@@ -1,0 +1,818 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SE CO Customer/Book by Depot Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  DSPF/SE7513DF - Corporate Actions Customer/Book by Depot     *
+      *                  Maintenance Screen.                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 29Nov05               *
+      *                 223182             Date 30Jan04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 23Nov98               *
+      *                 137879             Date 01Jul98               *
+      *                 135689             Date 08Jun98               *
+      *                 CSE007  *CREATE    Date 01Dec97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  223182 - Error on Corporate Action                           *
+      *           Protected fields for manual allocation if customer  *
+      *           is closed.                                          *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+      *  137879 - Amend Review from processing, if Status selected    *
+      *           and roll up, the next pages shown all Status.       *
+      *  135689 - Corporate Actions and EMU: various errors:          *
+      *           - Don't allow Action Code 'L' (Run Allocation) on   *
+      *             subfile for 'CASH' screen'.                       *
+      *  CSE007 - Corporate Actions.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      REF(MFRFL)
+      *
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CHGINPDFT
+     A                                      VLDCMDKEY(46 'Any valid key')
+     A                                      INDARA
+     A                                      PRINT(*LIBL/MPRINT)
+     A                                      CF12(12 'Previous')
+      *
+      ********************************
+      ***  Subfile for normal screen *
+      ********************************
+      *
+     A          R SE7513S0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      SFL
+      *
+     A  84                                  SFLNXTCHG
+      *
+     A            SACODE         1A  B  8  2TEXT('Action Code')
+     A                                      AUTO(RA)
+     A                                      DSPATR(HI)
+     A N52                                  DSPATR(UL)
+     A  52                                  DSPATR(PC RI)
+      *
+     A            SBC           10A  O  8  4TEXT('Book or Customer')
+     A                                      DSPATR(HI)
+     A            SPORT          4A  O  8 17TEXT('Portfolio')
+     A                                      DSPATR(HI)
+     A N13
+     AO 62
+     AON68                                  DSPATR(ND)
+     A            SCCY           3A  O  8 22TEXT('Currency')
+     A                                      DSPATR(HI)
+     A            SEXPOS        17A  O  8 26TEXT('Ex-Date Position')
+     A                                      DSPATR(HI)
+     A  63                                  DSPATR(ND)
+     A  64                                  DSPATR(BL)
+     A            STAST         17A  O  8 44TEXT('Taken as Stock')
+     A                                      DSPATR(HI)
+     A            SREST         17A  O  8 62TEXT('Reply Status')
+     A                                      DSPATR(HI)
+      *
+     A                                  9 20'Stock Allocation'
+     A            SSACCY         3A  O  9 38TEXT('Stock Alloc Ccy')
+     A                                      DSPATR(HI)
+     A            SOSAL         17A  O  9 42TEXT('Orig. Stock Alloc.')
+     A                                      DSPATR(HI)
+     A            SASAL         17A  B  9 61TEXT('Actual Stock Alloc.')
+     A                                      DSPATR(HI)
+     A**Start of Change 223182
+     A N85
+     A**End of Change 223182
+     A N70N54 66                            DSPATR(UL)
+     A N66
+     A**Start of Change 223182
+     AO 85
+     A**End of Change 223182
+     AO 70                                  DSPATR(PR)
+     A  54                                  DSPATR(PC RI)
+      *
+     A                                 10 20'Stock Rounding'
+     A            SSRCCY         3A  O 10 38TEXT('Stock Round Ccy')
+     A                                      DSPATR(HI)
+     A            SOSRO         17A  O 10 42TEXT('Orig. Stock Round.')
+     A                                      DSPATR(HI)
+     A            SASRO         17A  O 10 61TEXT('Actual Stock Round.')
+     A                                      DSPATR(HI)
+      *
+     A                                 11 20'Cash Rounding'
+     A            SCRCCY         3A  O 11 38TEXT('Cash Round Ccy')
+     A                                      DSPATR(HI)
+     A            SOCRO         17A  O 11 42TEXT('Orig. Cash Round.')
+     A                                      DSPATR(HI)
+     A            SACRO         17A  B 11 61TEXT('Actual Cash Round.')
+     A                                      DSPATR(HI)
+     A**Start of Change 223182
+     A N85
+     A**End of Change 223182
+     A N70N55 67                            DSPATR(UL)
+     A N67
+     A**Start of Change 223182
+     AO 85
+     A**End of Change 223182
+     AO 70                                  DSPATR(PR)
+     A  55                                  DSPATR(PC RI)
+      *
+     A                                 12  1'                    '
+     A                                 12 21'                    '
+     A                                 12 41'                    '
+     A                                 12 61'                    '
+      *
+     A            SHASAL        17A  H      TEXT('Actual Stock Alloc.')
+     A            SHACRO        17A  H      TEXT('Actual Cash Round.')
+     A            SHACAR        15  0H      TEXT('Actual Cash Round.')
+     A            SHASTR        15  8H      TEXT('Actual Stock Round.')
+     A            SHASTA        15  0H      TEXT('Actual Stock Alloc.')
+     A            SHOTSA        15  8H      TEXT('True Stock Alloc.')
+     A            SHTDVD        15  0H      TEXT('Ex-Date Position')
+     A            SHIND2         1A  H      TEXT('Save Indicator')
+     A            SHIND3         1A  H      TEXT('Save Indicator')
+     A            SHIND4         1A  H      TEXT('Save Indicator')
+     A            SHIND6         1A  H      TEXT('Save Indicator')
+     A            SHIND7         1A  H      TEXT('Save Indicator')
+     A            SHPORT         4A  H      TEXT('Portfolio')
+     A            SHCOTP         1A  H      TEXT('Cust/Book Ind.')
+      * Begin /CSD027/
+     A**********  SHCNUM         6  0H      TEXT('Customer')                                  CSD027
+     A            SHCNUM         6A  H      TEXT('Customer')
+      * End /CSD027/
+     A            SHBOOK         2A  H      TEXT('Book')
+      *
+      ****************************************
+      ***  Subfile control for normal screen *
+      ****************************************
+      *
+     A          R SE7513C0                  TEXT('Normal subfile control')
+     A                                      SFLCTL(SE7513S0)
+      *
+     A                                      CA05(05 'Refresh')
+     A N70                                  CA20(20 'Exit Without Saving')
+     A  70                                  CA03(03 'Exit')
+     A                                      SFLSIZ(0004)
+     A                                      SFLPAG(0003)
+     A                                      OVERLAY
+     A  80                                  SFLCLR
+     A*                                              Begin /137879/
+     A**81**                                SFLDSP
+     A**81**                                SFLDSPCTL
+     A**30**                                SFLEND
+     A N80 81                               SFLDSP
+     A N80                                  SFLDSPCTL
+     A N80 81 30                            SFLEND
+     A*                                              End   /137879/
+     A N30                                  ROLLUP(27 'Next page')
+      *
+     A            SRRN           4S 0H      SFLRCDNBR
+      *
+     A            SUSER     R        O  1  2TEXT('User')
+     A                                      REFFLD(AUP1)
+     A                                  1 13'SE7513C0'
+     A                                  1 34'CORPORATE ACTION'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE'
+     A            SMRDT     R        O  1 72
+     A                                      REFFLD(RELD)
+     A            SJOB      R        O  2  2
+     A                                      REFFLD(AUP1)
+     A  13N70                           2 25'CUSTOMER/BOOK BY DEPOT MAINTENANCE'
+     A                                      DSPATR(HI)
+     A  13 70                           2 27'CUSTOMER/BOOK BY DEPOT ENQUIRY'
+     A                                      DSPATR(HI)
+     A N13N70                           2 30'BOOK BY DEPOT MAINTENANCE'
+     A                                      DSPATR(HI)
+     A N13 70                           2 32'BOOK BY DEPOT ENQUIRY'
+     A                                      DSPATR(HI)
+     A                                  2 67'TIME'
+     A            STIME     R     Y  O  2 72REFFLD(RTIM)
+     A                                      EDTWRD('  :  :  ')
+      *
+     A                                  3  2'Reference'
+     A            SREFNO         6A  O  3 12TEXT('Reference')
+     A                                      DSPATR(HI)
+     A                                  3 19'Security'
+     A            SSESN         10A  O  3 28TEXT('Security')
+     A                                      DSPATR(HI)
+     A                                  3 40'Action Type'
+     A            SACTTY         2A  O  3 52TEXT('Action Type')
+     A                                      DSPATR(HI)
+     A                                  3 56'Ex-date'
+     A            SEXDAT         6A  O  3 64TEXT('Ex-date')
+     A                                      DSPATR(HI)
+     A                                  3 71'Status'
+     A            SSTAT          1A  O  3 78TEXT('Status')
+     A                                      DSPATR(HI)
+      *
+     A                                  4  2'Branch'
+     A            SBRCH          3A  O  4  9TEXT('Branch')
+     A                                      DSPATR(HI)
+     A                                  4 13'Depot'
+     A            SDEPOT        10A  O  4 19TEXT('Depot')
+     A                                      DSPATR(HI)
+     A                                  4 30'Nominal Ccy'
+     A            SNMCCY         3A  O  4 42TEXT('Nominal Ccy')
+     A                                      DSPATR(HI)
+     A                                  4 46'Option'
+     A            SOPT           2A  O  4 53TEXT('Option')
+     A                                      DSPATR(HI)
+     A                                  4 56'New Security'
+     A            SNWSEC        10A  O  4 69TEXT('New Security')
+     A                                      DSPATR(HI)
+      *
+     A                                  5  6'Actual Allocation Stock'
+     A            SSTCCY         3A  O  5 30TEXT('Stock Ccy')
+     A                                      DSPATR(HI)
+     A            SACSTK        17A  O  5 34TEXT('Actual Alloc. Stock')
+     A                                      DSPATR(HI)
+     A                                  5 53'Cash'
+     A            SCHCCY         3A  O  5 58TEXT('Cash Ccy')
+     A                                      DSPATR(HI)
+     A            SCASH         17A  O  5 62TEXT('Cash')
+     A                                      DSPATR(HI)
+      *
+     A N70                              6  2'(YJVL)'
+     A  70                              6  2'(JV)'
+      *
+      *                                              Begin /CAC005/
+     A***********                       6 34'Review From: Book'
+     A*********** SRFBK          2A  B  6 52TEXT('Book')
+     A                                  6 19'Review From: Book'
+     A            SRFBK          2A  B  6 37TEXT('Book')
+      *                                              End  /CAC005/
+     A                                      DSPATR(HI)
+     A N56                                  DSPATR(UL)
+     A  56                                  DSPATR(PC RI)
+      *                                              Begin /CAC005/
+     A N69                              6 40'Prof Ctr'
+     A            SPRFC          4A  B  6 49TEXT('Profit Centre')
+     A                                      DSPATR(HI)
+     A N53                                  DSPATR(UL)
+     A  53                                  DSPATR(PC RI)
+     A  69                                  DSPATR(ND)
+      *                                              End  /CAC005/
+     A  13                              6 55'Customer'
+     A            SCUST          6A  B  6 64TEXT('Customer')
+     A                                      DSPATR(HI)
+     A  13N50                               DSPATR(UL)
+     A N13                                  DSPATR(ND)
+     A N13                                  DSPATR(PR)
+     A  50                                  DSPATR(PC RI)
+     A                                  6 71'Status'
+     A            SCSTAT         1A  B  6 78TEXT('Status')
+     A                                      DSPATR(HI)
+     A N51                                  DSPATR(UL)
+     A  51                                  DSPATR(PC RI)
+      *
+     A N13                              7  3'Book'
+     A  13                              7  3'Book/Customer'
+     A  13 68                           7 17'Port'
+     A                                  7 22'Ccy'
+     A                                  7 26'Ex-Date Position'
+     A                                  7 44'Taken as Stock'
+      *
+      ********************************
+      ***  Subfile for 'CASH' screen *
+      ********************************
+      *
+     A          R SE7513S1                  TEXT('Cash subfile record')
+     A                                      SFL
+      *
+     A  84                                  SFLNXTCHG
+      *
+     A            SACODE         1A  B  8  2TEXT('Action Code')
+     A                                      AUTO(RA)
+     A                                      DSPATR(HI)
+     A N52                                  DSPATR(UL)
+     A  52                                  DSPATR(PC RI)
+     A            SBC           10A  O  8  4TEXT('Book or Customer')
+     A                                      DSPATR(HI)
+     A            SPORT          4A  O  8 17TEXT('Portfolio')
+     A                                      DSPATR(HI)
+     A N13
+     AON68
+     AO 62                                  DSPATR(ND)
+     A            SCCY           3A  O  8 22TEXT('Currency')
+     A                                      DSPATR(HI)
+     A            SEXPOS        17A  O  8 26TEXT('Ex-Date Position')
+     A                                      DSPATR(HI)
+     A  63                                  DSPATR(ND)
+     A  64                                  DSPATR(BL)
+     A            STACA         17A  O  8 44TEXT('Taken as Cash')
+     A                                      DSPATR(HI)
+     A            SREST         17A  O  8 62TEXT('Reply Status')
+     A                                      DSPATR(HI)
+      *
+     A                                  9  8'Cash Option'
+     A            SCAOP         17A  O  9 26TEXT('Cash Option')
+     A                                      DSPATR(HI)
+     A                                  9 44'Actual Cash Alloc.'
+     A            SACAL         17A  B  9 63TEXT('Actual Cash Alloc.')
+     A                                      DSPATR(HI)
+     A**Start of Change 223182
+     A N85
+     A**End of Change 223182
+     A N70N57 67                            DSPATR(UL)
+     A N67
+     A**Start of Change 223182
+     AO 85
+     A**End of Change 223182
+     AO 70                                  DSPATR(PR)
+     A  57                                  DSPATR(PC RI)
+      *
+     A                                 10  8'Orig. Cash Round.'
+     A            SOCRO         17A  O 10 26TEXT('Orig. Cash Round.')
+     A                                      DSPATR(HI)
+     A                                 10 44'Actual Cash Round.'
+     A            SACRO         17A  B 10 63TEXT('Actual Cash Round.')
+     A                                      DSPATR(HI)
+     A**Start of Change 223182
+     A N85
+     A**End of Change 223182
+     A N70N58 67                            DSPATR(UL)
+     A N67
+     A**Start of Change 223182
+     AO 85
+     A**End of Change 223182
+     AO 70                                  DSPATR(PR)
+     A  58                                  DSPATR(PC RI)
+      *
+     A                                 11  8'Total Fees'
+     A            STFEE         17A  O 11 26TEXT('Original value 3')
+     A                                      DSPATR(HI)
+     A                                 11 44'Total Settlement'
+     A            STSET         17A  O 11 63TEXT('Total Settlement')
+     A                                      DSPATR(HI)
+      *
+     A            STTOT         11A  O 12  8TEXT('Narrative ''Total Taxes''')
+     A            STOTT         17A  O 12 26TEXT('Total Taxes')
+     A                                      DSPATR(HI)
+      *
+     A            SHACAL        17A  H      TEXT('Actual Cash Alloc.')
+     A            SHACRO        17A  H      TEXT('Actual Cash Round.')
+     A            SHACAA        15  0H      TEXT('Actual Cash Alloc.')
+     A            HSACAA        15  0H      TEXT('Actual Cash Alloc.')
+     A            SHACAR        15  0H      TEXT('Actual Cash Round.')
+     A            HSACAR        15  0H      TEXT('Actual Cash Round.')
+     A            SHTOTF        15  0H      TEXT('Total Fees')
+     A            SHTOTT        15  0H      TEXT('Total Taxes')
+     A            SHTDVD        15  0H      TEXT('Ex-Date Position')
+     A            SHIND2         1A  H      TEXT('Save Indicator ')
+     A            SHIND3         1A  H      TEXT('Save Indicator ')
+     A            SHIND4         1A  H      TEXT('Save Indicator ')
+     A            SHIND6         1A  H      TEXT('Save Indicator ')
+     A            SHIND7         1A  H      TEXT('Save Indicator ')
+     A            SHPORT         4A  H      TEXT('Portfolio')
+     A            SHCOTP         1A  H      TEXT('Cust/Book Ind.')
+      * Begin /CSD027/
+     A**********  SHCNUM         6  0H      TEXT('Customer')                                  CSD027
+     A            SHCNUM         6A  H      TEXT('Customer')
+      * End /CSD027/
+     A            SHBOOK         2A  H      TEXT('Book')
+      *
+      ****************************************
+      ***  Subfile control for 'CASH' screen *
+      ****************************************
+      *
+     A          R SE7513C1                  TEXT('Cash subfile control')
+     A                                      SFLCTL(SE7513S1)
+      *
+     A                                      CA05(05 'Refresh')
+     A N70                                  CA20(20 'Exit Without Saving')
+     A  70                                  CA03(03 'Exit')
+     A                                      SFLSIZ(0004)
+     A                                      SFLPAG(0003)
+     A                                      OVERLAY
+     A  80                                  SFLCLR
+     A*                                              Begin /137879/
+     A**81**                                SFLDSP
+     A**81**                                SFLDSPCTL
+     A**30**                                SFLEND
+     A N80 81                               SFLDSP
+     A N80                                  SFLDSPCTL
+     A N80 81 30                            SFLEND
+     A*                                              End   /137879/
+     A N30                                  ROLLUP(27 'Next page')
+      *
+     A            SRRN           4S 0H      SFLRCDNBR
+      *
+     A            SUSER     R        O  1  2TEXT('User')
+     A                                      REFFLD(AUP1)
+     A                                  1 13'SE7513C1'
+     A                                  1 33'CORPORATE ACTION'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE'
+     A            SMRDT     R        O  1 72
+     A                                      REFFLD(RELD)
+     A            SJOB      R        O  2  2
+     A                                      REFFLD(AUP1)
+     A  13N70                           2 21'CUSTOMER/BOOK BY DEPOT MAINTENANCE-
+     A                                       - CASH'
+     A                                      DSPATR(HI)
+     A  13 70                           2 23'CUSTOMER/BOOK BY DEPOT ENQUIRY - C-
+     A                                      ASH'
+     A                                      DSPATR(HI)
+     A N13N70                           2 26'BOOK BY DEPOT MAINTENANCE - CASH'
+     A                                      DSPATR(HI)
+     A N13 70                           2 28'BOOK BY DEPOT ENQUIRY - CASH'
+     A                                      DSPATR(HI)
+     A                                  2 67'TIME'
+     A            STIME     R     Y  O  2 72REFFLD(RTIM)
+     A                                      EDTWRD('  :  :  ')
+      *
+     A                                  3  2'Reference'
+     A            SREFNO         6A  O  3 12TEXT('Reference')
+     A                                      DSPATR(HI)
+     A                                  3 19'Security'
+     A            SSESN         10A  O  3 28TEXT('Security')
+     A                                      DSPATR(HI)
+     A                                  3 40'Action Type'
+     A            SACTTY         2A  O  3 52TEXT('Action Type')
+     A                                      DSPATR(HI)
+     A                                  3 56'Ex-date'
+     A            SEXDAT         6A  O  3 64TEXT('Ex-date')
+     A                                      DSPATR(HI)
+     A                                  3 71'Status'
+     A            SSTAT          1A  O  3 78TEXT('Status')
+     A                                      DSPATR(HI)
+      *
+     A                                  4  2'Branch'
+     A            SBRCH          3A  O  4  9TEXT('Branch')
+     A                                      DSPATR(HI)
+     A                                  4 13'Depot'
+     A            SDEPOT        10A  O  4 19TEXT('Depot')
+     A                                      DSPATR(HI)
+     A                                  4 30'Nominal Ccy'
+     A            SNMCCY         3A  O  4 42TEXT('Nominal Ccy')
+     A                                      DSPATR(HI)
+     A                                  4 46'Option'
+     A            SOPT           2A  O  4 53TEXT('Option')
+     A                                      DSPATR(HI)
+     A                                  4 56'New Security'
+     A            SNWSEC        10A  O  4 69TEXT('New Security')
+     A                                      DSPATR(HI)
+      *
+     A                                  5  6'Actual Allocation Stock'
+     A            SSTCCY         3A  O  5 30TEXT('Stock Ccy')
+     A                                      DSPATR(HI)
+     A            SACSTK        17A  O  5 34TEXT('Actual Alloc. Stock')
+     A                                      DSPATR(HI)
+     A                                  5 53'Cash'
+     A            SCHCCY         3A  O  5 58TEXT('Cash Ccy')
+     A                                      DSPATR(HI)
+     A            SCASH         17A  O  5 62TEXT('Cash')
+     A                                      DSPATR(HI)
+      *
+      *                                                    /Begin 135689/
+     A*N70**                            6  2'(YJVL)'
+     A N70                              6  2'(YJV)'
+      *                                                    /End 135689/
+     A  70                              6  2'(JV)'
+      *
+      *                                              Begin /CAC005/
+     A***********                       6 34'Review From: Book'
+     A*********** SRFBK          2A  B  6 52TEXT('Book')
+     A                                  6 19'Review From: Book'
+     A            SRFBK          2A  B  6 37TEXT('Book')
+      *                                              End   /CAC005/
+     A                                      DSPATR(HI)
+     A N56                                  DSPATR(UL)
+     A  56                                  DSPATR(PC RI)
+      *                                              Begin /CAC005/
+     A N69                              6 40'Prof Ctr'
+     A            SPRFC          4A  B  6 49TEXT('Profit Centre')
+     A                                      DSPATR(HI)
+     A N53                                  DSPATR(UL)
+     A  53                                  DSPATR(PC RI)
+     A  69                                  DSPATR(ND)
+      *                                              End   /CAC005/
+     A  13                              6 55'Customer'
+     A            SCUST          6A  B  6 64TEXT('Customer')
+     A                                      DSPATR(HI)
+     A  13N50                               DSPATR(UL)
+     A N13                                  DSPATR(ND)
+     A N13                                  DSPATR(PR)
+     A  50                                  DSPATR(PC RI)
+     A                                  6 71'Status'
+     A            SCSTAT         1A  B  6 78TEXT('Status')
+     A                                      DSPATR(HI)
+     A N51                                  DSPATR(UL)
+     A  51                                  DSPATR(PC RI)
+      *
+     A N13                              7  3'Book'
+     A  13                              7  3'Book/Customer'
+     A  13 68                           7 17'Port'
+     A                                  7 22'Ccy'
+     A                                  7 26'Ex-Date Position'
+     A                                  7 46'Taken as Cash'
+      *
+      *******************************************
+      ***  Bottom lines of screen: command keys *
+      *******************************************
+      *
+     A          R SE7513F2                  TEXT('Command keys.')
+      *
+     A                                      OVERLAY
+     A                                      CA05(05 'Refresh')
+     A N70                                  CA20(20 'Exit Without Saving')
+     A  70                                  CA03(03 'Exit')
+      *
+     A N70                             24  2'F5=Refresh Screen  F12=Previous'
+     A N70                             24 35'F20=Exit Without Saving'
+     A N70                             24 60'Rollup/Down'
+      *
+     A  70                             24  2'F3=Exit  F5=Refresh Screen'
+     A  70                             24 30'F12=Previous'
+     A  70                             24 44'Rollup/Down'
+      *
+      ********************************************
+      ***  Confirmatiom screen for normal screen *
+      ********************************************
+      *
+     A          R SE7513F3                  TEXT('Normal confirmation screen')
+      *
+     A                                      OVERLAY
+      *
+     A            SUSER     R        O  1  2TEXT('User')
+     A                                      REFFLD(AUP1)
+     A                                  1 13'SE7513F3'
+     A                                  1 34'CORPORATE ACTION'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE'
+     A            SMRDT     R        O  1 72
+     A                                      REFFLD(RELD)
+     A            SJOB      R        O  2  2
+     A                                      REFFLD(AUP1)
+     A  13N70                           2 25'CUSTOMER/BOOK BY DEPOT MAINTENANCE'
+     A                                      DSPATR(HI)
+     A  13 70                           2 27'CUSTOMER/BOOK BY DEPOT ENQUIRY'
+     A                                      DSPATR(HI)
+     A N13N70                           2 30'BOOK BY DEPOT MAINTENANCE'
+     A                                      DSPATR(HI)
+     A N13 70                           2 32'BOOK BY DEPOT ENQUIRY'
+     A                                      DSPATR(HI)
+     A                                  2 67'TIME'
+     A            STIME     R     Y  O  2 72REFFLD(RTIM)
+     A                                      EDTWRD('  :  :  ')
+      *
+     A                                  3  2'Reference'
+     A            SREFNO         6A  O  3 12TEXT('Reference')
+     A                                      DSPATR(HI)
+     A                                  3 19'Security'
+     A            SSESN         10A  O  3 28TEXT('Security')
+     A                                      DSPATR(HI)
+     A                                  3 40'Action Type'
+     A            SACTTY         2A  O  3 52TEXT('Action Type')
+     A                                      DSPATR(HI)
+     A                                  3 56'Ex-date'
+     A            SEXDAT         6A  O  3 64TEXT('Ex-date')
+     A                                      DSPATR(HI)
+     A                                  3 71'Status'
+     A            SSTAT          1A  O  3 78TEXT('Status')
+     A                                      DSPATR(HI)
+      *
+     A                                  4  2'Branch'
+     A            SBRCH          3A  O  4  9TEXT('Branch')
+     A                                      DSPATR(HI)
+     A                                  4 13'Depot'
+     A            SDEPOT        10A  O  4 19TEXT('Depot')
+     A                                      DSPATR(HI)
+     A                                  4 30'Nominal Ccy'
+     A            SNMCCY         3A  O  4 42TEXT('Nominal Ccy')
+     A                                      DSPATR(HI)
+     A                                  4 46'Option'
+     A            SOPT           2A  O  4 53TEXT('Option')
+     A                                      DSPATR(HI)
+     A                                  4 56'New Security'
+     A            SNWSEC        10A  O  4 69TEXT('New Security')
+     A                                      DSPATR(HI)
+      *
+     A                                  5  6'Actual Allocation Stock'
+     A            SSTCCY         3A  O  5 30TEXT('Stock Ccy')
+     A                                      DSPATR(HI)
+     A            SACSTK        17A  O  5 34TEXT('Actual Alloc. Stock')
+     A                                      DSPATR(HI)
+     A                                  5 53'Cash'
+     A            SCHCCY         3A  O  5 58TEXT('Cash Ccy')
+     A                                      DSPATR(HI)
+     A            SCASH         17A  O  5 62TEXT('Cash')
+     A                                      DSPATR(HI)
+      *
+     A N13                              7  3'Book'
+     A  13                              7  3'Book/Customer'
+     A  68 13                           7 17'Port'
+     A                                  7 22'Ccy'
+     A                                  7 26'Ex-Date Position'
+     A                                  7 44'Taken as Stock'
+      *
+     A            SBC           10A  O  8  4TEXT('Book or Customer')
+     A                                      DSPATR(HI)
+     A            SPORT          4A  O  8 17TEXT('Portfolio')
+     A                                      DSPATR(HI)
+     A N13
+     AO 62
+     AON68                                  DSPATR(ND)
+     A            SCCY           3A  O  8 22TEXT('Currency')
+     A                                      DSPATR(HI)
+     A            SEXPOS        17A  O  8 26TEXT('Ex-Date Position')
+     A                                      DSPATR(HI)
+     A  63                                  DSPATR(ND)
+     A  64                                  DSPATR(BL)
+     A            STAST         17A  O  8 44TEXT('Taken as Stock')
+     A                                      DSPATR(HI)
+     A            SREST         17A  O  8 62TEXT('Reply Status')
+     A                                      DSPATR(HI)
+      *
+     A                                 12 27'Confirm Allocation'
+     A  21                                  DSPATR(ND)
+     A            SCOAL          1A  B 12 48
+     A                                      CHECK(ER)
+     A                                      DSPATR(HI)
+     A  21                                  DSPATR(PR ND)
+     A N14                                  DSPATR(UL)
+     A  14                                  DSPATR(PC RI)
+      *
+     A                                 10 27'CONFIRM EXIT WITHOUT SAVING'
+     A N21                                  DSPATR(ND)
+     A            SCONF          1A  B 10 55
+     A                                      CHECK(ER)
+     A                                      DSPATR(HI)
+     A N21                                  DSPATR(PR ND)
+     A N59                                  DSPATR(UL)
+     A  59                                  DSPATR(PC RI)
+      *
+     A            SHPORT         4A  H      TEXT('Portfolio')
+      *
+      ********************************************
+      ***  Confirmatiom screen for 'CASH' screen *
+      ********************************************
+      *
+     A          R SE7513F4                  TEXT('Cash confirmation screen')
+      *
+     A                                      OVERLAY
+      *
+     A            SUSER     R        O  1  2TEXT('User')
+     A                                      REFFLD(AUP1)
+     A                                  1 13'SE7513F4'
+     A                                  1 33'CORPORATE ACTION'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE'
+     A            SMRDT     R        O  1 72
+     A                                      REFFLD(RELD)
+     A            SJOB      R        O  2  2
+     A                                      REFFLD(AUP1)
+     A  13N70                           2 21'CUSTOMER/BOOK BY DEPOT MAINTENANCE-
+     A                                       - CASH'
+     A                                      DSPATR(HI)
+     A  13 70                           2 23'CUSTOMER/BOOK BY DEPOT ENQUIRY - C-
+     A                                      ASH'
+     A                                      DSPATR(HI)
+     A N13N70                           2 26'BOOK BY DEPOT MAINTENANCE - CASH'
+     A                                      DSPATR(HI)
+     A N13 70                           2 28'BOOK BY DEPOT ENQUIRY - CASH'
+     A                                      DSPATR(HI)
+     A                                  2 67'TIME'
+     A            STIME     R     Y  O  2 72REFFLD(RTIM)
+     A                                      EDTWRD('  :  :  ')
+      *
+     A                                  3  2'Reference'
+     A            SREFNO         6A  O  3 12TEXT('Reference')
+     A                                      DSPATR(HI)
+     A                                  3 19'Security'
+     A            SSESN         10A  O  3 28TEXT('Security')
+     A                                      DSPATR(HI)
+     A                                  3 40'Action Type'
+     A            SACTTY         2A  O  3 52TEXT('Action Type')
+     A                                      DSPATR(HI)
+     A                                  3 56'Ex-date'
+     A            SEXDAT         6A  O  3 64TEXT('Ex-date')
+     A                                      DSPATR(HI)
+     A                                  3 71'Status'
+     A            SSTAT          1A  O  3 78TEXT('Status')
+     A                                      DSPATR(HI)
+      *
+     A                                  4  2'Branch'
+     A            SBRCH          3A  O  4  9TEXT('Branch')
+     A                                      DSPATR(HI)
+     A                                  4 13'Depot'
+     A            SDEPOT        10A  O  4 19TEXT('Depot')
+     A                                      DSPATR(HI)
+     A                                  4 30'Nominal Ccy'
+     A            SNMCCY         3A  O  4 42TEXT('Nominal Ccy')
+     A                                      DSPATR(HI)
+     A                                  4 46'Option'
+     A            SOPT           2A  O  4 53TEXT('Option')
+     A                                      DSPATR(HI)
+     A                                  4 56'New Security'
+     A            SNWSEC        10A  O  4 69TEXT('New Security')
+     A                                      DSPATR(HI)
+      *
+     A                                  5  6'Actual Allocation Stock'
+     A            SSTCCY         3A  O  5 30TEXT('Stock Ccy')
+     A                                      DSPATR(HI)
+     A            SACSTK        17A  O  5 34TEXT('Actual Alloc. Stock')
+     A                                      DSPATR(HI)
+     A                                  5 53'Cash'
+     A            SCHCCY         3A  O  5 58TEXT('Cash Ccy')
+     A                                      DSPATR(HI)
+     A            SCASH         17A  O  5 62TEXT('Cash')
+     A                                      DSPATR(HI)
+      *
+     A N13                              7  3'Book'
+     A  13                              7  3'Book/Customer'
+     A  68 13                           7 17'Port'
+     A                                  7 22'Ccy'
+     A                                  7 26'Ex-Date Position'
+     A                                  7 46'Taken as Cash'
+      *
+     A            SBC           10A  O  8  4TEXT('Book or Customer')
+     A                                      DSPATR(HI)
+     A            SPORT          4A  O  8 17TEXT('Portfolio')
+     A                                      DSPATR(HI)
+     A N13
+     AON68
+     AO 62                                  DSPATR(ND)
+     A            SCCY           3A  O  8 22TEXT('Currency')
+     A                                      DSPATR(HI)
+     A            SEXPOS        17A  O  8 26TEXT('Ex-Date Position')
+     A                                      DSPATR(HI)
+     A  63                                  DSPATR(ND)
+     A  64                                  DSPATR(BL)
+     A            STACA         17A  O  8 44TEXT('Taken as Cash')
+     A                                      DSPATR(HI)
+     A            SREST         17A  O  8 62TEXT('Reply Status')
+     A                                      DSPATR(HI)
+      *
+     A                                 12 27'Confirm Allocation'
+     A  21                                  DSPATR(ND)
+     A            SCOAL          1A  B 12 48
+     A                                      CHECK(ER)
+     A                                      DSPATR(HI)
+     A  21                                  DSPATR(PR ND)
+     A N14                                  DSPATR(UL)
+     A  14                                  DSPATR(PC RI)
+      *
+     A                                 10 27'CONFIRM EXIT WITHOUT SAVING'
+     A N21                                  DSPATR(ND)
+     A            SCONF          1A  B 10 55
+     A                                      CHECK(ER)
+     A                                      DSPATR(HI)
+     A N21                                  DSPATR(PR ND)
+     A N59                                  DSPATR(UL)
+     A  59                                  DSPATR(PC RI)
+      *
+     A            SHPORT         4A  H      TEXT('Portfolio')
+      *
+      ********************************************************
+      ***  Bottom lines of confirmation screen: command keys *
+      ********************************************************
+      *
+     A          R SE7513F5                  TEXT('Command keys of confirmation -
+     A                                      screen')
+      *
+     A                                      OVERLAY
+      *
+     A N21                             24  2'F12=Previous'
+     A  21                             24  2'Enter ''N'' to Save Changes or ''Y-
+     A                                      '' to Remove Changes.'
+      *
+      *******************************
+      ***  Subfile program messages *
+      *******************************
+      *
+     A          R #MSGRCD                   TEXT('Program messages subfile')
+     A                                      SFL SFLMSGRCD(23)
+     A            SMSG                      SFLMSGKEY
+     A            SPGM                      SFLPGMQ
+      *
+      ***************************************
+      ***  Subfile control program messages *
+      ***************************************
+      *
+     A          R #MSGCTL                   TEXT('Program messages subfile cont-
+     A                                      rol')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLSIZ(0015)
+     A                                      SFLPAG(0001)
+     A******                                OVERLAY                       137879
+     A                                      SFLINZ
+     A                                      SFLDSP
+     A                                      SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            SPGM                      SFLPGMQ
+      *

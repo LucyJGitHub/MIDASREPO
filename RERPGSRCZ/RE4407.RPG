@@ -1,0 +1,210 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI Daily Cashier Interface Files Set-Up')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4407 - Daily Cashier Interface Files Set-Up                *
+     F*                                                               *
+     F*  Function:  This program will update the trickle feed header  *
+     F*   (INIT)    and reset branch status to 'D' ownload            *
+     F*             at the start of the day/initialisation.           *
+     F*                                                               *
+     F*                                                               *
+     F*  Called By: REC4407 - CI System Set-Up and Initialisation     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. CRT005             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 122060             Date 21Aug97               *
+      *                 CRT003  *CREATE    Date 22Jul96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRT005 - Cashier Enhancement for Cash In/Cash Out            *
+     F*  122060 - Drafts Issuance.                                    *
+     F*  CRT003 - Cashier Interface.                                  *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FRECITHPDUF  E                    DISK         KINFSR *PSSR A
+     F**  Trickle Fedd Header Control
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   70       EOF/File error indicator                           *
+     F*                                                               *
+     F*  U7-U8     Database Error.                                    *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E/EJECT
+     E*
+     E**********          PGMA       25 10                                                    CRT005
+     E                    PGMA       29 10                                                    CRT005
+      *
+      **   Array used to hold the CI Function Program Names.
+      *
+     E**********          PGDA       25  2                                                    CRT005
+     E                    PGDA       29  2                                                    CRT005
+      *
+      **   Array used to hold the Default Number of Programs to Start.
+      *
+     E                    CPY@    1   1 80
+     I*
+     I/SPACE 3
+     I*
+     I/COPY ZSRSRC,CIPGMNI1
+      **  Array data structures for CI Functions Program Names
+      *
+     ICIACTV      DS                            100
+      **  Data Area CI Active Jobs.
+      *
+     ISDBAIC    E DSSDBAICPD
+      **  Midas Configuration File
+      *
+     I            DS
+     I                                        1  10 PGMDS
+     I                                        1   6 PGMN
+     I                                        7   9 PGMF
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs (200 long)
+     I*
+      *
+     ILDA        UDS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     C/EJECT
+     C*****************************************************************
+     C*             S T A R T   O F   P R O G R A M                   *
+     C*****************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PRCVR  10
+     C                     PARM           PSQNO  100
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Reset LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'RE4407'  DBPGM
+     C                     OUT  LDA
+     C*
+     C           1         CHAINRECITHD0             70
+     C*
+     C                     Z-ADDPSQNO     RSJOSQ
+     C                     MOVELPRCVR     RSPRRC
+     C                     MOVELPRCVR     RSNXRC
+     C*
+     C           *IN70     IFEQ '0'
+     C                     UPDATRECITHD0
+     C                     ELSE
+     C                     WRITERECITHD0
+     C                     ENDIF
+     C*
+     C**  Initialise CIACTV data area with default number of programs
+     C*
+     C           *NAMVAR   DEFN           CIACTV
+     C           *LOCK     IN   CIACTV
+     C                     MOVEL*BLANKS   CIACTV
+     C                     OUT  CIACTV
+      *
+     C                     MOVEACIPGMN    PGMA
+      *
+     C                     Z-ADD1         I       20       Array Index
+      *
+     C********** I         DOWLE25                                                            CRT005
+     C           I         DOWLE29                                                            CRT005
+      *
+     C           PGMA,I    IFEQ 'CASH_REC'                                122060
+     C                     MOVEL'RE4144'  PGMN                            122060
+     C                     MOVEL'DRI'     PGMF                            122060
+     C                     ELSE                                           122060
+     C                     MOVELPGMA,I    PGMDS
+     C                     ENDIF                                          122060
+      *
+     C                     CALL 'AOBAICR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM PGMN      @PGMN  10
+     C                     PARM PGMF      @PGMF   3
+     C           SDBAIC    PARM SDBAIC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'SDBAICPD'DBFILE
+     C                     MOVEL'*KEY  '  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE CFPGDF    PGDA,I
+     C                     ADD  1         I
+      *
+     C                     ENDDO
+      *
+     C           *LOCK     IN   CIACTV
+     C                     MOVEAPGDA      CIACTV
+     C                     OUT  CIACTV
+      *
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C* Called by: MAIN                                               *
+     C* Calls    : none                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C**  Produce program dump
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*
+** COPYRIGHT OBJECT **
+(c) Finastra International Limited 2001

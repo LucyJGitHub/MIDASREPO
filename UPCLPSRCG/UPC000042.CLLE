@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Save and delete logicals')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000042 - Save and delete logicals                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. CUP040   *CREATE   Date 25Jul14              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP040 - New deliverable data methodology.                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MOVLIB &OBJECT &STATUS)
+ 
+             DCL        VAR(&MOVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&OBJLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Change status to 'C'; only an error will set it to 'F'. */
+             CHGVAR     VAR(&STATUS) VALUE('C')
+ 
+/* If the object does not already exist in the library list then ignore. */
+             RTVOBJD    OBJ(&OBJECT) OBJTYPE(*FILE) TEXT(&TEXT)
+             MONMSG     MSGID(CPF9812) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* If the object is a logical, view or index then save and delete it. */
+             CHGVAR     VAR(&OBJLIB) VALUE(%SST(&MOVLIB 3 3) *TCAT +
+                          'VLIB')
+             DLTF       FILE(&MOVLIB/&OBJECT)
+             MONMSG     MSGID(CPF0000)
+             CRTSAVF    FILE(&MOVLIB/&OBJECT) TEXT(&TEXT)
+             SAVOBJ     OBJ(&OBJECT) LIB(&OBJLIB) DEV(*SAVF) +
+                          OBJTYPE(*FILE) SAVF(&MOVLIB/&OBJECT)
+             DLTF       FILE(&OBJECT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&STATUS) VALUE('F')
+ENDPGM:
+             ENDPGM

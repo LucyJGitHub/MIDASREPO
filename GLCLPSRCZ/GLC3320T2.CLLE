@@ -1,0 +1,222 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GLC3320T2)                            */
+/*EXI    TEXT('Midas GL Balance Statements - Task Split Server')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC3320T2 - Midas GL Balance Statements - Task Split Server */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD024120           Date 19Aug14              */
+/*                      CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD024120 - GLC3320 Performance Issues                       */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&POSTNUM &CNAME &CSEQ &COPY_RECS)       */                 /*MD024120*/
+             PGM        PARM(&POSTNUM &CNAME &CSEQ)                                     /*MD024120*/
+ 
+/**********  DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +           */                 /*MD024120*/
+/**********               VALUE('GLACBAPD')                          */                 /*MD024120*/
+/**********  DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +          */                 /*MD024120*/
+/**********               VALUE('GLACBIPD')                          */                 /*MD024120*/
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('ACBALSERVE')
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSEQC) TYPE(*CHAR) LEN(5)                                  /*MD024120*/
+/**********  DCL        VAR(&COPY_RECS) TYPE(*DEC) LEN(7 0)          */                 /*MD024120*/
+/**********  DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(3)            */                 /*MD024120*/
+/**********  DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)                */                 /*MD024120*/
+/**********  DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)             */                 /*MD024120*/
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+/**********  DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)            */                 /*MD024120*/
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
+/**********  DCL        VAR(&WKCUR) TYPE(*DEC) LEN(10 0)             */                 /*MD024120*/
+/**********  DCL        VAR(&WKDLT) TYPE(*DEC) LEN(10 0)             */                 /*MD024120*/
+/**********  DCL        VAR(&WKTOT) TYPE(*DEC) LEN(10 0)             */                 /*MD024120*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC3320T2 - Balance Statements - Task +
+                          Split Server') TOMSGQ(MRUNQ)
+ 
+             IF         COND(&POSTNUM = '3') THEN(DO)
+                RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
+                IF         COND(&CURRCD = 0) THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+                                                                                        /*MD024120*/
+             CHGVAR     VAR(&CSEQC) VALUE(&CSEQ)                                        /*MD024120*/
+ 
+/**********  IF         COND(&POSTNUM = '2' *OR &POSTNUM = '3' *OR + */                 /*MD024120*/
+/**********               &POSTNUM = '4') THEN(DO)                   */                 /*MD024120*/
+/**********     RTVMBRD    FILE(ZACCNTAB) NBRCURRCD(&WKCUR) +        */                 /*MD024120*/
+/**********                  NBRDLTRCD(&WKDLT)                       */                 /*MD024120*/
+/**********  ENDDO                                                   */                 /*MD024120*/
+/**********  ELSE (DO)                                               */                 /*MD024120*/
+/**********     RTVMBRD    FILE(ACCNTAB) NBRCURRCD(&WKCUR) +         */                 /*MD024120*/
+/**********                  NBRDLTRCD(&WKDLT)                       */                 /*MD024120*/
+/**********  ENDDO                                                   */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CHGVAR     VAR(&WKTOT) VALUE(&WKCUR + &WKDLT)           */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Start*commitment*control*******************************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                  */                 /*MD024120*/
+/**********  ALCOBJ     OBJ((&INDEXFL *FILE *EXCL))                  */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Read*COB*components*file*to*check*the*restart*status***************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CALL       PGM(CB0160) PARM(&CNAME &CSEQ &STAT)         */                 /*MD024120*/
+/**********                                                          */                 /*MD024120*/
+/**Check*if*any*problems*with*COB*components*file*********************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)             */                 /*MD024120*/
+/**********  GOTO       CMDLBL(ABNOR)                                */                 /*MD024120*/
+/**********  ENDDO                                                   */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**If*restart*status*=*F,*only*resend*END*message*to*sub-Task*********/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  IF         COND(&STAT = 'F') THEN(DO)                   */                 /*MD024120*/
+/**********  GOTO       CMDLBL(SNDEND)                               */                 /*MD024120*/
+/**********  ENDDO                                                   */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Set*restart*status*to*'Y'******************************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CHGVAR     VAR(&STAT) VALUE('Y')                        */                 /*MD024120*/
+/**********  CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)         */                 /*MD024120*/
+/**********                                                          */                 /*MD024120*/
+/**Wait*for*data*queue*entry******************************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/****RECEIVE:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +  */                 /*MD024120*/
+/**********               &MSGLENGTH &MSGDATA &RCVWAIT)              */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Extract*member*name************************************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))*/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Clear*the*driving*file*********************************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CLRPFM     FILE(&DRIVER) MBR(&MEMBER)                   */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Override*driving*file**********************************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER)   */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Call*the*program*to*copy*records*to*specified*member***************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CALL       PGM(GL3320T2) PARM(&COPY_RECS &WKTOT &RTN_CODE) */              /*MD024120*/
+/**********                                                          */                 /*MD024120*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)             */                 /*MD024120*/
+/**********  GOTO       CMDLBL(ABNOR)                                */                 /*MD024120*/
+/**********  ENDDO                                                   */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Set*up*data*queue*and*message*data*********************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)                 */                 /*MD024120*/
+/**********  CHGVAR     VAR(&MSGDATA) VALUE('PROMPT')                */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Send*message*data*to*data*queue************************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +      */                 /*MD024120*/
+/**********               &MSGLENGTH &MSGDATA)                       */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**If*return*code*=*EOF,*set*restart*status*to*'N'*and*terminate******/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  IF         COND(&RTN_CODE *EQ 'EOF') THEN(DO)           */                 /*MD024120*/
+/**********     CHGVAR     VAR(&STAT) VALUE('F')                     */                 /*MD024120*/
+/**********     CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)      */                 /*MD024120*/
+/**********     GOTO       CMDLBL(SNDEND)                            */                 /*MD024120*/
+/**********  ENDDO                                                   */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**If*return*code*<>*EOF,*wait*for*another*data*queue*entry***********/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  GOTO       CMDLBL(RECEIVE)                              */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/****SNDEND:                                                         */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Retrieve*first*member*description**********************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)                */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Set*up*data*queue*and*message*data*********************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)                 */                 /*MD024120*/
+/**********  CHGVAR     VAR(&MSGDATA) VALUE('END')                   */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Send*message*data*to*data*queue************************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/****LOOP:*      CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +  */                 /*MD024120*/
+/**********               &MSGLENGTH &MSGDATA)                       */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Retrieve*next*member*description***********************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +           */                 /*MD024120*/
+/**********               RTNMBR(&SNDDTAQ)                           */                 /*MD024120*/
+/**********  MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(RCVDTAQ))    */                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**Loop*for*all*members*in*driving*file*******************************/                 /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)                 */                 /*MD024120*/
+/**********  GOTO       CMDLBL(LOOP)                                 */                 /*MD024120*/
+ 
+/* Wait for data queue entry */
+ 
+ RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If message = FINISH, terminate the program */
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
+/**********     CHGVAR     VAR(&STAT) VALUE('N')                     */                 /*MD024120*/
+/**********     CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)      */                 /*MD024120*/
+                GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(DO)
+/**********     CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10)) */             /*MD024120*/
+/**********     CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)              */                 /*MD024120*/
+/**********     CHGVAR     VAR(&MSGDATA) VALUE('END')                */                 /*MD024120*/
+/**********     CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +   */                 /*MD024120*/
+/**********               &MSGLENGTH &MSGDATA)                       */                 /*MD024120*/
+/**********     MONMSG     MSGID(CPF9801)                            */                 /*MD024120*/
+                GOTO       CMDLBL(RCVDTAQ)
+             ENDDO
+ 
+ ABNOR:
+/**********  SNDPGMMSG  MSG('Program GLC3320T2 ended abnormally') +  */                 /*MD024120*/
+/**********               TOMSGQ(MOPERQ MRUNQ)                       */                 /*MD024120*/
+             SNDPGMMSG  MSG('Program ' *CAT &CNAME *CAT ' ' *CAT +
+                          &CSEQC *CAT ' ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD024120*/
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**********  ROLLBACK                                                */                 /*MD024120*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000 RPG0000)               */                 /*MD024120*/
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+/**********  ENDCMTCTL                                               */                 /*MD024120*/
+/**********  MONMSG     MSGID(CPF0000)                               */                 /*MD024120*/
+             ENDPGM

@@ -1,0 +1,391 @@
+/*********************************************************************/
+/*X*I****OVRDBF*FILE(UPOBJDTQT)*TOFILE(UPOBJDTPD)*********************/ /*             */ /*B18716*/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Change ownership and authorities control')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC0360 - Change Ownership & Authority                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP042             Date 06Nov14              */
+/*                      CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      256038             Date 01Aug08              */
+/*                      B18716             Date 06May08              */
+/*                      250022  *REWRITE   Date 07Aug07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUT001  *CREATE    Date 23Jul98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP042 - Monitor for error if library is empty when trying  */
+/*                to change the contents.                            */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       256038 - Make QSYS path for CHGOWN absolute.                */
+/*       B18716 - Handle error if library does not contain objects.  */
+/*       250022 - Enhance CHGOWNAUT utility.  Convert to ILE.        */
+/*              - Use CHGOWN rather than CHGOBJOWN as this uses      */
+/*                generic objects.                                   */
+/*       CUT001 - Bring CHGOWNAUT command and associated programs    */
+/*                into core midas                                    */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&OBJLIB &TYPE &NEWOWN &CUROWNAUT +                        */ /*CSC043*/
+/**********               &ALLUSER &PUBLIC &AUTL &CHGLIB &OVRLIBVLD +                  */ /*CSC043*/
+/**********               &LOG)                                                        */ /*CSC043*/
+             PGM        PARM(&OBJLIB &TYPE &NEWOWN &CUROWNAUT +
+                          &ALLUSER &PUBLIC &AUTL &CHGLIB &OVRLIBVLD +
+                          &LOG &ASP &ASPDEV)                                              /*CSC043*/
+ 
+/*/COPY WNCPYSRC,UTC0360INT                                          */
+             DCL        VAR(&OBJLIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWOWN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CUROWNAUT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CHGLIB) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PUBLIC) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&ALLUSER) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&OVRLIBVLD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LOG) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ASP) TYPE(*CHAR) LEN(2)                                      /*CSC043*/
+             DCL        VAR(&ASPDEV) TYPE(*CHAR) LEN(10)                                  /*CSC043*/
+ 
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPF2227) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CHGOWN) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CHGOWNO) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CHGOWNT) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RVKOLDAUT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&AUTLNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTLFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&EMPTYLIB) TYPE(*CHAR) LEN(1)                                 /*B18716*/
+             DCL        VAR(&ASPDEVP) TYPE(*CHAR) LEN(11) VALUE(' ')                      /*CSC043*/
+ 
+             DCL        VAR(&LOGLVL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LOGSEV) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&LOGCLPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)                                    /*B18716*/
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)                                    /*B18716*/
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)                                 /*B18716*/
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)                                 /*B18716*/
+ 
+/**********  DCLF       FILE(UPOBJDTQT)                                                */ /*B18716*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,UTC0360MPS                                          */
+ 
+/* Retrieve the logging values as they will be reset later on. */
+             RTVJOBA    LOGLVL(&LOGLVL) LOGSEV(&LOGSEV) +
+                          LOGCLPGM(&LOGCLPGM)
+ 
+/* Ensure that useful CL commands are logged but that the joblog */
+/*  does not fill up with completion messages.                   */
+/**********  CHGJOB     LOG(0 99 *NOLIST) LOGCLPGM(*YES)                               */ /*B18716*/
+             CHGJOB     LOG(0 99 *MSG) LOGCLPGM(*YES)                                     /*B18716*/
+ 
+/* Delete and recreate message queue used to store error messages. */
+             DLTMSGQ    MSGQ(QTEMP/CHGOWNAUT)
+             MONMSG     MSGID(CPF0000)
+             CRTMSGQ    MSGQ(QTEMP/CHGOWNAUT) SIZE(3 1 *NOMAX)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Set up the separate library and object names. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJLIB 1 10))
+             CHGVAR     VAR(&OBJL) VALUE(%SST(&OBJLIB 11 10))
+ 
+/* If the library is QSYS then the library's authority should not be changed. */
+             IF         COND(&OBJL *EQ 'QSYS') THEN(DO)
+                CHGVAR     VAR(&CHGLIB) VALUE('N')
+             ENDDO
+ 
+/* If IASP specified then build this as part of path name else leave as */                /*CSC043*/
+/*  blank.                                                              */                /*CSC043*/
+             IF         COND(&ASP *EQ 'AD') THEN(DO)                                      /*CSC043*/
+                CHGVAR     VAR(&ASPDEVP) VALUE('/' *TCAT &ASPDEV)                         /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+ 
+/* Check that the library exists, as the validation for this may */
+/*  have been bypassed in the validity checker.                  */
+             CHKOBJ     OBJ(QSYS/&OBJL) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9800) EXEC(DO)
+                SNDPGMMSG  MSG('Library ' *CAT &OBJL *TCAT ' ' *CAT +
+                             'does not exist or the user lacks +
+                             sufficient authority.') +
+                          TOMSGQ(QTEMP/CHGOWNAUT)
+                CHGVAR     VAR(&CPF2227) VALUE('Y')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+CHGOWN:
+             IF         COND(&NEWOWN *NE ' ') THEN(DO)
+/* Set up RVKOLDAUT parameter based on CUROWNAUT. */
+                IF         COND(&CUROWNAUT *EQ '*REVOKE') THEN(DO)
+                   CHGVAR     VAR(&RVKOLDAUT) VALUE('*YES')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&RVKOLDAUT) VALUE('*NO ')
+                ENDDO
+/* Start building CHGOWN string. */
+                IF         COND(&OBJL *EQ 'QSYS') THEN(DO)
+                   CHGVAR     VAR(&CHGOWNT) VALUE(%SST(&TYPE 2 7))
+/**********        CHGVAR     VAR(&CHGOWN) VALUE('QSYS.LIB/' *TCAT &OBJ +              */ /*256038*/
+/**********                     *TCAT '.' *TCAT &CHGOWNT)                              */ /*256038*/
+/**********        CHGVAR     VAR(&CHGOWN) VALUE('/QSYS.LIB/' *TCAT &OBJ +             */ /*CSC043*/
+/**********                     *TCAT '.' *TCAT &CHGOWNT)                   */ /*256038*/ /*CSC043*/
+                   CHGVAR     VAR(&CHGOWN) VALUE(&ASPDEVP *TCAT +
+                                '/QSYS.LIB/' *TCAT &OBJ *TCAT '.' *TCAT +
+                                &CHGOWNT)                                                 /*CSC043*/
+                ENDDO
+                ELSE       CMD(DO)
+/**********        CHGVAR     VAR(&CHGOWN) VALUE('QSYS.LIB/' *TCAT &OBJL +             */ /*256038*/
+/**********                     *TCAT '.LIB/')                                         */ /*256038*/
+/**********        CHGVAR     VAR(&CHGOWN) VALUE('/QSYS.LIB/' *TCAT &OBJL +            */ /*CSC043*/
+/**********                     *TCAT '.LIB/')                              */ /*256038*/ /*CSC043*/
+                   CHGVAR     VAR(&CHGOWN) VALUE(&ASPDEVP *TCAT +
+                                '/QSYS.LIB/' *TCAT &OBJL *TCAT '.LIB/')                   /*CSC043*/
+                   IF         COND(&OBJ *EQ '*ALL') THEN(DO)
+                      CHGVAR     VAR(&CHGOWNO) VALUE('*')
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&CHGOWNO) VALUE(&OBJ)
+                   ENDDO
+                   IF         COND(&TYPE *EQ '*ALL') THEN(DO)
+                      CHGVAR     VAR(&CHGOWNT) VALUE('*')
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&CHGOWNT) VALUE(%SST(&TYPE 2 7))
+                   ENDDO
+                   CHGVAR     VAR(&CHGOWN) VALUE(&CHGOWN *TCAT &CHGOWNO +
+                                *TCAT '.' *TCAT &CHGOWNT)
+                ENDDO
+                CHGOWN     OBJ(&CHGOWN) NEWOWN(&NEWOWN) +
+                             RVKOLDAUT(&RVKOLDAUT)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)                          /*B18716*/
+/**********        IF         COND(&MSGID *NE 'CPFA093') THEN(DO)               */ /*B18716 CUP042*/
+                   IF         COND(&MSGID *NE 'CPFA093' *AND &MSGID *NE +
+                                'CPFBC50') THEN(DO)                                       /*CUP042*/
+                      SNDPGMMSG  MSG('Error while trying to change ownership +
+                                   for' *BCAT &OBJL *TCAT '/' *TCAT &OBJ +
+                                   *TCAT ', type' *BCAT &TYPE *TCAT '.') +
+                                   TOMSGQ(QTEMP/CHGOWNAUT)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO                                                                  /*B18716*/
+                   ELSE       CMD(DO)                                                     /*B18716*/
+                      CHGVAR     VAR(&EMPTYLIB) VALUE('Y')                                /*B18716*/
+                   ENDDO                                                                  /*B18716*/
+                ENDDO
+                IF         COND(&CHGLIB *EQ 'Y') THEN(DO)
+                   CHGVAR     VAR(&CHGOWN) VALUE(' ')
+/**********        CHGVAR     VAR(&CHGOWN) VALUE('QSYS.LIB/' *TCAT +                   */ /*256038*/
+/**********                     &OBJL *TCAT '.LIB')                                    */ /*256038*/
+                   CHGVAR     VAR(&CHGOWN) VALUE('/QSYS.LIB/' *TCAT &OBJL +
+                                *TCAT '.LIB')                                             /*256038*/
+                   CHGOWN     OBJ(&CHGOWN) NEWOWN(&NEWOWN) +
+                                RVKOLDAUT(&RVKOLDAUT)
+                   MONMSG     MSGID(CPF0000) EXEC(DO)
+                      SNDPGMMSG  MSG('Error while trying to change ownership +
+                                   for library' *BCAT &OBJL *TCAT '.') +
+                                   TOMSGQ(QTEMP/CHGOWNAUT)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+RVKUSRAUT:
+/* If other users' authority is to be revoked then this will revoke all users' */
+/*  apart from the owner (*ALL) and *PUBLIC (*EXCLUDE).                        */
+             IF         COND(&ALLUSER *EQ 'Y') THEN(DO)
+                IF         COND(&EMPTYLIB *NE 'Y') THEN(DO)                               /*B18716*/
+                   RVKOBJAUT  OBJ(&OBJL/&OBJ) OBJTYPE(&TYPE) USER(*ALL) +
+                                AUT(*ALL)
+/* Monitor for library being empty. */                                                    /*B18716*/
+                   MONMSG     MSGID(CPF2253) EXEC(DO)                                     /*B18716*/
+                      CHGVAR     VAR(&EMPTYLIB) VALUE('Y')                                /*B18716*/
+                   ENDDO                                                                  /*B18716*/
+/* If error message is received then check diagnostic messages. */
+                   MONMSG     MSGID(CPF2227) EXEC(DO)
+                      RCVMSG     MSGQ(*PGMQ) MSGTYPE(*DIAG) MSGID(&MSGID)
+/* Message CPF3381 means that an output queue or job queue has not had its */
+/*  QSPL authority revoked which is OK.                                    */
+                      IF         COND(&MSGID *NE 'CPF3381') THEN(DO)
+                         GOTO       CMDLBL(ABNOR)
+                      ENDDO
+                   ENDDO
+                   MONMSG     MSGID(CPF0000) EXEC(DO)
+                      SNDPGMMSG  MSG('Error while trying to revoke users +
+                                   authority for' *BCAT &OBJL *TCAT '/' +
+                                   *TCAT &OBJ *TCAT ', type' *BCAT &TYPE +
+                                   *TCAT '.') TOMSGQ(QTEMP/CHGOWNAUT)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                ENDDO                                                                     /*B18716*/
+                IF         COND(&CHGLIB *EQ 'Y') THEN(DO)
+                   RVKOBJAUT  OBJ(QSYS/&OBJL) OBJTYPE(*LIB) USER(*ALL) +
+                                AUT(*ALL)
+                   MONMSG     MSGID(CPF0000) EXEC(DO)
+                      SNDPGMMSG  MSG('Error while trying to revoke users +
+                                   authority for library' *BCAT &OBJL *TCAT +
+                                   '.') TOMSGQ(QTEMP/CHGOWNAUT)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+PUBAUT:
+/* Set *PUBLIC authority.  If *EXCLUDE was specified and all users */
+/*  authority has been revoked then go to the authorisation list   */
+/*  section as this will already have been done.                   */
+             IF         COND(&PUBLIC *EQ '*EXCLUDE' *AND &ALLUSER +
+                          *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(AUTL)
+             ENDDO
+             IF         COND(&PUBLIC *NE '*SAME') THEN(DO)
+                IF         COND(&PUBLIC *EQ '*AUTL') THEN(DO)
+                   IF         COND(&EMPTYLIB *NE 'Y') THEN(DO)                            /*B18716*/
+                      GRTOBJAUT  OBJ(&OBJL/&OBJ) OBJTYPE(&TYPE) AUTL(&AUTL)
+/* Monitor for library being empty. */                                                    /*B18716*/
+                      MONMSG     MSGID(CPF2253) EXEC(DO)                                  /*B18716*/
+                         CHGVAR     VAR(&EMPTYLIB) VALUE('Y')                             /*B18716*/
+                      ENDDO                                                               /*B18716*/
+                      MONMSG     MSGID(CPF0000) EXEC(DO)
+                         SNDPGMMSG  MSG('Error while trying to attach +
+                                      authorisation list' *BCAT &AUTL *BCAT +
+                                      'to' *BCAT &OBJL *TCAT '/' *TCAT &OBJ +
+                                      *TCAT ', type' *BCAT &TYPE *TCAT '.') +
+                                      TOMSGQ(QTEMP/CHGOWNAUT)
+                         GOTO       CMDLBL(ABNOR)
+                      ENDDO
+                   ENDDO                                                                  /*B18716*/
+                   IF         COND(&CHGLIB *EQ 'Y') THEN(DO)
+                      GRTOBJAUT  OBJ(QSYS/&OBJL) OBJTYPE(*LIB) AUTL(&AUTL)
+                      MONMSG     MSGID(CPF0000) EXEC(DO)
+                         SNDPGMMSG  MSG('Error while trying to attach +
+                                      authorisation list' *BCAT &AUTL *BCAT 'to +
+                                      library' *BCAT &OBJL *TCAT '.') +
+                                      TOMSGQ(QTEMP/CHGOWNAUT)
+                         GOTO       CMDLBL(ABNOR)
+                      ENDDO
+                   ENDDO
+                   CHGVAR     VAR(&AUTLFLAG) VALUE(Y)
+                ENDDO
+                IF         COND(&EMPTYLIB *NE 'Y') THEN(DO)                               /*B18716*/
+                   GRTOBJAUT  OBJ(&OBJL/&OBJ) OBJTYPE(&TYPE) USER(*PUBLIC) +
+                                AUT(&PUBLIC)
+/* Monitor for library being empty. */                                                    /*B18716*/
+                   MONMSG     MSGID(CPF2253) EXEC(DO)                                     /*B18716*/
+                      CHGVAR     VAR(&EMPTYLIB) VALUE('Y')                                /*B18716*/
+                   ENDDO                                                                  /*B18716*/
+                   MONMSG     MSGID(CPF0000) EXEC(DO)
+                      SNDPGMMSG  MSG('Error while trying to grant *PUBLIC +
+                                   authority' *BCAT &PUBLIC *BCAT 'to' *BCAT +
+                                   &OBJL *TCAT '/' *TCAT &OBJ *TCAT ', type' +
+                                   *BCAT &TYPE *TCAT '.') +
+                                   TOMSGQ(QTEMP/CHGOWNAUT)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                ENDDO                                                                     /*B18716*/
+                IF         COND(&CHGLIB *EQ 'Y') THEN(DO)
+                   GRTOBJAUT  OBJ(QSYS/&OBJL) OBJTYPE(*LIB) USER(*PUBLIC) +
+                                AUT(&PUBLIC)
+                   MONMSG     MSGID(CPF0000) EXEC(DO)
+                      SNDPGMMSG  MSG('Error while trying to grant *PUBLIC +
+                                   authority' *BCAT &PUBLIC *BCAT 'to +
+                                   library' *BCAT &OBJL *TCAT '.') +
+                                   TOMSGQ(QTEMP/CHGOWNAUT)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                ENDDO
+             ENDDO
+ 
+AUTL:
+/* Set authorisation list.  If authorisation list has been attached when */
+/*  PUBAUT was set up then ignore.                                       */
+             IF         COND(&AUTLFLAG *NE 'Y') THEN(DO)
+                IF         COND(&AUTL *NE '*SAME') THEN(DO)
+                   IF         COND(&AUTL *EQ '*REVOKE') THEN(DO)
+                      CHGVAR     VAR(&AUTLNAME) VALUE('*NONE')
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&AUTLNAME) VALUE(&AUTL)
+                   ENDDO
+                   IF         COND(&EMPTYLIB *NE 'Y') THEN(DO)                            /*B18716*/
+                      GRTOBJAUT  OBJ(&OBJL/&OBJ) OBJTYPE(&TYPE) AUTL(&AUTLNAME)
+/* Monitor for library being empty. */                                                    /*B18716*/
+                      MONMSG     MSGID(CPF2253)                                           /*B18716*/
+                      MONMSG     MSGID(CPF0000) EXEC(DO)
+                         SNDPGMMSG  MSG('Error while trying to change +
+                                      authorisation list for' *BCAT &OBJL *TCAT +
+                                      '/' *TCAT &OBJ *TCAT ', type' *BCAT &TYPE +
+                                      *TCAT '.') TOMSGQ(QTEMP/CHGOWNAUT)
+                         GOTO       CMDLBL(ABNOR)
+                      ENDDO
+                   ENDDO                                                                  /*B18716*/
+                   IF         COND(&CHGLIB *EQ 'Y') THEN(DO)
+                      GRTOBJAUT  OBJ(QSYS/&OBJL) OBJTYPE(*LIB) AUTL(&AUTLNAME)
+                      MONMSG     MSGID(CPF0000) EXEC(DO)
+                         SNDPGMMSG  MSG('Error while trying to change +
+                                      authorisation list for library' *BCAT +
+                                      &OBJL *TCAT '.') TOMSGQ(QTEMP/CHGOWNAUT)
+                         GOTO       CMDLBL(ABNOR)
+                      ENDDO
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/*/COPY WNCPYSRC,UTC0360MPE                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,UTC0360ERR                                          */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          UTC0360 ended abnormally - see job log.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DSPMSG     MSGQ(QTEMP/CHGOWNAUT) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF2227) MSGF(QCPFMSG) TOPGMQ(*PRV)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSG('Check the spool file produced for more +
+                          details of the errors.') TOPGMQ(*PRV)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGVAR     VAR(&CPF2227) VALUE('Y')
+ 
+END:
+ 
+/*/COPY WNCPYSRC,UTC0360END                                          */
+ 
+/* Send message to confirm successful authority changes. */
+             IF         COND(&CPF2227 *EQ 'N') THEN(DO)
+                SNDPGMMSG  MSG('CHGOWNAUT ended normally.')
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Reset the logging options to their original values, set off U7/U8. */
+             CHGJOB     LOG(&LOGLVL &LOGSEV) LOGCLPGM(&LOGCLPGM) +
+                          SWS(XXXXXX00)
+ 
+             ENDPGM

@@ -1,0 +1,287 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial SD and GL')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000088 - Set up initial Standing Data and General Ledger */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP042             Date 02Jan15              */
+/*                      CUP004  *CREATE    Date 24Sep10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP042 - Changes for Bridge deliverable data split.         */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&GLJENDTA) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&DEPTCODE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&BRCHCODE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SQLSTR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&INCR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&INCREASE) TYPE(*DEC)  LEN(5)
+             DCL        VAR(&MNT) TYPE(*DEC) LEN(5)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGVAR     VAR(&DMLIB) VALUE(&PFX *TCAT 'DMLIB')
+             CHGVAR     VAR(&USER) VALUE(&PFX *TCAT 'USER')
+ 
+/* Call program to intialise files and data areas. */
+/**********  CALL       PGM(SMC000032)                                                 */ /*CUP042*/
+             CALL       PGM(SMC000126)                                                    /*CUP042*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**********     CHGVAR     VAR(&ERRPGM) VALUE('SMC000032')                             */ /*CUP042*/
+                CHGVAR     VAR(&ERRPGM) VALUE('SMC000126')                                /*CUP042*/
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Standing Data. */
+             CLRPFM     FILE(SDBRCHPD)
+             CLRPFM     FILE(SDCTRYPD)
+             CLRPFM     FILE(SDCURRPD)
+             CLRPFM     FILE(SDCUSTPD)
+             CLRPFM     FILE(SDLOCNPD)
+             CLRPFM     FILE(TABLETH)
+             CLRPFM     FILE(TABLETR)
+             CLRPFM     FILE(CLINTCB)
+             CLRPFM     FILE(CLINTCC)
+             CLRPFM     FILE(TABTG10)
+             CLRPFM     FILE(TABTG20)
+             CLRPFM     FILE(TABTG40)
+ 
+/* Reset run date on SDBANKPD. */
+             CHGVAR     VAR(&SQLSTR) VALUE('update SDBANKPD set +
+                          BJRDNB = 0, BJDNWD = 0, BJMRDT =' *BCAT +
+                          &QUOTE *TCAT ' ' *BCAT &QUOTE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+/* Initialise SDSTAT. */
+             CHGDTAARA  DTAARA(SDSTAT (1 5)) VALUE('SETUP')
+             CHGDTAARA  DTAARA(SDSTAT (6 2)) VALUE(&PFX)
+             CHGDTAARA  DTAARA(SDSTAT (8 3)) VALUE('OLD')
+             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('BEGIN')
+ 
+/* Initialise MPHAS. */
+             CHGDTAARA  DTAARA(MPHAS) VALUE('A')
+ 
+/* Initialise JNSTAT. */
+             CHGDTAARA  DTAARA(JNSTAT (147 2)) VALUE(&PFX)
+             CHGDTAARA  DTAARA(JNSTAT (11 10)) VALUE('IR00000001')
+ 
+/* Set up the global location code. */
+             CALL       PGM(SD0550X) PARM(&RTNCODE)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SD0550X')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Call maintenance of SDBANKPD. */
+             CALL       PGM(SD9101R) PARM(&RTNCODE 'BANK' '     ')
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SD9101R')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Initialise API ICD file. */
+             CLRPFM     FILE(SDAPIPD)
+             CHGVAR     VAR(&SQLSTR) VALUE('insert into SDAPIPD +
+                          (GHAPID) values(' *TCAT &QUOTE *TCAT +
+                          'API' *TCAT &QUOTE *TCAT ')')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+             CPYF       FROMFILE(SDBRCHPD) TOFILE(GZSDBRCHPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)
+ 
+/* Copy branches into global layer. */
+             CHGVAR     VAR(&SQLSTR) VALUE('delete from GZSDBRCHPD a +
+                          where exists')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR')
+             CHGVAR     VAR(&SQLSTR) VALUE('(select * from SDBRCHPD +
+                          b where a.A8BRCD = b.A8BRCD)')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+             CPYF       FROMFILE(SDBRCHPD) TOFILE(GZSDBRCHPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)
+ 
+/* Retrieve branch code (*FIRST). */
+             CALL       PGM(AOBRCHR0) PARM(&RTNCODE '*FIRST' ' ' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOBRCHR0')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&BRCHCODE) VALUE(%SST(&FMT 1 3))
+             ENDDO
+ 
+/* Update user (zzUSER) with default branch. */
+             CHGVAR     VAR(&SQLSTR) VALUE('update MUSERDD set DBRN +
+                          =' *BCAT &QUOTE *TCAT &BRCHCODE *TCAT +
+                          &QUOTE *TCAT ', USRP =' *BCAT &QUOTE +
+                          *TCAT &USER *TCAT &QUOTE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR')
+             CHGVAR     VAR(&SQLSTR) VALUE('where USRP =' *BCAT +
+                          &QUOTE *TCAT 'xxUSER' *TCAT &QUOTE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+/* Update action code for zzUSER with default branch. */
+             CHGVAR     VAR(&SQLSTR) VALUE('update MACBRDD set BRCB +
+                          =' *BCAT &QUOTE *TCAT &BRCHCODE *TCAT +
+                          &QUOTE *TCAT ', USRP =' *BCAT &QUOTE +
+                          *TCAT &USER *TCAT &QUOTE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR')
+             CHGVAR     VAR(&SQLSTR) VALUE('where USRP =' *BCAT +
+                          &QUOTE *TCAT 'xxUSER' *TCAT &QUOTE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+/* Update global action code for zzUSER with default branch. */
+             CHGVAR     VAR(&SQLSTR) VALUE('update GPMACBRDD set BRCB +
+                          =' *BCAT &QUOTE *TCAT &BRCHCODE *TCAT +
+                          &QUOTE *TCAT ', USRP =' *BCAT &QUOTE +
+                          *TCAT &USER *TCAT &QUOTE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR')
+             CHGVAR     VAR(&SQLSTR) VALUE('where USRP =' *BCAT +
+                          &QUOTE *TCAT 'xxUSER' *TCAT &QUOTE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+/* Set up run date. */
+             CALL       PGM(SD1020)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SD1020')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Update run date on files and data areas. */
+             OVRDBF     FILE(TABLE) TOFILE(TABSDU)
+             CALL       PGM(SD1030)
+             DLTOVR     FILE(TABLE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SD1030')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Check that correct version of data area RUNDAT was updated. */
+             RTVOBJD    OBJ(RUNDAT) OBJTYPE(*DTAARA) RTNLIB(&RTNLIB)
+             IF         COND(&RTNLIB *NE &DMLIB) THEN(DO)
+                CPYDTAARA  FMDTAARA(&RTNLIB/RUNDAT) +
+                             TODTAARA(&DMLIB/RUNDAT)
+             ENDDO
+ 
+/* General Ledger. */
+             CLRPFM     FILE(ACCNTAA)
+             CLRPFM     FILE(ACCNTAC)
+             CLRPFM     FILE(APOSTHH)
+             CLRPFM     FILE(APOSTZZ)
+             CLRPFM     FILE(RERCHHPA)
+             CLRPFM     FILE(STRAN)
+             CLRPFM     FILE(STRANF)
+             CLRPFM     FILE(STRANH)
+ 
+             CHGDTAARA  DTAARA(GLSTAT) +
+                          VALUE('0090000950010000090000950010000505N  -
+      N NNNN  NNNNNOLDN          N')
+             CHGDTAARA  DTAARA(GLSTAT (69 5)) VALUE('NDDDD')
+             CHGDTAARA  DTAARA(GLSTAT (89 1)) VALUE('N')
+             RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)
+             CHGDTAARA  DTAARA(GLTEMP) VALUE(&GLSTAT)
+             RTVDTAARA  DTAARA(GLJENDTA) RTNVAR(&GLJENDTA)
+             IF         COND(%SUBSTRING(&GLJENDTA 1 20) = +
+                          '                    ') THEN(DO)
+                CHGDTAARA  DTAARA(GLJENDTA (1 20)) +
+                             VALUE('00000000000000000000')
+             ENDDO
+/* Call program to update Account and Posting headers / trailers. */
+             CALL       PGM(GL0920)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('GL0920')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Call program to update amount accrual headers / trailers. */
+             CALL       PGM(GL1110)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('GL1110')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Initialise STRAN. */
+             CHGVAR     VAR(&INCREASE) VALUE(%SUBSTRING(&GLSTAT 26 5))
+             INZPFM     FILE(STRAN) TOTRCDS(&INCREASE)
+             INZPFM     FILE(STRANF) TOTRCDS(&INCREASE)
+/* Update GLJEH*PD files. */
+             CALL       PGM(GL2560)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('GL2560')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Update STRAN* files and RERCHHPA. */
+             CALL       PGM(GL0900)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('GL0900')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Increase file size for STRAN. */
+             CALL      PGM(GL0936) PARM(&INCR &MNT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('GL0936')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF     COND(&INCR *EQ 'Y') THEN(DO)
+                INZPFM     FILE(STRAN) TOTRCDS(&MNT)
+                INZPFM     FILE(STRANF) TOTRCDS(&MNT)
+             ENDDO
+/* Call program to update GL file controls. */
+             CALL       PGM(GL0925)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('GL0925')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000088')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

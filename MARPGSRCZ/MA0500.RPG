@@ -1,0 +1,187 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MA Set up Colln Freq DTAARA (EDDFLG)')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Microfiche/Optical Disk Archiving Module
+     F*                                                               *
+     F* MA0500 - SET UP ARCHIVE FREQUENCY DATA AREA.                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 XXXXXX             Date DDMmmYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*       FUNCTION OF INDICATORS
+     F*            98  DATE STANDARD
+     F*            U7  DATABASE ERROR
+     F*            U8  DATABASE ERROR
+     F*
+     F/EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    FREQ        7  1
+     E                    CPY@    1   1 80
+     ILDA        UDS                            256
+     I*    STANDARD LOCAL DATA AREA FIELDS
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+      **  External DS for BANK details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  External DS for GENERAL LEDGER details
+      *
+     IDSFDY     E DSDSFDY
+     I* First DS for access programs, short data structure
+     I*
+     IMACHK       DS
+     I                                        1   1 @MACHK
+     I*
+     IEDDFLG      DS
+     I                                        1   7 FREQ
+     I*
+     I/EJECT
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Access LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      *  Parameter list for program 'AOBANKR0'
+      *
+     C           PLISTA    PLIST
+     C                     PARM *BLANKS   RTCD    7
+     C                     PARM '*FIRST ' OPTN    7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  Access: 'Run Day Number'(BJRDNB),
+      *          'Date of Next Working Day'(BJBNWD),
+      *          'End of Year Date'(BJEYD)
+      *
+     C                     CALL 'AOBANKR0'PLISTA
+     C           RTCD      IFNE *BLANKS                    ************
+     C                     MOVE 'MA0500'  DBPGM            * DBERR 001*
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     MOVE OPTN      DBKEY
+     C                     Z-ADD1         DBASE
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      *  Parameter list for program 'AOGELRR0'
+      *
+     C           PLISTB    PLIST
+     C                     PARM *BLANKS   RTCD    7
+     C                     PARM '*FIRST ' OPTN    7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      *  Access 'Accruals/Profit Date'(BKAPDT)
+      *
+     C**********           CALL 'AOGELRR0'PLISTB                                              CGL029
+     C                     CALL 'AOGELRR1'PLISTB                                              CGL029
+     C           RTCD      IFNE *BLANKS                    ************
+     C                     MOVE 'MA0500'  DBPGM            * DBERR 002*
+     C                     MOVE 'SDGELRPD'DBFILE           ************
+     C                     MOVE OPTN      DBKEY
+     C                     Z-ADD2         DBASE
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      *  Check 'Date Format Indicator'(BJDFIN)
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      *  Access: DTAARA/MACHK, DTAARA/EDDFLG
+      *
+     C           *NAMVAR   DEFN           MACHK
+     C           *LOCK     IN   MACHK
+     C           *NAMVAR   DEFN           EDDFLG
+     C           *LOCK     IN   EDDFLG
+      *
+      * Using MIDAS 'Run Date' calculate the Day of the Week (Day 1 was
+      *  a Saturday) and convert it to a Frequency Day Number (MON = 1)
+      *
+     C                     MOVE *BLANKS   FREQ
+     C                     MOVEA'DZ'      FREQ
+     C           BJRDNB    DIV  7         WRK1    50
+     C                     MVR            WRK2    50
+     C           WRK2      IFGE 3
+     C           WRK2      SUB  2         FREQW   10
+     C                     ELSE
+     C           WRK2      ADD  5         FREQW
+     C                     END
+     C                     MOVE FREQW     FREQ,3
+     C                     Z-ADD4         I       20
+      *
+      *If 'Accrual Profit Date'(BKAPDT/SDGELRPD) is prior to 'Date of Next
+      *  Working Day'(BJDNWD/SDBANKPD),set up Accruals Frequency
+      *
+     C           BKAPDT    IFLT BJDNWD
+     C                     MOVE 'A'       FREQ,I
+     C                     ADD  1         I
+     C                     END
+      *
+      *   If today is the last working day of the month
+      * using 'Run Day Number'(BJRDNB/SDBANKPD) and 'Date of Next Wrk Day'
+      *  (BJDNWD/SDBANKPD),set up Monthly Frequency,
+      *
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZMTH      MNTH1   20
+     C                     Z-ADDBJDNWD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZMTH      MNTH2   20
+     C           MNTH1     IFNE MNTH2
+     C                     MOVE 'B'       FREQ,I
+     C                     ADD  1         I
+     C                     END
+      *
+      * If 'End of Year'(BJEYD/SDBANKPD) is prior to 'Date of Next Wrk Day'
+      *  (BJDNWD/SDBANKPD),set up Yearly Frequency
+      *
+     C           BJEYD     IFLT BJDNWD
+     C                     MOVE 'Y'       FREQ,I
+     C                     ADD  1         I
+     C                     END
+      *
+      * Update Frequencies Data Area
+      *
+     C                     OUT  EDDFLG
+     C                     MOVE 'N'       @MACHK
+     C                     OUT  MACHK
+     C                     SETON                     LR
+      ***********************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

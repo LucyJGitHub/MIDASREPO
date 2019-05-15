@@ -1,0 +1,183 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT Program References File Creation')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC01001 - Midas UT Program References File Creation        */
+/*                                                                   */
+/*       Function:  This program will identify all programs and      */
+/*                  referenced programs and write in file UTPREFPD   */
+/*                  (Input Cycle)                                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CBF011  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBLST &SYSTEM &OBJNAM)
+ 
+             DCL        VAR(&LIBLST) TYPE(*CHAR) LEN(2502)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OBJNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBR) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&CNT) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&ADDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBCNT) TYPE(*DEC) LEN(4 0) VALUE(0)
+             DCL        VAR(&FLG) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCLF       FILE(V_UTPREF3)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Retrieve number of libraries entered to be added */
+ 
+             CHGVAR     VAR(&NBRB) VALUE(%SST(&LIBLST 1 2))
+             CHGVAR     VAR(&NBR) VALUE(%BIN(&NBRB))
+ 
+/** Set up library list from MIDASIC jobd */
+ 
+             IF         COND(&SYSTEM *NE ' ') THEN(DO)
+               CALL       PGM(UPC0014) PARM(&SYSTEM)
+               MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+             ENDDO
+ 
+/** Process libraries to be added to library list */
+ 
+             CHGVAR     VAR(&LIBCNT) VALUE(((&NBR - 1) * 10) + 3)
+ 
+LOOP:
+             CHGVAR     VAR(&ADDLIB) VALUE(%SST(&LIBLST &LIBCNT 10))
+             ADDLIBLE   LIB(&ADDLIB)
+             MONMSG     MSGID(CPF2103) EXEC(DO)
+               RMVLIBLE   LIB(&ADDLIB)
+               ADDLIBLE   LIB(&ADDLIB)
+             ENDDO
+ 
+             CHGVAR     VAR(&LIBCNT) VALUE(&LIBCNT - 10)
+             CHGVAR     VAR(&CNT) VALUE(&CNT + 1)
+             IF         COND(&CNT *NE &NBR) THEN(GOTO CMDLBL(LOOP))
+ 
+/** Check if File UTEREXPD exists, if not found, end abnormally */
+ 
+             CHKOBJ     OBJ(UTEREXPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** If found, clear file */
+ 
+             CLRPFM     FILE(UTEREXPD)
+ 
+/** Check if File UTPREFPD exists, if not found, end abnormally */
+ 
+             CHKOBJ     OBJ(UTPREFPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** If file exists, clear and then populate */
+ 
+             CLRPFM     FILE(UTPREFPD)
+ 
+/** Create and rename temporary source file for RUNSQLSTM */
+ 
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/** Build string to delete all 'AO%' records from UTPREFPD */
+ 
+             CHGVAR     VAR(&STM_STR) VALUE('DELETE FROM UTPREFPD +
+                          WHERE WHPNAM LIKE ''AO%'' OR WHFNAM LIKE +
+                          ''AO%'';')
+ 
+/** Call standard program to write to source file  */
+ 
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+ 
+/** Build string to delete all 'Q%' records from UTPREFPD */
+ 
+             CHGVAR     VAR(&STM_STR) VALUE('DELETE FROM UTPREFPD +
+                          WHERE WHPNAM LIKE ''Q%'' OR WHFNAM LIKE +
+                          ''Q%''')
+ 
+/** Call standard program to write to source file  */
+ 
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/** Process all programs in the library list */
+ 
+             DSPPGMREF  PGM(*USRLIBL/*ALL) OUTPUT(*OUTFILE) +
+                        OBJTYPE(*PGM *MODULE) +
+                        OUTFILE(*LIBL/UTPREFPD) OUTMBR(*FIRST *ADD)
+ 
+/** Call UT001001 to check for record with WHFNAM = '*VARIABLE' */
+ 
+             CALL       PGM(UT001001)
+ 
+/** Check if File UTMREFPD exists, if not found, end abnormally */
+ 
+             CHKOBJ     OBJ(UTMREFPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CLRPFM     FILE(UTMREFPD)
+ 
+/** Read from utprefpd Main Calling Program List - Distinct */
+ 
+READ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(FIN))
+             DSPMOD     MODULE(&WHPNAM) DETAIL(*IMPORT) +
+                          OUTPUT(*OUTFILE) OUTFILE(*LIBL/UTMREFPD) +
+                          OUTMBR(*FIRST *ADD)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(READ)
+ 
+/** Extract all module programs being referenced by service programs */
+/** in UTPREFPD by calling program UT001011 */
+ 
+FIN:
+             CALL       PGM(UT001011)
+ 
+/** Run Sql commands */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 SQL0000)
+             MONMSG     MSGID(CPD32CC)
+             MONMSG     MSGID(SQL0952) CMPDTA(CPA32B2)
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal Termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSG('Program UTC01001 ended abnormally - see +
+                          job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Updates data area UTSGSTAT whether the job ends succesfully or */
+/** not before exiting the program */
+ 
+END:
+             CHGDTAARA  DTAARA(UTSGSTAT (1 1)) VALUE('Y')
+             ENDPGM

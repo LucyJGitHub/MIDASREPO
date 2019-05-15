@@ -1,0 +1,180 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Check for first Friday of month')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing                     *
+     F*                                                               *
+     F*  CB0821 - Check for first working day of month followed       *
+     F*           by a non-working day (normally Friday)              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1091294          Date 26Feb13               *
+      *                 CSC051             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *                 191065             Date 27Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01488             Date 19Apr94               *
+      *                                                               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1091294 - Error upon starting COB                          *
+      *  CSC051 - Frequent run of COB historic drop componets         *
+      *  191065 - Components are still running more than once when    *
+      *           holidays are defined separately on the first week   *
+      *           of the month.  Add additional checks.               *
+     F*  S01488 - Created for CoB run conditions enhancements         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      /COPY ZSRSRC,ZHOLE
+      /COPY ZSRSRC,ZHOLI
+      *
+      /COPY ZSRSRC,ZHOLDS
+     ISDBANK    E DSSDBANKPD
+      *
+      *  EXTERNAL DATA STRUCTURE FOR ACCESS PROGRAM FORMAT
+      *
+     IDSFDY     E DSDSFDY
+      *
+     I** FIRST DATA STRUCTURE FOR ACCESS PROGRAM, SHORT DATA STRUCTURE
+     I*
+     ILDA       E DSLDA                         256
+     I            DS
+      *
+      *    Month of run date
+      *
+     I                                        1   7 RUNDAT
+     I                                        1   20DAY1N                 191065
+     I                                        3   5 MON1
+     I            DS
+      *
+      *    Month of one week previous
+      *
+     I                                        1   7 ZADATE
+     I                                        3   5 MON2
+     C           *ENTRY    PLIST
+     C                     PARM           RUN     1
+     C                     PARM           RTN     1
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+      *
+      *    Use access program to obtain record from SDBANKPD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *    Database error if blank return code not received from access pgm
+      *
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 01  *
+     C                     MOVEL'CB0821'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     RETRN
+     C                     END
+      *
+      *    Check for following day being a non-working day
+      *
+     C           BJDNWD    SUB  BJRDNB    W5D0    50
+     C           W5D0      IFGT 1
+      *                                                                                       CSC051
+     C           RUN       IFEQ 'A'                                                           CSC051
+     C                     MOVE 'Y'       RUN                                                 CSC051
+     C                     GOTO ENDTAG                                                        CSC051
+     C                     END                                                                CSC051
+      *                                                                                       CSC051
+     C                     MOVE BJMRDT    RUNDAT
+     C                     MOVE BJLCCY    ZCCY                            191065
+     C                     MOVE BJSLCD    ZLOC                            191065
+     C                     Z-ADD0         ZNRDYS                          191065
+      *
+      *    Check if corresponding day last week was in previous month
+      *
+     C           BJRDNB    SUB  7         ZDAYNO
+     C                     EXSR ZBKDT
+     C                     CALL 'ZDATE2'
+     C**********           PARM           ZDAYNO  50       Value date     191065
+     C                     PARM           ZDYNBR  50       Value date     191065
+     C                     PARM BJDFIN    ZDATFM  1        Date format ind
+     C                     PARM           ZDATE   60       Value date
+     C                     PARM           ZADATE  7        Run-date in DDM
+      *
+      *    Set run value if conditions met
+      *
+     C           MON1      IFNE MON2
+     C                     MOVE 'Y'       RUN
+      *                                                                   191065
+      **  Verify if already run previously for the month                  191065
+      *                                                                   191065
+     C           DAY1N     IFGT 2                                         191065
+      *                                                                   191065
+      **  Get the 1st day of the month                                    191065
+      *                                                                   191065
+     C           DAY1N     SUB  1         PRVNO   20                      191065
+     C           BJRDNB    SUB  PRVNO     FRSTDY  50                      191065
+      *                                                                   191065
+     C                     MOVE *BLANK    AFTER   1                       191065
+      *                                                                   191065
+      **  Check if the previous days for the current month                191065
+      **  already had a working day followed by a holiday...              191065
+      *                                                                   191065
+     C           FRSTDY    DOUEQBJRDNB                                    191065
+     C           BEFORE    OREQ 'W'                                       191065
+     C           AFTER     ANDEQ'H'                                       191065
+      *                                                                   191065
+     C                     Z-ADDFRSTDY    ZDAYNO                          191065
+     C                     EXSR ZCHKH                                     191065
+     C                     MOVE AFTER     BEFORE  1                       191065
+     C                     MOVE ZIND      AFTER                           191065
+     C                     ADD  1         FRSTDY                          191065
+      *                                                                   191065
+     C                     ENDDO                                          191065
+      *                                                                   191065
+      **  ...if yes, do not run anymore..                                 191065
+      *                                                                   191065
+     C           BEFORE    IFEQ 'W'                                       191065
+     C           AFTER     ANDEQ'H'                                       191065
+     C                     MOVE 'N'       RUN                             191065
+     C                     ENDIF                                          191065
+      *                                                                   191065
+     C                     ENDIF                                          191065
+      *                                                                   191065
+     C                     ELSE
+     C                     MOVE 'N'       RUN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *    Set blank return code, close files and end program
+      *
+     C           ENDTAG    TAG                                                             AR1091294
+     C                     MOVE '*FREE  ' ZOPTN
+     C                     EXSR ZACCH
+     C                     MOVE ' '       RTN
+      *                                                                                       CSC051
+     C********** ENDTAG    TAG                                                      CSC051 AR1091294
+     C                     SETON                     LR
+     C                     RETRN
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZBKDT
+      /COPY ZSRSRC,ZCHKH                                                  191065
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,1206 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Drop off position settlements')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2560 - DROP OFF POSITION SETTLEMENTS                       *
+     F*                                                               *
+     F*  Function: To drop off positions Settlements for which:       *
+     F*   (COB)    - The Due Date is less than retention date         *
+     F*              (from Retention of Settled Trades period on ICD) *
+     F*            - or the related security has expired and is to be *
+     F*              dropped off,                                     *
+     F*            and to report dropped records.                     *
+     F*                                                               *
+     F*  Called by: SEC1005 - Drop off Position Settlements           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 095907             Date 26Jan07               *
+     F*                 243026             Date 26Jan07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG7985            Date 12Jul05               *
+      *                 CRE020             Date 20Jan04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSE040             Date 11Jun03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 203832             Date 2JUl02                *
+      *                 206603             Date  2Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 14AUG00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 03Avr98               *
+      *                 CSE007             Date 03feb98               *
+      *                 084236             DATE 29JUL96               *
+     F*                 085990             DATE 28APR95               *
+     F*                 S01496             DATE 21JUL94               *
+     F*                 S01447             DATE 04NOV93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 048919             DATE 10JAN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E37493             DATE 02APR92               *
+     F*                 E29170             DATE 15OCT91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 S01269             DATE 02AUG90               *
+     F*                 E20651             DATE 30JAN90               *
+     F*                 E20114             DATE 06DEC89               *
+     F*                 E14884             DATE 12/09/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  095907 - TRAILERS POSETA MUST BE UPDATED                     *
+     F*         - MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER       *
+     F*         - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
+     F*         - IF FEATURE MT5XX (S01401) IS ACTIVE, DROP CORRESPON *
+     F*           RECORDS IN POSETDX1 AND POSETDX2                    *
+     F*         - DELETE RECORDS ALREADY WITH RECI '*'                *
+     F*         - ACCESS SECTYD ONLY WHEN CHANGE OF SECURITY          *
+     F*         - USE WORK FIELD OF 6,0 TO OUPTPUT DETAILS FOR POSETD *
+     F*           ON SE2560AU                                         *
+     F*         - Also include 243026                                 *
+     F*  243026 - Work field too short                                *
+     F*         - 6,0 is not enough on printer. Increase to 7,0       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG7985- Several components failed due to accessing TABLETR  *
+      *  CRE020 - Midas Plus Online Printing of Advices (GE7)         *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CSE040 - Securities Statement Processing                     *
+      *  203832 - Do not consider reversed position settlements when  *
+      *           computing for the number of records deleted (PSDEL) *
+      *  206603 - Do not consider reversed position settlements into  *
+      *           number of records (they are not included into core  *
+      *           of POSETA)                                          *
+      *  CSE023 - Treaty Withholding Tax                              *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  084236 - Prevent CPF5004 'Print Overflow line' message being *
+     F*           received.                                           *
+     F*  085990 - Do not drop off matured records that are still      *
+     F*           within the retention period as they can still be    *
+     F*           enquired upon in position settlement input.         *
+     F*           Remove fix E14884.                                  *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10985).       *
+     F*  S01447 - WITHHOLDING TAX (SE) ENHANCEMENT.                   *
+     F*           Recompiled due to changes in PF/POSETD.             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  048919 - IF NO LIVE RECORDS IN POSETD, THE REPORT DOES NOT   *
+     F*           OUTPUT 'END OF REPORT'                              *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E37493 - Recompiled over changed printer file                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*  S01269 - TRADE AUTHORISATION: RECOMPILED OVER CHANGED        *
+     F*           FILE TABSE.                                         *
+     F*  E20651 - DB ERROR NUMBERS USED IN MORE THAN ONE PLACE.       *   E20651
+     F*           NEW ERROR NUMBERS AS FOLLOWS:                       *   E20651
+     F*           DB ERROR 01 -> 06                                   *   E20651
+     F*           DB ERROR 01 -> 07                                   *   E20651
+     F*  E20114 - PROGRAM CHANGED TO USE LF POSET1, WHICH IS BUILT    *   E20114
+     F*           OVER A SINGLE MEMBER POSETD.                        *   E20114
+     F*  E14884 - DROP OFF MATURED RECORDS (RECI 'M')                 *   E14884
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*POSET***UP**E***********K        DISK                              E20114
+     FPOSET1  UP  E           K        DISK                               E20114
+     FSECTY   IF  E           K        DISK
+     FPOSETA  UF  E                    DISK
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     FPOSETDYLUF  E           K        DISK                                                   CRE020
+      **  Midas SE Position Settlement Extension file                                         CRE020
+      *                                                                                       CRE020
+     FPOSETDY1UF  E           K        DISK                                                   095907
+     FPOSETDY2UF  E           K        DISK                                                   095907
+     FSE2560AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     FSE2560P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL          E29170
+     F/COPY WNCPYSRC,SE2560F001
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   31 - Security not found for this record                     *
+     F*   32 - Control new page printing                              *
+     F*   33 - General work indicator                                 *
+     F*   36 - DETAIL PRINTER FILE P1 IS OPEN                         *   E29170
+     F*   37 - MULTIBRANCHING ON                                      *   E29170
+     F*   69 - Used to Control first cycle processing                 *
+     F*   70 - No Tabletl record                                      *
+     F*   71 - No Clintcb record                                      *
+     F*   72 - No Tabtg10 record                                      *
+     F*   74 - Narrative field required                               *
+     F*   73 - Number of records on audit file different from         *
+     F*      - number of records read                                 *
+     F*90-99 - Used in standard sub-routines                          *
+     F*   U7 - Database error                                         *
+     F*   U8 - Database / Control error                               *
+     F*   L3 - Change of Branch                                       *
+     F*   L2  -Change of Security                                     *
+     F*   L1 - Change of Counterparty                                 *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*  DECPLS - Get decimal places tabtg10                          *
+     F*  DLTREC - Flag records as deleted and count total             *
+     F*  PRINTD - Print deleted record                                *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+     F*  ZDATE2 - DAYNO - DATE conversion                             *
+     F*  ZICDSE - Access ICD record for Securities Trading            *
+     F*  ZSEDIT - Insert a decimal point and sign into a numeric field*
+     F*           and blank out leading zeros                         *
+     F*  ZSYSTM - Access ICD record                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E*
+      /EJECT
+     IPOSETDF
+     I***********                                   PBCH  L3              S01117
+     I                                              PBCA  L3              S01117
+     I                                              PSSH  L2
+     I                                              PCPY  L1
+     I              RECI                            RECIX
+     I/COPY WNCPYSRC,SE2560I001
+     I*LDA******* UDS                            256
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     IRUNDT       DS                                                      E29170
+     I                                        1   7 RUNA                  E29170
+     I                                    P   8  100RUND                  E29170
+     I                                       11  11 SSF                   E29170
+     I                                       12  12 DATF                  E29170
+     I                                       13  13 MBIN                  E29170
+     I*                                                                   E29170
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+     I*                                                                   E29170
+     I/COPY ZSRSRC,ZSEDITZ2
+     I* Data structure for file keys
+     I*
+     I            DS
+     I                                        1  12 TLKEY
+     I                                        1   2 TLRECT
+     I                                        3   7 TLZZ5
+     I                                        8  10 TLPSCU
+     I                                       11  12 TLPSE2
+     I*
+     I            DS
+     I                                        1  12 TKEY
+     I                                        1   2 TRECT
+     I                                        3   8 TZZ6
+     I                                        9  11 TPSCU
+     I                                       12  12 TSREC
+     I*
+     I            DS
+     I*
+     I* Data structure for settlement account field
+     I*
+     I**********                              1  12 PSEA                                      CGL029
+     I                                        1  18 PSEA                                      CGL029
+     I                                        1   6 PSEA06
+     I**********                              7  10 PSEA04                                    CGL029
+     I**********                             11  12 PSEA02                                    CGL029
+     I                                        7  16 PSEA10                                    CGL029
+     I                                       17  18 PSEA02                                    CGL029
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01496
+     I**  EXTERNAL DS FOR SECURITIES TRADING DETAILS                      S01496
+     I*                                                                   S01496
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+     I              A8BRNM                          BRNM                                     BUG7985
+     ISDSTRD    E DSSDSTRDPD                                              S01496
+     I*                                                                   S01496
+     I** LONG STRUCTURE FOR ACCESS OBJECTS, LONG DATA STRUCTURE           S01496
+     I*                                                                   S01496
+     IDSSDY     E DSDSSDY                                                 S01496
+     I*
+     IDSFDY     E DSDSFDY                                                                     CRE020
+      *                                                                                       CRE020
+      /EJECT
+     C           *LIKE     DEFN PSSH      SPSSH                                               095907
+     C*================================================================
+     C*  P R O G R A M     S T A R T                                  *
+     C*================================================================
+     C*
+     C           *IN69     IFEQ '0'
+      *
+      * Define key list for chaining to clintcb file
+      *
+     C           CLICBK    KLIST
+     C**********           KFLD           CBNUM   60                                          CSD027
+     C                     KFLD           CBNUM   6                                           CSD027
+     C                     KFLD           CBRCDT  1
+      *                                                                                       CRE020
+      ** Midas SE Position Settlement Extension file                                          CRE020
+      *                                                                                       CRE020
+     C           KPOST3    KLIST                                                              CRE020
+     C                     KFLD           K3PBCA  3                                           CRE020
+     C                     KFLD           K3PSSH 10                                           CRE020
+     C**********           KFLD           K3PCPY  60                                   CRE020 CSD027
+     C                     KFLD           K3PCPY  6                                           CSD027
+     C                     KFLD           K3PDUD  50                                          CRE020
+     C                     KFLD           K3PEVT  2                                           CRE020
+      *                                                                                       CRE020
+     C/COPY WNCPYSRC,SE2560C001
+      *
+      * Define keylist for chaining to tabletl file
+      *
+     C           TABTLK    KLIST
+     C                     KFLD           TLKEY
+      *
+      * Define keylist for chaining to tabse file - tabtg10
+      *
+     C           TABTK     KLIST
+     C                     KFLD           TKEY
+      *
+     C** KLIST TO ACCESS MT5XX EXTENSION FILES                                                095907
+     C*                                                                                       095907
+     C           KEY1      KLIST                                                              095907
+     C                     KFLD           PBCA                                                095907
+     C                     KFLD           PSSH                                                095907
+     C                     KFLD           PCPY                                                095907
+     C                     KFLD           PDUD                                                095907
+     C                     KFLD           PEVT                                                095907
+     C*
+     C* Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVE 'SE2560  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* Get Installation Control Data record 1
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C* If error in ZSYSTM, abend program
+     C*
+     C           *IN99     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                        ***************S01117
+     C***********          MOVE '01'      DBASE            **DB*ERROR*01**E20651
+     C***********          MOVE '06'      DBASE            **DB 6**E20651 S01117
+     C                     Z-ADD6         DBASE            **DB ERROR 06**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C* Get Installation Control Data record for Securities trading
+     C*
+     C                     EXSR ZICDSE
+     C*                                                                   S01496
+     C           *IN99     IFEQ *OFF                                      S01496
+     C*                                                                   S01496
+     C**   ACCESS SECURITIES TRADING DETAIL                               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSTRDR0'                                S01496
+     C                     PARM *BLANKS   @RTCD   7                       S01496
+     C                     PARM '*FIRST ' @OPTN   7                       S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*                                                                   S01496
+     C           @RTCD     IFEQ '*EOF'                                    S01496
+     C                     SETON                     99                   S01496
+     C                     ELSE                                           S01496
+     C           @RTCD     IFNE *BLANK                                    S01496
+     C           *LOCK     IN   LDA                                       S01496
+     C                     MOVEL'SDSTRDPD'DBFILE                          S01496
+     C                     MOVEL@OPTN     DBKEY            ***************S01496
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 08 *S01496
+     C                     Z-ADD8         DBASE            ***************S01496
+     C                     OUT  LDA                                       S01496
+     C                     EXSR *PSSR                               S01117S01496
+     C                     WRITEHEADAU                                    S01496
+     C                     WRITEERROR                                     S01496
+     C***********          WRITETRAILAU                             E29170S01496
+     C                     SETON                     U7U8LR               S01496
+     C                     RETRN                                          S01496
+     C                     ENDIF                                          S01496
+     C                     ENDIF                                          S01496
+      *                                                                   S01496
+     C                     ENDIF                                          S01496
+     C*
+     C* If error in ZICDSE, abend program
+     C*
+     C           *IN99     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                        ***************S01117
+     C***********          MOVE '02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*                                                                   S01496
+     C**  Check if Jyske Enhancements is installed                        S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSARDR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*VERIFY' WLOPTN  7                       S01496
+     C                     PARM 'S01496'  WLSARD  6                       S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFEQ *BLANK                                    S01496
+     C                     MOVE 'Y'       S01496  1                       S01496
+     C                     END                                            S01496
+     C*                                                                   CSE007
+     C**  Check if Corporate Action is installed                          CSE007
+     C*                                                                   CSE007
+     C                     CALL 'AOSARDR0'                                CSE007
+     C                     PARM *BLANKS   WLRTCD  7                       CSE007
+     C                     PARM '*VERIFY' WLOPTN  7                       CSE007
+     C                     PARM 'CSE007'  WLSARD  6                       CSE007
+     C*                                                                   CSE007
+     C           WLRTCD    IFEQ *BLANK                                    CSE007
+     C                     MOVE 'Y'       CSE007  1                       CSE007
+     C                     END                                            CSE007
+      *                                                                   CEU017
+      **  Check if Securities Redenomination is installed                 CEU017
+      *                                                                   CEU017
+     C                     MOVE 'N'       CEU017  1                       CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM *BLANKS   WLRTCD  7                       CEU017
+     C                     PARM '*VERIFY' WLOPTN  7                       CEU017
+     C                     PARM 'CEU017'  WLSARD  6                       CEU017
+      *                                                                   CEU017
+     C           WLRTCD    IFEQ *BLANK                                    CEU017
+     C                     MOVE 'Y'       CEU017                          CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CSE023
+      ** Check if CSE023 - Treaty Withholding Tax present                 CSE023
+      *                                                                   CSE023
+     C                     MOVE 'N'       CSE023  1                       CSE023
+     C                     CALL 'AOSARDR0'                                CSE023
+     C                     PARM *BLANKS   @RTCD   7                       CSE023
+     C                     PARM '*VERIFY' @OPTN   7                       CSE023
+     C                     PARM 'CSE023'  @SARD   6                       CSE023
+      *                                                                   CSE023
+     C           @RTCD     IFEQ *BLANK                                    CSE023
+     C                     MOVE 'Y'       CSE023                          CSE023
+     C           31        MULT 18        @MINR   30                      CSE023
+     C                     ENDIF                                          CSE023
+     C*
+     C* Calculate Retention date
+     C*
+     C           S01496    IFNE 'Y'                                       S01496
+     C           CSE007    ANDNE'Y'                                       CSE007
+     C           CEU017    ANDNE'Y'                                       CEU017
+     C           CSE040    ANDNE'Y'                                       CSE040
+     C********** 31        MULT RTST      WK3N    30                                          243026
+     C           31        MULT RTST      WK3N    50                                          243026
+     C                     ELSE                                           S01496
+     C********** 31        MULT BVROPS    WK3N    30                      S01496              243026
+     C           31        MULT BVROPS    WK3N                                                243026
+     C                     END                                            S01496
+     C*                                                                   CSE023
+     C** If CSE023 is present, the minimum retention period is            CSE023
+     C** 18 months.                                                       CSE023
+     C*                                                                   CSE023
+     C           CSE023    IFEQ 'Y'                                       CSE023
+     C           WK3N      ANDLT@MINR                                     CSE023
+     C                     Z-ADD@MINR     WK3N                            CSE023
+     C                     END                                            CSE023
+     C*                                                                   CSE023
+     C           RUND      SUB  WK3N      RTNTDT  50
+     C*                                                                   086990
+     C** Access SAR files to check if value date for pos. settlements     085990
+     C*                                                                   085990
+     C                     MOVE 'N'       S01512                          085990
+     C                     CALL 'AOSARDR0'                                085990
+     C                     PARM '       ' WLRTCD                          085990
+     C                     PARM '*VERIFY' WLOPTN                          085990
+     C                     PARM 'S01512'  WLSARD                          085990
+     C*                                                                   085990
+     C           WLRTCD    IFEQ *BLANK                                    085990
+     C                     MOVE 'Y'       S01512  1                       085990
+     C                     END                                            085990
+      *                                                                   CSE040
+      ** Check if CRE020 is enabled.                                                          CRE020
+      *                                                                                       CRE020
+     C                     CALL 'AOSARDR0'                                                    CRE020
+     C                     PARM *BLANKS   PRTCD   7                                           CRE020
+     C                     PARM '*VERIFY' POPTN   7                                           CRE020
+     C                     PARM 'CRE020'  PSARD   6                                           CRE020
+      *                                                                                       CRE020
+     C                     MOVE 'N'       CRE020  1                                           CRE020
+     C           PRTCD     IFEQ *BLANKS                                                       CRE020
+     C                     MOVE 'Y'       CRE020                                              CRE020
+     C                     ELSE                                                               CRE020
+     C           PRTCD     IFNE '*NRF   '                                                     CRE020
+     C           *LOCK     IN   LDA                                                           CRE020
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRE020
+     C                     MOVEL'CRE020'  DBKEY                                               CRE020
+     C                     Z-ADD46        DBASE                                               CRE020
+     C                     OUT  LDA                                                           CRE020
+     C                     EXSR *PSSR                                                         CRE020
+     C                     ENDIF                                                              CRE020
+     C                     ENDIF                                                              CRE020
+      *                                                                                       CRE020
+      ** CSE040 - Securities Statement Processing                         CSE040
+      *                                                                   CSE040
+     C                     MOVE 'N'       CSE040                          CSE040
+     C                     CALL 'AOSARDR0'                                CSE040
+     C                     PARM '       ' WLRTCD                          CSE040
+     C                     PARM '*VERIFY' WLOPTN                          CSE040
+     C                     PARM 'CSE040'  WLSARD                          CSE040
+      *                                                                   CSE040
+     C           WLRTCD    IFEQ *BLANK                                    CSE040
+     C                     MOVE 'Y'       CSE040  1                       CSE040
+     C                     ENDIF                                          CSE040
+     C*
+     C/COPY WNCPYSRC,SE2560C002
+     C                     SETON                     69
+     C*                                                                   E29170
+     C** IN THE DATAAREA RUNDAT                                           E29170
+     C*                                                                   E29170
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+     C                     IN   RUNDT                                     E29170
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     37                   E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*                                                                                       095907
+     C* CHECK IF MT5XX FEATURE IS ACTIVE                                                      095907
+     C*                                                                                       095907
+     C                     EXSR AOSARD                                                        095907
+     C                     END
+     C*
+      /EJECT
+     C*
+     C* Change of Branch calcs
+     C*
+     C   L3                DO
+     C*
+     C**Fetch*Branch*name**********************************************   E29170
+     C* Fetch Branch name if multibranching is on                         E29170
+     C*
+     C           *IN37     IFEQ '1'                                       E29170
+     C                     MOVE *BLANKS   KEY12A 12
+     C                     MOVEL'10'      KEY12A
+     C***********          MOVE PBCH      KEY12A                          S01117
+     C                     MOVE PBCA      KEY12A                          S01117
+     C********** KEY12A    CHAINTABLETRF             33                                      BUG7985
+     C********** *IN33     IFEQ '1'                        ***************                   BUG7985
+      *                                                                                      BUG7985
+     C                     CALL 'AOBRCHR1'                                                   BUG7985
+     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+     C                     PARM PBCA      PBRCH   3                                          BUG7985
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+     C*                                                                                      BUG7985
+     C** Database error if no record found                                                   BUG7985
+     C*                                                                                      BUG7985
+     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C                     Z-ADD3         DBASE            **DB ERROR 03**S01117
+     C**********           MOVEL'TABLE'   DBFILE           ***************                   BUG7985
+     C**********           MOVELKEY12A    DBKEY                                              BUG7985
+     C                     MOVEL'SDBRCHPD'DBFILE                                             BUG7985
+     C                     MOVELPBCA      DBKEY                                              BUG7985
+     C**********           OUT  LDA                                                   S01117 BUG7985
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     END                                            E29170
+     C*
+     C* Indicator controlling new page printing
+     C*
+     C                     SETOF                     32
+     C*
+     C   L3                END
+      /SPACE 3
+     C*
+     C* Detail processing
+     C*
+      /SPACE 2
+     C/COPY WNCPYSRC,SE2560C007
+     C*
+     C* Ignore this record if already deleted
+     C*
+     C           RECIX     IFNE '*'
+     C*
+     C* Count movements records read
+     C*    Not including Matured records                                  E14884
+     C*
+     C           RECIX     IFNE 'M'                                       E14884
+     C           RECIX     ANDNE'R'                                       206603
+     C***********          ADD  1         PSRRD                                               095907
+     C                     ADD  1         PSRRD   50                                          095907
+     C*********************ADD  1         PSRRD6                                       095907 243026
+     C                     ADD  1         PSRRD7                                              243026
+     C                     END                                            E14884
+     C*                                                                                       095907
+     C           RECIX     IFEQ 'D'                                                           095907
+     C                     ADD  1         LVREC   50                                          095907
+     C                     END                                                                095907
+     C*
+     C* Access Security
+     C*
+     C           PSSH      IFNE SPSSH                                                         095907
+     C                     MOVE PSSH      SPSSH                                               095907
+     C           PSSH      CHAINSECTYDF              31
+     C  N31      RECI      COMP '*'                      31
+     C                     END                                                                095907
+     C           *IN31     IFEQ '1'
+     C*
+     C* If not found get dec.places tabtg10
+     C*
+     C                     EXSR DECPLS
+     C*
+     C* If not found, flag position and count as deleted
+     C*
+     C                     EXSR DLTREC
+     C*
+     C* Print detail report
+     C*
+     C                     EXSR PRINTD
+     C*
+     C* Else if security found
+     C*
+     C                     ELSE
+     C*
+     C* If due date is greater than retention date take no action
+     C*   unless matured record                                           E14884
+     C*
+     C           PDUD      IFLE RTNTDT
+     C           S01512    ANDNE'Y'                                       085990
+     C           PSVL      ORLE RTNTDT                                    085990
+     C           S01512    ANDEQ'Y'                                       085990
+     C***********RECIX     OREQ 'M'                                E14884 085990
+     C*
+     C* Get dec places tabtg10
+     C*
+     C                     EXSR DECPLS
+     C/COPY WNCPYSRC,SE2560C005
+     C*
+     C* Flag position settlement records and count as deleted
+     C*
+     C                     EXSR DLTREC
+     C*
+     C* Print detail report
+     C*
+     C                     EXSR PRINTD
+     C*
+     C                     END
+     C                     END
+     C*                                                                                       095907
+     C                     ELSE                                                               095907
+     C*                                                                                       095907
+     C* Get dec places tabtg10                                                                095907
+     C*                                                                                       095907
+     C                     EXSR DECPLS                                                        095907
+     C*                                                                                       095907
+     C* Flag position settlement records and count as deleted                                 095907
+     C*                                                                                       095907
+     C                     EXSR DLTREC                                                        095907
+     C*                                                                                       095907
+     C* Print detail report                                                                   095907
+     C*                                                                                       095907
+     C                     EXSR PRINTD                                                        095907
+     C*
+     C                     END
+     C*
+      /SPACE 3
+     C*
+     C* Change of Branch
+     C*
+     C*L3******  PSRRD     IFGT *ZEROS                                    048919
+     C*L3******  *IN36     ANDEQ'1'                                 E29170048919
+     CL3         *IN36     IFEQ '1'                                       048919
+     CL3                   WRITETRAILP1                                   E29170
+     CL3                   CLOSESE2560P1
+     CL3                   SETOF                     36                   E29170
+     CL3                   END
+     C*
+      /SPACE 3
+     C*
+     C* LR time
+     C*
+     C/COPY WNCPYSRC,SE2560C003
+     CLR                   DO
+     C*
+     C* If no records read, perform 1st time calcs for audit report
+     C*
+     CL0         PSRRD     IFEQ *ZEROS
+     C*
+     C* Prepare LDA
+     C*
+     CL0                   MOVE *BLANKS   DBLOT
+     CL0                   MOVE 'SE2560  'DBPGM
+     C*
+     C* Get Installation Control Data record 1
+     C*
+     CL0                   EXSR ZSYSTM
+     C*
+     C* If error in ZSYSTM, abend program
+     C*
+     CL0         *IN99     IFEQ '1'                        ***************
+     CL0         *LOCK     IN   LDA                        ***************S01117
+     C**L0*******          MOVE '01'      DBASE            **DB*ERROR*01**E20651
+     C*L0********          MOVE '07'      DBASE            **DB ERROR 07**E20651
+     CL0                   Z-ADD7         DBASE            **DB ERROR 07**E20651
+     CL0                   MOVEL'TABLE'   DBFILE           ***************
+     CL0                   MOVELZTABKY    DBKEY
+     CL0                   OUT  LDA                                       S01117
+     CL0                   EXSR *PSSR                                     S01117
+     CL0                   WRITEHEADAU
+     CL0                   WRITEERROR
+     C*0*********          WRITETRAILAU                                   E29170
+     CL0                   SETON                     U7U8LR
+     CL0                   RETRN
+     CL0                   END
+     C*
+     CL0                   END
+     C*
+     C* Fetch Depot movements audit file
+     C*
+     CL0         1         CHAINPOSETAF              33
+     CL0         *IN33     IFEQ '1'                        ***************
+     CL0         *LOCK     IN   LDA                        ***************S01117
+     C*L0********          MOVEL'05'      DBASE            **DB ERROR 05**S01117
+     CL0                   Z-ADD5         DBASE            **DB ERROR 05**S01117
+     CL0                   MOVEL'POSETA'  DBFILE           ***************
+     CL0                   MOVEL'1'       DBKEY
+     CL0                   OUT  LDA                                       S01117
+     CL0                   EXSR *PSSR                                     S01117
+     CL0                   WRITEHEADAU
+     CL0                   WRITEERROR
+     C*0*********          WRITETRAILAU                                   E29170
+     CL0                   SETON                     U7U8
+     CL0                   RETRN
+     CL0                   ELSE
+     C*
+     C* Compare control total to number of records read
+     C*
+     CL0         NORE      COMP PSRRD                U8U8
+     CL0 U8                SETON                     73
+     C*
+     C* Calculate output fields
+     C*
+     C*0*********NORE      SUB  PSDEL     PSNEW                                               095907
+     CL0         NORE      SUB  PSDEL     PSNEW   50                                          095907
+     C*0*********NORE6     SUB  PSDEL6    PSNEW6                                       095907 243026
+     CL0         NORE7     SUB  PSDEL7    PSNEW7                                              243026
+     C*
+     C* Print audit report
+     C*
+     CL0                   WRITEHEADAU
+     CL0                   WRITEDETLAU
+     C*                                                                   E29170
+     C** If have read no records then output 'No Details' to Audit file   E29170
+     C*                                                                   E29170
+     CL0         PSRRD     IFEQ 0                                         E29170
+     CL0                   WRITENONE                                      E29170
+     CL0                   END                                            E29170
+     C*
+     C* If totals same, update audit record
+     C*
+     CL0         *INU8     IFEQ '0'
+     C***L0                Z-ADDPSNEW     NLRB                                                095907
+     C***L0                Z-ADDPSNEW     NORE                                                095907
+     CL0                   Z-ADDLVREC     NLRB                                                095907
+     CL0                   Z-ADDLVREC     NORE                                                095907
+     C*0*******************Z-ADDLVREC     NORE6                                        095907 243026
+     CL0                   Z-ADDLVREC     NORE7                                               243026
+     CL0                   UPDATPOSETAF
+     CL0                   END
+     C*
+     CL0                   END
+     C*                                                                                       095907
+     CLR         S01401    IFEQ 'Y'                                                           095907
+     CLR                   CLOSEPOSETDY1                                                      095907
+     CLR                   CLOSEPOSETDY2                                                      095907
+     CLR                   ENDIF                                                              095907
+     C*
+     CLR                   END
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   DECPLS SR. TO ACQUIRE DEC.PLACES - TABTG10                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     CSR         DECPLS    BEGSR                           *** DECPLS ***
+     C*
+     C                     MOVEL'20      'TKEY
+     C                     MOVE PSCU      TPSCU
+     C                     MOVE '1'       TKEY
+     C           TABTK     CHAINTABTG10F             72
+     C           *IN72     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     72
+     C                     END
+     C                     END
+     C           *IN72     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'1'       *INU8
+     C                     MOVEL'1'       *INU7            ***************
+     C***********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
+     C                     Z-ADD4         DBASE            **DB ERROR 04**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     CSR                   ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**   DLTREC SR. TO FLAG RECORDS AND COUNT AS DELETED            *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     CSR         DLTREC    BEGSR                           *** DLTREC  ***
+     C*
+     C* Flag Position record and count as deleted
+     C*
+     C***        RECIX     IFNE 'M'                                       E14884              095907
+     C****       RECIX     ANDNE'R'                                                    203832 095907
+     C*                                                                                       095907
+     C* DROP MT5XX EXTENSION FILES                                                            095907
+     C*                                                                                       095907
+     C           S01401    IFEQ 'Y'                                                           095907
+     C           KEY1      CHAINPOSETDY1             34                                       095907
+     C           *IN34     IFEQ '0'                                                           095907
+     C                     DELETPOSETDD1                                                      095907
+     C                     END                                                                095907
+     C           KEY1      CHAINPOSETDY2             35                                       095907
+     C           *IN35     IFEQ '0'                                                           095907
+     C                     DELETPOSETDD2                                                      095907
+     C                     END                                                                095907
+     C                     END                                                                095907
+     C                     DELETPOSETDF                                                       095907
+     C************         ADD  1         PSDEL                           E14884              095907
+     C                     ADD  1         PSDEL   50                                          095907
+     C*********************ADD  1         PSDEL6                                       095907 243026
+     C                     ADD  1         PSDEL7                                              243026
+     C***                  END                                            E14884              095907
+     C***                  MOVE '*'       RECIX                                               095907
+     C***                  EXCPTDELPSO                                                        095907
+     C/COPY WNCPYSRC,SE2560C006
+     C***********          ADD  1         PSDEL                           E14884
+      *                                                                                       CRE020
+      ** Once record is deleted, remove extension file record physically on file              CRE020
+      *                                                                                       CRE020
+     C           CRE020    IFEQ 'Y'                                                           CRE020
+     C                     MOVE PBCA      K3PBCA                                              CRE020
+     C                     MOVE PSSH      K3PSSH                                              CRE020
+     C                     MOVE PCPY      K3PCPY                                              CRE020
+     C                     MOVE PDUD      K3PDUD                                              CRE020
+     C                     MOVE PEVT      K3PEVT                                              CRE020
+      *                                                                                       CRE020
+     C           KPOST3    SETLLPOSETDD3                                                      CRE020
+     C           KPOST3    READEPOSETDD3                 78                                   CRE020
+     C           *IN78     DOWEQ'0'                                                           CRE020
+     C                     DELETPOSETDD3                                                      CRE020
+     C           KPOST3    READEPOSETDD3                 78                                   CRE020
+     C                     ENDDO                                                              CRE020
+     C                     ENDIF                                                              CRE020
+     C*
+     C* Increment deleted not authorised count if neccessary
+     C*
+     C           PAUI      IFNE 'Y'
+     C***********          ADD  1         PSDELX                                              095907
+     C                     ADD  1         PSDELX  50                                          095907
+     C*********************ADD  1         PSDEX6                                       095907 243026
+     C                     ADD  1         PSDEX7                                              243026
+     C                     END
+     C*
+     C/COPY WNCPYSRC,SE2560C004
+     CSR                   ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**   PRINTD SR. TO PRINT DETAIL RECORDS                         *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     CSR         PRINTD    BEGSR                           *** PRINTD  ***
+     C*
+     C* Format due date
+     C*
+     C                     Z-ADDPDUD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ZAPDUD
+     C*
+     C* Format settlement account depending on settlement method
+     C*
+     C**********           MOVE *BLANK    ZPSE14 14                                           CGL029
+     C**********           MOVE *BLANK    ZPSE12 12                                           CGL029
+     C                     MOVE *BLANK    ZPSE20 20                                           CGL029
+     C                     MOVE *BLANK    ZPSE18 18                                           CGL029
+     C*
+     C*    Format nnnnnn-nn-nnnn for settlement code 05
+     C*
+     C           PSMT      IFEQ 05
+     C                     MOVELPSEA06    ZPSE07  7
+     C                     MOVE '-'       ZPSE07
+     C*
+     C**********           MOVELPSEA04    ZPSE05  5                                           CGL029
+     C**********           MOVE '-'       ZPSE05                                              CGL029
+     C                     MOVELPSEA10    ZPSE11 11                                           CGL029
+     C                     MOVE '-'       ZPSE11                                              CGL029
+     C*
+     C**********           MOVELZPSE07    ZPSE12                                              CGL029
+     C**********           MOVE ZPSE05    ZPSE12                                              CGL029
+     C                     MOVELZPSE07    ZPSE18                                              CGL029
+     C                     MOVE ZPSE11    ZPSE18                                              CGL029
+     C*
+     C**********           MOVELZPSE12    ZPSE14                                              CGL029
+     C**********           MOVE PSEA02    ZPSE14                                              CGL029
+     C                     MOVELZPSE18    ZPSE20                                              CGL029
+     C                     MOVE PSEA02    ZPSE20                                              CGL029
+     C                     ELSE
+     C*
+     C*    Format settlement methods 01 02 07 08 12
+     C*
+     C           PSMT      IFEQ 01
+     C*
+     C           PSMT      OREQ 02
+     C*
+     C           PSMT      OREQ 07
+     C*
+     C           PSMT      OREQ 08
+     C*
+     C           PSMT      OREQ 12
+     C*
+     C*    Tabletl file using key
+     C*    If no record/record deleted - print psea not shortname
+     C*
+     C                     MOVE '70'      TLRECT
+     C                     MOVE PSCU      TLPSCU
+     C                     MOVELPSEA      TLPSE2
+     C           TABTLK    CHAINTABLETLF             70
+     C           *IN70     IFEQ '1'
+     C**********           MOVELPSEA      ZPSE14                                              CGL029
+     C                     MOVELPSEA      ZPSE20                                              CGL029
+     C                     ELSE
+     C           RECI      IFEQ '*'
+     C**********           MOVELPSEA      ZPSE14                                              CGL029
+     C                     MOVELPSEA      ZPSE20                                              CGL029
+     C                     ELSE
+     C*
+     C* Format customer shortname
+     C*    read clintcb file using key
+     C*    if no record/record deleted  - print psea not shortname
+     C*
+     C**********           Z-ADDCNUM      CBNUM                                               CSD027
+     C                     MOVE CNUM      CBNUM                                               CSD027
+     C                     MOVE 'A'       CBRCDT
+     C           CLICBK    CHAINCLINTCBF             71
+     C           *IN71     IFEQ '1'
+     C**********           MOVELPSEA      ZPSE14                                              CGL029
+     C                     MOVELPSEA      ZPSE20                                              CGL029
+     C                     ELSE
+     C           RECI      IFEQ '*'
+     C**********           MOVELPSEA      ZPSE14                                              CGL029
+     C                     MOVELPSEA      ZPSE20                                              CGL029
+     C                     ELSE
+     C**********           MOVELTLPSE2    ZPSE12                                              CGL029
+     C**********           MOVE CSNM      ZPSE12                                              CGL029
+     C**********           MOVELZPSE12    ZPSE14                                              CGL029
+     C                     MOVELTLPSE2    ZPSE18                                              CGL029
+     C                     MOVE CSNM      ZPSE18                                              CGL029
+     C                     MOVELZPSE18    ZPSE20                                              CGL029
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*    Catch-all any other settlement codes
+     C*
+     C                     ELSE
+     C**********           MOVELPSEA      ZPSE14                                              CGL029
+     C                     MOVELPSEA      ZPSE20                                              CGL029
+     C*
+     C                     END
+     C                     END
+     C*
+     C* Format settlement amount
+     C*    Use dec places from tabtg10 for zdecs
+     C*    as input to zsedit
+     C*
+     C                     Z-ADDCDP       ZDECS
+     C                     Z-ADDPSAT      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ZEPSAT 18
+     C*
+     C* Narrative required if authorised indicator posetd is not - y
+     C*
+     C                     SETOF                     74
+     C           PAUI      IFNE 'Y'
+     C                     SETON                     74
+     C                     END
+     C*
+     C* Open printer file and print heading
+     C*
+     C           *IN32     IFEQ '0'
+     C           *IN36     IFEQ '0'                                       E29170
+     C                     OPEN SE2560P1
+     C                     Z-ADD*ZEROS    PAGE
+     C                     END                                            E29170
+     C                     WRITEHEADL3
+     C*********************Z-ADD10        LCOUNT  30                      084236
+     C                     Z-ADD11        LCOUNT  30                      084236
+     C                     SETON                     32
+     C                     SETON                     36                   E29170
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END
+     C*
+     C* Check for overflow
+     C*
+     C           LCOUNT    IFGT 56
+     C                     WRITEHEADL3
+     C*********************Z-ADD10        LCOUNT                          084236
+     C                     Z-ADD11        LCOUNT                          084236
+     C                     END
+     C*
+     C* Print Detail line
+     C*
+     C                     WRITEDETAIL
+     C                     ADD  2         LCOUNT
+     C*
+     CSR                   ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM PBCA      SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT                                                                                  095907
+     C*****************************************************************                       095907
+      *                                                               *                       095907
+      * AOSARD - Subroutine to call access object : Switchabe Features*                       095907
+      *                                                               *                       095907
+      *****************************************************************                       095907
+      *                                                                                       095907
+     C           AOSARD    BEGSR                           ** AOSARD **                       095907
+      *                                                                                       095907
+     C                     MOVE 'N'       S01401                                              095907
+      *                                                                                       095907
+      **  Access Switchable features file for MT5xx processing -                              095907
+      *                                                                                       095907
+     C                     CALL 'AOSARDR0'                                                    095907
+     C                     PARM '       ' @RTCD   7                                           095907
+     C                     PARM '*VERIFY' @OPTN   7                                           095907
+     C                     PARM 'S01401'  @SARD   6                                           095907
+      *                                                                                       095907
+     C           @RTCD     IFEQ *BLANK                                                        095907
+     C                     MOVE 'Y'       S01401  1                                           095907
+     C                     END                                                                095907
+      *                                                                                       095907
+     C                     ENDSR                                                              095907
+      *****************************************************************                       095907
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     O/EJECT
+     O***POSETDF E             DELPSO                                                         095907
+     O***                      RECIX                                                          095907
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

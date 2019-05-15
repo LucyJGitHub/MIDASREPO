@@ -1,0 +1,440 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC Log spool file')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Report Control Facility Module                       *
+      *                                                               *
+      *  FC1010 - Log spool file                                      *
+      *                                                               *
+      *  Function:  Written for User Defined Correspondence; add      *
+      *             spool reference to reports created list for RCF   *
+      *             sequence.                                         *
+      *                                                               *
+      *  Called By: CG5200                                            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG5869            Date 21Mar05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 142799             Date 27Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 20Jan95               *
+      *                 X00000                  00XXX00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG5869 - For archiving from outq, assign entity details as  *
+      *            held by RCF; for archiving on request, report name *
+      *            should include suffix.                             *
+      *  142799 - Some reports were not distributed by RCF.           *
+      *           Recompiled because of changes in FCSFNOL1.          *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  01   -    XX                                                 *
+      *  50   -    CHAIN fail                                         *
+      *                                                               *
+      *****************************************************************
+      *
+      /COPY WNCPYSRC,FC1010FPG
+     FFCRREQL0UF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FFCRSFXL1UF  E           K        DISK                      A
+     F                                              KINFSR SRFILE
+     FFCSFNOL1UF  E           K        DISK                      A
+     F                                              KINFSR SRFILE
+     FMAARCPL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FMAARCDPDO   E           K        DISK
+     F                                              KINFSR SRFILE
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Copyright statement
+      *
+      /COPY CGCPYSRC,SRERRE
+      /COPY WNCPYSRC,FC1010EPG
+      /EJECT
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+      ** Copyright statement
+      *
+     IRUNDTA    E DSRUNDAT
+      ** Data Area for run-date
+      *
+     ID#RSFX      DS
+     I                                        1  10 #KRNAM
+     I                                       11  20 #KRSFX
+      ** Used to report database error
+      *
+     ID#AUTO      DS
+     I I            'Definition created'      1  18 DHAUT1
+     I I            ' automatically'         19  32 DHAUT2
+      ** Narrative for new spool file attribute information record
+      *
+     IIHEAD       DS
+     I                                        1 198 HEADER
+     I                                        1   4 OUTPUT
+     I                                        5  14 REPORT
+     I                                       15  24 USERID
+     I                                       25  34 JOBNAM
+     I                                       35  40 JOBNBR
+     I                                       41  44 SPLFNO
+     I                                       45  45 RPTLVL
+     I                                       46  48 ENTITY
+     I                                       49  53 RSEQNO
+     I                                       54  63 PRTFNM
+      ** Parameter list for write-to-optical-disk-header std program      S01382
+      *
+     I            DS
+     I                                        1   60SFNOS
+      ** redefine spool file number
+      *
+      /COPY CGCPYSRC,SRERRI
+      /COPY WNCPYSRC,FC1010IPG
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRINIT - Initial processing                                 *
+      *   SRRREQ - Look up report request                             *
+      *   SRSPLA - Look up spool file attributes                      *
+      *   SRCSPL - Create spool file attribute information            *
+      *   SRSPLN - Look up spool file number information              *
+      *   SRARCH - Log archive information                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           R0RTN   7        Return code
+     C                     PARM           #2RSEQ  5        Rept. seq.
+     C                     PARM           #3SPNA 10        SPLF name
+     C                     PARM           #4SPNM  60       SPLF no.
+     C                     PARM           #5ENTY  3        Entity
+     C                     PARM           #6CSPL  1        Create SPLF
+     C                     PARM           #7RTMP 10        Rept. tmpl.
+     C                     PARM           #8STMP 10        SPLF tmpl.
+     C                     PARM           #9SPLI 50        SPLF info.
+     C                     PARM           #0EXID  1        Exit if dup.
+      *
+      ** Initial processing
+     C                     EXSR SRINIT
+      *
+      ** Look up report request
+     C                     EXSR SRRREQ
+      *
+      ** Look up spool file attributes
+     C                     EXSR SRSPLA
+      *
+      ** Look up spool file number information
+     C                     EXSR SRSPLN
+      *
+      ** Log archive information
+     C                     EXSR SRARCH
+      *
+      /COPY WNCPYSRC,FC1010PRC
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Purpose     :  Initial processing                             *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright statement
+     C                     MOVE CPYR@#    ACT@   80
+      *
+      ** Access run-date
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+      *
+      ** Convert spool file number to 4 alpha
+     C                     Z-ADD#4SPNM    SFNOS
+     C                     MOVE SFNOS     ##SFN4  4
+      *
+      ** Key lists:
+      **  o FCRSFXL1
+     C           K#RSFX    KLIST
+     C                     KFLD           #KRNAM 10
+     C                     KFLD           #KRSFX 10
+      *
+      **  o FCSFNOL1
+     C           K#SFNO    KLIST
+     C                     KFLD           #KRSEQ  5
+     C                     KFLD           #KRPNA 10
+     C                     KFLD           #KENTY  3
+      *
+      **  o MAARCPL2
+     C           K#ARCP    KLIST
+     C                     KFLD           #KRNAM
+     C                     KFLD           #KPSQN  2
+     C                     KFLD           #KRSFX
+      *
+     C           EXINIT    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRRREQ                                         *
+      * Purpose     :  Look up report request                         *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRRREQ    BEGSR
+      *
+      ** Access report request information for this sequence number
+     C           #2RSEQ    CHAINFCRREQL0             50
+      *
+      ** Database error if record not found
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'FCRREQL0'W0FILE
+     C                     MOVEL#2RSEQ    W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** Update job name, user and number
+     C                     MOVEL##JOB     D5JBNM
+     C                     MOVEL##USR     D5JUSR
+     C                     MOVEL##JNO     D5JBNB
+     C                     UPDAT@D5REI8
+      *
+     C           EXRREQ    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSPLA                                         *
+      * Purpose     :  Look up spool file attributes                  *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  SRCSPL                                         *
+      *****************************************************************
+      *
+     C           SRSPLA    BEGSR
+      *
+      ** Access spool file attributes
+     C                     MOVELD5RNAM    #KRNAM
+     C                     MOVEL#3SPNA    #KRSFX
+     C           K#RSFX    CHAINFCRSFXL1            N50
+      *
+      ** If record not found: if 'create spool file' indication is not
+      ** 'Y', database error; otherwise create spool file attribute
+      ** information.
+     C           *IN50     IFEQ '1'
+      *
+     C           #6CSPL    IFNE 'Y'
+     C                     MOVEL'FCRSFXL1'W0FILE
+     C                     MOVELD#RSFX    W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ELSE
+     C                     EXSR SRCSPL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EXSPLA    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRCSPL                                         *
+      * Purpose     :  Create spool file attribute information        *
+      *                                                               *
+      * Called by   :  SRSPLA                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRCSPL    BEGSR
+      *
+      ** Get spool file information for CG3000
+     C                     MOVEL#7RTMP    #KRNAM
+     C                     MOVEL#8STMP    #KRSFX
+     C           K#RSFX    CHAINFCRSFXL1            N50
+      *
+      ** Database error if record not found
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'FCRSFXL1'W0FILE
+     C                     MOVELD#RSFX    W0KEY            ***************
+     C                     Z-ADD3         W0ERNB           * DB ERROR 03 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** Set up additional details and create new record
+     C                     MOVEL#7RTMP    DYRNAM
+     C                     MOVEL#3SPNA    DYRSFX
+     C                     MOVEL'N'       DYAURP
+     C                     MOVEL'N'       DYCOLT
+     C           #9SPLI    IFNE *BLANK
+     C                     MOVEL#9SPLI    DYPFTX    P
+     C                     ELSE
+     C                     MOVELD#AUTO    DYPFTX    P
+     C                     ENDIF
+      *
+     C                     WRITE@DYREIO
+      *
+     C           EXCSPL    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSPLN                                         *
+      * Purpose     :  Look up spool file number information          *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRSPLN    BEGSR
+      *
+      ** Set spool_file_already_defined indication
+     C                     MOVEL'N'       ##SFAD  1
+      *
+      ** Access spool file information
+     C                     MOVEL#2RSEQ    #KRSEQ
+     C                     MOVEL#3SPNA    #KRPNA
+     C                     MOVEL#5ENTY    #KENTY
+     C           K#SFNO    CHAINFCSFNOL1             50
+      *
+      ** If record not found, write new record
+     C           *IN50     IFEQ '1'
+     C                     MOVEL#2RSEQ    D6RQSQ
+     C                     MOVEL#3SPNA    D6RSFX
+     C                     MOVEL#5ENTY    D6XETY
+     C                     MOVELDYAURP    D6AURP
+     C                     MOVEL##SFN4    D6SFNO
+     C                     MOVEL'N'       D6PSTS
+     C                     WRITE@D6REJC
+      *
+      ** If record is found: if 'duplicate entry' is 'Y', exit program
+      ** with return code; otherwise update record with latest details,
+      ** and set spool_file_already_defined indication.
+     C                     ELSE
+     C           #0EXID    IFEQ 'Y'
+     C                     UNLCKFCSFNOL1
+     C                     MOVEL'CGD1776' R0RTN
+     C                     RETRN
+     C                     ELSE
+     C                     MOVEL'Y'       ##SFAD
+     C                     MOVELDYAURP    D6AURP
+     C                     MOVEL##SFN4    D6SFNO
+     C                     MOVEL'N'       D6PSTS
+     C                     UPDAT@D6REJC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EXSPLN    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRARCH                                         *
+      * Purpose     :  Create archive reference information for       *
+      *                microfiche and optical disk                    *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRARCH    BEGSR
+      *
+      ** If archiving required, and spool file not already defined...
+     C           D5ARMF    IFEQ 'Y'
+     C           ##SFAD    ANDEQ'N'
+     C           D5AROD    OREQ 'Y'
+     C           ##SFAD    ANDEQ'N'
+      *
+      ** For each archive request...
+     C                     MOVELD5RNAM    #KRNAM
+     C                     CLEAR#KPSQN
+     C                     MOVEL#4SPNM    #KRSFX
+     C           K#ARCP    CHAINMAARCPL2             50
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      ** Create daily archive entry on PF/MAARCDPD
+     C                     MOVELECARID    EBARID
+     C                     MOVEL#2RSEQ    EBRQSQ
+     C                     MOVELECRNAM    EBRNAM
+     C                     MOVEL#4SPNM    EBRSFX
+     C                     MOVEL'N'       EBCFLG
+     C                     MOVEL'N'       EBACFL
+     C                     WRITEMAARCDD0
+      *
+     C           K#ARCP    READEMAARCPL2                 50
+      *
+     C                     ENDDO
+      *
+      ** If archiving for optical disk, set up header string using
+      ** standard program MA0640.
+     C           D5AROD    IFEQ 'Y'
+      *
+     C                     CLEARIHEAD
+     C                     MOVEL'OHDR'    OUTPUT                          S01382
+     C**********           MOVELD5RNAM    REPORT                                      S01382 BUG5869
+     C                     MOVELD6RSFX    REPORT                                             BUG5869
+     C                     MOVELD5JUSR    USERID                          S01382
+     C                     MOVELD5JBNM    JOBNAM                          S01382
+     C                     MOVELD5JBNB    JOBNBR                          S01382
+     C                     MOVELD6SFNO    SPLFNO                          S01382
+     C                     MOVELD5LVL     RPTLVL                          S01382
+     C                     MOVELD5ETTY    ENTITY                          S01382
+     C                     MOVELD5RQSQ    RSEQNO                          S01382
+     C                     MOVELD6RSFX    PRTFNM                          S01382
+      *
+     C                     CALL 'MA0640'                                  S01382
+     C                     PARM           HEADER                          S01382
+     C                     PARM *BLANK    #ERROR  1                       S01382
+      *
+      ** Database error if error in called program
+     C           #ERROR    IFNE *BLANK
+     C                     MOVEL'MA0640  'W0FILE
+     C                     MOVEL'CALL'    W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EXARCH    TAG
+     C                     ENDSR
+      /EJECT
+      /COPY WNCPYSRC,FC1010CPG
+      /COPY CGCPYSRC,SRERRC
+      /COPY CGCPYSRC,SRERRPSSR
+** CPY@ Copyright statement
+(c) Finastra International Limited 2001

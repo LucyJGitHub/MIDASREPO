@@ -1,0 +1,261 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PB Retail Number Automatic Generation')          *
+      *****************************************************************
+      *                                                               *
+      *  Private Banking Module                                       *
+      *                                                               *
+      *  PBACNOGN - Midas Retail Number Automatic Generation          *
+      *                                                               *
+      *  Function:  This program sets up the Midas Retail Number for  *
+      *             Retail Accounts opened through the Midas/Tof      *
+      *             Interface.                                        *
+      *                                                               *
+      *  (phase(s)) Input Cycle                                       *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR978786           Date 28Jun12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CPB002 *CREATE     Date 23Oct00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR978786 - Retail number attribution problem                 *
+      *             (Child:AR978788)
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPB002 -  'Private Banking' Module                           *
+      *                                                               *
+      *****************************************************************
+      *
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /TITLE ARRAY SPECIFICATIONS
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+      *****************************************************************
+     I              'GPACSBRCH'           C         GPBRCH                                  AR978786
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      *-------------------------------------------------------------------------
+      *
+     IWLDA      E DSLDA                         256
+      *
+      **  Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      **  Program Status Data Structure - gives Prog/Job/Workstn name
+      **  and user ID
+      *
+     I                                        1  10 PRGNAM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IDSSDY     E DSDSSDY
+      **  DS for access programs, long data structure
+     ISDBANK    E DSSDBANKPD
+      **  External DS for Bank Details
+     ISDCURR    E DSSDCURRPD
+      **  External DS for Currency Details
+     ISDBRCH    E DSSDBRCHPD                                                                AR978786
+      **  External DS for Branch Details                                                    AR978786
+      *
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #INIT  - Program Initialisation                              *
+      *                                                               *
+      *  *PSSR  - Error Processing Subroutine - DUMPs and ends Program*
+      *           (This is called automatically if an unexpected      *
+      *            Error occurs, or specifically for DB Error.)       *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           TWCNUM  6        Customer number
+     C                     PARM           TWCCY   3        Currency code
+     C**********           PARM           TWACOD  4        Account Code                       CGL029
+     C                     PARM           TWACOD 10                                           CGL029
+     C                     PARM           TWACSQ  2        Account Sequence
+     C                     PARM           TWBRCA  3        Branch Code
+      *
+     C                     PARM           OOERR   1        Error identifier
+     C                     PARM           OOACNO 10        Retail Account number
+      *
+     C                     MOVE TWACSQ    WKACSQ  20
+      *
+      **  Program initialisation
+     C                     EXSR #INIT
+      *
+      ** The first six digits = Customer number
+     C                     MOVELTWCNUM    SACNO  10 P
+      *                                                                                     AR978786
+     C                     CALL GPBRCH                                                      AR978786
+     C                     PARM *BLANKS   I#RTCD  7                                         AR978786
+     C                     PARM           I#ERMS  50                                        AR978786
+     C                     PARM TWBRCA    I#BRCD  3                                         AR978786
+     C                     PARM           SDBRCH                                            AR978786
+      *                                                                                     AR978786
+     C           I#RTCD    IFNE *BLANK                                                      AR978786
+     C                     MOVEL'1'       OOERR                                             AR978786
+     C                     ENDIF                                                            AR978786
+     C                     MOVE *BLANKS   PZONE                                             AR978786
+     C                     MOVE A8ZONE    PZONE                                             AR978786
+      *
+      ** Retrieve sort sequence number of currency
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM TWCCY     @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK                     - B1
+      *
+      ** Clear first instance of access object error message
+      *
+     C                     MOVEL'1'       OOERR
+      *
+     C                     ELSE                            - X1
+      *
+      ** The digit 7 and 8 = sort sequence number of currency
+     C                     MOVELA6SSNB    W1ACNO  4 P
+     C                     MOVE WKACSQ    W1ACNO
+     C                     MOVE W1ACNO    SACNO
+     C                     ENDIF                           - E1
+      *
+     C           OOERR     IFEQ *BLANK                     - B1
+      *
+      ** Retail Number Validation
+      ** Cannot exist on Retail Account file
+     C                     Z-ADDWKACSQ    WCOUNT  20
+     C                     MOVE SACNO     WWRKEY 100
+     C           WWRKEY    CHAINACNUM                80
+     C           *IN80     IFEQ '1'                                                         AR978786
+     C                     CALL 'GPCHRETL'                                                  AR978786
+     C                     PARM           PFOUND  1                                         AR978786
+     C                     PARM SACNO     PACNO  10                                         AR978786
+     C                     PARM           PZONE  12                                         AR978786
+     C           PFOUND    IFEQ 'Y'                                                         AR978786
+     C                     MOVE '0'       *IN80                                             AR978786
+     C                     ENDIF                                                            AR978786
+     C                     ENDIF                                                            AR978786
+      *
+     C           *IN80     DOWEQ'0'                        - B2
+     C           WCOUNT    ANDNE99
+     C                     ADD  1         WCOUNT
+     C                     MOVE WCOUNT    W1ACNO
+     C                     MOVE W1ACNO    SACNO
+     C                     MOVE SACNO     WWRKEY
+     C           WWRKEY    CHAINACNUM                80
+     C           *IN80     IFEQ '1'                                                         AR978786
+     C                     CALL 'GPCHRETL'                                                  AR978786
+     C                     PARM           PFOUND                                            AR978786
+     C                     PARM SACNO     PACNO                                             AR978786
+     C                     PARM           PZONE                                             AR978786
+     C           PFOUND    IFEQ 'Y'                                                         AR978786
+     C                     MOVE '0'       *IN80                                             AR978786
+     C                     ENDIF                                                            AR978786
+     C                     ENDIF                                                            AR978786
+     C                     ENDDO                           - E2
+      *
+     C           *IN80     IFEQ '0'                        - B2
+     C                     MOVEL'2'       OOERR
+     C                     ELSE                            - X2
+     C                     MOVE SACNO     OOACNO
+     C                     ENDIF                           - E2
+      *
+     C                     ENDIF                           - E1
+      *
+      ** Termination processing
+     C*****                MOVE *ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INIT  - Initial process                                      *
+      * Called by: - main process                                     *
+      * Calls: none                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      **  Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      **  Access Bank details via access program
+      **  (database error handling done in access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      **  Set Date indicator to DDMMYY
+     C                     MOVE *OFF      *IN98
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'PBACNOGN'DBPGM     P
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+**  CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

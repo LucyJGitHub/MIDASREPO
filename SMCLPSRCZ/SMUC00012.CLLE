@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM FT Upgrade utility 1 (SAR is off/on)')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00012 - FT Upgrade Utility 1 (SAR is off/on)            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BG26993            Date 26Jan10              */
+/*                      CFT014  *CREATE    Date 25May00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed CFT014C01.                                */
+/*       CFT014  - Straight-through Processing Phase 2 MT103         */
+/*                 Messages Generation for FT.                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Create back-up for error proccessing. */
+             CPYF       FROMFILE(INPAYDD) TOFILE(QTEMP/XINPAYDD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(XINPAYDD))
+ 
+/* Call SMU00012. */
+             CALL       PGM(SMU00012)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CPYF       FROMFILE(XINPAYDD) TOFILE(INPAYDD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                             FILE(INPAYDD))
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             DLTF       FILE(XINPAYDD)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             DMPCLPGM
+             CPYF       FROMFILE(XINPAYDD) TOFILE(INPAYDD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(INPAYDD))
+             CHGJOB     SWS(XXXXXX11)
+ END:
+             ENDPGM

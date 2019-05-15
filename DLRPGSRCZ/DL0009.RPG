@@ -1,0 +1,436 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Citydealer Transmission Failures Aud Rpt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0009 - Citydealer Transmission Failures Audit Report       *
+      *                                                               *
+      *  Function:  This program will be called by DLC0009.  It will  *
+      *             produce an audit report of all the Citydealer     *
+      *             messages which failed to transmit correctly       *
+      *             during today's processing.  It will only be       *
+      *             available as an On-Request option. If it is       *
+      *             selected during Input Cycle, it will produce a    *
+      *             list of all Citydealer transmission failures up   *
+      *             to the point that the report is requested.  This  *
+      *             will be an 'Interim' report. If selected during   *
+      *             Close of Business processing, it will produce a   *
+      *             full list of all Citydealer transmission failures *
+      *             for that day.                                     *
+      *                                                               *
+      *  Called By: DLC0009                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCM002   *CREATE   Date 04Sep95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CCM002 - Midas/Citydealer Interface (Phases V and VI)        *
+      *                                                               *
+      *****************************************************************
+     FDLCDAUPDIF  E           K        DISK
+     FDL0009P1O   E             20     PRINTER      KINFDS SPOOL      UC
+     FDL0009AUO   E                    PRINTER                        UC
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  10         EOF read FOR PF/DLCDAUPD                          *
+     F*  20         Overflow                                          *
+     F*  98         Date Format                                       *
+     F*  U7-U8      Database Error                                    *
+     F*  LR         Exit program                                      *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  #LINIT  -  Initial Processing                                *
+     F*  #LAUDT  -  Process all the records in the Citydealer         *
+     F*             Transmission Audit file                           *
+     F*  #LPROC  -  Transmission Audit record processing              *
+     F*  #LEREP  -  End of Report Processing                          *
+     F*  *PSSR   -  Program exception error routine                   *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E*
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+     ISPOOL       DS                                                      S01117
+      ** Spool Information Data Structure                                 S01117
+      *
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+      /EJECT
+     C*
+     C** Initialisation.
+     C*
+     C                     EXSR #LINIT
+     C*
+     C** Process all the records in the Transmission Audit file
+     C*
+     C                     EXSR #LAUDT
+     C*
+     C** End of Report processing.
+     C*
+     C                     EXSR #LEREP
+     C*
+     C                     MOVE '1'       *INLR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT  - Initial Processing                                  *
+     C*                                                               *
+     C* Called by :  Main - Main Processing                           *
+     C*                                                               *
+     C* Calls :  *PSSR  - Program exception error routine             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Define parameters passed.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PRUNTP  1
+     C                     PARM           PRSEQ   50
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Access the Bank Details.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0009'  DBPGM
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           PRUNTP    IFEQ 'I'
+     C                     MOVEL'*Interim'RINTR
+     C                     MOVE '*'       RINTR
+     C                     ELSE
+     C                     MOVEL*BLANKS   RINTR
+     C                     ENDIF
+     C*
+     C** Determine the date format.
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LAUDT  - Process all the records in the Citydealer           *
+     C*           Transmission Audit file                             *
+     C*                                                               *
+     C* Called by :  Main - Main Processing                           *
+     C*                                                               *
+     C* Calls :  #LPROC - Transmission Audit record processing        *
+     C*          *PSSR  - Program exception error routine             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LAUDT    BEGSR
+     C*
+     C** Read the first record from the Citydealer Transmission
+     C** Audit File.
+     C*
+     C                     READ DLCDAUPD                 10
+     C                     MOVE '1'       WFIRST  1
+     C                     MOVE '0'       WRECRD  1
+     C*
+     C           *IN10     DOWEQ*OFF
+     C*
+     C** If this is the first record processed.
+     C*
+     C           WFIRST    IFEQ '1'
+     C*
+     C** Open the printer file DL0009P1.
+     C*
+     C                     OPEN DL0009P1
+     C*
+     C** Report Spool File Generation.
+     C*
+     C                     Z-ADDSFNUM     SFNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           SFNUM1
+     C                     PARM *BLANK    ZSERR   1
+     C*
+     C** If error during ZSFILE processing.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0009'  DBPGM
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'ZSFILE'  DBFILE           *DB ERROR 002 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** Write the header format.
+     C*
+     C                     WRITEHEADP1
+     C                     MOVE '0'       WFIRST
+     C                     MOVE '1'       WRECRD
+     C*
+     C                     ENDIF
+     C*
+     C** Perform detailed processing
+     C*
+     C                     EXSR #LPROC
+     C*
+     C** Read the next record from the Citydealer Transmission
+     C** Audit File.
+     C*
+     C                     READ DLCDAUPD                 10
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LPROC - Transmission Audit record processing                 *
+     C*                                                               *
+     C* Called by : #LAUDT - Process all the records in the           *
+     C*                      Citydealer Transmission Audit file       *
+     C*                                                               *
+     C* Calls :  *PSSR - Program exception error routine              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LPROC    BEGSR
+     C*
+     C** Convert the Error Date to system date format.
+     C*
+     C                     Z-ADDERRD      ZDAYNO                          S01370
+     C                     EXSR ZDATE2                                    S01370
+     C                     Z-ADDZDATE     RERRD                           S01370
+     C*
+     C** Convert the Value date to system date format, if not zero.
+     C*
+     C           VDAT0     IFNE 0
+     C                     Z-ADDVDAT0     ZDAYNO                          S01370
+     C                     EXSR ZDATE2                                    S01370
+     C                     Z-ADDZDATE     RVDAT                           S01370
+     C                     ELSE
+     C                     MOVE *BLANKS   RVDAT
+     C                     ENDIF
+     C*
+     C** Edit the Amount according to the number of
+     C** decimal places of the Currency, if currency is not blanks.
+     C*
+     C           CCY       IFNE *BLANKS
+     C*
+     C** Access the Currency Details.
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM CCY       @CCYD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0009'  DBPGM
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 003 *
+     C                     MOVELCCY       DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     Z-ADDAMT       ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C*
+     C                     MOVELZOUT22    RTAMT
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   RTAMT
+     C                     ENDIF
+     C*
+     C** Write Header format if overflow.
+     C*
+     C           *IN20     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN20
+     C                     ENDIF
+     C*
+     C** Write the detail format.
+     C*
+     C                     MOVELERRP      RERRP
+     C                     Z-ADDERRN      RERRN
+     C                     Z-ADDERRT      RERRT
+     C                     MOVELMOTYP     RMTYP
+     C                     MOVELBRCA      RBRCA
+     C                     MOVELCCY       RCCY
+     C                     Z-ADDNOSN      RNOSN
+     C                     WRITEDETAIL
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LEREP - End of Report Processing                             *
+     C*                                                               *
+     C* Called by :  Main - Main Processing                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LEREP    BEGSR
+     C*
+     C** If at least one record is processed.
+     C*
+     C           WRECRD    IFEQ '1'
+     C*
+     C** Write Header format if overflow.
+     C*
+     C           *IN20     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN20
+     C                     ENDIF
+     C*
+     C** Write the End of Report format.
+     C*
+     C                     WRITEENDREP
+     C*
+     C** Close the Printer file DL0009P1.
+     C*
+     C                     CLOSEDL0009P1
+     C                     ENDIF
+     C*
+     C** If no details to report.
+     C*
+     C           WRECRD    IFEQ '0'
+     C                     OPEN DL0009AU
+     C                     WRITEHEADAU
+     C                     WRITENODET
+     C                     CLOSEDL0009AU
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: #LINIT  - Initial Processing                       *
+     C*            #LAUDT  - Process all the records in the           *
+     C*                      Citydealer Transmission Audit file       *
+     C*            #LPROC  - Transmission Audit record processing     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     OPEN DL0009AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEDL0009AU
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C*
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

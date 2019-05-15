@@ -1,0 +1,71 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM COB Optimisation - Save While Active MSGQ')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00035 - COB Optimisation - Save While Active MSGQ       */
+/*                                                                   */
+/*       Function:  This program will add a record to SMSETUPD.      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1095588          Date 12Mar13              */
+/*                      CSC057  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1095588 - Amended program to create MSGQ directly         */
+/*       CSC057 - COB Save Enhancement - Using SWA 1.0               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)                              /*AR1095588*/
+             DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)                                /*AR1095588*/
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(8)                                  /*AR1095588*/
+             DCL        VAR(&ADOPT) TYPE(*CHAR) LEN(7)                                 /*AR1095588*/
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(7)                                 /*AR1095588*/
+                                                                                       /*AR1095588*/
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Insert record to SMSETUPD */
+ 
+/**********  SCRUNSQL   SQL('INSERT INTO SMSETUPD (DFRECI, DFTYPE, +
+                          DFNAME, DFLIB, DFCMD, DFINS) +
+                          VALUES(''D'', ''*MSGQ'', ''CBSWAMMQ'', +
+                          ''XLIB'', ''CRTMSGQ MSGQ(**XLIB/CBSWAMMQ) +
+                          FORCE(*YES) SIZE(50 5 *NOMAX) +
+                          TEXT(''''Midas CB Save While Active +
+                          Monitor'''')'', ''CSC057'')')              */                /*AR1095588*/
+/**********    MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))    */                /*AR1095588*/
+                                                                                       /*AR1095588*/
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                                 /*AR1095588*/
+             CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))                    /*AR1095588*/
+             CHGVAR     VAR(&XLIB) VALUE(&ZONEID *CAT 'XLIB ')                         /*AR1095588*/
+             CHGVAR     VAR(&ADOPT) VALUE(&ZONEID *CAT 'ADOPT')                        /*AR1095588*/
+             CHGVAR     VAR(&OWNER) VALUE(&ZONEID *CAT 'OWNER')                        /*AR1095588*/
+                                                                                       /*AR1095588*/
+             CRTMSGQ    MSGQ(&XLIB/CBSWAMMQ) TEXT('Midas CB Save +
+                          While Active Monitor') FORCE(*YES) +
+                          SIZE(50 5 *NOMAX)                                            /*AR1095588*/
+ 
+             CHGOWNAUT  OBJ(&XLIB/CBSWAMMQ) OBJTYPE(*MSGQ) +
+                          NEWOWN(&OWNER) PUBAUT(*EXCLUDE) +
+                          AUTL(&ADOPT) CHGLIB(N)                                       /*AR1095588*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

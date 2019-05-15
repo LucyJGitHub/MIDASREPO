@@ -1,0 +1,414 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Account Posting')                            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC0600A - GL Account Posting                               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD040304           Date 11Aug16              */
+/*                      MD039002           Date 27May16              */
+/*                      MD037383           Date 10Feb16              */
+/*                      CGL049             Date 17Feb15              */
+/*                      CGL142             Date 06Aug12              */
+/*                      CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD040304 - GLCLERPD must be cleared (as it was cleared      */
+/*                  by GLC008142 which was made redundant).          */
+/*       MD039002 - U1 must be on to allow closure of accounts       */
+/*                  Apply CC2903 that was done in GLCP018.           */
+/*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
+/*                  Stamp Tax (CER049) processing.                   */
+/*                  Rework that component to make it 'Task Split'    */
+/*                  compliant.                                       */
+/*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
+/*       CGL142 - Tactical COB changes GL                            */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &MEMBER &CNAM &CSEQ &RESTART)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LDA)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&ACCR) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) VALUE('CFT004')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CRE023) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(SDMMODPD)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+ 
+             SNDPGMMSG  MSG('GLC0600A - GL Account Posting') +
+                        TOMSGQ(MRUNQ)
+ 
+             RCVF
+ 
+ /********** OVRDBF     FILE(GLACPOPD) TOFILE(GLACPOPD) MBR(&MEMBER) +*/                  /*CGL142*/
+ /**********              NBRRCDS(1000) SEQONLY(*YES 2000)     */                         /*CGL142*/
+             OVRDBF     FILE(GLACPOPD) TOFILE(GLACPOPD) MBR(&MEMBER)                      /*CGL142*/
+ 
+             IF         COND(&POSTNUM *EQ '1') THEN(DO)
+             CALLSUBR   SUBR(GLC600A01)
+             ENDDO
+             ELSE       CMD(DO)
+ 
+             IF         COND(&POSTNUM *EQ '2') THEN(DO)
+             CALLSUBR   SUBR(GLC600A02)
+             ENDDO
+             ELSE       CMD(DO)
+ 
+             IF         COND(&POSTNUM *EQ '3') THEN(DO)
+             CALLSUBR   SUBR(GLC600A03)
+             ENDDO
+             ELSE       CMD(DO)
+ 
+             IF         COND(&POSTNUM *EQ '4') THEN(DO)
+             CALLSUBR   SUBR(GLC600A04)
+             ENDDO
+             ELSE       CMD(DO)
+ 
+             IF         COND(&POSTNUM *EQ '5') THEN(DO)
+             CALLSUBR   SUBR(GLC600A05)
+             ENDDO      /* CGL049 */
+             ELSE       CMD(DO) /*CGL049*/
+ 
+                IF         COND(&POSTNUM *EQ '6') THEN(DO) /*CGL049*/
+                   CALLSUBR   SUBR(GLC600A06) /* CGL049 */
+                ENDDO      /* CGL049 */
+                                                                                        /*MD037383*/
+                IF         COND(&POSTNUM *EQ '7') THEN(DO)                              /*MD037383*/
+                   CALLSUBR   SUBR(GLC600A07)                                           /*MD037383*/
+                ENDDO                                                                   /*MD037383*/
+                                                                                        /*MD037383*/
+             ENDDO
+             ENDDO
+             ENDDO
+             ENDDO
+             ENDDO
+ 
+/* Allocate member to ensure it is available                       */
+ 
+             ALCOBJ     OBJ((GLACPOPD *FILE *EXCL &MEMBER))
+ 
+/* Call GL Account Posting                                         */
+ 
+             CALL       PGM(GL0600)
+ 
+/* De-Allocate member to ensure it is available                    */
+ 
+             DLCOBJ     OBJ((GLACPOPD *FILE *EXCL &MEMBER))
+ 
+             DLTOVR     FILE(GLACPOPD)
+ 
+             IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ELSE       CMD(DO)
+             COMMIT                                                                       /*CGL142*/
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Database Error                                                  */
+ 
+ABNOR:
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+             RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+             CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+             IF         COND(%SWITCH(XXXXXX01)) THEN(DO)
+             SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT OF +
+                          BALANCE') TOMSGQ(MRUNQ)
+             SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT OF +
+                          BALANCE') TOMSGQ(MOPERQ)
+ 
+             ENDDO
+             ELSE       CMD(DO)
+             CHGJOB     SWS(XXXXXX01)
+ 
+             SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT OF +
+                          BALANCE') TOMSGQ(MRUNQ)
+             SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT OF +
+                          BALANCE') TOMSGQ(MOPERQ)
+ 
+             ENDDO
+             ENDDO
+ 
+             RETURN
+ 
+/* GLC600A01 Subroutine                                            */
+ 
+             SUBR       SUBR(GLC600A01)
+ 
+/* Read Midas CB Module data area                                  */
+ 
+             RTVDTAARA  DTAARA(CBSTAT (46 5)) RTNVAR(&ACCR)
+ 
+/* Determine if 2 O'clock Flag SAR switch is on                    */
+ 
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CRE023')
+             CHGVAR     VAR(&CRE023) VALUE('N')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+ 
+/* 2 O'clock Flag SAR switch is on: Set Flag                       */
+ 
+             CHGVAR     VAR(&CRE023) VALUE('Y')
+             ENDDO
+ 
+/* Reset job switch U1 on                                          */
+ 
+             CHGJOB     SWS(10000000)
+ 
+/* Check if Retail is on OR Interest on Accounts is on             */
+ 
+             IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ +
+                          'Y')) THEN(DO)
+ 
+/* Retail is on OR Interest on Accounts is on: Set Main post or    */
+/* post after end of period Switch                                 */
+ 
+             CHGJOB     SWS(XXXX1XXX)
+ 
+/* Check if 2 O'clock Flag SAR is on:                              */
+ 
+             IF         COND(&CRE023 *EQ 'Y') THEN(DO)
+ 
+/* 2 O'clock Flag SAR is on:                                       */
+/* Set RE Outward Clearing File processing                         */
+ 
+             CHGJOB     SWS(XXX1XXXX)
+             ENDDO
+ 
+/* Check if first day of Month is NWD                              */
+ 
+             IF         COND(&ACCR = 'THREE') THEN(DO)
+ 
+/* First day of Month is NWD: Set output to GL Shadow items        */
+/* in clearing detail                                              */
+ 
+             OVRDBF     FILE(CLEARHH) TOFILE(CLEAR2HH) OVRSCOPE(*JOB)
+             OVRDBF     FILE(CLEARPD) TOFILE(CLEAR2PD) FRCRATIO(500) +
+                          NBRRCDS(1000) OVRSCOPE(*JOB) SEQONLY(*YES +
+                          2000)
+             OVRDBF     FILE(CLEARZZ) TOFILE(CLEAR2ZZ) OVRSCOPE(*JOB)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/* Normal daily accruals:  Set GL New items in clearing detail     */
+ 
+             OVRDBF     FILE(CLEARHH) TOFILE(CLEAROHH) OVRSCOPE(*JOB)
+             OVRDBF     FILE(CLEARPD) TOFILE(CLEAROPD) FRCRATIO(500) +
+                          NBRRCDS(1000) OVRSCOPE(*JOB) SEQONLY(*YES +
+                          2000)
+             OVRDBF     FILE(CLEARZZ) TOFILE(CLEAROZZ) OVRSCOPE(*JOB)
+ 
+             ENDDO
+ 
+             ENDDO
+ 
+             OVRDBF     FILE(SACPO) TOFILE(GLACPML0) OVRSCOPE(*JOB)
+             OVRDBF     FILE(SACPOZ) TOFILE(ACPO1Z) OVRSCOPE(*JOB)
+ 
+             CALLSUBR   SUBR(OVERRIDES)
+ 
+/* Set trailer record count is done                                */
+ 
+             CHGJOB     SWS(XXXXX1XX)
+ 
+             ENDSUBR
+ 
+/* GLC600A02 Subroutine                                            */
+ 
+             SUBR       SUBR(GLC600A02)
+ 
+/* Reset job switches                                              */
+ 
+             CHGJOB     SWS(000000XX)
+ 
+/* Check if Retail is on OR Interest on Accounts is on:            */
+/* IF on Set Main post or post after end of period switch          */
+ 
+             IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ +
+                          'Y')) THEN(CHGJOB SWS(XXXX1XXX))
+ 
+             OVRDBF     FILE(SACPO) TOFILE(ACPO2) OVRSCOPE(*JOB)
+             OVRDBF     FILE(SACPOZ) TOFILE(ACPO2Z) OVRSCOPE(*JOB)
+ 
+             CALLSUBR   SUBR(OVERRIDES)
+ 
+             ENDSUBR
+ 
+/* GLC600A03 Subroutine                                            */
+ 
+             SUBR       SUBR(GLC600A03)
+ 
+/* Reset job switches                                              */
+ 
+             CHGJOB     SWS(000000XX)
+ 
+/* Check if Retail is on OR Interest on Accounts is on:            */
+/* IF on Set Main post or post after end of period switch.         */
+ 
+             IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ +
+                          'Y')) THEN(CHGJOB SWS(XXXX1XXX))
+ 
+             OVRDBF     FILE(SACPO) TOFILE(ACPO3) OVRSCOPE(*JOB)
+             OVRDBF     FILE(SACPOZ) TOFILE(ACPO3Z) OVRSCOPE(*JOB)
+ 
+             CALLSUBR   SUBR(OVERRIDES)
+ 
+             ENDSUBR
+ 
+/* GLC600A04 Subroutine                                            */
+ 
+             SUBR       SUBR(GLC600A04)
+ 
+/* Reset job switches                                              */
+ 
+             CHGJOB     SWS(000000XX)
+ 
+/* Check if Retail is on OR Interest on Accounts is on:            */
+/* IF on Set Main post or post after end of period switch          */
+ 
+             IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ +
+                          'Y')) THEN(CHGJOB SWS(XXXX1XXX))
+ 
+             OVRDBF     FILE(SACPO) TOFILE(ACPO4) OVRSCOPE(*JOB)
+             OVRDBF     FILE(SACPOZ) TOFILE(ACPO4Z) OVRSCOPE(*JOB)
+ 
+             CALLSUBR   SUBR(OVERRIDES)
+ 
+             ENDSUBR
+ 
+/* GLC600A05 Subroutine                                            */
+ 
+             SUBR       SUBR(GLC600A05)
+ 
+/* Reset job switches                                              */
+ 
+             CHGJOB     SWS(010001XX)
+ 
+/* Check if Retail is on OR Interest on Accounts is on:            */
+/* IF on Set Main post or post after end of period switch          */
+ 
+             IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ +
+                          'Y')) THEN(DO)
+             CHGJOB     SWS(XXXX1XXX)
+             ENDDO
+ 
+/* Set overrides for main files                                    */
+ 
+             OVRDBF     FILE(CLEARHH) TOFILE(CLEAROHH) OVRSCOPE(*JOB)
+             OVRDBF     FILE(CLEARPD) TOFILE(CLEAROPD) FRCRATIO(500) +
+                          NBRRCDS(1000) OVRSCOPE(*JOB) SEQONLY(*YES +
+                          2000)
+             OVRDBF     FILE(CLEARZZ) TOFILE(CLEAROZZ) OVRSCOPE(*JOB)
+ 
+             OVRDBF     FILE(SACPO) TOFILE(ACPO5) FRCRATIO(500) +
+                          NBRRCDS(1000) OVRSCOPE(*JOB) SEQONLY(*YES +
+                          2000)
+             OVRDBF     FILE(SACPOZ) TOFILE(ACPO5Z) OVRSCOPE(*JOB)
+ 
+             CALLSUBR   SUBR(OVERRIDES)
+ 
+             ENDSUBR
+ 
+ /* GLC600A06 Subroutine                                            */  /* CGL049 */
+ 
+             SUBR       SUBR(GLC600A06) /* CGL049 */
+ 
+/* Reset job switches                                              */  /* CGL049 */
+ 
+                CHGJOB     SWS(000000XX) /* CGL049 */
+ 
+/* Check if Retail is on OR Interest on Accounts is on:            */      /* CGL049 */
+/* IF on Set Main post or post after end of period switch          */                  /* CGL049 */
+ 
+                IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ 'Y')) +
+                             THEN(CHGJOB SWS(XXXX1XXX)) /* CGL049 */
+ 
+                OVRDBF     FILE(SACPO) TOFILE(ACPO6) OVRSCOPE(*JOB) /* CGL049 */
+                OVRDBF     FILE(SACPOZ) TOFILE(ACPO6Z) OVRSCOPE(*JOB) /* CGL049 */
+ 
+                CALLSUBR   SUBR(OVERRIDES) /* CGL049 */
+ 
+             ENDSUBR    /* CGL049 */
+ 
+/* GLC600A07 Subroutine                                            */                   /*MD037383*/
+                                                                                        /*MD037383*/
+             SUBR       SUBR(GLC600A07)                                                 /*MD037383*/
+                                                                                        /*MD037383*/
+/* Reset job switches                                              */                   /*MD037383*/
+                                                                                        /*MD037383*/
+/*           CHGJOB     SWS(000000XX) */                                      /*MD037383**MD039002*/
+             CHGJOB     SWS(100000XX)                                                   /*MD039002*/
+                                                                                        /*MD037383*/
+/* Check if Retail is on OR Interest on Accounts is on:            */                   /*MD037383*/
+/* IF on Set Main post or post after end of period switch          */                   /*MD037383*/
+                                                                                        /*MD037383*/
+             IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ +
+                          'Y')) THEN(CHGJOB SWS(XXXX1XXX))                              /*MD037383*/
+                                                                                        /*MD037383*/
+             CLRPFM     FILE(GLCLERHH)                                                  /*MD040304*/
+             CLRPFM     FILE(GLCLERPD)                                                  /*MD040304*/
+             CLRPFM     FILE(GLCLERZZ)                                                  /*MD040304*/
+             CLRPFM     FILE(GLSYDTPD)                                                  /*MD040304*/
+             CLRPFM     FILE(GLSYHDPD)                                                  /*MD040304*/
+             CLRPFM     FILE(GLSYTRPD)                                                  /*MD040304*/
+                                                                                        /*MD040304*/
+             OVRDBF     FILE(CLEARHH) TOFILE(GLCLERHH)                                  /*MD037383*/
+             OVRDBF     FILE(CLEARPD) TOFILE(GLCLERPD)                                  /*MD037383*/
+             OVRDBF     FILE(CLEARZZ) TOFILE(GLCLERZZ)                                  /*MD037383*/
+             OVRDBF     FILE(SYSOPHH) TOFILE(GLSYHDPD)                                  /*MD037383*/
+             OVRDBF     FILE(SYSOPAJ) TOFILE(GLSYDTPD)                                  /*MD037383*/
+             OVRDBF     FILE(SYSOPZX) TOFILE(GLSYTRPD)                                  /*MD037383*/
+             OVRDBF     FILE(SACPO) TOFILE(GLGESTL3)                                    /*MD037383*/
+             OVRDBF     FILE(SACPOZ) TOFILE(GLSTTRL3)                                   /*MD037383*/
+             CALLSUBR   SUBR(OVERRIDES)                                                 /*MD037383*/
+                                                                                        /*MD037383*/
+             ENDSUBR                                                                    /*MD037383*/
+                                                                                        /*MD037383*/
+/* OVERRIDES Subroutine                                            */
+ 
+             SUBR       SUBR(OVERRIDES)
+ 
+/* Set overrides for output files                                  */
+ 
+             OVRDBF     FILE(ACORDAB) FRCRATIO(500) NBRRCDS(1000) +
+                          OVRSCOPE(*JOB) SEQONLY(*YES 2000)
+             OVRDBF     FILE(STMTAH) FRCRATIO(500) NBRRCDS(1000) +
+                          OVRSCOPE(*JOB) SEQONLY(*YES 2000)
+             OVRDBF     FILE(SYSOPAJ) FRCRATIO(500) NBRRCDS(1000) +
+                          OVRSCOPE(*JOB) SEQONLY(*YES 2000)
+             OVRDBF     FILE(REOUTLPD) FRCRATIO(500) NBRRCDS(1000) +
+                          OVRSCOPE(*JOB) SEQONLY(*YES 2000)
+             OVRDBF     FILE(REIAC2) TOFILE(REIAC) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+ 
+             ENDSUBR
+END:         ENDPGM

@@ -1,0 +1,221 @@
+     C****************************************************************
+     C**                                                             *
+     C****SR:FFPRCS***-*CONVERTS*A*PRICE*IN*FILE*FORMAT*(*11,7P*)*****    CFF004
+     C******************TO*ITS*EQUIVALENT*SCREEN*FORMAT*(*12**A*)*****    CFF004
+     C**  SR:FFPRCS   - CONVERTS A PRICE IN FILE FORMAT ( 15,8P )    *    CFF004
+     C**                TO ITS EQUIVALENT SCREEN FORMAT ( 16  A )    *    CFF004
+     C**                                                             *
+     C****INPUTS******-*FFPRIC*(11,7P)*PRICE*(*FILE*FORMAT*)**********    CFF004
+     C**  INPUTS      - FFPRIC (15,8P) PRICE ( FILE FORMAT )         *    CFF004
+     C**                FFTKDM  (3,0P) TICKS DENOMINATOR             *
+     C**                FFMNPF (11,7P) MINIMUM PRICE FLUCTUATION     *
+     C****OUTPUTS*****-*FFSPRC*(12**A)*PRICE*(*SCREEN*FORMAT*)********    CFF004
+     C**  OUTPUTS     - FFSPRC (16  A) PRICE ( SCREEN FORMAT )       *    CFF004
+     C**                                                             *
+     C****************************************************************
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CFF006             Date 28Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CFF004             Date 21Aug96               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CFF006 - Fractional Ticks Enhancement.                       *
+      * CFF004 - Increase in size of Price Fields                     *
+      *                                                               *
+      *****************************************************************
+     C**
+     C           FFPRCS    BEGSR                           ** FFPRCS SR **
+     C**
+     C**
+     C**
+     C*     DEFINE INPUT FIELDS
+     C**
+     C***********          Z-ADDFFPRIC    FFPRIC 117                      CFF004
+     C                     Z-ADDFFPRIC    FFPRIC 158                      CFF004
+     C                     Z-ADDFFTKDM    FFTKDM  30
+     C***********          Z-ADDFFMNPF    FFMNPF 117                      CFF004
+     C                     Z-ADDFFMNPF    FFMNPF 158                      CFF004
+     C                     Z-ADD0         K       20                      CFF006
+     C                     MOVE 'N'       FFSIGN  1                       CFF006
+     C                     MOVE 'N'       FFXPT2  1                       CFF006
+     C**
+     C*     INITIALISE O/P FIELD FFSPRC
+     C**
+     C***********          MOVE *BLANK    FFSPRC 12                       CFF004
+     C                     MOVE *BLANK    FFSPRC 16                       CFF004
+     C**
+     C*     SEARCH FFPRIC FOR 1ST NON ZERO ELEMENT BEFORE DECIMAL
+     C**
+     C                     Z-ADD1         I       20
+     C***********I         DOWLT4                                         CFF004
+     C           I         DOWLT7                                         CFF004
+     C           FFFP,I    ANDEQ0
+     C**
+     C                     ADD  1         I
+     C**
+     C                     END
+     C**
+     C******MOVE*ELEMENTS*FROM FIRST NON ZERO POSITION TO 4TH OF FFFP     CFF004
+     C*     MOVE ELEMENTS FROM FIRST NON ZERO POSITION TO 7TH OF FFFP     CFF004
+     C*     TO CORRESPONDING POSITIONS IN FFSP
+     C**
+     C***********I         DOWLE4                                         CFF004
+     C           I         DOWLE7                                         CFF004
+     C**
+     C                     MOVE FFFP,I    FFSP,I
+     C                     ADD  1         I
+     C**
+     C                     END
+     C**
+     C*     SET UP DECIMAL OR FRACTION FORMAT SEPARATOR
+     C**
+     C           FFTKDM    IFEQ 100
+     C*
+     C                     MOVE '.'       FFPT    1
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '-'       FFPT
+      *                                                                   CFF006
+     C           FFMNPF    IFNE 0                                         CFF006
+     C                     MOVE '.'       FFPT2   1                       CFF006
+     C                     ENDIF                                          CFF006
+     C*
+     C                     END
+     C**
+     C*     DETERMINE NUMBER OF SIGNIFICANT DECIMAL DIGITS
+     C**
+     C*     IF TICK =100 DETERMINE NO. DECIMAL PLACES FROM FFMNPF
+     C**
+     C           FFTKDM    IFEQ 100
+     C**
+     C***********          Z-ADD7         I                               CFF004
+     C                     Z-ADD8         I                               CFF004
+     C           I         DOWGT0
+     C           FFMF,I    ANDEQ0
+     C*
+     C                     SUB  1         I
+     C*
+     C                     END
+     C                     Z-ADDI         FFN     20
+     C**
+     C                     ELSE
+     C**
+     C*    DETERMINE NO. OF SIGNIFICANT DIGITS FROM TICK VALUE
+     C**
+     C           FFTKDM    IFLE 10
+     C                     Z-ADD1         FFN
+     C                     END
+     C**
+     C           FFTKDM    IFGT 10
+     C           FFTKDM    ANDLE100
+     C                     Z-ADD2         FFN
+     C                     END
+     C**
+     C           FFTKDM    IFGT 100
+     C                     Z-ADD3         FFN
+     C                     END
+     C**
+     C                     END
+      *                                                                   CFF006
+      ** Determine the total number of fractional digits.  If this is     CFF006
+      ** greater than the significant digits before the '.', then         CFF006
+      ** second delimeter is required.                                    CFF006
+      *                                                                   CFF006
+     C           FFTKDM    IFNE 100                                       CFF006
+     C           FFMNPF    ANDNE0                                         CFF006
+     C                     Z-ADD15        I                               CFF006
+      *                                                                   CFF006
+     C           I         DOWGT7                                         CFF006
+     C           FFFP,I    ANDEQ0                                         CFF006
+     C                     SUB  1         I                               CFF006
+     C                     ENDDO                                          CFF006
+      *                                                                   CFF006
+     C           I         SUB  7         L       20                      CFF006
+      *                                                                   CFF006
+     C           L         IFGT 0                                         CFF006
+      *                                                                   CFF006
+     C           L         IFGT FFN                                       CFF006
+     C                     MOVE 'Y'       FFXPT2                          CFF006
+     C                     ELSE                                           CFF006
+     C                     Z-ADDFFN       L                               CFF006
+     C                     ENDIF                                          CFF006
+     C                     ENDIF                                          CFF006
+      *                                                                   CFF006
+     C                     ENDIF                                          CFF006
+     C**
+     C*    IF NUMBER OF SIGNIFICANT DECIMALS<> 0
+     C**
+     C           FFN       IFNE 0
+     C**
+     C*    MOVE FFPT IN TO OUT FIELD
+     C**
+     C***********          MOVE FFPT      FFSP,5                          CFF004
+     C                     MOVE FFPT      FFSP,8                          CFF004
+      *                                                                   CFF006
+      ** Move the fractional digits to out field                          CFF006
+      *                                                                   CFF006
+     C           FFTKDM    IFNE 100                                       CFF006
+     C           FFMNPF    ANDNE0                                         CFF006
+     C                     Z-ADD8         I                               CFF006
+     C                     Z-ADD9         J                               CFF006
+     C                     Z-ADD1         P                               CFF006
+     C                     MOVE 'N'       FFSIGN                          CFF006
+      *                                                                   CFF006
+     C           P         DOWLEL                                         CFF006
+      *                                                                   CFF006
+      ** If digit is not zero, or if it is zero but significant,          CFF006
+      ** (meaning a previous non-zero digit were previously moved)        CFF006
+      ** move this to out field                                           CFF006
+      *                                                                   CFF006
+     C           FFFP,I    IFNE 0                                         CFF006
+     C           FFSIGN    OREQ 'Y'                                       CFF006
+     C           FFFP,I    OREQ 0                                         CFF006
+     C           FFSIGN    ANDNE'Y'                                       CFF006
+     C           P         ANDEQFFN                                       CFF006
+     C                     MOVE FFFP,I    FFSP,J                          CFF006
+     C                     MOVE 'Y'       FFSIGN                          CFF006
+     C                     ADD  1         J                               CFF006
+     C                     ENDIF                                          CFF006
+      *                                                                   CFF006
+      ** If significant digits before '.' has been moved, and second      CFF006
+      ** delimeter is necessary, move the delimeter to out field          CFF006
+      *                                                                   CFF006
+     C                     ADD  1         I                               CFF006
+     C           FFN       IFEQ P                                         CFF006
+     C           FFXPT2    ANDEQ'Y'                                       CFF006
+     C                     MOVE FFPT2     FFSP,J                          CFF006
+     C                     ADD  1         J                               CFF006
+     C                     ENDIF                                          CFF006
+      *                                                                   CFF006
+     C                     ADD  1         P       20                      CFF006
+     C                     ENDDO                                          CFF006
+      *                                                                   CFF006
+     C                     ELSE                                           CFF006
+     C**
+     C*    MOVE SIGNIFICANT DIGITS TO CORRESPONDING
+     C*    POSITIONS IN FFSP
+     C**
+     C***********          Z-ADD5         I                               CFF004
+     C                     Z-ADD8         I                               CFF004
+     C           FFN       DOWNE0
+     C*
+     C           I         ADD  1         J       20
+     C                     MOVE FFFP,I    FFSP,J
+     C                     ADD  1         I
+     C                     SUB  1         FFN
+     C*
+     C                     END
+     C                     ENDIF                                          CFF006
+     C**
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************

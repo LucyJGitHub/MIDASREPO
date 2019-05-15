@@ -1,0 +1,847 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Resend DL confirmations to TRAM')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - CONFIRMATION MATCHING                                *
+     F*                                                               *
+     F*  CF0187 - RESEND DEALING CONFIRMATIONS TO TRAM                *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CMG003             Date 04Oct12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 165884             DATE 25Aug99               *
+     F*                 113352             DATE 13FEB97               *
+      *                 098602             DATE 23JAN98               *
+     F*                 S01408             DATE 24APR96               *
+     F*                 090570             DATE 24JUL95               *
+     F*                 061810             DATE 19JAN94               *
+     F*                 S01310             DATE 06DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CMG003 - SWIFT MT600 Message Generation                      *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CDL008 - Continuous Linked Settlement (recompile MGOREFPD)   *
+     F*  165884 - Add extra key field to MSIXI2LA.                    *
+     F*  113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                 *
+      *  098602 - Chain to CF ICD file rather than read - if file     *
+      *           already read, pgm will get EOF on the read.         *
+     F*  S01408 - Addition of core hook CF0187EEP1                    *
+     F*           Addition of core hook CF0187CCP1                    *
+     F*  090570 - RECOMPILED FOR CHANGE IN MSIXI2LA.                  *
+     F*  061810 - Create dummy MT392 for amended deals to cater TRAM  *
+     F*           (Recompile due to changes in MGOREFLI)              *
+     F*  S01310 - RE WRITTEN FOR SWIFT RATIONALISATION                *
+     F*                                                               *
+     FCF0187DFCF  E                    WORKSTN
+     FSDBANKPDIF  E                    DISK
+     FSDCONFPDIF  E                    DISK
+     FMGOREFL0UF  E           K        DISK
+     FMSIXI2L2UF  E           K        DISK
+     FMGOREFLTUF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREFT0
+     FMSIXI2LAUF  E           K        DISK
+     F            MSIXI2D0                          KRENAMEMSIXI2A0
+     FMUSER   IF  E           K        DISK
+     FSDBRCHL0IF  E           K        DISK
+     FCF0187AUO   E             20     PRINTER
+      *
+      * ID C  F  H  L    Function of indicators
+      *    20            CF0187P1 overflow
+      *    30            EOF MGOREFLT
+      *    31            EOF MSIXI2LA
+      *    32            EOF MSIXI2L2
+      *    33            EOF MGOREFL0
+      *    34            EOF SDCONFPD
+      *    35            EOF SDCONFPD
+      *    40            Screen error
+      *    41            Deal selection error
+      *    42            Outgoing message error
+      *    43            Time selection error
+      *    44            Alpha time error
+      *    45            Hour error
+      *    46            Minute error
+      *    47            Branch error
+      *    49            Multibranching on
+      *    88            EOF SDBRCHPD
+      *    89            EOF MUSER
+      *    U7U8LR        DB error
+      *    KC            F3 Pressed
+      *    KL            F12 Pressed
+      *
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,CF0187EEP1                                           S01408
+     E*                                                                   S01408
+     E                    MSGA    1  18 70
+     E                    CPY@    1   1 80
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local Data Area - Database errors
+      *
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      **  Workstation Id
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     I            DS
+     I                                        1   3 @TST
+     I                                        1   1 SFOD
+     I                                        2   2 SFIM
+     I                                        3   3 SFFT
+      **  Screen fields (Our deal, Incoming message or from time)
+      *
+     I            DS
+     I                                        1   2 SFHR
+     I                                        1   20@NHR
+     I                                        3   4 SFMN
+     I                                        3   40@NMN
+     I                                        1   4 @TM4
+     I                                        1   40@NTM
+     I I            00                        5   60@A
+     I                                        1   60@TM6
+      **  Time entered HH, MM, HHMM, HHMM00
+      *
+     I            DS
+     I I            'DL'                      1   2 @B
+     I                                        3   8 SFDN
+     I                                        3   80@NOD
+     I                                        1  16 STRNO
+      **  Deal number entered
+      *
+     I            DS
+     I                                        1   60@CK6
+     I                                        1   40@CK4
+      **  System time HHMMSS, HHMM
+      *                                                                                       CMG003
+     ISCSARD    E DSSCSARDPD                                                                  CMG003
+      ** Switchable Features File                                                             CMG003
+      *                                                                                       CMG003
+     IDSFDY     E DSDSFDY                                                                     CMG003
+      ** Short Data Structure for Access Object                                               CMG003
+      *                                                                                       CMG003
+      *
+     C           MGKY      KLIST
+     C                     KFLD           @DAT
+     C                     KFLD           @TM6
+      *
+     C           MSKY      KLIST
+     C                     KFLD           @CNT                        165884
+     C                     KFLD           @DAT
+     C                     KFLD           @NTM
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   VSEL  - validate selection                                  *
+      *   DLSN  - display our deal entry screen                       *
+      *   VDLN  - validate deal number entered                        *
+      *   IMSN  - display incoming message entry screen               *
+      *   VREF  - validate reference entered                          *
+      *   TMSN  - display from time entry screen                      *
+      *   VTIM  - validate time entered                               *
+      *   RSTM  - resend confirmations fronm time                     *
+      *   RSDL  - resend outgoing confirmations for deal              *
+      *   RSIM  - resend incoming confirmation                        *
+      *   *PSSR - Error processing                                    *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           VSEL validate selection                             *
+      *           DLSN display our deal entry screen                  *
+      *           VDLN validate deal number entered                   *
+      *           IMSN display incoming message entry screen          *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN40     IFEQ '0'
+     C                     MOVE *BLANKS   SBCH
+     C                     MOVE *BLANKS   @TST
+     C                     END
+      *
+     C                     WRITECF0187F1
+     C                     EXFMTCF0187F2
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     404142
+     C                     SETOF                     4347
+      *
+      **  Validate selection
+     C           *INKC     IFEQ '0'
+     C                     EXSR VSEL
+      *
+      **  If selection valid display
+      **  our deal, incoming message or from time screen
+     C           VALD      IFEQ 'Y'
+     C           SFOD      IFEQ 'X'
+     C                     EXSR DLSN
+     C                     ELSE
+     C           SFIM      IFEQ 'X'
+     C                     EXSR IMSN
+     C                     ELSE
+     C           SFFT      IFEQ 'X'
+     C                     EXSR TMSN
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     END
+      *
+     C                     WRITEEOREPORT
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'CF0187'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for run date & single branch
+     C           1         CHAINSDBANKPD             33
+      *
+     C           *IN33     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Convert run date to YYMMDD
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZMDATE  6
+     C                     MOVE ZMDATE    @DAT    60
+     C                     MOVELZMDATE    @YEAR   2                   165884
+     C           @YEAR     IFGE '72'                                  165884
+     C                     MOVE '19'      @CNT    2                   165884
+     C                     ELSE                                       165884
+     C                     MOVE '20'      @CNT                        165884
+     C                     END                                        165884
+      *
+      **  Obtain TRAM standing data
+     C******************** READ SDCONFPD                 35           098602
+     C           1         CHAINSDCONFPD             35               098602
+     C           *IN35     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *
+     C                     MOVEL'FIRST'   DBKEY
+     C                     MOVEL'SDCONFPD'DBFILE
+     C                     OUT  LDA
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+      *
+      **  Access MUSER for user's authority
+     C           USRID     CHAINMUSER                89
+      *
+     C           *IN89     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVELUSRID     DBKEY            * DB ERROR 03 *
+     C                     MOVEL'MUSER'   DBFILE
+     C                     OUT  LDA
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Seton multibranching indicator
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     49
+     C                     END
+      *
+      **  Seton overflow to trigger page heading
+     C                     SETON                     20
+      *                                                                                       CMG003
+      ** Access Switchable Feature details, Check if CMG003 is *ON                            CMG003
+      *                                                                                       CMG003
+     C                     CALL 'AOSARDR0'                                                    CMG003
+     C                     PARM *BLANKS   PRTCD   7                                           CMG003
+     C                     PARM '*VERIFY 'POPTN   7                                           CMG003
+     C                     PARM 'CMG003'  PSARD   6                                           CMG003
+     C           SCSARD    PARM SCSARD    DSFDY                                               CMG003
+      *                                                                                       CMG003
+     C           PRTCD     IFNE *BLANK                                                        CMG003
+     C           PRTCD     ANDNE'*NRF '                                                       CMG003
+     C           *LOCK     IN   LDA                                                           CMG003
+     C                     Z-ADD004       DBASE            **************                     CMG003
+     C                     MOVEL'SCSARDPD'DBFILE           ** DB ERROR **                     CMG003
+     C                     MOVELPSARD     DBKEY            **************                     CMG003
+     C                     OUT  LDA                                                           CMG003
+     C                     EXSR *PSSR                                                         CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C           PRTCD     IFEQ *BLANKS                                                       CMG003
+     C                     MOVE 'Y'       CMG003  1                                           CMG003
+     C                     ELSE                                                               CMG003
+     C                     MOVE 'N'       CMG003                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL - Validate selection                                   *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+     C                     MOVE 'Y'       VALD    1
+      *
+      **  'X' must be entered in one selection field
+     C           SFOD      IFNE ' '
+     C           SFOD      ANDNE'X'
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,1    SFMG
+     C                     SETON                     4041
+      *
+     C                     ELSE
+     C           SFIM      IFNE ' '
+     C           SFIM      ANDNE'X'
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,2    SFMG
+     C                     SETON                     4042
+      *
+     C                     ELSE
+     C           SFFT      IFNE ' '
+     C           SFFT      ANDNE'X'
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,3    SFMG
+     C                     SETON                     4043
+      *
+     C                     ELSE
+     C           @TST      IFNE 'X  '
+     C           @TST      ANDNE' X '
+     C           @TST      ANDNE'  X'
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,4    SFMG
+     C                     SETON                     40
+     C                     SETON                     414243
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      **  If multibranching active
+     C           MBIN      IFEQ 'Y'
+      *
+      **  If branch blank substitute user's default branch
+     C           SBCH      IFEQ *BLANK
+     C                     MOVE DBRN      SBCH
+     C                     END
+      *
+      **  Is branch code valid
+     C           SBCH      IFNE 'ALL'
+     C           SBCH      CHAINSDBRCHL0             88
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,16   SFMG
+     C                     SETON                     4047
+     C                     ELSE
+      *
+     C           BANK      IFNE 'Y'
+     C                     MOVE SBCH      ZBR     3
+     C                     Z-ADD0         ZERR    10
+     C                     CALL 'ZVBBU'
+     C                     PARM           ZBR
+     C                     PARM           ZERR
+      *
+     C           ZERR      IFNE 0
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,17   SFMG
+     C                     SETON                     4047
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      **  If branch 'ALL' user must have bank level authority
+      **  or be system routing officer
+     C           SBCH      IFEQ 'ALL'
+     C           BANK      IFNE 'Y'
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,18   SFMG
+     C                     SETON                     4047
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DLSN  - display our deal entry screen                       *
+      *   Calls - RSDL resend outgoing confirmations for deal         *
+      *           VDLN validate deal number entered                   *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           DLSN      BEGSR
+      *
+      **  Display our deal screen until F3 or F12 pressed
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN40     IFEQ '0'
+     C                     MOVE *BLANKS   SFDN
+     C                     END
+      *
+     C                     WRITECF0187F1
+     C                     WRITECF0187F6
+     C                     EXFMTCF0187F3
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     40
+      *
+      **  Validate deal number entered
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR VDLN
+      *
+      **  Resend all outgoing confirmations for deal
+     C           VALD      IFEQ 'Y'
+     C                     EXSR RSDL
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VDLN  - validate deal number entered                        *
+      *   Called by - DLSN display our deal entry screen              *
+      *****************************************************************
+      *
+     C           VDLN      BEGSR
+      *
+     C                     MOVE 'Y'       VALD
+      *
+      **  Deal number must be numeric and between 1 and 999999
+     C                     TESTN          SFDN       41
+      *
+     C           *IN41     IFEQ '0'
+     C           @NOD      ORLT 1
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,10   SFMG
+     C                     SETON                     40
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,CF0187CCP1                                           S01408
+     C*                                                                   S01408
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   IMSN  - display incoming message entry screen               *
+      *   Calls - RSIM resend incoming confirmation                   *
+      *           VREF validate reference entered                     *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           IMSN      BEGSR
+      *
+      **  Display incoming message screen until F2 or F12 pressed
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN40     IFEQ '0'
+     C                     MOVE *BLANKS   SFIR
+     C                     END
+      *
+     C                     WRITECF0187F1
+     C                     WRITECF0187F6
+     C                     EXFMTCF0187F4
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     40
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR VREF
+      *
+      **  Resend incoming confirmation
+     C           VALD      IFEQ 'Y'
+     C                     EXSR RSIM
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VREF  - validate reference entered                          *
+      *   Called by - IMSN display incoming message entry screen      *
+      *****************************************************************
+      *
+     C           VREF      BEGSR
+      *
+     C                     MOVE 'Y'       VALD
+      *
+      **  Reference must be entered
+     C           SFIR      IFEQ *BLANKS
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,11   SFMG
+     C                     SETON                     40
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   TMSN  - display from time entry screen                      *
+      *   Calls - VTIM validate time entered                          *
+      *           RSTM resend confirmations fronm time                *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           TMSN      BEGSR
+      *
+      **  Display from time screen until F3 or F12 pressed
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN40     IFEQ '0'
+     C                     MOVE *BLANKS   @TM4
+     C                     END
+      *
+     C                     WRITECF0187F1
+     C                     WRITECF0187F6
+     C                     EXFMTCF0187F5
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     404546
+      *
+      **  Validate time
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR VTIM
+      *
+      **  Resend incoming and outgoing confirmations from time entered
+     C           VALD      IFEQ 'Y'
+     C                     EXSR RSTM
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VTIM  - validate time entered                               *
+      *   Called by - TMSN display from time entry screen             *
+      *****************************************************************
+      *
+     C           VTIM      BEGSR
+      *
+     C                     MOVE 'Y'       VALD
+      *
+      **  Time must be entered & numeric
+     C                     TIME           @CK6    60
+     C           @TM4      IFEQ *BLANKS
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,8    SFMG
+     C                     SETON                     404546
+      *
+     C                     ELSE
+     C                     TESTN          @TM4       44
+     C           *IN44     IFEQ '0'
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,9    SFMG
+     C                     SETON                     404546
+     C                     ELSE
+      *
+      **  Time must be between 00:00 - 23:59 and before current time
+     C           @NHR      IFGT 23
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,5    SFMG
+     C                     SETON                     4045
+      *
+     C                     ELSE
+     C           @NMN      IFGT 59
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,6    SFMG
+     C                     SETON                     4046
+      *
+     C                     ELSE
+     C           @NTM      IFGT @CK4
+     C                     MOVE 'N'       VALD
+     C                     MOVEAMSGA,7    SFMG
+     C                     SETON                     404546
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   RSDL  - resend outgoing confirmations for deal              *
+      *   Called by - DLSN display our deal entry screen              *
+      *****************************************************************
+      *
+     C           RSDL      BEGSR
+      *
+     C                     MOVEAMSGA,14   SFMG
+      *
+      **  Change processed flag on outgoing confirmations for deal
+      **  (MT350 excepted depending on ICD our MT350?)
+     C           STRNO     SETLLMGOREFL0
+     C                     READ MGOREFL0                 33
+      *
+     C           *IN33     DOWEQ'0'
+     C           MODI      ANDEQ'DL'
+     C           SFDN      ANDEQMTRN
+      *
+     C           MBIN      IFNE 'Y'
+     C           SBCH      OREQ 'ALL'
+     C           SBCH      OREQ BRCA
+      *
+     C           MGST      IFNE 'DLTD'
+     C           MTPY      IFEQ '300'
+     C           MTPY      OREQ '320'
+     C           MTPY      OREQ '324'
+     C           MTPY      OREQ '330'
+     C           MTPY      OREQ '392'
+     C           MTPY      OREQ '350'
+     C           DSIOIA    ANDEQ'Y'
+     C           MTPY      OREQ '600'                                                         CMG003
+     C           CMG003    ANDEQ'Y'                                                           CMG003
+      *
+     C                     MOVE ' '       CFPF
+     C                     UPDATMGOREFD0
+     C                     MOVEAMSGA,12   SFMG
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     20
+     C                     END
+      *
+      **  Print outgoing details
+     C                     WRITEOUTLINE
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     READ MGOREFL0                 33
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   RSIM  - resend incoming confirmation                        *
+      *   Called by - IMSN display incoming message screen            *
+      *****************************************************************
+      *
+     C           RSIM      BEGSR
+      *
+     C                     MOVEAMSGA,15   SFMG
+      *
+      **  Change processed flag on incoming confirmation
+      **  (MT350 excepted depending on ICD their MT350?)
+     C           SFIR      CHAINMSIXI2L2             32
+      *
+     C           *IN32     IFEQ '0'
+     C           MTPY      IFEQ '300'
+     C           MTPY      OREQ '320'
+     C           MTPY      OREQ '324'
+     C           MTPY      OREQ '330'
+     C           MTPY      OREQ '392'
+     C           MTPY      OREQ '350'
+     C           DSICIA    ANDEQ'Y'
+     C           MTPY      OREQ '600'                                                         CMG003
+     C           CMG003    ANDEQ'Y'                                                           CMG003
+      *
+     C           MBIN      IFNE 'Y'
+     C           SBCH      OREQ 'ALL'
+     C           SBCH      OREQ BRCA
+      *
+     C                     MOVE ' '       CFPF
+     C                     UPDATMSIXI2D0
+     C                     MOVEAMSGA,12   SFMG
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     20
+     C                     END
+      *
+      **  Print incoming details
+     C                     WRITEINLINE
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   RSTM  - resend confirmations fronm time                     *
+      *   Called by - TMSN display from time screen                   *
+      *****************************************************************
+      *
+     C           RSTM      BEGSR
+      *
+     C                     MOVEAMSGA,13   SFMG
+      *
+      **  Change processed flag on outgoing confirmation from time
+      **  (MT350 excepted depending on ICD our MT350?)
+     C           MGKY      SETLLMGOREFLT
+     C                     READ MGOREFLT                 30
+      *
+     C           *IN30     DOWEQ'0'
+     C           MGDE      ANDEQ@DAT
+      *
+     C           MBIN      IFNE 'Y'
+     C           SBCH      OREQ 'ALL'
+     C           SBCH      OREQ BRCA
+      *
+     C           MGST      IFNE 'DLTD'
+     C           MGTM      ANDGE@TM6
+     C           MTPY      IFNE '350'
+     C           DSIOIA    OREQ 'Y'
+      *
+     C                     MOVE ' '       CFPF
+     C                     UPDATMGOREFT0
+     C                     MOVEAMSGA,12   SFMG
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     20
+     C                     END
+      *
+      **  Print outgoing details
+     C                     WRITEOUTLINE
+     C                     MOVE '1'       *INKL
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     READ MGOREFLT                 30
+     C                     END
+      *
+      **  Change processed flag on incoming confirmation from time
+      **  (MT350 excepted depending on ICD their MT350?)
+     C           MSKY      SETLLMSIXI2LA
+     C                     READ MSIXI2LA                 31
+      *
+     C           *IN31     DOWEQ'0'
+     C           MODE      ANDEQ@DAT
+      *
+     C           MBIN      IFNE 'Y'
+     C           SBCH      OREQ 'ALL'
+     C           SBCH      OREQ BRCA
+      *
+     C           MOTM      IFGE @NTM
+     C           MTPY      IFNE '350'
+     C           DSICIA    OREQ 'Y'
+      *
+     C                     MOVE ' '       CFPF
+     C                     UPDATMSIXI2A0
+     C                     MOVEAMSGA,12   SFMG
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     20
+     C                     END
+      *
+      **  Print outgoing details
+     C                     WRITEINLINE
+     C                     MOVE '1'       *INKL
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     READ MSIXI2LA                 31
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - ERROR HANDLING                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,CF0187C001
+**  MESSAGES ARRAY
+001  X MUST BE USED TO SELECT OUR DEAL RESEND
+002  X MUST BE USED TO SELECT INCOMING MESSAGE RESEND
+003  X MUST BE USED TO SELECT TIME RESEND
+004  SELECT ONE OF OUR DEAL, INCOMING MESSAGE OR FROM TIME
+005  HOUR MUST BE IN RANGE 00-23
+006  MINUTES MUST BE IN RANGE 00-59
+007  TIME MUST BE EARLIER THAN CURRENT TIME
+008  TIME MUST BE ENTERED
+009  TIME MUST BE NUMERIC
+010  DEAL NUMBER MUST BE IN RANGE 000001-999999
+011  REFERENCE NUMBER MUST BE ENTERED
+SEE AUDIT REPORT FOR CONFIRMATIONS SENT
+NO LIVE DEALING CONFIRMATIONS AFTER TIME ENTERED
+NO LIVE DEALING CONFIRMATIONS FOR DEAL NUMBER ENTERED
+NO INCOMING CONFIRMATION WITH REFERENCE ENTERED
+012 BRANCH INVALID
+013 NOT AUTHORISED TO BRANCH
+014 BRANCH ALL ONLY ALLOWED WITH BANK LEVEL AUTHORITY
+**  Object copyright
+(c) Finastra International Limited 2001

@@ -1,0 +1,629 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Lending Advices - Driver')                    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG6030 - Lending Advices - Driver                            *
+     F*                                                               *
+     F*  Function:  This program will determine which type of event   *
+     F*    (CoB)    it is processing by reading through LF/SCUTX      *
+     F*             It will call CG6035 if it is a loan repayment;    *
+     F*             CG6036 if an interest payment; CG6037 if a fee    *
+     F*             payment; and CG6038 if an amendment.              *
+     F*                                                               *
+     F*  Called By: CGC6004 - Lending Advices, Repayments             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CLE031             Date 03Feb03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK009             Date 01Sep99               *
+      *                 122226             Date 26Aug97               *
+     F*                 102468             DATE 25APR96               *
+     F*                 CCG008 *CREATE     DATE 30OCT95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CLE031 - Lending Enhancements.                               *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+     F*  CPK009 - Compilation problems found at DBA R3.00             *
+     F*  122226 - Changes to CUTX1HN has resulted in a mis-match in   *
+     F*           parameters being passed to other programs + rename  *
+     F*           certain fields.                                     *
+     F*  102468 - UDC Lending alpha site fix.  New logical LECUTXL1   *
+     F*           created and used for update, as key on SCUTX is     *
+     F*           changed by this program.                            *
+     F*         - Also renamed the ##PGM field, to prevent confusing  *
+     F*           dumps.  ##PGM is used by IBM for the name of the    *
+     F*           current program.                                    *
+     F*  CCG008 - User Defined Correspondence - Lending               *
+     F*                                                               *
+     F*****************************************************************
+     FSCUTX   UF  E           K        DISK         KCOMIT
+     F                                              KINFSR SRFILE
+     F            CUTX1HHF                          KIGNORE
+     F            CUTX2HHF                          KIGNORE
+     F            CUTX1HQF                          KIGNORE
+     F            CUTX1ZXF                          KIGNORE
+     F            CUTX2ZXF                          KIGNORE
+     FLECUTXL1UF  E           K        DISK         KCOMIT            UC  102468
+     F            CUTX1HNF                          KRENAMELECUTXNF       102468
+     F                                              KINFSR SRFILE         102468
+     F/COPY WNCPYSRC,CG6030F001
+     F*****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N  C T I O N    O F    I N D I C A T O R S               *
+     F*                                                               *
+     F*  50         End of file SCUTX                                 *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  SRINIT  -  Initial Processing - On First Call                *
+     F*  SRINZ   -  Initialise Fields on Each Invocation              *
+     F*  SRMAIN  -  Main Processing                                   *
+     F*  SRAUDT  -  Audit Report Processing                           *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E**  Copyright array.
+     E                    CPY@    1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     E*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     I*
+     ICUTX1HNF    01
+     ICUTX1HPF    02
+     I              RECI                            P2RECI
+     I              RCDT                            P2RCDT
+     I              BRCA                            P2BRCA
+     I              CNUM                            P2CNUM
+     I              LNRF                            P2LNRF
+     I              VDAT                            P2VDAT
+     I              PRSQ                            P2PRSQ
+     I              LASN                            P2LASN
+     I              FCUS                            P2FCUS
+     I              FTYP                            P2FTYP
+     I              FSEQ                            P2FSEQ
+     I              PTYP                            P2PTYP
+     I              CCY                             P2CCY
+     I              AMTP                            P2AMTP
+     I              PRAM                            P2PRAM
+     I              INTA                            P2INTA
+     I              ACBI                            P2ACBI
+     ICUTX2HPF    03
+     I              RECI                            P3RECI
+     I              RCDT                            P3RCDT
+     I              BRCA                            P3BRCA
+     I              CNUM                            P3CNUM
+     I              LNRF                            P3LNRF
+     I              VDAT                            P3VDAT
+     I              PRSQ                            P3PRSQ
+     I              LASN                            P3LASN
+     I              FCUS                            P3FCUS
+     I              FTYP                            P3FTYP
+     I              FSEQ                            P3FSEQ
+     I              PTYP                            P3PTYP
+     I              CCY                             P3CCY
+     I              AMTP                            P3AMTP
+     I              PRAM                            P3PRAM
+     I              INTA                            P3INTA
+     I              WTXA                            P3WTXA
+     I              FEAM                            P3FEAM
+     I              FECD                            P3FECD
+     I              WOIN                            P3WOIN
+     I              EXVD                            P3EXVD
+     I              DAYS                            P3DAYS
+     I              ACUP0                           P3ACUP
+     I              ACBI                            P3ACBI
+     I              ZZ006                           P3ZZ06
+     I              CNAC                            P3CNAC
+     I              REPT                            P3REPT
+     I              BTRQ                            P3BTRQ
+     I*
+     IP1PARM    E DSCUTX1HN
+     I**  External DS for parameter passed to CG6036
+     I*
+     IP2PARM    E DSCUTX1HP
+     I**  External DS for parameter passed to CG6035/37/38
+     I              RECI                            P2RECI
+     I              RCDT                            P2RCDT
+     I              BRCA                            P2BRCA
+     I              CNUM                            P2CNUM
+     I              LNRF                            P2LNRF
+     I              VDAT                            P2VDAT
+     I              PRSQ                            P2PRSQ
+     I              LASN                            P2LASN
+     I              FCUS                            P2FCUS
+     I              FTYP                            P2FTYP
+     I              FSEQ                            P2FSEQ
+     I              PTYP                            P2PTYP
+     I              CCY                             P2CCY
+     I              AMTP                            P2AMTP
+     I              PRAM                            P2PRAM
+     I              INTA                            P2INTA
+     I              BTIN                            P2BTIN
+     I              CPAM                            P2CPAM                122226
+     I              AITC                            P2AITC                122226
+     I              INTR                            P2INTR                122226
+     I              AIAP                            P2AIAP                122226
+     I              IPRD                            P2IPRD                122226
+     I*
+     IP3PARM    E DSCUTX2HP
+     I**  External DS for parameter passed to CG6037
+     I              RECI                            P3RECI
+     I              RCDT                            P3RCDT
+     I              BRCA                            P3BRCA
+     I              CNUM                            P3CNUM
+     I              LNRF                            P3LNRF
+     I              VDAT                            P3VDAT
+     I              PRSQ                            P3PRSQ
+     I              LASN                            P3LASN
+     I              FCUS                            P3FCUS
+     I              FTYP                            P3FTYP
+     I              FSEQ                            P3FSEQ
+     I              PTYP                            P3PTYP
+     I              CCY                             P3CCY
+     I              AMTP                            P3AMTP
+     I              PRAM                            P3PRAM
+     I              INTA                            P3INTA
+     I              WTXA                            P3WTXA
+     I              FEAM                            P3FEAM
+     I              FECD                            P3FECD
+     I              WOIN                            P3WOIN
+     I              EXVD                            P3EXVD
+     I              DAYS                            P3DAYS
+     I              ACUP0                           P3ACUP
+     I              ACBI                            P3ACBI
+     I              ZZ006                           P3ZZ06
+     I              CNAC                            P3CNAC
+     I              REPT                            P3REPT
+     I              BTRQ                            P3BTRQ
+     I              BTIN                            P3BTIN
+     I              SCCY                            P3SCCY                                    CPK009
+     I              SEXR                            P3SEXR                                    CLE031
+     I              SEXI                            P3SEXI                                    CLE031
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I*                                                                   102468
+     ILECUTD      DS                                                      102468
+     I** Data structure to allow LECUTK key list to be passed to DB error 102468
+     I** handler.                                                         102468
+     I                                        1   3 HNBRCA                102468
+     I**********                              4   90HNCNUM                             102468 CSD027
+     I                                        4   9 HNCNUM                                    CSD027
+     I                                       10  120HNFTYP                102468
+     I                                       13  140HNFSEQ                102468
+     I**********                             15  200HNLNRF                             102468 CLE148
+     I                                       15  20 HNLNRF                                    CLE148
+     I                                       21  250HNVDAT                102468
+     I                                       26  270HNPRSQ                102468
+     I                                       28  300HNLASN                102468
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* Process     :  MAINLINE                                       *
+     C* Function    :  Mainline processing                            *
+     C*                                                               *
+     C* Called by   :  None                                           *
+     C* Calls       :  SRINIT - Initial Processing - On First Call    *
+     C*                SRINZ  - Initialise Fields on Each Invocation  *
+     C*                SRMAIN - Main Processing                       *
+     C*                SRAUDT - Audit Report Processing               *
+     C*****************************************************************
+     C*
+     C**  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C**  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+     C*
+     C**  Initialisation processing
+     C                     EXSR SRINZ
+     C*
+     C**  Main processing
+     C                     EXSR SRMAIN
+     C*
+     C**  Audit Processing
+     C                     EXSR SRAUDT
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C**  Terminate program
+     C                     RETRN
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* Subroutine  :  SRMAIN                                         *
+     C* Function    :  Main processing                                *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  CG4010 - Dealing Input Cycle Confirmations     *
+     C*****************************************************************
+     C           SRMAIN    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+     C*
+     C                     MOVE *OFF      *IN50
+     C*
+     C** Read SCUTX until End of File
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+     C                     MOVEA'000'     *IN,01
+     C                     READ SCUTX                    50
+     C*
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C** If Bill/Telex Indicator = 'B'
+     C*
+     C/COPY WNCPYSRC,CG6030C004
+     C           BTIN      IFEQ 'B'
+     C/COPY WNCPYSRC,CG6030C005
+     C*
+     C**  Increment the count of SCUTX records read.
+     C                     ADD  1         ##SREC  50
+     C**********           MOVE *BLANKS   ##PGM  10                       102468
+     C                     MOVE *BLANKS   PGM##  10                       102468
+     C/COPY WNCPYSRC,CG6030C001
+     C*
+     C**  SELECT EXTRACT PROGRAM TO RUN:
+     C**  Repayments
+     C                     SELEC
+     C*
+     C           *IN02     WHEQ *ON
+     C           P2RCDT    ANDEQ'D'
+     C           P2ACBI    ANDNE'A'
+     C           P2AMTP    ANDEQ'RE'
+     C***********          MOVEL'CG6035'  ##PGM                           102468
+     C                     MOVEL'CG6035'  PGM##                           102468
+     C                     MOVELP2PARM    #SCUTX
+     C*
+     C**  Interest
+     C*
+     C           *IN01     WHEQ *ON
+     C           RCDT      ANDEQ'H'
+     C***********          MOVEL'CG6036'  ##PGM                           102468
+     C                     MOVEL'CG6036'  PGM##                           102468
+     C                     MOVELP1PARM    #SCUTX
+     C*
+     C**  Fees (Commitment)
+     C*
+     C           *IN03     WHEQ *ON
+     C           P3RCDT    ANDEQ'F'
+     C***********          MOVEL'CG6037'  ##PGM                           102468
+     C                     MOVEL'CG6037'  PGM##                           102468
+     C                     MOVELP3PARM    #SCUTX
+     C*
+     C** Fess (Loan)
+     C*
+     C           *IN02     WHEQ *ON
+     C           P2RCDT    ANDEQ'B'
+     C***********          MOVEL'CG6037'  ##PGM                           102468
+     C                     MOVEL'CG6037'  PGM##                           102468
+     C                     MOVELP2PARM    #SCUTX
+     C*
+     C**  Amendments
+     C*
+     C           *IN02     WHEQ *ON
+     C           P2RCDT    ANDEQ'D'
+     C           P2ACBI    ANDEQ'A'
+     C***********          MOVEL'CG6038'  ##PGM                           102468
+     C                     MOVEL'CG6038'  PGM##                           102468
+     C                     MOVELP2PARM    #SCUTX
+     C*
+     C*   No condition satisfied, read next SCUTX record
+     C                     OTHER
+     C                     ITER
+     C*
+     C                     ENDSL
+     C*
+     C** Produce Confirmation
+     C*
+     C***********          CALL ##PGM                                     102468
+     C                     CALL PGM##                                     102468
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM *BLANK    ##COPD  1
+     C                     PARM           #SCUTX
+     C*
+     C**  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C                     EXSR SRAUDT
+     C*
+     C** Database error
+     C**********           MOVEL##PGM     W0FILE           ***************102468
+     C                     MOVELPGM##     W0FILE           ***************102468
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD01        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C**  Update SCUTX if confirmation successfully produced
+     C*
+     C/COPY WNCPYSRC,CG6030C002
+     C           ##COPD    IFEQ 'Y'
+     C*
+     C** If repayment record, update ZZ006 to allow Interest Advice
+     C** program to re-process this record and also to allow LE0540
+     C** to recorgnise that this recognise that this has already been
+     C** processed by UDC.
+     C*
+     C           *IN02     IFEQ *ON
+     C           P2RCDT    ANDEQ'D'
+     C           P2ACBI    ANDNE'A'
+     C           P2AMTP    ANDEQ'RE'
+     C                     MOVEL'Y'       ZZ006
+     C                     UPDATCUTX1HPF
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   BTIN
+     C*
+     C                     SELEC
+     C           *IN01     WHEQ *ON
+     C***********          UPDATCUTX1HNF                                  102468
+     C                     UNLCKSCUTX                                     102468
+     C                     OPEN LECUTXL1               99                 102468
+     C           LECUTK    CHAINLECUTXL1             99                   102468
+     C           *IN99     IFEQ *ON                                       102468
+     C*                                                                   102468
+     C** Database error: move the key fields to the data structure        102468
+     C** equivalents to allow them to be output.                          102468
+     C                     MOVELBRCA      HNBRCA                          102468
+     C**********           Z-ADDCNUM      HNCNUM                                       102468 CSD027
+     C                     MOVE CNUM      HNCNUM                                              CSD027
+     C                     Z-ADDFTYP      HNFTYP                          102468
+     C                     Z-ADDFSEQ      HNFSEQ                          102468
+     C**********           Z-ADDLNRF      HNLNRF                                       102468 CLE148
+     C                     MOVELLNRF      HNLNRF                                              CLE148
+     C                     Z-ADDVDAT      HNVDAT                          102468
+     C                     Z-ADDPRSQ      HNPRSQ                          102468
+     C                     Z-ADDLASN      HNLASN                          102468
+     C**                                                   ***************102468
+     C                     MOVELLECUTD    W0KEY            * DB ERROR 02 *102468
+     C                     Z-ADD02        W0ERNB           ***************102468
+     C                     MOVEL'MEM0001' W0MSGD                          102468
+     C                     MOVEL'MIDAS  ' W0MSGF                          102468
+     C                     EXSR SRERR                                     102468
+     C                     ENDIF                                          102468
+     C*                                                                   102468
+     C                     UPDATLECUTXNF                                  102468
+     C*                                                                   102468
+     C           *IN02     WHEQ *ON
+     C                     UPDATCUTX1HPF
+     C           *IN03     WHEQ *ON
+     C                     UPDATCUTX2HPF
+     C                     ENDSL
+     C*
+     C                     ENDIF
+     C*
+     C**  Commit
+     C                     COMIT
+     C*
+     C                     ELSE
+     C***Unlock*record****************************************************102468
+     C***********          UNLCKSCUTX                                     102468
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C           EXMAIN    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C* Subroutine  :  SRINZ                                          *
+     C* Function    :  Initialise Fields on Program Invocation        *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  CGZAUDIT - Audit Processing                    *
+     C*****************************************************************
+     C           SRINZ     BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+     C*
+     C**  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6030AU'I#SPLN
+     C                     MOVEL'CG6030  'I#REF
+     C                     MOVEL'CGD2531' I#TITL
+     C                     MOVEL'CGD2532' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C           EXINZ     TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE
+     C*****************************************************************
+     C* Subroutine  :  SRINIT                                         *
+     C* Function    :  Initial processing - First Call Only           *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C           SRINIT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C**  Initialise work fields
+     C                     Z-ADD*ZEROS    ##SREC
+     C***********          MOVEL*BLANKS   #SCUTX100                       122226
+     C                     MOVEL*BLANKS   #SCUTX135                       122226
+     C*
+     C**  Copyright
+     C                     MOVEACPY@      ACT@   80
+     C/COPY WNCPYSRC,CG6030C003
+     C*
+     C           EXINIT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*                                                                   102468
+     C** Key list for LECUTXL1                                            102468
+     C           LECUTK    KLIST                                          102468
+     C                     KFLD           BRCA                            102468
+     C                     KFLD           CNUM                            102468
+     C                     KFLD           FTYP                            102468
+     C                     KFLD           FSEQ                            102468
+     C                     KFLD           LNRF                            102468
+     C                     KFLD           VDAT                            102468
+     C                     KFLD           PRSQ                            102468
+     C                     KFLD           LASN                            102468
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* Subroutine  :  SRAUDT                                         *
+     C* Function    :  Audit Report Processing                        *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  CGZAUDIT - Audit Processing                    *
+     C*                CG9020   - Write Data to UDC Data Files - Audit*
+     C*****************************************************************
+     C           SRAUDT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+     C*
+     C**  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6030  'I#REF
+     C                     MOVE 'CGD2531' I#TITL
+     C                     MOVE 'CGD2532' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'SCUTX   'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##SREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C**  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C**  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD2531' W0TITL  7
+     C                     PARM 'CGD2532' W0ULIN  7
+     C                     PARM           W0CMT
+     C*
+     C**  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6030  'I#REF
+     C                     MOVEL'CGD2531' I#TITL
+     C                     MOVEL'CGD2532' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C           EXAUDT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+** CPY@  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

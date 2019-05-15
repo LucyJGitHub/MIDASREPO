@@ -1,0 +1,531 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas DL FRA daily deals enquiry')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - FRA/IRS Module
+     A*                                                               *
+     A*  DSPF/DL1902DF - FRA DAILY DEALS ENQUIRY                      *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CAAA03             Date 29Mar04               *
+      *                 CAAA02             Date 16Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 CEU012             Date 16Feb98               *
+     A*                 126426             Date 29Dec97               *
+     A*                 112563             Date 29Jan97               *
+     A*                 104199             Date 10Jun96               *
+     A*                 046114             DATE 14JUL93               *
+     A*                 E26570             DATE 04SEP92               *
+     A*                 S01253             DATE 17APR90               *
+     A*                 S01199/E22695      DATE 30MAR90               *   S01199
+     A*                  S01117                 DATE 30FEB90          *   S01117
+     A*                  S01203                 DATE 06/04/89         *
+     A*                  S01157                 DATE 10/05/88         *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAAA03 - Webfacing Changes                                   *
+      *         - Move the Fxx keys display to position 23 for proper *
+      *           display. Prompts were also adjusted to be higher    *
+      *           So that it will not overwrite the Fxx keys display. *
+      *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
+      *           to process screens.                                 *
+      *           Cause Web page to redisplay frequently and the RPG  *
+      *           will accumulate the total elapsed time and exit     *
+      *           when this matches the time from the OVRDSPF         *
+     A*  CEU012 - Position/Risk Enquiries & Reports                   *
+     A*  126426 - Book code should be 2A, not 3A.                     *
+     A*  112563 - Header and footer changes required for GUI          *
+     A*           Multilanguage support.                              *
+     A*  104199 - Add program name to DSPF for GUI identification     *
+     A*  046114 - FRA book position enquiry - F12 takes you to        *
+     A*           another enquiry screen.                             *
+     A*  E26570 - The enquiry on FRA Daily Deals asks for the date    *
+     A*           to be input in format MMMDDYY instead of MMDDYY.    *
+     A*           This does not meet the standard for the rest of     *
+     A*           the MIDAS system.                                   *
+     A*   S01253  -  RECOMPILED FOR MULTILANGUAGE SCREENS             *
+     A*   S01199/E22695  -  HELP SYSTEM.  (E22695 WAS APPLIED FOR *       S01199
+     A*                     R2 TO THIS FILE AT THE SAME TIME AS       *   S01199
+     A*                     S01199 WAS APPLIED FOR R10 - THEREFORE    *   S01199
+     A*                     THEY MAY NOT BE INDENTICAL CHANGES)       *   S01199
+     A*   S01253  -  RECOMPILED FOR MULTILANGUAGE SCREENS             *
+     A*   S01117  -  MULTI-BRANCHING CHANGES                          *   S01117
+     A*   S01203  -  INCORPORATION CHANGES                            *
+     A*   S01157  -  NEW DISPLAY FILE WRITTEN FOR FRA/IRS             *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A*         /////////////////////////////////////////
+     A*        // WARNING: When creating this display //
+     A*       //   file, take options RSTDSP(*YES)   //
+     A*      //                       SHARE (*YES)  //
+     A*     /////////////////////////////////////////
+     A*
+      *****************************************************************
+      *                                                               *
+      * INDICATORS TO BE RECEIVED FROM THE SCREEN - COMMANDS          *
+      *                                                               *
+      *     03   -  EXIT PROGRAM                                      *
+      *     05   -  REFRESH SCREEN                                    *
+      *     07   -  Toggles between 'Display Euro Equivalent'         *   CEU012
+      *             and 'Display Ccy Amount'                          *   CEU012
+      ******10***-**HELP KEY HAS BEEN PRESSED                         *   S01199
+      *     12   -  RETURN TO PREVIOUS SCREEN                         *
+      *     25   -  ROLLUP REQUESTED                                  *
+      *     26   -  ROLLDOWN REQUESTED                                *
+      *                                                               *
+      *     27   -  INHIBIT ROLL/REFRESH/SELECT KEYS & TEXT/ENQ.TITLES*
+      *     28   -  ACTIVATE THE OVRDTA KEYWORD FOR KEYS/TEXT & TITLES*
+      *     29   -  ACTIVATE THE OVRATR KEYWORD FOR THE SELECT FIELDS *
+      *     24   -  ACTIVATE THE OVRDTA KEYWORD FOR THE SELECT FIELDS *
+      *                                                               *
+      *     31   -  Position/Risk Enquiries & Reports Feature Ind     *   CEU012
+      *     32   -  Display Euro Equivalent Indicator                 *   CEU012
+      * INDICATORS TO CONTROL THE ENQUIRY SUBFILE                     *
+      *                                                               *
+      *     30   -  ACTIVATE SUBFILE END                              *
+      *     35   -  ACTIVATE SUBFILE DISPLAY                          *
+      *     36   -  ACTIVATE SUBFILE DISPLAY CONTROL                  *
+      *     (N35N36   -  ACTIVATE SUBFILE CLEAR)                      *
+      *     50   -  MBIN = 'N'; NON-DISPLAY OF BRANCH FIELD & TEXT    *
+      *                                                               *
+      * INDICATORS TO CONTROL THE MESSAGE SUBFILE                     *
+      *                                                               *
+      *     40   -  ACTIVATE SUBFILE END                              *
+      *     46   -  ACTIVATE SUBFILE DISPLAY CONTROL                  *
+      *                                                               *
+      * INDICATORS TO REPORT ERRORS ON VALIDATION OF PROMPT SCREEN    *
+      *                                                               *
+      *     60   -  ERROR ON CURRENCY SELECTED                        *
+      *     61   -  ERROR ON BRANCH CODE SELECTED                     *
+      *     62   -  ERROR ON VALUE DATE SELECTED                      *
+      *     63   -  ERROR ON BROKER SELECTED                          *
+      *     64   -  ERROR ON BOOK CODE SELECTED                       *
+      *     68   -  NO RECORD ON FILE FOR GIVEN PROMPTS               *
+      *     69   -  GENERAL ERROR ON VALIDATION OF PROMPT SCREEN      *
+      *                                                               *
+      *****************************************************************
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A*                                                             /* S01203 */
+     A***********                           CA01(01 'Cmd 1 to Exit')
+     A*N27*******                           CA02(02 'Cmd 2 to Return')
+     A*N27*******                           CA05(05 'Cmd 5 to Refresh')
+     A                                      CA03(03 'F3 to Exit')
+     A N27                                  CA12(12 'F12 to Return')
+     A N27                                  CA05(05 'F5 to Refresh')
+      *                                              Begin /CEU012/
+     A  31                                  CA07(07 'F7 to disp In/Euro Equiv')
+      *                                              End   /CEU012/
+     A*                                                             /* S01203 */
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A*
+     A*
+     A          R DL1902F0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A*
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A*
+     A* Main Title always displayed. Time updated when new Enquiry
+     A* Subfile displayed. Book Code etc. only displayed when Enquiry
+     A* Subfile displayed.
+     A*
+     A                                  1  2'FRA DAILY DEALS'
+     A                                      DSPATR(UL HI)
+     A*
+     A                                  1 21'BOOK:'
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A            @TBKCD         3   O  1 27TEXT('Book Code')
+     A                                      DSPATR(HI)
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                      OVRDTA
+     A*
+     A            @TCRCY         3   O  1 34TEXT('Currency')
+     A                                      DSPATR(HI)
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                      OVRDTA
+     A*
+     A*                                              Start /*104199*/
+     A                                  1 40'DL1902'
+     A*                                              End   /*104199*/
+     A            @TDATE         7   O  1 51TEXT('Todays Date')
+     A                                      OVRDTA
+     A            @TTIME         6  0O  1 60TEXT('Time')
+     A                                      EDTWRD('0 :  :  ')
+     A                                      OVRDTA
+     A*
+     A                                  1 70'WID:'
+     A            @TWID          3   O  1 75TEXT('Workstation Id')
+     A*
+     A*                                                    /*S01117*/
+     A*********************             2  2'BRANCH:'
+     A                                  2  2'BOOKING BRANCH:'
+     A*                                                    /*S01117*/
+     A  50
+     AO 27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A*                                                    /*S01117*/
+     A************@TBRCH***      3   O  2 10TEXT('Branch Code')
+     A            @TBRCH         3   O  2 18TEXT('Branch Code')
+     A*                                                    /*S01117*/
+     A                                      DSPATR(HI)
+     A  50
+     AO 27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                      OVRDTA
+     A*
+     A*                                                    /*S01117*/
+     A*********************             2 21'BROKER:'
+     A                                  2 29'BROKER:'
+     A*                                                    /*S01117*/
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A*                                                    /*S01117*/
+     A************@TBRKR***      4   O  2 29TEXT('Broker')
+     A            @TBRKR         4   O  2 37TEXT('Broker')
+     A*                                                    /*S01117*/
+     A                                      DSPATR(HI)
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                      OVRDTA
+     A*
+     A*                                                    /*S01117*/
+     A*********************             2 39'VALUE DATE:'
+     A                                  2 47'VALUE DATE:'
+     A*                                                    /*S01117*/
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A*                                                    /*S01117*/
+     A************@TVLDT***      7   O  2 51TEXT('Value Date')
+     A            @TVLDT         7   O  2 59TEXT('Value Date')
+     A*                                                    /*S01117*/
+     A                                      DSPATR(HI)
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                      OVRDTA
+     A*
+     A* Subfile Titles - only shown when Enquiry Subfile output and
+     A* once displayed never re-displayed (*IN28 is turned off)
+     A* - except when program recalled.
+     A*
+     A                                  3 10'Maturity'
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                  3 20'Base'
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                  3 26'Fix'
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                  3 32'Broker'
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                  3 42'Client'
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                  3 58'Amount'
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A                                  3 67'Contract Rate'
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+     A*
+     A*
+     A          R DL1902F1                  TEXT('Command Keys Text')
+     A                                      OVERLAY
+     A*
+     A**Text*-*Cmd*2/Roll/Refresh*only*allowed*with*enquiry*subfile*/* S01203 */
+     A* Text - F12/Roll/Refresh only allowed with enquiry subfile   /* S01203 */
+     A*
+     A*                                                             /* S01203 */
+      *                                              Begin /CEU012/
+      ** Start of change CAAA03
+     A**31N32***                       20  2'F7=Display Euro Equivalent'                      CAAA03
+     A  31N32                          23  2'F7=Display Euro Equivalent'
+     A**31*32***                       20  2'F7=Display Ccy Amount     '                      CAAA03
+     A  31 32                          23  2'F7=Display Ccy Amount     '
+     A**31*32***                       20 55'EURO EQUIVALENT'                                 CAAA03
+     A  31 32                          23 55'EURO EQUIVALENT'
+      ** End of change CAAA03
+     A  31 32                               DSPATR(HI)
+      *                                              End   /CEU012/
+     A**27********                     21  2'Cmd/1-end or Help'
+     A*N27********                     21  2'Cmd/1-end, Cmd/2-previous screen,'
+     A*N27********                     21 36'Cmd/5-refresh,'
+     A**                                             Begin /112563/
+     A* 27 ******                      21  2'F3-end or Help'
+      ** Start of change CAAA03
+     A**27******                       21  2'F3=Exit     or Help'                             CAAA03
+     A  27                             22  2'F3=Exit'
+      ** End of change CAAA03
+     A**                                             End   /112563/
+     A*                                                    /*S01117*/
+     A*N27*****************            21  2'F3-end, F12-previous      screen,'
+     A**********             Start of change               /046114/
+     A*N27******                       21  2'F3-end, F12-previous screen,'
+     A**                                             Begin /112563/
+     A*N27 ******                      21  2'F3-end, F12-further summary,'
+      ** Start of change CAAA03
+     A*N27******                       21  2'F3=Exit  F12=Further Summary'                    CAAA03
+     A N27                             22  2'F3=Exit  F12=Further Summary'
+      ** End of change CAAA03
+     A**                                             End   /112563/
+     A*                      End of change                 /046114/
+     A*N27*****************            21 36'F5-refresh,'
+     A**                                             Begin /112563/
+     A*N27 ******                      21 31'F5-refresh,'
+      ** Start of change CAAA03
+     A*N27******                       21 32'F5=Refresh'                                      CAAA03
+     A N27                             22 32'F5=Refresh'
+      ** End of change CAAA03
+     A**                                             End   /112563/
+     A*                                                             /* S01203 */
+     A*N27*****************            21 51'Rollup, Rolldown'
+     A**                                             Begin /112563/
+     A*N27 ******                      21 43'Rollup, Rolldown or Help'
+      ** Start of change CAAA03
+     A*N27******                       21 50'Rollup/Rolldown   or Help'                       CAAA03
+     A N27                             22 50'Rollup/Rolldown'
+      ** End of change CAAA03
+     A**                                             End   /112563/
+     A*N27*****************            21 68'or Help'
+     A*                                                    /*S01117*/
+     A*
+     A*
+     A          R DL1902S0                  TEXT('Message Subfile')
+     A*
+     A* Message Subfile
+     A*
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            DDMGKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A*
+     A          R DL1902C0                  TEXT('Message Subfile Control')
+     A*
+     A* Message Subfile Control
+     A*
+     A                                      SFLCTL(DL1902S0)
+     A                                      SFLSIZ(5)
+     A                                      SFLPAG(1)
+     A                                      SFLDSP
+     A  46                                  SFLDSPCTL
+     A                                      SFLINZ
+     A  40                                  SFLEND
+     A                                      OVERLAY
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A*
+     A          R DL1902S1                  TEXT('Enquiry Subfile')
+     A*
+     A* Subfile Record Format, five hidden fields and a select field
+     A*
+     A                                      SFL
+     A            SSSLCT         1A  I  4  2TEXT('Select Field')
+     A                                      DSPATR(HI)
+     A*
+     A            @YBOKC         2   H      TEXT('Book Code')
+     A            @YVDAT         5  0H      TEXT('Value Date - MIDAS')
+     A            @YBRCD         3  0H      TEXT('Branch Code - MIDAS')
+     A            @YMDAT         5  0H      TEXT('Maturity Date - MIDAS')
+     A            @YBRSQ         2  0H      TEXT('Base Rate')
+     A*
+     A            DDDLNO         6  0   4  4TEXT('Deal Number')
+     A                                      DSPATR(HI)
+     A            DDMTDT         7A     4 11TEXT('Maturity Date')
+     A                                      DSPATR(HI)
+     A            DDBSRT         5A     4 19TEXT('Base Rate')
+     A                                      DSPATR(HI)
+     A            DDFIX          2  0   4 26TEXT('Fix Day')
+     A                                      DSPATR(HI)
+     A            DDBRKR         4A     4 33TEXT('Broker')
+     A                                      DSPATR(HI)
+     A            DDCLNT        10A     4 40TEXT('Client')
+     A                                      DSPATR(HI)
+     A            DDAMNT        14A     4 51TEXT('Amount')
+     A                                      DSPATR(HI)
+     A            DDCNTR        12A     4 68TEXT('Contract Rate')
+     A                                      DSPATR(HI)
+     A*
+     A*
+     A          R DL1902C1                  TEXT('Enquiry Subfile Control')
+     A*
+     A* Enquiry Subfile Control and prompts
+     A*
+     A                                      SFLCTL(DL1902S1)
+     A  35                                  SFLDSP
+     A  36                                  SFLDSPCTL
+     A N35N36                               SFLCLR
+     A                                      SFLSIZ(0016)
+     A                                      SFLPAG(0016)
+     A  30                                  SFLEND
+     A                                      OVERLAY
+     A N27                                  ROLLUP(25)
+     A N27                                  ROLLDOWN(26)
+      ** Start of CAAA02
+     A**36**************                    INVITE
+      ** End of CAAA02
+     A                                      PUTOVR
+     A*                                                    /*S01199*/
+     A*
+     A*
+     A*
+     A*
+     A*
+     A*
+     A*
+     A*                                                    /*S01199*/
+     A*
+     A* Prompts - all highlighted. Reversed image and cursor positioned
+     A* on it for error in field. (Since UL, RI and HI all together
+     A* have the effect of ND then NO UL has to be specified when error
+     A* in field.)
+     A*
+      ** Start of change CAAA03
+     A**********                       22  2'Date'                                            CAAA03
+     A                                 20  2'Date'
+     A*********          START OF CHANGE                   /E26570/
+     A*********   @SVLDT         7A  B 22  7TEXT('Value Date Selected')
+     A**********  @SVLDT         6A  B 22  7TEXT('Value Date Selected')                       CAAA03
+     A            @SVLDT         6A  B 20  7TEXT('Value Date Selected')
+      ** End of change CAAA03
+     A*                  END OF CHANGE                     /E26570/
+     A                                      DSPATR(HI)
+     A N62N68                               DSPATR(UL)
+     A  62
+     AO 68                                  DSPATR(RI PC)
+     A                                      DSPATR(MDT)
+     A  29                                  OVRATR
+     A  24                                  OVRDTA
+     A*
+     A*                                                    /*S01117*/
+     A************                     22 16'Currency'
+     A************@SCRCY         3A  B 22 25TEXT('Currency Selected')
+      ** Start of change CAAA03
+     A**********                       22 20'Currency'                                        CAAA03
+     A                                 20 20'Currency'
+     A**********  @SCRCY         3A  B 22 29TEXT('Currency Selected')                         CAAA03
+     A            @SCRCY         3A  B 20 29TEXT('Currency Selected')
+      ** End of change CAAA03
+     A*                                                    /*S01117*/
+     A                                      DSPATR(HI)
+     A N60N68                               DSPATR(UL)
+     A  60
+     AO 68                                  DSPATR(RI PC)
+     A                                      DSPATR(MDT)
+     A  29                                  OVRATR
+     A  24                                  OVRDTA
+     A*
+     A*                                                    /*S01117*/
+     A*********************            22 30'Book'
+     A************@SBKCD***      2A  B 22 35TEXT('Book Selected')
+      ** Start of change CAAA03
+     A**********                       22 37'Book'                                            CAAA03
+     A                                 20 37'Book'
+     A*                                               /*Begin 126426*/
+     A************@SBKCD         3A  B 22 42TEXT('Book Selected')
+     A**********  @SBKCD         2A  B 22 42TEXT('Book Selected')                             CAAA03
+     A            @SBKCD         2A  B 20 42TEXT('Book Selected')
+      ** End of change CAAA03
+     A*                                               /*End   126426*/
+     A*                                                    /*S01117*/
+     A                                      DSPATR(HI)
+     A N64N68                               DSPATR(UL)
+     A  64
+     AO 68                                  DSPATR(RI PC)
+     A                                      DSPATR(MDT)
+     A  29                                  OVRATR
+     A  24                                  OVRDTA
+     A*
+     A*                                                    /*S01117*/
+     A*********************            22 39'Broker'
+     A************@SBRKR***      4A  B 22 46TEXT('Broker Selected')
+      ** Start of change CAAA03
+     A**********                       22 50'Broker'                                          CAAA03
+     A                                 20 50'Broker'
+     A**********  @SBRKR         4A  B 22 57TEXT('Broker Selected')                           CAAA03
+     A            @SBRKR         4A  B 20 57TEXT('Broker Selected')
+      ** End of change CAAA03
+     A*                                                    /*S01117*/
+     A                                      DSPATR(HI)
+     A N63N68                               DSPATR(UL)
+     A  63
+     AO 68                                  DSPATR(RI PC)
+     A                                      DSPATR(MDT)
+     A  29                                  OVRATR
+     A  24                                  OVRDTA
+     A*
+     A*                                                    /*S01117*/
+     A*********************            22 52'Branch'
+      ** Start of change CAAA03
+     A**********                       22 67'Bk.Branch'                                       CAAA03
+     A                                 20 67'Bk.Branch'
+      ** End of change CAAA03
+     A*                                                    /*S01117*/
+     A  50                                  DSPATR(ND)
+     A*                                                    /*S01117*/
+     A************@SDBCH***      3A  B 22 59TEXT('Branch Selected')
+      ** Start of change CAAA03
+     A**********  @SBRCA         3A  B 22 77TEXT('Branch Selected')                           CAAA03
+     A            @SBRCA         3A  B 20 77TEXT('Branch Selected')
+      ** End of change CAAA03
+     A*                                                    /*S01117*/
+     A                                      DSPATR(HI)
+     A N61N68                               DSPATR(UL)
+     A  61
+     AO 68                                  DSPATR(RI PC)
+     A  50                                  DSPATR(ND PR)
+     A                                      DSPATR(MDT)
+     A  29                                  OVRATR
+     A  24                                  OVRDTA
+     A*
+      ** Start of change CAAA03
+     A**********                       23  2'or enter "1" against deal'                       CAAA03
+     A                                 21  2'or enter "1" against deal'
+      ** End of change CAAA03
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+      ** Start of change CAAA03
+     A**********                       23 28'for Deal Details'                                CAAA03
+     A                                 21 28'for Deal Details'
+      ** End of change CAAA03
+     A  27                                  DSPATR(ND)
+     A  28                                  OVRATR
+ 
+      ** Start of CAAA02 (NOTE: The following lines ARE meaningful)
+     A*%%WB 6 FLD <!-- -->\r\n\r\n+
+     A*%%WB +<!-- Script to cause auto refresh -->\r\n\r\n+
+     A*%%WB +<script language="JavaScript">\r\n+
+     A*%%WB +\tsetTimeout("validateAndSubmit('ENTER')",10000);+
+     A*%%WB +\r\n</script>\r\n\r\n
+      ** End of CAAA02
+ 
+     A*
+     A* THIS FORMAT IS USED TO CLEAR THE SCREEN OF DEAL DETAILS
+     A* IN THE INSTANCE OF THE DEALS BEING DELETED BY ANOTHER USER
+     A* BEFORE THE PGM REFRESHES THE SCREEN
+     A*
+     A          R DCLEAR                    CLRL(15)
+     A            DUMMY          1A  I  4  2
+     A                                      DSPATR(PR)
+     A                                      DSPATR(ND)
+     A*

@@ -1,0 +1,1201 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Update History Amount for Rollovers')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LER033 - Midas LE Update History Amount for Rollovers        *
+      *                                                               *
+      *  Function:  This program updates the history amounts of       *
+      *  (COB)      facility history records affected by backvalued   *
+      *             rollovers (both normal and multi-currency) where  *
+      *             the facility currency exchange rates are changed. *
+      *             Once these are encountered,all succeeding records *
+      *             will use the new exchange rate/indicator.  This   *
+      *             processing is applicable to both tranche and      *
+      *             credit agreement facility.                        *
+      *                                                               *
+      *  Called By: LERC30A - Midas LE Facility History Update 2      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *                 MD029795           Date 25Nov14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 248133A            Date 12Jun07               *
+      *                 248133             Date 31May07               *
+      *                 247164             Date 20Apr07               *
+      *                 246448             Date 15Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243656             Date 04Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8222            Date 25May06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 225591 (rework)    Date 08Jul04               *
+      *                 225591             Date 16Apr04
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023  *CREATE    Date 19Nov01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  MD029795 - LER135P2 calculation of available amount is wrong.*
+      *             Aligned processing of RO amount on LER033 with    *
+      *             processing on LER032.                             *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00161                                 *
+      *  248133A- Remove 248133 as it is incorrect.                   *
+      *  248133 - Ensure correct Facility Amount on records for CAs.  *
+      *  247164 - Correct CLE106 so that records can be written for   *
+      *           Credit Agreements.                                  *
+      *  246448 - Apply 244429 to address DBASE 10 error.             *
+      *  243656 - Incorrect amount sign for the difference between    *
+      *           old fac exch & new fac exch.                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8222- If event date is earlier than take-on date, use     *
+      *           take-on date instead. This is only for facilities   *
+      *           existing prior to M+.                               *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndications Manager.                               *
+      *  225591 - Facility history changes for repayments due to      *
+      *  (rework) rollover                                            *
+      *  225591 - Succeeding rollover/s for the same loan should take *
+      *           into account any past rollover already done against *
+      *           the loan. Patterned fix after 225337.               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Rollover Action record
+     FLEACT5L3IF  E           K        DISK
+      *
+      ** Old Loans file
+     FPETEMPL0IF  E           K        DISK
+      *
+      ** Updated loans file
+     FCLOAN   IF  E           K        DISK
+     F            CLOANCLF                          KRENAMECLOANCL
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+      *
+      ** Facility Details file
+     FFCLTY   IF  E           K        DISK
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+      *
+      * Temporary copy of Facility Details
+     FPEFCLFL2IF  E           K        DISK
+     F            FCLTYFMF                          KRENAMEPEFCLFMF
+      *
+      ** Rollover action of facility history
+     FLEHISFL1IF  E           K        DISK
+     F            HISACTF                           KRENAMEHISACTF1
+      ************                                                                    248133 248133A
+      ***Facility*History Amounts by Date**                                           248133 248133A
+     F*HISUPD*IF**E           K        DISK                                           248133 248133A
+     F************HISACTF                           KRENAMEHISUPDH                    248133 248133A
+     F************FACHISAF                          KRENAMEHISUPDF                    248133 248133A
+      *
+      ** Facility History Amounts by Loan
+     FFACHISH UF  E           K        DISK
+      *
+     FFACACT  UF  E           K        DISK         KINFSR *PSSR A
+      *
+     FLEHISFL0UF  E           K        DISK
+     F            HISACTF                           KRENAMEHISACTF0
+      *
+      * History Actions
+     FLECAROPDUF  E                    DISK                      A
+      *
+      * History Actions
+     FHISACT  O   E                    DISK
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  FUNCTION OF INDICATORS                                       *
+      *                                                               *
+      *   01 -  End of File LEACT5L3                                  *
+      *   02 -  Record not found on CLOANCL/PETEMPL0                  *
+      *   03 -  Record not found in FCLTYFM/PEFCLFM                   *
+      *   05 -  End of file on LEHISFL0                               *
+      *   07 -  End of file on LEHISFL1                               *
+      *   08 -  End of file on LECAROPD                               *
+      *   09 -  End of file on FACHISAF                               *
+      *   10 -  Record format read is FACHISAF                        *
+      *   11 -  Record format read is HISACTF                         *
+      ****12*-**Record format read is HISUPDF**                       *               248133 248133A
+      ****13*-**Record format read is HISUPDH**                       *               248133 248133A
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Process rollover action                             *
+      *  SRWRRO - Write Rollover action to HISACT file                *
+      *  SRHAMT - History Amount processing for RO                    *
+      *  SRMCRO - Update New Rates and action amount fields after     *
+      *           'MC' or 'RO' action.                                *
+      *  SRWRCA - Write record to temporary file for later update of  *
+      *           Credit Agreement facility history records.          *
+      *  SRCONV - Amount conversion.                                  *
+      *  SRCURR - Get Currency Details                                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZPOWERZ1
+      /SPACE 3
+      *
+      ** Rename some of the Loan Amendment fields
+     ILOAMSDKF
+     I              LNRF                            LNRFA
+     I              VDAT                            VDATA
+      *
+      ** Define indicator for File format of FACHISA
+     IFACHISAF    10
+     I              BRCA                            FABRCA
+      *
+      ** Define indicator for File format of HISACT
+     IHISACTF0    11
+     I              BRCA                            BRCAH
+     I              HACNUM                          CNUMH
+     I              HAFCTY                          FCTYH
+     I              HADATE                          DATEH
+     I              HASEQ                           SEQH
+     I              HALOAN                          LOANH
+     I              HAACTN                          ACTNH
+     I              HAAAMT                          AAMTH
+     I              HAPART                          PARTH
+     I              HALCRF                          LCRFH
+     I              GEDT                            GEDTH
+     I              HASQNO                          SQNOH
+     I              HAECIN                          ECINH
+     I              HARCIN                          RCINH
+     I              HAGASS                          GASSH
+     I              HATRRC                          TRRCH
+     I              HAOLRC                          OLRCH
+     I              HATSEQ                          TSEQH
+     I              HALUCY                          LUCYH
+     I              HALUAM                          LUAMH
+     I              HAEXRT                          EXRTH
+     I              HARTMD                          RTMDH
+     I              HAPTYP                          PTYPH
+     I              HARCSI                          RCSIH
+     I              HARIND                          RINDH                                     225591
+     I/COPY WNCPYSRC,LEH00161
+      ***********                                                                     248133 248133A
+      ***Define*indicator for File format of HISUPDF**                                248133 248133A
+     I*HISUPDF*** 12                                                                  248133 248133A
+     I***********   FARECI                          FHRECI                            248133 248133A
+     I***********   BRCA                            FHBRCA                            248133 248133A
+     I***********   FACNUM                          FHCNUM                            248133 248133A
+     I***********   FAFCTY                          FHFCTY                            248133 248133A
+     I***********   FADATE                          FHDATE                            248133 248133A
+     I***********   FAFSEQ                          FAFSEQ                            248133 248133A
+     I***********   FALOAN                          FHLOAN                            248133 248133A
+     I***********   FAACTN                          FHACTN                            248133 248133A
+     I***********   FAAAMT                          FHAAMT                            248133 248133A
+     I***********   FAPART                          FHPART                            248133 248133A
+     I***********   FARCIN                          FHRCIN                            248133 248133A
+     I***********   FACFAM                          FHCFAM                            248133 248133A
+     I***********   FADRAM                          FHDRAM                            248133 248133A
+     I***********   FAUNDR                          FHUNDR                            248133 248133A
+     I***********   FAREVI                          FHREVI                            248133 248133A
+     I***********   FALCRF                          FHLCRF                            248133 248133A
+     I***********   FAGNDT                          FHGNDT                            248133 248133A
+     I***********   FASQNO                          FHSQNO                            248133 248133A
+     I***********   FACFGI                          FHCFGI                            248133 248133A
+     I***********   FAGASS                          FHGASS                            248133 248133A
+     I***********   FATSEQ                          FHTSEQ                            248133 248133A
+     I***********   FALUCY                          FHLUCY                            248133 248133A
+     I***********   FALUAM                          FHLUAM                            248133 248133A
+     I***********   FAEXRT                          FHEXRT                            248133 248133A
+     I***********   FARTMD                          FHRTMD                            248133 248133A
+     I***********   FAPTYP                          FHPTYP                            248133 248133A
+     I***********   FARCSI                          FHRCSI                            248133 248133A
+     I***********   FAORED                          FHORED                            248133 248133A
+     I***********   FAAFAM                          FHAFAM                            248133 248133A
+     I***********   FAPAMT                          FHPAMT                            248133 248133A
+     I***********   FALPFI                          FHLPFI                            248133 248133A
+     I***********   FAOFFS                          FHOFFS                            248133 248133A
+     I***********   FADEAL                          FHDEAL                            248133 248133A
+     I***********   FAMCY                           FHMCY                             248133 248133A
+     I***********   FAACBR                          FHACBR                            248133 248133A
+     I***********   FAACCU                          FHACCU                            248133 248133A
+     I***********   FAACCY                          FHACCY                            248133 248133A
+     I***********   FAACCD                          FHACCD                            248133 248133A
+     I***********   FAACSQ                          FHACSQ                            248133 248133A
+     I***********   FAACNO                          FHACNO                            248133 248133A
+     I***********   FATTEO                          FHTTEO                            248133 248133A
+     I***********   FAPTEO                          FHPTEO                            248133 248133A
+     I***********   FAEXCY                          FHEXCY                            248133 248133A
+     I***********   FATVAL                          FHTVAL                            248133 248133A
+     I***********   FAWEIG                          FHWEIG                            248133 248133A
+     I***********   FAWCPC                          FHWCPC                            248133 248133A
+     I***********   FAINOF                          FHINOF                            248133 248133A
+     I***********   FAFXMT                          FHFXMT                            248133 248133A
+     I***********   FAFXPC                          FHFXPC                            248133 248133A
+     I***********   FARIND                          FHRIND                            248133 248133A
+      ***********                                                                     248133 248133A
+      ***Define*indicator for File format of HISUPDH                                  248133 248133A
+     I*HISUPDH*** 13                                                                  248133 248133A
+     I***********   BRCA                            HHBRCA                            248133 248133A
+     I***********   HACNUM                          HHCNUM                            248133 248133A
+     I***********   HAFCTY                          HHFCTY                            248133 248133A
+     I***********   HADATE                          HHDATE                            248133 248133A
+     I***********   HASEQ                           HHSEQ                             248133 248133A
+     I***********   HALOAN                          HHLOAN                            248133 248133A
+     I***********   HAACTN                          HHACTN                            248133 248133A
+     I***********   HAAAMT                          HHAAMT                            248133 248133A
+     I***********   HAPART                          HHPART                            248133 248133A
+     I***********   HALCRF                          HHLCRF                            248133 248133A
+     I***********   GEDT                            HHGEDT                            248133 248133A
+     I***********   HASQNO                          HHSQNO                            248133 248133A
+     I***********   HAECIN                          HHECIN                            248133 248133A
+     I***********   HARCIN                          HHRCIN                            248133 248133A
+     I***********   HAGASS                          HHGASS                            248133 248133A
+     I***********   HATRRC                          HHTRRC                            248133 248133A
+     I***********   HAOLRC                          HHOLRC                            248133 248133A
+     I***********   HATSEQ                          HHTSEQ                            248133 248133A
+     I***********   HALUCY                          HHLUCY                            248133 248133A
+     I***********   HALUAM                          HHLUAM                            248133 248133A
+     I***********   HAEXRT                          HHEXRT                            248133 248133A
+     I***********   HARTMD                          HHRTMD                            248133 248133A
+     I***********   HAPTYP                          HHPTYP                            248133 248133A
+     I***********   HARCSI                          HHRCSI                            248133 248133A
+     I***********   HARIND                          HHRIND                            248133 248133A
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Type
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     ILERSTS    E DSLERSTS                                                                   BUG8222
+     I              FACHISD                         TONDAT                                   BUG8222
+     I              LERC2030                        RENAM1                                   BUG8222
+     I              LERC135                         RENAM2                                   BUG8222
+     I              LERC315                         RENAM3                                   BUG8222
+     I              LERC425                         RENAM4                                   BUG8222
+     I              EOYFLAG                         RENAM5                                   BUG8222
+      *                                                                                      BUG8222
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Execute initial subroutine.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Generate RO event if Facility exchange rate changed
+      *
+     C                     EXSR SRPROC
+      *
+      ** Process facility history records to update rate and amount due
+      ** to change in rate (MC or RO)
+      *
+     C                     EXSR SRMCRO
+      *
+      ** Terminate program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  SRINIT - Program Initialisation                              *
+      *  Called by: Main routine                                      *
+      *  Calls    : AOBANKR0 AOSARDR0                                 *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define data areas
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *                                                                                      BUG8222
+      ** Define LERSTS                                                                       BUG8222
+      *                                                                                      BUG8222
+     C           *NAMVAR   DEFN           LERSTS                                             BUG8222
+     C                     IN   LERSTS                                                       BUG8222
+      *                                                                                      BUG8222
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD001       DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'BANK'    DBKEY
+     C                     MOVEL'LER033'  DBPGM
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set-up key fields.
+      *
+     C           KEYFCL    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KFCTP   30
+     C                     KFLD           KFCNO   20
+      *
+      ** Key fields to retrieve History file - partial key
+      *
+     C           KEYHIS    KLIST
+     C                     KFLD           KBRCA   3
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KFCTY   50
+     C**********           KFLD           KLOAN   60                                          CLE148
+     C                     KFLD           KLOAN   6                                           CLE148
+      *
+      *
+      ** Key fields to retrieve History file - full key with date
+      *
+     C           KEYHS2    KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCNUM
+     C                     KFLD           KFCTY
+     C                     KFLD           KLOAN
+     C                     KFLD           KDATE   50
+      ***********                                                                     248133 248133A
+      ***Key*fields*to retrieve History file - Credit Agreements**                    248133 248133A
+      ***********                                                                     248133 248133A
+     C***********KEYHS3    KLIST                                                      248133 248133A
+     C***********          KFLD           KHBRCA  3                                   248133 248133A
+     C***********          KFLD           KHCNUM  60                                  248133 248133A
+     C***********          KFLD           KHFCTY  50                                  248133 248133A
+     C***********          KFLD           KHDATE  50                                  248133 248133A
+     C***********          KFLD           KHSEQ   30                                  248133 248133A
+      *
+     C           KEYFAC    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           FCCNUM
+     C                     KFLD           FCFCTY
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRPROC - Process rollover action.                             *
+      * Called by: Main routine                                       *
+      * Calls    : SRWRRO *PSSR                                       *
+      *****************************************************************
+     C           SRPROC    BEGSR
+      *
+     C                     MOVE 'N'       WTRCA   1
+     C                     READ LEACT5L3                 01
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+     C           LNRFA     CHAINCLOANCL              02
+     C           *IN02     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOANCL 'DBFILE
+     C                     Z-ADD002       DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVELLNRF      DBKEY
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDFCXR      WNFCXR 138
+     C                     MOVE FMDI      WNFMDI  1
+      *
+      ** Process rollover action and write to HISACT file
+      *
+     C           LNRFA     CHAINPETEMPL0             02
+     C           *IN02     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'PETEMPLN'DBFILE
+     C                     Z-ADD003       DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVELLNRF      DBKEY
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE RCSI      WRCSI   1
+      *
+      ** If there is a rollover of facility exchange rate, output to
+      ** History Actions File.
+      *
+     C********** FCXR      IFNE WNFCXR                                                        225591
+     C********** FMDI      ORNE WNFMDI                                                        225591
+     C           FCXR      IFNE WNFCXR                                                        246448
+     C           FMDI      ORNE WNFMDI                                                        246448
+      *
+     C           LPFI      IFEQ 'I'
+     C           LPFI      OREQ 'P'
+     C           LPFI      OREQ 'S'                                                           CLE106
+     C           LPFI      OREQ 'R'                                                           CLE106
+     C**********           MOVE PTFC      WCNUM   60                                          CSD027
+     C                     MOVE PTFC      WCNUM   6                                           CSD027
+     C                     MOVE PTFT      WFTYP   30
+     C                     MOVE PTFN      WFSEQ   20
+     C                     EXSR SRWRRO
+     C                     ENDIF
+      *
+     C                     MOVE FCUS      WCNUM
+     C                     MOVE FTYP      WFTYP
+     C                     MOVE FSEQ      WFSEQ
+      *
+     C                     EXSR SRWRRO
+      *
+      ** If facility is a Tranche, write RO record for Credit agreement
+      *
+     C           TRCA      IFEQ 'TR'
+     C           LPFI      ANDNE'I'
+     C           LPFI      ANDNE'P'
+     C***********LPFI      ANDEQ'S'                                                     CLE106247164
+     C***********LPFI      ANDEQ'R'                                                     CLE106247164
+     C           LPFI      ANDNE'S'                                                           247164
+     C           LPFI      ANDNE'R'                                                           247164
+     C                     MOVE 'Y'       WTRCA
+     C                     MOVE CANM      WCNUM
+     C                     MOVELCAFT      WFTYP
+     C                     MOVE CAFN      WFSEQ
+     C                     EXSR SRWRRO
+     C                     ENDIF
+     C**********           ENDIF                                                              225591
+     C                     ENDIF                                                              246448
+      *
+     C                     MOVE 'N'       WTRCA
+     C                     READ LEACT5L3                 01
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRWRRO - Write Rollover action to HISACT file                 *
+      * Called by: SRPROC                                             *
+      * Calls    : SRHAMT SRCONV *PSSR                                *
+      *****************************************************************
+     C           SRWRRO    BEGSR
+      *
+     C                     MOVE 'RO'      HAACTN
+     C                     Z-ADD99        HASEQ
+     C                     Z-ADD99        HATSEQ
+     C                     MOVE LNRF      HALOAN
+     C**********           Z-ADDWCNUM     HACNUM                                              CSD027
+     C                     MOVE WCNUM     HACNUM                                              CSD027
+     C           WFTYP     MULT 100       HAFCTY
+     C                     ADD  WFSEQ     HAFCTY
+     C                     Z-ADD0         HALUAM
+     C                     Z-ADDPTYP      HAPTYP
+     C                     MOVE WRCSI     HARCSI
+     C                     Z-ADDVDATA     HADATE
+     C                     MOVE LPFI      HALPFI
+     C           WTRCA     IFEQ 'N'
+     C                     Z-ADD0         HAAAMT
+     C                     Z-ADDWNFCXR    HAEXRT
+     C                     MOVE WNFMDI    HARTMD
+     C                     MOVE *BLANKS   HALUCY
+     C                     MOVE *BLANK    HATRRC
+     C                     ELSE
+     C                     Z-ADDCAXR      HAEXRT
+     C                     MOVE CMDI      HARTMD
+     C                     MOVE FCCY      HALUCY
+     C                     MOVE RVCR      HATRRC
+     C                     Z-ADDHAAAMT    HALUAM
+     C                     MOVE CACY      WLUCY
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WCDPF
+     C                     MOVE FCCY      WLUCY
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WCDPL
+     C                     Z-ADDCAXR      WEXRT
+     C                     MOVE CMDI      WMDIN
+     C                     ENDIF
+      *
+      ** Access Facility Details file to retrieve the revolving credit
+      ** indicator.
+      *
+     C**********           Z-ADDWCNUM     KCNUM                                               CSD027
+     C                     MOVE WCNUM     KCNUM                                               CSD027
+     C                     Z-ADDWFTYP     KFCTP
+     C                     Z-ADDWFSEQ     KFCNO
+     C                     MOVELHAFCTY    WCAFT   5
+     C           KEYFCL    CHAINFCLTYFMF             03
+     C           *IN03     IFEQ *ON
+     C           KEYFCL    CHAINPEFCLFMF             03
+     C                     ENDIF
+     C           *IN03     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FCLTY   'DBFILE
+     C                     Z-ADD004       DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVELKCNUM     DBKEY
+     C                     MOVE WCAFT     DBKEY
+     C                     MOVEL'LER033'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE RVCR      HARCIN
+      *                                                                                      BUG8222
+     C           HADATE    IFLT TONDAT                                                       BUG8222
+     C           ORED      ANDLTTONDAT                                                       BUG8222
+     C                     Z-ADDTONDAT    HADATE                                             BUG8222
+     C                     ENDIF                                                             BUG8222
+      *                                                                                      BUG8222
+      *
+     C           WTRCA     IFEQ 'N'
+     C                     EXSR SRHAMT
+     C                     ELSE
+     C***********          Z-ADDHALUAM    WAMNT                                               248133
+     C***********          EXSR SRCONV                                                        248133
+     C***********          Z-ADDWAAAMT    HAAAMT                                              248133
+     C                     Z-ADDHALUAM    WAMNT                                              248133A
+     C                     EXSR SRCONV                                                       248133A
+     C                     Z-ADDWAAAMT    HAAAMT                                             248133A
+     C***********          MOVE BRCA      KHBRCA                                      248133 248133A
+     C***********          Z-ADDHACNUM    KHCNUM                                      248133 248133A
+     C***********          Z-ADDHAFCTY    KHFCTY                                      248133 248133A
+     C***********          Z-ADDHADATE    KHDATE                                      248133 248133A
+     C***********          Z-ADD*HIVAL    KHSEQ                                       248133 248133A
+      ***********                                                                     248133 248133A
+      ***Access*last*CA record on HISUPD prior to the one being written.**            248133 248133A
+      ***********                                                                     248133 248133A
+     C***********          MOVEA'00'      *IN,12                                      248133 248133A
+     C***********KEYHS3    SETGTHISUPD                                                248133 248133A
+     C***********          READPHISUPD                   05                           248133 248133A
+      ***********                                                                     248133 248133A
+     C************IN12     IFEQ '1'                                                   248133 248133A
+     C***********FHCNUM    ANDEQHACNUM                                                248133 248133A
+     C***********FHFCTY    ANDEQHAFCTY                                                248133 248133A
+     C***********          Z-ADDFHAAMT    HAAAMT                                      248133 248133A
+     C***********          ENDIF                                                      248133 248133A
+      ***********                                                                     248133 248133A
+     C************IN13     IFEQ '1'                                                   248133 248133A
+     C***********HHCNUM    ANDEQHACNUM                                                248133 248133A
+     C***********HHFCTY    ANDEQHAFCTY                                                248133 248133A
+     C***********          Z-ADDHHAAMT    HAAAMT                                      248133 248133A
+     C***********          ENDIF                                                      248133 248133A
+      ***********                                                                     248133 248133A
+     C                     ENDIF
+     C           PRAM      IFNE 0                                                             225591
+     C                     MOVEL'R'       HARIND                                              225591
+     C                     ENDIF                                                              225591
+      *
+      ** Write RO record to HISACT
+      *
+     C                     WRITEHISACTF
+      *
+     C                     MOVE HACNUM    FCCNUM
+     C                     MOVE HAFCTY    FCFCTY
+      *
+      ** If CLE023 is present, check if facility record already
+      ** exists on file before write record
+      *
+     C           KEYFAC    CHAINFACACTF              89
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE HADATE    FCDATE
+     C                     WRITEFACACTF
+     C                     ELSE
+     C           HADATE    IFLT FCDATE
+     C                     MOVE HADATE    FCDATE
+     C                     UPDATFACACTF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Update facility history header record for rework fields
+      *
+     C           KEYFCL    CHAINFACHISH              88
+      *
+     C           *IN88     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FACHISH' DBFILE
+     C                     Z-ADD011       DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVELFCUS      DBKEY
+     C                     MOVE WCAFT     DBKEY
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           FCDATE    IFLT BJRDNB
+     C                     MOVE 'Y'       FHRWKR
+     C                     MOVE 'B'       FHRWTP
+     C           FHRWDT    IFEQ 0
+     C           FHRWDT    ORGT FCDATE
+     C                     Z-ADDFCDATE    FHRWDT
+     C                     ENDIF
+     C                     UPDATFACHISHF
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRHAMT - History Amount processing for RO                    *
+      *  Called by: SRWRRO                                            *
+      *  Calls    : SRCONV SRCURR *PSSR                               *
+      *****************************************************************
+     C           SRHAMT    BEGSR
+      *
+      ** Access currency details of facility
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM FCCY      PAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER033'  DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD005       DBASE
+     C                     MOVELFCCY      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    WCDPF   10
+     C                     MOVE *BLANKS   WLUCY
+     C                     Z-ADD*ZERO     WLOAM  150
+     C                     Z-ADD*ZERO     WDRAM  150
+     C                     Z-ADD*ZERO     WEXRT
+     C                     MOVE *BLANK    WMDIN
+     C                     MOVE BRCA      KBRCA
+     C**********           Z-ADDHACNUM    KCNUM                                               CSD027
+     C                     MOVE HACNUM    KCNUM                                               CSD027
+     C                     Z-ADDHAFCTY    KFCTY
+     C**********           Z-ADDHALOAN    KLOAN                                               CLE148
+     C                     MOVELHALOAN    KLOAN                                               CLE148
+      *
+      ** Read through FACHISA and HISACT files.
+      *
+     C                     MOVEA'00'      *IN,10
+     C           KEYHIS    SETLLLEHISFL0
+     C           KEYHIS    READELEHISFL0                 05
+      *
+     C           *IN10     IFEQ '1'
+     C                     Z-ADDFADATE    WDATE   50
+     C                     ELSE
+     C                     Z-ADDDATEH     WDATE
+     C                     ENDIF
+      *
+     C           *IN05     DOWEQ'0'
+     C           WDATE     ANDLEHADATE
+      *
+      ** Accumulate drawn amount in facility ccy and original loan
+      ** amount in loan ccy.
+      *
+     C           *IN10     IFEQ '1'
+     C           FAACTN    IFEQ 'ST'
+     C           FAACTN    OREQ 'PI'
+     C           FAACTN    OREQ 'IC'
+     C           FAACTN    OREQ 'PT'                                                          225591
+     C           FALUAM    IFNE *ZERO
+     C                     ADD  FALUAM    WLOAM
+     C                     ELSE
+     C                     ADD  FAAAMT    WLOAM
+     C                     ENDIF
+     C                     ADD  FAAAMT    WDRAM
+     C                     MOVE FALUCY    WLUCY
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           ACTNH     IFEQ 'ST'
+     C           ACTNH     OREQ 'PI'
+     C           ACTNH     OREQ 'IC'
+     C           ACTNH     OREQ 'PT'                                                          225591
+     C           LUAMH     IFNE *ZERO
+     C                     ADD  LUAMH     WLOAM
+     C                     ELSE
+     C                     ADD  AAMTH     WLOAM
+     C                     ENDIF
+     C                     ADD  AAMTH     WDRAM
+     C                     MOVE LUCYH     WLUCY
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN10     IFEQ '1'
+      *
+     C           FAACTN    IFEQ 'MT'
+     C           FAACTN    OREQ 'RE'
+     C           FAACTN    OREQ 'WO'
+     C           FAACTN    OREQ 'PF'                                                          225591
+     C           FALUAM    IFNE *ZERO
+     C                     SUB  FALUAM    WLOAM
+     C                     ELSE
+     C                     SUB  FAAAMT    WLOAM
+     C                     ENDIF
+     C                     SUB  FAAAMT    WDRAM
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           ACTNH     IFEQ 'MT'
+     C           ACTNH     OREQ 'RE'
+     C           ACTNH     OREQ 'WO'
+     C           ACTNH     OREQ 'PF'                                                          225591
+     C           LUAMH     IFNE *ZERO
+     C                     SUB  LUAMH     WLOAM
+     C                     ELSE
+     C                     SUB  AAMTH     WLOAM
+     C                     ENDIF
+     C                     SUB  AAMTH     WDRAM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN10     IFEQ '1'
+     C           FAACTN    ANDEQ'MC'
+      *
+     C           FALUAM    IFNE *ZERO
+     C                     Z-ADDFALUAM    WLOAM
+     C                     ELSE
+     C                     Z-ADDFAAAMT    WLOAM
+     C                     ENDIF
+     C                     MOVE FALUCY    WLUCY
+     C                     Z-ADDFAAAMT    WDRAM
+     C                     ENDIF
+      *                                                                                       225591
+      ** Reconsider past rollovers in deducing adjustment for the new                         225591
+      ** rollover                                                                             225591
+      *                                                                                       225591
+     C           *IN10     IFEQ '1'                                                           225591
+     C           FAACTN    ANDEQ'RO'                                                          225591
+      *                                                                                       225591
+     C                     MOVE '0'       *IN15                                               225591
+     C           WDATE     IFEQ HADATE                                                        225591
+     C                     Z-ADD0         FAAAMT                                              225591
+     C                     ADD  0         WLOAM                                               225591
+     C                     ADD  0         WDRAM                                               225591
+     C                     MOVE '1'       *IN15                                               225591
+     C                     ELSE                                                               225591
+     C**********           SUB  FAAAMT    WDRAM                                      225591 MD029795
+     C                     ADD  FAAAMT    WDRAM                                             MD029795
+     C                     ENDIF                                                              225591
+     C                     MOVE FALUCY    WLUCY                                               225591
+      *                                                                                       225591
+     C           *IN15     IFEQ '1'                                                           225591
+     C                     UPDATFACHISAF                                                      225591
+     C                     ENDIF                                                              225591
+      *                                                                                       225591
+     C                     ENDIF                                                              225591
+      *
+      ** End DO of read through LEHISFL0
+      *
+     C                     MOVEA'00'      *IN,10
+     C           KEYHIS    READELEHISFL0                 05
+      *
+     C           *IN10     IFEQ '1'
+     C                     Z-ADDFADATE    WDATE   50
+     C                     ELSE
+     C                     Z-ADDDATEH     WDATE
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           WLUCY     IFNE *BLANKS
+     C                     Z-ADD9         WCCYDB  30
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WCDPL   10
+     C                     Z-ADDWLOAM     WAMNT  150
+     C                     Z-ADDHAEXRT    WEXRT  138
+     C                     MOVE HARTMD    WMDIN   1
+     C                     EXSR SRCONV
+     C********** WDRAM     SUB  WAAAMT    HAAAMT                                              243656
+     C           WAAAMT    SUB  WDRAM     HAAAMT                                              243656
+     C                     MOVE WLUCY     HALUCY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRMCRO - Update New Rates and action amount fields after     *
+      *           'MC' or 'RO' action.                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRCURR SRCONV SRWRCA  *PSSR                       *
+      *****************************************************************
+     C           SRMCRO    BEGSR
+      *
+      ** Read history action today for MC or RO.
+      *
+     C                     READ LEHISFL1                 07
+      *
+     C           *IN07     DOWEQ*OFF
+      *
+     C**********           Z-ADDHACNUM    KCNUM                                               CSD027
+     C                     MOVE HACNUM    KCNUM                                               CSD027
+     C                     MOVELHAFCTY    KFCTP
+     C                     MOVE HAFCTY    KFCNO
+      *
+     C           KEYFCL    CHAINFCLTYFMF             03
+     C           *IN03     IFEQ *ON
+     C           KEYFCL    CHAINPEFCLFMF             03
+     C                     ENDIF
+     C           *IN03     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FCLTY   'DBFILE
+     C                     Z-ADD006       DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVELKCNUM     DBKEY
+     C                     MOVE WCAFT     DBKEY
+     C                     MOVEL'LER033'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE 'N'       WTRCA
+      *
+     C                     MOVE FCCY      WLUCY
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WCDPF
+      *
+     C           TRCA      IFEQ 'TR'
+     C                     MOVE 'Y'       WTRCA
+     C**********           Z-ADDCANM      WCNUM                                               CSD027
+     C                     MOVE CANM      WCNUM                                               CSD027
+     C                     Z-ADDCAFT      WFTYP
+     C                     Z-ADDCAFN      WFSEQ
+     C                     Z-ADDCAXR      WCAXR  138
+     C                     MOVE CMDI      WCMDI   1
+     C                     MOVE FCCY      WTRCY   3
+     C                     ENDIF
+      *
+     C           TRCA      IFNE 'CA'
+     C                     MOVE BRCA      KBRCA
+     C**********           Z-ADDHACNUM    KCNUM                                               CSD027
+     C                     MOVE HACNUM    KCNUM                                               CSD027
+     C                     Z-ADDHAFCTY    KFCTY
+     C**********           Z-ADDHALOAN    KLOAN                                               CLE148
+     C                     MOVELHALOAN    KLOAN                                               CLE148
+     C                     Z-ADDHADATE    KDATE
+      *
+      ** Set lower limit to facility history with value date equal to
+      ** or greater than rollover date.  Then read through the facility
+      ** history with same facility and loan.
+      *
+     C                     MOVEA'00'      *IN,10
+     C           KEYHS2    SETGTLEHISFL0
+     C           KEYHIS    READELEHISFL0                 06
+      *
+     C           *IN06     DOWEQ*OFF
+     C           *IN10     IFEQ '1'
+     C                     Z-ADDFAAAMT    FAPAMT
+     C                     Z-ADDHAEXRT    FAEXRT
+     C                     MOVE HARTMD    FARTMD
+     C                     MOVE FALUCY    WLUCY   3
+     C                     Z-ADD10        WCCYDB
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WCDPL   10
+     C                     Z-ADDFALUAM    WAMNT  150
+     C                     Z-ADDFAEXRT    WEXRT
+     C                     MOVE FARTMD    WMDIN
+     C                     EXSR SRCONV
+     C                     Z-ADDWAAAMT    FAAAMT
+     C                     MOVE *BLANKS   FACFGI
+      *
+     C                     UPDATFACHISAF
+      *
+      ** Write Record to temporary file for later update of CA facility
+      *
+     C           WTRCA     IFEQ 'Y'
+     C                     EXSR SRWRCA
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVEA'00'      *IN,10
+      *
+     C           KEYHIS    READELEHISFL0                 06
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     READ LEHISFL1                 07
+     C                     ENDDO
+      *
+     C                     READ LECAROPD                 08
+     C           *IN08     DOWEQ'0'
+     C                     MOVE CABRCA    KBRCA
+     C**********           Z-ADDCAFCUS    KCNUM                                               CSD027
+     C                     MOVE CAFCUS    KCNUM                                               CSD027
+     C                     MOVELCAFACT    KFCTY
+     C                     MOVE CAFCNO    KFCTY
+     C**********           Z-ADDCALOAN    KLOAN                                               CLE148
+     C                     MOVELCALOAN    KLOAN                                               CLE148
+     C                     Z-ADDCADATE    KDATE
+     C                     MOVEA'00'      *IN,10
+     C                     MOVE 'N'       WFIND   1
+     C           KEYHS2    SETLLFACHISAF
+     C           KEYHS2    READEFACHISAF                 09
+      *
+     C           CAACTN    IFEQ FAACTN
+     C                     MOVE 'Y'       WFIND
+     C                     ENDIF
+      *
+     C           *IN09     DOWEQ*OFF
+     C           WFIND     ANDEQ'N'
+      *
+     C           KEYHS2    READEFACHISAF                 09
+     C           CAACTN    IFEQ FAACTN
+     C                     MOVE 'Y'       WFIND
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           *IN09     IFEQ *OFF
+     C           CACACY    IFNE CATRCY
+     C                     Z-ADDCALUAM    FALUAM
+     C                     MOVE CACACY    WLUCY
+     C                     MOVE CACACY    FCCY
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WCDPF
+     C                     MOVE CATRCY    WLUCY
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WCDPL
+     C                     Z-ADDCALUAM    WAMNT
+     C                     Z-ADDCACAXR    WEXRT
+     C                     MOVE CACMDI    WMDIN
+     C                     EXSR SRCONV
+     C                     ELSE
+     C                     Z-ADDCALUAM    WAAAMT
+     C                     ENDIF
+      *
+     C                     Z-ADDFAAAMT    FAPAMT
+     C                     Z-ADDWAAAMT    FAAAMT
+     C                     MOVE *BLANKS   FACFGI
+     C                     UPDATFACHISAF
+     C                     ENDIF
+      *
+     C                     READ LECAROPD                 08
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRWRCA - Write record to temporary file for later update of  *
+      *           Credit Agreement facility                           *
+      *  Called by: SRMCRO                                            *
+      *  Calls    : *PSSR                                             *
+      *****************************************************************
+     C           SRWRCA    BEGSR
+      *
+     C**********           Z-ADDWCNUM     KCNUM                                               CSD027
+     C                     MOVE WCNUM     KCNUM                                               CSD027
+     C                     Z-ADDWFTYP     KFCTP
+     C                     Z-ADDWFSEQ     KFCNO
+      *
+     C           KEYFCL    CHAINFCLTYFMF             03
+     C           *IN03     IFEQ *ON
+     C           KEYFCL    CHAINPEFCLFMF             03
+     C                     ENDIF
+     C           *IN03     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FCLTY   'DBFILE
+     C                     Z-ADD007       DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVELKCNUM     DBKEY
+     C                     MOVE WCAFT     DBKEY
+     C                     MOVEL'LER033'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE BRCA      CABRCA
+     C**********           Z-ADDWCNUM     CAFCUS                                              CSD027
+     C                     MOVE WCNUM     CAFCUS                                              CSD027
+     C                     Z-ADDWFTYP     CAFACT
+     C                     Z-ADDWFSEQ     CAFCNO
+     C**********           Z-ADDFALOAN    CALOAN                                              CLE148
+     C                     MOVELFALOAN    CALOAN                                              CLE148
+     C                     Z-ADDFADATE    CADATE
+     C                     MOVE FAACTN    CAACTN
+     C                     MOVE WTRCY     CATRCY
+     C                     MOVE FCCY      CACACY
+     C                     Z-ADDFAAAMT    CALUAM
+     C                     Z-ADDWCAXR     CACAXR
+     C                     MOVE WCMDI     CACMDI
+     C                     WRITELECAROPF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRCONV - Amount Conversion                                   *
+      *  Called by: SRWRRO SRHAMT SRMCRO                              *
+      *  Calls    : *PSSR                                             *
+      *****************************************************************
+     C           SRCONV    BEGSR
+      *
+     C********** WCDPF     SUB  WCDPL     DP      10                                          225591
+     C**********           ADD  4         DP                                                  225591
+      *
+     C           WLUCY     IFNE FCCY
+     C           WLUCY     ANDNE*BLANK                                                        246448
+     C********** WMDIN     IFEQ 'D'                                                           225591
+     C********** WEXRT     DIV  POWER,DP  FCXRT  159H                                         225591
+     C********** 1         DIV  FCXRT     FCXRT                                               225591
+     C**********           ELSE                                                               225591
+     C********** WEXRT     MULT POWER,DP  FCXRT     H                                         225591
+     C**********           ENDIF                                                              225591
+     C********** WAMNT     MULT FCXRT     WAAAMT 150H                                         225591
+      *                                                                                       225591
+      ** Align the amount conversion with PGM/LE0491.                                         225591
+      *                                                                                       225591
+     C                     Z-ADDWEXRT     ZEXCH  138                                          225591
+     C                     MOVE WMDIN     ZMD     1                                           225591
+     C                     Z-ADDWAMNT     ZAMTCI 150                                          225591
+     C                     MOVE WLUCY     ZCCYI   3                                           225591
+     C                     MOVE FCCY      ZCCYO   3                                           225591
+     C                     Z-ADDWCDPL     ZCDPI   10                                          225591
+     C                     Z-ADDWCDPF     ZCDPO   10                                          225591
+     C                     EXSR ZCONV                                                         225591
+     C                     Z-ADDZAMTCO    WAAAMT 150H                                         225591
+     C                     ELSE
+     C                     Z-ADDWAMNT     WAAAMT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRCURR - Get Currency Details                                *
+      *  Called by: SRHAMT SRMCRO                                     *
+      *  Calls    : AOCURRR0 *PSSR                                    *
+      *****************************************************************
+      *
+     C           SRCURR    BEGSR
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WLUCY     PAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER033'  DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADDWCCYDB    DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELWLUCY     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      /TITLE SR/ZCONV                                                                         225591
+     C/COPY ZSRSRC,ZCONVZ1                                                                    225591
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

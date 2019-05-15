@@ -1,0 +1,148 @@
+      *****************************************************************
+/*STD *: PGMBASE                                                    : *
+/*EXI *: MODULE(GLAMADCTL) ACTGRP(*CALLER)                          : *                       CPK016
+/*EXI *  TEXT('Midas GL Account maintenance controller')              *
+/*E*I *:*MODULE(GLAMADCTL)******************************************:**                       CPK016
+/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************:**                       CPK016
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger ILE Module                            *
+      *                                                               *
+      *  GLAMADCTL - Account Maintenance - Control                    *
+      *                                                               *
+      *  Function:  This is the main validation of Accounts for       *
+      *             input to the database.                            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *                 LLN022             Date 03Jun15               *
+      *                 CRE095             Date 25Apr14               *
+      *                 CGL165             Date 23Feb15               *
+      *                 CRE090             Date 14Feb14               *
+      *                 AR850512           Date 28Apr14               *
+      *                 AR1095876          Date 30Sep13               *
+      *                 AR314589           Date 04Oct12               *
+      *                 AR947093           Date 26Apr12               *
+      *                 AR847249           Date 28Jan12               *
+      *                 AR899028           Date 25Jan12               *
+      *                 CSF011A            Date 28Nov11               *
+      *                 AR847269           Date 09Nov11               *
+      *                 CER049             Date 06Dec10               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER055             Date 06Dec10               *
+      *                 CER042             Date 11May11               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG24157           Date 04Jun09               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 04Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256564             Date 17Sep08               *
+      *                 256895             Date 30Sep08               *
+      *                 247888             Date 18May07               *
+      *                 245046             Date 27Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244450             Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 231128             Date 16Oct06               *
+      *                 242488             Date 27Sep06               *
+      *                 CER001             Date 25Apr05               *
+      *                 239720             Date 15Jun06               *
+      *                 238839             Date 29Mar06               *
+      *                 238639             Date 27Feb06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAP086             Date 08Jun05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 222373             Date 04Nov03               *
+      *                 CPK016             Date 29Jul03               *
+      *                 CSD012             Date 15Oct02               *
+      *                 208221             Date 11Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 201922             Date 14Dec01               *
+      *                 CSC011             Date 18Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDE002             Date 14Feb99               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 180721             Date 04May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 19Oct99               *
+      *                 CAP035  *CREATE    Date 15Jun99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN022A - BOE Upgrade to MidasPlus (Recompile)               *
+      *  LLN022 - BOE Upgrade to MidasPlus (Recompile)                *
+      *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
+      *  AR850512 - Recompiled due to changes in GLAMADCTL.           *
+      *             (Child: AR850513)                                 *
+      *           - Applied for MD023834                              *
+      *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
+      *             RUND (Child: AR1095877) (Recompile)               *
+      *  AR314589 - Recompiled due to changes in module GLAMADCTL     *
+      *  AR947093 - Base Rate amendment resulted to 0 interest rate   *
+                    (Recompile)                                       *
+      *  AR847249 - Negative interest is shown in the main list and   *
+      *             Loan Details enquiry screen (Recompile)           *
+      *  AR899028 - NOSTRO AMAD System errors occured; applied        *
+      *             fix AR847269                                      *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *            (Recompile)                                        *
+      *  AR847269 - Column F1DACN not in specified tables (Recompile) *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
+      *           (Recompile)                                         *
+      *  CER042 - Interest Scale Report Correspondence                *
+      *           (Upgrade of FGE178/179) (Recompile)                 *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG24157 - AMAD KWG field does not default to CUAP KWG       *
+      *           field when field is set to Y (Recompile)            *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *           (Recompile)                                         *
+      *  256564 - Recompile due to PF changes done by fix 256330      *
+      *  256895 - Recompiled due to changes in GLAMADCTL.             *
+      *  247888 - Missing record in CLE025 files.                     *
+      *  245046 - Recompiled due to changes in GLAMADCTL.             *
+      *  244450 - Recompiled due to changes in GLAMADCTL.             *
+      *  231128 - Recompiled due to changes in GLAMADCTL              *
+      *  242488 - Recompiled due to changes in GLAMADCTL.             *
+      *           Applied 239720/238639.                              *
+      *  CER001 - Lux Upgrade to MidasPlus (Recompile only)           *
+      *  239720 - Recompiled due to changes in GLAMADCTL              *
+      *           Applied 238639.                                     *
+      *  238839 - Pass parameter DDIBAN to GLAMADRTV.                 *
+      *  238639 - Recompiled due to changes in GLAMADCTL              *
+      *           Applied 231128                                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAP086 - Introduce Auto Authorisation to the API's           *
+      *           without it. (Recompile)                             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  222373 - Recompile - Parameters corrected on program calls   *
+      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+      *  CSD012 - Standing Data Authorisation. Recompile.             *
+      *  208221 - Default Margin from Rate/Spread change (Recompile)  *
+      *  201922 - BRT catergory is validated for non-retail accounts  *
+      *           (Recompile)                                         *
+      *  CSC011 - 24x7 Midas Availability (Recompile)                 *
+      *  CDE002 - CCRM Revenue Analysis - Recompile only              *
+      *  180721 - Default "Next Statement Date"                       *
+      *           Recompiled due to changes in GLAMADxxx              *
+      *  CPB001 - Meridian DBA Middleware Replication Customization.  *
+      *           Recompiled due to changes in GLAMADxxx              *
+      *         - 'Private Banking' Module                            *
+      *           Recompiled due to changes in GLAMADxxx              *
+      *  CAP035 - Midas/ToF Interface                                 *
+      *                                                               *
+      *****************************************************************

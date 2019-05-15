@@ -1,0 +1,1580 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG COB retail advices - driver')                 *
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CG4800 - COB retail advices - Driver                         *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 AR863952           Date 15Nov11               *
+      *                 CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP204             Date 21Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 241568             Date 08Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187340             Date 29Dec00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 169770             Date 05Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     F*                 162581             Date 06Oct99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+     F*                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 130468             Date 27Apr99               *
+     F*                 S01522             Date 15Dec94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
+      *  AR863952 - CGC2050 00002 DBERR 001 on file GLHATMPD RE0046   *
+      *  CER049 - Stamp Tax (CCR030)                                  *
+      *  CAP204 - Retail Account Transfer                             *
+      *  241568 - Error in Correspondence Manager extract. Applied    *
+      *           fixes 185452, 185203, 191077 and 237702. Note code  *
+      *           was applied here using original GEMS reference.     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL031 - Taxation on Savings Income                          *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  187340 - MSGW occurred due to array indexed problem in field *
+      *           #4.  Fix is to always initialise #4  properly.      *
+     F*  169770 - Move BAL,N to TOBAL only if *IN54 is OFF to avoid   *
+     F*           array index error.                                  *
+     F*  162581 - Set #4 to 1, to avoid array problem.                *
+      *  CGL007 - Account Postings Enquiry                            *
+     F*  130468 - BRT not deducted from CR interest adjustments.      *
+     F*           BRT is no longer deducted from the CR interest but  *
+     F*           is posted as a debit with transaction type 91070.   *
+     F*           For UDC these postings should be ignored.           *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  01   -    Detail posting - Standing order                    *
+     F*  99   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+     F***READVL1*IF  F     279 15AI     2 DISK                            CGL007
+     F***READVL1*IF  F     331 15AI     2 DISK                                         CGL007 CGL029
+     FREADVL1 IF  F     620 15AI     2 DISK                                                   CGL029
+     FREIAC   IF  E           K        DISK
+     FTABRE2  IF  E           K        DISK
+      *                                                                                       CGL031
+      ** Midas TA Swiss Installation Control Data                                             CGL031
+     FSDSTAXL1IF  E           K        DISK                                                   CGL031
+      *                                                                                       CGL031
+     E/SPACE 5
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E                    RAT        11 11 7
+     E                    BAL        11 15 0
+     E                    ARR         7  1
+     E                    ZARR        9  1
+     E/COPY CGCPYSRC,SRERRE
+     I/SPACE 5
+      *
+      **   Retail advices file - Posting records.
+      *
+     IREADVL1 NS  01   1 CP 106 C1 129 CO
+     I       OR   02   1 CP 106 C1 129 CC
+     I       OR   04   1 CP 106 C1 129 CE
+     I       OR   05   1 CP 106 C1 129 CD
+     I       OR   17   1 CP 106 C1 129 CL                                                     CAP204
+     I       OR   82   1 CP 106 C1 129 CU
+     I/COPY WNCPYSRC,CG4800I001
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8  10 CCY
+     I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ACSQ
+     I                                       23  320ACNO
+     I                                    P  33  350PSTD
+     I                                    P  36  380VALD
+     I                                       39  430TRAT
+     I                                       44  73 PNAR
+     I                                       44  51 PNAR1
+     I                                       44  490DLNO
+     I**********                             56  61 CUSX                                      CGL029
+     I**********                             63  65 CCYX                                      CGL029
+     I**********                             67  70 ACOX                                      CGL029
+     I                                       50  55 CUSX                                      CGL029
+     I                                       57  59 CCYX                                      CGL029
+     I                                       61  70 ACOX                                      CGL029
+     I                                       64  73 ACNOX
+     I                                       72  73 SEQX
+     I                                       56  73 CAPACT
+     I                                    P  74  800PSTA
+     I                                       81  810DRCR
+     I**********                             82  870ASOC                                      CSD027
+     I                                       82  87 ASOC                                      CSD027
+     I                                       88  950CHQN
+     I                                       96 102 SPOS
+     I                                      103 105 BRCA
+     I                                      106 1060RIND
+     I                                    P 107 1080REJC
+     I                                      109 111 DPMT
+     I                                    P 112 1140RRNM
+     I                                      124 124 ATYP
+     I                                      128 128 PRIN
+     I                                      129 129 GETP
+     I                                      130 1300ACUM
+     I                                      155 159 SONO
+     I                                      155 160 IPDN
+      *
+      ** Add fields for LE postings.
+      *
+     I                                      177 184 DLREF
+     I**********                            216 230 OTRF                                      CGL029
+     I                                      231 240 OTST
+     I                                      241 242 DTYPP
+     I                                      241 250 OTTP
+     I                                      352 352 FEEFLG                                    CAP204
+     I                                      590 5990ACOD                                      CGL029
+     I                                      600 620 OTRF                                      CGL029
+      *
+      **   Rate change record sequence 1.
+      *
+     I        NS  03   1 CR  17 C1
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8  10 CCY
+     I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ACSQ
+     I**********                              2  16 REIKEY                                    CGL029
+     I                                       17  170RSEQ
+     I                                       18  18 CONI
+     I                                       23  320ACNO
+     I                                    P  33  350PSTD
+     I                                    P  36  380VALD
+     I                                       39  430TRAT
+     I                                       44  73 PNAR
+     I                                       74  750ITYP
+     I                                       76  800ISTP
+     I                                       81  810DRCR
+     I                                       82  870TIME
+     I                                       96 102 SPOS
+     I                                      103 105 BRCA
+     I                                      124 124 ATYP
+     I                                      128 128 PRIN
+     I                                    P 138 1400LRCD
+     I                                    P 147 1527INRT
+     I                                      153 1540BRT
+     I                                    P 155 1607RTSP
+     I                                      161 1700ACOD                                      CGL029
+     I*
+     I**   Rate change record sequence 2.
+     I*
+     I        NS  52   1 CR  17 C2
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8  10 CCY
+     I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ACSQ
+     I**********                              2  16 REIKEY                                    CGL029
+     I                                       17  170RSEQ
+     I                                       18  18 CONI
+     I                                    P  19  260INTH
+     I                                    P  36  380VALD
+     I                                    P  39  44 RAT,1
+     I                                    P  45  50 RAT,2
+     I                                    P  51  56 RAT,3
+     I                                    P  57  62 RAT,4
+     I                                    P  63  68 RAT,5
+     I                                    P  69  74 RAT,6
+     I                                       81  810DRCR
+     I                                       82  870TIME
+     I                                      103 105 BRCA
+     I                                    P 106 113 BAL,1
+     I                                    P 114 121 BAL,2
+     I                                    P 122 129 BAL,3
+     I                                    P 130 137 BAL,4
+     I                                    P 138 145 BAL,5
+     I                                    P 146 153 BAL,6
+     I                                      161 1700ACOD                                      CGL029
+      *
+      **   Rate change record sequence 3.
+      *
+     I        NS  53   1 CR  17 C3
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8  10 CCY
+     I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ACSQ
+     I**********                              2  16 REIKEY                                    CGL029
+     I                                       17  170RSEQ
+     I                                       18  18 CONI
+     I                                    P  36  380VALD
+     I                                    P  39  44 RAT,7
+     I                                    P  45  50 RAT,8
+     I                                    P  51  56 RAT,9
+     I                                    P  57  62 RAT,10
+     I                                    P  63  68 RAT,11
+     I                                       81  810DRCR
+     I                                       82  870TIME
+     I                                      103 105 BRCA
+     I                                    P 106 113 BAL,7
+     I                                    P 114 121 BAL,8
+     I                                    P 122 129 BAL,9
+     I                                    P 130 137 BAL,10
+     I                                    P 138 145 BAL,11
+     I                                      161 1700ACOD                                      CGL029
+     I*   CATCHALL
+     I        NS
+     IDSPARM    E DSEODPOPD
+     I**  External DS to pass to programs.
+     I*
+     IDSPAR1      DS
+     I**   DS to pass to programs.
+     I                                        1   1 @RECI
+     I**********                              2   70@CNUM                                     CSD027
+     I                                        2   7 @CNUM                                     CSD027
+     I                                        8  10 @CCY
+     I**********                             11  140@ACOD                                     CGL029
+     I                                       11  140@ACOQQ                                    CGL029
+     I                                       15  160@ACSQ
+     I                                       17  170@RSEQ
+     I                                       18  18 @CONI
+     I                                       23  320@ACNO
+     I                                    P  33  350@PSTD
+     I                                    P  36  380@VALD
+     I                                       39  430@TRAT
+     I                                       44  73 @PNAR
+     I                                       74  750@ITYP
+     I                                       76  800@ISTP
+     I                                       81  810@DRCR
+     I                                       82  870@TIME
+     I                                       96 102 @SPOS
+     I                                      103 105 @BRCA                 S01117
+     I                                      124 124 @ATYP
+     I                                      128 128 @PRIN
+     I                                    P 138 1400@LRCD
+     I                                    P 147 1527@INRT
+     I                                      153 1540@BRT
+     I                                    P 155 1607@RTSP
+     I                                      161 1700@ACOD                                     CGL029
+     I*
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      *                                                                                       CGL031
+     ISCSARD    E DSSCSARDPD                                                                  CGL031
+      ** MIDAS Switchable Features Accessed Via Access Program                                CGL031
+      *                                                                                       CGL031
+     IDSFDY     E DSDSFDY                                                                     CGL031
+      **  First DS for access programs, short data structure                                  CGL031
+      *                                                                                       CGL031
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+      *                                                                                       CAP204
+     ISDRETR    E DSSDRETRPD                                                                  CAP204
+      *                                                                                       CAP204
+      ** External DS Profit Centre Details                                                    CAP204
+      *                                                                                       CAP204
+     I##INTD      DS                         17
+      **  MMOD to store From balance,to balance and interest rate.
+     I                                        1  15 FMBAL
+     I                                       16  30 TOBAL
+     I                                       31  41 PERC
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - only once        *
+      *                SRINZ  - Initial Processing                    *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+     C                     EXSR SRDVL1                     LF/READVL1
+      *
+      ** Audit processing
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRDVL1                                         *
+      * Function    :  Process LF/READVL1                             *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CG4810 - COB Standing Orders                   *
+      *****************************************************************
+     C           SRDVL1    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRDVL1'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Read from Deals Index Detail
+      *
+     C           *LOVAL    SETLLREADVL1
+     C                     READ READVL1                  99*
+      *
+      ** Read until End of File
+      *
+     C           *IN99     DOWEQ'0'
+      *
+      ** COB Retail standing orders
+      *
+     C           *IN01     IFEQ *ON
+     C                     EXSR SRSORD                     Standing orders
+     C                     ENDIF
+      *
+      ** COB Interest capitalization/transaction charges
+      *
+     C           *IN02     IFEQ *ON
+     C                     EXSR SRITTC                     Int cap/trans charges
+     C                     ENDIF
+      *
+      ** COB Rate change type 00.
+      *
+     C           *IN03     IFEQ *ON
+     C           ITYP      ANDEQ0
+     C                     EXSR SRRC00                     COB rate change type
+     C                     ENDIF
+      *
+      ** COB Rate change types 01,02,03,04.
+      *
+     C           *IN03     IFEQ *ON
+     C           ITYP      ANDEQ1
+     C           *IN03     OREQ *ON
+     C           ITYP      ANDEQ2
+     C           *IN03     OREQ *ON
+     C           ITYP      ANDEQ3
+     C           *IN52     OREQ *ON
+     C           *IN53     OREQ *ON
+     C                     EXSR SRRCN0
+     C                     ENDIF
+      *
+      ** COB Retail Currency exchanges
+      *
+     C           *IN04     IFEQ *ON
+     C                     EXSR SRCURE                     COB rate change type
+     C                     ENDIF
+      *
+      ** COB Retail Lending Generated entries.
+      *
+     C           *IN82     IFEQ *ON
+     C                     EXSR SRLGEN                     COB Lending gen entrs
+     C                     ENDIF
+      *
+      ** COB Retail Dealing Generated postings.
+      *
+     C           *IN05     IFEQ *ON
+     C                     EXSR SRDEAL                     COB Dealing generated
+     C                     ENDIF
+      *                                                                                       CAP204
+      ** COB Retail Account Transfer                                                          CAP204
+      *                                                                                       CAP204
+     C           *IN17     IFEQ *ON                                                           CAP204
+     C                     EXSR SRACTR                                                        CAP204
+     C                     ENDIF                                                              CAP204
+      *
+     C/COPY WNCPYSRC,CG4800C001
+     C                     COMIT
+      *
+     C                     MOVEA'00000'   *IN,01
+     C                     MOVEA'00'      *IN,52
+     C                     MOVEA'0'       *IN,82
+     C                     MOVEA'0'       *IN,17                                            AR863952
+     C/COPY WNCPYSRC,CG4800C004
+      *
+      ** Read next end of day postings record.
+      *
+     C                     READ READVL1                  99*
+      *
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXDVL1    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRSORD                                         *
+      * Function    :  COB retail standing orders                     *
+      *                                                               *
+      * Called by   :  SRDVL1                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRSORD    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRSORD'  @STK,Q
+      *
+      *................................................................
+      *
+     C           TRAT      IFNE *ZEROS                     B1
+      *
+      ** Check print transaction advice on REIAC.
+      *
+     C           *LIKE     DEFN CNUM      #CNUM
+     C           *LIKE     DEFN CCY       #CCY
+     C           *LIKE     DEFN ACOD      #ACOD
+     C           *LIKE     DEFN ACSQ      #ACSQ
+      *
+     C**********           Z-ADDCNUM      #CNUM                                               CSD027
+     C                     MOVE CNUM      #CNUM                                               CSD027
+     C                     MOVELCCY       #CCY
+     C                     Z-ADDACOD      #ACOD
+     C                     Z-ADDACSQ      #ACSQ
+      *
+     C           KKEY01    KLIST
+     C                     KFLD           #CNUM
+     C                     KFLD           #CCY
+     C                     KFLD           #ACOD
+     C                     KFLD           #ACSQ
+     C                     KFLD           BRCA
+      *
+     C           KKEY01    CHAINREIAC                80
+      *
+     C           PTRA      IFEQ 'Y'                        B*2
+      *
+      ** Check print transaction advice indicator on TABLETZ.
+      *
+     C                     MOVEL'41'      TTKEY  12
+     C                     MOVE TRAT      TTKEY
+     C           TTKEY     CHAINTABLETZF             48
+      *
+      ** Database error
+      *
+     C           *IN48     IFEQ *ON                        B**3
+     C                     MOVEL'TABLETZ 'W0FILE
+     C                     MOVELTTKEY     W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END                             E**3
+      *
+     C           ADVI      IFEQ 'Y'                        B**3
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      *
+     C                     MOVELSONO      RINO
+      *
+      ** Produce Confirmation
+      *
+     C                     CALL 'CG4810'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK                     B***4
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4810  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF                           E***4
+     C                     ENDIF                           E**3
+     C                     ENDIF                           E*2
+     C                     ENDIF                           E1
+      *
+      *................................................................
+      *
+     C           EXSORD    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRITTC                                         *
+      * Function    :  COB Interest capitalisation/transaction charges*
+      *                                                               *
+      * Called by   :  SRDVL1                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRITTC    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRITTC'  @STK,Q
+      *
+      *................................................................
+      *
+     C           TRAT      IFNE *ZEROS
+      *                                                                   130468
+      ** Bypass BRT postings                                              130468
+      *                                                                   130468
+     C           TRAT      IFEQ 91070                                     130468
+     C           S01383    ANDEQ'Y'                                       130468
+     C                     GOTO EXITTC                                    130468
+     C                     END                                            130468
+      *                                                                                       CGL031
+     C           TRAT      IFEQ WEUTT                                                         CGL031
+     C           CGL031    ANDEQ'Y'                                                           CGL031
+     C                     GOTO EXITTC                                                        CGL031
+     C                     ENDIF                                                              CGL031
+      *
+      ** Check print transaction advice on REIAC.
+      *
+     C**********           Z-ADDCNUM      #CNUM                                               CSD027
+     C                     MOVE CNUM      #CNUM                                               CSD027
+     C                     MOVELCCY       #CCY
+     C                     Z-ADDACOD      #ACOD
+     C                     Z-ADDACSQ      #ACSQ
+      *
+     C           KKEY01    CHAINREIAC                80
+      *
+     C           PTRA      IFEQ 'Y'
+      *                                                                                       CER049
+      ** Check if interest or charges is liable to stamp tax.                                 CER049
+      *                                                                                       CER049
+     C           CER049    IFEQ 'Y'                                                           CER049
+     C           TRCH      ANDNE0                                                             CER049
+     C                     MOVE 'Y'       ##STAX                                              CER049
+     C                     ELSE                                                               CER049
+     C                     MOVE 'N'       ##STAX                                              CER049
+     C                     ENDIF                                                              CER049
+      *
+      ** Check print transaction advice indicator on TABLETZ.
+      *
+     C                     MOVEL'41'      TTKEY  12
+     C                     MOVE TRAT      TTKEY
+     C           TTKEY     CHAINTABLETZF             48
+      *
+      ** Database error
+      *
+     C           *IN48     IFEQ *ON
+     C                     MOVEL'TABLETZ 'W0FILE
+     C                     MOVELTTKEY     W0KEY            ***************
+     C                     Z-ADD7         W0ERNB           * DB ERROR 07 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ADVI      IFEQ 'Y'
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      *
+     C                     MOVELSONO      RINO
+      *
+      ** Produce Confirmation
+      *
+     C                     CALL 'CG4820'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPARM
+     C                     PARM           ##STAX  1                                           CER049
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4820  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 08 *
+     C                     Z-ADD8         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXITTC    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRRC00                                         *
+      * Function    :  COB Rate change type 00.                       *
+      *                                                               *
+      * Called by   :  SRDVL1                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRRC00    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRC00'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Check print transaction advice on REIAC.
+      *
+     C**********           Z-ADDCNUM      #CNUM                                               CSD027
+     C                     MOVE CNUM      #CNUM                                               CSD027
+     C                     MOVELCCY       #CCY
+     C                     Z-ADDACOD      #ACOD
+     C                     Z-ADDACSQ      #ACSQ
+      *
+     C           KKEY01    CHAINREIAC                80
+      *
+      ** Bypass if 'Print transaction Advice' not equal to 'Y'
+     C           PRCH      IFNE 'Y'
+     C                     GOTO EXRC00
+     C                     ENDIF
+      *
+     C***********PTRA      IFEQ 'Y'                                                           185203
+      *
+      ** Check print transaction advice indicator on TABTG10F
+      *
+     C                     MOVEL'20'      CURKEY 12
+     C                     MOVE '1'       WRKA    4
+     C                     MOVELCCY       WRKA
+     C                     MOVE WRKA      CURKEY
+     C           CURKEY    CHAINTABTG10F             48
+      *
+      ** Database error
+      *
+     C           *IN48     IFEQ *ON
+     C                     MOVEL'TABTG10F'W0FILE
+     C                     MOVELTTKEY     W0KEY            ***************
+     C                     Z-ADD9         W0ERNB           * DB ERROR 09 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      *
+      **  Move data to data structure for parameter.
+     C                     EXSR SRMDTA
+      *
+      ** Produce Confirmation
+      *
+     C                     CALL 'CG4830'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPAR1
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4830  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 11 *
+     C                     Z-ADD11        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C**********           ENDIF                                                              185203
+      *
+      *................................................................
+      *
+     C           EXRC00    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRRCN0                                         *
+      * Function    :  COB Rate change types 01,02,03,04.             *
+      *                                                               *
+      * Called by   :  SRDVL1                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRRCN0    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRCN0'  @STK,Q
+     C                     Z-ADD1         #4      20                      187340
+      *
+      *................................................................
+      *
+      ** Clear multiple occurance data structure if Rate change seq.
+      ** record 1.
+      *
+     C           *IN03     IFEQ *ON
+      ** Clear all occurrences of ##INTD                                                      191077
+      *                                                                                       191077
+     C                     Z-ADD1         #4                                                  191077
+     C           #4        DOUEQ18                                                            191077
+     C           #4        OCUR ##INTD                                                        191077
+     C                     CLEAR##INTD
+     C                     ADD  1         #4                                                  191077
+     C                     ENDDO                                                              191077
+     C                     Z-ADD1         #4      20
+     C                     Z-ADDITYP      ##ITYP
+     C                     Z-ADDACNO      ##ACNO
+     C**********           Z-ADDCNUM      ##CNUM  60                                          CSD027
+     C                     MOVE CNUM      ##CNUM  6                                           CSD027
+     C                     Z-ADDDRCR      ##DRCR  10
+     C**********           Z-ADDACOD      ##ACOD  40                                          CGL029
+     C                     Z-ADDACOD      ##ACOD 100                                          CGL029
+     C                     Z-ADDACSQ      ##ACSQ  20
+     C                     ENDIF
+      *
+     C                     SETOF                     26
+     C           *IN03     IFEQ *ON
+     C           INRT      ANDLT*ZEROS
+     C                     SETON                     26
+     C                     ENDIF
+      *
+      ** Check print transaction advice on REIAC.
+      *
+     C**********           Z-ADDCNUM      #CNUM                                               CSD027
+     C                     MOVE CNUM      #CNUM                                               CSD027
+     C                     MOVELCCY       #CCY
+     C                     Z-ADDACOD      #ACOD
+     C                     Z-ADDACSQ      #ACSQ
+      *
+     C           KKEY01    CHAINREIAC                80
+      *
+     C           PRCH      IFEQ 'Y'
+      *
+      **   For interest types 01,02,03,04 maintain rate/balance levels
+      *
+     C           CONI      IFEQ 'X'
+     C           *IN52     ANDEQ*ON
+     C           *IN03     OREQ *ON                                                           185452
+     C                     GOTO EXRCN0
+     C                     ENDIF
+      *
+     C           INTH      COMP 0                        55
+     C                     Z-ADD0         M       20
+     C                     Z-ADD0         N       20
+     C           REPEAT    TAG                             ** REPEAT TAG *
+     C*
+     C           M         ADD  1         M
+     C           M         ADD  1         N
+     C           M         COMP 1                        57
+     C           M         COMP 11                       54
+     C  N54      BAL,N     COMP 0                        54
+     C  N57      BAL,M     ADD  1         BAL,M
+     C**********           Z-ADDRAT,M     ZINP   117                                          185452
+     C**********           EXSR REM0                                                          185452
+      *
+      **  Store Data
+     C********** ZINPWN    IFNE *ZEROS                                                        185452
+     C** Set #4 to 1, to avoid array problem.                             162581
+     C           #4        IFEQ 0                                         162581
+     C                     Z-ADD1         #4                              162581
+     C                     END                                            162581
+     C           #4        OCUR ##INTD
+     C                     MOVELBAL,M     FMBAL
+     C           *IN54     IFEQ *OFF                                      169770
+     C                     MOVELBAL,N     TOBAL
+     C                     ENDIF                                          169770
+     C**********           MOVELZINPWN    PERC                                                185452
+     C                     MOVELRAT,M     PERC                                                185452
+      *
+     C                     ADD  1         #4
+     C**********           ENDIF                                                              185452
+      *
+     C   54                GOTO EXRCN0
+      *
+     C                     GOTO REPEAT
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      *
+     C**********           ENDIF                                                              185452
+      *
+      *................................................................
+      *
+     C           EXRCN0    TAG
+      *
+     C           *IN03     IFNE *ON
+     C           CONI      IFNE 'X'                                                           237702
+     C                     CALL 'CG4860'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM           W0CMT   3
+     C                     PARM           ##INTD
+     C                     PARM           #CCY
+     C                     PARM           ##ITYP
+     C                     PARM           ##CNUM
+     C                     PARM           ##ACNO
+     C                     PARM           ##ACOD
+     C                     PARM           ##ACSQ
+     C                     PARM           VALD
+     C                     PARM           ##DRCR
+     C                     PARM           BRCA
+     C                     PARM           INTH
+     C                     ENDIF                                                              237702
+     C                     ENDIF
+     C                     ENDIF                                                              185452
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRCURE                                         *
+      * Function    :  COB Retail currency exchanges                  *
+      *                                                               *
+      * Called by   :  SRDVL1                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRCURE    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRCURE'  @STK,Q
+      *
+      *................................................................
+      *
+     C           TRAT      IFNE *ZEROS
+      *
+      ** Check print transaction advice on REIAC.
+      *
+     C**********           Z-ADDCNUM      #CNUM                                               CSD027
+     C                     MOVE CNUM      #CNUM                                               CSD027
+     C                     MOVELCCY       #CCY
+     C                     Z-ADDACOD      #ACOD
+     C                     Z-ADDACSQ      #ACSQ
+      *
+     C           KKEY01    CHAINREIAC                80
+      *
+     C           PTRA      IFEQ 'Y'
+      *
+      ** Check print transaction advice indicator on TABLETZ.
+      *
+     C                     MOVEL'41'      TTKEY  12
+     C                     MOVE TRAT      TTKEY
+     C           TTKEY     CHAINTABLETZF             48
+      *
+      ** Database error
+      *
+     C           *IN48     IFEQ *ON
+     C                     MOVEL'TABLETZ 'W0FILE
+     C                     MOVELTTKEY     W0KEY            ***************
+     C                     Z-ADD10        W0ERNB           * DB ERROR 10 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ADVI      IFEQ 'Y'
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      *
+     C                     MOVELSONO      RINO
+      *
+      ** Produce Confirmation
+      *
+     C                     CALL 'CG4840'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4840  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 12 *
+     C                     Z-ADD12        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXCURE    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************                       CAP204
+      * Subroutine  :  SRACTR                                         *                       CAP204
+      * Function    :  COB Retail Account Transfer                    *                       CAP204
+      *                                                               *                       CAP204
+      * Called by   :  SRDVL1                                         *                       CAP204
+      * Calls       :  None                                           *                       CAP204
+      *****************************************************************                       CAP204
+     C           SRACTR    BEGSR                                                              CAP204
+      *                                                                                       CAP204
+     C           CAP204    IFEQ 'Y'                                                           CAP204
+     C           FEEFLG    ANDEQ*BLANKS                                                       CAP204
+      *                                                                                       CAP204
+      **  Set up subroutine stack name                                                        CAP204
+      *                                                                                       CAP204
+     C                     ADD  1         Q                                                   CAP204
+     C                     MOVEL'SRACTR'  @STK,Q                                              CAP204
+      *                                                                                       CAP204
+     C           TRAT      IFNE *ZEROS                                                        CAP204
+      *                                                                                       CAP204
+      ** Check print transaction advice on REIAC.                                             CAP204
+      *                                                                                       CAP204
+     C                     MOVE CNUM      #CNUM                                               CAP204
+     C                     MOVELCCY       #CCY                                                CAP204
+     C                     Z-ADDACOD      #ACOD                                               CAP204
+     C                     Z-ADDACSQ      #ACSQ                                               CAP204
+      *                                                                                       CAP204
+     C           KKEY01    CHAINREIAC                80                                       CAP204
+      *                                                                                       CAP204
+     C           PTRA      IFEQ 'Y'                                                           CAP204
+      *                                                                                       CAP204
+      ** Validate transaction type                                                            CAP204
+      *                                                                                       CAP204
+     C                     MOVE TRAT      @KEY    5                                           CAP204
+     C                     CALL 'AORETRR0'                                                    CAP204
+     C                     PARM *BLANKS   PRTCD                                               CAP204
+     C                     PARM '*KEY    'POPTN                                               CAP204
+     C                     PARM           @KEY                                                CAP204
+     C           SDRETR    PARM SDRETR    DSFDY                                               CAP204
+      *                                                                                       CAP204
+      ** Database error                                                                       CAP204
+      *                                                                                       CAP204
+     C           PRTCD     IFNE *BLANKS                                                       CAP204
+     C                     MOVEL'SDRETRPD'W0FILE                                              CAP204
+     C                     MOVELTRAT      W0KEY            ***************                    CAP204
+     C                     Z-ADD22        W0ERNB           * DB ERROR 22 *                    CAP204
+     C                     MOVEL'MEM5004' W0MSGD           ***************                    CAP204
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CAP204
+     C                     EXSR SRERR                                                         CAP204
+     C                     END                                                                CAP204
+      *                                                                                       CAP204
+     C           ADVI      IFEQ 'Y'                                                           CAP204
+      *                                                                                       CAP204
+      **  Increment the count of records read.                                                CAP204
+     C                     ADD  1         ##DREC                                              CAP204
+      *                                                                                       CAP204
+     C                     MOVELSONO      RINO                                                CAP204
+      *                                                                                       CAP204
+      ** Produce Confirmation                                                                 CAP204
+      *                                                                                       CAP204
+     C                     CALL 'CG4880'                                                      CAP204
+     C                     PARM *BLANKS   ##RTCD                                              CAP204
+     C                     PARM W0CMT     ##CMT                                               CAP204
+     C                     PARM           DSPARM                                              CAP204
+      *                                                                                       CAP204
+      **  Error in called program.                                                            CAP204
+      *                                                                                       CAP204
+     C           ##RTCD    IFNE *BLANK                                                        CAP204
+      *                                                                                       CAP204
+     C                     EXSR SRAUDT                                                        CAP204
+      *                                                                                       CAP204
+      ** Database error                                                                       CAP204
+      *                                                                                       CAP204
+     C                     MOVEL'CG4840  'W0FILE                                              CAP204
+     C                     MOVEL##RTCD    W0KEY                                               CAP204
+     C                     Z-ADD21        W0ERNB                                              CAP204
+     C                     MOVEL'MEM5003' W0MSGD                                              CAP204
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CAP204
+     C                     EXSR SRERR                                                         CAP204
+     C                     ENDIF                                                              CAP204
+     C                     ENDIF                                                              CAP204
+     C                     ENDIF                                                              CAP204
+     C                     ENDIF                                                              CAP204
+      *                                                                                       CAP204
+      **  Unwind subroutine stack name                                                        CAP204
+     C                     MOVEA*BLANKS   @STK,Q                                              CAP204
+     C                     SUB  1         Q                                                   CAP204
+      *                                                                                       CAP204
+     C                     ENDIF                                                              CAP204
+      *                                                                                       CAP204
+     C           EXACTR    TAG                                                                CAP204
+      *                                                                                       CAP204
+     C                     ENDSR                                                              CAP204
+      *****************************************************************
+      * Subroutine  :  SRDEAL                                         *
+      * Function    :  COB Dealing generated entries                  *
+      *                                                               *
+      * Called by   :  SRDVL1                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRDEAL    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRDEAL'  @STK,Q
+      *
+      *................................................................
+      *
+     C           TRAT      IFNE *ZEROS
+      *
+      ** Check print transaction advice on REIAC.
+      *
+     C**********           Z-ADDCNUM      #CNUM                                               CSD027
+     C                     MOVE CNUM      #CNUM                                               CSD027
+     C                     MOVELCCY       #CCY
+     C                     Z-ADDACOD      #ACOD
+     C                     Z-ADDACSQ      #ACSQ
+      *
+     C           KKEY01    CHAINREIAC                80
+      *
+     C           PTRA      IFEQ 'Y'
+      *
+      ** Check print transaction advice indicator on TABLETZ.
+      *
+     C                     MOVEL'41'      TTKEY  12
+     C                     MOVE TRAT      TTKEY
+     C           TTKEY     CHAINTABLETZF             48
+      *
+      ** Database error
+      *
+     C           *IN48     IFEQ *ON
+     C                     MOVEL'TABLETZ 'W0FILE
+     C                     MOVELTTKEY     W0KEY            ***************
+     C                     Z-ADD14        W0ERNB           * DB ERROR 14 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ADVI      IFEQ 'Y'
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      *
+      ** Produce Confirmation
+      *
+     C                     CALL 'CG4850'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4850  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 13 *
+     C                     Z-ADD13        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXDEAL    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRLGEN                                         *
+      * Function    :  COB Retails - Lending Generated Entries        *
+      *                                                               *
+      * Called by   :  SRDVL1                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRLGEN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRLGEN'  @STK,Q
+      *
+      *................................................................
+      *
+     C           TRAT      IFNE *ZEROS
+      *
+      ** Check print transaction advice on REIAC.
+      *
+     C**********           Z-ADDCNUM      #CNUM                                               CSD027
+     C                     MOVE CNUM      #CNUM                                               CSD027
+     C                     MOVELCCY       #CCY
+     C                     Z-ADDACOD      #ACOD
+     C                     Z-ADDACSQ      #ACSQ
+      *
+     C           KKEY01    CHAINREIAC                80
+      *
+     C           PTRA      IFEQ 'Y'
+      *
+      ** Check print transaction advice indicator on TABLETZ.
+      *
+     C                     MOVEL'41'      TTKEY  12
+     C                     MOVE TRAT      TTKEY
+     C           TTKEY     CHAINTABLETZF             48
+      *
+      ** Database error
+      *
+     C           *IN48     IFEQ *ON
+     C                     MOVEL'TABLETZ 'W0FILE
+     C                     MOVELTTKEY     W0KEY            ***************
+     C                     Z-ADD16        W0ERNB           * DB ERROR 16 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ADVI      IFEQ 'Y'
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      *
+      ** Produce Confirmation
+      *
+     C                     CALL 'CG4870'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4820  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 17 *
+     C                     Z-ADD17        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXLGEN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,CG4800C002
+      *****************************************************************
+      * Subroutine  :  SRMDTA                                         *
+      * Function    :  Setup parameter                                *
+      *                                                               *
+      * Called by   :  SRRC00                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRMDTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRMDTA'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     CLEARDSPAR1
+     C**********           Z-ADDCNUM      @CNUM                                               CSD027
+     C                     MOVE CNUM      @CNUM                                               CSD027
+     C                     MOVELCCY       @CCY
+     C                     Z-ADDACOD      @ACOD
+     C                     Z-ADDACSQ      @ACSQ
+     C                     Z-ADDACNO      @ACNO
+     C                     Z-ADDPSTD      @PSTD
+     C                     Z-ADDVALD      @VALD
+     C                     Z-ADDITYP      @ITYP
+     C                     Z-ADDDRCR      @DRCR
+     C                     MOVELBRCA      @BRCA
+     C                     Z-ADDINRT      @INRT
+      *
+      *................................................................
+      *
+     C           EXMDTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4800AU'I#SPLN
+     C                     MOVEL'CG4800  'I#REF
+     C                     MOVE 'CGD1678' I#TITL
+     C                     MOVE 'CGD1679' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing                             *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      *
+     C           *LIKE     DEFN ITYP      ##ITYP
+     C           *LIKE     DEFN ACNO      ##ACNO
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##DREC  50
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *                                                                   130468
+      ** Access SAR details file to determine if BRT SAR is installed     130468
+      *                                                                   130468
+     C                     CALL 'AOSARDR0'                                130468
+     C                     PARM '       ' ##RTCD                          130468
+     C                     PARM '*VERIFY' ##OPTN  7                       130468
+     C                     PARM 'S01383'  @SARD   6                       130468
+     C           ##RTCD    IFNE *BLANK                                    130468
+     C           ##RTCD    ANDNE'*NRF   '                                 130468
+     C                     MOVEL'SCSARDPD'W0FILE                          130468
+     C                     MOVEL'*CALL'   W0KEY            ***************130468
+     C                     Z-ADD3         W0ERNB           * DB ERROR 03 *130468
+     C                     MOVEL'MEM5003' W0MSGD           ***************130468
+     C                     MOVEL'MIDAS  ' W0MSGF                          130468
+     C                     EXSR SRERR                                     130468
+     C                     END                                            130468
+     C           ##RTCD    IFEQ *BLANK                                    130468
+     C                     MOVEL'Y'       S01383  1                       130468
+     C                     END                                            130468
+      *                                                                                       CGL031
+      ** Access SAR details file to determine if CGL031 is installed                          CGL031
+      *                                                                                       CGL031
+     C                     CALL 'AOSARDR0'                                                    CGL031
+     C                     PARM *BLANKS   PRTCD   7                                           CGL031
+     C                     PARM '*VERIFY' POPTN   7                                           CGL031
+     C                     PARM 'CGL031'  PSARD   6                                           CGL031
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL031
+      *                                                                                       CGL031
+     C                     MOVEL'N'       CGL031  1                                           CGL031
+     C           PRTCD     IFNE *BLANK                                                        CGL031
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL031
+     C                     MOVEL'SCSARDPD'W0FILE                                              CGL031
+     C                     MOVEL'*CALL'   W0KEY                                               CGL031
+     C                     Z-ADD18        W0ERNB                                              CGL031
+     C                     MOVEL'MEM5003' W0MSGD                                              CGL031
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CGL031
+     C                     EXSR SRERR                                                         CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFEQ *BLANK                                                        CGL031
+     C                     MOVEL'Y'       CGL031                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+      ** Retrieve EU Withholding Tax Transaction Type                                         CGL031
+      *                                                                                       CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C           *LOVAL    SETLLSDSTAXL1                                                      CGL031
+     C                     READ SDSTAXL1                 20                                   CGL031
+      *                                                                                       CGL031
+     C           *IN20     IFEQ *ON                                                           CGL031
+     C                     MOVEL'SDSTAXPD'W0FILE                                              CGL031
+     C                     MOVEL'RETAIL'  W0KEY                                               CGL031
+     C                     Z-ADD19        W0ERNB                                              CGL031
+     C                     MOVEL'MEM5003' W0MSGD                                              CGL031
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CGL031
+     C                     EXSR SRERR                                                         CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE TXTXTT    WEUTT   50                                          CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CAP204
+      ** Access SAR details file to determine if CAP204 is installed                          CAP204
+      *                                                                                       CAP204
+     C                     CALL 'AOSARDR0'                                                    CAP204
+     C                     PARM *BLANKS   PRTCD                                               CAP204
+     C                     PARM '*VERIFY' POPTN                                               CAP204
+     C                     PARM 'CAP204'  PSARD                                               CAP204
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAP204
+      *                                                                                       CAP204
+     C                     MOVEL'N'       CAP204  1                                           CAP204
+     C           PRTCD     IFNE *BLANK                                                        CAP204
+     C           PRTCD     ANDNE'*NRF   '                                                     CAP204
+     C                     MOVEL'SCSARDPD'W0FILE                                              CAP204
+     C                     MOVEL'*CALL'   W0KEY                                               CAP204
+     C                     Z-ADD20        W0ERNB                                              CAP204
+     C                     MOVEL'MEM5003' W0MSGD                                              CAP204
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CAP204
+     C                     EXSR SRERR                                                         CAP204
+     C                     ENDIF                                                              CAP204
+      *                                                                                       CAP204
+     C           PRTCD     IFEQ *BLANK                                                        CAP204
+     C                     MOVEL'Y'       CAP204                                              CAP204
+     C                     ENDIF                                                              CAP204
+      *
+      ** Check if CER049 is installed.                                                        CER049
+      *                                                                                       CER049
+     C                     CALL 'AOSARDR0'                                                    CER049
+     C                     PARM *BLANKS   PRTCD                                               CER049
+     C                     PARM '*VERIFY' POPTN                                               CER049
+     C                     PARM 'CER049'  PSARD                                               CER049
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER049
+      *                                                                                       CER049
+     C           PRTCD     IFEQ *BLANK                                                        CER049
+     C                     MOVE 'Y'       CER049  1                                           CER049
+     C                     ELSE                                                               CER049
+     C                     MOVE 'N'       CER049                                              CER049
+      *                                                                                       CER049
+     C           PRTCD     IFNE '*NRF    '                                                    CER049
+     C                     MOVEL'SCSARDPD'W0FILE                                              CER049
+     C                     MOVEL'*CALL   'W0KEY                                               CER049
+     C                     Z-ADD23        W0ERNB                                              CER049
+     C                     MOVEL'MEM5003' W0MSGD                                              CER049
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CER049
+     C                     EXSR SRERR                                                         CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       CER049
+      *................................................................
+      *
+     C/COPY WNCPYSRC,CG4800C003
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *                CG9020   - Write Data to UDC Data Files - Audit*
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4800  'I#REF
+     C                     MOVE 'CGD1678' I#TITL
+     C                     MOVE 'CGD1679' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'READVL1 'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD1678' W0TITL  7
+     C                     PARM 'CGD1679' W0ULIN  7
+     C                     PARM           W0CMT   3
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4800  'I#REF
+     C                     MOVE 'CGD1678' I#TITL
+     C                     MOVE 'CGD1679' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C           ##DREC    IFNE *ZEROS
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     ENDIF
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C********** REM0      BEGSR                                                              185452
+     C**********                                                                              185452
+     C**********           MOVE ' '       ZARR                                                185452
+     C**********                                                                              185452
+     C**********                                                                              185452
+     C********** ZINP      IFLT 0                                                             185452
+     C**********           Z-SUBZINP      ZINP                                                185452
+     C**********           END                                                                185452
+     C**********                                                                              185452
+     C**********           Z-ADDZINP      ZINPWN  40                                          185452
+     C**********           MOVE ZINP      ZINPA   7                                           185452
+     C**********           MOVEAZINPA     ARR                                                 185452
+     C**********           Z-ADD7         X       20                                          185452
+     C********** TRAIL0    TAG                                                                185452
+     C********** ARR,X     COMP '0'                      25                                   185452
+     C***25***** X         COMP 1                    25                                       185452
+     C***25***** X         SUB  1         X                                                   185452
+     C***25*****           GOTO TRAIL0                                                        185452
+     C***26***** X         ADD  2         Y                                                   185452
+     C***26*****           MOVE '%'       ZARR,Y                                              185452
+     C********** X         ADD  1         Y       20                                          185452
+     C**N26*****           MOVE '%'       ZARR,Y                                              185452
+     C***26*****           MOVE '-'       ZARR,Y                                              185452
+     C********** TRAIL1    TAG                             ***TRAIL1 TAG**                    185452
+     C**********           MOVE ARR,X     ZARR,X                                              185452
+     C********** X         COMP 1                    25                                       185452
+     C***25***** X         SUB  1         X                                                   185452
+     C***25*****           GOTO TRAIL1                                                        185452
+     C**********           ENDSR                                                              185452
+     C********************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

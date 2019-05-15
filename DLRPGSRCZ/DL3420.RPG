@@ -1,0 +1,708 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL List of todays deals extract')                *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Dealing Module
+     F*                                                                  *
+     F*     DL3420 - LIST OF TODAYS DEALS EXTRACT                        *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10282           Date 04Feb06               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 184216             Date 28Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 101107             Date 19Feb98               *
+      *                 E41066             Date 16Jun92               *
+     F*                NO. S01358             DATE 03MAR92               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10282 - Fix field CLAS for DEALSDC.                       *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  184216 - Amended deals missing from List of Today's Deals    *
+      *           Report. Fix is to validate deals in DTRSD with      *
+      *           change type equal to 'A'.                           *
+     F*     101107 - DEAL TYPE PS ARE MISSING IN TABLE TABDL             *
+     F*     E41066 - Only extract details of FX/MM Deals, FRA's          *
+     F*            - for example are not included in report.             *
+     F*     S01358 - LIST OF TODAYS DEALS                                *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FDTRSD   IP  F      40            DISK
+     F***DEALS** IF  F     400  6AI     2 DISK                                                CGL029
+     F*DEALS***IF**F****2319**6AI*****2*DISK                                           CGL029 CDL038
+     FDEALS   IF  F    2606  6AI     2 DISK                                                   CDL038
+     F***CLINT**IF  F     256  7AI     2 DISK                                                 CER020
+     FCLINT   IF  F     264  7AI     2 DISK                                                   CER020
+     FTABDLI  IF  F      96 12AI     2 DISK
+     FDLDTRXDPO   F      96            DISK
+     FDLDTRXTPO   F      96            DISK
+     FDL3420AUO   F     132            PRINTER
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            DEAL TRANS INDEX SORTED - DETAIL
+     F* 02            DEAL TRANS INDEX SORTED - HEADER
+     F* 03            DEAL TRANS INDEX SORTED - CATCHALL
+     F* 04            DEALS FILE - HEADER
+     F* 05            DEALS FILE - FOREIGN EXCHANGE RECORD
+     F* 06            DEALS FILE - LOAN/DEP RECORD
+     F* 07            DEALS FILE - NEGOTIABLE ASSETS PURCHASED
+     F* 08            DEALS FILE - NEGOTIABLE ASSETS SOLD
+     F* 09            DEALS FILE - TRAILER
+     F* 10            INSTALLATION CONTROL DATA RECORD 1
+     F* 11            CUSTOMER RECORD 'A'
+     F* 12            CLINT FILE - CATCHALL
+     F* 13            DEALS FILE - CATCHALL
+     F*       31      GENERAL PURPOSE
+     F*       32      EXCEPTION OUTPUT
+     F*       41      FIRST CYCLE
+     F*       42      FAILED CHAIN - DEALS FILE
+     F*       43      FAILED CHAIN - CUSTOMER MASTER
+     F*       51      PRODUCT CODE FOR DEAL TYPE FOUND
+     F*       61      UNEQUAL CONTROLS INDICATOR
+     E*
+     E*****               TABDL   1  32  2   TABCD   1                    101107
+     E/COPY WNCPYSRC,DL3420E001
+     E                    TABDL   1  33  2   TABCD   1                    101107
+     E                    CPY@    1   1 80
+     I*
+     I*    DEAL TRANSACTION INDEX SORTED EXTRACT FILE - DETAIL
+     I*
+     IDTRSD   NS  01   1 CD   2 CD  17 CI
+     I       AND      20 C
+     I       OR        1 CD   2 CD  17 CR
+     I       AND      20 C
+     I       OR        1 CD   2 CD  17 CA                                 184216
+     I       AND      20 C                                                184216
+     I                                        1   1 RECI
+     I                                        2   2 RCDT
+     I                                        3   80DLNO
+     I                                        9  130VDAT
+     I                                       14  160DASN
+     I                                       17  17 CHTP
+     I                                       18  18 CNRQ
+     I                                       19  19 CNPR
+     I                                       20  20 REPR
+     I                                       26  26 DADI
+     I                                       27  270PRI1
+     I                                       28  280PRI2
+     I                                       29  290PRI3
+     I                                       35  37 BRCA
+     I                                    P  38  400TNLU
+     I                                        1  40 LOTD
+     I*
+     I*    DEAL TRANS INDEX SORTED EXTRACT FILE - HEADER
+     I*
+     I        NS  02   1 CH
+     I                                        1   1 RECI
+     I                                        2   2 RCDT
+     I                                        3   80DLNO
+     I                                    P   9  110NORE
+     I                                    P  12  140FLSZ
+     I                                    P  15  170RRLC
+     I                                    P  18  200RRNA
+     I                                    P  21  230RRLX
+     I                                    P  24  260RRXP
+     I                                    P  27  290NDLR
+     I                                    P  30  320NDAR
+     I                                       33  330STPI
+     I                                       35  37 BRCA
+     I                                    P  38  400TNLU
+     I                                        2  40 LOTH
+     I*
+     I*    DEAL TRANSACTIONS INDEX SORTED EXTRACT FILE - CATCHALL
+     I*
+     I        NS  03
+     I*
+     I*    DEALS FILE - HEADER RECORD.
+     I*
+     IDEALS   NS  04   1 CH
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I*
+     I*
+     I*    DEALS FILE - DETAIL RECORD - FX SWAPS/OUTRIGHTS.
+     I*
+     IDEALS   NS  05   1 CD   8 CB
+     I       OR        1 CE   8 CB
+     I       OR        1 CM   8 CB
+     I       OR        1 CR   8 CB
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                       17  190BRCD
+     I                                       20  21 DTYP
+     I                                       22  23 DLST
+     I                                    P  24  260DDAT
+     I                                    P  27  290VDAT
+     I                                    P  30  320OTDT
+     I                                       35  38 BRKC
+     I                                    P  39  450BAGE
+     I                                       46  48 PUCY
+     I                                    P  49  550PUAM
+     I                                    P  56  628EXRT
+     I                                       86  88 SLCY
+     I                                    P  89  950SLAM
+     I                                    P 117 1230BCEQ
+     I                                    P 124 1300OBCE
+     I                                    P 131 1378LCXR
+     I                                      138 1390PCST
+     I**********                            140 151 OPCA                                      CGL029
+     I                                      140 151 QQOPCA                                    CGL029
+     I                                      152 161 TSCN
+     I                                      162 1630SCST
+     I**********                            164 175 OSCA                                      CGL029
+     I                                      164 175 QQOSCA                                    CGL029
+     I                                      176 185 TPCN
+     I                                    P 192 1980ORPA
+     I                                    P 205 2110ORSA
+     I                                      212 2120FSLI
+     I                                    P 213 2190LITD
+     I                                    P 220 2260LILA
+     I                                    P 227 2330DITD
+     I                                    P 234 2400DILA
+     I                                    P 241 2470SPPD
+     I                                    P 248 2540SPLA
+     I                                      255 257 SPLC
+     I                                      258 260 ILCY
+     I                                    P 261 2670ILAM
+     I                                      268 270 IDCY
+     I                                    P 271 2770IDAM
+     I                                    P 278 2840IDIA
+     I                                      285 2900SODN
+     I                                      300 309 FACO
+     I                                      310 344 SPI
+     I                                    P 347 3527ILIR
+     I                                    P 353 3587IDIR
+     I                                    P 360 3660ILIA
+     I                                      370 370 DNSI
+     I                                      371 371 DSTI
+     I                                      372 372 CNFI
+     I                                      373 373 ACEI
+     I                                      374 374 TLXI
+     I                                      382 3820ILCM
+     I                                      383 3830IDCM
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I                                     12921309 OPCA                                      CGL029
+     I                                     13101327 OSCA                                      CGL029
+     I                                     13641367 CLAS                                      CDL038
+     I*
+     I*
+     I*    DEALS FILE - DETAIL - TAKINGS/PLACINGS/TIME DEPOSITS/LOANS.
+     I*
+     IDEALS   NS  06   1 CD   8 CC
+     I       OR        1 CE   8 CC
+     I       OR        1 CM   8 CC
+     I       OR        1 CR   8 CC
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                       17  190BRCD
+     I                                       20  21 DTYP
+     I                                       22  23 DLST
+     I                                    P  24  260DDAT
+     I                                    P  27  290VDAT
+     I                                    P  30  320MDAT
+     I                                       33  340CDAS
+     I                                       35  38 BRKC
+     I                                    P  39  450BAGE
+     I                                       46  48 CCY
+     I                                    P  49  550PCPL
+     I                                       56  56 INTC
+     I                                       63  640BRTT
+     I                                    P  65  707BRTE
+     I                                    P  71  767RTSP
+     I                                    P  77  827INTR
+     I                                       83  850NOTD
+     I                                       86 105 RNNA
+     I**********                            106 1110CHNA                                      CSD027
+     I                                      106 111 CHNA                                      CSD027
+     I                                      112 1140FACT
+     I                                      115 1160FCNO
+     I                                    P 117 1230OPAM
+     I                                    P 124 1308BCXR
+     I                                    P 131 1378LCXR
+     I                                      138 1390SDST
+     I**********                            140 151 OSDA                                      CGL029
+     I                                      140 151 QQOSDA                                    CGL029
+     I                                      152 161 TSTN
+     I                                      162 1630MDST
+     I**********                            164 175 OMDA                                      CGL029
+     I                                      164 175 QQOMDA                                    CGL029
+     I                                      176 185 TMAN
+     I                                      186 1910RODN
+     I                                    P 192 1980RODA
+     I                                      199 2040RBDN
+     I                                    P 205 2110RBDA
+     I                                      212 2120ICBS
+     I                                      213 213 IPFR
+     I                                    P 214 2200TOTI
+     I                                    P 221 2230NIDT
+     I                                    P 224 2260IBDT
+     I                                    P 227 2290SLID
+     I                                    P 230 2360AIPD
+     I                                    P 237 2390DLRC
+     I                                    P 240 2420IACD
+     I                                    P 243 2490AITC
+     I                                    P 250 2560AIAN
+     I                                    P 257 2630AIAP
+     I                                    P 264 2700IPRD
+     I                                    P 271 2770IPRM
+     I                                    P 278 2840ICTD
+     I                                    P 294 2960DAVD
+     I                                      297 2990DASN
+     I                                      300 309 FACO
+     I                                      310 344 SPI
+     I                                      345 3460INTF
+     I                                      370 370 DNSI
+     I                                      371 371 DSTI
+     I                                      372 372 CNFI
+     I                                      373 373 ACEI
+     I                                      374 374 TLXI
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I*************************************16721689 OMDA                               CGL029 CDL038
+     I*************************************16901707 OSDA                               CGL029 CDL038
+     I                                     17211738 OSDA                                      CDL038
+     I                                     17391756 OMDA                                      CDL038
+     I**********                           18981901 CLAS                             CDL038 BUG10282
+     I                                     20102013 CLAS                                    BUG10282
+     I*
+     I*    DEALS FILE - DETAIL RECORD - NEGOTIABLE ASSETS PURCHASED.
+     I*
+     IDEALS   NS  07   1 CD   8 CD
+     I       OR        1 CE   8 CD
+     I       OR        1 CM   8 CD
+     I       OR        1 CR   8 CD
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160ISCN                                      CSD027
+     I                                       11  16 ISCN                                      CSD027
+     I                                       17  190BRCD
+     I                                       20  21 DTYP
+     I                                       22  23 DLST
+     I                                    P  24  260DDAT
+     I                                    P  27  290VDAT
+     I                                    P  30  320MDAT
+     I                                       33  340IDAS
+     I                                       35  38 BRKC
+     I                                    P  39  450BAGE
+     I                                       46  48 CCY
+     I                                    P  49  550PUPR
+     I                                    P  57  627YRAT
+     I                                    P  71  767RTSP
+     I                                    P  77  827INTR
+     I                                       86 105 RNNA
+     I**********                            106 1110PCUS                                      CSD027
+     I                                      106 111 PCUS                                      CSD027
+     I                                      112 1140FACT
+     I                                      115 1160FCNO
+     I                                    P 117 1230FVAL
+     I                                    P 124 1308BCXR
+     I                                    P 131 1378LCXR
+     I                                      138 1390SDST
+     I**********                            140 151 OSDA                                      CGL029
+     I                                      140 151 QQOSDA                                    CGL029
+     I                                      152 161 TSTN
+     I                                      162 1630MDST
+     I**********                            164 175 OMDA                                      CGL029
+     I                                      164 175 QQOMDA                                    CGL029
+     I                                      176 185 TMAN
+     I                                    P 192 1980DISA
+     I                                    P 205 2110DPTD
+     I                                      212 2120ICBS
+     I                                      213 213 IPFR
+     I                                    P 214 2200TOTI
+     I                                    P 221 2230NIDT
+     I                                    P 224 2260IBDT
+     I                                    P 227 2290SLID
+     I                                    P 230 2360AIPD
+     I                                    P 237 2390DLRC
+     I                                    P 240 2420IACD
+     I                                    P 243 2490AITC
+     I                                    P 250 2560AIAN
+     I                                    P 257 2630AIAP
+     I                                    P 264 2700IPRD
+     I                                    P 271 2770IPRM
+     I                                    P 278 2840SAPR
+     I                                      285 2900ASDN
+     I                                    P 291 2930SADT
+     I                                    P 294 2960DAVD
+     I                                      297 2990DASN
+     I                                      300 309 FACO
+     I                                      310 344 SPI
+     I                                      345 3460INTF
+     I                                      347 3470MDBCXR
+     I                                      370 370 DNSI
+     I                                      371 371 DSTI
+     I                                      372 372 CNFI
+     I                                      373 373 ACEI
+     I                                      374 374 TLXI
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I*************************************11821199 OMDA                               CGL029 CDL038
+     I*************************************12001217 OSDA                               CGL029 CDL038
+     I                                     12451262 OSDA                                      CDL038
+     I                                     12631280 OMDA                                      CDL038
+     I                                     13171320 CLAS                                      CDL038
+     I*
+     I*
+     I*    DEALS FILE - DETAIL RECORD - NEGOTIABLE ASSETS SOLD.
+     I*
+     IDEALS   NS  08   1 CD   8 CE
+     I       OR        1 CE   8 CE
+     I       OR        1 CM   8 CE
+     I       OR        1 CR   8 CE
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                       17  190BRCD
+     I                                       20  21 DTYP
+     I                                       22  23 DLST
+     I                                    P  24  260DDAT
+     I                                    P  27  290VDAT
+     I                                       35  38 BRKC
+     I                                    P  39  450BAGE
+     I                                       46  48 CCY
+     I                                    P  49  550SAPR
+     I                                    P  57  627YRAT
+     I                                    P  77  827INTR
+     I                                       86 105 RNNA
+     I**********                            106 1110ISCN                                      CSD027
+     I                                      106 111 ISCN                                      CSD027
+     I                                    P 117 1230FVAL
+     I                                    P 124 1308BCXR
+     I                                    P 131 1378LCXR
+     I                                      138 1390SETP
+     I**********                            140 151 OSAC                                      CGL029
+     I                                      140 151 QQOSAC                                    CGL029
+     I                                      152 161 TSEN
+     I                                      285 2900RPDN
+     I                                    P 291 2930PMDT
+     I                                      370 370 DNSI
+     I                                      371 371 DSTI
+     I                                      372 372 CNFI
+     I                                      373 373 ACEI
+     I                                      374 374 TLXI
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I                                     10481065 OSAC                                      CGL029
+     I                                     11021105 CLAS                                      CDL038
+     I*
+     I*
+     I*    DEALS FILE -TRAILER RECORD.
+     I*
+     IDEALS   NS  09   1 CT
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                    P  17  190NORE
+     I                                    P  20  220FLSZ
+     I                                    P  23  250NLRB
+     I                                    P  26  280NINS
+     I                                    P  29  310NDEL
+     I                                    P  32  340NLRA
+     I                                    P  35  420VLBF
+     I                                    P  43  440VLBL
+     I                                    P  45  520VRIF
+     I                                    P  53  540VRIL
+     I                                    P  55  620VRDF
+     I                                    P  63  640VRDL
+     I                                    P  65  720VLAF
+     I                                    P  73  740VLAL
+     I                                    P  75  770DTMR
+     I                                    P  78  800ITMR
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I*
+     I*   UNIDENTIFIED RECORD IN DEALS SO INCLUDED CATCHALL
+     I**   CATCHALL
+     I**
+     I        NS  13
+     I                                        1 400 LOTDLD
+     I**
+     I*
+     I*
+     I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+     I*
+     ITABDLI  NS  10   2 C0   3 C1  12 C1
+     I       AND      13 C0
+     I                                        1   1 RECI
+     I                                        2   30RECT
+     I                                       12  130RCDE
+     I                                       14  66 TITL
+     I                                       67  67 DATF
+     I                                       68  700DFBR
+     I                                       74  74 MODI1
+     I                                       75  75 MODI2
+     I                                       76  76 MODI3
+     I                                    P  77  790RUND
+     I                                       80  86 RUNA
+     I                                       87  870SFLG
+     I                                    P  90  920LCD
+     I                                       93  93 CHTP
+     I                                    P  94  960TNLU
+     I*
+     I*
+     ICLINT   NS  11   1 CD   8 CA
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8   8 RCDT
+     I                                        9  28 CRNM
+     I                                       29  38 CTWN
+     I                                       39  48 CSNM
+     I                                       49  56 CASK
+     I                                       57  68 TELX
+     I                                       69  80 CSID
+     I                                       81  82 ACOC
+     I                                       83  83 CBSI
+     I                                       84  85 CCTZ
+     I                                       86  87 CLOC
+     I**********                             88  930CPAR                                      CSD027
+     I                                       88  93 CPAR                                      CSD027
+     I                                       94  960BRCD
+     I                                       97  980LINS
+     I                                       99 1010LIND
+     I                                    P 102 1040DASU
+     I                                    P 105 1070CDIC
+     I                                    P 108 1100DADE
+     I                                      111 111 CMIN
+     I                                      112 112 CTYP
+     I                                      113 124 TELF
+     I                                      125 133 CHID
+     I                                      134 136 CHAB
+     I                                    P 250 2520LCD
+     I                                      253 253 CHTP
+     I                                    P 254 2560TNLU
+     I                                      257 257 CUGRP                                     CER020
+     I                                      258 261 CAB2                                      CER020
+     I                                      262 264 LOIC                                      CER020
+     I*   UNIDENTIFIED RECORD IN CLINT SO INCLUDED CATCHALL
+0244 I**   CATCHALL
+0245 I**
+0246 I        NS  12
+0247 I                                        1 256 LOTCLD
+0243 I**
+     C**   FIRST CYCLE CALCS
+     C**   INITIALIZE OUTPUT RECORD CTR
+     C**   SET UP KEY FOR CHAIN TO CUSTOMER
+     C**   ACCESS I.C.D. FOR RUN DATE
+0243 C**
+     C   41                GOTO START
+     C                     Z-ADD0         OCT     50
+     C                     MOVE 'A'       CKEY    7
+     C                     EXSR ZSYSTM
+     C   99                SETON                     U7U8LR
+     C   99                GOTO END
+      *
+      ** Insert copyright
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     SETON                     41
+     C**   DETAIL PROCESSING
+     C**   INCREMENT I/O RECORD COUNTERS
+     C**
+     C           START     TAG                             ** START TAG **
+     C           RECI      COMP ' '                      31
+     C   31
+     CORN01N02             GOTO END
+     C                     ADD  1         RECRD   50
+     C   01      DLNO      CHAINDEALS                42
+     C***42******          GOTO END                                       E41066
+      *                                                                   E41066
+      ** If deal not found or deal is not FX/MM process next deal         E41066
+      *                                                                   E41066
+     C   13                                                               E41066
+     COR 42                GOTO END                                       E41066
+     C   01                MOVELCNUM      CKEY
+     C   01      CKEY      CHAINCLINT                43
+     C   01      DTYP      LOKUPTABDL     TABCD          51
+     C   51                MOVE TABCD     PROD    10
+     C/COPY WNCPYSRC,DL3420C001
+     C   01                ADD  1         OCT
+     C           END       TAG                             ** END TAG  **
+     C**
+     C**   LAST CYCLE CALCS
+     C**   COMPARE PROGRAM AND FILE CONTROLS
+     CLR                   EXSR ZSYSTM
+     CLR 99                SETON                     U7U8
+     CLR                   ADD  1         OCT
+     CLR 03      RECRD     COMP NORE                 6161
+     CLR 61                SETON                     U7U8
+     C**
+     C********************************************************************
+     C* ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C*
+     CSR         ZSYSTM    BEGSR                           *** ZSYSTM ***
+     C*
+     C*    SET UP KEY FOR INSTALLATION CONTROL DATA RECORD 1.
+     CSR                   MOVEL'01      'ZTABKY 12
+     CSR                   MOVE '  10'    ZTABKY
+     C*
+     C*    CHAIN TO THE TABLE FILE.
+     CSR         ZTABKY    CHAINTABDLI               99    -REC NOT FOUND
+     CSRN99      RECI      COMP 'D'                  9999  -IS DELETED
+     C*
+     C*    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     CSR         DATF      COMP 'M'                      98-MMDDYY
+     C*
+     CSR                   ENDSR
+     C*
+     C********************************************************************
+     O****DLDTRXDPD***     01                                             E41066
+     ODLDTRXDPD        01N13                                              E41066
+     O                         LOTD      40
+     O                         PROD      41
+     O                         DTYP      43
+     O                         CASK      51
+     O                         CRNM      71
+     O                         CTWN      81
+     O                         CNUM      87
+     ODLDTRXTPT        LR
+     O                                    1 'T'
+     O                         OCT        4P
+     ODL3420AUT  203   LR
+     O                                   22 'REFERENCE DL3420AU'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        T  1     LR
+     O                                   60 'LIST OF TODAYS'
+     O                                   74 ' DEALS EXTRACT'
+     O        T        LR
+     O                                   60 '--------------'
+     O                                   74 '--------------'
+     O        T  136   LR
+     O                                   18 'RUN CONTROLS'
+     O        T  1     LR
+     O                                   18 '------------'
+     O        T  2     LR
+     O                                   60 'NUMBER'
+     O        T  2     LR
+     O                                   32 'S/DTRSD - RECORDS INPUT'
+     O                         RECRD Z   60
+     O        T  2     LR
+     O                                   32 'S/DTRSD - CONTROL TOTAL'
+     O                         NORE  Z   60
+     O        T  2     LR
+     O                                   33 'S/DTRXX - RECORDS CREATE'
+     O                                   34 'D'
+     O                         OCT   Z   60
+     O        T        LR U7
+     O                                   60 '***  DIFFERENCE  ***'
+     O/COPY WNCPYSRC,DL3420O001
+**   TABDL/TABCD - DEAL TYPES AND ASSOCIATED PRODUCT CODE
+FP1
+FS1
+PI1
+SI1
+CX1
+OP1
+OT1
+SW1
+IT2
+TD2
+CI2
+CD2
+CS2
+BR2
+BS2
+TS2
+RA2
+TR2
+IP3
+TI3
+LN3
+CL3
+DL3
+C13
+C23
+BD3
+TB3
+TA3
+DA3
+BP3
+CP2
+BA2
+PS1
+**  CPY@
+(c) Finastra International Limited 2001

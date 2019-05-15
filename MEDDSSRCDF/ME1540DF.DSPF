@@ -1,0 +1,811 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas ME Generation criteria maintenance')
+      *****************************************************************
+      *                                                               *
+      *   Midas - Message Management Module                           *
+      *                                                               *
+      *   DSPF/ME1540DF - Generation Criteria Maintenance Display     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      *                 CRE008             Date 19Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 02Jun00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT006             Date 16Dec99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                  CPK010           Date 20Oct99                *
+      *                  CFT005           Date 04AUG99                *
+      *                  162075           Date 25AUG99                *
+      *                  165414           Date 31AUG99                *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                  162675           Date 24JUN99                *
+      *                  162559           Date 23JUN99                *
+      *                  162233           Date 14JUN99                *
+      *                  CFT002  *Create  Date 23APR98                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CRE008 - Cash Management                                     *
+      *  CFT009 - FT Fees and Charges                                 *
+      *  CFT006 - FT addition of MT101 and MT102 messages             *
+      *  CPK010 - Old BIS reference removed                           *
+      *  CFT005 - Straight Through Processing Phase 2                 *
+      *           Auto-authorisation of STP payments                  *
+      *  162075 - Correct cursor positioning                          *
+      *  165414 - Debit and Credit label swapped around               *
+      *  162675 - F7 not allowed for payment type **, ++              *
+      *  162559 - Change topics of DR/CR account                      *
+      *  162233 - Rename Sequence number to Rule number               *
+      *  CFT002 - Straight Through Processing Phase 1 Enhancement     *
+      *           Message Repair Details                              *
+      *  CFT002 - Straight Through Processing Phase 1                 *
+      *           Based on MEH037DF original reference S01482         *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+      *=========================================================================
+     A          R #HEADER                   TEXT('(c) Finastra +
+     A                                      International Limited +
+     A                                      2001')
+     A            ##USR         10      1  2TEXT('*USER')
+     A                                      DSPATR(HI)
+     A            ##PGM         10      1 13TEXT('*PROGRAM')
+     A                                      DSPATR(HI)
+     A*                                     Start of Change /CPK010/
+     A**********************************1 26'B I S  ¦  M i d a s  ¦  A B S'
+     A*                                       End of Change /CPK010/
+     A            ##MRDT         7      1 72TEXT('Midas Rundate')
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A                                      DSPATR(HI)
+     A                                  2 22'Generation Criteria Table +
+     A                                      Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A                                      DSPATR(HI)
+      *-------------------------------------------------------------------------
+      * Begin                                                             IMP011
+     A  52                              3 33'Header Record'
+     A                                      DSPATR(HI)
+     A N52                              3 33'Detail Record'
+     A                                      DSPATR(HI)
+      *-------------------------------------------------------------------------
+      * End                                                               IMP011
+      *=========================================================================
+     A          R #SFLRCD1                  TEXT('Subfile record 1.')
+     A                                      SFL
+     A                                      SETOF(98 'Force input format')
+     A                                      INDTXT(89 'Subfile next change')
+     A  89                                  SFLNXTCHG
+     A            #1ACTC         1   B  7 11VALUES('A' 'D' 'E' 'C' ' ')
+     A N31                                  DSPATR(UL)
+     A  31                                  DSPATR(RI PC)
+     A            #1MTPY         3      7 20TEXT('Message Type')
+     A            #1MSET         3      7 33TEXT('Set Number')
+     A            #1NWRK         6      7 46TEXT('Network')
+     A            #1SETT         2      7 66TEXT('Settlement Method')
+      *=========================================================================
+     A          R #SFLCTL1                  TEXT('Subfile control 1.')
+     A                                      SFLCTL(#SFLRCD1)
+     A                                      SETOF(98 'Force input format')
+     A                                      SFLPAG(0014)
+     A                                      SFLSIZ(0015)
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(31 'Invalid: #1ACTC')
+     A                                      INDTXT(85 'Clear subfile')
+     A                                      INDTXT(86 'Display subfile')
+     A                                      INDTXT(87 'End of subfile')
+     A  85                                  SFLCLR
+     A N85                                  SFLDSPCTL
+     A N85 86                               SFLDSP
+     A N85 86 87                            SFLEND
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A                                      CF09(09 'CF09 Add')
+     A N87                                  ROLLUP(27 'Next page.')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(31 'Invalid: #1ACTC')
+      *
+     A            ##SFR1         4S 0H      SFLRCDNBR
+     A  86                              5 11'?'
+     A                                      DSPATR(HI)
+     A  86                              5 17'Msg Type'
+     A                                      DSPATR(HI)
+     A  86                              5 31'Set No.'
+     A                                      DSPATR(HI)
+     A  86                              5 46'Network'
+     A                                      DSPATR(HI)
+     A  86                              5 59'Settlement Method'
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #RCDKEY                   TEXT('Record key.')
+     A                                      OVERLAY
+     A                                      INDTXT(78 'Copy record')
+     A                                      CA03(03 'Exit.')
+     A                                      CA12(12 'Previous.')
+     A                                      CF05(05 'Reset.')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(32 'Invalid: #1MTPY')
+     A                                      SETOF(33 'Invalid: #1MSET')
+     A                                      SETOF(34 'Invalid: #2MTPY')
+     A                                      SETOF(35 'Invalid: #2MSET')
+     A                                      SETOF(99 'Global error flag')
+      *
+      *-------------------------------------------------------------------------
+     A                                  5  6'Action Code :'
+     A            #1ACTC         1      5 20TEXT('Action Code')
+     A                                      DSPATR(HI)
+     A                                  7  6'Message Type............:'
+     A            #1MTPY         3   B  7 32TEXT('Message Type')
+     A N32                                  DSPATR(HI)
+     A  78                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A N32N78                               DSPATR(UL)
+     A                                  8  6'Set Number..............:'
+     A            #1MSET         3   B  8 32TEXT('Set Number')
+     A N33                                  DSPATR(HI)
+     A  78                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N33N78                               DSPATR(UL)
+      *-------------------------------------------------------------------------
+      * Copy To fields
+     A  78                              5 51'Copy to:'
+     A  78                              7 51'Message Type....:'
+     A  78        #2MTPY         3   B  7 69TEXT('To Message Type')
+     A  34                                  DSPATR(RI PC)
+     A N34                                  DSPATR(UL HI)
+     A  78                              8 51'Set Number......:'
+     A  78        #2MSET         3   B  8 69TEXT('To Set Number')
+     A  35                                  DSPATR(RI PC)
+     A N35                                  DSPATR(UL HI)
+      *=========================================================================
+     A          R #CMDTXTK                  TEXT('Command keys')
+     A                                      OVERLAY
+     A N78N09                          22  2'E=Enquire      D=Delete       A=Am+
+     A                                      end      C=Copy'
+     A                                      DSPATR(HI)
+     A N78N09                          23  2'F3=Exit        F5=Refresh     F9=+
+     A                                      Add'
+     A                                      DSPATR(HI)
+     A  09
+     AO 78                             23  2'F3=Exit        F5=Refresh     F12+
+     A                                      =Previous'
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #RCDDTL1                  TEXT('Header Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(79 'Protect fields')
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CA12(12 'Key screen.')
+     A                                      CF05(05 'Reset.')
+     A  75                                  CF10(10 'Delete.')
+     A  74                                  CF06(06 'Detail screen.')
+     A  76
+     AO 77
+     A*                                                                   /*Begin 162675*/
+     A*O*74**********************************CF07(07 'Message Repair Detail')
+     AO 74N53                               CF07(07 'Message Repair Detail')
+     A*                                                                   /*End   162675*/
+      *                                                                   /*Begin CFT009*/
+     A  76 68
+     AO 77 68
+     AO 74 68                               CF08(08 'STP Charges')
+      *                                                                   /*End   CFT009*/
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1NWRK')
+     A                                      SETOF(32 'Invalid: #1PYTP')
+     A                                      SETOF(33 'Invalid: #1PYST')
+     A                                      SETOF(34 'Invalid: #1SETT')
+     A                                      SETOF(35 'Invalid: #1EXCP')
+     A                                      SETOF(36 'Invalid: #1CLRT')
+     A                                      SETOF(37 'Invalid: #1BOKC')
+     A                                      SETOF(38 'Invalid: #1CSET')
+     A                                      SETOF(39 'Invalid: #1DSET')
+     A                                      SETOF(40 'Invalid: #1DESC')
+     A                                      SETOF(41 'Invalid: #1DES2')
+     A                                      SETOF(42 'Invalid: #1BRCA')
+     A                                      SETOF(43 'Invalid: #1CSND')
+     A                                      SETOF(44 'Invalid: #1C50 ')
+     A                                      SETOF(45 'Invalid: #1C52 ')
+     A                                      SETOF(46 'Invalid: #1C53 ')
+     A                                      SETOF(47 'Invalid: #1C54 ')
+     A                                      SETOF(48 'Invalid: #1C56 ')
+     A                                      SETOF(49 'Invalid: #1C57 ')
+     A                                      SETOF(50 'Invalid: #1C58 ')
+     A                                      SETOF(51 'Invalid: #1C70 ')
+     A                                      SETOF(52 'Invalid: #1C72 ')
+      *
+      *-------------------------------------------------------------------------
+     A                                  5  6'Action Code (I,A,D,E,C).:'
+     A            #1ACTC         1      5 32TEXT('Action Code')
+     A                                      DSPATR(HI)
+     A                                  7  6'Message Type............:'
+     A            #1MTPY         3      7 32TEXT('Message Type')
+     A                                      DSPATR(HI)
+     A                                  8  6'Set Number..............:'
+     A            #1MSET         3      8 32TEXT('Set Number - Alpha')
+     A                                      DSPATR(HI)
+     A                                 11  6'Network.................:'
+     A            #1NWRK         6   B 11 32TEXT('Network')
+     A N31                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      *                                                                   /*Begin 162075*/
+     A**31**********************************DSPATR(RI PC)
+     A  31                                  DSPATR(RI)
+     A  31
+     AO 67                                  DSPATR(PC)
+      *                                                                   /*End   162075*/
+     A N79N31                               DSPATR(UL)
+     A                                 11 40'Booking Branch .........:'
+     A            #1BRCA         3   B 11 66TEXT('Booking Branch')
+     A N42                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      *                                                                   /*Begin 162075*/
+     A**42**********************************DSPATR(RI PC)
+     A  42                                  DSPATR(RI)
+     A  42
+     AO 55                                  DSPATR(PC)
+      *                                                                   /*End   162075*/
+     A N79N42                               DSPATR(UL)
+     A                                 12  6'Payment Type/Sub-Type...:'
+     A            #1PYTP         2   B 12 32TEXT('Payment Type')
+     A N32                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A N79N32                               DSPATR(UL)
+     A            #1PYST         2   B 12 35TEXT('Payment Sub-Type')
+     A N33                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      *                                                                   /*Begin 162075*/
+     A**33**********************************DSPATR(RI PC)
+     A  33                                  DSPATR(RI)
+     A  33
+     AO 56                                  DSPATR(PC)
+      *                                                                   /*End   162075*/
+     A N79N33                               DSPATR(UL)
+     A                                 12 40'Settlement Type.........:'
+     A            #1SETT         2   B 12 66TEXT('Settlement Type')
+     A N34                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N79N34                               DSPATR(UL)
+     A                                 13  6'Trace Report............:'
+     A            #1EXCP         1   B 13 32TEXT('Trace Report Req')
+     A N35                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A N79N35                               DSPATR(UL)
+     A                                 13 40'Clearing Type...........:'
+      *                                                                   /*Begin CFT006 */
+     A  28                                  DSPATR(ND)
+      *                                                                   /*End CFT006 */
+     A            #1CLRT         1   B 13 66TEXT('Clearing Type')
+      *                                                                   /*Begin CFT006 */
+     A*********** N36                                  DSPATR(HI)         /* CFT006 */
+     A***********  79                                  DSPATR(PR)         /* CFT006 */
+     A***********  36                                  DSPATR(RI PC)      /* CFT006 */
+     A*********** N79N36                               DSPATR(UL)         /* CFT006 */
+     A  28                                  DSPATR(ND)
+     A N36N28                               DSPATR(HI)
+     A  28
+     AO 79                                  DSPATR(PR)
+     A  36N28                               DSPATR(RI PC)
+     A N79N36N28                            DSPATR(UL)
+      *                                                                   /*End CFT006 */
+     A                                 14  6'Book code ..............:'
+     A            #1BOKC         2   B 14 32TEXT('Book code')
+     A N37                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      *                                                                   /*Begin 162075*/
+     A**37**********************************DSPATR(RI PC)
+     A  37                                  DSPATR(RI)
+     A  37
+     AO 57                                  DSPATR(PC)
+      *                                                                   /*End   162075*/
+     A N79N37                               DSPATR(UL)
+      *                                                                   /*Begin CFT005*/
+     A  63                             14 40'Auto-authorise..........:'
+     A            #1AUTO         1   B 14 66TEXT('Auto-authorise')
+     A N54                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  54                                  DSPATR(RI PC)
+     A N79N54                               DSPATR(UL)
+     A N63                                  DSPATR(ND)
+      *                                                                   /*End   CFT005*/
+      *                                                                   /*Begin 162559*/
+     A**************************       15  6'Credit Account..........:'
+     A************#1CSET********18   B 15 32TEXT('Credit Account')
+      *                                                                   /*Begin 165414*/
+     A**************************       16  6'Cr override (A/C with bank/Dest).:'
+     A                                 15  6'Cr override (A/C with bank/Dest).:'
+      *                                                                   /*End   165414*/
+     A**Start of change CGL029
+     A**********  #1CSET        18A  B 15 41TEXT('Credit Account')                            CGL029
+     A            #1CSET        24A  B 15 41TEXT('Credit Account')
+     A**End of change CGL029
+      *                                                                   /*End   162559*/
+     A N38                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      *                                                                   /*Begin 162075*/
+     A**38**********************************DSPATR(RI PC)
+     A  38                                  DSPATR(RI)
+     A  38
+     AO 58                                  DSPATR(PC)
+      *                                                                   /*End   162075*/
+     A N79N38                               DSPATR(UL)
+      *                                                                   /*Begin 162559*/
+     A**************************       16  6'Debit Account ..........:'
+     A************#1DSET********18   B 16 32TEXT('Debit Account')
+      *                                                                   /*Begin 165414*/
+     A***************************      15  6'Dr override (Recv corr/Ord bank).:'
+     A                                 16  6'Dr override (Recv corr/Ord bank).:'
+      *                                                                   /*End   165414*/
+     A**Start of change CGL029
+     A**********  #1DSET        18A  B 16 41TEXT('Debit Account')                             CGL029
+     A            #1DSET        24A  B 16 41TEXT('Debit Account')
+     A**End of change CGL029
+      *                                                                   /*End   162559*/
+     A N39                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      *                                                                   /*Begin 162075*/
+     A**39**********************************DSPATR(RI PC)
+     A  39                                  DSPATR(RI)
+     A  39
+     AO 59                                  DSPATR(PC)
+      *                                                                   /*End   162075*/
+     A N79N39                               DSPATR(UL)
+     A                                 17  6'Clear fields (ISO eq)...:'
+     A                                 18  6'Sender.:'
+     A            #1CSND         1   B 18 15TEXT('Clear Sender')
+     A N43                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  43                                  DSPATR(RI PC)
+     A N79N43                               DSPATR(UL)
+     A                                 18 17'50'
+     A            #1C50          1   B 18 20TEXT('Clear Ordering Cust')
+     A N44                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  44                                  DSPATR(RI PC)
+     A N79N44                               DSPATR(UL)
+     A                                 18 22'52'
+     A            #1C52          1   B 18 25TEXT('Clear Ordering Bank')
+     A N45                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  45                                  DSPATR(RI PC)
+     A N79N45                               DSPATR(UL)
+     A                                 18 27'53'
+     A            #1C53          1   B 18 30TEXT('Clear Senders Corres.')
+     A N46                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  46                                  DSPATR(RI PC)
+     A N79N46                               DSPATR(UL)
+     A                                 18 32'54'
+     A            #1C54          1   B 18 35TEXT('Clear Rec. Corres.')
+     A N47                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  47                                  DSPATR(RI PC)
+     A N79N47                               DSPATR(UL)
+     A                                 18 37'56'
+     A            #1C56          1   B 18 40TEXT('Clear Intermediary')
+     A N48                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  48                                  DSPATR(RI PC)
+     A N79N48                               DSPATR(UL)
+     A                                 18 42'57'
+     A            #1C57          1   B 18 45TEXT('Clear A/c with Bank')
+     A N49                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  49                                  DSPATR(RI PC)
+     A N79N49                               DSPATR(UL)
+     A                                 18 47'58 or 59'
+     A            #1C58          1   B 18 57TEXT('Clear Beneficiary')
+     A N50                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  50                                  DSPATR(RI PC)
+     A N79N50                               DSPATR(UL)
+     A                                 18 59'70'
+     A            #1C70          1   B 18 62TEXT('Clear Details of Pay')
+     A N51                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  51                                  DSPATR(RI PC)
+     A N79N51                               DSPATR(UL)
+     A                                 18 64'72'
+     A            #1C72          1   B 18 67TEXT('Clear Bank to Bank')
+     A N52                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  52                                  DSPATR(RI PC)
+     A N79N52                               DSPATR(UL)
+     A                                 20  6'Description   ..........:'
+     A            #1DESC        30   B 20 32TEXT('Description')
+     A                                      CHECK(LC)
+     A N40                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  40                                  DSPATR(RI PC)
+     A N79N40                               DSPATR(UL)
+     A            #1DES2        30   B 21 32TEXT('Description 2')
+     A                                      CHECK(LC)
+     A N41                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  41                                  DSPATR(RI PC)
+     A N79N41                               DSPATR(UL)
+      *=========================================================================
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A                                      OVERLAY
+      *
+      *                                                                   /*Begin 162675*/
+     A**74*****************************23  2'F3=Exit      F6=Detail +
+      *                                                                   /*Begin CFT009*/
+     A**74N53**************************23  2'F3=Exit      F6=Detail +
+     A  74N53N68                       23  2'F3=Exit      F6=Detail +
+      *                                                                   /*End   CFT009*/
+      *                                                                   /*End   162675*/
+     A                                      screen      F7=Message Repair +
+     A                                      Details      F12=Previous'
+      *                                                                   /*Begin CFT009*/
+     A  74N53 68                       23  2'F3=Exit F6=Detail screen +
+     A                                      F7=Message Repair Details +
+     A                                      F8=STP Charges 12=Previous'
+      *                                                                   /*End   CFT009*/
+      *                                                                   /*Begin 162675*/
+      *                                                                   /*Begin CFT009*/
+     A**74*53**************************23  2'F3=Exit      F6=Detail +
+     A  74 53N68                       23  2'F3=Exit      F6=Detail +
+      *                                                                   /*End   CFT009*/
+     A                                      screen                        +
+     A                                                   F12=Previous'
+      *                                                                   /*End   162675*/
+      *
+     A                                      DSPATR(HI)
+      *                                                                   /*Begin CFT009*/
+     A  74 53 68                       23  2'F3=Exit      F6=Detail +
+     A                                      screen     F8=STP Charges     +
+     A                                                   F12=Previous'
+     A                                      DSPATR(HI)
+      *                                                                   /*End   CFT009*/
+     A  75                             23  2'F3=Exit       F10=Delete       +
+     A                                      F12=Previous'
+     A                                      DSPATR(HI)
+      *                                                                   /*Begin CFT009*/
+     A**76*****************************
+     A**77*****************************23  2'F3=Exit       F5=Refresh       +
+     A  76N68
+     AO 77N68                          23  2'F3=Exit       F5=Refresh       +
+      *                                                                   /*End   CFT009*/
+     A                                      F7=Message Repair Details       +
+     A                                      F12=Previous'
+     A                                      DSPATR(HI)
+      *                                                                   /*Begin CFT009*/
+     A  76 68
+     AO 77 68                          23  2'F3=Exit  F5=Refresh  +
+     A                                      F7=Message Repair Details  +
+     A                                      F8=STP Charges  F12=Previous'
+     A                                      DSPATR(HI)
+      *                                                                   /*End   CFT009*/
+      *=========================================================================
+     A          R #SFLRCD2                  SFL
+     A                                      TEXT('Subfile record 2.')
+     A                                      SETOF(98 'Force input format')
+     A                                      INDTXT(89 'Subfile next change')
+     A  89                                  SFLNXTCHG
+     A            #2ACTC         1A  B 10  8VALUES('A' 'D' 'E' ' ')
+     A N31                                  DSPATR(UL)
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A  51                                  DSPATR(PR ND)
+     A*                                                                   /*Begin 162233*/
+     A************#2MSEQ*********3A  O 10 13TEXT('Sequence Number')
+     A            #2MSEQ         3A  O 10 13TEXT('Rule Number')
+     A*                                                                   /* End  162233*/
+     A  51                                  DSPATR(ND)
+     A            #1MTAG         5A  O 10 22TEXT('Message Tag')
+     A  51                                  DSPATR(ND)
+      ** Start of Change CSW209
+     A            #1TSEQ         3A  O 10 34TEXT('Message Sequence')
+     A  71
+     AON71 64                               DSPATR(ND)
+     A**********  #2OPER         2A  O 10 33TEXT('Operator')                                  CSW209
+     A            #2OPER         2A  O 10 42TEXT('Operator')
+      ** End of Change CSW209
+     A  51                                  DSPATR(ND)
+      ** Start of Change CSW209
+     A**********  #2CMP1        35A  O 10 41TEXT('Compare Value 1')                           CSW209
+     A            #2CMP1        35A  O 10 46TEXT('Compare Value 1')
+      ** End of Change CSW209
+      *=========================================================================
+     A          R #SFLCTL2                  SFLCTL(#SFLRCD2)
+     A                                      SFLSIZ(0012)
+     A                                      SFLPAG(0011)
+     A                                      TEXT('Subfile control 2.')
+     A                                      SETOF(98 'Force input format')
+     A                                      OVERLAY
+     A                                      INDTXT(82 'Clear subfile')
+     A                                      INDTXT(83 'Display subfile')
+     A                                      INDTXT(84 'End of subfile')
+     A  82                                  SFLCLR
+     A N82                                  SFLDSPCTL
+     A N82 83                               SFLDSP
+     A N82 83 84                            SFLEND
+     A                                      INDTXT(31 'Invalid: #2ACTC')
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CA12(12 'Key screen.')
+     A                                      CF05(05 'Reset.')
+     A                                      CF09(09 'CF09 Add')
+     A N84                                  ROLLUP(27 'Next page.')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31)
+     A            ##SFR2         4S 0H      SFLRCDNBR
+     A  83                              5  8'Message Type....:'
+     A  83        #1MTPY         3A  O  5 26TEXT('Message Type')
+     A                                      DSPATR(HI)
+     A  83                              6  8'Set Number......:'
+     A  83        #1MSET         3A  O  6 26TEXT('Set Number - Alpha')
+     A                                      DSPATR(HI)
+     A  83                              8  8'?'
+     A                                      DSPATR(HI)
+     A*                                                                   /Begin 162233/
+     A**83******************************8 11'Seq. No.'
+     A  83                              8 11'Rule No.'
+     A*                                                                   / End  162233/
+     A                                      DSPATR(HI)
+     A  83                              8 21'Msg Tag'
+     A                                      DSPATR(HI)
+      ** Start of Change CSW209
+     A  83                              8 30'Sequence'
+     A  71
+     AON71 64                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A**83******                        8 31'Operator'                                        CSW209
+     A  83                              8 40'Operator'
+      ** End of Change CSW209
+     A                                      DSPATR(HI)
+      *-------------------------------------------------------------------------
+      * Begin                                                             IMP011
+      ** Start of Change CSW209
+     A**83******                        8 50'Compare Value(s)'                                CSW209
+     A  83                              8 61'Compare Value(s)'
+      ** End of Change CSW209
+     A                                      DSPATR(HI)
+      *-------------------------------------------------------------------------
+      * End                                                               IMP011
+      *=========================================================================
+     A          R #RCDDTL2                  TEXT('Key screen-Detail')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(79 'Protect fields')
+     A                                      INDTXT(31 'Invalid: #2ACTC')
+     A                                      INDTXT(35 'Invalid: #2MSEQ')
+     A                                      INDTXT(33 'Invalid: #2MTAG')
+     A                                      INDTXT(34 'Invalid: #2OPER')
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CA12(12 'Key screen.')
+     A                                      CF05(05 'Reset.')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #2ACTC')
+     A                                      SETOF(35 'Invalid: #2MSEQ')
+      *
+      *-------------------------------------------------------------------------
+     A                                  5  6'Message Type..........:'
+     A            #1MTPY         3      5 30TEXT('Message Type')
+     A                                      DSPATR(HI)
+     A                                  5 41'Set Number......:'
+     A            #1MSET         3      5 59TEXT('Set Number - Alpha')
+     A                                      DSPATR(HI)
+     A                                  7  6'Action Code (I,A,D,E).:'
+     A            #2ACTC         1      7 30TEXT('Action code')
+     A                                      DSPATR(HI)
+     A*                                                                   /Begin 162233/
+     A**********************************8  6'Sequence Number.......:'
+     A                                  8  6'Rule Number...........:'
+     A************#2MSEQ*********3***B**8 30TEXT('Sequence number')
+     A            #2MSEQ         3   B  8 30TEXT('Rule number')
+     A*                                                                   / End  162233/
+     A  35                                  DSPATR(RI PC)
+     A N35                                  DSPATR(UL HI)
+      *=========================================================================
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A                                      OVERLAY
+     A N77                             22  2'E=Enquire     D=Delete         +
+     A                                      A=Amend'
+     A                                      DSPATR(HI)
+     A  77                             23  2'F3=Exit       F5=Refresh       +
+     A                                      F12=Previous'
+     A                                      DSPATR(HI)
+     A N77                             23  2'F3=Exit       F5=Refresh       +
+     A                                      F9=Add       F12=Previous'
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #RCDDTL3                  TEXT('Generation Criteria Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(79 'Protect fields')
+     A                                      INDTXT(31 'Invalid: #2ACTC')
+     A                                      INDTXT(35 'Invalid: #2MSEQ')
+     A                                      INDTXT(33 'Invalid: #2MTAG')
+     A                                      INDTXT(34 'Invalid: #2OPER')
+      *                                                                 /* Begin CFT006 */
+     A                                      INDTXT(30 'Invalid: #2HDTG')
+      *                                                                   /* End CFT006 */
+     A** Start of change CRE008
+     A                                      INDTXT(40 'Invalid: #2REPT')
+     A** End of change CRE008
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CA12(12 'Key screen.')
+     A N74N75                               CF05(05 'Reset.')
+     A  75                                  CF10(10 'Delete.')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(33 'Invalid: #2MTAG')
+     A                                      SETOF(34 'Invalid: #2OPER')
+      *                                                                 /* Begin CFT006 */
+     A                                      SETOF(30 'Invalid: #2HDTG')
+      *                                                                   /* End CFT006 */
+     A** Start of change CRE008
+     A                                      SETOF(40 'Invalid: #2REPT')
+     A** End of change CRE008
+      *
+      *-------------------------------------------------------------------------
+     A                                  5  6'Message Type..........:'
+     A            #1MTPY         3      5 30TEXT('Message Type')
+     A                                      DSPATR(HI)
+     A                                  5 41'Set Number......:'
+     A            #1MSET         3      5 59TEXT('Set Number - Alpha')
+     A                                      DSPATR(HI)
+     A                                  7  6'Action Code (I,A,D,E).:'
+     A            #2ACTC         1      7 30TEXT('Action code')
+     A                                      DSPATR(HI)
+     A*                                                                   /Begin 162233/
+     A**********************************8  6'Sequence Number.......:'
+     A                                  8  6'Rule Number...........:'
+     A************#2MSEQ*********3******8 30TEXT('Sequence number')
+     A            #2MSEQ         3      8 30TEXT('Rule number')
+     A*                                                                   / End  162233/
+     A                                      DSPATR(HI)
+     A                                 11  6'Message Tag...........:'
+     A            #2MTAG         5   B 11 30TEXT('Message Tag')
+     A N33                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N79N33                               DSPATR(UL)
+      ** Start of Change CSW209
+     A                                 11 40'Sequence .......:'
+     A  71
+     AON71 64                               DSPATR(ND)
+     A            #2TSEQ         3   B 11 59
+     A  71
+     AON71 64                               DSPATR(ND)
+     A N33                                  DSPATR(HI)
+     A  71
+     AON71 64
+     AO 79                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N79N33                               DSPATR(UL)
+      ** End of Change CSW209
+     A                                 12  6'Operator..............:'
+     A            #2OPER         2   B 12 30TEXT('Operator')
+     A N34                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N79N34                               DSPATR(UL)
+     A                                 13  6'Compare Value 1 ......:'
+     A            #2CMP1        35   B 13 30TEXT('Compare Value 1')
+     A                                      CHECK(LC)
+     A                                      DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A N79                                  DSPATR(UL)
+     A                                 14  6'           or 2 ......:'
+     A            #2CMP2        35   B 14 30TEXT('Compare Value 2')
+     A                                      CHECK(LC)
+     A                                      DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A N79                                  DSPATR(UL)
+     A                                 15  6'           or 3 ......:'
+     A            #2CMP3        35   B 15 30TEXT('Compare Value 3')
+     A                                      CHECK(LC)
+     A                                      DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A N79                                  DSPATR(UL)
+     A                                 16  6'           or 4 ......:'
+     A            #2CMP4        35   B 16 30TEXT('Compare Value 4')
+     A                                      CHECK(LC)
+     A                                      DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A N79                                  DSPATR(UL)
+     A                                 17  6'           or 5 ......:'
+     A            #2CMP5        35   B 17 30TEXT('Compare Value 5')
+     A                                      CHECK(LC)
+     A                                      DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A N79                                  DSPATR(UL)
+     A                                 18  6'           or 6 ......:'
+     A            #2CMP6        35   B 18 30TEXT('Compare Value 6')
+     A                                      CHECK(LC)
+     A                                      DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A N79                                  DSPATR(UL)
+      *                                                                 /* Begin CFT006 */
+     A                                 11 40'Header (Y/N) '
+     A N64                                  DSPATR(ND)
+     A            #2HDTG         1   B 11 54
+     A N64                                  DSPATR(ND)
+     A N30 64                               DSPATR(HI)
+     A N64
+     AO 79                                  DSPATR(PR)
+     A  30 64                               DSPATR(RI PC)
+     A N79N30 64                            DSPATR(UL)
+      *                                                                   /* End CFT006 */
+     A** Start of change CRE008
+     A                                 19  6'Report Test Results...:'
+     A            #2REPT         1   B 19 30TEXT('Report Test Results')
+     A N40                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+     A  40                                  DSPATR(RI PC)
+     A N79N40                               DSPATR(UL)
+     A** End of change CRE008
+      *=========================================================================
+     A          R #CMDTXT3                  TEXT('Command keys')
+     A                                      OVERLAY
+     A  74                             23  2'F3=Exit       F12=Previous'
+     A                                      DSPATR(HI)
+     A  75                             23  2'F3=Exit       F10=Delete       +
+     A                                      F12=Previous'
+     A                                      DSPATR(HI)
+     A  76
+     AO 77                             23  2'F3=Exit       F5=Refresh       +
+     A                                      F12=Previous'
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *=========================================================================
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      OVERLAY
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ

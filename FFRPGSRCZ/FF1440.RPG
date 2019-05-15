@@ -1,0 +1,1103 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Initial margin reconciliation report')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module
+     F*                                                                  *
+     F*   FF1440  -  Initial Margin Reconciliation Report                *
+     F*                                                                  *
+     F*  (c) Finastra International Limited 2001                         *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 243826A            Date 25Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 142115             Date 28Apr99               *
+     F*                  123872             DATE 15OCT97                 *
+     F*                  CFF004             DATE 18SEP96                 *
+     F*                  S01411             DATE 16APR93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0021        DATE  28AUG92                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  243826A- Recompiled due to changes in FFPRCSZ2, FFPRCSZ3,    *
+      *           FFPRVLZ2 and FFPRVLZ3.                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*   176443 - Avoid MCH3601 to be sent.                             *
+     F*            Pass correct parameter to AOCUSTR0.                   *
+     F*   142115 - Only 1 currency & 1 instrument show on report, even   *
+     F*            though more are present.                              *
+     F*            Check for deleted transactions.                       *
+     F*   123872 - Change size of interface parameter using between      *
+     F*            program and AOCURRR0 to avoid problem of journaling.  *
+     F*   CFF004 - Increase in size of Price Fields,(Recompiled Only)    *
+     A*   S01411 - RECOMPILED BECAUSE 'ORIGINAL ENTRY DATE' HAS BEEN     *
+     A*            ADDED TO TRANSD.                                      *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F*  FUJI-FF0021 - NEW INITIAL MARGIN RECONCILIATION REPORT
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FPOSTNC5 IF  E           K        DISK
+     FTRANSMC IF  E           K        DISK
+     F            TRANSDF                           KRENAMETRANSMCF
+     FTRANSMB IF  E           K        DISK
+     F            TRANSDF                           KRENAMETRANSMBF
+     FTRSET1  IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FINTYP2  IF  E           K        DISK
+     F            INTYPDF                           KRENAMEINTYPD2F
+     FFF1440P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FFF1440AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*     INDICATOR TABLE
+     F*
+     F*       10           EOF on file POSTNC5
+     F*       15           '0' = no details to report
+     F*       20           EOF on file TRANSMB or TRANSMC
+     F*       50           work indicator
+     F*       55           '1' = broker position
+     F*                    '0' = customer position
+     F*       60           '1' = Multibranching is ON
+     F*       98           Date format indicator
+     F*       99           work indicator
+     F*       U7           Database error
+     F*       U8           Database error
+     F*       LR           Last record Indicator
+     F*
+     E*****************************************************************
+     E/EJECT
+      /COPY ZSRSRC,ZFRPEDZ1
+      /COPY ZSRSRC,FFPRCSZ2
+     E                    MTH    12  12  3
+     E* MONTH ABBREVIATIONS
+     E                    CPY@    1   1 80
+     I*
+     I/EJECT
+     IINTYPD2F
+     I*
+      ** Rename of fields from INTYP
+     I*
+     I              ISTT                            ISTT2
+     I              ISTI                            ISTI2
+     I              ISPT                            ISPT2
+     I              ISCY                            ISCY2
+     I              QOTC                            QOTC2
+     I              TKDM                            TKDM2
+     I              MNPF                            MNPF2
+     I              TKVL                            TKVL2
+     I              OTHC                            OTHC2
+     I/EJECT
+     I*
+     I*
+      /COPY ZSRSRC,ZFRPEDZ2
+     I*
+      /COPY ZSRSRC,FFPRCSZ3
+     I**  DATA STRUCTURE FOR PRICE VALIDATION
+     I*
+      /COPY ZSRSRC,FFSRDSZ1
+     I**  DATA STRUCTURE FOR PRICE VALIDATION
+     I*
+     I** FILE INFORMATION DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ILDA         DS                            256
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ISDBANK    E DSSDBANKPD
+      **  EXTERNAL DS FOR BANK DETAILS
+     I              BJURPT                          TITL
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** EXTERNAL DS FOR BRANCHES DETAILS
+      *
+     ISDCURR    E DSSDCURRPD
+     I** CURRENCY DETAILS
+     I              A6CYCD                          CURR
+     I              A6NBDP                          CDP
+      *
+     ISDCUST    E DSSDCUSTPD
+     I** CUSTOMER DETAILS
+     I              QQDFAC                          #DFAC1                                    CGL029
+      *
+     ISDFOCS    E DSSDFOCSPD
+     I** F&O CUSTOMER DETAILS
+      *
+     I@DSFDY    E DSDSFDY
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     I*                                                                   123872
+     IDSSDY     E DSDSSDY                                                 123872
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                123872
+     I*                                                                   123872
+     IISTTX       DS
+     I*  DATASTRUCTURE TO SPLIT INSTRUMENT CODE INTO MARKTE & CODE
+     I                                        1   2 MRKT
+     I                                        3   5 ISTC
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C********************************************************************
+     C*    SET UP PARAMETER LIST
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5        SEQUENCE NO
+     C                     PARM           ENT     3        ENTITY
+     C/EJECT
+     C********************************************************************
+      *
+      **     Perform Initial processing
+     C*
+     C                     EXSR INIT
+      *
+      **     Produce report
+     C*
+     C                     EXSR REPORT
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                               *
+     C*                    INDEX TO SUBROUTINES                       *
+     C*                                                               *
+     C*                                                               *
+      ** REPORT    Pprint report details
+      ** SAMEBR    Process all positions in the same branch
+      ** SAMECY    Process all positions in the same branch and
+      **           currency
+      ** SAMECB    Process all positions in the same branch,
+      **           currency and customer or broker
+      ** SAMEIN    Process all positions in the same branch,
+      **           currency and customer or broker and instrument
+      ** GETIN     Access instrument details
+      ** GETCB     Access Customer/broker details
+      ** GETCCY    Access currency details
+      ** GETBR     Access branch details
+      ** HDMAIN    Write main header details to FF1440
+      ** RCFP1     Output P| details to RCF
+      ** INIT      TO PERFORM PROGRAM INITIALISATION
+      ** DBERR     TO PERFORM DATABASE ERROR EXIT FROM PROGRAM
+      ** WRITAU    SUBROUTINE TO OUTPUT AU REPORT
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+      ** S/R Report to print report details
+     C*
+      ** Called fron Main processing
+     C*
+      ** Calls WRITAU, RCFP1, GETBR, SAMEBR, HDMAIN
+     C*
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C*
+     C           REPORT    BEGSR
+     C*
+      ** Access all customer/broker positions with non-zero initial
+      ** margin.
+     C*
+     C                     READ POSTNC5                  10
+      *
+      ** If no records found output no details to report on Audit
+      ** report.
+     C** OR
+     C** if MBIN is 'Y' , and no position exist for the requested
+     C** branch output no details to report on Audit
+      *
+     C           *IN10     IFEQ '1'
+      *
+     C           MBIN      OREQ 'Y'
+     C           ENT       ANDNE'ALL'
+     C           ENT       ANDNE*BLANK
+     C           BRCA      ANDGTENT
+     C*
+     C                     EXSR WRITAU
+     C                     ELSE
+     C*
+     C** Write Report
+      *
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C                     SETON                     15
+     C                     CLOSEFF1440P1
+     C                     OPEN FF1440P1
+     C*
+     C** Output printer file details to RCF
+     C*
+     C                     EXSR RCFP1
+     C*
+     C                     Z-ADD0         PAGE
+     C*
+     C** Get branch details if MBIN = 'Y'
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     EXSR GETBR
+     C                     END
+     C*
+     C** Process all positions in the same branch
+     C*
+     C                     EXSR SAMEBR
+     C*
+     C** Write End of report
+     C*
+     C           LINE      IFGT 55
+     C                     EXSR HDMAIN
+     C                     END
+     C                     WRITEENDRPT
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R SAMEBR -- Process all positions in the same branch
+      ** Called From: Report
+      ** Calls: GETCCY, SAMECY, HDMAIN, ZFRPED
+      **
+     C********************************************************************
+     C*
+     C           SAMEBR    BEGSR                           ** SAMEBR **
+     C*
+     C           *LIKE     DEFN BRCA      #BRSAV
+     C                     MOVE BRCA      #BRSAV
+     C                     MOVE BRCA      RBRCA
+     C*
+     C           *IN10     DOWEQ'0'
+     C           BRCA      ANDEQ#BRSAV
+     C*
+     C** Get Currency details
+     C*
+     C                     EXSR GETCCY
+     C*
+     C** Zero currency margin total
+     C*
+     C                     Z-ADD0         CMTOT
+     C*
+     C** Process all positions in the same branch and currency
+     C*
+     C                     EXSR SAMECY
+     C*
+     C** Write currency total details.
+     C*
+     C           LINE      IFGT 55
+     C                     EXSR HDMAIN
+     C                     END
+      *
+     C                     Z-ADDCMTOT     ZFLD15
+     C                     Z-ADD#ISDP     ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCYMAR
+     C                     WRITECCYTOT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R SAMECY -- Process all positions in the same branch and
+      **               currency
+      ** Called From: SAMEBR
+      ** Calls: GETCB, SAMECB, HDMAIN, ZFRPED
+      **
+     C********************************************************************
+     C*
+     C           SAMECY    BEGSR                           ** SAMECY **
+     C*
+     C           *LIKE     DEFN ISCY      #CYSAV
+     C                     MOVE ISCY      #CYSAV
+     C                     MOVE ISCY      RCCY
+     C                     MOVE A6CYNM    RCYNM
+     C*
+     C           *IN10     DOWEQ'0'
+     C           BRCA      ANDEQ#BRSAV
+     C           ISCY      ANDEQ#CYSAV
+     C*
+     C** Get  customer/broker details
+     C*
+     C                     EXSR GETCB
+     C*
+     C** Zero broker/customer  margin total
+     C*
+     C                     Z-ADD0         BMTOT
+     C*
+     C** Main Header
+     C*
+     C                     WRITEHDRMAIN
+     C*
+     C** Currency Header
+     C*
+     C                     WRITEHDRCCY
+     C*
+     C** Write customer/broker header
+     C*
+     C                     WRITEHDRCB
+     C*
+     C** Process all positions in the same branch and currency
+     C** and customer or broker
+     C*
+     C                     EXSR SAMECB
+     C*
+     C** Write customer/broker total details.
+     C*
+     C           LINE      IFGT 55
+     C                     EXSR HDMAIN
+     C                     END
+      *
+     C                     Z-ADDBMTOT     ZFLD15
+     C                     Z-ADD#ISDP     ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCBMAR
+     C                     WRITECBRTOT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R SAMECB -- Process all positions in the same branch,
+      **               currency and customer or broker
+      **
+      ** Called From: SAMECY
+      ** Calls: GETIN, SAMEIN, HDMAIN, ZFRPED
+      **
+     C********************************************************************
+     C*
+     C           SAMECB    BEGSR                           ** SAMECB **
+     C*
+     C           *LIKE     DEFN CBCD      #CBSAV
+     C**********           Z-ADDCBCD      #CBSAV                                              CSD027
+     C                     MOVE CBCD      #CBSAV                                              CSD027
+     C*
+     C           *IN10     DOWEQ'0'
+     C           BRCA      ANDEQ#BRSAV
+     C           ISCY      ANDEQ#CYSAV
+     C           CBCD      ANDEQ#CBSAV
+     C*
+     C** Get  instrument details
+     C*
+     C                     EXSR GETIN
+     C*
+     C** Zero Instrument  margin total
+     C*
+     C                     Z-ADD0         IMTOT
+     C*
+     C** Write instrument Header.
+     C*
+     C                     WRITEHDRINS
+     C*
+     C** Process all positions in the same branch and currency
+     C** and customer or broker and instrument
+     C*
+     C                     EXSR SAMEIN
+     C*
+     C** Write instrument total details.
+     C*
+     C           LINE      IFGT 55
+     C                     EXSR HDMAIN
+     C                     END
+      *
+     C                     Z-ADDIMTOT     ZFLD15
+     C                     Z-ADD#ISDP     ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RIMAR
+     C                     WRITEINSTOT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R SAMEIN -- Process all positions in the same branch,
+      **               currency and customer or broker and instrument
+      **
+      ** Called From: SAMECB
+      ** Calls: DBERR,  ZFRPED, HDMAIN
+      **
+     C********************************************************************
+     C*
+     C           SAMEIN    BEGSR                           ** SAMEIN **
+     C*
+     C           *LIKE     DEFN ISTT      #ISSAV
+     C           *LIKE     DEFN YRNO      #YRSAV
+     C           *LIKE     DEFN MTHN      #MNSAV
+     C           *LIKE     DEFN PCAL      #PCSAV
+     C           *LIKE     DEFN STRP      #STSAV
+     C*
+     C                     MOVE ISTT      #ISSAV
+     C                     Z-ADDYRNO      #YRSAV
+     C                     Z-ADDMTHN      #MNSAV
+     C                     MOVE PCAL      #PCSAV
+     C                     Z-ADDSTRP      #STSAV
+     C*
+      ** Define key to access related trades
+      *
+     C           POSKEY    KLIST
+     C                     KFLD           #BRSAV
+     C                     KFLD           #CBSAV
+     C                     KFLD           #ISSAV
+     C                     KFLD           #YRSAV
+     C                     KFLD           #MNSAV
+     C                     KFLD           #PCSAV
+     C                     KFLD           #STSAV
+     C*
+      ** If broker position access trade details from TRANSMB
+      ** else for customer positions access trade details from
+      ** TRANSMC.
+      *
+     C           BHBKIN    IFEQ 'Y'
+      *
+     C           POSKEY    SETLLTRANSMB
+     C           POSKEY    READETRANSMB                  20
+     C                     ELSE
+     C           POSKEY    SETLLTRANSMC
+     C           POSKEY    READETRANSMC                  20
+     C                     END
+      *
+     C           *IN20     DOWEQ'0'
+     C*
+      **     CHECK IF RECORD IS LIVE                              142115
+     C           RECI      IFEQ 'D'                               142115
+     C*                                                           142115
+      **     Access TRSET1 for margin details
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database-error
+     C*
+     C           TNBR      CHAINTRSET1               50
+     C*
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TRSET1'  DBFILE
+     C                     MOVELTNBR      DBKEY            ***************
+     C                     Z-ADD9         DBASE            * DB ERROR 09 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *
+      ** Format output fields for a broker position
+      *
+     C           BHBKIN    IFEQ 'Y'
+      *
+      ** No. of open contracts
+      *
+     C                     Z-ADDNOBO      NOPEN
+      *
+      ** Margin
+      *
+     C*
+     C                     Z-ADDBMAR      ZFLD15
+     C                     Z-ADD#ISDP     ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTMAR
+      *
+      ** Format output fields for a customer position
+      *
+     C                     ELSE
+      *
+      ** No. of open contracts
+      *
+     C                     Z-ADDNOCO      NOPEN
+      *
+      ** Margin
+      *
+     C                     Z-ADDCMAR      ZFLD15
+     C                     Z-ADD#ISDP     ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTMAR
+      *
+     C                     END
+     C*
+     C*    TRANSACTION NUMBER ( ALLOW FOR -VE : MATURITY TRANSACTIONS )
+     C*
+     C           TNBR      IFLT *ZERO
+     C                     Z-SUBTNBR      WTNBR   60
+     C                     MOVELWTNBR     RTNBR
+     C                     MOVE '-(M)'    RTNBR
+     C                     ELSE
+     C                     MOVE *BLANK    RTNBR
+     C                     MOVELTNBR      RTNBR
+     C                     END
+     C*
+     C** Write Trade details
+     C*
+     C           LINE      IFGT 55
+     C                     EXSR HDMAIN
+     C                     END
+     C*
+     C                     WRITETRADDET
+     C*
+     C** Increment Broker/customer margin total and currency margin
+     C*  and instrument
+     C           BHBKIN    IFEQ 'Y'
+     C*
+     C           *LIKE     DEFN BMAR      BMTOT
+     C           *LIKE     DEFN BMAR      CMTOT
+     C           *LIKE     DEFN BMAR      IMTOT
+     C*
+     C                     ADD  BMAR      BMTOT
+     C                     ADD  BMAR      CMTOT
+     C                     ADD  BMAR      IMTOT
+     C                     ELSE
+     C                     ADD  CMAR      BMTOT
+     C                     ADD  CMAR      CMTOT
+     C                     ADD  CMAR      IMTOT
+     C                     END
+     C*
+     C                     END                                    142115
+     C*                                                           142115
+      ** If broker position access trade details from TRANSMB
+      ** else for customer positions access trade details
+      ** TRANSMC.
+      *
+     C           BHBKIN    IFEQ 'Y'
+      *
+     C           POSKEY    READETRANSMB                  20
+     C                     ELSE
+     C           POSKEY    READETRANSMC                  20
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+      ** Access next customer/broker position
+      *
+     C*
+     C                     READ POSTNC5                  10
+      *
+     C** If MBIN is 'Y' , and no position exist for the requested
+     C** branch force end of file.
+      *
+     C           *IN10     IFEQ '0'
+      *
+     C           MBIN      ANDEQ'Y'
+     C           ENT       ANDNE'ALL'
+     C           ENT       ANDNE*BLANK
+     C           BRCA      ANDGTENT
+     C*
+     C                     SETON                     10
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R GETIN -- Access instrument details
+      ** Called From: SAMECB
+      ** Calls:
+      **
+     C********************************************************************
+     C*
+     C           GETIN     BEGSR                           ** GETIN  **
+     C*
+     C*
+      **     Access INTYP for instrument details
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database-error
+     C*
+     C           ISTT      CHAININTYP                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELISTT      DBKEY            ***************
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     MOVELISTT      ISTTX
+     C*
+      **         IF Market Option
+      **         Access INTYP2 using Future reference for underlying ins
+      **             IF no record found,
+      **             OR record not live
+      **                  Perform Database-error
+     C*
+     C           ISPT      IFGE 4
+     C           ISPT      ANDNE7
+     C           ISTI      ANDEQ'N'
+     C                     MOVELISTT      ISKEY   5
+     C                     MOVE FTRF      ISKEY
+     C           ISKEY     CHAININTYP2               99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELISTTX     DBKEY            ***************
+     C                     Z-ADD8         DBASE            * DB ERROR 08 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF INSTRUMENT IS AN OTC
+     C*
+     C           ISTI      IFEQ 'Y'
+     C*
+     C** FORMAT INSTRUMENT AS IIIII
+     C                     MOVEL*BLANK    RINST
+     C                     MOVELISTT      RINST
+     C                     MOVEL*BLANK    RYRNO
+     C                     MOVEL*BLANK    RMYS
+     C                     MOVEL*BLANK    RMNTH
+     C                     ELSE
+     C*
+     C** FORMAT INSTRUMENT AS MM-III-
+     C                     MOVELMRKT      WRK3    3
+     C                     MOVE '-'       WRK3
+     C                     MOVELISTC      WRK4    4
+     C                     MOVE '-'       WRK4
+     C                     MOVELWRK3      RINST
+     C                     MOVE WRK4      RINST
+     C                     MOVELYRNO      RYRNO
+     C                     MOVEL'-'       RMYS
+     C*
+     C*    CONVERT MONTH NUMBER INTO MONTH SHORT NAME
+     C                     MOVE MTH,MTHN  RMNTH
+     C                     END
+     C*
+     C** IF INSTRUMENT IS AN OPTION
+     C** CONVERT STRIKE PRICE INTO REPORT FORMAT
+     C*
+     C           ISPT      IFGT 3
+     C           ISPT      ANDNE7
+     C                     MOVELPCAL      RPCAL
+     C*
+     C** USE RELATED FUTURES DETAILS TO FORMAT STRIKE PRICE
+     C** ON MARKET OPTIONS.
+     C*
+     C*
+     C           ISTI      IFEQ 'N'
+     C                     Z-ADDTKDM2     FFTKDM
+     C                     Z-ADDMNPF2     FFMNPF
+     C                     ELSE
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDMNPF      FFMNPF
+     C                     END
+     C*
+     C                     Z-ADDSTRP      FFPRIC
+     C*
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    RSTRP
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R GETCB -- Access Customer/broker details
+      ** Called From: SAMECY
+      ** Calls: DBERR
+      **
+     C********************************************************************
+     C*
+     C           GETCB     BEGSR                           ** GETCB  **
+     C*
+     C** Access main customer details
+     C*
+     C                     MOVE CBCD      ACBCD   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ACBCD     @KEY2   6
+     C                     PARM           @KYST   7
+     C***********SDCUST    PARM SDCUST    @DSFDY                          176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+     C*
+     C*
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVELCBCD      DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     MOVE BBCRNM    RCRNM
+     C*
+     C** Access F&O customer details
+     C*
+     C                     CALL 'AOFOCSR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ACBCD     @KEY1  10
+     C           SDFOCS    PARM SDFOCS    @DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDFOCSPD'DBFILE
+     C                     MOVELCBCD      DBKEY            ***************
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C           BHBKIN    IFEQ 'Y'
+     C                     SETON                     55
+     C                     ELSE
+     C                     SETOF                     55
+     C                     END
+      *
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R GETCCY -- Access currency details
+      ** Called From: SAMEBR
+      ** Calls: DBERR
+      **
+     C********************************************************************
+     C*
+     C           GETCCY    BEGSR                           ** GETBR  **
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ISCY      @AJCD   3
+     C***********SDCURR    PARM SDCURR    @DSFDY                          123872
+     C           SDCURR    PARM SDCURR    DSSDY                           123872
+     C*
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL@AJCD     DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     MOVE A6CYNM    RCYNM
+     C*
+     C           *LIKE     DEFN CDP       #ISDP
+     C                     Z-ADDCDP       #ISDP
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R GETBR  -- Access branch details
+      ** Called From: Report
+      ** Calls: DBERR
+      **
+     C********************************************************************
+     C*
+     C           GETBR     BEGSR                           ** GETBR  **
+     C*
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    @DSFDY                                              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     MOVEL*BLANKS   BRNM   30        ***************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     MOVELA8BRNM    BRNM
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R HDMAIN -- Write main header details to FF1440
+      ** Called From: SAMEBR
+      ** Calls:
+      **
+     C********************************************************************
+     C*
+     C           HDMAIN    BEGSR                           ** HDMAIN **
+     C*
+     C** Main Header
+     C*
+     C                     WRITEHDRMAIN
+     C*
+     C** Currency Header
+     C*
+     C                     WRITEHDRCCY
+     C*
+     C** Customer/broker Header
+     C*
+     C                     WRITEHDRCB
+     C*
+     C** Instrument Header
+     C*
+     C                     WRITEHDRINS
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** S/R RCFP1  -- Output P| details to RCF
+      ** Called From: Report
+      ** Calls:
+      **
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                           ** RCFP1  **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+      ** S/R INIT TO PERFORM PROGRAM INITIALISATION
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS DBERR DBERR
+     C*
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C*
+     C           INIT      BEGSR
+     C*
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *ZEROS    DBASE
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE 'FF1440  'DBPGM
+     C                     OUT  LDA
+     C*
+      ** Access RUNDAT
+      ** IF no record found,
+      ** OR record not live
+      **     Perform Database-error
+      *
+      **   Access Bank Details
+     C*
+      ** IF no record found,
+      ** OR record not live
+      **     Perform Database-error
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    @DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C**   IN THE DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C**   SET MULTIBRANCHING INDICATOR
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     60
+     C                     END
+     C*
+      ** Set indicator for date format, from DATF field.
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R DBERR TO PERFORM DATABASE ERROR EXIT FROM PROGRAM
+     C*
+      ** CALLED FROM
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C*
+     C           DBERR     BEGSR
+     C*
+     C                     OUT  LDA
+     C*
+      ** Seton U7 U8 LR
+      ** Return
+     C*
+     C*
+     C*
+     C                     EXSR WRITAU
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** WRITAU - SUBROUTINE TO OUTPUT AU REPORT
+      ** CALLS: NOTHING
+      **
+     C********************************************************************
+     C*
+     C           WRITAU    BEGSR                           ** WRITAU **
+     C*
+      ** Open Printer file
+     C*
+     C                     OPEN FF1440AU
+     C*
+      ** ENSURE TOTAL SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+     C*
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8
+     C                     RETRN
+     C                     END
+     C*
+      ** OUTPUT AUDIT REPORT HEADING
+     C*
+     C                     WRITEFMTAU01
+     C*
+      ** IF NO DETAIL TO REPORT, OUTPUT TO AUDIT REPORT
+     C*
+     C           *IN15     IFEQ '0'
+     C           *INU7     ANDEQ'0'
+     C                     WRITEFMTAU03
+     C                     END
+     C*
+      ** IF DATABASE ERROR, OUTPUT TO AUDIT REPORT
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITEFMTAU04
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/COPY ZSRSRC,FFPRCSZ4
+**  MTH MONTH NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

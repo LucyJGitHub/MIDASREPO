@@ -1,0 +1,224 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Leo LE Events Update')
+      *****************************************************************
+      *                                                               *
+      *  Midas - LEO/Midas Lending Integration                        *
+      *                                                               *
+      *  LE0493 - LEO LE Events Update                                *
+      *                                                               *
+      *  Function: This program allows the file LEEVLOPD to be        *
+      *  (COB)     updated with parameters passed to it.              *
+      *                                                               *
+      *  Called By: RPG/CMIU40                                        *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01473             Date 02Aug94               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  S01473 - New program created for Midas/Leo Integration       *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FLEEVLOPDO   E                    DISK
+      *
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    01  - Currency array set up                                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Program Initialisation                              *
+     F*  UPDATE - Update File                                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+      *
+     I/EJECT
+     I*DETL*****  DS                            366                                           CLE042
+     IDETL        DS                            340                                           CLE042
+      ** DS for parameters DETL passed to program
+     I                                        1   1 @RECI
+     I                                        2   7 @ZZ006
+     I**********                              8  130@CNUM                                     CSD027
+     I                                        8  13 @CNUM                                     CSD027
+     I                                       14  17 @ETYP
+     I                                    P  18  200@EDAT
+     I                                    P  21  270@EAMT
+     I                                       28  30 @ECCY
+     I                                       31  32 @ZZ002
+     I                                       33  34 @LTYP
+     I                                       35  36 @SUTP
+     I                                       37  39 @BRCA
+     I                                       40  49 @ZZ010
+     I                                    P  50  560@OTHA
+     I                                       57  59 @FCCY
+     I                                       60 230 @ZZ171
+     I                                      231 231 @INOI
+     I                                      232 314 @ZZ083
+     I***********                           315 3250@FCLT                                     CSD027
+     I                                      315 325 @FCLT                                     CSD027
+     I                                      326 333 @LCRM
+     I                                      334 334 @LTNM
+     I                                      335 336 @LCRN
+     I                                      337 340 @CLAS                                     CLE042
+     I*
+     ILDA       E DSLDA
+      ** Database error Data Structure
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Update File  Processing.
+      *
+     C                     EXSR UPDATE
+      *
+      ***  End Program.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - SUBROUTINE TO DO PROGRAM INITIALISATION.            *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RTCD    7        RETURN CODE
+     C                     PARM           DETL             UPDAT DETAIL
+     C*
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initialise update fields
+      *
+     C                     MOVE *BLANKS   RECI
+     C                     MOVE *BLANKS   ZZ006
+     C**********           Z-ADD0         CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     MOVE *BLANKS   ETYP
+     C                     Z-ADD0         EDAT
+     C                     Z-ADD0         EAMT
+     C                     MOVE *BLANKS   ECCY
+     C                     MOVE *BLANKS   ZZ002
+     C                     MOVE *BLANKS   LTYP
+     C                     MOVE *BLANKS   SUTP
+     C                     MOVE *BLANKS   CLAS                                                CLE042
+     C                     MOVE *BLANKS   BRCA
+     C                     MOVE *BLANKS   ZZ010
+     C                     Z-ADD0         OTHA
+     C                     MOVE *BLANKS   FCCY
+     C                     MOVE *BLANKS   ZZ171
+     C                     MOVE *BLANKS   INOI
+     C                     MOVE *BLANKS   ZZ083
+     C***********          Z-ADD0         FCLT                                                CSD027
+     C                     MOVE *BLANKS   FCLT                                                CSD027
+     C                     MOVE *BLANKS   LCRM
+     C                     MOVE *BLANKS   LTNM
+     C                     MOVE *BLANKS   LCRN
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /TITLE SR/UPDATE
+      *****************************************************************
+      *                                                               *
+      *  UPDATE - SUBROUTINE TO UPDATE FILE LEEVLOPD.                 *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDATE    BEGSR
+      *
+      ** Move input L/C parameters to output fields
+      *
+     C                     MOVE @RECI     RECI
+     C                     MOVE @ZZ006    ZZ006
+     C**********           Z-ADD@CNUM     CNUM                                                CSD027
+     C                     MOVE @CNUM     CNUM                                                CSD027
+     C                     MOVE @ETYP     ETYP
+     C                     Z-ADD@EDAT     EDAT
+     C                     Z-ADD@EAMT     EAMT
+     C                     MOVE @ECCY     ECCY
+     C                     MOVE @ZZ002    ZZ002
+     C                     MOVE @LTYP     LTYP
+     C                     MOVE @SUTP     SUTP
+     C                     MOVE @CLAS     CLAS                                                CLE042
+     C                     MOVE @BRCA     BRCA
+     C                     MOVE @ZZ010    ZZ010
+     C                     Z-ADD@OTHA     OTHA
+     C                     MOVE @FCCY     FCCY
+     C                     MOVE @ZZ171    ZZ171
+     C                     MOVE @INOI     INOI
+     C                     MOVE @ZZ083    ZZ083
+     C***********          Z-ADD@FCLT     FCLT                                                CSD027
+     C                     MOVE @FCLT     FCLT                                                CSD027
+     C                     MOVE @LCRM     LCRM
+     C                     MOVE @LTNM     LTNM
+     C                     MOVE @LCRN     LCRN
+     C*
+     C** Update file LEEVLOPD with L/C Input
+     C*
+     C                     WRITEEVLEODF                01
+     C*
+     C** If error setup return code
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE '*ERROR'  RTCD
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001

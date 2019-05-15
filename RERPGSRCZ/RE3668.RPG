@@ -1,0 +1,371 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE GL overdraft line details creation')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE3668 - Overdraft Line Details Creation                     *
+      *                                                               *
+      *  Function:  This program will be called from the switchable   *
+      *             features installation menu to create additional   *
+      *             overdraft history details and to set default dates*
+      *             on the account whenever the Overdraft Interest    *
+      *             Calculation feature, CRE001 is installed.         *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CER055             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 01Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 161934             Date 19Jul01               *
+      *                 CDE002             Date 21Dec99               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *             No. CPK011             Date 27Jul00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRE001 *CREATE     Date 18Feb97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  161934 - Check to make sure account is not closed before     *
+      *           writing record to REODHSPD.                         *
+      *  CDE002 - Revenue Analysis - Recompiled due to changes in     *
+      *           PF/ACCNTBXC.                                        *
+      *  CPK011 - Recompile due to addition of extra fields in        *
+      *           ACCNTBXC (added for CAP035).                        *
+      *  CRE001 - Overdraft Interest Calculation                      *
+      *                                                               *
+      *****************************************************************
+      *
+     FACCNTAB IF  E                    DISK         KINFSR *PSSR
+     FACCNTBXCUF  E           K        DISK         KINFSR *PSSR A
+     FREODHSPDO   E                    DISK                           UC
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   50  - End of PF/ACCNTAB                                     *
+      *   51  - Chain to PF/ACCNTBXC                                  *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initial Processing                                  *
+      *  SRWRT1 - Write record to PF/REODHSPD                         *
+      *  SRWRT2 - Write record to PF/ACCNTBXC                         *
+      *  SRUPD1 - Update record in PF/ACCNTBXC                        *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+     E                    CMD     1   1 21
+      *
+      ** Array containing Copyright statement
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      **  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External data structures for Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure - used as parameter to access programs
+      *
+     C/TITLE Main Processing
+      *****************************************************************
+      *  P R O G R A M   S T A R T                                    *
+      *****************************************************************
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Read first record from PF/ACCNTAB
+      *
+     C                     READ ACCNTAB                  50
+      *
+      ** Do until End of PF/ACCNTAB (i.e. *IN50 = '1')
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      ** Process all records with Account Type 'R'
+      *
+     C           ATYP      IFEQ 'R'
+      *
+      *
+      ** Write a record to PF/REODHSPD if O/D Line > ZERO
+      ** and account is not closed.                                       161934
+      *
+     C           ODLN      IFGT *ZERO
+     C           RECI      ANDEQ'D'                                       161934
+     C                     EXSR SRWRT1
+     C                     ENDIF
+      *
+      ** Chek if record exist in PF/ACCNTBXC
+      *
+     C           R1KEY     CHAINACCNTBXC             51
+     C           *IN51     IFEQ '0'
+      *
+      ** If found and O/D Line is greater than Zero
+      **    update existing record in PF/ACCNTBXC
+     C           ODLN      IFGT *ZERO
+     C                     EXSR SRUPD1
+     C                     ENDIF
+      *
+      **  ..  else (If not found ), write new record to PF/ACCNTBXC
+     C                     ELSE
+     C                     EXSR SRWRT2
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read next record from PF/ACCNTAB
+      *
+     C                     READ ACCNTAB                  50
+      *
+     C                     ENDDO
+      *
+     C           @OPEN     IFEQ 'Y'
+     C                     CLOSEREODHSPD
+     C                     ENDIF
+      *
+      ** Terminate program
+      *
+     C                     MOVE '1'       *INLR
+      *****************************************************************
+      *  P R O G R A M   E N D                                        *
+      *****************************************************************
+     C/TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initial processing                                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : AOBANKR0 - Dank Details Access Program            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           ***  SRINIT  ***
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RETC   7
+     C                     PARM           @MODE   1
+      *
+     C                     MOVEL*BLANKS   @RETC
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Call Access Program for Bank Details - Run Date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELWOPTN     DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'RE3668'  DBPGM            * DBERR 01 *
+     C                     Z-ADD001       DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Define Key Field to access PF/ACCNTBXC
+      *
+     C           R1KEY     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD,1
+     C                     PARM 21        MSGLEN 155
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRWRT1
+      *****************************************************************
+      *                                                               *
+      *  SRWRT1 - Write record to PF/REODHSPD                         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRT1    BEGSR                           *** SRWRT1 ***
+      *
+     C           @OPEN     IFNE 'Y'
+     C                     OPEN REODHSPD
+     C                     MOVE 'Y'       @OPEN   1
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    HISD
+     C                     Z-ADDBJRDNB    PSTD
+     C                     MOVE *BLANK    PCSI
+     C                     Z-ADD*ZERO     PODL
+     C                     Z-ADDODED      POLE
+      *
+     C                     WRITEREODHSD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRWRT2
+      *****************************************************************
+      *                                                               *
+      *  SRWRT2 - Write record to PF/ACCNTBXC                         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRT2    BEGSR                           *** SRWRT2 ***
+      *
+     C                     MOVE CNUM      ATCNUM
+     C                     MOVE CCY       ATCCY
+     C                     MOVE ACOD      ATACOD
+     C                     MOVE ACSQ      ATACSQ
+     C                     MOVE BRCA      ATBRCA
+      *
+     C           ODLN      IFGT *ZERO
+      *
+     C           DRIB      IFNE *ZERO
+     C           DRIS      ORNE *ZERO
+     C                     Z-ADD999999    ATITRD
+     C                     ELSE
+     C                     Z-ADD*ZERO     ATITRD
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    ATPOLC
+     C                     Z-ADDODED      ATPOLE
+     C                     ELSE
+     C                     Z-ADD*ZERO     ATITRD
+     C                     Z-ADD*ZERO     ATPOLC
+     C                     Z-ADD*ZERO     ATPOLE
+     C                     ENDIF
+      *
+     C                     MOVEASTAMP,1   ATTMST           Default Timestamp                  CPK015
+     C                     WRITEACCNTBD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRUPD1
+      *****************************************************************
+      *                                                               *
+      *  SRUPD1  - Update record in PF/ACCNTBXC                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPD1    BEGSR                           *** SRUPD1 ***
+      *
+     C           DRIB      IFNE *ZERO
+     C           DRIS      ORNE *ZERO
+     C                     Z-ADD999999    ATITRD
+     C                     ELSE
+     C                     Z-ADD*ZERO     ATITRD
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    ATPOLC
+     C                     Z-ADDODED      ATPOLE
+      *
+     C                     UPDATACCNTBD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *  Called By: Abnormal Error Conditions                         *
+      *  Calls    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C                     MOVEL'*ERROR ' @RETC
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Finastra International Limited 2001
+**  CMD - Clear PF/REODHSPD
+CLRPFM FILE(REODHSPD)

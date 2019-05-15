@@ -1,0 +1,1750 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('DL Consolidated Deal Amendments Print')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL9912 - Consolidated Deal Amendments Print                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 MD024098           Date 12Dec13               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER040  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  MD024098 - DLC0603 Failed during COB due customer number     *
+      *             moved to a decimal data type variable.            *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER040 - Consolidated MM Deal Confirmation Correspondence    *
+      *           (upgFGE097)                                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  #FINIT - INITIAL PROCESSING                                  *
+      *  #FMAIN - MAIN PROCESSING                                     *
+      *  #FFAMT - FORMAT AMOUNT TO PRINT                              *
+      *  #FFRAT - FORMAT INTEREST RATE TO PRINT                       *
+      *  #FFMTC - FORMAT HARD COPY CONFIRMATION                       *
+      *  #FSPSR - SET UP (PAY) SETTLEMENT INSTRUCTIONS                *
+      *  #FSRSR - SET UP (RECEIVE) SETTLEMENT INSTRUCTIONS            *
+      *  #FPINT - FORMAT LINES 19, 20, 21  & 22 - INTEREST DETAILS    *
+      *  #FCNST - ACCESS COUNTERPARTY NOSTRO DETAILS                  *
+      *  #CLRPF - CLEAR PRINTER FILE & SETTLEMENT INSTRUCTION FIELDS  *
+      *  #FPAUD - OVERRIDE TO DL9912AU                                *
+      *  #FDBER - PRINT DATABASE ERROR                                *
+      *  *PSSR  - ERROR SUBROUTINE                                    *
+      *                                                               *
+      *  EXTERNAL ROUTINES CALLED                                     *
+      *  AOBANKR0 - BANK DETAILS ACCESS PROGRAM                       *
+      *  AOCUSTR0 - CUSTOMER DETAILS ACCESS PROGRAM                   *
+      *  AOCURRR0 - CURRENCY CODES ACCESS PROGRAM                     *
+      *  AOCNSTR0 - COUNTERPARTY NOSTROS ACCESS PROGRAM               *
+      *  ZSFILE   - RCF REPORT SEQUENCE NUMBER                        *
+      *                                                               *
+      *****************************************************************
+      *
+      ** DL Deal Amendments Consolidation
+      *
+     FDLDACOL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Midas DL Deals file
+      *
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+      ** Consolidated confirmations
+      *
+     FDL9912P1O   E             97     PRINTER      KINFDS SPOOL
+      *
+      ** Deal Confs Audit Report
+      *
+     FDL9912AUO   E             96     PRINTER      KINFDS SPOOLU
+      *
+      *****************************************************************
+     F/EJECT
+      *****************************************************************
+      *
+      ** Conf deatil text
+      *
+     E                    FF1     1  38 43
+      *
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+      *
+     E                    @C         22  1
+     E                    @D         15  1
+     E                    @E         22  1
+     E                    @RA        12  1
+     E                    @R1        13  1
+      *
+      ** Leading astericks
+      *
+     E                    FF3     1   1 20
+      /SPACE
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *
+      ** DEALS master
+      *
+     IDEALSDCF    05
+     I              DLNO                            DDLNO
+     I              RCDT                            DRCDT
+     I              BRTT                            BRCO
+      *
+      ** Data structures
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *
+      ** First DS for access programs, Short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access progrmas, Long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Nostro details accessed via access program
+      *
+     ISDNOST    E DSSDNOSTPD
+      *
+      ** Counterparty Nostros details accessed via access program
+      *
+     ISDCNST    E DSSDCNSTPD
+      *
+      ** Customer Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** P1 printer file information data structure
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+      ** AU printer file information data structure
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Local Data Area
+      *
+     ILDA         DS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** Setlement deatils
+      *
+     I            DS
+     I                                        1  30 SETTLR
+     I                                        1   20RMED
+     I                                        3   4 RNOS
+     I                                        3   8 RCNUMA
+     I                                        9  18 RACOD
+     I                                        3  12 RRETAC
+     I                                       19  20 RACSQ
+     I                                       21  30 RCPAR
+     I                                       21  260CRCNUM
+     I                                       21  26 CRCNUA
+     I                                       31  60 SETTLP
+     I                                       31  320PMED
+     I                                       33  34 PNOS
+     I                                       33  38 PCNUMA
+     I                                       39  48 PACOD
+     I                                       33  42 PRETAC
+     I                                       49  50 PACSQ
+     I                                       51  60 PCPAR
+     I                                       51  560CPCNUM
+     I                                       51  56 CPCNUA
+      *
+     I            DS
+     I                                        1  10 UFFACO
+     I                                        1   60WCNUM
+     I                                        1   6 WCNUMA
+     I            DS
+      *
+      ** Receive instructions
+      *
+     I                                        1  30 UFRVSI
+     I                                        1   20FSETP
+     I                                        3  20 FOSAR
+     I                                       21  30 FTSAR
+      *
+     I            DS
+      *
+      ** Pay instructions
+      *
+     I                                        1  30 UFPYSI
+     I                                        1   20FPSET
+     I                                        3  20 FOSAP
+     I                                       21  30 FISEP
+      *
+      ** Fields used for beneficiary bank deatils
+      *
+     I            DS
+     I                                        1  35 SPI
+     I                                        1   5 SPEC5
+     I                                        6   8 SPEC8
+     I                                        9  14 SPEC14
+     I                                        9  17 SPEC17
+     I                                        6  35 SPEC35
+      *
+      ** DS for DEAMS key
+      *
+     I                                       27  310VDAT
+     I                                       32  340DASN
+      *
+     IDATEA       DS
+     I                                        1   2 D2
+     I                                        3   3 POINT1
+     I                                        4   5 M2
+     I                                        6   6 POINT2
+     I                                        7   8 Y2
+      *
+     IDATEN       DS
+     I                                        1   2 D1
+     I                                        3   4 M1
+     I                                        5   6 Y1
+      *
+     IUFWKS       DS
+     I                                        1   3 UFBRCD
+     I                                        4   4 UFD1
+     I                                        5  14 UFACOD
+     I                                       15  15 UFD2
+     I                                       16  17 UFACSQ
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** Process initialization subroutine
+      *
+     C                     EXSR #FINIT
+      *
+      ** Process main  subroutine
+      *
+     C                     EXSR #FMAIN
+      *
+      ** Exit program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FMAIN - MAIN processing                                     *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *                                                               *
+      *  Calls: #FDBER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FMAIN    BEGSR
+      *
+      ** Initial read - DLDACOPA
+      *
+     C                     READ DLDACOL0                 01
+      *
+      ** No details to print
+      *
+     C           *IN01     IFEQ '1'
+     C                     EXSR #FPAUD
+     C                     WRITEAUDHDR
+     C                     WRITENODTLS
+      *
+     C                     ELSE
+      *
+      ** Read through DLDACOPA
+      *
+     C           *IN01     DOUEQ'1'
+      *
+      ** Level break on Branch
+     C                     MOVE FBRCA     UFBRCA
+      *
+      ** Report spool file generation
+      *
+     C                     CLOSEDL9912P1
+     C                     OPEN DL9912P1
+     C                     Z-ADDSFNUM     UUSFNB
+     C                     CALL 'ZSFILE'
+     C                     PARM           UUSEQN
+     C                     PARM FBRCA     UUENTY
+     C                     PARM SFILE     UUSFNM
+     C                     PARM           UUSFNB
+     C                     PARM *BLANK    UUZSER
+      *
+      ** Error during ZSFILE processing, return to calling program
+      *
+     C           UUZSER    IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Do while same Branch
+      *
+     C           FBRCA     DOWEQUFBRCA
+     C           *IN01     ANDEQ'0'
+      *
+      ** Get related DEALS
+      *
+     C           FDLNO     CHAINDEALS                02
+     C           *IN02     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'E'
+     C           RECI      ANDNE'M'
+     C           RECI      ANDNE'R'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DEALS'   DBFILE
+     C                     MOVELFDLNO     DBKEY
+     C                     Z-ADD006       DBASE
+     C                     EXSR #FDBER
+     C                     END
+      *
+      ** Find record type
+      *
+     C           DRCDT     IFEQ 'C'
+      *
+      ** Move settlement fields for Loan/Dep or amendment into
+      *
+     C                     MOVEL*BLANK    SETTLR
+     C                     MOVEL*BLANK    SETTLP
+     C                     MOVEL*BLANK    UFFACO
+      *
+      ** Set appropiate settlement methos
+      *
+     C                     MOVELFFACO     UFFACO
+     C           FPRFL     IFEQ 'R'
+     C           FPRFL     OREQ 'B'
+     C                     MOVELUFRVSI    SETTLR
+     C                     END
+     C           FPRFL     IFEQ 'P'
+     C           FPRFL     OREQ 'B'
+     C                     MOVELUFPYSI    SETTLP
+     C                     END
+      *
+      ** Output hard copy
+      *
+     C                     EXSR #FFMTC
+     C                     END
+      *
+      ** Subsequent reads - DLDACOPA
+      *
+     C                     READ DLDACOL0                 01
+      *
+      ** End DOWEQ Branches
+     C                     END
+      *
+      ** Write Branch totals
+      *
+     C           UFLNAC    IFGE 65
+     C                     WRITEAUDHDR
+     C                     Z-ADD6         UFLNAC
+     C                     END
+      *
+     C                     WRITEBTOTS
+     C                     ADD  6         UFLNAC
+     C                     Z-ADD0         UFTTCN
+     C                     MOVE FBRCA     UFBRCA
+      *
+      ** End DOUEOF
+     C                     END
+     C                     WRITEENDREP
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FFAMT- Format Amount to print                               *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FFAMT    BEGSR
+      *
+     C                     MOVE *BLANKS   UFOAMT 22
+      *
+     C           @@D       SUB  3         F2      20
+     C           F2        SUBSTFF3,1     UFOAMT
+     C           UFOAMT    CAT  @@ADSP:0  UFOAMT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FFRAT - Format Interest Rate to print                       *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FFRAT    BEGSR
+      *
+     C                     MOVE *BLANKS   UFORAT 13
+      *
+     C           @K        SUBSTFF3,1     UFORAT
+     C           UFORAT    CAT  @@RATO:0  UFORAT
+      *
+     C           UFORAT    CAT  UFZ:0     UFORAT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FFMTC - Format Hard Copy Confirmation                       *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: #FDBER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FFMTC    BEGSR
+      *
+      ** Clear printer file
+      ** Clear printer file & settlement instruction work fields
+      *
+     C                     EXSR #FCLRP
+      *
+      ** Convert value date
+      *
+     C                     Z-ADDFVDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     VDATN   6
+      *
+      ** Format value date for output
+      *
+     C                     MOVELVDATN     DATEN
+     C                     MOVE D1        D2
+     C                     MOVE M1        M2
+     C                     MOVE Y1        Y2
+     C                     MOVELDATEA     UF15DT  8
+      *
+      ** Get Currency Decimal point for editing
+      *
+     C                     MOVE CCY       UFCYKY  3
+     C                     EXSR #FCYDP
+     C                     Z-ADDA6NBDP    CDP1    10
+      *
+     C           DRID      IFNE 'Y'
+      *
+      ** Get DEAL Customer
+      *
+     C**********           Z-ADDCNUM      UFNOKY                                              CER059
+     C                     MOVELCNUM      UFNOKY                                              CER059
+     C                     EXSR #FCSNO
+      *
+      ** Set indicator if customer is blanks
+      *
+     C           BBBNBI    IFEQ 'Y'
+     C                     MOVE 'Y'       UFBANK  1
+     C                     END
+      *
+      ** Format confirmation lines 37-40 - address of Dealing customer
+      *
+     C                     MOVELBBCNA1    PRT37A 45
+     C                     MOVELBBCNA2    PRT38A 45
+     C                     MOVELBBCNA3    PRT39A 45
+     C                     MOVELBBCNA4    PRT40A 45
+     C                     ELSE
+      *
+     C                     MOVELRODN      SETP08
+     C                     MOVELFF1,1     PRT37A
+     C                     END
+      *
+      ** Format line 10 - amendment header
+      *
+     C                     MOVE FF1,20    UFW70  70
+     C                     MOVELUFW70     PRT10
+      *
+      ** Format line 12 - Deal number & date
+      *
+     C                     MOVELFF1,21    UFW15  15
+     C                     MOVE FDLNO     UFW15
+     C                     MOVELFF1,35    UFW14  14
+     C                     MOVE UF12DT    UFW14
+     C                     MOVELUFW15     PRT12
+     C                     MOVE UFW14     PRT12
+      *
+      ** Format line 15 - Mian text
+     C                     MOVELFF1,22    UFW33  33
+      *
+     C           DTYP      IFEQ 'CD'
+     C                     MOVELFF1,24    UFW26  26
+     C                     END
+     C           DTYP      IFEQ 'CL'
+     C                     MOVELFF1,25    UFW26
+     C                     END
+      *
+     C           UFW33     CAT  UFW26:1   PRT15
+     C           PRT15     CAT  UF15DT:1  PRT15
+      *
+      ** Format line 17 - Net change of Principal
+      *
+     C                     Z-ADDCDP1      @@CDP
+     C                     Z-ADDFPCHG     @@IAMT
+     C                     EXSR ZA1320
+     C                     EXSR #FFAMT
+      *
+      ** Different text for Capitalised Interest
+      *
+     C           FCAPT     IFEQ 'Y'
+     C           FF1,36    CAT  CCY       PRT17
+     C                     ELSE
+     C           FF1,26    CAT  CCY       PRT17
+     C                     END
+     C                     MOVE UFOAMT    PRT17
+     C                     MOVE *BLANKS   UFOAMT
+      *
+      ** Format line 18 - New Principal Amount
+     C                     Z-ADDCDP1      @@CDP
+     C                     Z-ADDFNPPL     @@IAMT
+     C                     EXSR ZA1320
+     C                     EXSR #FFAMT
+      *
+     C           FF1,27    CAT  CCY       PRT18
+     C                     MOVE UFOAMT    PRT18
+     C                     MOVE *BLANKS   UFOAMT
+      *
+      ** Format lines 19, 20, 21  & 22 - Interest deatils
+      *
+     C                     EXSR #FPINT
+      *
+      ** Format line 23 - Payment value
+      *
+     C           FF1,32    CAT  UF15DT:1  PRT23
+      *
+      ** Format lines 26 & 27 - Credit Int.Liable to withholding tax
+      *
+     C           DTYP      IFEQ 'CD'
+     C           FF1,33    CAT  FF1,37:1  PRT26
+     C           BBTAIN    IFEQ 'Y'
+     C           BBBNBI    ANDEQ'N'
+     C           FF1,34    CAT  FF1,38:1  PRT27
+     C                     END
+     C                     END
+      *
+     C           BBTAIN    IFEQ 'Y'
+     C           DTYP      ANDEQ'IT'
+     C           DTYP      OREQ 'TD'
+      *
+     C                     MOVELFF1,33    PRT26
+     C           BBBNBI    IFEQ 'N'
+     C                     MOVELFF1,34    PRT27
+     C                     END
+     C                     ENDIF
+      *
+      ** Format Pay/Receive instructions for line 30-40
+      *
+     C           FPRFL     IFNE *BLANK
+      *
+     C           FPRFL     IFEQ 'P'
+     C           FPRFL     OREQ 'B'
+     C                     EXSR #FSPSR
+     C                     END
+     C           FPRFL     IFEQ 'R'
+     C           FPRFL     OREQ 'B'
+     C                     EXSR #FSRSR
+     C                     END
+      *
+      ** Format Pay/Receive Settlement deatils - lines 30 - 36
+      *
+     C                     MOVE SETP01    PRT30
+     C                     MOVELSETR01    PRT30
+      *
+      ** Line 31
+      *
+     C                     MOVE SETP02    PRT31
+     C                     MOVELSETR02    PRT31
+      *
+      ** Line 32
+      *
+     C                     MOVE SETP03    PRT32
+     C                     MOVELSETR03    PRT32
+      *
+      ** Line 33
+      *
+     C                     MOVE SETP04    PRT33
+     C                     MOVELSETR04    PRT33
+      *
+      ** Line 34
+      *
+     C                     MOVE SETP05    PRT34
+     C                     MOVELSETR05    PRT34
+      *
+      ** Line 35
+      *
+     C                     MOVE SETP06    PRT35
+     C                     MOVELSETR06    PRT35
+      *
+      ** Line 36
+      *
+     C                     MOVE SETP07    PRT36
+     C                     END
+      *
+      ** Format Customer details (1 to 4)  - Line 37 - 40
+      ** Line 37
+      *
+     C           UFBLK     CAT  PRT37A:3  PRT37
+      *
+     C                     MOVE *BLANKS   WW045A 45
+     C                     MOVELSETP08    WW045A
+     C                     MOVE WW045A    PRT37
+      *
+      ** Line 38
+      *
+     C           UFBLK     CAT  PRT38A:3  PRT38
+     C                     MOVE *BLANKS   WW045A
+     C                     MOVELSETP09    WW045A
+     C                     MOVE WW045A    PRT38
+      *
+      ** Line 39
+      *
+     C           UFBLK     CAT  PRT39A:3  PRT39
+     C                     MOVE *BLANKS   WW045A
+     C                     MOVELSETP10    WW045A
+     C                     MOVE WW045A    PRT39
+      *
+      ** Line 40
+     C           UFBLK     CAT  PRT40A:3  PRT40
+     C                     MOVE *BLANKS   WW045A
+     C                     MOVELSETP11    WW045A
+     C                     MOVE WW045A    PRT40
+      *
+      ** Print confirmation
+      *
+     C           UFTTCN    ADD  1         UFTTCN
+     C                     WRITECNFPRT
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FSPSR - Set up Settlement instructions (Pay)                *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: #FDBER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FSPSR    BEGSR
+      *
+     C           PMED      IFEQ 01
+      *
+     C                     MOVELFF1,2     SETP01
+      *
+     C           PCNUMA    IFNE *BLANK
+     C                     MOVE PNOS      UFNSNO  2
+     C                     MOVE CCY       UFNSCY  3
+     C                     EXSR #FNOST
+     C                     MOVELA7CUST    UFNOKY
+     C                     EXSR #FCSNO
+     C                     MOVELBBCRNM    SETP02
+     C                     MOVELBBCRTN    SETP03
+     C                     END
+      *
+     C           CPCNUA    IFNE *BLANK
+     C                     MOVELFF1,3     SETP04
+      *
+     C                     MOVELPCPAR     UFCNKY
+     C                     EXSR #FCNST
+     C           UFRTCD    IFEQ *BLANKS
+     C                     MOVELAWCPNM    SETP05
+     C                     MOVELAWCNTN    SETP06
+     C                     ELSE
+     C                     MOVELPCPAR     UFNMKY 10
+     C                     EXSR #FCSNM
+     C           UFRTCD    IFNE *BLANKS
+     C**********           MOVELCPCNUM    UFNOKY  60                                        MD024098
+     C                     MOVELCPCNUA    UFNOKY  6                                         MD024098
+     C                     EXSR #FCSNO
+     C                     END
+     C                     MOVELBBCRNM    SETP05
+     C                     MOVELBBCRTN    SETP06
+     C                     END
+      *
+     C           WCNUMA    IFNE *BLANK
+     C                     MOVELFF1,4     SETP07
+     C                     MOVELA7CUST    UFNOKY
+     C                     EXSR #FCSNO
+     C                     MOVELBBCRNM    SETP08
+     C                     MOVELBBCRTN    SETP09
+     C                     END
+      *
+     C           SPI       IFNE *BLANKS
+     C                     MOVELFF1,4     SETP10
+     C                     MOVELSPI       SETP11
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C           PMED      IFEQ 02
+     C                     MOVELFF1,2     SETP01
+     C                     MOVELFF1,6     SETP02
+     C                     END
+      *
+     C           PMED      IFEQ 03
+     C                     MOVELFF1,7     SETP01
+     C                     MOVELFF1,8     SETP02
+     C                     END
+      *
+     C           PMED      IFEQ 04
+     C           PMED      OREQ 05
+     C                     MOVELFF1,9     SETP01
+     C           PCNUMA    IFNE *BLANK
+     C                     MOVELPCNUMA    UFNOKY
+     C                     EXSR #FCSNO
+     C                     MOVELBBBRCD    UFBRCD
+     C                     END
+     C                     MOVE PACOD     UFACOD
+     C                     MOVE PACSQ     UFACSQ
+     C                     MOVELUFWKS     SETP02
+     C                     END
+      *
+     C           PMED      IFEQ 08
+     C                     MOVELFF1,7     SETP01
+     C                     MOVE PNOS      UFNSNO
+     C                     MOVE CCY       UFNSCY
+     C                     EXSR #FNOST
+     C                     MOVELA7CUST    UFNOKY
+     C                     EXSR #FCSNO
+     C                     MOVELBBCRNM    SETP02
+     C                     MOVELBBCRTN    SETP03
+      *
+     C           CPCNUA    IFNE *BLANK
+     C                     MOVELFF1,3     SETP04
+     C                     MOVELPCPAR     UFCNKY
+     C                     EXSR #FCNST
+      *
+      ** If error in access program .......
+      *
+     C           UFRTCD    IFEQ *BLANKS
+     C                     MOVELAWCPNM    SETP05
+     C                     MOVELAWCNTN    SETP06
+      *
+     C                     ELSE
+     C                     MOVELPCPAR     UFNMKY
+     C                     EXSR #FCSNM
+     C           UFRTCD    IFNE *BLANKS
+     C**********           MOVELCPCNUM    UFNOKY                                            MD024098
+     C                     MOVELCPCNUA    UFNOKY                                            MD024098
+     C                     EXSR #FCSNO
+     C                     END
+      *
+     C                     MOVELBBCRNM    SETP05
+     C                     MOVELBBCRTN    SETP06
+     C                     END
+      *
+     C           WCNUMA    IFNE *BLANK
+     C                     MOVELFF1,10    SETP07
+     C**********           MOVELWCNUM     UFNOKY                                            MD024098
+     C                     MOVELWCNUMA    UFNOKY                                            MD024098
+     C                     EXSR #FCSNO
+     C                     MOVELBBCRNM    SETP08
+     C                     MOVELBBCRTN    SETP09
+     C                     END
+      *
+     C           SPI       IFNE *BLANKS
+     C                     MOVELFF1,4     SETP10
+     C                     MOVELSPI       SETP11
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C           PMED      IFEQ 12
+     C                     MOVELFF1,2     SETP01
+     C                     MOVELFF1,11    SETP02
+     C                     END
+      *
+     C           PMED      IFEQ 14
+     C                     MOVELFF1,12    SETP01
+     C                     MOVELPRETAC    SETP02
+     C                     END
+      *
+     C           PMED      IFEQ 20
+     C                     MOVELFF1,13    SETP01
+     C                     END
+      *
+      ** Indent variable fields - 3 SPACES
+      *
+     C                     MOVE *BLANKS   WWSETL 48
+     C                     MOVE SETP02    WWSETL
+     C                     MOVELWWSETL    SETP02
+      *
+     C                     MOVE *BLANKS   WWSETL
+     C                     MOVE SETP03    WWSETL
+     C                     MOVELWWSETL    SETP03
+      *
+     C                     MOVE *BLANKS   WWSETL
+     C                     MOVE SETP05    WWSETL
+     C                     MOVELWWSETL    SETP05
+      *
+     C                     MOVE *BLANKS   WWSETL
+     C                     MOVE SETP06    WWSETL
+     C                     MOVELWWSETL    SETP06
+      *
+     C                     MOVE *BLANKS   WWSTL2 23
+     C                     MOVE SETP08    WWSTL2
+     C                     MOVELWWSTL2    SETP08
+      *
+     C                     MOVE *BLANKS   WWSTL2
+     C                     MOVE SETP09    WWSTL2
+     C                     MOVELWWSTL2    SETP09
+      *
+     C                     MOVE *BLANKS   WWSTL2
+     C                     MOVE SETP11    WWSTL2
+     C                     MOVELWWSTL2    SETP11
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FSRSR - Set up Settlement instructions (Receive)            *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: #FDBER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FSRSR    BEGSR
+      *
+     C           RMED      IFEQ 01
+     C                     MOVELFF1,14    SETR01
+     C           RCNUMA    IFNE *BLANK
+     C                     MOVE RNOS      UFNSNO
+     C                     MOVE CCY       UFNSCY
+     C                     EXSR #FNOST
+     C                     MOVELA7CUST    UFNOKY
+     C                     EXSR #FCSNO
+     C                     MOVELBBCRNM    SETR02
+     C                     MOVELBBCRTN    SETR03
+     C                     END
+      *
+     C           CRCNUA    IFNE *BLANK
+     C                     MOVELFF1,2     SETR04
+     C                     MOVELRCPAR     UFCNKY
+     C                     EXSR #FCNST
+      *
+     C           UFRTCD    IFEQ *BLANKS
+     C                     MOVELAWCPNM    SETR05
+     C                     MOVELAWCNTN    SETR06
+     C                     ELSE
+     C                     MOVELRCPAR     UFNMKY
+     C                     EXSR #FCSNM
+      *
+     C           UFRTCD    IFNE *BLANKS
+     C**********           MOVELCRCNUM    UFNOKY                                            MD024098
+     C                     MOVELCRCNUA    UFNOKY                                            MD024098
+     C                     EXSR #FCSNO
+     C                     END
+     C                     MOVELBBCRNM    SETR05
+     C                     MOVELBBCRTN    SETR06
+     C                     END
+     C                     END
+     C                     END
+      *
+     C           RMED      IFEQ 02
+     C                     MOVELFF1,3     SETR01
+     C                     MOVELFF1,15    SETR02
+     C                     END
+      *
+     C           RMED      IFEQ 03
+     C                     MOVELFF1,16    SETR01
+     C                     MOVELFF1,8     SETP02
+     C                     END
+      *
+     C           RMED      IFEQ 04
+     C           RMED      OREQ 05
+     C           RCNUMA    IFNE *BLANK
+     C                     MOVELRCNUMA    UFNOKY
+     C                     EXSR #FCSNO
+     C                     MOVELBBBRCD    UFBRCD
+     C                     END
+     C                     MOVELFF1,17    SETR01
+     C                     MOVE RACOD     UFACOD
+     C                     MOVE RACSQ     UFACSQ
+     C                     MOVELUFWKS     SETR02
+     C                     END
+      *
+     C           RMED      IFEQ 08
+     C                     MOVELFF1,16    SETR01
+     C                     MOVE RNOS      UFNSNO
+     C                     MOVE CCY       UFNSCY
+     C                     EXSR #FNOST
+     C                     MOVELA7CUST    UFNOKY
+     C                     EXSR #FCSNO
+     C                     MOVELBBCRNM    SETR02
+     C                     MOVELBBCRTN    SETR03
+      *
+     C           CRCNUA    IFNE *BLANK
+     C                     MOVELFF1,2     SETR04
+     C                     MOVELRCPAR     UFCNKY
+     C                     EXSR #FCNST
+      *
+      ** If no error in access program
+      *
+     C           UFRTCD    IFEQ *BLANKS
+     C                     MOVELAWCPNM    SETR05
+     C                     MOVELAWCNTN    SETR06
+     C                     ELSE
+      *
+      ** If CP Nost not found
+      *
+     C                     MOVELRCPAR     UFNMKY
+     C                     EXSR #FCSNM
+     C           UFRTCD    IFNE *BLANKS
+     C**********           MOVELCRCNUM    UFNOKY                                            MD024098
+     C                     MOVELCRCNUA    UFNOKY                                            MD024098
+     C                     EXSR #FCSNO
+     C                     END
+     C                     MOVELBBCRNM    SETR05
+     C                     MOVELBBCRTN    SETR06
+     C                     END
+     C                     END
+     C                     END
+      *
+     C           RMED      IFEQ 12
+     C                     MOVELFF1,14    SETR01
+     C                     MOVELFF1,11    SETP02
+     C                     END
+      *
+     C           RMED      IFEQ 14
+     C                     MOVELFF1,18    SETR01
+     C                     MOVELRRETAC    SETR02
+     C                     END
+      *
+     C           RMED      IFEQ 20
+     C                     MOVELFF1,19    SETR01
+     C                     END
+      *
+      ** Indent variable fields
+      *
+     C                     MOVE *BLANKS   WWSETL
+     C                     MOVE SETR02    WWSETL
+     C                     MOVELWWSETL    SETR02
+      *
+     C                     MOVE *BLANKS   WWSETL
+     C                     MOVE SETR03    WWSETL
+     C                     MOVELWWSETL    SETR03
+      *
+     C                     MOVE *BLANKS   WWSETL
+     C                     MOVE SETR05    WWSETL
+     C                     MOVELWWSETL    SETR05
+      *
+     C                     MOVE *BLANKS   WWSETL
+     C                     MOVE SETR06    WWSETL
+     C                     MOVELWWSETL    SETR06
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FPINT - Format lines 19, 20, 21  & 22 - Interest deatils    *
+      *                                                               *
+      *  Called by: #FFMTC                                            *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FPINT    BEGSR
+      *
+      ** Format line 19 - Current Interest Rate
+      *
+     C                     Z-ADDFOINT     @@RATI
+     C                     EXSR ZA1330
+     C                     EXSR #FFRAT
+      *
+     C                     MOVELFF1,28    PRT19
+     C                     MOVE UFORAT    PRT19
+     C                     MOVE *BLANKS   UFORAT
+      *
+      ** Format line 20 - New Interest Rate
+      *
+     C                     Z-ADDFNINT     @@RATI
+     C                     EXSR ZA1330
+     C                     EXSR #FFRAT
+      *
+     C                     MOVELFF1,29    PRT20
+     C                     MOVE UFORAT    PRT20
+     C                     MOVE *BLANKS   UFORAT
+      *
+      ** Format line 21 - Interest Amount since last amendment
+      *
+     C                     Z-ADDCDP1      @@CDP
+     C                     Z-ADDFINTA     @@IAMT
+     C                     EXSR ZA1320
+     C                     EXSR #FFAMT
+      *
+     C           FF1,30    CAT  CCY       PRT21
+     C                     MOVE UFOAMT    PRT21
+     C                     MOVE *BLANKS   UFOAMT
+      *
+      ** Format line 22 - Interest statement in the amount of
+      *
+     C                     Z-ADDCDP1      @@CDP
+     C                     Z-ADDFINTP     @@IAMT
+     C                     EXSR ZA1320
+     C                     EXSR #FFAMT
+      *
+     C           FF1,31    CAT  CCY       PRT22
+     C                     MOVE UFOAMT    PRT22
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FCNST - Access counter party Nostros Deatils                *
+      *           access program (No return code check)               *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: #FDBER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FCNST    BEGSR
+     C                     MOVE *BLANKS   UFRTCD
+     C                     MOVE '*KEY   ' UFOPTN
+      *
+     C                     CALL 'AOCNSTR0'             90
+     C                     PARM           UFRTCD  7
+     C                     PARM           UFOPTN  7
+     C                     PARM           UFCNKY  8
+     C           SDCNST    PARM *BLANKS   DSFDY
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FCLRP - Clear printer file & Settlement instruction filelds *
+      *                                                               *
+      *  Called by: MAIN Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FCLRP    BEGSR
+      *
+     C                     MOVEL*BLANK    PRT02
+     C                     MOVEL*BLANK    PRT03
+     C                     MOVEL*BLANK    PRT04
+     C                     MOVEL*BLANK    PRT06
+     C                     MOVEL*BLANK    PRT08
+     C                     MOVEL*BLANK    PRT10
+     C                     MOVEL*BLANK    PRT11
+     C                     MOVEL*BLANK    PRT12
+     C                     MOVEL*BLANK    PRT13
+     C                     MOVEL*BLANK    PRT14
+     C                     MOVEL*BLANK    PRT15
+     C                     MOVEL*BLANK    PRT16
+     C                     MOVEL*BLANK    PRT17
+     C                     MOVEL*BLANK    PRT18
+     C                     MOVEL*BLANK    PRT19
+     C                     MOVEL*BLANK    PRT20
+     C                     MOVEL*BLANK    PRT21
+     C                     MOVEL*BLANK    PRT22
+     C                     MOVEL*BLANK    PRT23
+     C                     MOVEL*BLANK    PRT25
+     C                     MOVEL*BLANK    PRT26
+     C                     MOVEL*BLANK    PRT27
+     C                     MOVEL*BLANK    PRT29
+     C                     MOVEL*BLANK    PRT30
+     C                     MOVEL*BLANK    PRT31
+     C                     MOVEL*BLANK    PRT32
+     C                     MOVEL*BLANK    PRT33
+     C                     MOVEL*BLANK    PRT34
+     C                     MOVEL*BLANK    PRT35
+     C                     MOVEL*BLANK    PRT36
+     C                     MOVEL*BLANK    PRT37
+     C                     MOVEL*BLANK    PRT38
+     C                     MOVEL*BLANK    PRT39
+     C                     MOVEL*BLANK    PRT40
+      *
+     C                     MOVEL*BLANK    SETR01 45
+     C                     MOVEL*BLANK    SETP01 45
+     C                     MOVEL*BLANK    SETR02 45
+     C                     MOVEL*BLANK    SETP02 45
+     C                     MOVEL*BLANK    SETR03 45
+     C                     MOVEL*BLANK    SETP03 45
+     C                     MOVEL*BLANK    SETR04 45
+     C                     MOVEL*BLANK    SETP04 45
+     C                     MOVEL*BLANK    SETR05 45
+     C                     MOVEL*BLANK    SETP05 45
+     C                     MOVEL*BLANK    SETR06 45
+     C                     MOVEL*BLANK    SETP06 45
+     C                     MOVEL*BLANK    SETP07 45
+     C                     MOVEL*BLANK    SETP08 20
+     C                     MOVEL*BLANK    SETP09 20
+     C                     MOVEL*BLANK    SETP10 20
+     C                     MOVEL*BLANK    SETP11 20
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FPAUD - Override to DL9912AU                                *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           #FPAUD    BEGSR
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    UUSFNB  60
+      *
+      ** Call ZSFILE for DL9912AU
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           UUSEQN  5
+     C                     PARM *BLANKS   UUENTY  3
+     C                     PARM SFILEU    UUSFNM 10
+     C                     PARM           UUSFNB  60
+     C                     PARM           UUZSER  1
+      *
+     C           UUZSER    IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FNOST - Call Access prog. for Nostro deatils                *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FNOST    BEGSR
+      *
+     C                     CALL 'AONOSTR0'
+      *
+     C                     PARM '*MSG   ' UFRTCD  7
+     C                     PARM '*KEY   ' UFOPTN  7
+     C                     PARM *BLANKS   UFKEYA  6
+     C                     PARM UFNSCY    UFKEYB  3
+     C                     PARM *BLANKS   UFKEYC  4
+     C                     PARM *BLANKS   UFKEYD  2
+     C                     PARM UFNSNO    UFKEYE  2
+     C                     PARM *BLANKS   UFKEYF  3
+     C                     PARM *BLANKS   UFKEYG 10
+     C                     PARM *BLANKS   UFKEYH  1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C           UFRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDNOSTPD'DBFILE
+     C                     MOVEL'004'     DBASE
+     C                     MOVELUFKEYB    DBKEY
+     C                     MOVE UFKEYE    DBKEY
+     C                     EXSR #FDBER
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FCSNO - Call Access prog. RTV Client information Cust no    *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FCSNO    BEGSR
+      *
+     C                     MOVE *BLANKS   UFRTCD
+     C                     MOVELUFNOKY    UFCSKY
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM           UFRTCD
+     C                     PARM '*KEY   ' UFOPTN
+     C                     PARM           UFCSKY
+     C                     PARM '*CNUM  ' KEYSTS
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** If error in access program, exit via DBERR subroutine
+      *
+     C           UFRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELCNUM      DBKEY
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     Z-ADD005       DBASE
+     C                     EXSR #FDBER
+     C                     ENDIF
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FCSNM - Call Access prog. RTV Client information Cust Name  *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FCSNM    BEGSR
+      *
+     C                     MOVE *BLANKS   UFRTCD
+     C                     MOVELUFNMKY    UFCSKY 10
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM           UFRTCD
+     C                     PARM '*KEY   ' UFOPTN
+     C                     PARM           UFCSKY
+     C                     PARM '*CSNM  ' KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FCYDP - Get Currency Decimal places                         *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FCYDP    BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   UFRTCD
+     C                     PARM '*KEY   ' UFOPTN
+     C                     PARM           UFCYKY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           UFRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL'002'     DBASE
+     C                     MOVELUFCYKY    DBKEY
+     C                     EXSR #FDBER
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FINIT - Initial processing                                  *
+      *                                                               *
+      *  Called by: #FMAIN                                            *
+      *                                                               *
+      *  Calls: #FDBER                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FINIT    BEGSR
+      *
+      ** Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'DL9912'  DBPGM
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Use access program AOBANKR0 to retrieve BANK details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' UFRTCD  7
+     C                     PARM '*FIRST ' UFOPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error in access program, exit via DBERR subroutine
+      *
+     C           UFRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD001       DBASE
+     C                     EXSR #FDBER
+     C                     END
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C                     OUT  LDA
+      *
+      ** Get Rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      **  Check system date format, DDMMYY OR MMDDYY.
+      *
+     C           DFF       IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+      *
+     C                     MOVE '.'       POINT1
+     C                     MOVE '.'       POINT2
+     C                     MOVE '-'       UFD1
+     C                     MOVE '-'       UFD2
+      *
+      ** Format Rundate for output
+      *
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DATEN
+      *
+     C                     MOVE D1        D2
+     C                     MOVE M1        M2
+     C                     MOVE Y1        Y2
+     C                     MOVELDATEA     UF12DT  8
+      *
+     C                     Z-ADD65        UFLNAC  20
+     C                     Z-ADD0         UFTTCN
+     C                     Z-ADD21        @@CRET  20
+     C                     MOVE '00000000'UFZ    16
+     C                     MOVEL'00000000'UFZ
+     C                     MOVE *BLANK    UFBLK   1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FDBER - Print Database eroor                                *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #FDBER    BEGSR
+      *
+      ** Release the LDA
+      *
+     C                     OUT  LDA
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    UUSFNB  60
+      *
+      ** Call ZSFILE for DL9912AU
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           UUSEQN  5
+     C                     PARM *BLANKS   UUENTY  3
+     C                     PARM SFILEU    UUSFNM 10
+     C                     PARM           UUSFNB  60
+     C                     PARM           UUZSER  1
+      *
+     C           UUZSER    IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     WRITEDBERR
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Eroor subroutine                                     *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+      *                                                               *
+      *  ZA1320 - Subroutine to format Amount                         *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZA1320    BEGSR
+      *
+      ** Define and initialise fields used.
+      *
+     C           @@IAMT    IFGE 0
+     C                     MOVE *BLANK    @@ATSG  1
+     C                     Z-ADD@@IAMT    @@IAMT 150
+     C                     ELSE
+     C                     MOVE '-'       @@ATSG
+     C                     Z-SUB@@IAMT    @@IAMT
+     C                     END
+     C                     Z-ADD@@CRET    @@CRET  20
+     C                     Z-ADD@@CDP     @@CDP   10
+     C                     MOVE *BLANKS   @@ADSP 40
+     C                     MOVEL@@IAMT    @@AMDS 15
+      *
+     C                     Z-ADD*ZEROS    @@C     20
+     C                     Z-ADD*ZEROS    @@D     20
+     C                     Z-ADD*ZEROS    @@E     20
+     C                     Z-ADD*ZEROS    @@F     20
+     C                     Z-ADD*ZEROS    @@G     20
+     C                     Z-ADD*ZEROS    @@H     20
+     C                     Z-ADD*ZEROS    @@MAX   20
+     C                     Z-ADD*ZEROS    @@CNT1  20
+     C                     Z-ADD*ZEROS    @@CNT2  20
+     C                     Z-ADD*ZEROS    @@RES   20
+     C                     Z-ADD*ZEROS    @@CMOV  20
+     C                     Z-ADD*ZEROS    @@DIFF  20
+     C                     Z-ADD*ZEROS    @@REMD  10
+     C                     Z-ADD*ZEROS    @@MRET  20
+      *
+      ** Initialise arrays.
+      *
+     C                     MOVEA*BLANKS   @C
+     C                     MOVEA*BLANKS   @D
+     C                     MOVEA*BLANKS   @E
+      *
+      ** Take modulus of input amount.
+      *
+     C           @@IAMT    IFLT *ZERO
+     C                     Z-SUB@@IAMT    @@IAMT
+     C                     END
+      *
+      ** Move input amount to @D.
+      *
+     C                     MOVEA@@AMDS    @D
+      *
+      ** Move decimal portion of amount to @E.
+      *
+     C                     Z-ADD15        @@C
+     C                     Z-ADD21        @@D
+      *
+     C           21        SUB  @@CDP     @@MAX
+     C           @@D       DOWGT@@MAX
+     C                     MOVE @D,@@C    @E,@@D
+     C                     SUB  1         @@C
+     C                     SUB  1         @@D
+     C                     END
+      *
+      ** Move decimal separator to @E.
+      *
+     C           @@CDP     IFNE 0
+     C                     MOVE ','       @E,@@D
+     C                     SUB  1         @@D
+     C                     END
+      *
+      ** Find position of last character to be moved.
+      *
+     C                     Z-ADD1         @@E
+      *
+     C           @@E       DOWLT15
+     C           @D,@@E    ANDEQ'0'
+     C                     ADD  1         @@E
+     C                     END
+      *
+      ** Move integer portion of amount to @E.
+      *
+     C                     Z-ADD0         @@CNT1
+     C                     Z-ADD0         @@CNT2
+      *
+     C           @@C       DOWGT@@E
+     C                     MOVE @D,@@C    @E,@@D
+     C                     ADD  1         @@CNT1
+     C                     SUB  1         @@C
+     C                     SUB  1         @@D
+      *
+      ** Insert thousand separators.
+      *
+     C           @@CNT1    DIV  3         @@RES
+     C                     MVR            @@REMD
+     C           @@REMD    IFEQ 0
+     C           @@CNT2    ANDLT5
+     C                     MOVE '.'       @E,@@D
+     C                     ADD  1         @@CNT2
+     C                     Z-ADD@@D       @@F
+     C                     SUB  1         @@D
+     C                     END
+     C                     END
+      *
+      ** Move last character.
+      *
+     C                     MOVE @D,@@C    @E,@@D
+      *
+      ** Calculate the number of characters that must be returned.
+      *
+     C           22        SUB  @@D       @@CMOV
+     C           @@CMOV    SUB  @@CNT2    @@MRET
+      *
+      ** If number of characters to be returned is greater than the
+      ** number that must be returned.
+      *
+     C           @@MRET    IFGT @@CRET
+      *
+      ** Output the required no. of characters, but all '*'.
+      *
+     C           22        SUB  @@CRET    @@G
+     C                     MOVEA*BLANKS   @E
+     C                     MOVEA*ALL'*'   @E,@@G
+     C                     GOTO ZA1028
+     C                     END
+      *
+      ** If number of characters moved is greater than number to be
+      ** returned, drop thousand separators until satisfied.
+      *
+     C           @@CMOV    SUB  @@CRET    @@DIFF
+     C           @@DIFF    IFGT 0
+     C                     DO   @@DIFF
+     C                     Z-ADD1         @@G
+     C                     Z-ADD2         @@H
+     C           @@G       DOWLE21
+     C                     MOVE @E,@@G    @C,@@H
+     C                     ADD  1         @@G
+     C                     ADD  1         @@H
+     C           @@G       IFEQ @@F
+     C                     ADD  1         @@G
+     C                     END
+     C                     END
+     C                     MOVEA@C        @E
+     C                     ADD  4         @@F
+     C                     END
+     C                     END
+      *
+      ** Tag ZA1028.
+      *
+     C           ZA1028    TAG
+      *
+      ** Move @E to display field.
+      *
+     C                     MOVEA@@ATSG    @E,22
+     C                     Z-ADD1         @@D
+     C           @E,@@D    DOWEQ' '
+     C           @E,@@D    OREQ '*'
+     C                     ADD  1         @@D
+     C                     END
+     C                     MOVEA@E,@@D    @@ADSP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZA1330 - Subroutine to format Interest Rate                  *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZA1330    BEGSR
+      *
+      ** Define and initialise fields used.
+      *
+     C                     Z-ADD@@RATI    @@RATI 117
+     C                     MOVEL*BLANK    @@RATO 40
+     C                     MOVEL*BLANK    @@FIRT  4
+     C                     MOVEL*BLANK    @@LART  8
+     C                     MOVEL*BLANK    @RA
+     C                     MOVEL*BLANK    @R1
+     C                     MOVEL*BLANK    @@SIGN  1
+     C                     Z-ADD0         @K      20
+     C                     Z-ADD0         @L      20
+      *
+      ** Sst sign in last char of O/P Rate - rither +/-
+      ** If Input Rate is greater than or equal to 0 Pve else Nve
+      *
+     C           @@RATI    IFLT 0
+     C                     MOVE '-'       @@SIGN
+     C                     Z-SUB@@RATI    @@RATI
+     C                     END
+      *
+      ** Convert Number into character format
+      *
+     C                     MOVEL@@RATI    @@FIRT
+     C                     MOVE @@RATI    @@LART
+     C                     MOVEL','       @@LART
+     C                     MOVEA@@FIRT    @RA,1
+     C                     MOVEA@@LART    @RA,5
+      *
+      ** SUPRESS LEADING ZEROS
+      *
+     C                     Z-ADD1         @K
+     C           @RA,@K    DOWEQ'0'
+     C           @K        ANDLE3
+     C                     MOVE *BLANK    @RA,@K
+     C                     ADD  1         @K
+     C                     END
+      *
+      ** Supress trailing zeros
+      *
+     C                     Z-ADD12        @L      20
+     C           @RA,@L    DOWEQ'0'
+     C           @L        ANDGE7
+     C                     MOVE *BLANK    @RA,@L
+     C                     SUB  1         @L
+     C                     END
+     C                     MOVEA@RA       @R1
+     C                     ADD  1         @L
+     C                     MOVE @@SIGN    @R1,@L
+     C                     MOVEA@R1,@K    @@RATO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+**   FF1 - CONFIRMATION DETAIL TEXT
+     REPURCHASE AGREEMENT
+PAYMENT BY
+PAYMENT TO
+FOR A/C OF
+SPECIAL INSTRUCTIONS
+WE WILL SEND REMITTANCE
+SOLD AMOUNT PAYABLE BY
+AS PER INSTRUCTIONS
+WE WILL CREDIT THE ACCOUNT
+FOR ACCOUNT OF
+.
+WE CREDIT THE ACCOUNT
+YOURSELVES
+PAYMENT TO OUR A/C WITH
+WE AWAIT YOUR REMITTANCE
+BOUGHT AMOUNT PAYABLE TO
+WE WILL DEBIT THE ACCOUNT
+WE DEBIT THE ACCOUNT
+OURSELVES
+AMENDMENT CONFIRMATION
+REF.NR:
+WE CONFIRM FOLLOWING AMENDMENT OF
+WE WISH TO ADVISE YOU THAT
+YOUR DEPOSIT WITH US VALUE
+OUR DEPOSIT WITH YOU VALUE
+NET CHANGE OF PRINCIPAL
+NEW PRINCIPAL AMOUNT
+CURRENT INTEREST RATE
+NEW INTEREST RATE
+INTEREST AMOUNT SINCE LAST AMENDMENT
+INTEREST AMOUNT IN THE AMOUNT OF
+PAYMENT VALUE
+CREDIT INTEREST IS LIABLE TO WITHOLDING
+PLEASE REFER TO YOUR TAX ADVICE FOR
+DATE:
+GROSS INTEREST AMOUNT
+TAX
+FURTHER DETAILS
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   FF3 LEADING ASTERISKS
+********************
+** CPY@
+(c) Finastra International Limited 2008

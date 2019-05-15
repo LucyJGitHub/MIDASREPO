@@ -1,0 +1,507 @@
+     H        1                                                           SE2115
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Input Cycle Clearance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2115  - INPUT CYCLE CLEARANCE                              *
+     F*                                                               *
+     F*  Function: The Input Cycle fields on the Customer Depot       *
+     F*   (COB)    Position, User Depot Position and Book Position    *
+     F*            files are cleared, before these fields are added   *
+     F*            to by Close of Business programs.                  *
+     F*                                                               *
+     F*  Called by: SEC0603G - Clear Input Cycle Fields               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10Jan94               *
+      *                 E29170             Date 05Nov91               *
+     F*                 E25293             DATE 25OCT91               *
+     F*                 S01117             DATE 06JUN91               *
+     F*                 E20651             DATE 30JAN90               *
+     F*                 E19865             DATE 20OCT89               *
+     F*                 S01158             DATE 06/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E25293 - Initialise I/C Repo fields                          *
+     F*  S01117 - Multibranching                                      *
+     F*  E20651 - DB Error Numbers used in more than one place.       *   E20651
+     F*           New Error Numbers as follows:                       *   E20651
+     F*           DB ERROR 04 -> 08                                   *   E20651
+     F*           DB ERROR 04 -> 09                                   *   E20651
+     F*  E19865 - Prevent RECI of First Record of UDEPPD or CDEPPD    *   E19865
+     F*           being reset from 'H' to 'D'.                        *   E19865
+     F*  S01158 - Post Incorporation Development Fixes.               *   S01158
+     F*                                                               *   S01158
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FUDEPPD  UP  E                    DISK         KINFDS UDEPDS
+     F                                              KINFSR UDEPSR
+     FCDEPPD  US  E                    DISK         KINFDS CDEPDS
+     F                                              KINFSR CDEPSR
+     FBKPOSD  US  E                    DISK         KINFDS BDEPDS
+     F                                              KINFSR BDEPSR
+     FTABSE   IF  E           K        DISK
+     F*           TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     FUDEPPA  IF  E                    DISK
+     FCDEPPA  IF  E                    DISK
+     FBKPOSA  IF  E                    DISK
+     FSE2115AUO   E                    PRINTER
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01 - User Depot Positions record has been read              *
+     F*   02 - Customer Depot Positions record has been read          *
+     F*   03 - Book Depot Positions record has been read              *
+     F*                                                               *
+     F*  N20 - First time through                                     *
+     F*   28 - Difference between number of records read from         *
+     F*      - the UDEPPD and the number of record from the           *
+     F*      - Audit file.                                            *
+     F*   29 - Difference between number of records read from         *
+     F*        the CDEPPD and the number of record from the           *
+     F*        Audit file.                                            *
+     F*   30 - Difference between number of records read from         *
+     F*        the BKPOSD and the number of record from the           *
+     F*        Audit file.                                            *
+     F*   80 - General file reads                                     *
+     F*                                                               *
+     F*90-99 -  Used in standard sub-routines                         *
+     F*                                                               *
+     F*   U7 -  Database error                                        *
+     F*   U8 -  Database / Control error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   FIRST  - Access ICD and initial processing                  *
+     F*   EAUDIT - Audit report processing at end of program          *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+     I*
+     IUDEPPDF     01
+      ** Rename of fields                                                 E19865
+     I              RECI                            RECIUD                E19865
+     ICDEPPDF     02
+     I              RECI                            RECICD                E19865
+     IBKPOSDF     03
+     IUDEPDS      DS                            366
+     I                                     *STATUS  STSUDE
+     ICDEPDS      DS                            366
+     I                                     *STATUS  STSCDE
+     IBDEPDS      DS                            366
+     I                                     *STATUS  STSBKP
+      *
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     IDSUDEK      DS
+     I*   User Depot Positions file key to be move to DBKEY
+     I***********                             1   30UDBR                  S01117
+     I                                        1   3 UDBA                  S01117
+     I                                        4  13 UDSN
+     I**********                             14  190UDPT                                      CSD027
+     I                                       14  19 UDPT                                      CSD027
+     I                                       20  21 UDBK
+     I                                       22  22 UDMK
+     IDSCDEK      DS
+     I*   Customer Depot Positions file key to be move to DBKEY
+     I***********                             1   30CDBR                  S01117
+     I                                        1   3 CDBA                  S01117
+     I**********                              4   90CDCN                                      CSD027
+     I                                        4   9 CDCN                                      CSD027
+     I                                       10  19 CDSN
+     I**********                             20  250CDPT                                      CSD027
+     I                                       20  25 CDPT                                      CSD027
+     I                                       26  26 CDMK
+     IDSBKPK      DS
+     I*   Book Depot Positions file key to be move to DBKEY
+     I                                        1  10 BPSC
+     I***********                            11  130BPBR                  S01117
+     I                                       11  13 BPBA                  S01117
+     I                                       14  15 BPBK
+     I                                       16  16 BPMK
+     I                                       17  17 BPTV
+     I                                       18  220WBPPD
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     I*
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C*   Access ICD information and carry out initial processing
+     C*
+     C           *IN20     IFEQ '0'
+     C                     EXSR FIRST
+     C                     END
+     C*
+     C*  Check that no errors have occurred in access of ICD information
+     C*
+     C           *IN99     IFEQ '0'
+     C*
+     C*   If User Depot Positions record has been read and no errors
+     C*   have occurred then set input cycle fields to zeros.
+     C*
+     C           *IN01     IFEQ '1'
+     C           RECI      ANDNE'*'
+     C           *INU7     ANDNE'1'
+     C*
+     C                     ADD  1         WUDREC
+     C*
+     C                     Z-ADD*ZEROS    UDTP
+     C                     Z-ADD*ZEROS    UDTS
+     C                     Z-ADD*ZEROS    UDPV
+     C                     Z-ADD*ZEROS    UDSV
+     C                     Z-ADD*ZEROS    UNSI                            S01158
+     C                     Z-ADD*ZEROS    USNT                            E25293
+     C                     Z-ADD*ZEROS    USNR                            E25293
+     C                     Z-ADD*ZEROS    USNV                            E25293
+     C                     Z-ADD*ZEROS    USRV                            E25293
+     C*
+     C                     UPDATUDEPPDF
+     C*
+     C                     END
+     C*
+     C*   If Customer Depot Positions record has been read and no
+     C*   errors have occurred then set input cycle fields to zeros.
+     C*
+     C*
+     C           *IN02     IFEQ '1'
+     C           RECI      ANDNE'*'
+     C           *INU7     ANDNE'1'
+     C*
+     C                     ADD  1         WCDREC
+     C*
+     C                     Z-ADD*ZEROS    SNPT
+     C                     Z-ADD*ZEROS    CDST
+     C                     Z-ADD*ZEROS    CNPV
+     C                     Z-ADD*ZEROS    CNSV
+     C                     Z-ADD*ZEROS    SAPP
+     C                     Z-ADD*ZEROS    SAPS
+     C                     Z-ADD*ZEROS    SAPV
+     C                     Z-ADD*ZEROS    SPSV
+     C                     Z-ADD*ZEROS    CNSI                            S01158
+     C*
+     C                     UPDATCDEPPDF
+     C*
+     C                     END
+     C*
+     C*   If Book Depot Positions record has been read and no
+     C*   errors have occurred then set input cycle fields to zeros.
+     C*
+     C           *IN03     IFEQ '1'
+     C           *INU7     ANDNE'1'
+     C           RECI      IFNE '*'                                       S01158
+     C*
+     C                     ADD  1         WBDREC
+     C*
+     C********** RECI      IFNE '*'                                       S01158
+     C                     Z-ADD*ZEROS    SNPI
+     C                     Z-ADD*ZEROS    SNSI
+     C                     Z-ADD*ZEROS    SANP
+     C                     Z-ADD*ZEROS    SANS
+     C                     END
+     C*
+     C                     UPDATBKPOSDF
+     C*
+     C                     END
+     C                     END
+     C*
+     C           EAUDIT    TAG                             *** EAUDIT ***
+     C*
+     C           *INU7     IFEQ '1'
+     C                     EXSR AUDIT
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END
+     C*
+     CLRN20                EXSR FIRST
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     CLR                   EXSR AUDIT
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Print Control Report.                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+     C*
+     C*   Print report heading
+     C*
+     C                     WRITEHEADAU
+     C*
+     C*   If no DB error has occurred read the Audit Files for User &
+     C*   Customer Positions file to obtain the number of records.
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C*
+     C           1         CHAINUDEPPA               80
+     C           *LOCK     IN   LDA                                       S01117
+     C           *IN80     IFEQ '1'                        ***************
+     C                     Z-ADD02        DBASE            **DB ERROR 02**
+     C                     MOVEL'UDPPA'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDNORE      UNORE
+     C*
+     C           1         CHAINCDEPPA               80
+     C           *LOCK     IN   LDA                                       S01117
+     C           *IN80     IFEQ '1'                        ***************
+     C                     Z-ADD03        DBASE            **DB ERROR 03**
+     C                     MOVEL'CDPPA'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDNORE      CNORE
+     C*
+     C           1         CHAINBKPOSA               80
+     C           *IN80     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                        ***************S01117
+     C***********          Z-ADD04        DBASE            **DB*ERROR*04**E20651
+     C                     Z-ADD08        DBASE            **DB ERROR 08**E20651
+     C                     MOVEL'BKPSA'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDNORE      BNORE
+     C*
+     C*   Compare record totals with those on the Audit files and
+     C*   print details.
+     C*
+     C           WUDREC    COMP UNORE                2828
+     C           WCDREC    COMP CNORE                2929
+     C           WBDREC    COMP BNORE                3030
+     C*
+     C           *IN28     IFEQ '1'
+     C           *IN29     OREQ '1'
+     C           *IN30     OREQ '1'
+     C                     SETON                         U8
+     C                     END
+     C*
+     C                     WRITECONTROL
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*   Print details of data base error
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C                     SETON                         20
+     C*
+     C*    Initialise LDA data area values
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     Z-ADD0         DBASE
+     C                     MOVE 'SE2115  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* ACCESS ICD    TABTB10
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD01        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  UDEPSR  - SUBROUTINE FOR ERROR HANDLING OF LF/UDEPP          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UDEPSR    BEGSR                            **UDEPSR**
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'UDEPP'   DBFILE           *****************
+     C***********          MOVELDSUDEK    DBKEY            ***DB*ERROR*05*E20651
+     C***********          Z-ADD04        DBASE            ***************E20651
+     C                     MOVELDSUDEK    DBKEY            ** DB ERROR 09 E20651
+     C                     Z-ADD09        DBASE            ***************E20651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSUDE    DBSTAT
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  CDEPSR  - SUBROUTINE FOR ERROR HANDLING OF LF/CDEPP          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CDEPSR    BEGSR                            **CDEPSR**
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CDEPP'   DBFILE           *****************
+     C                     MOVELDSCDEK    DBKEY            ** DB ERROR 06 **
+     C                     Z-ADD05        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSCDE    DBSTAT
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  BDEPSR  - SUBROUTINE FOR ERROR HANDLING OF LF/BKPOSD         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           BDEPSR    BEGSR                            **CDEPSR**
+     C*
+     C                     Z-ADDBPPD      WBPPD
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BKPOS'   DBFILE           *****************
+     C                     MOVELDSBKPK    DBKEY            ** DB ERROR 07 **
+     C                     Z-ADD07        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSBKP    DBSTAT
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+**  CPY@
+(c) Finastra International Limited 2001

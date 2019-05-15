@@ -1,0 +1,1882 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Extract Yearly Profitability')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8400 - Extract Yearly Profitability                        *
+      *                                                               *
+      *  Called by: SEC8400  SEC8400A                                 *
+      *                                                               *
+      *  (c) Finastra International Limited. 2017                     *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. MD048383           Date 16Nov17               *
+      *                 CSE108 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD048383 - [MIDAS-QA][FB2.1][SP16][MA][SPRINT 1][CSE108] -   *
+      *             SEC8400 00001 COMPONENT FAILED                    *
+      *             Fix is to set the date numbers (day and month)    *
+      *             based on Midas Date Format.                       *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+     FSEBKHBL0IF  E           K        DISK
+     FBKPOS   IF  E           K        DISK
+     FBPACH2  IF  E           K        DISK
+     FBPCHDL2 IF  E           K        DISK
+     F            BPACHD2F                          KRENAMEBPACHDX
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     FBOOKD   IF  E           K        DISK
+     FSE8400P1O   F     132     OA     PRINTER                        U1
+     FSEBKPRPDO   E                    DISK                           U2
+     FSEYPEDPDO   E                    DISK
+     FSEYPEAPDO   E                    DISK
+     FSEDEXRPDIF  E           K        DISK
+      *
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    POWER8  1   8  8 4             POWER8 ARRAY
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZDAYSZ1
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     ILDA        UDS                            256
+     I                                        1   1 CLOSPG
+     I                                        2   2 YP
+     I                                        3   3 LDAC
+     I                                        4  13 SESN
+     I                                       14  14 PROT
+     I                                       15  15 PPDI
+     I                                       16  160NMDP
+     I                                       17  170CDP
+     I                                       18  220MATY
+     I                                       23  337CPNR
+     I                                       34  34 DYBS
+     I                                       35  35 DVBS
+     I                                       36  36 STBS
+     I                                       37  38 SYBS
+     I                                       50  97 CD
+     I                                       50  530CD01
+     I                                       54  570CD02
+     I                                       58  610CD03
+     I                                       62  650CD04
+     I                                       66  690CD05
+     I                                       70  730CD06
+     I                                       74  770CD07
+     I                                       78  810CD08
+     I                                       82  850CD09
+     I                                       86  890CD10
+     I                                       90  930CD11
+     I                                       94  970CD12
+     I                                       98 109 CR
+     I                                       98  98 CR01
+     I                                       99  99 CR02
+     I                                      100 100 CR03
+     I                                      101 101 CR04
+     I                                      102 102 CR05
+     I                                      103 103 CR06
+     I                                      104 104 CR07
+     I                                      105 105 CR08
+     I                                      106 106 CR09
+     I                                      107 107 CR10
+     I                                      108 108 CR11
+     I                                      109 109 CR12
+     I                                      110 1140NCD
+     I                                      115 1249CFCT
+     I                                      125 1390CPDP
+     I                                      140 1540SFPP
+     I                                      155 1570IADJ
+     I                                      158 1620FCPN
+     I                                      163 1670ISSD
+     I                                      168 1720ITLD
+     I                                      182 1920NOML
+     I                                      193 1970CALDAT
+     I                                      198 198 ACIN
+     I                                      199 2130INTR
+     I            DS
+      ** Data Structure to hold Date, Used in SR/ACDEXR
+     I**********                              1   60ZDATE                                   MD048383
+     I                                        1   6 CZDATE                                  MD048383
+     I**********                              1   2 DLMNTH                                  MD048383
+     I**********                              3   4 DLDAYN                                  MD048383
+     I                                        5   6 DLYEAR
+     IDBERR       DS                            256
+      ** Local Data Area DS for Database Error Information.
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFIL
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+      *
+      ** EXTERNAL DS FOR BANK DETAILS
+     ISDBANK    E DSSDBANKPD
+      *
+      ** EXTERNAL DS FOR CURRENCY DETAIL
+     ISDCURR    E DSSDCURRPD
+      *
+      ** External data structures for GL Details
+     ISDGELR    E DSSDGELRPD
+      *
+      ** External data structures for SE Details
+     ISDSTRD    E DSSDSTRDPD
+      *
+      ** TRADE/VALUE DATE
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RPARM   1
+     C                     MOVELRPARM     TRDVAL  1
+      *
+     C           TRDVAL    COMP 'V'                      70*
+      *
+      ** Access LF/SDBANKL1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFIL            * DB ERROR 01 *
+     C                     MOVEL'SDBANKL1'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Access Currency file for Base Currency Decimal Places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM BJCYCD    WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFIL            ***************
+     C                     MOVELBJCYCD    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    BCDP    10
+      *
+      ** Call Access Program for GL Details
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'DBFIL            ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Access LF/SDSTRDPD
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C           SDSTRD    PARM SDSTRD    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD07        DBASE            ***************
+     C                     MOVEL*BLANKS   DBFIL            * DB ERROR 07 *
+     C                     MOVEL'SDSTRDPD'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      ** SET EVENT CONTROL DATE TO DATE OF NEXT WORKING DAY - 1
+      *
+     C           BJDNWD    SUB  1         ECD     50
+     C                     Z-ADDECD       TRGDAT  50
+      *
+     C                     Z-ADDTRGDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TRDATE  7
+      *
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDBJRDNB    RNDAY   50
+     C                     Z-ADDZMTH      RNMTH   20
+     C                     Z-ADDZDAY      WDAY    20
+      *
+     C                     Z-ADD0         YCOUNT  50
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL' '       CLOSPG
+     C                     MOVEL'P'       YP
+     C                     MOVEL' '       LDAC
+     C                     OUT  LDA
+     C           *LOCK     IN   LDA
+      *
+     C                     SETON                         OA
+      *
+      ** RESET KEY FIELDS
+      *
+     C                     MOVEL*BLANK    XXBHSC
+     C                     MOVEL*BLANK    XXBHBK
+      *
+      ** READ THE BOOK POSITION FILE
+      *
+     C           *LOVAL    SETLLSEBKHBL0
+     C                     READ SEBKHBL0                 60*
+     C           BHTV      DOWNETRDVAL
+     C           *IN60     ANDEQ'0'
+     C                     READ SEBKHBL0                 60*
+     C                     END
+      ** DO WHILE NOT EOF
+     C           *IN60     DOWEQ'0'
+      *
+      ** GET THE POSITION AS AT THE START OF THE YEAR
+      *
+     C                     EXSR GETPOS
+      *
+      ** PROCESS BOOK POSITION ACTIONS FOR THE POSITION
+      *
+     C   75                EXSR PROCES
+      *
+      ** READ THE BOOK POSITION FILE
+      *
+     C                     READ SEBKHBL0                 60*
+     C           BHTV      DOWNETRDVAL
+     C           *IN60     ANDEQ'0'
+     C                     READ SEBKHBL0                 60*
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDYCOUNT    NORE
+     C                     WRITESEYPEAD0
+     C                     SETON                     LR
+      *
+     CLR                   MOVEL'Y'       CLOSPG
+     CLR                   OUT  LDA
+     CLR                   CALL 'SE8401'
+     CLR         *LOCK     IN   LDA
+     CLR                   OUT  LDA
+      *****************************************************************
+      *                                                               *
+      * GETPOS - GET POSITION SUBROUTINE                              *
+      *                                                               *
+      *****************************************************************
+     C           GETPOS    BEGSR
+      *
+      ** ACCESS SECURITY
+      *
+     C           BHSC      IFNE XXBHSC
+     C                     EXSR ACSSEC
+     C                     MOVELBHSC      XXBHSC 10
+     C                     END
+      *
+      ** ACCESS BOOK
+      *
+     C           BHBK      IFNE XXBHBK
+     C   70N70             EXSR ACSBOK
+     C                     MOVELBHBK      XXBHBK  2
+     C                     END
+      *
+      ** Book Position Full Key.
+      *
+     C           KBKPO1    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           BPPD
+      *
+      ** Book Position Partial Key.
+      *
+     C           KBKPO2    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+      *
+      ** Obtain the position prior to the start of the year.
+      *
+     C                     Z-ADDBJPEYD    BPPD
+     C           KBKPO1    SETGTBKPOS
+     C           KBKPO2    REDPEBKPOS                    60
+      *
+      ** No processing required if flat and latest position
+      *
+     C                     MOVE '1'       *IN75
+     C                     Z-ADD0         TNML   110
+     C                     Z-ADD0         TNEX   110
+     C                     Z-ADD0         TAPN   150
+     C                     Z-ADD0         TPIN   150
+     C                     Z-ADD0         TDIP   150
+     C                     Z-ADD0         TOINAC 150
+     C                     Z-ADD0         TODIP  150
+     C                     Z-ADD0         TORLPL 150
+     C                     Z-ADD0         TOCHRG 150
+     C                     Z-ADD0         TOCOMM 150
+     C                     Z-ADD0         TOBDAY 150
+     C                     Z-ADD0         TOBMTD 150
+     C                     Z-ADD0         TOBYTD 150
+     C                     Z-ADD0         AVPR
+     C                     MOVE *BLANK    ETNML
+     C                     MOVE *BLANK    EAVPR
+     C                     MOVE *BLANK    ETAPN
+     C                     MOVE *BLANK    EINTOT
+     C                     Z-ADD*ZERO     XXDAY   50
+     C                     Z-ADD*ZERO     XXMTH   20
+     C           *IN60     IFEQ '0'
+      *
+      ** Book Position Action Full Key.
+      *
+     C           KBPCH1    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHMK
+     C                     KFLD           BHBK
+     C                     KFLD           BHTV
+     C                     KFLD           ACTSEQ
+     C                     KFLD           BPPD
+      *
+      ** Book Position Action Partial Key.
+      *
+     C           KBPCH2    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHMK
+     C                     KFLD           BHBK
+     C                     KFLD           BHTV
+     C                     KFLD           ACTSEQ
+      *
+     C           BPPD      IFEQ LPSD
+     C           NPSN      ANDEQ*ZERO
+     C           LPCD      ANDLTBJPEYD
+     C                     MOVE '0'       *IN75
+     C                     END
+      *
+      ** Get Year End Mark To Market Price (if present)
+      *
+     C                     MOVE '60'      ACTSEQ  2
+     C                     Z-ADDBJPEYD    BPPD
+     C           KBPCH1    SETLLBPACHDX
+     C           KBPCH2    READEBPACHDX                  60*
+     C           *IN60     IFEQ '0'
+     C           BCAD      ANDLEBJPEYD
+     C                     Z-ADDBCPR      APPB
+     C                     ENDIF
+      *
+      ** Calculate starting value
+      *
+     C                     Z-ADDNPSN      ZNOML
+     C                     Z-ADDAPPB      ZPRC
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      *
+     C                     Z-ADDNPSN      TNML
+     C                     Z-ADDZCONS     TAPN
+     C                     Z-ADDAPPB      AVPR
+     C                     END
+      *
+      ** Book Position Action Full Key.
+      *
+     C           KBPAC1    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHMK
+     C                     KFLD           BHBK
+     C                     KFLD           BHTV
+     C                     KFLD           BJPEYD
+      *
+      ** Book Position Action Partial Key.
+      *
+     C           KBPAC2    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHMK
+     C                     KFLD           BHBK
+     C                     KFLD           BHTV
+      *
+      ** Position the Book Position Actions file.
+      *
+     C           *IN75     IFEQ '1'
+     C           KBPAC1    SETGTBPACH2
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * PROCES - PROCESS SUBROUINE                                    *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR
+      *
+      ** OUTPUT HEADER
+      *
+     C                     SETOF                         40*
+     C                     EXCPTBHEAD
+      *
+     C           KBPAC2    READEBPACH2                   60
+      ** DO WHILE NOT EOF
+     C           *IN60     DOWEQ'0'
+      *
+      ** PROCESS MOVEMENT (TRADE, DIVIDEND & PARTLY PAID CALL)
+      *
+     C           BCAS      IFEQ '05'
+     C           BCAS      OREQ '30'
+     C           BCAS      OREQ '35'
+     C           BCAS      OREQ '40'
+     C           BCAS      OREQ '60'
+     C                     EXSR PROMOV
+     C                     END
+     C           KBPAC2    READEBPACH2                   60
+     C                     END
+      *
+      ** CHANGE OF KEY PROCESSING
+      *
+     C                     EXSR CHGKEY
+     C*
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * PROMOV - PROCESS MOVEMENT SUBROUTINE                          *
+      *                                                               *
+      *****************************************************************
+     C           PROMOV    BEGSR
+      *
+      ** If the Day or Month has changed, reset Today's or Month's P/L
+      *
+     C           BCAD      IFNE XXDAY
+     C           BCAS      IFNE '35'
+     C                     Z-ADDBCAD      XXDAY
+     C                     ELSE
+     C                     Z-ADDBCED      XXDAY
+     C                     END
+     C                     Z-ADD0         TOBDAY
+     C                     END
+      *
+     C                     Z-ADDBCAD      ZDAYNO
+     C                     EXSR ZDATE2
+     C           ZMTH      IFNE XXMTH
+     C                     Z-ADDZMTH      XXMTH
+     C                     Z-ADD0         TOBMTD
+     C                     END
+      *
+     C                     MOVEL'Y'       FIRMOV  1
+      ** ACTION DATE
+     C           BCAS      IFNE '35'
+     C                     Z-ADDBCAD      ZDAYNO
+     C                     ELSE
+     C                     Z-ADDBCED      ZDAYNO
+     C                     END
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ACDATE  7
+      *
+      ** Access the Daily Exchange Rates for the Nominal Currency/Date
+      *
+     C                     EXSR ACDEXR
+      *
+      ** SET 'TO ACCRUAL DATE' AS ACTION DATE OF LATEST MOVEMENT
+      *
+     C                     Z-ADDBCAD      TOADAT  50
+      *
+      ** IF NOT THE 1st MOVEMENT & THE FROM/TO ACCRUAL DATES ARE DIFF.
+      *
+     C           FIRMOV    IFNE 'Y'
+     C           TOADAT    ANDNEFRADAT
+      *
+      ** CALCULATE ACCRUED INT/DISC FROM 'FROM' TO 'TO' ACCRUAL DATE
+      *
+     C   70N70             EXSR CALACR
+     C                     END
+      *
+      ** SET 'FROM ACCRUAL DATE' AS ACTION DATE OF LATEST MOVEMENT
+      *
+     C                     MOVEL'N'       FIRMOV
+     C                     Z-ADDBCAD      FRADAT  50
+      *
+      ** GET THE PARTLY PAID PRICE FROM THE SECURITY DIARY
+      ** AT THE DATE OF THE MOVEMENT
+      *
+     C                     Z-ADD1         WCPPPR  96
+     C           PPDI      IFEQ 'Y'
+     C                     Z-ADD0         CPPPR   63
+     C                     EXSR GETPPP
+     C           CPPPR     DIV  100       WCPPPR
+     C                     END
+      *
+      ** GET THE CURRENT FACTOR FROM THE SECURITY DIARY
+      ** AT THE DATE OF THE MOVEMENT
+      *
+     C                     Z-ADD1         WCURFA  98
+     C           PROT      IFEQ '8'
+     C                     EXSR GETCUF
+     C                     END
+      ** SET NOMINAL
+     C                     Z-ADDBCNL      NML    110
+      ** SET PRICE
+     C                     Z-ADDCNTP      PRC    158
+      ** SET CONSIDERATION
+     C                     Z-ADDBCCN      CNS    150
+      ** COMM
+     C           BVCMBP    IFEQ 'Y'
+     C                     ADD  BCCT      CNS
+     C                     END
+      ** CHARG
+     C           BVCBAP    IFEQ 'Y'
+     C                     ADD  BCCC      CNS
+     C                     END
+      ** SET ALL CHARGES/COMMISSIONS TO OUTGOING
+     C           BCPS      IFEQ 'P'
+     C                     Z-SUBBCCT      BCCT
+     C                     Z-SUBBCCC      BCCC
+     C                     END
+      ** SET INTEREST
+     C           PCHI      SUB  INAJ      INT    150
+      *
+      ** PART PAYMENT
+      *
+     C           BCAS      IFEQ '05'
+     C                     MOVEL'PARTPY'  BCTR
+      *
+      ** ADJUST CALL AMOUNT TO REFLECT CHANGE IN AVERAGE PRICE
+      *
+     C           PROT      IFNE '4'
+     C           BCCP      DIV  100000    ZPRC
+     C                     ELSE
+     C           BCCP      DIV  100000000 ZPRC
+     C                     END
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       ZPRC
+     C                     END
+     C                     Z-ADDZPRC      PRC
+      *
+      ** UPDATE AVERAGE PRICE
+      *
+     C                     ADD  ZPRC      AVPR
+      *
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADDAVPR      ZPRC
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     TAPN
+     C                     END
+      *
+      **  INTEREST
+      *
+     C           BCAS      IFEQ '30'
+      *
+      ** CALCULATE INTEREST DUE
+      *
+     C                     MOVEL'INTRST'  BCTR
+     C                     Z-ADDBCUN      PRC
+     C                     Z-ADDBCDV      INT
+     C                     ADD  BCDV      TOINAC
+     C                     END
+      *
+      ** DIVIDEND
+      *
+     C           BCAS      IFEQ '35'
+      *
+      ** CALCULATE DIVIDEND DUE
+      *
+     C                     MOVEL'DIVIDN'  BCTR
+     C                     Z-ADDBCUN      PRC
+     C                     Z-ADDBCDV      INT
+     C                     ADD  BCDV      TOINAC
+     C                     END
+      *
+      ** MARK TO MARKET
+      *
+     C           BCAS      IFEQ '60'
+     C                     MOVEL'MK-MKT'  BCTR
+      *
+      ** SET PRICE REPORTED
+      *
+     C                     Z-ADDBCPR      PRC
+      *
+      ** UPDATE AVERAGE PRICE
+      *
+     C                     Z-ADDBCPR      AVPR
+      *
+     C                     Z-ADDTAPN      PTAPN
+     C                     Z-ADD*ZERO     WWCAPN
+      *
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADDAVPR      ZPRC
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     TAPN
+     C                     END
+      *
+      ** EDIT MOVEMENT NOMINAL
+      *
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C           BCPS      IFEQ 'S'
+     C                     Z-SUBNML       ZFLD15
+     C                     ELSE
+     C                     Z-ADDNML       ZFLD15
+     C                     END
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ENML   15
+      *
+      ** EDIT MOVEMENT PRICE
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE PRC       ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EPRC   16
+      *
+      ** EDIT MOVEMENT CONSIDERATION
+      *
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C           BCPS      IFEQ 'S'
+     C                     Z-SUBCNS       ZFLD15
+     C                     ELSE
+     C                     Z-ADDCNS       ZFLD15
+     C                     END
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ECNS   17
+      *
+      ** EDIT MOVEMENT INTEREST
+      *
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C           BCPS      IFEQ 'S'
+     C                     Z-SUBINT       ZFLD15
+     C                     ELSE
+     C                     Z-ADDINT       ZFLD15
+     C                     END
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EINT   13
+      *
+      ** EDIT MOVEMENT CHARGES & COMMISSIONS
+      *
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C           BCCC      ADD  BCCT      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ECCC   13
+      *
+      ** CALCULATE AND EDIT MOVEMENT DISCOUNT/PREMIUM
+      *
+     C           MATY      IFEQ *ZERO
+     C                     Z-ADD*ZERO     DIP
+     C                     MOVEL*BLANK    EDIP
+     C                     ELSE
+     C                     Z-ADDNML       ZNOML
+      ** ADJUST THE NOMINAL BY THE PARTLY PAID PRICE
+     C                     MULT WCPPPR    ZNOML     H
+     C                     Z-ADD100       ZPRC
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      *
+     C           ZCONS     SUB  CNS       DIP    130
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C           BCPS      IFEQ 'S'
+     C                     Z-SUBDIP       ZFLD15
+     C                     ELSE
+     C                     Z-ADDDIP       ZFLD15
+     C                     END
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EDIP   13
+     C                     END
+      ** CALC AV PRICE
+     C           BCAS      IFNE '60'
+     C                     EXSR AVPRIC
+     C                     END
+      ** EDIT TOTAL NOMINAL
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     Z-ADDTNML      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ETNML  15
+      ** EDIT TOTAL AP NUMERATOR
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE TAPN      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ETAPN  17
+      *
+      ** CALCULATE AND EDIT AVERAGE PRICE (TAPN/TNML)
+      *
+     C           TNML      IFNE *ZERO
+     C                     EXSR CALAVP
+     C                     ELSE
+     C                     Z-ADD*ZERO     AVPR
+     C                     END
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE AVPR      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EAVPR  16
+      *
+      ** EDIT POSITION DISCOUNT/PREMIUM
+      *
+     C           MATY      IFEQ *ZERO
+     C                     MOVEL*BLANK    ETDIP
+     C                     ELSE
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     Z-ADDTDIP      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ETDIP  13
+     C                     END
+      *
+      ** CALCULATE TOTAL INTEREST ON CURRENT POSITION AT VALUE DATE
+      *
+     C                     Z-ADDBCAD      CALDAT
+     C                     EXSR CALINT
+      *
+      ** ACCUMULATE TOTAL CHARGES AND TOTAL COMMISSIONS
+      *
+     C                     ADD  BCCC      TOCHRG
+     C                     ADD  BCCT      TOCOMM
+      *
+      ** OUTPUT TRANSACTION DETAILS
+      *
+     C                     EXCPTBTRAN
+      *
+      ** REPORT PROFIT/LOSS DUE TO TRADE
+      *
+     C                     EXSR PROLOS
+      *
+      ** Convert Realized P/L and Dividends to Base Currency
+      ** and add to Today's, Month To Date and Year To Date Totals
+      *
+     C                     Z-ADDCTAPN     ZAMTCI
+     C           BCAS      IFEQ '35'
+     C           BCAS      OREQ '30'
+     C                     ADD  INT       ZAMTCI
+     C                     END
+     C                     Z-ADDDLEXRT    ZEXCH
+     C                     MOVE CMDIN     ZMD
+     C                     Z-ADDCNDEC     ZCDPI
+     C                     Z-ADDBCDP      ZCDPO
+     C                     EXSR ZCONVN
+     C           XXDAY     IFEQ RNDAY
+     C                     ADD  ZAMTCO    TOBDAY
+     C                     END
+     C           XXMTH     IFEQ RNMTH
+     C                     ADD  ZAMTCO    TOBMTD
+     C                     END
+     C                     ADD  ZAMTCO    TOBYTD
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * CHGKEY - CHANGE OF KEY SUBROUTINE                             *
+      *                                                               *
+      *****************************************************************
+     C           CHGKEY    BEGSR
+      *
+      ** SET 'TO ACCRUAL DATE' AS TARGET DATE OR END OF BOOK DATE
+      *
+     C                     Z-ADDTRGDAT    TOADAT
+     C                     EXSR CHKMAT
+     C   70N70             EXSR CALACR
+     C   40                EXCPTBMATUR
+     C  N40                EXSR CURPOS
+     C                     EXSR WRTYPX
+     C                     EXCPTBTOTAL
+     C   U2                WRITESEBKPRD0
+      *
+     C                     ENDSR
+     C********************************************************************
+     C           ACSSEC    BEGSR
+      *
+     C           BHSC      CHAINSECTYDF              99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'SECTY'   DBFIL            ***************
+     C                     MOVELBHSC      DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD*ZERO     IADJ
+      *
+     C                     Z-ADDMATY      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    MTDATE  7
+      *
+     C           INVTPK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C           INVTPK    CHAININVTPDF              99    *
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM NMCY      WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFIL            ***************
+     C                     MOVELNMCY      DBKEY            * DB ERROR 06 *
+     C                     Z-ADD006       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SPRT    CSPOT  138
+     C                     Z-ADDA6NBDP    CNDEC   10
+     C           A6MDIN    IFEQ 'D'
+     C                     MOVEL'D'       CMDIN   1
+     C                     ELSE
+     C                     MOVEL'M'       CMDIN
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * ACSBOK - ACCESS BOOK POSITION SUBROUTINE                      *
+      *                                                               *
+      *****************************************************************
+     C           ACSBOK    BEGSR
+      *
+     C           BHBK      CHAINBOOKDDF              99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'BOOKD'   DBFIL            ***************
+     C                     MOVELBHBK      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * CHKMAT - CHECK MATURITY SUBROUTINE                            *
+      *                                                               *
+      *****************************************************************
+     C           CHKMAT    BEGSR
+      *
+      ** CHECK IF MATURITY PASSED
+      *
+     C           TOADAT    IFGE MATY
+     C           MATY      ANDNE*ZERO
+     C                     Z-ADDMATY      TOADAT
+     C                     SETON                         40*
+     C           MATY      IFGT BJPEYD
+      *
+      ** REALIZED P/L ON MATURITY
+      *
+     C           TNML      IFNE 0
+     C                     Z-ADDTNML      ZNOML
+     C           SPBS      IFEQ 'P'
+     C                     Z-ADD100       ZPRC
+     C                     ELSE
+     C                     Z-ADD0         ZPRC
+     C                     END
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      *
+      ** PROFIT/LOSS = (NEW - PREVIOUS) AP NUM
+      *
+     C           ZCONS     SUB  TAPN      CTAPN
+      *
+      ** EDIT PROFIT/LOSS AND REPORT
+      *
+     C           CTAPN     IFNE *ZERO
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE CTAPN     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ECTAPN
+     C                     EXCPTBPROLO
+     C                     EXCPTBSPACE
+     C                     END
+      *
+      ** ACCUMULATE TOTAL REALIZED PROFIT/LOSS
+      *
+     C                     ADD  CTAPN     TORLPL
+      *
+      **   Access the Daily Exchange Rates for the Nominal Currency/Date
+      *
+     C                     Z-ADDMATY      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     EXSR ACDEXR
+      *
+      ** Convert Realized P/L to Base Currency
+      ** and add to Today's, Month To Date and Year To Date Totals
+      *
+     C                     Z-ADDCTAPN     ZAMTCI
+     C                     Z-ADDDLEXRT    ZEXCH
+     C                     MOVE CMDIN     ZMD
+     C                     Z-ADDCNDEC     ZCDPI
+     C                     Z-ADDBCDP      ZCDPO
+     C                     EXSR ZCONVN
+      *
+      ** If the Day or Month has changed, reset Today's or Month's P/L
+      *
+     C           MATY      IFNE XXDAY
+     C                     Z-ADDMATY      XXDAY
+     C                     Z-ADD0         TOBDAY
+     C                     END
+      *
+     C           ZMTH      IFNE XXMTH
+     C                     Z-ADDZMTH      XXMTH
+     C                     Z-ADD0         TOBMTD
+     C                     END
+      *
+     C           XXDAY     IFEQ RNDAY
+     C                     ADD  ZAMTCO    TOBDAY
+     C                     END
+     C           XXMTH     IFEQ RNMTH
+     C                     ADD  ZAMTCO    TOBMTD
+     C                     END
+     C                     ADD  ZAMTCO    TOBYTD
+      *
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * CALAVP - CALCULATE AVERAGE PRICE SUBROUTINE                   *
+      *                                                               *
+      *****************************************************************
+     C           CALAVP    BEGSR
+      *
+      ** CALCULATE AVERAGE PRICE (TAPN/TNML)
+      *
+     C           5         ADD  CNDEC     DC      10
+     C                     SUB  NMDP      DC
+     C           DC        IFLT 5
+     C           TAPN      DIV  POWER8,DC APNC   150H
+     C                     ELSE
+     C                     Z-ADDTAPN      APNC
+     C                     END
+     C                     DIV  WCURFA    APNC      H
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       APNC
+     C                     END
+     C           APNC      DIV  TNML      AVPR      H
+     C           DC        IFGE 5
+     C                     DIV  POWER8,DC AVPR   158H
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * CALACR - CALCULATE ACRRUAL SUBROUTINE                         *
+      *                                                               *
+      *****************************************************************
+     C           CALACR    BEGSR
+      *
+      ** DO WHILE 'FROM ACCRUAL DATE' IS LESS THAN 'TO ACCRUAL DATE'
+      *
+     C           FRADAT    DOWLTTOADAT
+      *
+      ** CALCULATE INTEREST ON LAST POSITION AS AT 'FROM ACCRUAL DATE'
+      *
+     C                     Z-ADDFRADAT    CALDAT
+     C                     EXSR CALINT
+      *
+      ** SAVE INTEREST AND NEXT COUPON DATE AS AT 'FROM ACCRUAL DATE'
+      *
+     C                     Z-ADDINTOT     SINTOT 150
+     C                     Z-ADDNCD       SNCD    50
+      *
+      ** CALCULATE INTEREST ON LAST POSITION AS AT 'TO ACCRUAL DATE'
+      *
+     C                     MOVELTOADAT    CALDAT
+     C                     EXSR CALINT
+      *
+      ** IF THE NEXT COUPON DATE RETURNED ON THE 'TO DATE' IS DIFFERENT
+      ** FROM THE NEXT COUPON DATE RETURNED ON THE 'FROM DATE',
+      ** OR THE NEXT COUPON DATE IS EQUAL TO THE 'TO DATE' (IE ON MAT)
+      ** THEN AT LEAST ONE COUPON DATE HAS BEEN PASSED
+      *
+     C           NCD       IFNE SNCD
+     C           NCD       OREQ CALDAT
+      *
+      ** CALCULATE INTEREST ON LAST POSITION AS AT LAST COUPON DATE
+      *
+     C                     Z-ADDSNCD      CALDAT
+     C                     MOVEL'Y'       LDAC
+     C                     EXSR CALINT
+     C                     MOVEL' '       LDAC
+      *
+      ** ACCRUED INT = INT AS AT COUPON DATE-INT AS AT FROM DATE
+      *
+     C           INTOT     SUB  SINTOT    INAC   150
+      *
+      ** WRITE INTEREST ACCRUAL LINE
+      *
+     C           INAC      IFNE *ZERO
+      ** SPACE
+     C                     EXCPTBSPACE
+     C                     EXSR WRTIAC
+     C                     END
+      *
+      ** WRITE DISCOUNT/PREMIUM ACCRUAL LINE
+      *
+     C           STAD      IFEQ 'Y'
+     C                     EXSR WRTDPA
+     C                     END
+      *
+      ** SET THE EX-COUPON NOMINAL TO ZERO
+      *
+     C                     Z-ADD*ZERO     TNEX
+      *
+      ** WRITE COUPON DUE LINE
+      *
+     C                     EXSR WRTCUD
+      *
+      ** RESET 'FROM ACCRUAL DATE' EQUAL TO COUPON DATE
+      *
+     C                     Z-ADDCALDAT    FRADAT
+      *
+     C                     ELSE
+      *
+      ** ACCRUED INT = INT AS AT TO DATE - INT AS AT FROM DATE
+      *
+     C           INTOT     SUB  SINTOT    INAC
+      *
+      ** WRITE INTEREST ACCRUAL LINE
+      *
+     C           INAC      IFNE *ZERO
+      ** SPACE
+     C                     EXCPTBSPACE
+     C                     EXSR WRTIAC
+     C                     END
+      *
+      ** WRITE DISCOUNT/PREMIUM ACCRUAL LINE
+      *
+     C           STAD      IFEQ 'Y'
+     C                     EXSR WRTDPA
+     C                     END
+      *
+      ** RESET 'FROM ACCRUAL DATE' EQUAL TO 'TO ACCRUAL DATE'
+      *
+     C                     Z-ADDTOADAT    FRADAT
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * WRTIAC - WRITE INTEREST ACCRUAL DETAIL LINE                   *
+      *                                                               *
+      *****************************************************************
+     C           WRTIAC    BEGSR
+      *
+      ** WRITE INTEREST ACCRUAL DETAIL LINE
+      *
+      *
+      ** EDIT ACCRUED INTEREST FOR OUTPUT
+      *
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE INAC      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EINAC  13
+      ** FROM DATE
+     C                     MOVE FRADAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    FADATE  7
+      ** TO DATE
+     C                     Z-ADDCALDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    TADATE  7
+      *
+     C                     EXCPTBINTA
+      ** SPACE
+     C                     EXCPTBSPACE
+      *
+      ** ACCUMULATE TOTAL ACCRUED INTEREST
+      *
+     C                     ADD  INAC      TOINAC
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * WRTDPA - WRITE DISCOUNT/PREMIUM ACCRUAL DETAIL LINE           *
+      *                                                               *
+      *****************************************************************
+     C           WRTDPA    BEGSR
+      *
+      ** (CALCULATE & ) WRITE DISCOUNT/PREMIUM ACCRUAL DETAIL LINE
+      *
+     C           TNML      COMP 0                    9999  * >< ZERO
+     C  N99                GOTO EWRTDP
+      *
+      ** DAYS TO MATURITY = MATURITY DATE - 'ACCRUAL FROM DATE'
+      *
+     C                     Z-ADDFRADAT    ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    DAYSM   50 99    * > ZERO
+     C  N99                GOTO EWRTDP
+      *
+      ** DAYS TO ACCRUE = 'ACCRUAL TO DATE' - 'ACCRUAL FROM DATE'
+      *
+     C                     Z-ADDCALDAT    ZEDATE
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    DAYSA   50 99    * > ZERO
+     C  N99                GOTO EWRTDP
+      *
+      ** COST AT MATURITY - CURRENT COST = DISCOUNT/PREMIUM TO AMORTIZE
+      *
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADD100       ZPRC
+      ** ADJUST THE NOMINAL BY THE PARTLY PAID PRICE
+     C                     MULT WCPPPR    ZNOML     H
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      *
+     C           ZCONS     SUB  TAPN      DIP    130 9999  *
+     C  N99                GOTO EWRTDP
+      *
+      ** (DSCNT/PREM TO AMORTIZE)*(NO OF DAYS TO ACCRUE)/(NO.OF DAYS TO MATY)
+      *
+     C           DIP       DIV  DAYSM     DIPXX  152H
+     C           DIPXX     MULT DAYSA     DIP       H
+      ** EDIT DISCOUNT/PREMIUM
+     C           TNML      IFGT *ZERO
+     C           DIP       COMP *ZERO                85    *DISCOUNT
+     C                     ELSE
+     C           DIP       COMP *ZERO                  85  *DISCOUNT
+     C                     END
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C   85                Z-ADDDIP       ZFLD15
+     C  N85                Z-SUBDIP       ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EDIP
+      ** EDIT DAYS TO MATURITY
+     C                     Z-ADD0         ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE DAYSM     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EDAYSM  6
+      ** FROM DATE
+     C                     MOVE FRADAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    FADATE
+      ** TO DATE
+     C                     Z-ADDCALDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    TADATE
+      *
+     C                     EXCPTBDIPA
+      ** SPACE
+     C                     EXCPTBSPACE
+      *
+      ** ADD DISCOUNT/PREMIUM AMORTIZED TO COST (AP NUMERATOR)
+      *
+     C                     ADD  DIP       TAPN
+      *
+      ** SUBTRACT DISCOUNT/PREMIUM AMORTIZED FROM TOTAL DISC/PREMIUM
+      *
+     C                     SUB  DIP       TDIP
+      *
+      ** ACCUMULATE TOTAL ACCRUED DISCOUNT/PREMIUM
+      *
+     C                     ADD  DIP       TODIP
+      *
+      ** RE-EDIT TOTAL AP NUMERATOR
+      *
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE TAPN      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ETAPN
+      *
+      ** RE-CALCULATE AND RE-EDIT AVERAGE PRICE (TAPN/TNML)
+      *
+     C           TNML      IFNE *ZERO
+     C                     EXSR CALAVP
+     C                     ELSE
+     C                     Z-ADD*ZERO     AVPR
+     C                     END
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE AVPR      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EAVPR
+      *
+     C           EWRTDP    ENDSR
+      *****************************************************************
+      *                                                               *
+      * WRTCUD - WRITE COUPON DATE                                    *
+      *                                                               *
+      *****************************************************************
+     C           WRTCUD    BEGSR
+      *
+      ** WRITE TOTAL INTEREST FOR OUTPUT
+      *
+      ** COUPON DATE
+      ** TO DATE
+      *
+     C                     Z-ADDCALDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    TADATE
+      *
+     C                     EXCPTBCUDU
+     C* SPACE
+     C                     EXCPTBSPACE
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * CURPOS - WRITE POSITION SUBROUTINE                            *
+      *                                                               *
+      *****************************************************************
+     C           CURPOS    BEGSR
+      ** SPACE
+     C                     EXCPTBSPACE
+      *
+     C                     EXCPTBCURP
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * WRTYPX - WRITE YEARLY PROFITABILITY DETAILS                   *
+      *                                                               *
+      *****************************************************************
+     C           WRTYPX    BEGSR
+     C                     MOVELBHBA      YPBA
+     C                     MOVELBHBK      YPBK
+     C                     MOVELCCYI      YPNC
+     C                     MOVELINVT      YPIN
+     C                     MOVELBHSC      YPSS
+      *
+      ** CONVERT CURRENT COST INTO BASE CURRENCY
+      *
+     C           MATY      IFGT BJRDNB
+     C           MATY      OREQ *ZERO
+     C                     Z-ADDTAPN      ZAMTCI
+     C                     Z-ADDCSPOT     ZEXCH
+     C                     MOVE CMDIN     ZMD
+     C                     Z-ADDCNDEC     ZCDPI
+     C                     Z-ADDBCDP      ZCDPO
+     C                     EXSR ZCONVN
+     C                     Z-ADDZAMTCO    TOBCST 150
+      *
+      **  CONVERT UNREALIZED P/L INTO BASE CURRENCY
+      *
+     C                     Z-ADDUPPT      ZAMTCI
+     C                     Z-ADDCSPOT     ZEXCH
+     C                     MOVE CMDIN     ZMD
+     C                     Z-ADDCNDEC     ZCDPI
+     C                     Z-ADDBCDP      ZCDPO
+     C                     EXSR ZCONVN
+     C                     Z-ADDZAMTCO    TOBUNR 150
+     C                     ELSE
+     C                     Z-ADD0         UPPT
+     C                     Z-ADD0         TOBCST
+     C                     Z-ADD0         TOBUNR
+     C                     END
+      *
+      **  CHECK IF OUTPUT NEEDED
+      *
+     C           TORLPL    IFNE 0
+     C           UPPT      ORNE 0
+     C           TOINAC    ORNE 0
+     C           TOCOMM    ORNE 0
+     C           TOCHRG    ORNE 0
+     C           TOBCST    ORNE 0
+     C           TOBUNR    ORNE 0
+     C           TOBDAY    ORNE 0
+     C           TOBMTD    ORNE 0
+     C           TOBYTD    ORNE 0
+      *
+      **  TRADE DATE BASIS
+      *
+     C           TRDVAL    IFEQ 'T'
+     C                     Z-ADDTORLPL    TTRP
+     C                     Z-ADDUPPT      TUPN
+     C                     Z-ADDTOINAC    TPSN
+     C                     Z-ADDTOCOMM    TCMT
+     C                     Z-ADDTOCHRG    TCCT
+     C                     Z-ADDTOBCST    TBCST
+     C                     Z-ADDTOBUNR    TBUNR
+     C                     Z-ADDTOBDAY    TBDAY
+     C                     Z-ADDTOBMTD    TBMTD
+     C                     Z-ADDTOBYTD    TBYTD
+     C                     ELSE
+      *
+      **  VALUE DATE BASIS
+      *
+     C                     Z-ADDTORLPL    VTRP
+     C                     Z-ADDUPPT      VUPN
+     C                     Z-ADDTOINAC    VPSN
+     C                     Z-ADDTOCOMM    VCMT
+     C                     Z-ADDTOCHRG    VCCT
+     C                     Z-ADDTOBCST    VBCST
+     C                     Z-ADDTOBUNR    VBUNR
+     C                     Z-ADDTOBDAY    VBDAY
+     C                     Z-ADDTOBMTD    VBMTD
+     C                     Z-ADDTOBYTD    VBYTD
+     C                     END
+      *
+     C                     WRITESEYPEDD0
+     C                     ADD  1         YCOUNT  50
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * CALINT - CALCULATE INTEREST SUBROUTINE                        *
+      *                                                               *
+      *****************************************************************
+     C           CALINT    BEGSR
+      *
+      ** IF NON-INTEREST BEARING, THEN IGNORE
+      *
+     C           CPNR      IFEQ 0
+     C                     Z-ADD*ZERO     NCD
+     C                     Z-ADD*ZERO     INTOT
+     C                     MOVE *BLANK    EINTOT
+     C                     ELSE
+      *
+      ** SET SECURITY FOR SE8401
+      *
+     C                     MOVELBHSC      SESN
+      *
+      ** CALCULATE INTEREST ON TOTAL NOMINAL
+      *
+     C                     MOVEL'C'       ACIN
+     C                     Z-ADDTNML      NOML
+      *
+     C                     OUT  LDA
+     C                     CALL 'SE8401'
+     C           *LOCK     IN   LDA
+     C                     Z-ADDINTR      INTOT  150
+      *
+      ** EDIT INTEREST TOTAL FOR OUTPUT
+      *
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE INTOT     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EINTOT 13
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * AVPRIC - AVERAGE PRICE SUBROUTINE                             *
+      *                                                               *
+      *****************************************************************
+     C           AVPRIC    BEGSR
+      *
+      ** STORE PREVIOUS NOMINAL,AP NUMERATOR,PURCH.INTEREST,DISCNT/PREM
+      *
+     C                     Z-ADDTNML      PTNML  110
+     C                     Z-ADDTAPN      PTAPN  150
+     C                     Z-ADDTPIN      PTPIN  150
+     C                     Z-ADDTDIP      PTDIP  150
+      *
+      ** Set up AP numerator
+      *
+     C                     Z-ADDCNS       WWCAPN 150
+      *
+      ** SET UP PURCHASED INTEREST
+      *
+     C                     Z-ADDINT       WWCPIN 150
+      *
+      ** SET UP DISCOUNT/PREMIUM
+      *
+     C                     Z-ADDDIP       WWCDIP 150
+      *
+      ** Save original value of nominal
+      *
+     C                     Z-ADDTNML      WWNOML 110
+      *
+      ** Calculate absolute value of nominal
+      *
+     C           TNML      IFLT *ZEROS
+     C                     Z-SUBTNML      WWNOMA 110
+     C                     ELSE
+     C                     Z-ADDTNML      WWNOMA
+     C                     END
+      *----------------------------------------------------------------
+      **   1. Update fields for MOVEMENT IN
+      *----------------------------------------------------------------
+     C           BCPS      IFEQ 'P'
+      ** Update nominal
+     C                     ADD  NML       TNML
+      ** Update the ex-coupon nominal and purchased interest
+     C           ACRI      IFEQ 'X'
+     C                     ADD  NML       TNEX
+     C                     END
+      ** Update the AP numerator
+     C           WWNOML    IFEQ *ZEROS
+     C                     Z-ADDWWCAPN    TAPN
+     C                     Z-ADDWWCPIN    TPIN
+     C                     Z-ADDWWCDIP    TDIP
+     C                     END
+      *
+     C           WWNOML    IFGT *ZEROS
+     C                     ADD  WWCAPN    TAPN
+     C                     ADD  WWCPIN    TPIN
+     C                     ADD  WWCDIP    TDIP
+     C                     END
+      *
+     C           WWNOML    IFLT *ZEROS
+      *
+     C           WWNOMA    IFGT NML
+     C           TNML      DIV  WWNOML    WWRSLT 158H
+     C           WWRSLT    MULT TAPN      TAPN      H
+     C           WWRSLT    MULT TPIN      TPIN      H
+     C           WWRSLT    MULT TDIP      TDIP      H
+     C                     END
+      *
+     C           WWNOMA    IFLT NML
+      *
+      ** Calculate AP (Average Price) Numerator
+      *
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADDPRC       ZPRC
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      ** ADJUST THE CONSIDERATION BY THE CURRENT FACTOR
+     C                     MULT WCURFA    ZCONS     H
+      *
+     C                     Z-ADDZCONS     TAPN
+      *
+      ** Calculate PURCHASED INTEREST
+      *
+     C                     Z-ADDBCAD      CALDAT
+     C                     EXSR CALINT
+     C                     Z-ADDINTOT     TPIN
+      *
+      ** Calculate DISCOUNT/PREMIUM
+      *
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADD100       ZPRC
+      ** ADJUST THE NOMINAL BY THE PARTLY PAID PRICE
+     C                     MULT WCPPPR    ZNOML     H
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      *
+     C           ZCONS     SUB  TAPN      TDIP
+      *
+     C                     END
+      *
+     C           WWNOMA    IFEQ NML
+     C                     Z-ADD*ZEROS    TAPN
+     C                     Z-ADD*ZEROS    TPIN
+     C                     Z-ADD*ZEROS    TDIP
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *----------------------------------------------------------------
+      **   2. Update fields for MOVEMENTS OUT
+      *----------------------------------------------------------------
+     C           BCPS      IFEQ 'S'
+      *
+      ** Update nominal
+      *
+     C                     SUB  NML       TNML
+      *
+      ** Update the ex-coupon nominal
+      *
+     C           ACRI      IFEQ 'X'
+     C                     SUB  NML       TNEX
+     C                     END
+      *
+      ** Update the AP numerator
+      *
+     C           WWNOML    IFEQ *ZEROS
+     C                     Z-SUBWWCAPN    TAPN
+     C                     Z-SUBWWCPIN    TPIN
+     C                     Z-SUBWWCDIP    TDIP
+     C                     END
+      *
+     C           WWNOML    IFLT *ZEROS
+     C                     SUB  WWCAPN    TAPN
+     C                     SUB  WWCPIN    TPIN
+     C                     SUB  WWCDIP    TDIP
+     C                     END
+      *
+     C           WWNOML    IFGT *ZEROS
+      *
+     C           WWNOML    IFGT NML
+     C           TNML      DIV  WWNOML    WWRSLT 158H
+     C           WWRSLT    MULT TAPN      TAPN      H
+     C           WWRSLT    MULT TPIN      TPIN      H
+     C           WWRSLT    MULT TDIP      TDIP      H
+     C                     END
+      *
+     C           WWNOML    IFLT NML
+      *
+      ** Calculate AP (Average Price) Numerator
+      *
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADDPRC       ZPRC
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      ** ADJUST THE CONSIDERATION BY THE CURRENT FACTOR
+     C                     MULT WCURFA    ZCONS     H
+      *
+     C                     Z-ADDZCONS     TAPN
+      *
+      ** Calculate PURCHASED INTEREST
+      *
+     C                     Z-ADDBCAD      CALDAT
+     C                     EXSR CALINT
+     C                     Z-ADDINTOT     TPIN
+      *
+      ** Calculate DISCOUNT/PREMIUM
+      *
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADD100       ZPRC
+      ** ADJUST THE NOMINAL BY THE PARTLY PAID PRICE
+     C                     MULT WCPPPR    ZNOML     H
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      *
+     C           ZCONS     SUB  TAPN      TDIP
+      *
+     C                     END
+      *
+     C           WWNOML    IFEQ NML
+     C                     Z-ADD*ZEROS    TAPN
+     C                     Z-ADD*ZEROS    TPIN
+     C                     Z-ADD*ZEROS    TDIP
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * PROLOS - PROFIT AND LOSS SUBROUTINE                           *
+      *                                                               *
+      *****************************************************************
+     C           PROLOS    BEGSR
+      *
+      ** CHANGE TO AVERAGE PRICE NUMERATOR = (NEW - PREVIOUS) AP NUM
+      *
+     C           TAPN      SUB  PTAPN     CTAPN  150
+      *
+      ** ADD BACK COST OF TRADE TO OBTAIN PROFIT/LOSS
+      *
+     C           BCPS      IFEQ 'S'
+     C                     ADD  WWCAPN    CTAPN
+     C                     ELSE
+     C                     SUB  WWCAPN    CTAPN
+     C                     END
+      *
+      ** EDIT PROFIT/LOSS AND REPORT
+      *
+     C           CTAPN     IFNE *ZERO
+     C                     Z-ADDCNDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE CTAPN     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ECTAPN 17
+      *
+      ** CONVERT P/L TO BASE CURRENCY AND EDIT
+      *
+     C                     Z-ADDCTAPN     ZAMTCI
+     C                     Z-ADDDLEXRT    ZEXCH
+     C                     MOVE CMDIN     ZMD
+     C                     Z-ADDCNDEC     ZCDPI
+     C                     Z-ADDBCDP      ZCDPO
+     C                     EXSR ZCONVN
+      *
+     C                     Z-ADDZAMTCO    ZFLD15
+     C                     Z-ADDBCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EBASE  17
+      *
+     C                     EXCPTBPROLO
+     C                     EXCPTBSPACE
+     C                     END
+      *
+      ** ACCUMULATE TOTAL REALIZED PROFIT/LOSS
+      *
+     C                     ADD  CTAPN     TORLPL
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * GETPPP - GET PARTLY PAID PRICE SUBROUTINE                     *
+      *                                                               *
+      *****************************************************************
+     C           GETPPP    BEGSR
+     C           SEDDOK    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           ETYP    2
+     C                     KFLD           BCAD
+     C                     MOVE 'PP'      ETYP
+     C           SEDDOK    SETLLSEDEVDO
+     C                     READ SEDEVDO                  99
+      *
+      ** GET THE TOTAL PARTLY PAID PRICE AT THE ACTION DATE FROM THE
+      ** SECURITY DIARY. IF NO DETAILS ARE PRESENT, USE THE CURRENT PARTLY
+      ** PAID PRICE FROM THE SECURITY.
+      *
+     C           *IN99     IFEQ '0'
+     C           SDSN      ANDEQBHSC
+     C           SDET      ANDEQ'PP'
+     C           SDTP      IFEQ *ZERO
+     C                     MOVE SDTA      CPPPR
+     C                     ELSE
+     C                     MOVE SDTP      CPPPR
+     C                     END
+     C                     ELSE
+     C                     MOVE CPDP      CPPPR
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * GETCUF - GET CURRENT FACTOR SUBROUTINE                        *
+      *                                                               *
+      *****************************************************************
+     C           GETCUF    BEGSR
+     C                     MOVE 'MP'      ETYP
+     C           SEDDOK    SETLLSEDEVDO
+     C                     READ SEDEVDO                  99
+     C           *IN99     IFEQ '0'
+     C           SDSN      ANDEQBHSC
+     C           SDET      ANDEQ'MP'
+     C                     Z-ADDSDCP      WCURFA
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ACDEXR - Access Daily Exchange Rate for Nominal Curr/Date    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACDEXR    BEGSR                           ** ACDEXR *
+      *
+     C           SDDEXK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           DLYEAR
+     C                     KFLD           DLMNTH
+     C                     KFLD           DLDAYN
+     C           SDDEXP    KLIST
+     C                     KFLD           NMCY
+     C                     MOVE ZDATE     CZDATE  6                                         MD048383
+     C           BJDFIN    IFEQ 'M'                                                         MD048383
+     C           2         SUBSTCZDATE:1  DLMNTH                                            MD048383
+     C           2         SUBSTCZDATE:3  DLDAYN                                            MD048383
+     C                     ELSE                                                             MD048383
+     C           2         SUBSTCZDATE:1  DLDAYN                                            MD048383
+     C           2         SUBSTCZDATE:3  DLMNTH                                            MD048383
+     C                     ENDIF                                                            MD048383
+      *
+     C           ZDAYNO    IFGT BJRDNB
+     C                     MOVE WDAY      DLDAYN
+     C                     END
+      *
+     C           SDDEXK    SETLLSEDEXRPD             99    *
+     C           SDDEXP    READESEDEXRPD                 99*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'SEDEX'   DBFIL            ***************
+     C                     MOVELNMCY      DBKEY            * DB ERROR 08 *
+     C                     MOVE DLYEAR    DBKEY            ***************
+     C                     Z-ADD08        DBASE
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** EDIT EXCHANGE RATE
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE DLEXRT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    EDEXRT 16
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR - ERROR SUBROUTINE                                      *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZCNSDZ1
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/COPY ZSRSRC,ZCONVNZ1
+     OSE8400P1H   02   OA
+     O                      N70          10 'TRADE DATE'
+     O                       70          10 'VALUE DATE'
+     O                                   70 'BOOK POSITIONS'
+     O                                  124 'TO:'
+     O                         TRDATE   132
+     O        H  104   OA
+     O                                    3 'Brn'
+     O                                   12 'Security'
+     O                                   18 'BOOK'
+      *
+     O                                   22 'Ccy'
+     O                N70                31 'Trade'
+     O                 70                31 'Value'
+     O                                   46 'Nominal'
+     O                                   60 'Price'
+     O                                   70 'Trade'
+     O                                   84 'Cost'
+     O                                  100 'Interest'
+     O                                  114 'Exch.Rate'
+     O                                  127 'P/L'
+     O                         BJCYCD   131
+      *
+     O        EF1              BHEAD
+     O                         BHBA       3
+     O                         BHSC      14
+     O                         BHBK      17
+     O                         NCRY      22
+     O        EF1              BTRAN
+      *
+     O                         ACDATE    31
+     O                         ENML      47
+     O                         EPRC      63
+     O                         ACRI      64
+     O                         ECNS      88
+     O                         BCTR      71
+     O                         EDEXRT   116
+     O                         EINT     101
+      *
+     O        EF11             BTRAN
+     O                                   22 'C/F---->'
+      *
+     O                         ETNML     47
+     O                         EAVPR     63
+     O                         ETAPN     88
+     O                         EINTOT   101
+      *
+     O        EF1              BSPACE
+     O        EF1              BPROLO
+     O                N40                22 'Trdg P/L'
+     O                 40                22 'Maturity'
+     O                         ECTAPN    88
+     O                         EBASE    132
+     O        EF1              BINTA
+     O                                   22 'Accrual '
+     O                         FADATE    29
+     O                                   31 '-'
+     O                         TADATE    39
+     O                                   48 'Interest'
+     O                         EINAC    101
+     O        EF1              BDIPA
+     O                                   22 'Accrual '
+     O                         FADATE    29
+     O                                   31 '-'
+     O                         TADATE    39
+     O                 85                44 'DISC'
+     O                N85                44 'PREM'
+     O                         EDAYSM    53
+     O                         EDIP     101
+     O        EF1              BCUDU
+     O                                   22 'Coupon  '
+     O                         TADATE    32
+     O                         ETNML     47
+     O                         EINTOT   101
+     O        EF1              BMATUR
+     O                                   13 '*'
+     O                                   22 'Maturity'
+     O                         MTDATE    32
+     O                         ETNML     47
+     O        EF1              BCURP
+     O                                   22 'C/F---->'
+      *
+     O                         TRDATE    31
+     O                         ETNML     47
+     O                         EAVPR     63
+     O                         ETAPN     88
+     O                         EINTOT   101
+      *
+     O        EF11             BTOTAL
+     O                                   24 '------------------------'
+     O                                   48 '------------------------'
+     O                                   62 '------------------------'
+     O                                   86 '------------------------'
+     O                                  110 '------------------------'
+     O                                  132 '------------------------'
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351

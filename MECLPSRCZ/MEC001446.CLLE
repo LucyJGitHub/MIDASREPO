@@ -1,0 +1,131 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ME SWIFTREf SSI Plus Check Release Date/File')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management                                  */
+/*                                                                   */
+/*       MEC001446 - SWIFTRef SSI Plus Check Release Date/Files      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CFT050  *CREATE    Date 03Jun13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CFT050 - SWIFTRef Directories upload                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ERRTYP &INHDR)
+ 
+             DCL        VAR(&ERRTYP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&YY) TYPE(*DEC) LEN(2 0) VALUE(00)
+             DCL        VAR(&MM) TYPE(*DEC) LEN(2 0) VALUE(00)
+             DCL        VAR(&DD) TYPE(*DEC) LEN(2 0) VALUE(00)
+             DCL        VAR(&INHDR) TYPE(*CHAR) LEN(6)
+ 
+             DCLF       FILE(METXT3L0)
+ 
+/* Copyright statement                                               */
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global Monitor Message                                            */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&ERRTYP) VALUE('0')
+ 
+             CLRPFM     METXT3PD
+ 
+             MONMSG     MSGID(CPF1023)
+ 
+/* List all files of QGPL library                                    */
+             DSPFD      FILE(QGPL/*ALL) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(METXT3PD)
+ 
+/* Read METXT3L0 file                                                */
+ LOOP1:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+             GOTO       CMDLBL(ERROR3)
+             ENDDO
+ 
+/* Filenames starting with SI_                                       */
+             IF         COND((&PREF3 *EQ 'SI_') *AND (&DATE6 +
+                        *GT &INHDR)) THEN(DO)
+               IF       COND(%SST(&ATFILE 10 1) *EQ ' ') THEN(DO)
+                 IF     COND((&INHDR *EQ *BLANK) *OR (&DATE6 *GT +
+                          &INHDR)) THEN(DO)
+ 
+                        CHGVAR     VAR(&YY) VALUE(%SST(&DATE6 1 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+ 
+                        CHGVAR     VAR(&MM) VALUE(%SST(&DATE6 3 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+ 
+                        CHGVAR     VAR(&DD) VALUE(%SST(&DATE6 5 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+ 
+                        IF         ((&MM *GT 12) *OR (&MM *EQ 00)) +
+                          THEN(GOTO ERROR1)
+                        IF         ((&DD *GT 31) *OR (&DD *EQ 00)) +
+                        THEN(GOTO ERROR1)
+                        CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+                 ENDDO
+ 
+             CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+             CPYF       FROMFILE(QGPL/&ATFILE) +
+                          TOFILE(MEDWSIPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)
+                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO ERROR2)
+ 
+               ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR1:
+             CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+             SNDPGMMSG  MSG('Wrong date format in SI_YYMMDD') +
+                          TOMSGQ(MOPERQ)
+             CHGVAR     VAR(&ERRTYP) VALUE('3')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR2:
+             SNDPGMMSG  MSG('SI_YYMMDD found is empty') +
+                        TOMSGQ(MOPERQ)
+             CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+             CHGVAR     VAR(&ERRTYP) VALUE('2')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR3:
+             CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+             SNDPGMMSG  MSG('No file SI_YYMMDD exists in QGPL') +
+                        TOMSGQ(MOPERQ)
+             CHGVAR     VAR(&ERRTYP) VALUE('1')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+/* Abnormal termination */
+ABNOR:
+             CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Abnormal Termination') +
+                        TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGVAR     VAR(&ERRTYP) VALUE('8')
+ 
+/* End program */
+ ENDCLPGM:
+ 
+             ENDPGM

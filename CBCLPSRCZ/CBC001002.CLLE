@@ -1,0 +1,49 @@
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB Check Dashboard for unauthorised')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business                                   */
+/*                                                                   */
+/*       CBC001002 - Check Dashboard for unauthorised                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD048901A          Date 05Mar18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD033971 *CREATE   Date 15May15              */
+/*                      NNNNNNNN           Date DDMmmYY              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD048901A - Not possible to check Fusion Banking Midas Dash */
+/*                   Dash Board (still 2 unauthorised Items)         */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD033971 - When COB is autoscheduled, unauthorized          */
+/*                  transactions are not checked.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(2)
+             DCLF       FILE(V_DASHACTN)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SBS)
+READ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+/**********  IF         COND((&DLMSID *EQ &SBS) *AND (&DLVAL *GT 0) +       */     /*MD048901A*/
+/**********               *AND (&DLUATH *EQ 'Y')) THEN(GOTO +               */     /*MD048901A*/
+/**********               CMDLBL(ERROR))                                    */     /*MD048901A*/
+             IF         COND((&DLMSID *EQ &SBS) *AND (&DLVAL *NE '00000') +
+                          *AND (&DLUATH *EQ 'Y')) THEN(GOTO +
+                          CMDLBL(ERROR))                                           /*MD048901A*/
+             GOTO       CMDLBL(READ)
+ 
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                         CBC001002 ended abnormally - Unauthorized +
+                         transactions') TOMSGQ(MOPERQ)
+            MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+     ENDPGM

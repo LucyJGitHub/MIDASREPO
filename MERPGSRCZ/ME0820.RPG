@@ -1,0 +1,722 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Outgoing payment messages by nostro')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *    ME0820 - Outgoing payment messages by nostro report        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 142823             Date 20Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21SEP98               *
+      *                    113352           DATE 13FEB97              *
+      *                    067576           DATE 22FEB94              *
+      *                    E32658           DATE 29MAY92              *
+      *                    E38493           DATE 16APR92              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   142823  -  Apply 137492. Output branch code not 'ALL'.      *
+      *   141572  -  Recompile over changes in MGOREFPD               *
+      *   113352  -  Recompile over changes in MGOREFPD               *
+      *   067576  -  OUTPUT CORRECT BRANCH CODE TO ZSFILE, TO ENSURE  *
+      *              THAT SPOOL FILE IS DISTRIBUTED CORRECTLY         *
+      *   E32658  -  RECOMPILED OVER AMENDED P1 PRINT FILE            *
+      *   E38493  -  SUPRESS ALL BRANCH INFO WHEN SINGLE BRANCHING    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FMGOREFPDIF  E           K        DISK
+     FMGOREFL0IF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREF
+     FME0820AUO   E                    PRINTER      KINFDS SPOOLA     UC
+     FME0820P1O   E             61     PRINTER      KINFDS SPOOLP     UC
+      *
+      * ID C  F  H  L    Function of indicaators
+      * 01               DSRUN (DATA AREA) not found indicator
+      * 44               Print additional branch details on heading
+      * 87               Multibranch environment                          E38493
+      * 99               Read & Chain fail indicator
+      * 98               End of file indicator
+      * 97               CHAIN fail on MGOREFL0
+      * 30,32 -42        Error indicator for ERCD
+      * U7U8LR           DB error
+      *
+     E                    ARR      2000 16
+     E                    PAG      2000  4 0
+     E                    CPY@    1   1 80
+     ISPOOLA      DS
+     I                                       83  92 AFILE
+     I                                    B 123 1240AFNUM
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+      **  File information data structure
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IDSRUN       DS
+     I                                        1   7 RDAT
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      **  RUNDAT data area data structure (date format -ddmmmyy)
+      *
+     I@RPARM      DS
+     I                                        1   1 @@LVL
+     I                                        2   4 @@BCH
+     I                                        5 104 @@RPRM
+     I                                        5   6 @MODID
+     I                                        7  11 @NOST
+     I                                       12  17 @NTWRK
+     I                                       18  23 @FMDAT
+     I                                       18  19 @@FMYY
+     I                                       20  21 @@FMMM
+     I                                       22  23 @@FMDD
+     I                                       24  29 @TODAT
+     I                                       24  25 @@TOYY
+     I                                       26  27 @@TOMM
+     I                                       28  29 @@TODD
+      **  Parameters for &RPARM - 100 long string passed to RCF
+      *
+     IFMDAT       DS
+     I                                        1   4 FMDM
+     I                                        5   6 FMYY
+      **  Data structure for FROM date (ddmmyy or mmddyy)
+      *
+     ITODAT       DS
+     I                                        1   4 TODM
+     I                                        5   6 TOYY
+      **  Data structure for TO date (ddmmyy or mmddyy)
+      *
+     ISDMMOD    E DSSDMMODPD
+      **  MMOD details
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for access program; short data structure
+      *
+     C/EJECT
+      *
+      **  Parameters passed from RCF & ME0815
+     C           *ENTRY    PLIST
+     C                     PARM           @@RSEQ  5
+     C           @@LVL     PARM           @@LVLP  1
+     C           @@BCH     PARM           @@BCHP  3
+     C           @@RPRM    PARM           @@PRMP100
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Parameters passed to AOMMODR0
+     C           PLIST1    PLIST
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      **  Parameters passed to ME0800
+     C           PLIST2    PLIST
+     C                     PARM WK16      PARM1  16
+     C                     PARM MBIN      PARM2   1
+     C                     PARM BGCFMT    PARM3   1
+     C           ERR       PARM *BLANKS   ERR     1
+      *
+      **  Parameters passed to MEDTQPRT
+     C           PLIST3    PLIST
+     C                     PARM 'MEDTQPRT'QNAME  10
+     C                     PARM 'QTEMP'   LIB    10
+     C                     PARM 125       FLDLEN  50
+     C           LINE      PARM *BLANKS   FIELD 125
+     C                     PARM           WAIT    50
+      *
+      **  Parameters passed to ZSFILE
+     C           PLIST4    PLIST
+     C                     PARM           @@RSEQ
+     C                     PARM BRCA2     @PARM   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      **  Parameters passed to AOBANKR0
+     C           PLIST5    PLIST
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   DETLP - Detail processing                                   *
+      *         -             processing                              *
+      *         -            processing                               *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN   - Main process                                       *
+      *   Calls  - INIT - Init process                                *
+      *            MAIN - MAIN processing                             *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Perform        process
+     C                     EXSR DETLP
+      *
+      **  Set on LR
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT   - Initial process                                    *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  Access sdbankpd (via aobankr0) & verify date format
+     C                     CALL 'AOBANKR0'PLIST5
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***********
+     C                     MOVEL'FIRST'   DBKEY            * DBERR 1 *
+     C                     MOVEL'ME0820  'DBPGM            ***********
+     C                     MOVE '01'      DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access sdmmodpd (via aommodr0)
+     C                     CALL 'AOMMODR0'PLIST1
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDMMODPD'DBFILE           ***********
+     C                     MOVEL'FIRST'   DBKEY            * DBERR 2 *
+     C                     MOVEL'ME0820  'DBPGM            ***********
+     C                     MOVE '02'      DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access data area RUNDAT to find date & multibranch indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+     C           MBIN      COMP 'Y'                      87               E38493
+      *
+      **  Convert date from (yymmdd) to (mmddyy or ddmmyy)
+     C                     MOVE @@FMYY    FMYY
+     C                     MOVE @@TOYY    TOYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVEL@@FMMM    FMDM
+     C                     MOVE @@FMDD    FMDM
+     C                     MOVEL@@TOMM    TODM
+     C                     MOVE @@TODD    TODM
+     C                     ELSE
+     C                     MOVEL@@FMDD    FMDM
+     C                     MOVE @@FMMM    FMDM
+     C                     MOVEL@@TODD    TODM
+     C                     MOVE @@TOMM    TODM
+     C                     END
+      *
+      **  Read outgoing message file PF/MGOREFPD
+     C                     EXSR READVR
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MGOREFPD'DBFILE           ***********
+     C                     MOVEL'FIRST'   DBKEY            * DBERR 3 *
+     C                     MOVEL'ME0820  'DBPGM            ***********
+     C                     MOVE '03'      DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE BRCA      BCHWK3  3
+     C                     Z-ADD1         X       40
+     C                     Z-ADD0         PA      50
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DETLP  - Detail processing                                  *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           DETLP     BEGSR
+      *
+      **  If no record found on the file FP/MGOREFPD
+     C           *IN98     IFEQ '1'
+      *
+      **  Open Audit printer file PRTF/ME0820AU & call ZSFILE via SPLF
+     C                     OPEN ME0820AU
+     C                     MOVE AFILE     SFILE  10
+     C                     Z-ADDAFNUM     ZSNUM   60
+      *
+     C                     EXSR SPLF
+      *
+      **  Write 'no records to report'
+     C                     WRITEAU1
+     C                     WRITERR0
+     C                     WRITEAU1
+     C                     WRITERR02
+      *
+      **  Close Audit printer file PRTF/ME0820AU
+     C                     CLOSEME0820AU
+      *
+      **  Else records present to process
+     C                     ELSE
+      *
+      **  If level selected is system ( @@LVL = 'S')
+      **  Process messages at system level
+     C           @@LVL     IFEQ 'S'
+     C                     EXSR SYSLVL
+     C                     END
+      *
+      **  If level selected is branch ( @@LVL = 'B')
+      **  and selected branch is 'ALL' ( @@BCH = 'ALL')
+      **  Process messages for all branches
+     C           @@LVL     IFEQ 'B'
+     C           @@BCH     ANDEQ'ALL'
+     C                     EXSR ALLBCH
+     C                     END
+      *
+      **  If level selected is branch ( @@LVL = 'B')
+      **  and selected branch is  NOT 'ALL' ( @@BCH ¬= 'ALL')
+      **  Process messages as for single branch
+     C           @@LVL     IFEQ 'B'
+     C           @@BCH     ANDNE'ALL'
+     C                     EXSR SNGBCH
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SYSLVL - System level processing                            *
+      *   Called by DETLP process                                     *
+      *****************************************************************
+     C           SYSLVL    BEGSR
+      *
+      **  Open printer file PRTF/ME0820P1
+     C                     OPEN ME0820P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+      *
+      **  Call ZSFILE via SPLF
+     C                     EXSR SPLF
+      *
+      **  Print report title
+     C                     WRITER01
+     C                     ADD  1         PA
+     C                     WRITER00
+      *
+      **  Do while ¬= eof (MGOREFPD)
+     C           *IN98     DOWEQ'0'
+      *
+      **  Do until branch (BRCA ON PF/MGOREFPD) changes
+     C           BCHWK3    DOWEQBRCA
+     C           *IN98     ANDEQ'0'
+      *
+      **  Print message processing
+     C                     EXSR PRTM
+      *
+      **  Read next record from PF/MGOREFPD
+     C                     EXSR READVR
+      *
+     C                     END
+      *
+      **  Write end of report for Branch - R03
+     C           MBIN      IFEQ 'Y'                                       E38493
+     C                     WRITER01
+     C                     ADD  1         PA
+     C                     WRITER03
+     C                     END                                            E38493
+      *
+     C                     MOVE BRCA      BCHWK3
+     C                     MOVE OTHT      OTHT20
+     C                     MOVE OTHB      OTHB03
+     C                     MOVE RCBR      RCBR03
+      *
+     C                     END
+      *
+      **  Write end of report - R04
+     C           MBIN      IFEQ 'N'                                       E38493
+     C                     WRITER01
+     C                     ADD  1         PA
+     C                     WRITER04
+     C                     END                                            E38493
+      *
+      **  Close printer file PRTF/ME0820P1
+     C                     CLOSEME0820P1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ALLBCH - all branches processing                            *
+      *   Called by DETLP process                                     *
+      *****************************************************************
+      *
+     C           ALLBCH    BEGSR
+      *
+      **  Do while ¬= eof (MGOREFPD)
+     C           *IN98     DOWEQ'0'
+      *
+      **  Open printer file PRTF/ME0820P1
+     C                     OPEN ME0820P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+      *
+      **  Reset the arrays & the index to blank & 0 respectively
+      **  (Every time the Branch changes)
+     C                     MOVEA*BLANKS   ARR
+     C                     MOVEA*ZERO     PAG
+     C                     Z-ADD0         X
+     C                     Z-ADD0         PA
+      *
+      **  Call ZSFILE via SPLF
+     C                     EXSR SPLF
+      *
+      **  Print report title - R00
+     C                     WRITER01
+     C                     ADD  1         PA
+     C                     WRITER00
+      *
+      **  Do until branch (BRCA ON PF/MGOREFPD) changes
+     C           BCHWK3    DOWEQBRCA
+     C           *IN98     ANDEQ'0'
+      *
+      **  Print message processing
+     C                     EXSR PRTM
+      *
+      **  Read next record from PF/MGOREFPD
+     C                     EXSR READVR
+      *
+     C                     END
+      *
+      **  Write end of report for Branch - R03
+     C           MBIN      IFEQ 'Y'                                       E38493
+     C                     WRITER01
+     C                     ADD  1         PA
+     C                     WRITER03
+     C                     END                                            E38493
+      *
+     C                     MOVE BRCA      BCHWK3
+     C                     MOVE OTHT      OTHT20
+     C                     MOVE OTHB      OTHB03
+     C                     MOVE RCBR      RCBR03
+      *
+      **  Close printer file PRTF/ME0820P1
+     C                     CLOSEME0820P1
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SNGBCH - single branch processing                           *
+      *   Called by DETLP process                                     *
+      *****************************************************************
+      *
+     C           SNGBCH    BEGSR
+      *
+      **  Open printer file PRTF/ME0820P1
+     C                     OPEN ME0820P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+      *
+      **  Call ZSFILE via SPLF
+     C                     EXSR SPLF
+      *
+      **  Print report title - R00
+     C                     WRITER01
+     C                     ADD  1         PA
+     C                     WRITER00
+      *
+      **  Do until branch (BRCA ON PF/MGOREFPD) changes
+     C           *IN98     DOWEQ'0'
+      *
+      **  Print message processing
+     C                     EXSR PRTM
+      *
+      **  Read next record from PF/MGOREFPD
+     C                     EXSR READVR
+      *
+     C                     END
+      *
+     C                     MOVE BRCA      BCHWK3
+     C                     MOVE OTHT      OTHT20
+     C                     MOVE OTHB      OTHB03
+     C                     MOVE RCBR      RCBR03
+      *
+      **  Write end of report for Branch - R04
+     C           MBIN      IFEQ 'N'                                       E38493
+     C                     WRITER01
+     C                     ADD  1         PA
+     C                     WRITER04
+     C                     END                                            E38493
+      *
+      **  Close printer file PRTF/ME0820P1
+     C                     CLOSEME0820P1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   PRTM   - Print message processing                           *
+      *   Called by SYSLVL,ALLBCH & SNGBCH processess                 *
+      *****************************************************************
+      *
+     C           PRTM      BEGSR
+      *
+      **  Set up variable WK16 with TRNO
+     C                     MOVE TRNO      WK16   16
+      *
+      **  If message is a multiple (TRNF on PF/MGOREFPD ¬= blank) or
+      **  (TRNM ¬= blank)
+      *
+     C           TRNF      IFNE *BLANKS
+     C           TRNM      ORNE *BLANKS
+      *
+      **  If TRNF is not blank (TRNO is not the header of the multiple)
+     C           TRNF      IFNE *BLANKS
+     C                     MOVE TRNF      WK16
+     C                     END
+      *
+      **  Use WK16 to check whether multiple message has been printed
+      **  before (If WK16 has been stored, message has already been
+      **  printed)
+     C                     SETOF                     11
+      *
+     C           X         IFNE 0
+     C                     Z-ADD1         Y       50
+     C           WK16      LOKUPARR,Y                    11
+     C                     END
+      *
+      **  Store transaction reference part
+     C           *IN11     IFEQ '0'
+     C                     ADD  1         X
+     C                     MOVE WK16      ARR,X
+     C           PA        ADD  1         PAG,X
+     C                     ELSE
+     C                     WRITER01
+     C                     ADD  1         PA
+     C                     Z-ADDPAG,Y     @TABP
+     C                     WRITER05
+     C                     END
+      *
+     C                     END
+      *
+      **  If message is a single message or message is a mutiple that
+      **  has not been previously printed
+     C           TRNM      IFEQ *BLANKS
+     C           TRNF      ANDEQ*BLANKS
+     C           *IN11     ORNE '1'
+      *
+      **  Call formatting program ME0800 with parameter WK16
+     C                     CALL 'ME0800'  PLIST2
+      *
+     C           ERR       IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Receive data queue MEDTQPRT from formatting program via
+      **  QRCVDTAQ
+     C                     CALL 'QRCVDTAQ'PLIST3
+      *
+      **  Print page headings
+     C           RCBR03    IFNE *BLANKS
+     C                     SETON                     44
+     C                     END
+      *
+     C                     WRITER01
+     C                     SETOF                     44
+     C                     ADD  1         PA
+      *
+      **  Do while entry found in DATAQ/MEDTQPRT
+     C           FLDLEN    DOWNE0
+      *
+      **  If end of page - throw a page and print headings R01
+     C           *IN61     IFEQ '1'
+      *
+     C           RCBR03    IFNE *BLANKS
+     C                     SETON                     44
+     C                     END
+      *
+     C                     WRITER01
+     C                     SETOF                     44
+     C                     ADD  1         PA
+     C                     SETOF                     61
+     C                     END
+      *
+      **  Output line of message detail from dataq
+     C                     WRITEDETL
+      *
+      **  Receive data queue MEDTQPRT from formatting program via
+      **  QRCVDATAQ
+     C                     CALL 'QRCVDTAQ'PLIST3
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SPLF  - Ensure Spool File recorded by RCF                     * 067576
+      ****SPLF**-*Printer*error*handling********************************* 067576
+      *   Called by -      Initial process                            *
+      *****************************************************************
+      *
+     C           SPLF      BEGSR
+      *
+      **  Set up key
+     C***********@@BCH     IFEQ 'ALL'                                     067576
+     C***********          MOVE *BLANKS   BRCA2   3                       067576
+     C***********          ELSE                                           067576
+     C***********          MOVE @@BCH     BRCA2                           067576
+     C***********          END                                            067576
+      *
+     C           @@BCH     IFEQ 'ALL'                                     142823
+     C                     MOVELBRCA      BRCA2                           142823
+     C                     ELSE                                           142823
+     C                     MOVE @@BCH     BRCA2   3                       067576
+     C                     END                                            142823
+      *                                                                   142823
+     C                     CALL 'ZSFILE'  PLIST4
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *******************************************************************
+      *   READVR - read a valid record                                  *
+      *   Called by -                                                   *
+      *******************************************************************
+      *
+     C           READVR    BEGSR
+      *
+      **  Read, and if necessary re-read file until eligible message
+      **  is found or EOF.
+     C                     READ MGOREFPD               9998
+     C           *IN98     IFEQ '0'
+     C           *IN99     ANDEQ'0'
+     C                     EXSR ELIG
+     C                     END
+      *
+     C           *IN98     DOWEQ'0'
+     C           *IN99     ANDEQ'0'
+     C           OK        ANDEQ'N'
+     C                     READ MGOREFPD               9998
+     C           *IN98     IFEQ '0'
+     C           *IN99     ANDEQ'0'
+     C                     EXSR ELIG
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *******************************************************************
+      *   ELIG - check message is eligible for printing                 *
+      *   Called by - READVR                                            *
+      *******************************************************************
+      *
+     C           ELIG      BEGSR
+      *
+      **  Initially flag message as OK
+     C                     MOVE 'Y'       OK      1
+      *
+      **  If message is part of a multiple, access header part to check
+      **  that any amendments (which only update the header) have not
+      **  rendered the message ineligible for reporting according to
+      **  the user's selection criteria.
+     C           TRNF      IFNE *BLANKS                              B1
+      *
+      **  Save this TRN
+     C                     MOVELTRNO      WK16
+      *
+     C           TRNF      CHAINMGOREFL0             97
+      *
+      **  Database error if header not found
+     C           *IN97     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELTRNF      DBKEY
+     C                     MOVEL'ME0820  'DBPGM
+     C                     MOVE '06'      DBASE            ***************
+     C                     MOVE 'MGOREFL0'DBFILE           * DB ERROR 06 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           @NTWRK    IFNE NWRK
+     C           @NTWRK    ANDNE*BLANKS
+     C                     MOVE 'N'       OK
+     C                     END
+      *
+      **  Re-access part
+     C           WK16      CHAINMGOREFL0             97
+      *
+     C                     END                                        1
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   *PSSR - error handling                                               *
+      *   Called by - INIT initial process                                     *
+      **************************************************************************
+      *
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Write database error to report
+      *
+     C                     OPEN ME0820AU
+     C                     WRITEAU1
+     C                     WRITEDBERROR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+** CPY@   **      Object copyright
+(c) Finastra International Limited 2001

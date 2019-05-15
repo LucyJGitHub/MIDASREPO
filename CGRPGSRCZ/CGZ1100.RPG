@@ -1,0 +1,1163 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Standard amounts formatting.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CGZ1100 - - - - Format amounts for display or printing.      *
+     F*                                                               *
+     F*  Function:   - - This program edits an amount. The format     *
+     F*                   used depends on an input parameter.         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 133857             Date 17Apr98               *
+      *                 126572             Date 05Feb98               *
+     F*                 089184             DATE 22MAY95               *
+     F*                 087939             DATE 18MAY95               *
+     F*                 087381             DATE 05APR95               *
+     F*                 086904             DATE 05APR95               *
+     F*                 085133             DATE 22MAR95               *
+     F*                 084876             DATE 17MAR95               *
+     F*                 084239             DATE 03MAR95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  133857 - Fix to reverse 126572
+     F*  126572 - REVERSE CR/DR REGARDLESS OF POSITION 14.            *
+     F*  089184 - If 0.00 then format as 0.00 not 0.00CR etc          *
+     F*  087939 - Format as +/-                                       *
+     F*  087381 - Allow debit/credit options to be inverted for       *
+     F*           statement reporting:                                *
+     F*            o To force the sign to be inverted before          *
+     F*              formatting, set position 14 of option to 'N'     *
+     F*  086904 - Support new formatting options                      *
+     F*  085133 - Correct zero-suppression errors for amounts less    *
+     F*            than 10.00; add a sign selection value of "E"      *
+     F*  084876 - Standard padded amounts corrupt if *GE 100 million  *
+     F*  084239 - Correct asterisk-suppression error                  *
+     F*            (a leading comma now replaced by an asterisk)      *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  Parameters: - - P0RTN  --   7    -- Return code;             *
+     F*                  P0VIN  -- 256    -- Input value;             *
+     F*                  P0VOUT -- 256    -- Output value;            *
+     F*                  P0VLEN --   3(0) -- Output value length;     *
+     F*                  P0FTYP --  10    -- Format type;             *
+     F*                  P0FOPT --  15    -- Format option.           *
+     F*                                                               *
+     F*  The leftmost 8 characters of P0FOPT determine the editing    *
+     F*   pattern, and the rightmost character gives the sign type.   *
+     F*                                                               *
+     F*  Valid patterns are:                                          *
+     F*                                                               *
+     F*    STANDARD -- With comma delimiters and a decimal point,     *
+     F*                 with leading zeros suppressed;                *
+     F*    EUROPEAN -- With no delimiters and a decimal comma,        *
+     F*                 with leading zeros suppressed;                *
+     F*    ISO      -- With a decimal comma (even if no fractional    *
+     F*                 part) and no delimiters;                      *
+     F*    SWIFT    -- As for ISO;                                    *
+     F*    STD PAD  -- As for STANDARD, but leading zeros are         *
+     F*                 replaced by asterisks;                        *
+     F*    EURO PAD -- As for EUROPEAN, but leading zeros are         *
+     F*                 replaced by asterisks.                        *
+     F*                                                               *
+     F*  Valid sign types are:                                        *
+     F*                                                               *
+     F*    L -- A leading sign, if negative;                          *
+     F*    R -- A trailing sign, if negative;                         *
+     F*    C -- A trailing sign: "CR" if positive or "DR"             *
+     F*           if negative;                                        *
+     F*    D -- A trailing "DR" if negative;                          *
+     F*    E -- A trailing "CR" if negative;                          *   085133
+     F*    + -- Format as +/-                                         *   087939
+     F*    b -- (blank) no sign shown.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  90 -- Error detected.                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*  SRSPLT -- Split the amount into integer and fraction.        *
+     F*  SRSTD  -- Edit the amount with the standard format.          *
+     F*  SREURO -- Edit the amount with the European format.          *
+     F*  SRISO  -- Edit the amount with the ISO/SWIFT format.         *
+     F*  SRSPAD -- Edit the amount with the standard padded format.   *
+     F*  SREPAD -- Edit the amount with the European padded format.   *
+     F*  SRSIGN -- Adds the sign to the result.                       *
+     F*  SRBADF -- Handle an invalid format flag.                     *
+     F*  SRINIT -- Provide initialisation and definitions.            *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    AMT       256  1               Amount in.
+     E                    INT       256  1               Integer part.
+     E                    FRC       256  1               Fractional part.
+     E                    EDT       256  1               Amount out.
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CGZ1100EPG
+     E*
+     E*-------------------------------------------------------------------
+     I/SPACE
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CGZ1100IPG
+     I*
+     I* Copied-in data structures
+     I*
+     I*...................................................................
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error processing data structures
+     I*
+     I*...................................................................
+     IAMNTDS      DS
+     I*
+     I* The incoming amount
+     I                                        1 256 AMT
+     I*...................................................................
+     IINTEDS      DS
+     I*
+     I* Integer part
+     I                                        1 256 INT
+     I*...................................................................
+     IFRACDS      DS
+     I*
+     I* Fractional part
+     I                                        1 256 FRC
+     I*...................................................................
+     IEDITDS      DS
+     I*
+     I* The outgoing amount
+     I                                        1 256 EDT
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0VIN 256
+     C                     PARM           P0VOUT256
+     C                     PARM           P0VLEN  30
+     C                     PARM           P0FTYP 10
+     C                     PARM           P0FOPT 15
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     Z-ADD1         Q
+     C                     MOVEL'@Main@'  @STK,Q
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* Split the value:
+     C*
+     C           P0VIN     IFNE *BLANKS
+     C                     EXSR SRSPLT
+     C                     ENDIF
+     C*
+     C* Format:
+     C/COPY WNCPYSRC,CGZ1100C03
+     C           #ETYPE    CASEQ',,,.    'SRSTD            000,000.00     086904
+     C           #ETYPE    CASEQ'...,    'SRSTD            000,000.00     086904
+     C           #ETYPE    CASEQ'.       'SREURO           000000.00      086904
+     C           #ETYPE    CASEQ',       'SREURO           000000,00      086904
+     C           #ETYPE    CASEQ'STANDARD'SRSTD            Standard
+     C           #ETYPE    CASEQ'EUROPEAN'SREURO           European
+     C           #ETYPE    CASEQ'ISO     'SRISO            ISO/SWIFT
+     C           #ETYPE    CASEQ'SWIFT   'SRISO            ISO/SWIFT
+     C           #ETYPE    CASEQ'STD PAD 'SRSPAD           Std padded
+     C           #ETYPE    CASEQ'EURO PAD'SREPAD           Euro padded
+     C                     CAS            SRBADF
+     C                     ENDCS
+      *                                                                   086904
+      * Replace , with .                                                  086904
+      *                                                                   086904
+     C           #ETYPE    CASEQ'...,    'SRTRAN           000,000.00     086904
+     C           #ETYPE    CASEQ',       'SRTRAN           000000,00      086904
+     C                     ENDCS                                          086904
+     C*
+     C* Return the edited value:
+     C*
+     C                     MOVE EDITDS    P0VOUT
+     C*
+     C           EXMAIN    TAG                             <<<=== EXMAIN
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+      ********************************************************************086904
+      **  Subroutine SRTRAN replaces . with , and , with .              **086904
+      **                                                                **086904
+      **                                                                **086904
+      **  For example: 123,123,123.00  -->    123.123.123,00            **086904
+      ********************************************************************086904
+     C           SRTRAN    BEGSR                           * S R T R A N *086904
+      *                                                                   086904
+      * Add subroutine name to stack:                                     086904
+      *                                                                   086904
+     C                     ADD  1         Q                               086904
+     C                     MOVEL'SRTRAN'  @STK,Q                          086904
+      *                                                                   086904
+     C           '.,':',.' XLATEEDITDS    EDITDS                          086904
+      *                                                                   086904
+     C           EXTRAN    TAG                             <<<=== EXTRAN  086904
+      *                                                                   086904
+      * Unwind subroutine stack:                                          086904
+      *                                                                   086904
+     C                     MOVE *BLANKS   @STK,Q                          086904
+     C                     SUB  1         Q                               086904
+      *                                                                   086904
+     C                     ENDSR                                          086904
+     C********************************************************************086904
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSPLT divides the amount into two parts --        **
+     C**    the integer part (before the decimal point); and            **
+     C**    the fractional part (after the decimal point).              **
+     C********************************************************************
+     C           SRSPLT    BEGSR                           * S R S P L T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSPLT'  @STK,Q
+     C*
+     C* Move the input value:
+     C*
+     C                     MOVE P0VIN     AMNTDS
+      *                                                                   089184
+      * Check if zero                                                     089184
+      *                                                                   089184
+     C           ' .0'     CHECKP0VIN                    90               089184
+     C           *IN90     IFEQ *OFF                                      089184
+     C                     MOVEL'Zero    '#ZERO   8                       089184
+     C                     ELSE                                           089184
+     C                     MOVEL'Not Zero'#ZERO                           089184
+     C                     ENDIF                                          089184
+     C*
+     C* Prepare flags, index values and lengths:
+     C*
+     C                     MOVE 'N'       #ERROR  1
+     C                     MOVE 'N'       #NEG    1
+     C*
+     C                     Z-ADD*ZERO     #VS     30       Value start
+     C*
+     C                     Z-ADD*ZERO     #IS     30       Integer start
+     C                     Z-ADD*ZERO     #IE     30       Integer end
+     C                     Z-ADD*ZERO     #IL     30       Integer length
+     C*
+     C                     Z-ADD*ZERO     #FS     30       Fraction start
+     C                     Z-ADD*ZERO     #FE     30       Fraction end
+     C                     Z-ADD*ZERO     #FL     30       Fraction length
+     C*
+     C                     Z-ADD*ZERO     #X      30       Index
+     C                     Z-ADD*ZERO     #Y      30       Index
+     C                     Z-ADD*ZERO     #Z      30       Index
+     C*
+     C* If leading blanks, search for a non-blank character:
+     C*
+     C                     MOVE AMT,1     #CHAR   1
+     C           #CHAR     IFEQ *BLANK
+     C           #X        DOUEQ256
+     C           #CHAR     ORNE *BLANK
+     C                     ADD  1         #X
+     C                     MOVE AMT,#X    #CHAR
+     C                     ENDDO
+     C                     SUB  1         #X
+     C                     ENDIF
+     C*
+     C           #X        ADD  1         #VS
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Read the incoming amount until a decimal marker,
+     C*  a negative sign, a space or the end of the array:
+     C*
+     C           #X        DOUEQ256
+     C           #CHAR     OREQ '.'
+     C           #CHAR     OREQ ','
+     C           #CHAR     OREQ '-'
+     C           #CHAR     OREQ *BLANK
+     C********** #IS       ANDGT*ZERO                                     085133
+     C                     ADD  1         #X
+     C                     MOVE AMT,#X    #CHAR
+     C*
+     C* If the first significant digit, save the integer start position:
+     C*
+     C           #CHAR     IFGE '1'
+     C           #CHAR     ANDLE'9'
+     C           #IS       ANDEQ*ZERO
+     C                     Z-ADD#X        #IS
+     C                     ENDIF
+     C*
+     C* Save integer digits:
+     C*
+     C           #CHAR     IFGE '0'
+     C           #CHAR     ANDLE'9'
+     C                     ADD  1         #Y
+     C                     MOVE #CHAR     INT,#Y
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C* Save the end point and the length of the integer part:
+     C*
+     C           #X        SUB  1         #IE
+     C                     Z-ADD#Y        #IL
+     C*
+     C* Handle an entirely-zero integer part:                             085133
+     C*                                                                   085133
+     C           #IS       IFEQ *ZERO                                     085133
+     C                     Z-ADD#IE       #IS                             085133
+     C                     ENDIF                                          085133
+     C*
+     C* If a sign, remember that the amount is negative:
+     C*
+     C           #CHAR     IFEQ '-'
+     C                     MOVE 'Y'       #NEG
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If a decimal marker found,
+     C*  extract the fractional part:
+     C*
+     C           #X        IFLT 256
+     C           #CHAR     ANDEQ'.'
+     C           #X        ORLT 256
+     C           #CHAR     ANDEQ','
+     C                     Z-ADD#X        #Y
+     C           #X        ADD  1         #FS
+     C*
+     C           #Y        DOUEQ256
+     C           #CHAR     ORLT '0'
+     C           #CHAR     ORGT '9'
+     C                     ADD  1         #Y
+     C                     MOVE AMT,#Y    #CHAR
+     C*
+     C           #CHAR     IFGE '0'
+     C           #CHAR     ANDLE'9'
+     C                     ADD  1         #Z
+     C                     MOVE #CHAR     FRC,#Z
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C           #Y        SUB  1         #FE
+     C                     Z-ADD#Z        #FL
+     C*
+     C* If a sign, remember that the amount is negative:
+     C*
+     C           #CHAR     IFEQ '-'
+     C                     MOVE 'Y'       #NEG
+     C                     SUB  1         #D
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   087381
+      ** If 'invert' indicator specified in option, invert #NEG           087381
+     C           #INV      IFEQ 'N'                                       087381
+     C           'YN':'NY' XLATE#NEG      #NEG                            087381
+     C                     ENDIF                                          087381
+     C*
+     C           EXSPLT    TAG                             <<<=== EXSPLT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSTD formats the amount with                      **
+     C**                                                                **
+     C**    comma delimiters;                                           **
+     C**    a decimal point;                                            **
+     C**    leading zeros replaced by blanks.                           **
+     C**                                                                **
+     C**  For example: 0001234567.8901 -->    1,234,567.8901            **
+     C********************************************************************
+     C           SRSTD     BEGSR                           * S R S T D   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSTD '  @STK,Q
+     C*
+     C* Calculate the number of commas required,
+     C*  giving the length of the edited integer:
+     C*
+     C           #IL       DIV  3         #CM     30
+     C                     MVR            #REM    10
+     C*
+     C* Avoid a leading comma (for 3, 6, 9, ... digits):
+     C*
+     C           #REM      IFEQ *ZERO
+     C           #CM       ANDGT*ZERO
+     C                     SUB  1         #CM
+     C                     ENDIF
+     C           #IL       ADD  #CM       #EL     30       Edited length
+     C*
+     C* #A is the pointer to the current input digit;
+     C* #B is the pointer to the current output character;
+     C* #C is the counter of digits for inserting commas:
+     C*
+     C           #IL       ADD  1         #A      30       After integer
+     C           #EL       ADD  1         #B      30
+     C                     Z-ADD*ZERO     #C      30
+     C*
+     C* If the sign type is "L" (Left), adjust the start point;
+     C*
+     C           #STYPE    IFEQ 'L'
+     C                     ADD  1         #A
+     C                     ADD  1         #B
+     C                     ADD  1         #EL
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#EL       P0VLEN
+     C*
+     C* Move integer characters to the output array (from right to left):
+     C*
+     C           #A        IFGT 1
+     C********** #A        SUB  2         #E      30       End zero-supp  085133
+     C           #B        SUB  2         #E      30       End zero-supp  085133
+     C*
+     C           #A        DOUEQ1
+     C                     SUB  1         #A
+     C                     SUB  1         #B
+     C                     ADD  1         #C
+     C                     MOVE INT,#A    EDT,#B
+     C           #C        IFEQ 3
+     C           #A        ANDGT1
+     C                     SUB  1         #B
+     C                     MOVE ','       EDT,#B
+     C                     Z-ADD*ZERO     #C
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C* Now move from left to right, replacing leading zeros
+     C*  and commas with blanks:
+     C*
+     C                     MOVE 'N'       ##FLAG  1
+     C                     Z-ADD*ZERO     #D      30
+     C*
+     C           #E        IFGT *ZERO
+     C           #D        DOUEQ#E
+     C           ##FLAG    OREQ 'Y'
+     C                     ADD  1         #D
+     C           EDT,#D    IFEQ '0'
+     C           EDT,#D    OREQ ','
+     C                     MOVE *BLANK    EDT,#D
+     C                     ELSE
+     C                     MOVE 'Y'       ##FLAG
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the sign type is "L" (Left), and if the amount is negative,
+     C*  move a leading sign:
+     C*
+     C           #STYPE    IFEQ 'L'
+     C           #NEG      ANDEQ'Y'
+     C                     SUB  1         #D
+     C                     MOVE '-'       EDT,#D
+     C                     ENDIF
+     C*
+     C* Endif integer part:
+     C                     ENDIF
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C           #EL       ADD  1         #B
+     C                     MOVE '.'       EDT,#B
+     C                     DO   #FL       #D      30
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C*
+     C* Adjust the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C                     ENDIF
+     C*
+     C* Append a sign value, if required:
+     C*
+     C                     EXSR SRSIGN
+     C/COPY WNCPYSRC,CGZ1100C04
+     C*
+     C           EXSTD     TAG                             <<<=== EXSTD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREURO formats the amount with                     **
+     C**                                                                **
+     C**    no delimiters;                                              **
+     C**    a decimal comma;                                            **
+     C**    leading zeros replaced by blanks.                           **
+     C**                                                                **
+     C**  For example: 0001234567.8901 -->    1234567,8901              **
+     C********************************************************************
+     C           SREURO    BEGSR                           * S R E U R O *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREURO'  @STK,Q
+     C*
+     C* Set the index values:
+     C*
+     C                     Z-ADD*ZERO     #A
+     C                     Z-ADD*ZERO     #B
+     C                     Z-ADD#IL       #EL
+     C*
+     C* If the sign type is "L" (Left), adjust the output start point:
+     C*
+     C           #STYPE    IFEQ 'L'
+     C                     ADD  1         #B
+     C                     ADD  1         #EL
+     C                     ENDIF
+     C*
+     C* Move the integer part to the output array (from left to right),
+     C*  suppressing leading zeros:
+     C*
+     C                     MOVE 'N'       ##FLAG
+     C                     Z-ADD*ZERO     #IS     30       Integer start
+     C*
+     C                     DO   #IL       #A
+     C                     ADD  1         #B
+     C           INT,#A    IFGT '0'                        1..9
+     C           ##FLAG    OREQ 'Y'                        embedded
+     C           #A        OREQ #EL                        units digit
+     C                     MOVE INT,#A    EDT,#B
+     C                     MOVE 'Y'       ##FLAG
+     C           #IS       IFEQ *ZERO
+     C                     Z-ADD#B        #IS
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *BLANK    EDT,#B
+     C                     ENDIF
+     C                     ENDDO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the sign type is "L" (Left), and if the amount is negative,
+     C*  move a leading sign:
+     C*
+     C           #STYPE    IFEQ 'L'
+     C           #NEG      ANDEQ'Y'
+     C           #IS       SUB  1         #D
+     C                     MOVE '-'       EDT,#D
+     C                     ENDIF
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C           #IL       ADD  1         #B
+     C                     MOVE ','       EDT,#B
+     C                     DO   #FL       #D
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C*
+     C* Append a sign value, if required:
+     C*
+     C                     EXSR SRSIGN
+     C*
+     C           EXEURO    TAG                             <<<=== EXEURO
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRISO formats the amount with                      **
+     C**                                                                **
+     C**    no delimiter;                                               **
+     C**    a decimal comma with or without decimal places;             **
+     C**    leading zeros replaced by blanks.                           **
+     C**                                                                **
+     C**  For example: 0001234567 -->    1234567,                       **
+     C********************************************************************
+     C           SRISO     BEGSR                           * S R I S O   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRISO '  @STK,Q
+     C*
+     C* Set the index values:
+     C*
+     C                     Z-ADD*ZERO     #A
+     C                     Z-ADD*ZERO     #B
+     C                     Z-ADD#IL       #EL
+     C*
+     C* If the sign type is "L" (Left), adjust the output start point:
+     C*
+     C           #STYPE    IFEQ 'L'
+     C                     ADD  1         #B
+     C                     ADD  1         #EL
+     C                     ENDIF
+     C*
+     C* Move the integer part to the output array (from left to right),
+     C*  suppressing leading zeros:
+     C*
+     C                     MOVE 'N'       ##FLAG
+     C                     Z-ADD*ZERO     #IS              Integer start
+     C*
+     C                     DO   #IL       #A
+     C                     ADD  1         #B
+     C           INT,#A    IFGT '0'                        1..9
+     C           ##FLAG    OREQ 'Y'                        embedded
+     C           #A        OREQ #EL                        units digit
+     C                     MOVE INT,#A    EDT,#B
+     C                     MOVE 'Y'       ##FLAG
+     C           #IS       IFEQ *ZERO
+     C                     Z-ADD#B        #IS
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *BLANK    EDT,#B
+     C                     ENDIF
+     C                     ENDDO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the sign type is "L" (Left), and if the amount is negative,
+     C*  move a leading sign:
+     C*
+     C           #STYPE    IFEQ 'L'
+     C           #NEG      ANDEQ'Y'
+     C           #IS       SUB  1         #D
+     C                     MOVE '-'       EDT,#D
+     C                     ENDIF
+     C*
+     C* Add the decimal comma:
+     C*
+     C                     ADD  1         #B
+     C                     MOVE ','       EDT,#B
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C                     DO   #FL       #D
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C*
+     C* Append a sign value, if required:
+     C*
+     C                     EXSR SRSIGN
+     C*
+     C           EXISO     TAG                             <<<=== EXISO
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSPAD formats the amount with                     **
+     C**                                                                **
+     C**    a comma delimiter;                                          **
+     C**    a decimal point;                                            **
+     C**    leading zeros replaced by asterisks.                        **
+     C**                                                                **
+     C**  For example: 00001234567.8901 --> *****1,234,567.8901         **
+     C********************************************************************
+     C           SRSPAD    BEGSR                           * S R S P A D *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSPAD'  @STK,Q
+     C*
+     C* Fill the array with asterisks until the end of the integer:
+     C*
+     C           #IE       IFGT #VS
+     C                     Z-ADD*ZERO     #A
+     C           #VS       DO   #IE
+     C                     ADD  1         #A
+     C                     MOVE '*'       EDT,#A
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Calculate the number of commas required,
+     C*  giving the length of the edited integer:
+     C*
+     C           #IL       DIV  3         #CM
+     C                     MVR            #REM
+     C*
+     C* Avoid a leading comma (for 3, 6, 9, ... digits):
+     C*
+     C           #REM      IFEQ *ZERO
+     C           #CM       ANDGT*ZERO
+     C                     SUB  1         #CM
+     C                     ENDIF
+     C*
+     C* If any commas, move an asterisk for each one:
+     C*
+     C           #CM       IFGT *ZERO
+     C                     DO   #CM
+     C                     ADD  1         #A
+     C                     MOVE '*'       EDT,#A
+     C                     ENDDO
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Set the edited length:
+     C*
+     C                     Z-ADD#A        #EL
+     C*
+     C* #A is the pointer to the current input digit;
+     C* #B is the pointer to the current output character;
+     C* #C is the counter of digits for inserting commas:
+     C*
+     C           #IL       ADD  1         #A
+     C           #IE       SUB  #VS       #B
+     C                     ADD  #CM       #B
+     C                     ADD  2         #B
+     C                     Z-ADD*ZERO     #C
+     C*
+     C* Save the value in #B:
+     C*
+     C                     Z-ADD#B        #SV     30
+     C*
+     C* If the sign type is "L" (Left) and the amount is negative,
+     C*  move a leading sign and adjust the output start point:
+     C*
+     C           #STYPE    IFEQ 'L'
+     C           #NEG      ANDEQ'Y'
+     C                     MOVE '-'       EDT,1
+     C                     ADD  1         #B
+     C                     ADD  1         #EL
+     C                     ENDIF
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#EL       P0VLEN
+     C*
+     C* Move integer characters to the output array (from right to left):
+     C*
+     C           #A        IFGT 1
+     C           #A        DOUEQ1
+     C********** #A        OREQ #IS                                       084876
+     C                     SUB  1         #A
+     C                     SUB  1         #B
+     C                     ADD  1         #C
+     C                     MOVE INT,#A    EDT,#B
+     C           #C        IFEQ 3
+     C           #A        ANDGT1
+     C                     SUB  1         #B
+     C                     MOVE ','       EDT,#B
+     C                     Z-ADD*ZERO     #C
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the last-moved character is a comma,                           084239
+     C*  replace it with an asterisk:                                     084239
+     C*                                                                   084239
+     C           EDT,#B    IFEQ ','                                       084239
+     C                     MOVE '*'       EDT,#B                          084239
+     C                     ENDIF                                          084239
+     C*
+     C* If the units digit is an asterisk, replace it with a zero:
+     C*
+     C           #SV       SUB  1         #B
+     C           EDT,#B    IFEQ '*'
+     C                     MOVE '0'       EDT,#B
+     C                     ENDIF
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C                     ADD  1         #B
+     C                     MOVE '.'       EDT,#B
+     C                     DO   #FL       #D
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C*
+     C* Adjust the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C                     ENDIF
+     C*
+     C* Append a sign value, if required:
+     C*
+     C                     EXSR SRSIGN
+     C*
+     C           EXSPAD    TAG                             <<<=== EXSPAD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREPAD formats the amount with                     **
+     C**                                                                **
+     C**    no delimiter;                                               **
+     C**    a decimal comma;                                            **
+     C**    leading zeros replaced by asterisks.                        **
+     C**                                                                **
+     C**  For example: *****1234567,8901                                **
+     C********************************************************************
+     C           SREPAD    BEGSR                           * S R E P A D *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREPAD'  @STK,Q
+     C*
+     C* Fill the array with asterisks until the end of the integer:
+     C*
+     C           #IE       IFGT #VS
+     C                     Z-ADD*ZERO     #C
+     C           #VS       DO   #IE
+     C                     ADD  1         #C
+     C                     MOVE '*'       EDT,#C
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Set the index values:
+     C*
+     C           #IL       ADD  1         #A
+     C           #IE       SUB  #VS       #B
+     C                     ADD  2         #B
+     C*
+     C* Save the value in #B:
+     C*
+     C                     Z-ADD#B        #SV
+     C*
+     C* If the sign type is "L" (Left) and the amount is negative,
+     C*  move a leading sign, adjust the output start point, and
+     C*  append an additional asterisk:
+     C*
+     C           #STYPE    IFEQ 'L'
+     C           #NEG      ANDEQ'Y'
+     C                     MOVE '-'       EDT,1
+     C                     ADD  1         #B
+     C                     ADD  1         #C
+     C                     MOVE '*'       EDT,#C
+     C                     ENDIF
+     C                     Z-ADD#B        #IE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move integer characters to the output array (from right to left):
+     C*
+     C           #A        IFGT 1
+     C           #A        DOUEQ1
+     C           #A        OREQ #IS
+     C                     SUB  1         #A
+     C                     SUB  1         #B
+     C                     MOVE INT,#A    EDT,#B
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* If the units digit is an asterisk, replace it with a zero:
+     C*
+     C           #SV       SUB  1         #B
+     C           EDT,#B    IFEQ '*'
+     C                     MOVE '0'       EDT,#B
+     C                     ENDIF
+     C*
+     C* If any decimal places exist, move the fractional part:
+     C*
+     C           #FL       IFGT *ZERO
+     C                     ADD  1         #B
+     C                     MOVE ','       EDT,#B
+     C                     DO   #FL       #D
+     C                     ADD  1         #B
+     C                     MOVE FRC,#D    EDT,#B
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Move the length of the result:
+     C*
+     C                     Z-ADD#B        P0VLEN
+     C*
+     C* Append a sign value, if required:
+     C*
+     C                     EXSR SRSIGN
+     C*
+     C           EXEPAD    TAG                             <<<=== EXEPAD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSIGN handles a trailing sign.                    **
+     C********************************************************************
+     C           SRSIGN    BEGSR                           * S R S I G N *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSIGN'  @STK,Q
+      *                                                                   089184
+      * If zero exit                                                      089184
+      *                                                                   089184
+     C           #ZERO     CABEQ'Zero    'EXSIGN                          089184
+     C*
+     C* If the sign type is "R" (Right) and the amount is negative,
+     C*  move a trailing sign and adjust the output length:
+     C*
+     C                     SELEC
+     C           #STYPE    WHEQ 'R'
+     C           #NEG      ANDEQ'Y'
+     C           P0VLEN    ADD  1         #B
+     C                     MOVE '-'       EDT,#B
+     C                     ADD  1         P0VLEN
+     C*
+     C* If the sign type is "C" (CR/DR), move a sign value
+     C*  and adjust the output length:
+     C*
+     C           #STYPE    WHEQ 'C'
+     C           P0VLEN    ADD  1         #B
+     C           #NEG      IFEQ 'Y'
+     C***********          MOVEA'DR'      EDT,#B                          126572
+     C***********          MOVEA'CR'      EDT,#B                   126572 133857
+     C                     MOVEA'DR'      EDT,#B                          133857
+     C                     ELSE
+     C***********          MOVEA'CR'      EDT,#B                          126572
+     C***********          MOVEA'DR'      EDT,#B                   126572 133857
+     C                     MOVEA'CR'      EDT,#B                          133857
+     C                     ENDIF
+     C                     ADD  2         P0VLEN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the sign type is "D" (DR only) and the amount is negative,
+     C*  move the sign value and adjust the output length:
+     C*
+     C           #STYPE    WHEQ 'D'
+     C           #NEG      ANDEQ'Y'
+     C           P0VLEN    ADD  1         #B
+     C                     MOVEA'DR'      EDT,#B
+     C                     ADD  2         P0VLEN
+     C*                                                                   085133
+     C* If the sign type is "E" (CR only) and the amount is negative,     085133
+     C*  move the sign value and adjust the output length:                085133
+     C*                                                                   085133
+     C           #STYPE    WHEQ 'E'                                       085133
+     C           #NEG      ANDEQ'Y'                                       085133
+     C           P0VLEN    ADD  1         #B                              085133
+     C                     MOVEA'CR'      EDT,#B                          085133
+     C                     ADD  2         P0VLEN                          085133
+     C*                                                                   085133
+     C*                                                                   087939
+     C* If the sign type is "+" (+/-) format                              087939
+     C*  move the sign value and adjust the output length:                087939
+     C*                                                                   087939
+     C           #STYPE    WHEQ '+'                                       087939
+     C           P0VLEN    ADD  1         #B                              087939
+     C           #NEG      IFEQ 'Y'                                       087939
+     C                     MOVEA'-'       EDT,#B                          087939
+     C                     ADD  1         P0VLEN                          087939
+     C                     ELSE                                           087939
+     C                     MOVEA'+'       EDT,#B                          087939
+     C                     ADD  1         P0VLEN                          087939
+     C                     ENDIF                                          087939
+     C*                                                                   087939
+     C/COPY WNCPYSRC,CGZ1100C01
+     C                     ENDSL
+     C*
+     C           EXSIGN    TAG                             <<<=== EXSIGN
+     C/COPY WNCPYSRC,CGZ1100C02
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBADF handles an invalid format flag.             **
+     C********************************************************************
+     C           SRBADF    BEGSR                           * S R B A D F *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBADF'  @STK,Q
+     C*
+     C* Flag the error:
+     C                     MOVE 'CGD1629' P0RTN
+     C*
+     C           EXBADF    TAG                             <<<=== EXBADF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation.                    **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Define and clear error return code:
+     C*
+     C                     MOVE *BLANKS   P0RTN
+     C*
+     C* Move the copyright parameter:
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CGZ1100CPG
+     C*
+     C* Split the options value:
+     C*
+     C                     MOVELP0FOPT    #ETYPE  8
+     C                     MOVE P0FOPT    #STYPE  1
+     C           1         SUBSTP0FOPT:14 #INV    1                       087381
+     C*
+     C* Clear output length and data structures:
+     C*
+     C                     Z-ADD*ZERO     P0VLEN
+     C*
+     C                     MOVE *BLANKS   P0VOUT
+     C                     MOVE *BLANKS   EDITDS
+     C*
+     C* Clear work and data structures:                                   084239
+     C*                                                                   084239
+     C                     MOVE *BLANKS   INTEDS                          084239
+     C                     MOVE *BLANKS   FRACDS                          084239
+     C/COPY WNCPYSRC,CGZ1100C05
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculation specifications:
+     C*
+     C/COPY WNCPYSRC,CGZ1100CPG
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     C* /Copy point for output:
+     C*
+     O/COPY WNCPYSRC,CGZ1100OPG
+     C*
+     O********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

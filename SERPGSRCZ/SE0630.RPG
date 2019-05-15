@@ -1,0 +1,1411 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trade Number Gaps Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0630 - TRADE NUMBER GAPS REPORT                            *
+     F*                                                               *
+     F*  Function: This report displays Trade Numbers Cancelled or    *
+     F*   (I/C)    Amended today; those outside of the previously     *
+     F*   (COB)    set up ranges; gaps (missing Trade Numbers) in     *
+     F*            Today's Input and Trade Numbers Input Today which  *
+     F*            were previously missing.                           *
+     F*            Additionally advises of the utilised Trade Numbers *
+     F*            within a Range, Ranges unused today and unallocated*
+     F*            Ranges.                                            *
+     F*                                                               *
+     F*  Called by: SEC0303  - Interim Trade Number Gaps Report (I/C) *
+     F*             SEC0612D - Trade Number Gaps Report (COB)         *
+     F*                                                               *
+     F*             Frequency:                                        *
+     F*             - Interim report on request during I/C            *
+     F*             - Daily during COB                                *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 066849             Date 3NOv97                *
+     F*                 093383             Date 05OCT95               *
+     F*                  S01496            DATE 23AUG941              *
+     F*                  052254            DATE 10JAN94               *
+     F*                  E41621            DATE  1FEB93               *
+     F*                  E34985            DATE  4MAR92               *
+     F*                  E33522            DATE 15JAN92               *
+     F*                  E25750            DATE 21OCT91               *
+     F*                  E29170            DATE 07OCT91               *
+     F*                  S01117            DATE 01NOV90               *
+     F*                  E13911            DATE 23JUN88               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  066849 - Trade number equal to the Next Available Trade is   *
+     F*           reported as missing.                                *
+     F*  093383 - Trades wrongly reported as unauthorised.            *
+     F*           Only RECIs of L, P and R are not authorised         *
+     F*  S01496 - Jyske Enhancements - Change format parameter        *  *
+     F*           from DSFDY to DSSDY for AOSTRDR0                    *  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E41621 - Next available trade number is not being updated    *
+     F*           due to previously missing trade number is being     *
+     F*           used.                                               *
+     F*  E34985 - Was not coping with Trade Authorisations correctly  *
+     F*  E33522 - Records with change types P and Y were not getting  *
+     F*           selected for range processing                       *
+     F*  E25750 - Array index error because trade ref of 999999       *
+     F*  E29170 - RCF CHANGES                                         *
+     F*  S01117 - Multi-branching                                     *
+     F*  E13911 - POST INCORPORATION DEVELOPMENT FIX.                 *   E13911
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FTRADNLCDIP  E           K        DISK
+     F*TABSE***IF* E           K        DISK                              S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     FTNRN1   IF  E           K        DISK
+     F            TNRANAAF                          KRENAMETNRN1AAF
+     F            TNRANABF                          KRENAMETNRN1ABF
+     FTNRAN   UF  E           K        DISK
+     FSE0630P1O   F     132     OF     PRINTER                            S01124
+     F                                              KINFDS SPOOL          S01117
+     FSE0630AUO   F     132     OA     PRINTER                            S01124
+     F                                              KINFDS SPOOLU         S01117
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - S/TRADSD - DETAIL                                     *
+     F*   03  - S/TNRAN - HEADER                                      *
+     F*   04  - S/TNRAN - DETAIL                                      *
+     F*                                                               *
+     F*   20  - TRADE REFERENCE IS > PROGRAM NEXT AVAILABLE TRADE     *
+     F*         POINTER AND GREATER THAN NEXT AVAILABLE TRADE.        *
+     F*   21  - TRADE REFERENCE IS LESS THAN PROGRAM NEXT AVAILABLE   *
+     F*         TRADE POINTER AND LESS THAN NEXT AVAILABLE TRADE.     *
+     F*   22  - TRADE REFERENCE IS EQUAL TO THE NEXT AVAILABLE TRADE  *   066849
+     F*   30  - VERY FIRST S/TRADSD DETAIL RECORD.                    *
+     F*   31  - TRADE REFERENCE SELECTED FOR RANGE PROCESSING.        *
+     F*   32  - FUTURE OUTPUT OF TRADE NUMBER RANGE DETAILS.          *
+     F*   33  - Trade is authorised                                   *   E34985
+     F*   34  - Trade Authorisations is used                          *   E34985
+     F*   40  - FIRST CYCLE BYPASS.                                   *
+     F*   43  - TDRF IS OUT OF CURRENT RANGE.                         *
+     F*   44  - TRADE REFERENCE IS GREATER THAN THE LAST TRADE NO.    *
+     F*         IN THE CURRENT RANGE.                                 *
+     F*   45  - TRADE REFERENCE > NEXT AVAILABLE TRADE PROGRAM POINTER*
+     F*   46  - TRADE REFERENCE < NEXT AVAILABLE TRADE PROGRAM POINTER*
+     F*   47  - TRADE REFERENCE = NEXT AVAILABLE TRADE PROGRAM POINTER*
+     F*   48  - AT LEAST ONE PREVIOUSLY MISSING TRADE IN THIS RANGE.  *
+     F*   52  - TWO OR MORE PREVIOUSLY MISSING TRADES IN THIS RANGE.  *
+     F*   57  - TRADE REFERENCE IS EQUAL TO NEXT AVAILABLE TRADE      *
+     F*         PROGRAM POINTER, AND LESS THAN NEXT AVAILABLE TRADE.  *
+     F*   58  - TNRN1 EOF.                                            *
+     F*   59  - TNRANAB RECORD FOUND.                                 *
+     F*   61  - SINGLE MISSING TRADE.                                 *
+     F*   63  - LAST TRADE RERFENCE IN THIS RANGE HAS BEEN USED.      *
+     F*   65  - FIRST RECORD IN SEQUENCE OF S/STRX2 RECORDS WITH SAME *
+     F*         TRADE REFERENCE IS 'I1'.                              *
+     F*   66  - RECORD TYPE IS '2'.                                   *
+     F*   67  - RECORD TYPE IS '1'.                                   *
+     F*   68  - LAST RECORD IN SEQUENCE OF S/STRX2 RECORDS WITH SAME  *
+     F*         TRADE REFERENCE IS 'C1'.                              *
+     F*   69  - THERE HAS BEEN MOVEMENT TODAY FOR THIS TRADE NUMBER   *
+     F*         RANGE.                                                *
+     F*   70  - TRADE REFERNCE CANCELLED WITHIN CURRENT RANGE.        *
+     F*   71  - S/TRADSD FILE CONTROLS OUT OF BALANCE.                *
+     F*   72  - S/TNRAN FILE CONTROLS OUT OF BALANCE.                 *
+     F*   73  - Trade has been changed                                *   E34985
+     F*   79  - OUTPUT NO DETAILS TO REPORT ON AUDIT FILE             *   S01117
+     F*   80  - OUTPUT NO DETAILS TO REPORT.                          *
+     F*   81  - END OF S/TNRAN FILE.                                  *
+     F*   82  - OUTPUT UNALLOCATED RANGE LINE.                        *
+     F*   83  - OUTPUT OF ALLOCATED TRADE NUMBER RANGE DETAILS.       *
+     F*   84  - OUTPUT OF 'RANGE NOT USED TODAY'.                     *
+     F*   85  - OUTPUT OF C/FWD. NEXT AVAILABLE TRADE NUMBER.         *
+     F*   86  - EXCEPTION FOR UPDATING S/TNRAN DETAIL RECORD.         *
+     F*   87  - FILE CONTROL REPORT.                                  *
+     F*   88  - END OF TRADE NUMBER RANGES REACHED.                   *
+     F*   89  - OUTPUT 'END OF REPORT' LINE.                          *
+     F*                                                               *
+     F* 90-99 - STANDARD SUB-ROUTINE INDICATORS.                      *
+     F*   99  - DATABASE ERROR.                                       *
+     F*                                                               *
+     F*   U3  - INTERIM AUDIT LIST.                                   *
+     F* U7+U8 - DATABASE ERROR.                                       *
+     F*   U8  - FILE CONTROLS OUT OF BALANCE.                         *
+     F*                                                               *
+     F*   L1  - LEVEL BREAK ON TRADE REFERENCE.                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    RNM       100  2 0             RANGE NO. ARR.
+     E                    RNA       100 35               RANGE DESC. ARR.
+     E                    FNR       100  6 0             FIRST TRAD. ARR.
+     E                    LNR       100  6 0             LAST TRAD. ARR.
+     E                    NAN       100  6 0             NEXT AVL. ARR.
+     E                    CPY@    1   1 80
+      /EJECT
+     I*
+     ITRADSDF     01
+     I*
+     I*   TRADE TRANSACTION INDEX
+     I*
+     I                                              TDRF  L1
+     I              LCD                             LSTC
+     I              CHTP                            CTYP
+     I*TABTB10F***                                                        S01117
+     I***********                                                         S01117
+     I****INSTALLATION*CONTROL*DATA***************************************S01117
+     I***********                                                         S01117
+     ITNRANAAF    03
+     I*
+     I*   TRADE NUMBER RANGES FILE - HEADER
+     I*
+     I              RECI                            RECITN
+     ITNRANABF    04
+     I*
+     I*   TRADE NUMBER RANGES FILE - DETAIL
+     I*
+     I              RECI                            RECITN
+     ITNRN1AAF
+     I*
+     I*   SORTED TRADE NUMBER RANGES FILE - HEADER
+     I*
+     I              RECI                            RECIT1
+     ITNRN1ABF
+     I*
+     I*   SORTED TRADE NUMBER RANGES FILE - DETAIL
+     I*
+     I              RECI                            RECIT1
+     I*                                                                   S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     I*                                                                   S01117
+     ITNRDS       DS                             12
+     I*
+     I*   TNRAN KEY DATA STRUCTURE
+     I*
+     I                                        1   20KRECT
+     I                                        3  10 KZZ004
+     I                                       11  120KRANG
+     I            DS
+     I*
+     I*   CONVERT TRADE REF TO NUMERIC
+     I*
+     I                                        1   6 TDRF
+     I                                        1   60TRDR
+     I*LDA********UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I*   LOCAL DATA AREA
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITL                  S01117
+     I*                                                                   E34985
+     ISDSTRD    E DSSDSTRDPD                                              E34985
+     I** Data Structure for Security Trading ICD details                  E34985
+     I*                                                                   E34985
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     I**  FILE INFORMATION DATA STRUCTURE - P1                            S01117
+     I**                                                                  S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I**                                                                  S01117
+     I**  FILE INFORMATION DATA STRUCTURE - AU                            S01117
+     I**                                                                  S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I**                                                                  S01117
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE          S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I**                                                                  S01117
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, LONG DATA STRUCTURE           S01496
+     IDSSDY     E DSDSSDY                                                 S01496
+     I**                                                                  S01496
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C**  TNRAN KEY LIST
+     C*
+     C           TNRKEY    KLIST
+     C                     KFLD           KRECT
+     C                     KFLD           KZZ004
+     C                     KFLD           KRANG
+     C*                                                                   S01117
+     C*   PARAMETER LIST                                                  S01117
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C*
+     C* Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*****************************************************************
+     C*
+     C**  M A I N   P R O C E S S I N G
+     C*
+     C*      CALLS: ICDRSR
+     C*             RANGES
+     C*             RANGRD
+     C*             SELECT
+     C*             RANGE
+     C*             LRPROC
+     C*
+     C*****************************************************************
+     C*
+     C**  FIRST TIME PROCESSING ONLY
+     C*
+     C           *IN40     IFEQ '0'
+     C                     TIME           ZTIME   60
+     C***********          MOVEL'SE0630  'DBPGM                           S01117
+     C                     EXSR ICDRSR
+     C***LR******          GOTO ENDD
+     C                     SETON                     40
+     C*
+     C**  INITIALIZE PRINTER LINE COUNT
+     C*
+     C                     Z-ADD61        L       20
+     C*
+     C**  SET-UP RANGE ARRAYS
+     C*
+     C                     EXSR RANGES
+     C*
+     C***LR******          GOTO ENDD
+     C*
+     C**  READ FIRST RANGE
+     C*
+     C                     Z-ADD0         LRLTIR  60
+     C                     EXSR RNGERD
+     C*
+     C**  SET INDICATOR TO DISTINGUISH FIRST TRADNLCD DETAIL RECORD
+     C**  FROM SUBSEQUENT TRADNLCD DETAILS
+     C*
+     C                     SETON                     30
+     C*
+     C                     END
+     C*
+     C           DETAIL    TAG                             ** DETAIL **
+     C*
+     C**  PROCESSING FOR S/TRASDS DETAIL RECORDS ONLY
+     C*
+     C** FOR ANY SEQUENCE OF S/TRADSD DETAIL RECORDS WHICH HAS THE SAME
+     C** TRADE REFERENCE, IF THIS IS THE FIRST OF THE SEQUENCE, THEN
+     C** SAVE FIRST ACTION CODE AND RECORD TYPE FIELDS.
+     C*
+     C   L1                MOVE ACTC      ACTC1   1
+     C*
+     CLRN30                TIME           ZTIME   60
+     C*LRN30******          MOVEL'SE0630  'DBPGM                          S01117
+     CLRN30                EXSR ICDRSR
+     CLRN30                EXSR RANGES
+     CLRN30                EXSR NODETS
+     C*
+     CL1    30             EXSR SELECT
+     CL1 31 30             EXSR RANGE
+     C*
+     C***********ENDL      TAG                             ** ENDL TAG **
+     C*
+     C***********ENDD      TAG                             ** ENDD TAG **
+     C***40******          EXSR EMPTYF
+     C***U7******          GOTO ENDL
+     C*
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     CLR 30                EXSR LRPROC
+      *                                                               *
+      *================================================================
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  OUTPUT  - SR. TO OUTPUT HEADING AND DETAIL LINES
+     C*
+     C*  CALLED BY: RANGE
+     C*             ENDRNG
+     C*             CURLT
+     C*             CUREQ
+     C*             CURGT
+     C*
+     C*****************************************************************
+     C*
+     C           OUTPUT    BEGSR                           ** OUTPUT **
+     C*
+     C**  CHECK IF LINE COUNT IS GREATER THAN 60
+     C*
+     C           L         COMP 60                   60
+     C   60                Z-ADD9         L
+     C                     EXCPT
+     C                     SETOF                     60
+     C*
+     C           OUTPZZ    ENDSR                           ** OUTPZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  RNGHDR SR. TO OUTPUT THE DETAILS OF AN ALLOCATED RANGE FOR
+     C*             THE FIRST TIME.
+     C*
+     C*  CALLED BY: ENDRNG
+     C*             PMTRAD
+     C*
+     C*  CALLS:     OUTPUT
+     C*
+     C*****************************************************************
+     C*
+     C           RNGHDR    BEGSR                           ** RNGHDR **
+     C*
+     C                     SETON                     83
+     C           NTRNR     COMP 999999                   63
+     C                     EXSR OUTPUT
+     C                     ADD  2         L
+     C                     SETOF                     833263
+     C*
+     C           RNGHZZ    ENDSR                           ** RNGHZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PMTRAD SR. TO OUTPUT ANY PREVIOUSLY MISSING TRADES IN THIS
+     C*             RANGE.
+     C*
+     C*  CALLED BY: ENDRNG
+     C*             CURLT
+     C*             CUREQ
+     C*             CURGT
+     C*
+     C*  CALLS:     OUTPUT
+     C*             RNGHDR
+     C*
+     C*****************************************************************
+     C*
+     C           PMTRAD    BEGSR                           ** PMTRAD **
+     C*
+     C**  CHECK IF RANGE HEADER HAS YET BEEN OUTPUT
+     C*
+     C   32                EXSR RNGHDR
+     C*
+     C           PMFTIR    COMP 0                    48
+     C   48      PMLTIR    COMP PMFTIR               52
+     C  N48                GOTO PMTRZZ
+     C                     EXSR OUTPUT
+     C                     ADD  1         L
+     C                     Z-ADD0         PMFTIR
+     C                     Z-ADD0         PMLTIR
+     C                     SETOF                     48
+     C*
+     C           PMTRZZ    ENDSR                           ** PMTRZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SELECT  - SR. TO SELECT TRADE REFERENCE FOR RANGE PROCESSING.
+     C*  CALLED BY: MAIN PROCESSING
+     C*
+     C*****************************************************************
+     C*
+     C           SELECT    BEGSR                           *** SELECT ***
+     C*
+     C                     SETOF                     31
+     C                     SETOF                     33                   E34985
+     C*
+     C**  SET ON LR IF LAST CHANGE DATE IS GREATER THAN RUN DATE.
+     C*
+     C*
+     C**  SELECT RECORDS FOR PROCESSING ON THE CRITERIA:-
+     C**     LAST CHANGE DATE = RUN DATE                               E
+     C*******AND*CHANGE*TYPE*=*'I'*OR*'D'*********************************E34985
+     C*******OR*CHANGE*TYPE*=*'C'*OR*'A'*AND******************************E33522
+     C*******OR*CHANGE*TYPE*=*'C'*OR*'A'*OR*'P'*OR*'Y'*AND**********E33522E34985
+     C*******ORIGINAL*ENTRY*DATE*=*RUN*DATE.******************************E34985
+     C**     and Change Types = 'A','C','D',I','P' or 'Y'                 E34985
+     C*
+     C** WHEN A RECORD HAS BEEN SELECTED THE FOLLOWING ACTION CODES ARE
+     C** RETURNED:-
+     C********ACTION*CODE*=*'I'*FOR*CHANGE*TYPES*'A',*'C'*OR*'I'**********E33522
+     C*****ACTION*CODE*=*'I'*FOR*CHANGE*TYPES*'A','C','P','Y'*OR*'I'E33522E34985
+     C********ACTION*CODE*=*'C'*FOR*CHANGE*TYPE*'D'.**********************E34985
+     C**      Action code = 'I' for Change Type 'I' and Types 'P' and     E34985
+     C**                    'Y' when Original Entry Date = Run Date       E34985
+     C**      Action code = 'C' for Change Type 'D' and Type 'Y' when     E34985
+     C**                    Record Id is '*' or 'C'                       E34985
+     C**      Action code = 'A' for Change Types 'A' & 'C' & Types 'P'    E34985
+     C**                    & 'Y' when Original Entry Date < Run Date     E34985
+     C*
+     C           LSTC      IFGT RUND
+     C                     MOVE '1'       *INLR
+     C                     ELSE                                           E80866
+     C           LSTC      IFEQ RUND                                      E80866
+     C           CTYP      IFEQ 'I'
+     C                     MOVE '1'       *IN31                           E80866
+     C                     MOVE 'I'       ACTC    1
+     C***********          ELSE                                     E80866E34985
+     C                     END                                            E34985
+     C           CTYP      IFEQ 'D'                                       E80866
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'C'       ACTC
+     C***********          ELSE                                           E34985
+     C                     END                                            E34985
+     C           CTYP      IFEQ 'A'
+     C           CTYP      OREQ 'C'
+     C***********CTYP      OREQ 'P'                                 E33522E34985
+     C***********CTYP      OREQ 'Y'                                 E33522E34985
+     C***********TOED      ANDEQRUND                                      E33522
+     C***********TOED      IFEQ RUND                                E33522E34985
+     C                     MOVE '1'       *IN31
+     C***********          MOVE 'I'       ACTC                            E34985
+     C                     MOVE 'A'       ACTC                            E34985
+     C***********          END                                      E33522E34985
+     C                     END
+     C           CTYP      IFEQ 'P'                                       E34985
+     C                     SETON                     31                   E34985
+     C           TOED      IFLT RUND                                      E34985
+     C                     MOVE 'A'       ACTC                            E34985
+     C                     ELSE                                           E34985
+     C                     MOVE 'I'       ACTC                            E34985
+     C                     END                                            E34985
+     C                     END                                            E34985
+     C           CTYP      IFEQ 'Y'                                       E34985
+     C                     SETON                     3133                 E34985
+     C           RECI      IFEQ '*'                                       E34985
+     C           RECI      OREQ 'C'                                       E34985
+     C                     MOVE 'C'       ACTC                            E34985
+     C                     ELSE                                           E34985
+     C           TOED      IFLT RUND                                      E34985
+     C                     MOVE 'A'       ACTC                            E34985
+     C                     ELSE                                           E34985
+     C                     MOVE 'I'       ACTC                            E34985
+     C                     END                                            E34985
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*                                                                   093383
+     C**  Only RECIs of L, P and R are not authorised                     093383
+     C           *IN33     IFNE '1'                                       093383
+     C           RECI      IFEQ 'L'                                       093383
+     C           RECI      OREQ 'P'                                       093383
+     C           RECI      OREQ 'R'                                       093383
+     C                     SETOF                     33                   093383
+     C                     ELSE                                           093383
+     C                     SETON                     33                   093383
+     C                     END                                            093383
+     C                     END                                            093383
+      *                                                                   E41621
+      ** Update the next available number if the trade number have        E41621
+      ** been used.                                                       E41621
+      *                                                                   E41621
+     C           *IN31     IFEQ '0'                                       E41621
+     C           TRDR      ANDEQWNTRN                                     E41621
+     C                     ADD  1         WNTRN                           E41621
+     C                     END                                            E41621
+     C*
+     C           SELZZ     ENDSR                           ** SELZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  RANGE  - SR. TO DETERMINE WHETHER THE SELECTED TRADE REFERENCE
+     C*               IS IN THE CURRENT TRADE NUMBER RANGE
+     C*
+     C*  CALLED BY: MAIN PROCESSING
+     C*  CALLS:     OUTPUT
+     C*             ENDRNG
+     C*             RNGERD
+     C*             CURLT
+     C*             CUREQ
+     C*             CURGT
+     C*
+     C*****************************************************************
+     C*
+     C           RANGE     BEGSR                           ** RANGE TAG **
+     C*
+     C           RANG00    TAG                             ** RANG00 TAG *
+     C*
+     C           TRDR      COMP FTIRR                  43
+     C  N43 88   TRDR      COMP 999999                   43               E25750
+     C  N43                GOTO RANG01
+     C*
+     C**  TRADE NUMBER IS OUT OF RANGE
+     C*
+     C           ACTC      COMP 'C'                      65
+     C           ACTC      IFEQ 'A'                                       E34985
+     C                     SETON                     73                   E34985
+     C                     END                                            E34985
+     C                     EXSR OUTPUT
+     C                     ADD  1         L
+     C                     SETOF                     43
+     C                     SETOF                     6573                 E34985
+     C                     GOTO RANGZZ
+     C*
+     C           RANG01    TAG                             ** RANG01 **
+     C*
+     C** CHECK IF TRADE NUMBER IS GREATER THAN THE LAST TRADE NUMBER IN
+     C** THE CURRENT RANGE
+     C*
+     C           TRDR      COMP LTIRR                44
+     C  N44                GOTO RANG02
+     C                     EXSR ENDRNG
+     C   U7                GOTO RANGZZ
+     C                     EXSR RNGERD
+     C                     GOTO RANG00
+     C*
+     C           RANG02    TAG                             ** RANG02 **
+     C*
+     C** IF THIS POINT OF THE PROGRAM IS REACHED, THE TRADE IS WITHIN
+     C** THE CURRENT RANGE AND THERE HAS BEEN INPUT TODAY FOR THIS
+     C** RANGE.
+     C*
+     C                     SETON                     69
+     C*
+     C**  FURTHER PROCESSING IS DEPENDENT ON COMPARISON OF THE TRADE
+     C**  REFERENCE AND THE NEXT AVAILABLE TRADE PROGRAM POINTER.
+     C*
+     C           TRDR      COMP WNTRN                454647
+     C*
+     C   46                EXSR CURLT
+     C   47                EXSR CUREQ
+     C   45                EXSR CURGT
+     C                     ADD  1         WNTRN
+     C*
+     C           RANGZZ    ENDSR                           ** RANGZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  CURLT  SR. PROCESSING FOR WHEN TRADE IS IN CURRENT RANGE AND IS
+     C*             LESS THAN THE PROGRAM NEXT AVAILABLE TRADE POINTER.
+     C*
+     C*  CALLED BY: RANGE
+     C*
+     C*  CALLS:     PMTRAD
+     C*             OUTPUT
+     C*             CURGT
+     C*
+     C*****************************************************************
+     C*
+     C           CURLT     BEGSR                           ** CURLT **
+     C*
+     C           ACTC      COMP 'C'                      65
+     C   65                GOTO CURL01
+     C*                                                                   E34985
+     C** TRADE STATUS IS AMENDED                                          E34985
+     C*                                                                   E34985
+     C           ACTC      IFEQ 'A'                                       E34985
+     C                     EXSR PMTRAD                                    E34985
+     C                     EXCPTCHANGE                                    E34985
+     C                     ADD  1         L                               E34985
+     C                     ELSE                                           E34985
+     C*
+     C** TRADE STATUS IS INSERT - SET FIRST PREVIOUS MISSING TRADE AND
+     C**  LAST PREVIOUS MISSING TRADE FIELDS.
+     C*
+     C                     Z-ADDTRDR      PMFTIR  60
+     C                     Z-ADDTRDR      PMLTIR  60
+     C                     END                                            E34985
+     C                     GOTO CURL03
+     C*
+     C           CURL01    TAG                             ** CURL01 **
+     C*
+     C**  TRADE STATUS IS CANCEL
+     C**  OUTPUT PREVIOUSLY MISSING TRADES AND CANCELLATION LINE
+     C*
+     C                     EXSR PMTRAD
+     C                     SETON                     70
+     C                     EXSR OUTPUT
+     C                     ADD  1         L
+     C                     SETOF                     70
+     C*
+     C           CURL03    TAG                             ** CURL03 **
+     C*
+     C                     Z-ADDTRDR      WNTRN
+     C*
+     C           CURLZZ    ENDSR                           ** CURLZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  CUREQ  SR. PROCESSING FOR WHEN TRADE IS IN CURRENT RANGE AND
+     C*             IS EQUAL TO PROGRAM NEXT AVAILABLE TRADE POINTER.
+     C*
+     C*  CALLED BY: RANGE
+     C*  CALLS:     PMTRAD
+     C*             OUTPUT
+     C*
+     C*****************************************************************
+     C*
+     C           CUREQ     BEGSR                           ** CUREQ **
+     C*
+     C           ACTC      COMP 'C'                      65
+     C   65                GOTO CURE03
+     C*                                                                   E34985
+     C** TRADE STATUS IS AMENDED                                          E34985
+     C*                                                                   E34985
+     C           ACTC      IFEQ 'A'                                       E34985
+     C                     EXSR PMTRAD                                    E34985
+     C                     EXCPTCHANGE                                    E34985
+     C                     ADD  1         L                               E34985
+     C                     ELSE                                           E34985
+     C*
+     C**  TRADE STATUS IS INSERT - CHECK IF PREVIOUSLY MISSING
+     C*
+     C           WNTRN     COMP NTRNR                  57
+     C  N57                GOTO CUREZZ
+     C           PMLTIR    COMP 0                        52
+     C   52                Z-ADDWNTRN     PMFTIR
+     C                     Z-ADDWNTRN     PMLTIR
+     C                     END                                            E34985
+     C                     GOTO CUREZZ
+     C*
+     C           CURE03    TAG                             ** CURE03 **
+     C*
+     C**  TRADE STATUS IS CANCEL - OUTPUT PREVIOUSLY MISSING TRADES AND
+     C**  CANCELLATION LINE
+     C*
+     C                     EXSR PMTRAD
+     C                     SETON                     70
+     C                     EXSR OUTPUT
+     C                     ADD  1         L
+     C                     SETOF                     70
+     C*
+     C           CUREZZ    ENDSR                           ** CUREZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  CURGT  SR. PROCESSING FOR WHEN TRADE IS IN CURRENT RANGE AND
+     C*             GREATER THAN PROGRAM NEXT AVAILABLE TRADE POINTER.
+     C*
+     C*  CALLED BY: RANGE
+     C*  CALLS:     PMTRAD
+     C*             OUTPUT
+     C*             CURLT
+     C*
+     C*****************************************************************
+     C*
+     C           CURGT     BEGSR                           ** CURGT **
+     C*
+     C**  OUTPUT ANY PREVIOUSLY MISSING TRADES.
+     C*
+     C                     EXSR PMTRAD
+     C*
+     C**  FURTHER PROCESSING IS DEPENDANT ON COMPARISON OF THE TRADE
+     C**  REFERENCE AND THE NEXT AVAILABLE TRADE OF THIS RANGE
+     C*
+     C***********TRDR      COMP NTRNR                2021                 066849
+     C           TRDR      COMP NTRNR                202122               066849
+     C   21                EXSR CURLT
+     C**N20******          GOTO CURGZZ                                    066849
+     C   21                GOTO CURGZZ                                    066849
+     C   22                GOTO CURG01                                    066849
+     C*
+     C**  OUTPUT 'MISSING' LINE
+     C*
+     C           TRDR      SUB  1         TRDR1   60
+     C           WNTRN     COMP TRDR1                    61
+     C                     SETON                     49
+     C                     EXSR OUTPUT
+     C                     ADD  1         L
+     C                     SETOF                     49
+     C*                                                                   066849
+     C           CURG01    TAG                                            066849
+     C                     Z-ADDTRDR      WNTRN
+     C*
+     C           CURGZZ    ENDSR                           ** CURGZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  ENDRNG  - SR. END OF RANGE PROCESSING
+     C*
+     C*  CALLED BY: RANGE
+     C*             LRPROC
+     C*
+     C*  CALLS:     PMTRAD
+     C*             OUTPUT
+     C*
+     C*****************************************************************
+     C*
+     C           ENDRNG    BEGSR                           ** ENDRNG **
+     C*
+     C**  CHECK IF RANGE HEADER HAS YET BEEN OUTPUT
+     C*
+     C   32                EXSR RNGHDR
+     C*
+     C**  CHECK IF THERE HAS BEEN INPUT TODAY FOR THIS RANGE
+     C*
+     C   69                GOTO ENDR01
+     C           NTRNR     COMP 999999                   63
+     C                     SETON                     84
+     C                     EXCPT
+     C                     SETOF                     8463
+     C                     GOTO ENDR05
+     C*
+     C           ENDR01    TAG                             ** ENDR01 **
+     C*
+     C                     SETOF                     69
+     C*
+     C**  OUTPUT ANY 'PREVIOUSLY REPORTED MISSING'
+     C*
+     C                     EXSR PMTRAD
+     C*
+     C**  CHECK IF A TRADE NUMBER GREATER THAN OR EQUAL TO THE BROUGHT
+     C**  FORWARD 'NEXT AVAILABLE TRADE NUMBER' HAS BEEN USED.
+     C**  ALSO, IF THE LAST TRADE NUMBER IN THIS RANGE HAS BEEN USED,
+     C**  THEN DO NOT OUTPUT A CARRIED FORWARD 'NEXT AVAILABLE TRADE
+     C**  NUMBER'
+     C*
+     C           WNTRN     COMP NTRNR                  6262
+     C   62      NTRNR     COMP 999999                   63
+     C  N62      WNTRN     COMP LTIRR                63
+     C   63                GOTO ENDR02
+     C                     SETON                     85
+     C                     EXSR OUTPUT
+     C                     ADD  1         L
+     C                     SETOF                     85
+     C*
+     C           ENDR02    TAG                             ** ENDR02 **
+     C*
+     C   62
+     COR U3                GOTO ENDR05
+     C*
+     C**  UPDATE S/TNRAN WITH NEW 'NEXT AVAILABLE TRADE NUMBER'
+     C*
+     C                     Z-ADD0         KRECT
+     C                     Z-ADDRANGR     KRANG
+     C           TNRKEY    CHAINTNRAN                99
+     C  N99                GOTO ENDR03
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVELTNRDS     DBKEY            * DB ERROR 01 *
+     C                     MOVE 'TNRAN'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDRZZ
+     C*
+     C           ENDR03    TAG                             ** ENDR03 **
+     C*
+     C  N63                Z-ADDWNTRN     NTRN
+     C   63                Z-ADD999999    NTRN
+     C                     SETON                     86
+     C                     EXCPT
+     C                     SETOF                     86
+     C*
+     C           ENDR05    TAG                             ** ENDR05 **
+     C*
+     C**  SAVE LAST NUMBER OF RANGE TO BE USED IN COMPARISON WITH FIRST
+     C**  NUMBER OF NEXT RANGE TO DETECT ANY UNALLOCATED RANGES
+     C*
+     C                     Z-ADDLTIRR     LRLTIR  60
+     C*
+     C           ENDRZZ    ENDSR                           ** ENDRZZ **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  RNGERD   - SR TO READ ARRAYS AND STORE ELEMENTS IN WORK FIELDS
+     C*
+     C*  CALLED FROM: MAIN PROCESSING
+     C*  CALLS:       OUTPUT
+     C*
+     C*****************************************************************
+     C*
+     C           RNGERD    BEGSR                           *** RNGERD ****
+     C*                                                                   E34985
+     C** Only read array if not last trade                                E34985
+     C*                                                                   E34985
+     C           LTIRR     IFEQ 999999                                    E34985
+     C           X         ANDNE0                                         E34985
+     C                     SETON                     88                   E34985
+     C                     ELSE                                           E34985
+     C*
+     C**  INCREMENT INDEX
+     C*
+     C           X         ADD  1         X
+     C*
+     C**  STORE ARRAY ELEMENTS
+     C*
+     C                     Z-ADDRNM,X     RANGR   20
+     C                     Z-ADDFNR,X     FTIRR   60
+     C                     Z-ADDLNR,X     LTIRR   60
+     C                     Z-ADDNAN,X     NTRNR   60
+     C                     MOVE RNA,X     DESCR  35
+     C*
+     C**  CHECK IF END OF RANGES REACHED
+     C*
+     C           FTIRR     COMP 0                        88
+     C                     END                                            E34985
+     C*
+     C**  IF END OF RANGES SET FTIRR TO PROCESS ALL OTHER TRADES
+     C*
+     C   88                Z-ADD999999    FTIRR
+     C*
+     C**  SET-UP WORK FIELD FOR NEXT AVAILABLE TRADE NO.
+     C*
+     C  N88                Z-ADDNTRNR     WNTRN   60
+     C  N88                MOVE RANGR     RNGENO  2
+     C*
+     C**  CHECK FOR AND OUTPUT UNALLOCATED RANGE
+     C*
+     C           LRLTIR    ADD  1         LRLDE1  60
+     C           FTIRR     COMP LRLDE1               82
+     C***82******FTIRR     SUB  1         FTIR1   60                      E25750
+     C   82N88   FTIRR     SUB  1         FTIR1   60                      E25750
+     C   82 88             Z-ADDFTIRR     FTIR1                           E25750
+     C           LTIRR     IFNE 999999                                    E34985
+     C   82                EXSR OUTPUT
+     C   82                ADD  2         L
+     C                     END                                            E34985
+     C                     SETOF                     82
+     C   88                GOTO RNGEZZ
+     C*
+     C**  SET INDICATOR FOR FUTURE OUTPUT OF RANGE HEADER
+     C*
+     C                     SETON                     32
+     C*
+     C           RNGEZZ    ENDSR                           ** RNGEZZ **
+     C*
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  NODETS SUBR - TO READ ARRAYS AND PRINT DETAILS WITH MESSAGE
+     C*                FOR NO RECORDS IN FILES
+     C*
+     C*  CALLED FROM: MAIN PROCESSING
+     C*
+     C*****************************************************************
+     C*
+     C           NODETS    BEGSR                           *** RNGERD ****
+     C*
+     C                     Z-ADD61        L
+     C*
+     C**  NO RECORDS IN TNRANAB
+     C*
+     C**N59******          SETON                     80                   S01117
+     C  N59                SETON                     7980                 S01117
+     C*
+     C**  RECORDS IN TNRANAB
+     C*
+     C   59                SETON                     8384
+     C   59                Z-ADD0         NTRNR
+     C*
+     C                     ADD  1         X
+     C           X         DOUGT100
+     C           RNM,X     OREQ *ZEROS
+     C*
+     C**  STORE ARRAY ELEMENTS
+     C*
+     C                     Z-ADDRNM,X     RANGR   20
+     C                     Z-ADDFNR,X     FTIRR   60
+     C                     Z-ADDLNR,X     LTIRR   60
+     C                     Z-ADDNAN,X     NTRNR   60
+     C                     MOVE RNA,X     DESCR  35
+     C*
+     C                     MOVE RANGR     RNGENO
+     C                     EXSR OUTPUT
+     C*
+     C                     ADD  2         L
+     C*
+     C                     ADD  1         X
+     C                     END
+     C*
+     C**  PRINT 'END OF REPORT' AND AUDIT
+     C*
+     C                     SETOF                     808384
+     C                     SETON                     8789
+     C                     EXCPT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  RANGES   - SR TO READ RANGES FILE AND STORE DATA IN ARRAYS
+     C*
+     C*  CALLED FROM: FIRST CYCLE MAIN PROCESSING
+     C*
+     C*****************************************************************
+     C*
+     C           RANGES    BEGSR                           *** RANGES ****
+     C                     SETOF                     59
+     C*
+     C**  LOOP TO READ AND STORE RANGES
+     C*
+     C           LOOP      TAG                             ** LOOP TAG  **
+     C                     READ TNRN1                    81
+     C   81                GOTO CHECKR
+     C*
+     C**  COUNT OF S/TNRAN RECORDS
+     C*
+     C           RECIT1    COMP '*'                  5858
+     C  N58                ADD  1         RECS1                           E13911
+     C  N58                GOTO LOOP
+     C           RECIT1    COMP 'D'                      58
+     C  N58                GOTO LOOP
+     C                     ADD  1         RECS1   50
+     C*
+     C           X         ADD  1         X       30
+     C                     Z-ADDRANG      RNM,X
+     C                     Z-ADDFTIR      FNR,X
+     C                     Z-ADDLTIR      LNR,X
+     C                     Z-ADDNTRN      NAN,X
+     C                     MOVE DESC      RNA,X
+     C                     SETON                     59
+     C                     GOTO LOOP
+     C*
+     C           CHECKR    TAG                             ** CHECKR TAG *
+     C*
+     C                     Z-ADD0         X
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  LRPROC  - SR. LAST TRADNLCD RECORD TOTAL TIME PROCESSING
+     C*
+     C*  CALLED FROM: MAIN PROCESSING
+     C*  CALLS:       ENDRNG
+     C*               RNGERD
+     C*
+     C*****************************************************************
+     C*
+     C           LRPROC    BEGSR                           *** LRPROC  ***
+     C*
+     C   U7                GOTO LRP03
+     C*
+     C**  READ REST OF RANGES
+     C*
+     C   88                GOTO LRP02
+     C*
+     C           LRP01     TAG                             ** LRP01 TAG **
+     C*
+     C                     EXSR ENDRNG
+     C   U7                GOTO LRP03
+     C                     EXSR RNGERD
+     C  N88                GOTO LRP01
+     C*
+     C           LRP02     TAG                             ** LRP02 TAG **
+     C*
+     C**  CHECK FILE CONTROLS
+     C*
+     C           NORE1     COMP RECS1                7272
+     C   72                SETON                     U8
+     C*
+     C           LRP03     TAG                             ** LRP03 TAG **
+     C*
+     C**  OUTPUT 'END OF REPORT' LINE FOR DETAIL REPORT, OUTPUT
+     C**  FILE CONTROL REPORT                                          .
+     C*
+     C**                                                                  S01117
+     C**  PRINT P1 REPORT HEADING IF DB ERROR OCCURED AT THE BEGINNING    S01117
+     C**                                                                  S01117
+     C           PAGE      IFEQ 0                                         S01117
+     C                     MOVE '1'       *IN60                           S01117
+     C                     END                                            S01117
+     C                     SETON                     8789
+     C                     EXCPT
+     C*
+     C           LRPZZ     ENDSR                           ** LRPZZ TAG **
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C***ICDRSR*SR.*TO*READ*ICD*AND*INITIALIZE*DATA*AREA************** ***S01117
+     C*  ICDRSR SR. TO READ RUNDAT & SDBANKPD AND INITIALIZE DATA AREA    S01117
+     C*
+     C*  CALLED FROM: MAIN PROCESSING
+     C***CALLS*ZSYSTM*************************************************    S01117
+     C*  CALLS INIT                                                       S01117
+     C*
+     C****************************************************************
+     C*
+     C           ICDRSR    BEGSR                           *** ICDRSR  ***
+     C*
+     C***********          EXSR ZSYSTM                                    S01117
+     C**N99******          GOTO ICDZZ                                     S01117
+     C                     EXSR INIT                                      S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C                     MOVE 'SDBANKPD'DBFILE           ***************S01117
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 02 *S01117
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE                                           E34985
+     C*                                                                   E34985
+     C**   Access Security Trading ICD Details for Trade Authorisations   E34985
+     C*                                                                   E34985
+     C                     CALL 'AOSTRDR0'                                E34985
+     C                     PARM '*MSG   ' @RTCD   7                       E34985
+     C                     PARM '*FIRST ' @OPTN   7                       E34985
+     C***********SDSTRD    PARM SDSTRD    DSFDY                     E34985S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*                                                                   E34985
+     C           @RTCD     IFNE *BLANK                                    E34985
+     C                     SETON                     U7U8LR               E34985
+     C           *LOCK     IN   LDA                                       E34985
+     C                     MOVE 'SDSTRDPD'DBFILE           ***************E34985
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 03 *E34985
+     C                     Z-ADD03        DBASE            ***************E34985
+     C                     OUT  LDA                                       E34985
+     C                     EXSR *PSSR                                     E34985
+     C                     ELSE                                           E34985
+     C           BVAUTH    IFNE '00'                                      E34985
+     C                     SETON                     34                   E34985
+     C                     END                                            E34985
+     C                     END                                            E34985
+     C                     END                                            S01117
+     C*
+     C***********ICDZZ     ENDSR                           ** ICDZZ TAG **S01117
+     C                     ENDSR                                          S01117
+     C*
+     C*****************************************************************
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** INIT -- SUBROUTINE TO PERFORM INITIALISATION                     S01117
+     C**                                                                  S01117
+     C**  CALLED FROM: ICDRSR                                             S01117
+     C**  CALLS: RCFP1                                                    S01117
+     C**         RCFAU                                                    S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           INIT      BEGSR                            ** INIT  **   S01117
+     C*                                                                   S01117
+     C*  PREPARE LDA FOR DB ERROR                                         S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE0630'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C*  REGISTER AU SPOOL FILE                                           S01117
+     C*                                                                   S01117
+     C                     EXSR RCFAU                                     S01117
+     C*                                                                   S01117
+     C*  REGISTER P1 SPOOL FILE                                           S01117
+     C*                                                                   S01117
+     C                     EXSR RCFP1                                     S01117
+     C**                                                                  S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C** CHECK SYSTEM FORMAT DATE, DDMMYY OR MMDDYY(98 ON)                S01117
+     C**                                                                  S01117
+     C           DATF      IFEQ 'M'                                       S01117
+     C                     SETON                     98                   S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C**                                                                  S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C**   *PSSR SR.- DATABASE ERROR SUBROUTINE                           S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR SR ** S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANK                                    S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFP1     BEGSR                            ** RCFP1 **   S01117
+     C**                                                                  S01117
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANKS   SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFAU     BEGSR                            ** RCFAU **   S01117
+     C**                                                                  S01117
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT
+     C***COPY*ZSRSRC,ZSYSTMZ1                                             S01117
+     O***/EJECT                                                           S01117
+     OTNRANABFE        86
+     O*
+     O*   UPDATE OF S/TNRAN RECORD  .
+     O*
+     O                         NTRN
+     OSE0630P1E  203   60                                                 S01124
+     O                                   24 'REFERENCE SE0630P1'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE     127
+     O        E  1     60
+     O                       U3          31 '** INTERIM **'
+     O                                   72 'TRADE NUMBER GAPS'
+     O                       U3ZTIME     81 '  .  .  '
+     O        E  1     60
+     O                                   72 '-----------------'
+     O                       U3          81 '---------'
+     O        E  1     60
+     O                                  128 'NEXT AVAILABLE'
+     O        E  1     60
+     O                                   28 'RANGE        NO.  NAME'
+     O                                   82 'B/F      TRADE NUMBERS'
+     O                                   99 'CONDITION'
+     O                                  128 'TRADE NUMBER'
+     O        E 1      43
+     O                                   21 '**'
+     O                         TRDR      75
+     O                                  102 'OUT OF RANGE'
+     O***********            65         114 '- CANCELLED'                 E34985
+     O                 65N34            114 '- CANCELLED'                 E34985
+     O                 73N34            112 '- CHANGED'                   E34985
+     O                 33 34            115 '- AUTHORISED'                E34985
+     O                N33 34            117 '- UNAUTHORISED'              E34985
+     O                 65 34            129 '- CANCELLED'                 E34985
+     O                 73 34            127 '- CHANGED'                   E34985
+     O        E 2      82
+     O                         LRLDE1     8
+     O                                   10 '-'
+     O                         FTIR1     17
+     O                                   76 'UNALLOCATED RANGE'
+     O        E 2      83
+     O                         FTIRR      8
+     O                                   10 '-'
+     O                         LTIRR     17
+     O                         RNGENO    21
+     O                         DESCR     59
+     O                N63      NTRNR     65
+     O                 83 84N30          65 '000000'
+     O        E 00     84
+     O                                  110 'RANGE NOT USED TODAY'
+     O                N63      NTRNR    127
+     O        E 1      48
+     O                         PMFTIR    75
+     O                       52          77 '-'
+     O                       52PMLTIR    84
+     O                                  114 'PREVIOUSLY REPORTED MISS'
+     O                                  117 'ING'
+     O        E 1      49
+     O                         WNTRN     75
+     O                N61                77 '-'
+     O                N61      TRDR1     84
+     O                                   97 'MISSING'
+     O        E 1      70
+     O                         TRDR      75
+     O                       65          99 'CANCELLED'
+     O                 33 34            112 '- AUTHORISED'                E34985
+     O                N33 34            114 '- UNAUTHORISED'              E34985
+     O        E 1              CHANGE                                     E34985
+     O                         TRDR      75                               E34985
+     O                                   97 'CHANGED'                     E34985
+     O                 33 34            110 '- AUTHORISED'                E34985
+     O                N33 34            112 '- UNAUTHORISED'              E34985
+     O        E 1      85
+     O                      N62WNTRN    127
+     O                       62NTRNR    127
+     O*                                                                   S01117
+     O        E   43   87 U7 U8                                           S01117
+     O                                   55 'DATABASE ERROR AT'           S01117
+     O                         DBASE     59                               S01117
+     O                                   68 ', PROGRAM'                   S01117
+     O                         DBPGM     79                               S01117
+     O        E 3      89
+     O                                   75 '*** END OF REPORT ***'
+     O********E*2      80                                                 E29170
+     O***********                        79 'NO DETAILS TO REPORT'        S01117
+     O***********                        68 '*** NO DETAILS TO REPORT'    E29170
+     O***********                        72 '***'                         E29170
+     O/EJECT
+     O*
+     O*  FILE CONTROL REPORT
+     O*
+     OSE0630AUE  203   87                                                 S01124
+     O                                   24 'REFERENCE SE0630AU'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O***********              PAGE     127                               S01117
+     O                         PAGE1    127                               S01117
+     O        E  1     87
+     O                                   60 'TRADE NUMBER GAPS'
+     O                                   80 'FILE CONTROL REPORT'
+     O                                   96 'RUN CONTROLS'                S01117
+     O        E  1     87
+     O***********                        63 '--------------------'        S01117
+     O***********                        82 '-------------------'         S01117
+     O                                   61 '------------------'          S01117
+     O                                   80 '-------------------'         S01117
+     O        E   13   87
+     O                                   83 '-------- RECORDS -------'
+     O        E   15   87
+     O                                   83 'FILE CONTROL  CALCULATED'
+     O        E   20   87
+     O                                   36 'S/TNRN1'
+     O                         NORE1 3   71
+     O                         RECS1 3   83
+     O                 72NU7             90 '***'
+     O        E 2      87 79                                              S01117
+     O                                   68 '*** NO DETAILS TO REPORT'    S01117
+     O                                   72 '***'                         S01117
+     O        E   43   87 U7 U8
+     O***********                        56 'DATA BASE ERROR AT'          S01117
+     O                                   55 'DATABASE ERROR AT'           S01117
+     O                         DBASE     59
+     O***********                        64 ', KEY'                       S01117
+     O***********              DBKEY     94                               S01117
+     O                                   68 ', PROGRAM'                   S01117
+     O                         DBPGM     79                               S01117
+     O        E   45   87 U7 U8
+     O***********                        64 'FILE NAME'                   S01117
+     O***********              DBFILE    57                               S01117
+     O                                   47 'FILE NAME'                   S01117
+     O                         DBFILE    56                               S01117
+     O                                   61 ', KEY'                       S01117
+     O                         DBKEY     91                               S01117
+     O        E   49   87NU7 U8
+     O                                   71 '*** FILE CONTROLS OUT OF'
+     O                                   83 'BALANCE ***'
+     O********E** 53   87                                                 S01117
+     O***********                        75 '*** END OF REPORT ***'       S01117
+     O********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

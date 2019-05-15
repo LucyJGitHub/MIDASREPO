@@ -1,0 +1,318 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Include/exclude fields')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0560 - Include/Exclude Fields                              *
+     F*                                                               *
+     F*  Function:  This program allows the user to select which      *
+     F*  (I/C INT)  fields to include or exclude for HAF.             *
+     F*                                                               *
+     F*  Called By: HFC0530 - Display Changes in File                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01379             Date 06Oct92               *
+      *                                    Date DDMmmYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*  90 - 99  ACT-SUBROUTINES
+     F*
+     F*  U7,U8    STANDARD-MIDAS ERROR
+     F*----------------------------------------------------------------
+     F*
+     FHF0560DFCF  E                    WORKSTN
+     F                                        ZEILE KSFILE HF0560F2
+     F                                              KINFDS DSPDS
+     F*
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    FLD       500 10               EX FIELD NAMES
+     E                    TXT       500 20               EXTERN.TEXT
+     E                    FIL       500 10               FILE NAME
+     E                    FLE       500  5 0             EX.BUF LENGTH
+     E                    FLT       500  1               EX,TYPE FIELD
+     E                    FLP       500  2 0             EX.DEC.POSIT.
+     E                    OK        501  1               LINE DISPLAY Y/N
+     E*
+     E*-----------------------------------------------------------------
+     IDSPDS       DS                            512
+     I                                    B 378 3790RETZEI
+     IWIND        DS
+     I                                        1   1 W1
+     I                                        2   2 W2
+     I                                        3   3 W3
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I*
+     I*---------------------------------------------------------------
+      *
+     C/EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           FLD
+     C                     PARM           TXT
+     C                     PARM           FIL
+     C                     PARM           FLE
+     C                     PARM           FLT
+     C                     PARM           FLP
+     C                     PARM           OK
+     C                     PARM           X       30
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA            RUN DATE
+     C                     MOVE USER      SUSER
+     C                     MOVELWSID      SWSID
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+      *
+     C                     MOVEL'HF0560'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+      *
+     C           BEGIN     TAG
+     C                     Z-ADD0         ZEILE
+     C                     Z-ADD1         KZEI
+     C                     Z-ADD0         Y       30
+     C                     MOVEL'EXCLUDED'EXCL
+     C                     SETOF                     9596
+     C                     WRITEHF0560C0
+     C                     WRITEHF0560F3
+      *
+     C           LOOP      TAG
+      * WE ARE PRINTING THE NORMAL JOURNAL ENTRIES
+     C                     ADD  1         Y
+      * END OF LIST, BUT HAS THE EXT.PRINT BE DONE?
+     C           Y         IFGT X
+     C                     GOTO ENDDIS
+     C                     END
+      * MOVE FIELDS FOR DISPLAY
+     C                     MOVELFLD,Y     NAME
+     C           OK,Y      IFEQ 'K'
+     C                     MOVE 'K'       NAME
+     C                     END
+     C                     MOVELTXT,Y     TEXT
+     C                     MOVELFIL,Y     FILE
+     C                     SETOF                     06
+     C           OK,Y      IFEQ 'N'
+     C                     SETON                     06
+     C                     END
+      *
+     C                     ADD  1         ZEILE
+      * IS THIS FIELD A SCAN FIELD?
+     C                     WRITEHF0560C0
+     C                     WRITEHF0560F2
+     C                     GOTO LOOP
+      *
+     C           ENDDIS    TAG
+      *
+      *
+      * DETERMINE ACTION IF NO RECORD TO BE DISPLAYED
+      * DETERMINE ACTION IF    RECORD TO BE DISPLAYED (KZEI)
+     C           ZEILE     IFEQ 0
+     C                     SETOF                     96
+     C                     SETON                     95
+      *
+     C                     MOVEL'HAF0101' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+     C                     SETON                     9695
+     C           KZEI      IFNE 0
+     C                     Z-ADDKZEI      ZEILE
+     C                     END
+     C                     END
+     C                     WRITEHF0560C0
+     C                     WRITEHF0560F1
+      *
+     C           REAFF     TAG
+      *
+     C                     EXFMTHF0560F3
+     C                     CALL 'SCC0250'
+     C                     SETOF                     04
+      * CMD/12 HAS BEEN REQUESTED
+     C           *IN21     IFEQ '1'
+     C                     SETON                     LR
+     C                     GOTO RETDSP
+     C                     END
+      * NOKEY TAG IS FOR NO COMMAND KEY PRESSED
+     C           NOKEY     TAG
+      * SUB-FILE EMPTY , ONLY CMD/1 ALLOWED
+     C           *IN96     IFEQ '0'
+     C                     GOTO REAFF
+     C                     END
+     C           NEXTT     TAG
+     C                     Z-ADD1         ZEILE
+     C                     Z-ADD0         KZEI    60
+     C                     Z-ADD0         Y
+     C* LESEN SF
+     C*---------
+     C           LOOPDS    TAG
+     C                     SETOF                     06
+     C                     READCHF0560F2                 95
+      * END OF SUB-FILE POSITION LINE TO BE DISPLAYED IN SUBFILE
+     C           *IN95     IFEQ '1'
+     C           KZEI      IFNE 0
+     C                     Z-ADDKZEI      ZEILE
+     C                     ELSE
+     C                     Z-ADDRETZEI    ZEILE
+     C                     END
+     C                     GOTO REAFF
+     C                     END
+      *DETERMINE ENTRY IN INTERNAL TABLES
+     C                     Z-ADD0         Y
+     C           RRR       TAG
+     C                     ADD  1         Y
+     C           Y         IFGT X
+     C                     DUMP
+     C                     END
+     C                     MOVELNAME      NAMEX  10
+     C                     MOVE ' '       NAMEX
+     C           NAMEX     IFNE FLD,Y
+     C           FIL,Y     ORNE FILE
+     C                     GOTO RRR
+     C                     END
+     C                     MOVELWINDOW    WIND
+      * A FIELD BEING DEFINED CAN BE EXCLUDED OR INCLUDED
+      * A FIELD CAN ONLY BE EXCLUDED IF IT IS NOT A KEY FIELD
+     C           W1        IFEQ 'E'
+     C           OK,Y      IFEQ 'Y'
+     C                     MOVEL'N'       OK,Y
+     C                     SETON                     06
+     C                     EXSR OKSUB
+     C                     GOTO NNCH
+     C                     ELSE
+     C                     EXSR ERRSUB
+     C                     GOTO NNCH
+     C                     END
+     C                     END
+      * A FIELD CAN ONLY BE INCLUDED IF IT IS EXCLUDED
+     C           W1        IFEQ 'I'
+     C           OK,Y      IFEQ 'N'
+     C                     MOVEL'Y'       OK,Y
+     C                     SETOF                     06
+     C                     EXSR OKSUB
+     C                     GOTO NNCH
+     C                     ELSE
+     C                     EXSR ERRSUB
+     C                     GOTO NNCH
+     C                     END
+     C                     END
+      *
+      * BLANK IN FUNCTION ACCEPTED
+     C           W1        IFEQ ' '
+     C                     GOTO NNCH
+     C                     END
+      *
+     C                     EXSR ERRSUB
+     C           NNCH      TAG
+      * POSITION TO NEXT LINE IN SUBFILE
+     C                     ADD  2         ZEILE
+     C                     GOTO LOOPDS
+      *
+     C           RETDSP    TAG
+      *
+     C           ERRSUB    BEGSR
+     C           *IN04     IFEQ '0'
+     C                     SETON                     04
+     C           KZEI      IFEQ 0
+     C                     Z-ADDZEILE     KZEI
+     C                     END
+     C                     END
+      *
+     C                     MOVEL'HAF0100' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     MOVEL' '       WINDOW
+     C           OK,Y      IFEQ 'N'
+     C                     SETON                     06
+     C                     ELSE
+     C                     SETOF                     06
+     C                     END
+     C                     WRITEHF0560C0
+     C                     UPDATHF0560F2
+     C                     CALL 'SCC0250'
+     C                     ENDSR
+      *
+     C           OKSUB     BEGSR
+     C           *IN04     IFEQ '0'
+     C           KZEI      IFEQ 0
+     C                     Z-ADDZEILE     KZEI
+     C                     END
+     C                     END
+     C           OK,Y      IFEQ 'N'
+     C                     SETON                     06
+     C                     ELSE
+     C                     SETOF                     06
+     C                     END
+     C                     MOVEL' '       WINDOW
+     C                     WRITEHF0560C0
+     C                     UPDATHF0560F2
+     C                     CALL 'SCC0250'
+     C                     ENDSR
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,125 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Change subsystem routing entries')
+/*OVR *  CRTPF FILE(QTEMP/UPSBSD) RCDLEN(132)                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade Module                                       *
+      *                                                               *
+      *  UP0121 - Change subsystem routing entries - classes          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Prev Amend No. CUP011 *CREATE     Date 04Oct00               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CUP011 - Allow user to change the libraries referenced by    *
+      *            a Midas subsystem's classes                        *
+      *                                                               *
+      *****************************************************************
+     FUPSBSD  IF  E                    DISK
+     F            UPSBSD                            KRENAMERTGE
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    CMD     1   1 80
+      /SPACE 3
+      *
+     IRTGE
+      * Renamed input format fields
+     I              UPSBSD                          SBSDTA
+      *
+     ICMDDTA      DS                             80
+     I                                        1  80 CHGRTG
+     I                                       14  15 SBS1
+     I                                       22  23 SBS2
+     I                                       36  39 SEQN
+     I                                       52  61 CLS
+      * Breakdown of CHGRTGE instruction
+      *
+     IINPUT       DS                            132
+     I                                        2   7 ROUTIN
+     I                                       76  79 SEQNI
+     I                                       76  790SEQNO
+     I                                       76  85 CLSI
+      * Breakdown of field input from UPSBSD
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SBSID   2
+     C                     PARM           ERROR   1
+      *
+      * Set up parameters for call to QCMDEXC
+     C                     Z-ADD80        MSGLEN 155
+     C                     MOVELCMD,1     CHGRTG
+     C                     MOVELSBSID     SBS1
+     C                     MOVELSBSID     SBS2
+      *
+      * Read file until Routing Entry Sequence section found
+     C                     READ UPSBSD                 6970
+     C           *IN69     IFEQ *ON                        I01
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     70
+     C                     ELSE                            X01
+      *
+     C                     MOVELSBSDTA    INPUT
+     C                     ENDIF                           E01
+      *
+     C           *IN70     DOUEQ*ON                        DO01
+     C           ROUTIN    IFEQ 'Routin'                   I01
+      * Move routing entry sequence number into command line
+     C                     MOVELSEQNI     SEQN
+     C                     SETON                     88
+      *
+     C                     ELSE                            X01
+     C           ROUTIN    IFEQ 'Class '                   I02
+      * Move routing entry sequence number into command line
+     C                     MOVELCLSI      CLS
+     C                     SETON                     89
+     C                     ENDIF                           E02
+     C                     ENDIF                           E01
+      *
+      * If both 88 and 89 are on then perform change
+     C           *IN88     IFEQ *ON                        I01
+     C           *IN89     ANDEQ*ON                        -01
+      *
+     C                     CALL 'QCMDEXC'              9393
+     C                     PARM           CHGRTG
+     C                     PARM           MSGLEN
+      *
+     C                     SETOF                     8889
+     C                     ENDIF                           E01
+      *
+     C                     READ UPSBSD                 6970
+     C           *IN69     IFEQ *ON                        I01
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     70
+     C                     ELSE                            X01
+      *
+     C                     MOVELSBSDTA    INPUT
+     C                     ENDIF                           E01
+      *
+     C                     ENDDO                           ED01
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  CMD
+CHGRTGE SBSD(xxXLIB/MxxSBS) SEQNBR(nnnn) CLS(*LIBL/cccccccccc)

@@ -1,0 +1,599 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(GEOSJSPDN)*TOFILE(GOEOSJSPD)*SHARE(*NO)***********                       CGP016
+/*S*D ***RPGBASEMOD****************************************************                       CGP016
+      *****************************************************************
+      *                                                               *
+      *  Midas  - Global Processing Module                            *
+      *                                                               *
+      *  GOOLSYNGEZ - On-line synchronisation of Equation data        *
+      *               for Consumer Banking Controller                 *
+      *                                                               *
+      *  Function:    This program Synchronise Equation Data          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGP016  *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. BUG14101           Date 19Jun07               *
+      *                 BUG12185           Date 09Oct06               *
+      *                 CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *  BUG14101 - Background job EQ_ONL_SYN is generated errors     *
+      *             and looping                                       *
+      *  BUG12185 - Change file in INZPFM operation (Recompile)       *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *    XX    - Function of Indicator                              *
+      *    99    -  Used for CHAIN & READE Operations                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR        - Program exception error routine               *
+      *  *INZSR       - Initialisation Subroutine                     *
+      *  UPD_COM_OSJS - Subroutine to Update Sequence Number in file  *
+      *                 GOEOSJSPD to the Sequence number in Journal   *
+      *                 Entry with Commit                             *
+      *  WRTTE_LOG    - Write to Log File Subroutine                  *
+      *  UPD_NCOM_OSJS- Subroutine to Update Sequence Number in file  *
+      *                 GOEOSJSPD one every 100th Entry without Commit*
+      *  ACTN_COMMIT  - Subroutine for Processing Commit Action Entry *
+      *  ACTN_ROLLBACK- Subroutine for processing Rollback Action     *
+      *                 Entry                                         *
+      *  ACTN_UPDATE_C- Subroutine for processing UPDATE Action Entry *
+      *                 when under commitment control                 *
+      *  ACTN_UPDATE_NC-Subroutine for processing UPDATE Action Entry *
+      *                  when NOT under commitment control            *
+      *  RECD_UPDATES - Subroutine to Call Associated Mapping Programs*
+      *                 based on File ID                              *
+      *                                                               *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.  Use      *
+      *  RESET for subsequent passes.                                 *
+      *                                                               *
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+      * Update : On-line Synchronisation Commitment ID's
+     FGOEOSCIL0 UF A E           K DISK    INFSR(*PSSR) COMMIT
+ 
+      * Update : On-line Synchronisation Journal Sequence Number
+     FGOEOSJSPD UF   E             DISK    INFSR(*PSSR) COMMIT
+ 
+     FGEOSJSPDN UF   E             DISK    INFSR(*PSSR)
+     F                                     RENAME(GEOSJSD0:GEOSJSDN)
+ 
+      * Update : On-line Synchronisation of Equation Data Log File
+     FGPESOLOGPDO  A E             DISK    INFSR(*PSSR)
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+      ****************************************************************
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indicator processing)
+      **    False      logical = *off (for indicator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** Program Status Data Structure
+      ** =============================
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      * Input Journal Entry DS
+     D JournalEnt      DS
+      * Standard fields on all journal entries
+     D  Filler01                      5A
+     D  JrnSeqn                      10A
+     D  JrnCode                       1A
+     D  JrnEntType                    2A
+     D  Filler02                     38A
+     D  Program                      10A
+     D  Object                       10A
+     D  Library                      10A
+     D  Member                       10A
+     D  Filler03                     11A
+     D  CommitId                     10A
+     D  Filler04                      8A
+      * Fields specific to the journal entry
+     D  EntryData                  4000A
+ 
+      * Input Control Information DS
+     D ControlInf      DS
+     D  CTRLInfo1                     1
+     D  CTRLInfo2                     1
+ 
+      * Message Information DS
+     D                 DS
+     D  MsgInfo                1     10
+     D  Instruction            1      5
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+      *********************************************************************
+      * MAIN PROCCESSING                                                  *
+      *********************************************************************
+      *
+      ** Populate MsgInfo Data Structure with the Entry data
+      *
+     C                   MOVEL     EntryData     MsgInfo
+      *
+      ** If the first byte of Control Information is 0, no data has been
+      ** passed so simply return
+      *
+     C                   IF        CTRLInfo1 = '0'
+     C                   RETURN
+     C                   ENDIF
+      *
+      **If the journal receiver has been changed
+      *
+     C                   IF        JrnEntType = 'NR'
+     C     1             CHAIN(N)  GEOSJSDN                           99                    BUG14101
+     C     *IN99         IFEQ      *OFF                                                     BUG14101
+      *                                                                                     BUG14101
+     C                   IF        MsgInfo = '*CURCHAIN'                                    BUG14101
+     C                   EXSR      UPD_COM_OSJS                                             BUG14101
+     C                   EVAL      OSMSG = 'On-line Synchronisation will switch'            BUG14101
+     C                                    + ' to ' + MsgInfo                                BUG14101
+     C                   EXSR      WRITE_LOG                                                BUG14101
+     C                   EVAL      CTRLInfo1 = '9'                                          BUG14101
+     C                   SETON                                        U6LR                  BUG14101
+     C                   RETURN                                                             BUG14101
+     C                   ENDIF                                                              BUG14101
+      *                                                                                     BUG14101
+     C                   IF        I#LASTRCV = *BLANKS                                      BUG14101
+     C                   EXSR      UPD_COM_OSJS                                             BUG14101
+     C                   EVAL      OSMSG = 'On-line Synchronisation will switch'            BUG14101
+     C                                    + ' to ' + MsgInfo                                BUG14101
+     C                   EXSR      WRITE_LOG                                                BUG14101
+     C                   EVAL      CTRLInfo1 = '9'                                          BUG14101
+     C                   SETON                                        U6LR                  BUG14101
+     C                   RETURN                                                             BUG14101
+     C                   ENDIF                                                              BUG14101
+      *                                                                                     BUG14101
+     C                   IF        I#LASTRCV <> MsgInfo                                     BUG14101
+     C                             And %INT(%SUBST(I#LASTRCV:7:4)) <                        BUG14101
+     C                                 %INT(%SUBST(MSGINFO:7:4))                            BUG14101
+     C                   EXSR      UPD_COM_OSJS
+     C                   EVAL      OSMSG = 'On-line Synchronisation will switch'
+     C                                    + ' to ' + MsgInfo
+     C                   EXSR      WRITE_LOG
+     C                   EVAL      CTRLInfo1 = '9'
+     C                   SETON                                        U6LR
+     C                   RETURN
+     C                   ENDIF                                                              BUG14101
+     C                   ELSE                                                               BUG14101
+     C                   EVAL      I#ERMS   = 'ERROR ON ACCESS OF GOEOSJSPD'                BUG14101
+     C                   EVAL      CTRLInfo1 = '9'                                          BUG14101
+     C                   EXSR      *PSSR                                                    BUG14101
+     C                   ENDIF                                                              BUG14101
+     C                   ENDIF
+      *
+      ** PROCESS ENTRY
+      *  =============
+ 
+     C                   SELECT
+      *
+      ** Ignore journal entries generated by this function
+      *
+     C     Program       WHENEQ    'GOOLSYNGEZ'
+     C                   EXSR      UPD_NCOM_OSJS
+      *
+      ** If this is an 'END' entry,
+      ** Write to the log file
+      ** and tell the RCVJRNE command (and hence the controlling CL) to Stop
+      *
+     C     JrnEntType    WHENEQ    'OS'
+     C     Instruction   ANDEQ     'END  '
+     C                   EXSR      UPD_COM_OSJS
+     C                   EVAL      OSMSG = 'On-line Synchronisation has ENDED'
+     C                   EXSR      WRITE_LOG
+     C                   EVAL      CTRLInfo1 = '9'
+      *
+      ** If this is a commit entry
+      ** action it
+      *
+     C     JrnEntType    WHENEQ    'CM'
+     C                   EXSR      ACTN_COMMIT
+     C     CommitUpdate  IFEQ      'Y'
+     C                   EXSR      UPD_COM_OSJS
+     C                   ELSE
+     C                   EXSR      UPD_NCOM_OSJS
+     C                   ENDIF
+      *
+      ** If this is a rollback entry
+      ** action it
+      *
+     C     JrnEntType    WHENEQ    'RB'
+     C                   EXSR      ACTN_ROLLBACK
+     C     CommitUpdate  IFEQ      'Y'
+     C                   EXSR      UPD_COM_OSJS
+     C                   ELSE
+     C                   EXSR      UPD_NCOM_OSJS
+     C                   ENDIF
+      *
+      ** If this is an update entry, then action it
+      ** Entries not under commitment control are applied immediately
+      ** Entries under commitment control are applied on the commit
+      *
+     C     JrnEntType    WHENEQ    'PT'
+     C     JrnEntType    OREQ      'PX'
+     C     JrnEntType    OREQ      'UB'
+     C     JrnEntType    OREQ      'UP'
+     C     JrnEntType    OREQ      'DL'
+     C     CommitID      IFNE      '0000000000'
+     C                   EXSR      ACTN_UPDATE_C
+     C                   ELSE
+     C                   EXSR      ACTN_UPDATE_NC
+     C                   ENDIF
+     C                   EXSR      UPD_COM_OSJS
+ 
+     C                   ENDSL
+ 
+     C                   RETURN
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * UPD_COM_OSJS - Subroutine to Update Sequence Number in file   *
+      * GOEOSJSPD to the Sequence number in Journal Entry with Commit *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     *PSSR                                             *
+      *****************************************************************
+     C     UPD_COM_OSJS  BEGSR
+      *
+      ** Change the sequence number reached on the journal
+      *
+     C     1             CHAIN     GEOSJSD0                           99
+     C     *IN99         IFEQ      *OFF
+     C                   EVAL      I#LASTSEQ = JrnSeqn
+     C                   IF        JrnEntType = 'NR'                                        BUG14101
+     C                   Eval      I#LASTRCV = MsgInfo                                      BUG14101
+     C                   EndIf                                                              BUG14101
+     C                   UPDATE    GEOSJSD0
+     C                   ELSE
+     C                   EVAL      I#ERMS   = 'ERROR ON ACCESS OF GOEOSJSPD'
+     C                   EVAL      CTRLInfo1 = '9'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** Commit the updates
+      *
+     C                   COMMIT
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * UPD_NCOM_OSJS - Subroutine to Update Sequence Number in file  *
+      * GOEOSJSPD one every 100th Entry without Commit                *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     *PSSR                                             *
+      *****************************************************************
+     C     UPD_NCOM_OSJS BEGSR
+      *
+      ** Only update on every 100th entry
+      *
+     C     CountEntries  IFEQ      100
+     C     JrnEntType    OREQ      'NR'                                                     BUG14101
+      *
+      ** Change the sequence number reached on the journal
+      *
+     C     1             CHAIN     GEOSJSDN                           99
+     C     *IN99         IFEQ      *OFF
+     C                   EVAL      I#LASTSEQ = JrnSeqn
+     C                   IF        JrnEntType = 'NR'                                        BUG14101
+     C                   Eval      I#LASTRCV = MsgInfo                                      BUG14101
+     C                   EndIf                                                              BUG14101
+     C                   UPDATE    GEOSJSDN
+     C                   ELSE
+     C                   EVAL      I#ERMS   = 'ERROR ON ACCESS OF GOEOSJSPD'
+     C                   EVAL      CTRLInfo1 = '9'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   Z-ADD     0             CountEntries
+     C                   ELSE
+     C                   ADD       1             CountEntries
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * WRITE_LOG - Subroutine to Write to the log file               *
+      *                                                               *
+      *  Called By: *INZSR, MAIN PROCESSING                           *
+      *                                                               *
+      *  Calls:     None                                              *
+      *****************************************************************
+     C     WRITE_LOG     BEGSR
+     C                   TIME                    TimeDate         12 0
+     C                   MOVE      TimeDate      OSDATE
+     C                   MOVEL     TimeDate      OSTIME
+     C                   WRITE     GESOLOGD0
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * ACTN_COMMIT - Subroutine for Processing Commit Action Entry   *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     RECD_UPDATES                                      *
+      *****************************************************************
+     C     ACTN_COMMIT   BEGSR
+ 
+     C                   MOVE      'N'           CommitUpdate      1
+      *
+      ** Read commit id records and action them
+      *
+     C                   MOVEL     CommitId      CICCID
+     C     CICCID        SETLL     GEOSCID0
+     C     CICCID        READE     GEOSCID0                               99
+     C     *IN99         DOWEQ     *OFF
+     C                   MOVEL     CIFILE        I#FILE           10
+     C                   MOVEL     O#ZONE        I#ZONE           10
+     C                   MOVEL     CIBFAF        I#BFAF            1
+     C                   MOVEL     *BLANK        I#BIMG
+     C                   MOVEL     *BLANK        I#AIMG
+     C     I#BFAF        IFEQ      'B'
+     C                   MOVEL     CIIMG         I#BIMG
+     C                   ELSE
+     C                   MOVEL     CIIMG         I#AIMG
+     C                   ENDIF
+ 
+     C                   IF        CIBFAF = 'A'
+     C                   EXSR      RECD_Updates
+     C                   ENDIF
+ 
+     C                   DELETE    GEOSCID0
+     C                   MOVE      'Y'           CommitUpdate
+     C     CICCID        READE     GEOSCID0                               99
+     C                   ENDDO
+ 
+     C                   ENDSR
+      *********************************************************************
+      /SPACE 5
+      ******************************************************************
+      *                                                                *
+      * ACTN_ROLLBACK - Subroutine for processing Rollback Action Entry*
+      *                                                                *
+      *  Called By: MAIN PROCESSING                                    *
+      *                                                                *
+      *  Calls:     None                                               *
+      ******************************************************************
+     C     ACTN_ROLLBACK BEGSR
+     C                   MOVE      'N'           CommitUpdate
+      *
+      ** Delete commit id record
+      *
+     C                   MOVEL     CommitId      CICCID
+     C     CICCID        CHAIN     GEOSCID0                           99
+     C     *IN99         IFEQ      *OFF
+     C                   DELETE    GEOSCID0
+     C                   MOVE      'Y'           CommitUpdate
+     C                   ENDIF
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * ACTN_UPDATE_C - Subroutine for processing UPDATE Action Entry *
+      *                 when under commitment control                 *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *****************************************************************
+     C     ACTN_UPDATE_C BEGSR
+      *
+      ** Write a commitment id record for the 'after' status
+      *
+     C     JrnEntType    IFEQ      'PT'
+     C     JrnEntType    OREQ      'PX'
+     C     JrnEntType    OREQ      'UP'
+     C                   MOVEL     CommitId      CICCID
+     C                   MOVEL     Object        CIFILE
+     C                   MOVEL     'A'           CIBFAF
+     C                   MOVEL     EntryData     CIIMG
+     C                   WRITE     GEOSCID0
+     C                   ENDIF
+      *
+      ** Write a commitment id record for the 'before' status
+      *
+     C     JrnEntType    IFEQ      'UB'
+     C     JrnEntType    OREQ      'DL'
+     C                   MOVEL     CommitId      CICCID
+     C                   MOVEL     Object        CIFILE
+     C                   MOVEL     'B'           CIBFAF
+     C                   MOVEL     EntryData     CIIMG
+     C                   WRITE     GEOSCID0
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * ACTN_UPDATE_NC - Subroutine for processing UPDATE Action Entry*
+      *                  when NOT under commitment control            *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     RECD_UPDATES                                      *
+      *****************************************************************
+     C     ACTN_UPDATE_NCBEGSR
+ 
+     C                   MOVEL     *BLANK        I#BIMG
+     C                   MOVEL     *BLANK        I#AIMG
+      *
+      ** Apply updates for the 'after' status
+      *
+     C     JrnEntType    IFEQ      'PT'
+     C     JrnEntType    OREQ      'PX'
+     C     JrnEntType    OREQ      'UP'
+     C                   MOVEL     Object        I#FILE
+     C                   MOVEL     O#ZONE        I#ZONE
+     C                   MOVEL     'A'           I#BFAF
+     C                   MOVEL     EntryData     I#AIMG
+     C                   EXSR      RECD_Updates
+     C                   ENDIF
+      *
+      ** Apply updates for the 'before' status
+      *
+     C     JrnEntType    IFEQ      'UB'
+     C     JrnEntType    OREQ      'DL'
+     C*                  MOVEL     Object        I#FILE
+     C*                  MOVEL     'B'           I#BFAF
+     C*                  MOVEL     EntryData     I#BIMG
+     C*                  EXSR      RECD_Updates
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *********************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * RECD_UPDATES - Subroutine to Call Associated Mapping Programs *
+      *                based on File ID                               *
+      *                                                               *
+      *  Called By: ACTN_COMMIT, ACTN_UPDATE_NC                       *
+      *                                                               *
+      *  Calls:     GOWTTCBCA, GOWTTCBRD                              *
+      *****************************************************************
+     C     RECD_UPDATES  BEGSR
+ 
+     C                   SELECT
+     C     I#FILE        WHENEQ    'SCPF      '
+     C                   CALL      'GOWTTCBCA'
+     C                   PARM      *BLANK        W#RTCD            7
+     C                   PARM      *BLANK        W#ERMS           50
+     C                   PARM                    I#BIMG         4000
+     C                   PARM                    I#AIMG         4000
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOWTTCBCA'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C     I#FILE        WHENEQ    'OSPF      '
+     C                   CALL      'GOWTTCBRD'
+     C                   PARM      *BLANK        W#RTCD            7
+     C                   PARM      *BLANK        W#ERMS           50
+     C                   PARM                    I#BIMG         4000
+     C                   PARM                    I#AIMG         4000
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOWTTCBRD'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSL
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initial Subroutine                                   *
+      *                                                               *
+      *  Called By: Called automatically at program start             *
+      *                                                               *
+      *  Calls:     WRITE_LOG                                         *
+      *****************************************************************
+     C     *INZSR        BEGSR
+      *
+      ** Define Entry Parameter List
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    JournalEnt
+     C                   PARM                    ControlInf
+ 
+     C                   MOVE      *BLANK        I#RTCD            7
+     C                   MOVE      *BLANK        I#ERMS           50
+      *
+      ** Job details
+      *
+     C                   EVAL      OSJOB  = PSJobName
+     C                   EVAL      OSUSER = PSUser
+     C                   MOVEL     PSJobNo       PSJobNoA          6
+     C                   EVAL      OSJOBN = PSJobNoA
+ 
+     C                   Z-ADD     0             CountEntries      3 0
+      *
+      ** Write to the log file
+      *
+     C                   EVAL      OSMSG = 'On-line Synchronisation has STARTED'
+     C                   EXSR      WRITE_LOG
+      *
+      ** Get Zone
+      *
+      /COPY GOCPYSRC,GOGETZONE
+ 
+     C                   ENDSR
+      *********************************************************************
+      /SPACE 5
+      *********************************************************************
+      * * P S S R  --- A B N O R M A L   E R R O R   C O N D I T I O N S  *
+      /COPY GOCPYSRC,GOPSSR
+      *********************************************************************
+      *********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

@@ -1,0 +1,507 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED LE Loans file special processing (i/c)')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas Export Data Module                             *
+      *                                                               *
+      *  ED0170 - Cust.Loans File Special Processing - Input Cycle    *
+      *                                                               *
+      *  Function: This program is one of the 'Special Processing     *
+      *            programs' that are called when the Drip Feed       *
+      *            process encounters a journal entry from a certain  *
+      *            file. In this case there are two files;            *
+      *            PF/CLOANCL and PF/CLOANCK.                         *
+      *                                                               *
+      *  Called By: ED0060 - Extract Journal entries within comit     *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CLE042             Date 06Sep05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAP074             Date 08Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CED004             Date 30Jun97               *
+      *                 107172  *CREATE    Date 14Jan97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CED004 - GIB Enhancement - program now driven by 'CL' journal*
+      *           entries only - access 'CK' record from file directly*
+      *  107172 - LE LOANS EXTRACTS                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANHHF                          KIGNORE               CED004
+     F            CLOANZ1F                          KIGNORE               CED004
+      * Cust.Loans (both record formats)
+      *
+     FEDNEWJL4UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDNEWJD4
+      * New journal entries by journal sequence
+      *
+     FEDOLDJL4UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDOLDJD4
+      * Old journal entries by journal sequence
+      *
+     FEDJRNEPDO   E                    DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDJRNED1
+      *
+      *****************************************************************   CED004
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01  -  EoF EDNEWJL4 or EDOLDJL4                            *
+      *    40  -  Access to Loans files                               *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      ***INIT***-*Initial*Processing***********************************   CED004
+      *  PROCES - Perform Detail Processing                           *
+      *  AMENDP - Amendment Processing                                *
+      *  WRITE  - Write a EDJRNEPD record                             *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+      *****************************************************************   CED004
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E                    DATA1     125  1
+     E                    DATA2    3971  1
+     I/TITLE I-SPECIFICATIONS
+      *-----------------------------------------------------------
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for Journal record data parameter
+     I                                        1 125 IN1
+     I                                        1   50INENTL
+     I                                        6  150INSEQN
+     I                                        6  15 ALSEQN
+     I                                       16  16 INCODE
+     I                                       17  18 INENTT
+     I                                       19  24 INDATE
+     I                                       25  300INTIME
+     I                                       31  40 INJOB
+     I                                       41  50 INUSER
+     I                                       51  560INNBR
+     I                                       57  66 INPGM
+     I                                       67  76 INOBJ
+     I                                       77  86 INLIB
+     I                                       87  96 INMBR
+     I                                       97 1060INCTRR
+     I                                      107 107 INFLAG
+     I                                      108 1170INCCID
+     I                                      118 125 INRES
+      *
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for Entry Specific data in parm
+     I                                        1 200 IN2
+     I                                        1   1 IRECI
+     I**********                              2   70ILNRF                                     CLE148
+     I                                        2   7 ILNRF                                     CLE148
+     I                                        8   8 IRCTP
+     I            DS
+      ** Data Structure for Entry Specific data in parm
+     I                                      201 400 IN3
+     I                                      397 397 ICHTP
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for EDJRNEPD output
+     I                                        1 125 OUT1
+     I                                        1   50JOENTL
+     I                                        6  150JOSEQN
+     I                                       16  16 JOCODE
+     I                                       17  18 JOENTT
+     I                                       19  24 JODATE
+     I                                       25  300JOTIME
+     I                                       31  40 JOJOB
+     I                                       41  50 JOUSER
+     I                                       51  560JONBR
+     I                                       57  66 JOPGM
+     I                                       67  76 JOOBJ
+     I                                       77  86 JOLIB
+     I                                       87  96 JOMBR
+     I                                       97 1060JOCTRR
+     I                                      107 107 JOFLAG
+     I                                      108 1170JOCCID
+     I                                      118 125 JORES
+      *
+     I*CL********E DSCLOANCL                                              CED004
+      ***Loans*(CL)                                                       CED004
+     ICKDS      E DSCLOANCK                                               CED004
+      ** Loans (CK Data Structure).                                       CED004
+      *-----------------------------------------------------------
+      * CONSTANTS
+     I***********   'CLOANCL   '          C         FACMC                 CED004
+     I              'CLOANCL   '          C         CLLOAN                CED004
+     I              'CLOANCK   '          C         CKLOAN                CED004
+      ** Cust.Loans File name as 10 long constant
+      **
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Parameter entry list
+     C           *ENTRY    PLIST
+      *IN PARAMETERS
+     C                     PARM           DATA1
+     C                     PARM           DATA2
+     C                     PARM           SRCF    1
+      *OUT PARAMETERS
+     C                     PARM JOOBJ     CDFILE  8
+     C                     PARM ALSEQN    CDBKEY 10
+     C                     PARM           WRTCD1  1
+     C                     PARM           RECCNT  50
+      *
+      ***  Key list for CLOAN
+      *
+     C           KEY1      KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           RCDT
+      *
+      ***  Copyright Statement and initialisation
+      *
+     C                     MOVEACPY@      ACT@   80
+     C                     Z-ADD*ZERO     RECCNT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR               *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      *** Set-up the data from the input parameters so that it can be used.
+      *
+     C                     MOVEADATA1     IN1
+     C                     MOVEADATA2     IN2
+     C                     Z-ADD201       J       30
+     C                     MOVEADATA2,J   IN3
+      *
+     C                     MOVEADATA1     OUT1      P
+     C                     MOVEADATA2     JOESD     P
+      *
+      *****Write*to*the*batch*member***********************************   CED004
+     C***********                                                         CED004
+     C***********          EXSR WRITE                                     CED004
+     C***********                                                         CED004
+     C*****Continue*by*deleting*the*record*read*in*by*ED0060.**********   CED004
+     C*****Use*the*journal*sequence*number*from*the*incoming*data*parameteCED004
+     C*****to*delete*the*record*from*'Old'*or*'New'*as*appropriate.****   CED004
+      *                                                                   CED004
+     C** If passed 'CK' data rather than 'CL' due to CLOANCK being        CED004
+     C** flagged 'Y' on EDDFTFPD delete the 'CK' record from EDNEWJPD.    CED004
+     C** If flagged 'N' the record is deleted by ED0060.                  CED004
+      *
+     C           INOBJ     IFEQ CKLOAN                                    CED004
+     C           SRCF      IFEQ 'N'                        B1
+      *
+     C           INSEQN    DELETEDNEWJD4             01
+      *
+     C           *IN01     IFEQ '1'                        B2
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'EDNEWJL4'DBFILE           * DB ERROR 01 *
+     C                     MOVE INSEQN    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      *
+     C                     ELSE                            X1
+      *
+     C           INSEQN    DELETEDOLDJD4             01
+      *
+     C           *IN01     IFEQ '1'                        B2
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'EDOLDJL4'DBFILE           * DB ERROR 02 *
+     C                     MOVE INSEQN    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF                           E1
+     C                     ENDIF                                          CED004
+      *
+      *****Check*for*insert*or*delete*of*a*Loans*or*amendment*of*a*****   CED004
+      *****PF/CLOANCL*record*-*these*always*come*together*with*a*'CK'**   CED004
+      *****PF/CLOANCK*can*however*be*amended*without*an*'CL'*so*special   CED004
+      *****processing*is*needed.***************************************   CED004
+      ***********                                                         CED004
+     C***********INENTT    IFEQ 'PT'                       B1             CED004
+     C***********INENTT    OREQ 'UP'                                      CED004
+     C***********ICHTP     ANDEQ'R'                                       CED004
+     C***********INENTT    OREQ 'UP'                                      CED004
+     C***********INOBJ     ANDEQFACMC                                     CED004
+      ***********                                                         CED004
+      ****Read*next*Journal*Entry*by*journal*sequence******************   CED004
+      ***********                                                         CED004
+     C***********INENTT    IFEQ 'PT'                       B1             CED004
+     C***********          ADD  1         INSEQN                          CED004
+     C***********          ELSE                                           CED004
+     C***********          ADD  2         INSEQN                          CED004
+     C***********          ENDIF                                          CED004
+      *                                                                   CED004
+      **  Check for insert or delete of a Loans or amendment of a         CED004
+      **  PF/CLOANCL record, this can be amended without an 'CK' so       CED004
+      **  special processing is needed.                                   CED004
+      *                                                                   CED004
+     C           INENTT    IFEQ 'PT'                                      CED004
+     C           INOBJ     ANDEQCLLOAN                                    CED004
+     C           INENTT    OREQ 'UP'                                      CED004
+     C           INOBJ     ANDEQCLLOAN                                    CED004
+      *
+     C           SRCF      IFEQ 'O'                        B2
+     C           INSEQN    CHAINEDOLDJD4             01
+      *
+      *** If found then delete the record
+      *
+     C           *IN01     IFEQ *OFF                       B3
+     C                     DELETEDOLDJD4
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+      *** If from 'New' or not found on 'Old' then try 'New'
+      *
+     C           SRCF      IFEQ 'N'                        B2
+     C           *IN01     OREQ *ON
+      *
+     C           INSEQN    CHAINEDNEWJD4             01
+      *
+     C           *IN01     IFEQ *ON                        B3
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'EDNEWJL4'DBFILE           * DB ERROR 03 *
+     C                     MOVE INSEQN    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E3
+      *
+      *** delete the record
+      *
+     C                     DELETEDNEWJD4
+      *
+     C                     ENDIF                           E2
+      *
+      *** Write this record to EDJRNEPD
+      *
+     C                     EXSR WRITE
+      *
+      ***ELSE*this*is*an*AMENDMENT*of*PF/CLOANCK*on*its*own*so*carry***   CED004
+      ***out*special*CK*amendment*processing***************************   CED004
+      ***********                                                         CED004
+     C***********          ELSE                            X1             CED004
+      *
+      ** Access the related CLOANCK record                                CED004
+      *                                                                   CED004
+     C                     EXSR AMENDP
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   CED004
+      /TITLE SR/WRITE
+      *****************************************************************
+      *                                                               *
+      *  WRITE - Write a detail record to EDJRNEPD                    *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRITE     BEGSR
+      *
+     C                     WRITEEDJRNED1
+     C                     ADD  1         RECCNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   CED004
+      /TITLE SR/AMENDP
+      *****************************************************************
+      *                                                               *
+W6    *  AMENDP - Amendment processing                                *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AMENDP    BEGSR
+      *
+      ****It*is*necessary*to*synthesise*a*PF/CLOANCL*journal*record****   CED004
+      ****and*put*it*in*the*batch*for*DTA.*****************************   CED004
+      ***********                                                         CED004
+      ****First*set*up*the*journal*header*output*fields*(Copied*from*the  CED004
+      ****CLOANCK*record)**********************************************   CED004
+      ***********                                                         CED004
+     C***********          MOVEADATA1     OUT1      P                     CED004
+      ***********                                                         CED004
+      ****Make*the sequence number on journal record unique by subtractingCED004
+      ****1.**The*result*is*actually*the*number*of*what*was*the*'UB'*recorCED004
+      ****for*the*CLOANCK*record,*which*is*of*course*not*sent*to*DTA.**   CED004
+      ***********                                                         CED004
+     C***********INSEQN    SUB  1         JOSEQN                          CED004
+     C***********          MOVEL'CLOANCL' JOOBJ     P                     CED004
+     C***********          MOVEL'CLOANCL' JOMBR     P                     CED004
+      ***********                                                         CED004
+      ****Create*the*rest*of*the*second*journal*entry*by*reading*from**   CED004
+      ****the*Midas*loans*file.****************************************   CED004
+      ***********                                                         CED004
+     C***********          MOVEL'A'       RCDT                            CED004
+     C***********          MOVELILNRF     LNRF                            CED004
+      ***********                                                         CED004
+      ****Read*the*synthesized*record*from*Loans*file******************   CED004
+      ****Use*the*new*data*to*overwrite*the*entry*specific*data********   CED004
+      ***********                                                         CED004
+     C***********KEY1      CHAINCLOANCLF             40                   CED004
+      ***********                                                         CED004
+      ****Database error if not found                                     CED004
+      ***********                                                         CED004
+     C************IN40     IFEQ *ON                        B1             CED004
+     C***********          Z-ADD004       DBASE            ***************CED004
+     C***********          MOVEL'CLOANCL 'DBFILE           * DB ERROR 04 *CED004
+     C***********          EXSR *PSSR                      ***************CED004
+     C***********          ENDIF                           E1             CED004
+      ***********                                                         CED004
+      ****Use*the*new*data*to*overwrite*the*entry*specific*data,*changing CED004
+      ****RECI*and*CHTP*to*the*value*from*the*CK*record*to*mismatches.*   CED004
+      ***********                                                         CED004
+     C***********          MOVELIRECI     RECI                            CED004
+     C***********          MOVELICHTP     CHTP                            CED004
+     C***********          MOVELCL        JOESD     P                     CED004
+      *                                                                   CED004
+      **  First set up the journal header output fields (Copied from the  CED004
+      **  CLOANCL record)                                                 CED004
+      *                                                                   CED004
+     C                     MOVEL'CLOANCK' JOOBJ     P                     CED004
+     C                     MOVEL'CLOANCK' JOMBR     P                     CED004
+      *                                                                   CED004
+      **  Create the rest of the second journal entry by reading from     CED004
+      **  the Midas loans file.                                           CED004
+      *                                                                   CED004
+     C                     MOVEL'B'       RCDT                            CED004
+     C                     MOVELILNRF     LNRF                            CED004
+      *                                                                   CED004
+      **  Read the synthesized record from Loans file                     CED004
+      **  Use the new data to overwrite the entry specific data           CED004
+      *                                                                   CED004
+     C           KEY1      CHAINCLOANCKF             40                   CED004
+      *                                                                   CED004
+      **  Database error if not found                                     CED004
+      *                                                                   CED004
+     C           *IN40     IFEQ *ON                                       CED004
+     C                     Z-ADD004       DBASE            ***************CED004
+     C                     MOVEL'CLOANCK 'DBFILE           * DB ERROR 04 *CED004
+     C                     EXSR *PSSR                      ***************CED004
+     C                     ENDIF                                          CED004
+      *                                                                   CED004
+      **  Use the new data to overwrite the entry specific data, changing CED004
+      **  RECI and CHTP to the value from the CL record to mismatches.    CED004
+      *                                                                   CED004
+     C                     MOVELIRECI     RECI                            CED004
+     C                     MOVELICHTP     CHTP                            CED004
+     C                     MOVELCKDS      JOESD     P                     CED004
+      *
+      **  output to EDJRNEPD
+      *
+     C                     EXSR WRITE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   CED004
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVE 'E'       WRTCD1
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK                     B1
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0170'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     DUMP
+     C                     ENDIF                           E1
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,134 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UTC000013O) TOFILE(UPMBRLTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CPP for CHKSRCHEX utility')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000013 - CPP for CHKSRCHEX utility                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015  *CREATE    Date 15Sep09              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT015 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OLDLIB &NEWLIB)
+ 
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2009')
+ 
+             DCLF       FILE(UTC000013O)
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create temporary file to hold messages for UP008010. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) TEXT('Temp. +
+                          file for holding msg from RMVSRCHEX')
+ 
+/* Ensure work libraries do not already exist. */
+             DLTF       FILE(QTEMP/UTC000013O)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC000013N)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/MBRLO)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/MBRLN)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Create lists of members in both libraries. */
+             DSPFD      FILE(&OLDLIB/*ALL) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/MBRLO)
+             MONMSG     MSGID(CPF3011 CPF3012 CPF3014 CPF3020) EXEC(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE('No files were found to +
+                             check in' *BCAT &OLDLIB *TCAT '.')
+                CALL       PGM(UP008010) PARM('*WRITE' 'CHKSRCHEX' +
+                             &ERRORMSG)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             DSPFD      FILE(&NEWLIB/*ALL) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/MBRLN)
+             MONMSG     MSGID(CPF3011 CPF3012 CPF3014 CPF3020) EXEC(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE('No files were found to +
+                             check in' *BCAT &NEWLIB *TCAT '.')
+                CALL       PGM(UP008010) PARM('*WRITE' 'CHKSRCHEX' +
+                             &ERRORMSG)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC000013O)
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC000013N)
+             CPYF       FROMFILE(QTEMP/MBRLO) +
+                          TOFILE(QTEMP/UTC000013O) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             CPYF       FROMFILE(QTEMP/MBRLN) +
+                          TOFILE(QTEMP/UTC000013N) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* Call program to check that there are no mismatches between members. */
+             OVRDBF     FILE(UTC131) TOFILE(UTC000013O)
+             OVRDBF     FILE(UTC132) TOFILE(UTC000013N)
+             CALL       PGM(UT000013) PARM('O' &NEWLIB)
+             DLTOVR     FILE(UTC131 UTC132)
+ 
+             OVRDBF     FILE(UTC132) TOFILE(UTC000013O)
+             OVRDBF     FILE(UTC131) TOFILE(UTC000013N)
+             CALL       PGM(UT000013) PARM('N' &OLDLIB)
+             DLTOVR     FILE(UTC131 UTC132)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Read list of members in 'old' library and call program to check. */
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Call program to check compares. */
+             OVRDBF     FILE(SRCO) TOFILE(&MLLIB/&MLFILE) MBR(&MLNAME)
+             OVRDBF     FILE(SRCN) TOFILE(&NEWLIB/&MLFILE) MBR(&MLNAME)
+             CALL       PGM(UT000014) PARM(&MLNAME &MLFILE)
+             DLTOVR     FILE(SRCO SRCN)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CALL       PGM(UP008010) PARM('*WRITE ' 'CHKSRCHEX' +
+                          'General error in CHKSRCHEX.  Check job +
+                          log.')
+             MONMSG     MSGID(CPF0000)
+ 
+ ENDPGM:
+             CALL       PGM(UP008010) PARM('*REPORT' 'CHKSRCHEX' ' ')
+             MONMSG     MSGID(CPF0000 RPG0000)
+ 
+             ENDPGM

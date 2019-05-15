@@ -1,0 +1,745 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                     MD038993
+/*EXI *  TEXT('Midas COB Scheduling maintenance/control')
+      *****************************************************************
+      *                                                               *
+      *  Midas - System Control Module                                *
+      *                                                               *
+      *  CB0004 - COB Scheduling Maintenance/Control                  *
+      *                                                               *
+      *  Function:  This program prompt a screen to define scheduling *
+      *             conditions and to control status (Restart/Stop)   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. MD038993 *REDUNDANTDate 21Nov16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG10848R          Date 02May06               *
+      *  Prev Amend No. BUG10848           Date 15Mar06               *
+      *                 CCB014  *Create    Date 25Apr05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD038993 - Missing code functionality on CCB014.             *
+      *             Define 10 jobs. COB will not run if one of the    *
+      *             job is active.                                    *
+      *             Source converted to RPGLE - CB000401              *
+      *  BUG10848R - Retrieved the UserId who runs the schedule batch *
+      *              for COB                                          *
+      *  BUG10848 - Schedule not functioning for Global Processing    *
+      *  CCB014 - Pre-Scheduled Batch Close Of Business               *
+      *                                                               *
+      *****************************************************************
+      *
+      *     F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *    11-15         Invalid Input indicators
+      *    LR            End of program
+      *    U7-U8         Databaser error
+      *
+      *****************************************************************
+      *
+     FCB0004DFCF  E                    WORKSTN      KINFSR *PSSR
+     FGPZONEL2IF  E           K        DISK         KINFSR *PSSR                            BUG10848
+      *
+      ** COB Scheduling Maintenance/Control Screen
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    TEXT    1   5 60
+      *
+      ** Array containing Status statement
+      *
+     IPSDS       SDS
+      *
+      ** Program status data structure
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WJBNB
+     I                                      254 263 WUSER
+      *
+     ILDA         DS                            256
+      *
+      ** Local data area
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IDLYCOB    E DSDLYCOB
+      *
+      ** Data Area giving Scheduled COB Details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     ISDSTAT    E DSSDSTAT                                                                  BUG10848
+      *                                                                                     BUG10848
+      ** Data Area for system details                                                       BUG10848
+      *                                                                                     BUG10848
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Long Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure
+      *
+     I            DS
+      *
+      ** System Dates
+      *
+     I                                        1   2 SYSD
+     I                                        3   4 SYSM
+     I                                        5   6 SYSY
+     I                                        1   60SYSN
+      *                                                                                     BUG10848
+     IZONEDS      DS                                                                        BUG10848
+     I                                        1  10 WZONE1                                  BUG10848
+     I                                       11  27 WZONE2                                  BUG10848
+     I                                       28  30 WZONE3                                  BUG10848
+     I                                       31  31 WZONE4                                  BUG10848
+     ITMDFDS      DS                                                                        BUG10848
+     I                                        1   1 WTMSGN                                  BUG10848
+     I                                        2   30WHOUR                                   BUG10848
+     I                                        1   3 WOFFST                                  BUG10848
+     I              ' Zone (Time Zone '   C         WZONE5                                  BUG10848
+      /EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  #LINIT  -  Initialisation process                            *
+      *  #LINTS  -  Initialisation of screen fields                   *
+      *  #LINSC  -  Control Status of Scheduling                      *
+      *  #LVLDS  -  Validation of screen fields                       *
+      *  #LUPDT  -  Update file with screen values                    *
+      *  #SCSTR  -  Start Scheduling                                  *
+      *  #SCEND  -  End Scheduling                                    *
+      *  #ZASNMS -  Send message to program's message queue           *
+      *  *PSSR   -  Error handling subroutine                         *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *             S T A R T   O F   P R O G R A M                   *
+      *****************************************************************
+      *                                                                                     BUG10848
+     C           *ENTRY    PLIST                                                            BUG10848
+     C                     PARM           POFFST  5                                         BUG10848
+      *
+      ** Perform the initial processing
+      *
+     C                     EXSR #LINIT
+      *
+      ** Initialise screen fields
+      *
+     C                     EXSR #LINTS
+      *
+      ** Control actual status of scheduling
+      *
+     C                     EXSR #LINSC
+      *
+      ** Do while F3 is not pressed to exit the program
+      *
+     C           *INKC     DOWEQ'0'
+      *
+      ** Write message subfile for any SPF error
+      *
+     C                     WRITECB0004C0
+      *
+      ** Update Time Field
+      *
+     C                     TIME           STIME
+      *                                                                                     BUG10848
+     C                     CALL 'ZDATE2'                                                    BUG10848
+     C                     PARM SYSDAT    WQ0001                                            BUG10848
+     C                     PARM BJDFIN    WQ0002                                            BUG10848
+     C                     PARM           WQ0003                                            BUG10848
+     C                     PARM           WQ0004                                            BUG10848
+      *                                                                                     BUG10848
+     C                     MOVELWQ0004    #0SDAT                                            BUG10848
+     C                     TIME           #0STIM                                            BUG10848
+      *
+      ** Accept input
+      *
+     C                     EXFMTCB0004F0
+      *
+      ** If F3 pressed from the main screen, end the program
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Validate screen fields
+      *
+     C                     EXSR #LVLDS
+      *
+     C           @ERR      IFEQ '0'
+      *
+      ** Update DLYCOB dtaara
+      *
+     C           *INKI     IFEQ '1'
+      *          *INKJ     OREQ '1'
+     C                     EXSR #LUPDT
+     C                     ENDIF
+      *
+      ** If F9 pressed from the main screen and no errors, Start
+      ** scheduling
+      *
+     C           *INKI     IFEQ '1'
+     C                     EXSR #SCSTR
+     C                     ENDIF
+      *
+      ** If F10 pressed from the main screen and no errors, Stop
+      ** scheduling
+      *
+     C           *INKJ     IFEQ '1'
+     C                     EXSR #SCEND
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Control actual status of scheduling
+      *
+     C                     EXSR #LINSC
+      *
+     C                     ENDDO
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LINIT  -  Initialisation process                            *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define the local data area
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CB0004'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Initialise screen message queue
+      *
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVE *BLANKS   WWTPGQ 10
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR  5
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     MOVE '1'       *IN76
+      *
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CB0004'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'FIRST'   DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     ENDIF
+      *
+      ** Set up screen header details
+      *
+     C                     MOVEL##PGM     SPGMN
+     C                     MOVELWJBNB     SWJOB
+     C                     MOVELWUSER     SUSER
+     C                     MOVELBJMRDT    SDATE
+      *
+      ** Retrieve system date
+      *
+     C                     MOVELUDAY      SYSD
+     C                     MOVELUMONTH    SYSM
+     C                     MOVELUYEAR     SYSY
+     C                     CALL 'ZDATE1'               90
+     C                     PARM           WQ0028  7
+     C                     PARM SYSN      WQ0029  60
+     C                     PARM 'D'       WQ0030  1
+     C                     PARM           WQ0031  50
+     C                     Z-ADDWQ0031    SYSDAT  50
+      ** Access SDSTAT                                                                      BUG10848
+      *                                                                                     BUG10848
+     C           *NAMVAR   DEFN           SDSTAT                                            BUG10848
+     C                     IN   SDSTAT                                                      BUG10848
+      *                                                                                     BUG10848
+     C           KZONE     KLIST                                                            BUG10848
+     C                     KFLD           LIBR                                              BUG10848
+      *                                                                                     BUG10848
+      ** Get Zone Details                                                                   BUG10848
+      *                                                                                     BUG10848
+     C           KZONE     CHAINGPZONEL2             30                                     BUG10848
+      *                                                                                     BUG10848
+     C           *IN30     IFEQ *ON                                                         BUG10848
+     C                     MOVEL'CB0004'  DBPGM                                             BUG10848
+     C                     MOVEL'GPZONEL2'DBFILE                                            BUG10848
+     C                     MOVELLIBR      DBKEY                                             BUG10848
+     C                     Z-ADD2         DBASE                                             BUG10848
+     C                     OUT  LDA                                                         BUG10848
+     C                     EXSR *PSSR                                                       BUG10848
+     C                     ENDIF                                                            BUG10848
+      *                                                                                     BUG10848
+     C                     MOVELZOZONE    WZONE1                                            BUG10848
+     C                     MOVELWZONE5    WZONE2                                            BUG10848
+     C           ZOTMDF    IFLT 0                                                           BUG10848
+     C                     MOVEL'-'       WZONE3                                            BUG10848
+     C                     Z-SUBZOTMDF    WTDIF   20                                        BUG10848
+     C                     ELSE                                                             BUG10848
+     C                     MOVEL'+'       WZONE3                                            BUG10848
+     C                     Z-ADDZOTMDF    WTDIF                                             BUG10848
+     C                     ENDIF                                                            BUG10848
+     C                     MOVE WTDIF     WZONE3                                            BUG10848
+     C                     MOVEL')'       WZONE4                                            BUG10848
+     C                     MOVELZONEDS    #0ZONE                                            BUG10848
+     C                     MOVELPOFFST    TMDFDS                                            BUG10848
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LINTS  -  Initialisation of screen fields                   *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LINTS    BEGSR
+      *
+      ** Access DLYCOB
+      *
+     C           *NAMVAR   DEFN           DLYCOB
+     C                     IN   DLYCOB
+      *
+     C                     MOVELAUTSCH    #0AUSC
+      *
+      ** If blanks default to Midas rundate
+      *
+     C           SCHDAT    IFEQ 0
+     C                     Z-ADDBJRDNB    SCHDAT
+     C                     ENDIF
+     C                     CALL 'ZDATE2'               90
+     C                     PARM SCHDAT    WQ0001  50
+     C                     PARM BJDFIN    WQ0002  1
+     C                     PARM           WQ0003  60
+     C                     PARM           WQ0004  7
+     C                     MOVELWQ0003    #0SCDT
+     C           2         SUBSTSCHTIM:1  #0SCTH
+     C           2         SUBSTSCHTIM:3  #0SCTM
+     C                     MOVELSCHTMM    #0SCWR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LINSC  -  Control actual status of scheduling               *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LINSC    BEGSR
+      *
+     C                     IN   DLYCOB
+      *
+      ** Schedule requested
+      *
+     C           SCHREQ    IFEQ 'Y'
+     C                     MOVEATEXT,1    #0SCS1
+      *
+      ** Control status of schedule COB
+      *
+     C                     CALL 'CBC0002'              90
+     C                     PARM           COBNAM
+     C                     PARM           COBUSR
+     C                     PARM           COBNBR
+     C                     PARM           WKSTS  10
+     C                     PARM           WKSTSQ 10
+      *
+      ** COB job not in jobq or held in jobq
+      *
+     C           WKSTS     IFNE '*JOBQ'
+     C           WKSTS     OREQ '*JOBQ'
+     C           WKSTSQ    ANDNE'SCD'
+     C                     MOVEATEXT,3    #0SCS2
+     C                     ELSE
+      *
+      ** COB status OK in jobq and scd
+      *
+     C                     MOVEATEXT,2    #0SCS2
+     C                     ENDIF
+      *
+      ** Schedule not requested
+      *
+     C                     ELSE
+     C                     MOVEATEXT,4    #0SCS1
+      *
+      ** Schedule date incompatible with system date
+      *
+     C           SCHDAT    IFLT SYSDAT
+     C                     MOVEATEXT,5    #0SCS2
+     C                     ELSE
+     C                     MOVEL*BLANKS   #0SCS2
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LVLDS  -  Validate main screen fields                       *
+      *  Called by: Main                                              *
+      *  Calls    :  ZASNMS                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LVLDS    BEGSR
+      *
+      ** Initialise Error indicators
+      *
+     C                     MOVE '0'       @ERR    1
+     C                     MOVEA'00000'   *IN,11
+     C                     Z-ADD0         #0HDAT  50
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Validate Only if not F10 Stop Scheduling
+      *
+     C           *INKJ     IFNE '1'
+      *
+      ** Validate Automatic Scheduling field
+      *
+     C           #0AUSC    IFEQ *BLANKS
+     C                     MOVEL'N'       #0AUSC
+     C                     ENDIF
+     C           #0AUSC    IFNE 'Y'
+     C           #0AUSC    ANDNE'N'
+     C                     MOVEL'SCH0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN11
+     C                     MOVE '1'       @ERR
+     C                     ENDIF
+      *
+      ** Validate Scheduling date
+      ** If blanks default to system date
+      *
+     C           #0SCDT    IFEQ *BLANKS
+     C                     CALL 'ZDATE2'               90
+     C                     PARM SYSDAT    WQ0001  50
+     C                     PARM BJDFIN    WQ0002  1
+     C                     PARM           WQ0003  60
+     C                     PARM           WQ0004  7
+     C                     MOVELWQ0003    #0SCDT
+     C                     ENDIF
+     C                     MOVEL#0SCDT    WQ0029
+     C                     CALL 'ZDATE1'               90
+     C                     PARM           WQ0028  7
+     C                     PARM           WQ0029  60
+     C                     PARM BJDFIN    WQ0030  1
+     C                     PARM           WQ0031  50
+     C           WQ0028    IFNE *BLANKS
+     C                     MOVEL'SCH0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     MOVE '1'       @ERR
+     C                     ELSE
+     C********** WQ0031    IFLT SYSDAT                                                      BUG10848
+     C**********           MOVEL'SCH0003' ZAMSID                                            BUG10848
+     C**********           EXSR ZASNMS                                                      BUG10848
+     C**********           MOVE '1'       *IN12                                             BUG10848
+     C**********           MOVE '1'       @ERR                                              BUG10848
+     C**********           ELSE                                                             BUG10848
+     C                     Z-ADDWQ0031    #0HDAT  50
+     C                     ENDIF
+     C**********           ENDIF                                                            BUG10848
+      *
+      ** Validate Scheduling time
+      *
+     C                     CALL 'ZALIGN'               90
+     C                     PARM           WQ0021  7
+     C                     PARM #0SCTH    WQ0022 16
+     C                     PARM *ZERO     WQ0023  10
+     C                     PARM 2         WQ0024  20
+     C                     PARM *BLANKS   WQ0025 16
+     C           WQ0021    IFEQ *BLANKS
+     C                     MOVE WQ0025    #0SCTH
+     C                     ENDIF
+     C           #0SCTH    IFLT '00'
+     C           #0SCTH    ORGT '23'
+     C                     MOVEL'SCH0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN13
+     C                     MOVE '1'       @ERR
+     C                     ENDIF
+     C                     CALL 'ZALIGN'               90
+     C                     PARM           WQ0021  7
+     C                     PARM #0SCTM    WQ0022 16
+     C                     PARM *ZERO     WQ0023  10
+     C                     PARM 2         WQ0024  20
+     C                     PARM *BLANKS   WQ0025 16
+     C           WQ0021    IFEQ *BLANKS
+     C                     MOVE WQ0025    #0SCTM
+     C                     ENDIF
+     C           #0SCTM    IFLT '00'
+     C           #0SCTM    ORGT '59'
+     C                     MOVEL'SCH0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN14
+     C                     MOVE '1'       @ERR
+     C                     ENDIF
+      *
+      ** Validate Scheduling date and time
+      *
+     C           *IN12     IFEQ '0'
+     C           *IN13     ANDEQ'0'
+     C           *IN14     ANDEQ'0'
+      *                                                                                     BUG10848
+      ** Convert time entered to GMT                                                        BUG10848
+      *                                                                                     BUG10848
+     C                     MOVE #0SCTH    WSCTH   20                                        BUG10848
+     C           ZOTMDF    IFLT 0                                                           BUG10848
+     C                     ADD  WTDIF     WSCTH                                             BUG10848
+     C                     ELSE                                                             BUG10848
+     C                     SUB  WTDIF     WSCTH                                             BUG10848
+     C                     ENDIF                                                            BUG10848
+      *                                                                                     BUG10848
+      ** Convert the GMT to Local Time                                                      BUG10848
+      *                                                                                     BUG10848
+     C           WTMSGN    IFEQ '-'                                                         BUG10848
+     C                     SUB  WHOUR     WSCTH                                             BUG10848
+     C                     ELSE                                                             BUG10848
+     C                     ADD  WHOUR     WSCTH                                             BUG10848
+     C                     ENDIF                                                            BUG10848
+      *                                                                                     BUG10848
+     C                     Z-ADD#0HDAT    WHDAT   50                                        BUG10848
+      *                                                                                     BUG10848
+      ** Hour more than 24 or equal to 24, add 1 day                                        BUG10848
+      *                                                                                     BUG10848
+     C           WSCTH     IFGE 24                                                          BUG10848
+     C                     ADD  1         WHDAT                                             BUG10848
+     C                     SUB  24        WSCTH                                             BUG10848
+     C                     ENDIF                                                            BUG10848
+     C                     Z-ADDWHDAT     SCHDAT                                            BUG10848
+      *                                                                                     BUG10848
+     C                     CALL 'ZDATE2'                                                    BUG10848
+     C                     PARM WHDAT     WQ0001                                            BUG10848
+     C                     PARM BJDFIN    WQ0002                                            BUG10848
+     C                     PARM           WQ0003                                            BUG10848
+     C                     PARM           WQ0004                                            BUG10848
+      *                                                                                     BUG10848
+     C                     MOVELWQ0004    #0SCDA                                            BUG10848
+     C                     MOVE WSCTH     WSCTHC  2                                         BUG10848
+     C                     MOVE #0SCTM    WSMIN   2                                         BUG10848
+     C           WSCTHC    CAT  ':'       #0SCTI                                            BUG10848
+     C                     MOVE WSMIN     #0SCTI                                            BUG10848
+     C           WHDAT     IFLT SYSDAT                                                      BUG10848
+     C                     MOVEL'SCH0003' ZAMSID                                            BUG10848
+     C                     EXSR ZASNMS                                                      BUG10848
+     C                     MOVE '1'       *IN12                                             BUG10848
+     C                     MOVE '1'       @ERR                                              BUG10848
+     C                     ELSE                                                             BUG10848
+     C********** #0SCTH    CAT  #0SCTM    SCTIM   6                                         BUG10848
+     C           WSCTHC    CAT  WSMIN     SCTIM   6                                         BUG10848
+     C                     MOVE '00'      SCTIM
+     C                     MOVELSCTIM     SCTIMN  60
+     C                     TIME           STIME   60
+     C                     TIME           #0STIM                                            BUG10848
+     C                     ENDIF                                                            BUG10848
+     C********** WQ0031    IFEQ SYSDAT                                                      BUG10848
+     C           WHDAT     IFEQ SYSDAT                                                      BUG10848
+     C           SCTIMN    ANDLTSTIME
+     C                     MOVEL'SCH0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     MOVE '1'       *IN13
+     C                     MOVE '1'       *IN14
+     C                     MOVE '1'       @ERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Warning period
+      *
+     C                     CALL 'ZALIGN'               90
+     C                     PARM           WQ0021  7
+     C                     PARM #0SCWR    WQ0022 16
+     C                     PARM *ZERO     WQ0023  10
+     C                     PARM 2         WQ0024  20
+     C                     PARM *BLANKS   WQ0025 16
+     C           WQ0021    IFEQ *BLANKS
+     C                     MOVE WQ0025    #0SCWR
+     C                     ENDIF
+     C           #0SCWR    IFEQ '00'
+     C           #0SCWR    OREQ '  '
+     C                     MOVEL'05'      #0SCWR
+     C                     ENDIF
+     C           #0SCWR    IFLT '00'
+     C           #0SCWR    ORGT '59'
+     C                     MOVEL'SCH0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN15
+     C                     MOVE '1'       @ERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LUPDT  -  Update file with the correct values               *
+      *                                                               *
+      *  Called by: Main program                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LUPDT    BEGSR
+      *
+     C           *LOCK     IN   DLYCOB
+     C                     MOVEL#0AUSC    AUTSCH
+     C                     MOVEL#0HDAT    SCHDAT
+     C                     MOVELSCTIM     SCHTIM
+     C                     MOVEL#0SCWR    SCHTMM
+     C                     MOVELWUSER     REQUSR                                           BUG10848R
+      *
+     C                     OUT  DLYCOB
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #SCSTR  -  Start/Restart COB jobs                            *
+      *                                                               *
+      *  Called by: Main program                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #SCSTR    BEGSR
+      *
+      ** Stop previous scheduling if exists + restart a new one
+      *
+     C                     CALL 'CBC0005'
+     C                     PARM 'S'       MODE    1        Mode
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #SCEND  -  Update file with the correct values               *
+      *                                                               *
+      *  Called by: Main program                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #SCEND    BEGSR
+      *
+      ** Stop previous scheduling
+      *
+     C                     CALL 'CBC0005'
+     C                     PARM 'E'       MODE
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS    - Send message to program's message queue          *
+      *                                                               *
+      *  CALLS     - Y2SNMGC                                          *
+      *                                                               *
+      *  CALLED BY - #LVLDS                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called by: #LINIT- Initialisation subroutine                 *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+** TEXT
+COB already scheduled
+Actual status is OK
+Actual status incorrect. Restart or Stop the scheduling
+COB not scheduled
+Scheduled date incompatible with system date

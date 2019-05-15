@@ -1,0 +1,296 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2009')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas FT Validate Validation Flag')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FTVIVLF  - Validate Validation Flag                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG24978           Date 25Aug09               *
+      *                 CSW209  *CREATE    Date 01Apr09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *            (Recompile)                                        *
+      *  BUG24978 - Related reference should be in red and bold font. *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *                                                               *
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      ** Standard D-specs
+      ** ================
+      **
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indcator processing)
+      **    False      logical = *off (for indcator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** Program Status Data Structure
+      ** =============================
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** The maximum size of the appended error arrays
+     D XArrayMax       C                   CONST(20)
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+      ** Array of Fields in error.
+     D FldNamXAr       S             10A   DIM(XArrayMax)
+ 
+      ** Array of error message IDs
+     D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
+ 
+      ** Array of error message data.
+     D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
+ 
+      ** Array of Warning in error.
+     D WFldNmXAr       S             10A   DIM(XArrayMax)
+ 
+      ** Array of Warning message IDs
+     D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
+ 
+      ** Array of Warning message data.
+     D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
+ 
+      ** Incoming Transaction
+     D NwIP4ScnFmt   E DS                  EXTNAME(FTIPY4PD)
+     D NwIP7ScnFmt   E DS                  EXTNAME(FTIPY7PD)
+ 
+      ** Valid Incoming Payments Extension File (default)
+     D NwIP2FilFmt   E DS                  EXTNAME(FTVIPY2PD)
+ 
+      **  Flags to indicate whether transaction fields are valid
+     D FTEIPY7       E DS                  EXTNAME(FTEIPY7PD)
+ 
+      ** External data structure for access programs
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** Index for arrays of error message ids etc
+     D Idx             S              3P 0
+ 
+      ** Index for arrays of warning message ids etc
+     D WIX             S              3P 0
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+      *
+      ** Initialization
+      *
+     C                   Eval      RetCodeIn  = *BLANKS
+     C                   Eval      FldNamXAr  = *BLANKS
+     C                   Eval      MsgIDXAr   = *BLANKS
+     C                   Eval      MsgDtaXAr  = *BLANKS
+     C                   EVAL      WFldNmXAr  = *BLANKS
+     C                   EVAL      WMsgIDXAr  = *BLANKS
+     C                   EVAL      WMsgDtaXAr = *BLANKS
+     C                   EVAL      WIX = 0
+     C                   Eval      Idx = 0
+ 
+      ** Validate
+     C                   Exsr      VIVLF
+ 
+      ** If an error was found, set the return code appropriately
+      *
+     C                   IF        OKVALF = 'N'
+     C                   EVAL      RetCodeIn = 'Error'
+      *
+     C                   ELSE
+     C                   EVAL      I2VALF = DDVALF
+     C                   ENDIF
+ 
+      ** RETURN
+      *
+     C                   RETURN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VIVLF - Validate Validation Flag
+      *****************************************************************
+      *
+     C     VIVLF         BEGSR
+      *
+     C                   IF        DDVALF <> *BLANKS
+      *
+      ** Network should be SWIFT
+      *
+     C                   IF        DDNWRK <> 'SWIFT'
+     C                   EVAL      OKVALF = 'N'
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDVALF'      FldNamXAr(Idx)
+     C                   MOVEL     DDVALF        MsgDtaXAr(IDX)
+     C                   MOVEL     'ME00170'     MsgIDXAr(Idx)
+      *
+     C                   ELSE
+      *
+      ** Validation Flag should be STP or REMIT for Message Type 103
+      *
+     C                   IF        DDMTPY  = '103' AND
+     C                             DDVALF <> 'STP' AND
+     C                             DDVALF <> 'REMIT'
+     C                   EVAL      OKVALF = 'N'
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDVALF'      FldNamXAr(Idx)
+     C                   MOVEL     DDVALF        MsgDtaXAr(IDX)
+     C                   MOVEL     'ME00171'     MsgIDXAr(Idx)
+     C                   ENDIF
+      *
+      ** Validation Flag should be COV for Message Type 202 and 205
+      *
+     C                   IF        (DDMTPY  = '202' OR DDMTPY = '205') AND
+     C                             DDVALF <> 'COV'
+     C                   EVAL      OKVALF = 'N'
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDVALF'      FldNamXAr(Idx)
+     C                   MOVEL     DDVALF        MsgDtaXAr(IDX)
+     C                   MOVEL     'ME00172'     MsgIDXAr(Idx)
+     C                   ENDIF
+      *
+      ** Message Type should be 103, 202 or 205
+      *
+     C                   IF        DDMTPY <> '103' AND
+     C                             DDMTPY <> '202' AND
+     C                             DDMTPY <> '205'
+     C                   EVAL      OKVALF = 'N'
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDVALF'      FldNamXAr(Idx)
+     C                   MOVEL     DDVALF        MsgDtaXAr(IDX)
+     C                   MOVEL     'ME00170'     MsgIDXAr(Idx)
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Related Payment Reference should not be blanks for Validation Flag COV
+      *
+     C                   IF        DDVALF = 'COV' AND
+     C                             DDRLPR = *BLANKS
+     C                   EVAL      OKVALF = 'N'
+     C                   ADD       1             Idx
+     C**********         MOVEL     'DDVALF'      FldNamXAr(Idx)                             BUG24978
+     C**********         MOVEL     DDVALF        MsgDtaXAr(IDX)                             BUG24978
+     C                   MOVEL     'DDRLPR'      FldNamXAr(Idx)                             BUG24978
+     C                   MOVEL     DDRLPR        MsgDtaXAr(IDX)                             BUG24978
+     C                   MOVEL     'ME00174'     MsgIDXAr(Idx)
+     C                   ENDIF
+      *
+     C                   ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      * *INZSR - Program Initialisation routine                       *
+      *****************************************************************
+     C     *INZSR        BEGSR
+     C*
+     C     *ENTRY        PLIST
+ 
+      * INPUTS
+      ** Return Code
+     C                   Parm                    RetCodeIn
+      *
+      ** Incoming Payments details from incoming transaction
+      ** - screen format
+     C                   PARM                    NwIP4ScnFmt
+     C                   PARM                    NwIP7ScnFmt
+ 
+      * OUTPUTS
+      ** Incoming Payments (additional details) for file update
+     C                   PARM                    NwIP2FilFmt
+      *
+      ** Incoming Payments Lvl 2 Scrn 7 error indicators
+     C                   Parm                    FTEIPY7
+      *
+      ** Error fields/message IDs/message data (arrays) from/to caller
+     C                   Parm                    FldNamXAr
+     C                   Parm                    MsgIDXAr
+     C                   Parm                    MsgDtaXAr
+ 
+     C                   PARM                    WFldNmXAr
+     C                   PARM                    WMsgIDXAr
+     C                   PARM                    WMsgDtaXAr
+      *
+      ** =================================================================
+      ** Program, module and procedure names for database error processing.
+      ** =================================================================
+      ** The following /COPY sets these values, and also defines LDA as
+      ** an external data area
+ 
+     C/COPY ZACPYSRC,DBFIELDS
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+     C/COPY ZACPYSRC,PSSR_ILE
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2009

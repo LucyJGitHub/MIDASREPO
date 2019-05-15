@@ -1,0 +1,642 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Consolidated events file extract')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0485 - Consoildated Events file extract program            *
+      *                                                               *
+      *  Function: This program is called just before the end of      *
+      *            close of business to produce a consolidated        *
+      *            events file GLCEVTPD to transfer to Global         *
+      *            Manager.                                           *
+      *                                                               *
+      *  Called By: EDC0485 - Consolidated Events file extract        *
+      *                                                               *
+      *  Calls:     AO/AOBANKR0                                       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 05May06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 13Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU031             Date 05Nov98               *
+      *                 124585             DATE 22OCT97               *
+      *                 124148             DATE 22OCT97               *
+      *                 CED006 *CREATE     DATE 21JUL97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  163486 - SIAC (Settled in Another Ccy) field was added to    *
+      *           the lending file LVENTEL, so use instead of IFXC.   *
+      *  CEU031 - EMU Global Manager Changes.                         *
+      *           Here, extract correct event from settlement in      *
+      *           another currency for EMU.                           *
+      *  124585 - Extra event records on output file                  *
+      *  124148 - Event amount and other amount have blank in first   *
+      *           position                                            *
+      *  CED006 - ED Enhancements                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FEVNTXED IF  E                    DISK         KINFSR *PSSR
+      * Dealing Events file
+      *
+     FLVENTEL IF  E                    DISK         KINFSR *PSSR
+      * Customer Lending Events file
+      *
+     FBVNTXED IF  E                    DISK         KINFSR *PSSR
+      * LEO/Trade Innovation Events file
+      *
+     FFPVNTDD IF  E                    DISK         KINFSR *PSSR
+      * Funds Transfer Events file
+      *
+     FTREVED  IF  E                    DISK         KINFSR *PSSR
+      * SE Trades Events file
+      *
+     FBPEVED  IF  E                    DISK         KINFSR *PSSR
+      * SE Book Position Events file
+      *
+     FFOEVED  IF  E                    DISK         KINFSR *PSSR
+      * Future and Options Events file
+      *
+     FINTYP   IF  E           K        DISK         KINFSR *PSSR
+      * FO Instrument Types file
+      *
+     FGLCEVTPDO   E                    DISK         KINFSR *PSSR
+      * Consolidated Events Extract file
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  40 - End of file EVNTXED                                     *
+      *  41 - End of file LVENTEL                                     *
+      *  42 - End of file BVNTXED                                     *
+      *  43 - End of file FPVNTDD                                     *
+      *  44 - End of file TREVED                                      *
+      *  45 - End of file BPEVED                                      *
+      *  46 - End of file FOEVED                                      *
+      *  51 - Chain of file INTYP                                     *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  PROCES - Perform Detail Processing                           *
+      *  WRTDL  - Write event record for Dealing events               *
+      *  WRTLE  - Write event record for Lending events               *
+      *  WRTLO  - Write event record for LEO events                   *
+      *  WRTFT  - Write event record for Funds transfer events        *
+      *  WRTTR  - Write event record for SE Trades events             *
+      *  WRTBP  - Write event record for SE Book Position events      *
+      *  WRTFF  - Write event record for Futures and Options events   *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+      *
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+      *
+      *
+     I/TITLE I-SPECIFICATIONS
+      ** Rename fields
+     IFOEVEDF
+     I              ISTT                            IISTT
+      *
+     ILVENTELF                                                                                CGL029
+     I              OSACQQ                          OSACB1                                    CGL029
+      *                                                                                       CGL029
+     IDBERR       DS                            256
+      ** Data structure for data-base error processing.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IDSFDY     E DSDSFDY
+      ** Midas Access Object Short Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IGLCEVT    E DSGLCEVTPD
+      ** Consolidated Events
+      *
+     IEVNT        DS                             86
+      ** Data structure for event details
+      *
+     I                                       34  37 ETYP
+     I                                    P  38  400EDAT
+     I***********                         P  42  480EAMT                  124148
+     I                                       49  51 ECCY
+     I                                       52  54 BRCA
+     I***********                         P  56  620DBCE                  124148
+     I                                       77  77 INOI
+      *
+     I***TREV***     DS                             86                                        CGL029
+     ITREV        DS                            104                                           CGL029
+      ** Data structure for SE trade event details
+      *
+     I                                        3   8 TRTR
+     I                                       18  27 TRSS
+     I**********                             28  330TRPT                                     CSD027A
+     I                                       28  33 TRPT                                     CSD027A
+     I                                       34  37 TREC
+     I                                    P  38  400TRVD
+     I                                    P  42  480TRVS
+     I                                       49  51 TRSC
+     I                                       52  54 TRBA
+     I**********                             65  76 TRSA                                      CGL029
+     I                                       65  76 TRSAQQ                                    CGL029
+     I                                       77  77 TRIO
+     I                                       87 104 TRSA                                      CGL029
+      *
+     IBPEV        DS                             86
+      ** Data structure for SE book position event details
+      *
+     I                                        3   4 CCBK
+     I                                       18  27 CCSS
+     I                                       34  37 CCCE
+     I                                    P  38  400CCDT
+     I                                    P  42  480CCEA
+     I                                       49  51 CCEC
+     I                                       52  54 CCBA
+     I                                       77  77 CCIO
+      *
+      *****************************************************************
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      **  Copyright Statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Access bank details for base currency.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD01        DBASE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL'ED0485'  DBPGM            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      **  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** Read all records in Dealing events file EVNTXED, write
+      ** details to file GLCEVTPD.
+      *
+     C                     READ EVNTXED                  40
+     C           *IN40     DOWEQ'0'
+      *                                                                   124585
+      ** If Multibranching Event flag is OFF                              124585
+     C           IBRE      IFEQ 'N'                                       124585
+     C                     EXSR WRTDL
+     C                     ENDIF                                          124585
+     C                     READ EVNTXED                  40
+     C                     ENDDO
+      *
+      ** Read all records in Lending events file LVENTEL, write
+      ** details to file GLCEVTPD.
+      *
+     C                     READ LVENTEL                  41
+     C           *IN41     DOWEQ'0'
+      *                                                                   124585
+      ** If Multibranching Event flag is OFF                              124585
+     C           IBRE      IFEQ 'N'                                       124585
+     C                     EXSR WRTLE
+     C                     ENDIF                                          124585
+     C                     READ LVENTEL                  41
+     C                     ENDDO
+      *
+      ** Read all records in LEO events file BVNTXED, write
+      ** details to file GLCEVTPD.
+      *
+     C                     READ BVNTXED                  42
+     C           *IN42     DOWEQ'0'
+     C                     EXSR WRTLO
+     C                     READ BVNTXED                  42
+     C                     ENDDO
+      *
+      ** Read all records in Funds Transfer events file FPVNTDD, write
+      ** details to file GLCEVTPD.
+      *
+     C                     READ FPVNTDD                  43
+     C           *IN43     DOWEQ'0'
+      *                                                                   124585
+      ** If Multibranching Event flag is OFF                              124585
+     C           IBRE      IFEQ 'N'                                       124585
+     C                     EXSR WRTFT
+     C                     ENDIF                                          124585
+     C                     READ FPVNTDD                  43
+     C                     ENDDO
+      *
+      ** Read all records in SE Trade events file TREVED, write
+      ** details to file GLCEVTPD.
+      *
+     C                     READ TREVED                   44
+     C           *IN44     DOWEQ'0'
+      *                                                                   124585
+      ** If Multibranching Event flag is OFF                              124585
+     C           IBRE      IFEQ 'N'                                       124585
+     C                     EXSR WRTTR
+     C                     ENDIF                                          124585
+     C                     READ TREVED                   44
+     C                     ENDDO
+      *
+      ** Read all records in SE Book position events file BPEVED,
+      ** write details to file GLCEVTPD.
+      *
+     C                     READ BPEVED                   45
+     C           *IN45     DOWEQ'0'
+     C                     EXSR WRTBP
+     C                     READ BPEVED                   45
+     C                     ENDDO
+      *
+      ** Read all records in Future and options events file FOEVED,
+      ** write details to file GLCEVTPD.
+      *
+     C                     READ FOEVED                   46
+     C           *IN46     DOWEQ'0'
+      *                                                                   124585
+      ** If Multibranching Event flag is OFF                              124585
+     C           IBRE      IFEQ 'N'                                       124585
+      *
+      ** Access instrument type details
+     C           IISTT     CHAININTYP                51
+     C           *IN51     IFEQ *ON
+     C                     MOVEL'INTYP   'DBFILE
+     C                     Z-ADD02        DBASE            ***************
+     C                     MOVELIISTT     DBKEY            * DB ERROR 02 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+     C                     EXSR WRTFF
+     C                     ENDIF                                          124585
+     C                     READ FOEVED                   46
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WRTDL
+      *****************************************************************
+      *                                                               *
+      *  WRTDL - Write an event record to GLCEVTPD for Dealing events *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTDL     BEGSR
+      *                                                                   CEU031
+      ** If EMU settlement event, do not extract if settle in another     CEU031
+      ** currency is 'Y'.                                                 CEU031
+      *                                                                   CEU031
+     C           SIAC      IFEQ *BLANKS                                   CEU031
+      *
+      ** Set up data from PF/EVNTXED to be written to PF/GLCEVTPD
+      *
+     C                     MOVE EVNT      GLCEVT
+      *
+     C                     MOVE 'DL'      FZMODC
+     C                     MOVELDLNO      FZTNRF
+     C                     MOVELDTYP      WFLD    4
+     C                     MOVE DLST      WFLD
+     C                     MOVELWFLD      FZSESN
+     C                     MOVELCUNR      FZCNUM
+     C                     Z-ADDEAMT      FZEAMT                          124148
+     C                     Z-ADDDBCE      FZDBCE                          124148
+     C                     Z-ADDSETP      FZSETP
+     C                     MOVELOSAC1     FZOSAC
+     C                     MOVE OSAC2     FZOSAC
+     C                     MOVE BJCYCD    FZBCCY
+     C                     Z-ADDBJRDNB    FZRUND
+     C                     Z-ADDDASN      FZAMDN
+      *
+      ** Write record to GLCEVTPD.
+      *
+     C                     WRITEGLCEVTD0
+      *
+     C                     ENDIF                                          CEU031
+      *                                                                   CEU031
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WRTLE
+      *****************************************************************
+      *                                                               *
+      *  WRTLE - Write an event record to GLCEVTPD for lending events *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTLE     BEGSR
+      *                                                                   CEU031
+      ** If EMU settlement event, do not extract if settle in another     CEU031
+      ** currency is 'Y'.                                                 CEU031
+      *                                                                   CEU031
+     C***********IFXC      IFEQ *BLANKS                             CEU031163486
+     C           SIAC      IFEQ *BLANKS                                   163486
+      *
+      ** Set up data from PF/LVENTEL to be written to PF/GLCEVTPD
+      *
+     C                     MOVE EVNT      GLCEVT
+      *
+     C                     MOVE 'LE'      FZMODC
+     C                     MOVELLNRF      FZTNRF
+     C                     MOVELLTYP      WFLD
+     C                     MOVE SUTP      WFLD
+     C                     MOVELWFLD      FZSESN
+     C                     Z-ADDSETP      FZSETP
+     C                     MOVELCUNR      FZCNUM
+     C                     Z-ADDEAMT      FZEAMT                          124148
+     C                     Z-ADDDBCE      FZDBCE                          124148
+     C                     MOVELOSAC      FZOSAC
+     C                     MOVE BJCYCD    FZBCCY
+     C                     Z-ADDBJRDNB    FZRUND
+     C                     Z-ADDLASN      FZAMDN
+      *
+      ** Write record to GLCEVTPD.
+      *
+     C                     WRITEGLCEVTD0
+      *
+     C                     ENDIF                                          CEU031
+      *                                                                   CEU031
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WRTLO
+      *****************************************************************
+      *                                                               *
+      *  WRTLO - Write an event record to GLCEVTPD for LEO events     *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTLO     BEGSR
+      *
+      ** Set up data from PF/BVNTXED to be written to PF/GLCEVTPD
+      *
+     C                     MOVE EVNT      GLCEVT
+      *
+     C                     MOVE 'LO'      FZMODC
+     C                     MOVELLCNO      FZTNRF
+     C                     MOVELDTYP      FZSESN
+     C**********           Z-ADDCNUM      FZCNUM                                             CSD027A
+     C                     MOVE CNUM      FZCNUM                                             CSD027A
+     C                     Z-ADDEAMT      FZEAMT                          124148
+     C                     Z-ADDDBCE      FZDBCE                          124148
+     C                     Z-ADDSETP      FZSETP
+     C                     MOVELOSAC1     FZOSAC
+     C                     MOVE OSAC2     FZOSAC
+     C                     MOVE BJCYCD    FZBCCY
+     C                     Z-ADDBJRDNB    FZRUND
+     C                     Z-ADD*ZERO     FZAMDN
+      *
+      ** Write record to GLCEVTPD.
+      *
+     C                     WRITEGLCEVTD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WRTFT
+      *****************************************************************
+      *                                                               *
+      *  WRTFT - Write an event record to GLCEVTPD Funds transfer     *
+      *          events                                               *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTFT     BEGSR
+      *
+      ** Set up data from PF/FPVNTDD to be written to PF/GLCEVTPD
+      *
+     C                     MOVE EVNT      GLCEVT
+      *
+     C                     MOVE 'FT'      FZMODC
+     C                     MOVELPREF      FZTNRF
+     C                     MOVELPYTP      WFLD
+     C                     MOVE PYST      WFLD
+     C                     MOVELWFLD      FZSESN
+     C                     MOVELCUNR      FZCNUM
+     C                     Z-ADDEAMT      FZEAMT                          124148
+     C                     Z-ADDDBCE      FZDBCE                          124148
+     C                     MOVE BJCYCD    FZBCCY
+     C                     Z-ADDBJRDNB    FZRUND
+     C                     Z-ADD*ZERO     FZAMDN
+      *
+     C           STNI      IFEQ 'Y'
+     C                     Z-ADD01        FZSETP
+     C                     MOVELNOSA      FZOSAC
+     C                     ELSE
+     C                     Z-ADD*ZERO     FZSETP
+     C                     CLEARFZOSAC
+     C                     ENDIF
+      *
+      ** Write record to GLCEVTPD.
+      *
+     C                     WRITEGLCEVTD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WRTTR
+      *****************************************************************
+      *                                                               *
+      *  WRTTR - Write an event record to GLCEVTPD for Trades events  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTTR     BEGSR
+      *
+      ** Set up data from PF/TREVED to be written to PF/GLCEVTPD
+      *
+     C                     MOVE TREV      GLCEVT
+      *
+     C                     MOVE 'SE'      FZMODC
+     C                     Z-ADD0         FZDBCE
+     C                     Z-ADDTRSM      FZSETP
+     C                     MOVE BJCYCD    FZBCCY
+     C                     Z-ADDBJRDNB    FZRUND
+     C                     Z-ADD*ZERO     FZAMDN
+      *
+      ** Write record to GLCEVTPD.
+      *
+     C                     WRITEGLCEVTD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WRTBP
+      *****************************************************************
+      *                                                               *
+      *  WRTBP - Write an event record to GLCEVTPD for Book           *
+      *          position events                                      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTBP     BEGSR
+      *
+      ** Set up data from PF/BPEVED to be written to PF/GLCEVTPD
+      *
+     C                     MOVE BPEV      GLCEVT
+      *
+     C                     MOVE 'SE'      FZMODC
+     C**********           Z-ADD0         FZCNUM                                             CSD027A
+     C                     MOVE *BLANKS   FZCNUM                                             CSD027A
+     C                     Z-ADD0         FZDBCE
+     C                     CLEARFZSETP
+     C                     MOVEL*BLANK    FZOSAC
+     C                     MOVE BJCYCD    FZBCCY
+     C                     Z-ADDBJRDNB    FZRUND
+     C                     Z-ADD*ZERO     FZAMDN
+      *
+      ** Write record to GLCEVTPD.
+      *
+     C                     WRITEGLCEVTD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WRTFF
+      *****************************************************************
+      *                                                               *
+      *  WRTFF - Write an event record to GLCEVTPD Future and options *
+      *          events.                                              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTFF     BEGSR
+      *
+      ** Set up data from PF/FOEVED to be written to PF/GLCEVTPD
+      *
+     C                     MOVE EVNT      GLCEVT
+      *
+     C                     MOVE 'FF'      FZMODC
+     C                     MOVELTNBR      FZTNRF
+     C                     MOVELIISTT     W#FLD   6
+     C                     MOVE ISPT      W#FLD
+     C                     MOVELW#FLD     FZSESN
+     C                     MOVELCUNR      FZCNUM
+     C                     Z-ADDEAMT      FZEAMT                          124148
+     C                     Z-ADDDBCE      FZDBCE                          124148
+     C                     MOVELEBRC      FZBRCA
+     C                     Z-ADD0         FZDBCE
+     C                     Z-ADDSETP      FZSETP
+     C                     MOVELNOSA      FZOSAC
+     C                     MOVE BJCYCD    FZBCCY
+     C                     Z-ADDBJRDNB    FZRUND
+     C                     Z-ADD*ZERO     FZAMDN
+      *
+      ** Write record to GLCEVTPD.
+      *
+     C                     WRITEGLCEVTD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK                     B1
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0485'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     DUMP
+     C                     ENDIF                           E1
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Finastra International Limited 2001

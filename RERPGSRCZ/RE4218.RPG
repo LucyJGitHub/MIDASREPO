@@ -1,0 +1,883 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Outward Clearing Cheques Print')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4218 - List of Outward Clearing Cheques                    *
+     F*                                                               *
+     F*  Function:  This program lists all outward clearing cheques   *
+     F*  (COB)      for Retail accounts.                              *
+     F*                                                               *
+     F*  Called By: REC4218  - List of Outward Clearing Cheques       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 091241             Date 17Jul95               *
+      *                 CRT001  *CREATE    Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  091241 - Bank Code field extended from 7A to 11A.            *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FCHQDPPH UF  E           K        DISK         KINFSR *PSSR
+      ** Cheques deposited         File header
+      *
+     FOTCLR   IF  E           K        DISK         KINFSR *PSSR
+      ** Outward clearing extract  Logical file
+      *
+     FRE4218AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Audit report
+      *
+     FRE4218P1O   E             11     PRINTER      KINFDS SPOOL      UC
+      ** List of outward clearing cheques
+      *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   11  - Overflow indicator                                    *
+     F*                                                               *
+     F*   15  - Difference print indicator                            *
+     F*                                                               *
+     F*   33  - Multibranching indicator                              *
+     F*   34  - Branch level                                          *
+     F*                                                               *
+     F*   71  - General Indicator Used For CHAIN                      *
+     F*   72  - EOF indicator for OTCLRPDF                            *
+     F*                                                               *
+     F*   LR  - Last Record Indicator                                 *
+     F*                                                               *
+     F*   U1  - Input cycle                                           *
+     F* U7+U8 - Set on if database error occurs                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Control Processing                                  *
+     F*  FIRST  - Initial Processing                                  *
+     F*  IFLDS  - Initialise                                          *
+     F*                                                               *
+     F*  PRODET - Process details                                     *
+     F*                                                               *
+     F*  PRHED  - Print header                                        *
+     F*  PRDET  - Print details                                       *
+     F*  PRTOT  - Print totals                                        *
+     F*  PRCON  - Print controls                                      *
+     F*                                                               *
+     F*  RDBKCD - Get bank code details                               *
+     F*  GCURR  - Get decimals for currencies                         *
+     F*                                                               *
+     F*  FINAL  - Final Processing                                    *
+     F*                                                               *
+     F*  *PSSR  - Program error                                       *
+     F*  ZFRPED - Edit numeric field                                  *
+     F*  ZHASH  - Accumulation of Hash totals                         *
+     F*  DBERR  - Database Error Handling :                           *
+     F*           Terminates program                                  *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E                    CPY@    1   1 80
+     E*
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E** Array for SR.ZFRPED
+     E*
+     E/COPY ZSRSRC,ZHASHZ1
+     E** Array for SR.ZHASH
+     E*
+      /EJECT
+     I*****************************************************************
+     I*
+     ICHQDPPHF
+     I** Renamed fields in LF/CHQDPPH
+     I*
+     I              RECI                            HRECI
+     I*
+     IENUM        DS                             19
+     I** Data structure for splitting the edited numeric which
+     I** has a value with 2 spaces to the right (CR,-)
+     I*
+     I                                        1  17 @EN
+     I                                       18  19 @FL
+     I*
+     I** FILE INFORMATION DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I** Data structure for SR.ZFRPED
+     I*
+     I/COPY ZSRSRC,ZHASHZ2
+     I** Data structure for SR.ZHASH
+     I*
+     IRUNDAT    E DS
+     I**  Standard Data Area Layout for System flags and Run Date
+     I*
+     IPSDS       SDS
+     I**  Program Status Data Structure
+      *
+     I                                        1  10 @PGM
+      **  Field containing Program name
+     I                                      244 253 @JOB
+      **  Field containing Workstation ID
+     I                                      254 263 @USER
+      **  Field Containing User ID
+      *
+     ILDA         DS                            256
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+     I*
+      *
+     ISDBANK    E DSSDBANKPD
+     I** External data structure for Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** External data structure for Currency Details
+     I*
+     ISDBNCD    E DSSDBNCDPD
+     I** External data structure for Retail Bank Codes
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I** External data structure for Branch Details
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+     I*
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      FIRST  - Initial Processing                        *
+      *            PRODET - Process details                           *
+      *            FINAL  - Final Processing                          *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Initial Processing
+     C                     EXSR FIRST
+     C*
+     C**  Check entity for 'ALL', blank or a specific branch
+     C*
+     C           PRENT     IFEQ 'ALL'
+     C           PRENT     OREQ *BLANKS
+     C           *LOVAL    SETLLOTCLRPDF
+     C                     ELSE
+     C                     MOVE 'D'       WRECI   1
+     C           KFLDA     SETLLOTCLRPDF
+     C                     END
+      *
+      ** processing outward clearing extract until EOF
+     C           *IN72     DOWEQ'0'
+      *
+     C                     READ OTCLRPDF                 72
+     C*
+     C**  For Branch level, it must be the same as the branch selected
+     C*
+     C           PRENT     IFNE 'ALL'
+     C           PRENT     ANDNE*BLANKS
+     C           PRENT     ANDNETLBC
+     C                     MOVE '1'       *IN72
+     C                     END
+      *
+     C           *IN72     IFEQ '0'
+      *
+     C                     ADD  1         NORD
+      *
+      ** Process for detail records
+     C           RECI      IFEQ 'D'
+      *
+     C                     EXSR PRODET
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF reached do final processing
+     C                     EXSR FINAL
+      *
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRODET - Process Detail                            *
+      *                                                               *
+      * CALLS      PRHED  - Print header                              *
+      *            PRDET  - Print details                             *
+      *            PRTOT  - Print totals                              *
+      *            RDBKCD - Get bank code details                     *
+      *            GCURR  - Get decimals for currencies               *
+      *            ZHASH  - Accumulation of Hash totals               *
+      *                                                               *
+      * CALLED BY  MAIN  - Control Processing                         *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           PRODET    BEGSR                           ** PRODET **
+      *
+     C           RBCD      IFNE WRBCD
+     C           TNCY      ORNE WTNCY
+      *
+     C                     EXSR PRTOT
+      *
+     C                     END
+     C*
+     C** On change of branch...
+     C*
+     C           TLBC      IFNE WTLBC
+     C*
+     C** If printer file is open and entity is not blank, print footer
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C           PRENT     ANDNE*BLANKS
+     C                     WRITELAST
+     C                     CLOSERE4218P1
+     C                     END
+     C*
+     C**  Open printer file RE4218P1 if entity is not blank
+     C**  or the printer file is not yet open
+     C*
+     C           PRENT     IFNE *BLANKS
+     C           WOPEN     ORNE 'Y'
+     C*
+     C                     OPEN RE4218P1
+     C*
+     C           PRENT     IFNE *BLANKS
+     C                     MOVE TLBC      SENTY
+     C                     END
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ
+     C                     PARM           SENTY
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVE '1'       *IN11
+     C                     MOVE 'Y'       WOPEN   1
+     C                     MOVE TLBC      WTLBC   3
+     C*
+     C**  Get branch name using access object
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM TLBC      P@BRCA  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C**  Check if error occurred
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD7         DBASE            * DBERROR 007
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVELTLBC      DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     MOVE A8BRNM    RBRNM
+     C                     MOVE TLBC      RBRCA
+     C*
+     C                     END
+     C*
+     C                     END
+      *
+     C           RBCD      IFNE WRBCD
+      *
+     C                     EXSR RDBKCD
+      *
+     C                     END
+      *
+     C           TNCY      IFNE WTNCY
+      *
+     C                     EXSR GCURR
+      *
+     C                     EXSR PRHED
+      *
+     C                     END
+      *
+      ** parameters for hashing subroutine
+     C                     Z-ADD1         S
+     C                     Z-ADD1         Z
+     C                     MOVE CQAM      ZZAMT
+      *
+      ** Call hashing subroutine to hash cheque amount
+     C                     EXSR ZHASH
+      *
+      ** accumulate cheque amount and the no of cheques
+     C                     ADD  1         NOCQ
+     C                     ADD  CQAM      VOCQ
+      *
+     C                     EXSR PRDET
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRDET  - Print details                             *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY  PRODET - Process detail                            *
+      *            PRHED  - Print header                              *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           PRDET     BEGSR                           ** PRDET  **
+      *
+     C                     MOVELCQNF      PCQNF
+     C                     MOVELTTYP1     PTTYP
+      *
+      ** Convert amount field Cheque amount to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PCQAM
+     C                     Z-ADDCQAM      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PCQAM
+      *
+      ** check for heading print
+     C           *IN11     IFEQ '1'
+     C                     EXSR PRHED
+     C                     END
+      *
+      ** Write detail line
+     C                     WRITEDETAIL
+      *
+      ** Move to previous field
+     C                     MOVELRBCD      WRBCD
+     C                     MOVELTNCY      WTNCY
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRHED  - Print header                              *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  PROHED - Process header                            *
+      *            PRDET  - Print details                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRHED     BEGSR                           ** PRHED  **
+      *
+     C                     MOVELSTIME     TIME    60
+     C                     MOVELRBCD      PRBCD
+     C                     MOVELFPRBNM    PRBNM
+     C                     MOVELTNCY      PTNCY
+      *
+      ** Write Heading line
+     C                     WRITEHEADNG
+     C                     WRITEDETHED
+      *
+     C                     SETOF                     11
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRTOT  - Print totals                              *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY  PROHED - Process header                            *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRTOT     BEGSR                           ** PRTOT  **
+      *
+      ** Bypass total printing for first record
+     C           WRBCD     IFNE *ZEROS
+     C           WTNCY     ANDNE*BLANKS
+      *
+     C                     MOVELNOCQ      PNOCQ
+      *
+      ** Convert total amount to edited numerics with decimals
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVOCQ
+     C                     Z-ADDVOCQ      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVOCQ
+      *
+      ** Write total line
+     C                     WRITETOTLIN
+      *
+      ** Initialise accumulated variables
+     C                     Z-ADD0         NOCQ
+     C                     Z-ADD0         VOCQ
+     C                     SETON                     11
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRCON  - Print controls                            *
+      *                                                               *
+      * CALLS      DBERR  - Database error handling (01)              *
+      *                                                               *
+      * CALLED BY  FINAL  - Final processing                          *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           PRCON     BEGSR                           ** PRCON  **
+      *
+      ** Access trailer record of outward extract file
+     C           'T'       CHAINOTCLRPZF             71
+      *
+      ** If record not found.
+     C           *IN71     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVEL'OTCLR'   DBFILE           ***************
+     C                     MOVEL'T'       DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Do not check file out of balance if specific branch has been
+     C** selected
+     C*
+     C           PRENT     IFEQ 'ALL'
+     C           PRENT     OREQ *BLANKS
+      *
+      ** Difference in no of records processed and on file
+     C           NORD      IFNE NORE1
+     C                     SETON                     U715
+     C                     END
+      *
+      ** Difference in value of records processed and on file
+     C           INT,1     IFNE HRWN
+     C                     SETON                     U715
+     C                     END
+      *
+      ** Difference in value of records processed and on file
+     C           DEC,1     IFNE HRDC
+     C                     SETON                     U715
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVELINT,1     PINT
+     C                     MOVELDEC,1     PDEC
+     C                     MOVELHRWN      PHRWN
+     C                     MOVELHRDC      PHRDC
+     C                     MOVELNORE1     PNORE1
+     C                     MOVELNORD      PNORD
+     C*
+     C** Print report footer
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C                     WRITELAST
+     C                     END
+      *
+      ** Print control totals report.
+     C                     WRITEAUHDNG
+     C*
+     C** Report no details
+     C*
+     C           NORD      IFEQ 0
+     C           *INU7     ANDEQ'0'
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ** Print control totals report.
+     C                     WRITEAUDETL
+     C                     END
+      *
+      ** If file out of balance(U7) move program name to LDA
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial processing                        *
+      *                                                               *
+      * CALLS -    IFLDS  - Initialize                                *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry paramete
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRLEV   1
+     C                     PARM           PRENT   3
+     C*
+     C           KFLDA     KLIST
+     C                     KFLD           WRECI
+     C                     KFLD           PRENT
+      *
+      * Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C**  Check report level
+     C*
+     C           PRLEV     IFEQ 'B'
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN33
+     C                     ELSE
+     C*
+     C**  Else, setup appropriate level and entity
+     C*
+     C                     MOVE 'S'       PRLEV
+     C                     MOVE *BLANKS   PRENT
+     C                     MOVE '0'       *IN34
+     C                     END
+      *
+     C                     MOVEL@JOB      SWID   10
+     C                     MOVE *BLANKS   SMRDT   7
+      *
+      * Initialize program work fields
+     C                     EXSR IFLDS
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANKS   ZSERRU  1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERRU    IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C** Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     EXSR DBERR
+     C                     ELSE
+     C                     MOVELBJSUC     @SCI    1
+     C                     END
+      *
+      ** Move midas run date to screen field
+     C                     MOVELBJMRDT    SMRDT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            IFLDS  - Initialize work/screen fields             *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C***********          MOVEL*BLANKS   WRBCD   70                      091241
+     C                     MOVEL*BLANKS   WRBCD  110                      091241
+     C                     MOVEL*BLANKS   WTNCY   3
+     C                     Z-ADD0         NORD    50
+     C                     Z-ADD0         NOCQ    50
+     C                     Z-ADD0         VOCQ   150
+     C                     TIME           STIME   60
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR    - Database Error Handling : Terminates program       *
+      *                                                               *
+      * CALLED BY  PRCON  - Print controls                 (01)       *
+      *            FINAL  - Final Processing               (03) (04)  *
+      *            RDBKCD - Get bank code details          (05)       *
+      *            GCURR  - Get decimals for currencies    (06)       *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     WRITEAUHDNG
+     C                     WRITEDBERROR
+     C           WOPEN     IFEQ 'Y'
+     C                     WRITEERRLINE
+     C                     CLOSERE4218P1
+     C                     END
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY                                                     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+     C                     CLOSE*ALL
+     C                     DUMP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FINAL  - Final processing                          *
+      *                                                               *
+      * CALLS      PRTOT  - Print totals                              *
+      *            PRCON  - Print controls                            *
+      *            DBERR  - Database Error Handling : (03) (04)       *
+      *                                                               *
+      * CALLED BY   Main  - Control process                           *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR                           ** FINAL  **
+      *
+     C                     EXSR PRTOT
+      *
+     C                     SETON                     11
+      *
+      ** setup and print control
+     C                     EXSR PRCON
+      *
+      *
+      ** if it is input cycle processing(i.e. U1 is on)
+     C           *INU1     IFEQ '1'
+      *
+     C                     READ CHQDPPHF                 71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CHQDPPH 'DBFILE           ***************
+     C                     Z-ADD3         DBASE            ** DB ERR 03 **
+     C                     MOVEL'1'       DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     TIME           LPTM
+      *
+     C                     UPDATCHQDPPHF               71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CHQDPPH 'DBFILE           ***************
+     C                     Z-ADD4         DBASE            ** DB ERR 04 **
+     C                     MOVEL'1'       DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     END
+      *
+      ** Seton end of program indicators
+     C                     SETON                     LR
+     C                     CLOSE*ALL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RDBKCD - Get bank code details                     *
+      *                                                               *
+      * CALLS      DBERR  - Database error routine (05)               *
+      *                                                               *
+      * CALLED BY  PRODET - Process details                           *
+      *                                                               *
+      *****************************************************************
+     C           RDBKCD    BEGSR                           ** RDBKCD **
+      *
+      ** Access bank code file for bank details
+     C*
+     C                     MOVELRBCD      @RBCD
+     C*
+     C                     CALL 'AOBNCDR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C***********          PARM           @RBCD   7                       091241
+     C                     PARM           @RBCD  11                       091241
+     C           SDBNCD    PARM SDBNCD    DSFDY
+      *
+      ** If record not found.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD5         DBASE            ** DB ERR 05 **
+     C                     MOVEL'SDBNCDPD'DBFILE           ***************
+     C                     MOVELRBCD      DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * GCURR             - Get decimals for currencies               *
+      *                                                               *
+      * CALLS      DBERR  - Database error routine (06)               *
+      *                                                               *
+      * CALLED BY  PRODET - Process details                           *
+      *                                                               *
+      *****************************************************************
+     C           GCURR     BEGSR                           ** GCURR  **
+      *
+      ** Access currency file for no.of decimal places
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM TNCY      @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found.
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD6         DBASE            ** DB ERR 06 **
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELTNCY      DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ** SR.ZFRPED Subroutine
+     C/COPY ZSRSRC,ZFRPEDZ3
+      /EJECT
+      ** SR.ZHASH  Subroutine
+     C/COPY ZSRSRC,ZHASHZ3
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

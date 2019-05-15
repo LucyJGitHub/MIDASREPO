@@ -1,0 +1,137 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Trade Innovation Interface                                    */
+/*                                                                             */
+/*       SXPF - TI Customer Address linkage SDCUSTPD, SDTICSPD and SDALTNPD    */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. BUG23752           Date 28Apr09                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      CRE026             Date 09Aug06                        */
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      CDL038             Date 10May05                        */
+/*                      CSW037A            Date 02May05                        */
+/*                      CSD025             Date 11Jan05                        */
+/*                      CSW037             Date 15Dec04                        */
+/*                      CSW036             Date 15Dec04                        */
+/*                      BUG3130            Date 18Jun04                        */
+/*                      CTI004  *CREATE    Date 08Jun04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       BUG23752 - Revise the SQL SXPF and SVPF to handle alphanumeric        */
+/*                  customer.                                                  */
+/*       CRE026 - Consumer Banking (Recompile)                                 */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CDL038 - Extended Deal Sub Type (Recompile)                           */
+/*       CSW037A- Additional Field extended to 40 chars (recompile)            */
+/*       CSD025 - Customer De-Activation                                       */
+/*       CSW037 - Additional Field Data on MT300/MT320                         */
+/*       CSW036 - Dual SWIFT BIC held on Client Details                        */
+/*       BUG3130 - Remove TFSYSOPT & T4PF from the view, are not Midas files.  */
+/*                 Put SX20LF in its own source file                           */
+/*       CTI004 - Midas-TI database integration                                */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+  DEC(BBCUST)+1000000 AS SXSEQ,'' AS SXCUS,'' AS SXCLC,' ' AS SXPRIM,           :
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN TCCUST                       :
+  ELSE TCCSSN END AS SXCUS1                                                     :
+/*FROM*SDCUSTPD,*SDTICSPD,*TFSYSOPT*****                                       */        /*BUG3130*/
+  FROM SDCUSTPD, SDTICSPD, SDTIINPD                                             :        /*BUG3130*/
+/*WHERE*ADDR_CODE**=*''*AND*BBCUST=TCCUST*AND*BBTICS='Y'*****                  */        /*BUG3130*/
+  WHERE TIADCD  = '' AND BBCUST=TCCUST AND BBTICS='Y'                           :        /*BUG3130*/
+  AND BBDTDL=0 AND BBPAIN <> 'P'                                                :
+  AND LENGTH(RTRIM(TRANSLATE(BBCUST,'*',' 0123456789'))) = 0                    :       /*BUG23752*/
+  UNION                                                                         :
+  SELECT DEC(BCCUST)+2000000 AS SXSEQ,'' AS SXCUS,'' AS SXCLC,                  :
+  BCADCD AS SXPRIM,                                                             :
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN TCCUST                       :
+  ELSE TCCSSN END AS SXCUS1                                                     :
+/*FROM*SDALTNPD,*SDTICSPD,*T4PF,*TFSYSOPT*****                                 */        /*BUG3130*/
+  FROM SDALTNPD, SDTICSPD, SDTIINPD                                             :        /*BUG3130*/
+/*WHERE*ADDR_CODE**=*''*AND*T4SWAD*=*BCADCD*AND*BCCUST=TCCUST*****             */        /*BUG3130*/
+  WHERE TIADCD  = '' AND TISWAD = BCADCD AND BCCUST=TCCUST                      :        /*BUG3130*/
+  AND LENGTH(RTRIM(TRANSLATE(BCCUST,'*',' 0123456789'))) = 0                    :       /*BUG23752*/
+  UNION                                                                         :
+  SELECT DEC(BCCUST)+1000000 AS SXSEQ,'' AS SXCUS,'' AS SXCLC,                  :
+  BCADCD AS SXPRIM,                                                             :
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN TCCUST                       :
+  ELSE TCCSSN END AS SXCUS1                                                     :
+/*FROM*SDALTNPD,*SDTICSPD,*TFSYSOPT*****                                       */        /*BUG3130*/
+  FROM SDALTNPD, SDTICSPD, SDTIINPD                                             :        /*BUG3130*/
+/*WHERE*ADDR_CODE**<>*''*AND*ADDR_CODE**=*BCADCD*****                           :        /*BUG3130*/
+  WHERE TIADCD  <> '' AND TIADCD  = BCADCD                                      :        /*BUG3130*/
+/*AND*BCCUST=TCCUST*UNION*******************************************************/        /BUG23752*/
+  AND BCCUST=TCCUST                                                             :       /*BUG23752*/
+  AND LENGTH(RTRIM(TRANSLATE(BCCUST,'*',' 0123456789'))) = 0                    :       /*BUG23752*/
+  UNION                                                                         :       /*BUG23752*/
+  SELECT DEC(BCCUST)+2000000 AS SXSEQ,'' AS SXCUS,'' AS SXCLC,                  :
+  BCADCD AS SXPRIM,                                                             :
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN TCCUST                       :
+  ELSE TCCSSN END AS SXCUS1                                                     :
+/*FROM*SDALTNPD,*SDTICSPD,*T4PF,*TFSYSOPT*****                                 */        /*BUG3130*/
+  FROM SDALTNPD, SDTICSPD, SDTIINPD                                             :        /*BUG3130*/
+/*WHERE*ADDR_CODE**<>*''*AND*T4SWAD*=*BCADCD*AND*BCCUST=TCCUST;*****           */        /*BUG3130*/
+/*WHERE*TIADCD**<>*''*AND*TISWAD*=*BCADCD*AND*BCCUST=TCCUST;********************//*BUG3130BUG23752*/
+  WHERE TIADCD  <> '' AND TISWAD = BCADCD AND BCCUST=TCCUST                     :       /*BUG23752*/
+  AND LENGTH(RTRIM(TRANSLATE(BCCUST,'*',' 0123456789'))) = 0                    :       /*BUG23752*/
+  UNION                                                                         :       /*BUG23752*/
+  SELECT 2999999 + ROWNUM AS SXSEQ,                                             :       /*BUG23752*/
+  SXCUS,SXCLC,SXPRIM,SXCUS1                                                     :       /*BUG23752*/
+  FROM (                                                                        :       /*BUG23752*/
+  SELECT BBCUST as SXSEQ,'' AS SXCUS,'' AS SXCLC,' ' AS SXPRIM,                 :       /*BUG23752*/
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN TCCUST                       :       /*BUG23752*/
+  ELSE TCCSSN END AS SXCUS1                                                     :       /*BUG23752*/
+  FROM SDCUSTPD A, SDTICSPD, SDTIINPD                                           :       /*BUG23752*/
+  WHERE TIADCD  = '' AND BBCUST=TCCUST AND BBTICS='Y'                           :       /*BUG23752*/
+  AND BBDTDL=0 AND BBPAIN <> 'P'                                                :       /*BUG23752*/
+  AND LENGTH(RTRIM(TRANSLATE(BBCUST,'*',' 0123456789'))) > 0                    :       /*BUG23752*/
+  UNION                                                                         :       /*BUG23752*/
+  SELECT BCCUST as SXSEQ,'' AS SXCUS,'' AS SXCLC,                               :       /*BUG23752*/
+  BCADCD AS SXPRIM,                                                             :       /*BUG23752*/
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN TCCUST                       :       /*BUG23752*/
+  ELSE TCCSSN END AS SXCUS1                                                     :       /*BUG23752*/
+  FROM SDALTNPD, SDTICSPD, SDTIINPD                                             :       /*BUG23752*/
+  WHERE TIADCD  = '' AND TISWAD = BCADCD AND BCCUST=TCCUST                      :       /*BUG23752*/
+  AND LENGTH(RTRIM(TRANSLATE(BCCUST,'*',' 0123456789'))) > 0                    :       /*BUG23752*/
+  UNION                                                                         :       /*BUG23752*/
+  SELECT BCCUST as SXSEQ,'' AS SXCUS,'' AS SXCLC,                               :       /*BUG23752*/
+  BCADCD AS SXPRIM,                                                             :       /*BUG23752*/
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN TCCUST                       :       /*BUG23752*/
+  ELSE TCCSSN END AS SXCUS1                                                     :       /*BUG23752*/
+  FROM SDALTNPD, SDTICSPD, SDTIINPD                                             :       /*BUG23752*/
+  WHERE TIADCD  <> '' AND TIADCD  = BCADCD                                      :       /*BUG23752*/
+  AND BCCUST=TCCUST                                                             :       /*BUG23752*/
+  AND LENGTH(RTRIM(TRANSLATE(BCCUST,'*',' 0123456789'))) > 0                    :       /*BUG23752*/
+  UNION                                                                         :       /*BUG23752*/
+  SELECT BCCUST as SXSEQ,'' AS SXCUS,'' AS SXCLC,                               :       /*BUG23752*/
+  BCADCD AS SXPRIM,                                                             :       /*BUG23752*/
+  CASE (SELECT TICUSN FROM SDTIINPD) WHEN 'Y' THEN TCCUST                       :       /*BUG23752*/
+  ELSE TCCSSN END AS SXCUS1                                                     :       /*BUG23752*/
+  FROM SDALTNPD, SDTICSPD, SDTIINPD                                             :       /*BUG23752*/
+  WHERE TIADCD  <> '' AND TISWAD = BCADCD AND BCCUST=TCCUST                     :       /*BUG23752*/
+  AND LENGTH(RTRIM(TRANSLATE(BCCUST,'*',' 0123456789'))) > 0) as A,             :       /*BUG23752*/
+  TABLE ( SELECT COUNT(*) AS ROWNUM                                             :       /*BUG23752*/
+  FROM SDCUSTPD AS B                                                            :       /*BUG23752*/
+  WHERE A.SXSEQ >= B.BBCUST                                                     :       /*BUG23752*/
+  AND LENGTH(RTRIM(TRANSLATE(B.BBCUST,'*',' 0123456789'))) > 0                  :       /*BUG23752*/
+  ) TEMP_TAB;                                                                   :       /*BUG23752*/
+/*CREATE VIEW SX20LF AS                                               **********/        /*BUG3130*/
+/*SELECT SXCUS, SXCLC, SXPRIM, SVSEQ, SVCSA, SVNA1, SVNA2, SVNA3,     **********/        /*BUG3130*/
+/*SVNA4, SVNA5, SVPZIP, SVLNM,SVPHN, SVFAX, SVTLX, SVC08, SVSWB,      **********/        /*BUG3130*/
+/*SVCNAS, SVSWL, SVSWBR, SVXM, SXCUS1, DUALACTION, CUSER,             **********/        /*BUG3130*/
+/*AUSER FROM SVPF, SXPF WHERE SVSEQ = SXSEQ;                          **********/        /*BUG3130*/
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas TI Customer Address linkage                 ';                     :
+                                                                                :

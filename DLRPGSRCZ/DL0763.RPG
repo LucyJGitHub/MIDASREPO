@@ -1,0 +1,1243 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FX Limit Usage (80/100%) Report')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - DEALING MODULE                                   *
+     F*                                                               *
+     F*  DL0763 - FX LIMIT USAGE (80/100%) REPORT                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CLE154             Date 06Aug12               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 236334             Date 06Jan06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 218582             Date 06Jun06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 191399             Date 20Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 14Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 160828             Date 05Jul99               *
+     F*                 096916             DATE 24Feb98               *
+     F*                 091530             DATE 06FEB98               *  *
+     F*                 CDL002             DATE 25APR97               *
+     F*                 088141             DATE 09JUN95               *
+     F*                 067533             DATE 09MAR94               *
+     F*                 046303             DATE 13JAN94               *
+     F*                 S01393             DATE 30OCT92               *
+     F*                 E38323             DATE 30JUL92               *
+     F*                 E28817             DATE 14OCT91               *
+     F*                 BH1039             DATE 28AUG91               *
+     F*                 E25515             DATE 08AUG91               *
+     F*                 E25548             DATE 20JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  236334 - DLC0806 often fails due to FCOOB. Recompiled due to *
+      *           change in length of NORE in PF/EVLXCEG. Applied fix *
+      *           213645.                                             *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  218582 - DLC0806 often fails due to FCOOB. Recompiled due to *
+      *           change in length of NORE in PF/EVLXCEG. Applied fix *
+      *           213645.                                             *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  191399 - Recompile due to removal of 160828 from EVLSX.      *
+     F*  163486 - Recompile due to changes in LVENTEL.                *
+     F*  160828 - Recompile due to changes in EVLSX.                  *
+     F*  096916 - When no details to report, no heading is printed in *
+     F*           DL0763P1 and no title and date in DL0763AU.         *
+     F*  091530 - Include Options (OP) in report.                     *  *
+     F*  CDL002 - FX Netting. Exclude netted FX deal events and       *
+     F*           include FX net events.                              *
+     F*  088141 - Customer FX limit shown as 'NO LIMIT' even if       *
+     F*           a limit has been assigned.                          *
+     F*  067533 - Set up Overflow Line correctly in the Print File    *
+     F*           definition instead of amending it in the RPG code.  *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  S01393 - RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F*  E38323 - Recompilation of the program done due to a change   *
+     F*           in subroutine ZFWDT                                 *
+     F*  E28817 - STEVEAB and STEVEFC are now redundant               *
+     F*  BH1039 - ARRAY XFDAA BLANK VALUES ARE IN THE FORM '000'      *
+     F*           RATHER THAN BEING BLANK, CAUSING ODD RESULTS        *
+     F*           ON A LIMIT TYPE(888) WITH A PERIOD UP TO 1 DAY.     *
+     F*  E25515 - REMOVAL OF SYNDICATED LOANS                         *
+     F*  E25548 - Overprinting on title                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FEVLSX   IP  E           K        DISK
+     F************STEVEABF                          KIGNORE               E28817
+     F************CEVNXCCF                          KIGNORE               E25515
+     F            LVENTELF                          KIGNORE
+     FFXNEVTL0IS  E           K        DISK                           U3  CDL002
+     F*                                                                   CDL002
+     F** FX Net Events                                                    CDL002
+     FDEALS   IF  E           K        DISK                           UC  CDL002
+     F*                                                                   CDL002
+     F** Deals                                                            CDL002
+     F            DEALSDAF                          KIGNORE               CDL002
+     F            DEALSDCF                          KIGNORE               CDL002
+     F            DEALSDDF                          KIGNORE               CDL002
+     F            DEALSDEF                          KIGNORE               CDL002
+     F            DEALSDFF                          KIGNORE               CDL002
+     F            DEALSDGF                          KIGNORE               CDL002
+     FDL0763AUO   F     132            PRINTER      KINFDS SPOOLU
+     F***DL0763P1O** F     132     OF    LPRINTER      KINFDS SPOOL       067533
+     FDL0763P1O   F     132     OF     PRINTER      KINFDS SPOOL          067533
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            EVENT RECORD
+     F* 02            EVENTS LIMIT RECORD
+     F* 03            FX NET EVENT RECORD                                 CDL002
+     F*       19      WORK INDICATOR
+     F*       25      NEGATIVE EVENT AMOUNT, LISTING VALUES
+     F*       30      FX LIMIT TYPE IS ZERO
+     F*       31      FX LIMIT EXPIRY DATE IS BEFORE RUN DATE
+     F*       40      FAILED CHAIN TO TABLE FILE
+     F*       46      NO RECORDS TO REPORT
+     F*       49      EXPOSURE IS GREATER THAN OR EQUAL TO 80% OF FX LIMIT
+     F*       50      FIRST LINE OF RECORD OUTPUT INDICATOR
+     F*       51      CUSTOMER'S TOWN OUTPUT
+     F*       53      DETAIL OUTPUT
+     F*       71      END OF PERIOD IS 'SPOT'
+     F*       85      No record on DEALS                              *   CDL002
+     F*       86-89   UTILITY
+     F*       90      FAILED CHAIN TO LIMIT TYPES RECORD OF TABLE FILE
+     F*       91-99   STANDARD SUBROUTINE INDICATORS
+     F*         U7&U8 DATABASE ERROR SWITCH
+     F*         U8    FILES OUT OF BALANCE SWITCH
+     F*         U4    REPORT IS TO INCLUDE ALL EXPOSURES - PERCENTAGE
+     F*                   OF LIMITS IS TO BE DISREGARDED
+     F*        NU4    REPORT IS TO INCLUDE ONLY THOSE WITH EXPOSURES
+     F*                   GT/EQ TO 80% OF LIMIT
+     F*            L1 CUSTOMER NUMBER CONTROL BREAK
+     F*            OF OVERFLOW
+     E                    CPY@    1   1 80
+     E                    FCT     1   4  4 0             DECIMAL PT. CONV.
+     E                    INT         2 15 0             ZDATE1/2 SR.ARRAY
+     E                    DEC         2  3 0             ZDATE2 SR. ARRAY
+     E**   SIX ARRAYS FOR FX LIMITS
+     E                    XFDA        6  3 0             PERIOD END DAYS
+     E                    XFDT        6  5 0             PERIOD END DATES
+     E                    XFLM        6  9 0             PERIOD LIMIT AMT.
+     E                    XFXP        6 13 0             PERIOD EXPOS.AMT.
+     E                    XFXS        6 10 0             PERIOD EXCES AMT.
+     E                    XFPC        6  3 2             PERIOD PERCENTAGE
+     E**   ONE-ELEMENT COMPILE-TIME ARRAY - KEY TO LIMIT REC ON S/TABLE
+     E**                  DLKY    1   1 12
+     E**   XFDA DEFINED AS ALPHA
+     E                    XFDAA       6  3
+     E                    XLDAA       6  3
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+     E**   RUN CONTROL ARRAYS FOR RECORDS LISTED IN THIS REPORT
+     E                    RLST        6  4 0
+     E                    LSTV        6 14 0
+     E**
+     E/COPY ZSRSRC,ZHOLE
+     L***DL0763P1 66FL 54OL                                               067533
+     IEVLXCEDF    01
+     I***********                                   CUNR  L1              CDL002
+     I                                              CUNR  L1M1            CDL002
+     I                                              CASK    M2            CDL002
+     I*
+     I*    EVLXCED - EVENTS BY PARENT
+     IEVNTXEDF    01
+     I***********                                   CUNR  L1              CDL002
+     I                                              CUNR  L1M1            CDL002
+     I                                              CASK    M2            CDL002
+     I*
+     I*    EVNTXED - EVENTS BY CUSTOMER
+     IEVLXCEEF    02
+     I***********                                   CUNR  L1              CDL002
+     I                                              CUNR  L1M1            CDL002
+     I                                              CASK    M2            CDL002
+     I*
+     I*    EVLXCEE - EVENTS LIMIT RECORD
+     IFXNEVTD0    06                                                      CDL002
+     I                                              CUNR  L1M1            CDL002
+     I                                              CASK    M2            CDL002
+     I*                                                                   CDL002
+     I*    FXNEVTPD - FX NET EVENTS BY CUSTOMER                           CDL002
+      /COPY ZSRSRC,ZHOLI
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I** EXTERNAL DS FOR DEALING DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** EXTERNAL DS FOR CURRENCY DETAILS
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I** EXTERNAL DS FOR MIDAS MODULES DETAILS
+     I*
+     ISDCLLM    E DSSDCLLMPD
+     I** EXTERNAL DS FOR CUSTOMER LIMITS DETAILS
+     I*
+     ISDLIMT    E DSSDLIMTPD
+     I** EXTERNAL DS FOR LIMITS DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I**
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I**
+     I********************************************************************
+     I**                                                                **
+     I**   DATA STRUCTURES TO LINK XFDAA/XFDA & INPUT FIELDS            **
+     I**                                                                **
+     I            DS
+     I                                        1  18 XFDA
+     I                                        1  18 XFDAA
+     I                                        1  18 XFDAIN
+     I            DS
+     I                                        1  18 XFPC
+     I                                        1  18 XFPCIN
+     I********************************************************************
+     ILEPSIN      DS
+     I* DATA STRUCTURE OF END/1ST TO 6TH LIMIT PERIODS
+     I                                        1   3 XLEP1
+     I                                        4   6 XLEP2
+     I                                        7   9 XLEP3
+     I                                       10  12 XLEP4
+     I                                       13  15 XLEP5
+     I                                       16  18 XLEP6
+     ILPCSIN      DS
+     I* DATA STRUCTURE OF %/LIMIT FOR 1ST TO 6TH PERIODS
+     I                                        1   30XLPC1
+     I                                        4   60XLPC2
+     I                                        7   90XLPC3
+     I                                       10  120XLPC4
+     I                                       13  150XLPC5
+     I                                       16  180XLPC6
+     I**
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C********************************************************************
+     C*                                                                  *
+     C***         F I R S T   C Y C L E   P R O C E S S I N G          ***
+     C*                                                                  *
+     C********************************************************************
+     C**
+     C**   ON FIRST CYCLE - GET ICDR1 & 2
+     C   40                GOTO DETAIL
+     C                     SETON                     OF
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0763'  DBPGM
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* Call Access Prog. For BANK DETAILS.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* If error occurs...
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'01'      DBASE            * DBERR 01 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C** TEST DATE FORMAT VALUE
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C* Call Access Prog. To Obtain DEAL DETAILS For Base CCY For Limits
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C* If error occurs...
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDDEALPD'DBFILE           ************
+     C                     MOVEL'02'      DBASE            * DBERR 02 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C* Call Access Prog. to obtain CURRENCY DETAILS for Decimal Places
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BNCYCD    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C* If error occurs...
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVEL'03'      DBASE            * DBERR 03 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     MOVEL@AJCD     DBKEY  29
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C           A6NBDP    ADD  1         DEP     10
+     C*
+     C*
+     C* Call Access Prog. For MODULE DETAILS.
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C* If error occurs...
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDMMODPD'DBFILE           ************
+     C                     MOVEL'05'      DBASE            * DBERR 05 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C** Only do FX Netting processing if switchable feature CDL002       CDL002
+     C** is on, which is worked out by DLC0763 which switches on U3,      CDL002
+     C** and Limits Reports are to include FX Netting Events.             CDL002
+     C*                                                                   CDL002
+     C                     MOVEL'N'       CDL002  1                       CDL002
+     C                     MOVEL'N'       W#NTCE  1                       CDL002
+     C*                                                                   CDL002
+     C           *INU3     IFEQ '1'                                       CDL002
+     C                     MOVEL'Y'       CDL002                          CDL002
+     C*                                                                   CDL002
+     C           BNNTCE    IFEQ 'Y'                                       CDL002
+     C                     MOVELBNNTCE    W#NTCE                          CDL002
+     C                     OPEN DEALS                                     CDL002
+     C                     END                                            CDL002
+     C                     END                                            CDL002
+     C*                                                                   CDL002
+     C**   OBTAIN NO. OF DAYS FORWARD FOR 'SP'
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     MOVE BNCYCD    ZCCY
+     C                     Z-ADD2         ZNRDYS
+     C                     MOVE BJSLCD    ZLOC
+     C                     EXSR ZFWDT
+     C           ZDYNBR    SUB  BJRDNB    SP      50
+     C                     OUT  LDA
+     C**
+     C********************************************************************
+     C*                                                                  *
+     C***         D E T A I L   T I M E   P R O C E S S I N G          ***
+     C*                                                                  *
+     C********************************************************************
+     C**
+     C                     SETON                     40
+     C           DETAIL    TAG                             * DETAIL TAG  *
+     C**
+     C** IF NOT EVENT OR LIMIT RECORD
+     C**
+     C**N01N02***          GOTO END                                       CDL002
+     C  N01N02N06          GOTO END                                       CDL002
+     C*
+     C*  RESET LIMIT DETAILS
+     C*  (IF LIMITS ARE PRESENT, THEY WILL BE READ IN ON CHANGE OF CUSTOMER)
+     C*
+     C   L1N02             Z-ADD*ZERO     FLTY
+     C   L1                EXSR DLLMT
+     C*
+     C** IF EVENT RECORD IS READ
+     C*
+     C           *IN01     IFEQ '1'
+     C           *IN06     OREQ '1'                                       CDL002
+     C**
+     C**   HASH TOTALLING ROUTINE
+     C**
+     C                     ADD  1         HASHN   70
+     C           EAMT      DIV  1000      ZZAMT        25
+     C      25             Z-SUBZZAMT     ZZAMT
+     C                     Z-ADD1         S       10
+     C                     EXSR HASH
+     C*
+     C** IF CUSTOMER HAS A PARENT, IGNORE THIS CUSTOMER
+     C** (IT WILL BE REPORTED UNDER ITS PARENT)
+     C*
+     C           PTNU      IFNE *BLANK
+     C           PTNU      ANDNE'000000'
+     C/COPY WNCPYSRC,DL0763C001
+     C                     GOTO END
+     C                     END
+     C**
+     C*  CHECK IF EVENT IS TO BE INCLUDED IN REPORTING
+     C**
+     C           DTYP      IFNE 'FP'
+     C           DTYP      ANDNE'FS'
+     C           DTYP      ANDNE'CX'
+     C           DTYP      ANDNE'PI'
+     C           DTYP      ANDNE'SI'
+     C           DTYP      ANDNE'OT'
+     C           DTYP      ANDNE'OP'                                      091530
+     C           DTYP      CABNE'SW'      END
+     C                     END
+     C*                                                                   CDL002
+     C** Do not include FX deals if the buy amount has been netted.       CDL002
+     C*                                                                   CDL002
+     C           W#NTCE    IFEQ 'Y'                                       CDL002
+     C           *IN01     ANDEQ'1'                                       CDL002
+     C*                                                                   CDL002
+     C           DLNO      CHAINDEALSDBF             85                   CDL002
+     C*                                                                   CDL002
+     C           *IN85     IFEQ '1'                                       CDL002
+     C                     MOVEL'DEALS'   DBFILE                          CDL002
+     C                     MOVELDLNO      DBKEY                           CDL002
+     C                     Z-ADD77        DBASE                           CDL002
+     C                     SETON                     U7U8LR               CDL002
+     C                     EXSR *PSSR                                     CDL002
+     C                     GOTO END                                       CDL002
+     C*                                                                   CDL002
+     C                     ELSE                                           CDL002
+     C           NETBR     IFNE *BLANKS                                   CDL002
+     C                     GOTO END                                       CDL002
+     C                     END                                            CDL002
+     C                     END                                            CDL002
+     C                     END                                            CDL002
+     C*                                                                   CDL002
+     C** Only include FX nets if it is a buy net                          CDL002
+     C*                                                                   CDL002
+     C           *IN06     IFEQ '1'                                       CDL002
+     C           INOI      IFNE 'I'                                       CDL002
+     C           W#NTCE    ORNE 'Y'                                       CDL002
+     C                     GOTO END                                       CDL002
+     C                     END                                            CDL002
+     C                     END                                            CDL002
+     C*
+     C** EVENT READ
+     C*
+     C                     MOVEL'Y'       EVREAD  1
+     C**
+     C**   CONVERT LIM. CUR. EQIV. TO WHOLE UNITS
+     C           A6NBDP    ADD  1         DEP     10
+     C           LCEQ      DIV  FCT,DEP   DLAMTF    H
+     C**
+     C**   ACCUMULATE EVENT AMOUNT
+     C                     ADD  DLAMTF    DATOT  150
+     C**
+     C**   CALCULATE EXPOSURE
+     C                     Z-ADDEDAT      DLVALU
+     C                     EXSR DLEXPF
+     C**
+     C**   COUNT RECORDS TO BE PRINTED AND STORE THEIR VALUES
+     C                     ADD  1         RLST,D
+     C                     ADD  EAMT      LSTV,D
+     C                     END
+     C*
+     C           END       TAG                             *   END TAG   *
+     C**
+     C**
+     C**  IF CUSTOMER HAS CHANGED AND AN EVENT WAS READ
+     C**  OUTPUT TO REPORT
+     C**
+     CL1         EVREAD    IFEQ 'Y'
+     CL1                   EXSR CHGCUS
+     CL1                   END
+     CL1                   MOVEL'N'       EVREAD
+     C********************************************************************
+     C*                                                                  *
+     C***         T O T A L   T I M E   C A L C U L A T I O N S        ***
+     C*                                                                  *
+     C********************************************************************
+     C*                                                                  *
+     C***          L A S T   R E C O R D   P R O C E S S I N G         ***
+     C*                                                                  *
+     C********************************************************************
+     C* Call Access Prog. For BANK DETAILS if input file is empty         096916
+     CLRN40                CALL 'AOBANKR0'                                096916
+     CLR                   PARM '*MSG   ' @RTCD   7                       096916
+     CLR                   PARM '*FIRST ' @OPTN   7                       096916
+     CLR         SDBANK    PARM SDBANK    DSFDY                           096916
+     C*                                                                   096916
+     C* If error occurs...                                                096916
+     CLRN40      @RTCD     IFNE *BLANK                                    096916
+     CLRN40                MOVEL'SDBANKPD'DBFILE           ************   096916
+     CLRN40                MOVEL'01'      DBASE            * DBERR 01 *   096916
+     CLRN40                MOVEL@OPTN     DBOPTN           ************   096916
+     CLRN40                MOVEL@OPTN     DBKEY                           096916
+     CLRN40                SETON                     U7U8LR               096916
+     CLRN40                EXSR *PSSR                                     096916
+     CLR                   END                                            096916
+     C*                                                                   096916
+     C* Call Access Prog. To Obtain DEAL DETAILS For Base CCY For Limits  096916
+     C* if input file is empty                                            096916
+     C**LR0*****           CALL 'AODEALR0'                                096916              CGL029
+     CLRN40                CALL 'AODEALR1'                                                    CGL029
+     CLR                   PARM '*MSG   ' @RTCD   7                       096916
+     CLR                   PARM '*FIRST ' @OPTN   7                       096916
+     C**LR****** SDDEAL    PARM SDDEAL    DSFDY                           096916              CGL029
+     CLR         SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*                                                                   096916
+     C* If error occurs...                                                096916
+     CLRN40      @RTCD     IFNE *BLANK                                    096916
+     CLRN40                MOVEL'SDDEALPD'DBFILE           ************   096916
+     CLRN40                MOVEL'02'      DBASE            * DBERR 02 *   096916
+     CLRN40                MOVEL@OPTN     DBOPTN           ************   096916
+     CLRN40                MOVEL@OPTN     DBKEY                           096916
+     CLRN40                SETON                     U7U8LR               096916
+     CLRN40                EXSR *PSSR                                     096916
+     CLR                   END                                            096916
+     C*                                                                   096916
+     C*
+     CLRNU7      RLIST     COMP 0                        46
+     C**
+     C**
+     C** CALL ZSFILE FOR P1 FILE - ONCE - ONLY IF DETAILS TO REPORT
+     CLR         *IN46     IFEQ '0'
+     CLR                   Z-ADDSFNUM     ZSNUM   60
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANKS   @PARM   3
+     CLR                   PARM           SFILE
+     CLR                   PARM           ZSNUM
+     CLR                   PARM           ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C** Error during ZSFILE processing, return to calling program
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     CLR                   END
+     C**
+     C**
+     C** CALL ZSFILE FOR AU FILE - ONCE ONLY
+     CLR                   Z-ADDSFNUMU    ZSNUM   60
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANKS   @PARM   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUM
+     CLR                   PARM           ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C** Error during ZSFILE processing, return to calling program
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     C**
+     C********************************************************************
+     C********************************************************************
+     C*                                                                  *
+     C***                    S U B R O U T I N E S                     ***
+     C*                                                                  *
+     C********************************************************************
+     C********************************************************************
+     C**
+     C**   CHGCUS SR COMPUTES ALL FIGURES TO BE REPORTED AND OUTPUTS THEM
+     C**        TO THE REPORT AS APPROPRIATE
+     C**
+     C           CHGCUS    BEGSR
+     C**
+     C                     Z-ADD0         X       20
+     C                     Z-ADD1         NEXTF
+     C*
+     C*    ON CHANGE OF CUSTOMER, WORK OUT AVAILABILITY/EXCESS EXPOSURE
+     C*
+     C   U7 U8             GOTO NOPRT
+     C                     EXSR DLXCSF
+     C*
+     C*    - THEN PRINT DETAILS
+     C                     Z-ADD0         D
+     C           DLOOP7    TAG                             **  DLOOP7  *
+     C           D         ADD  1         D
+     C*
+     C*    - TEST IF PERIOD END DATE ZERO
+     C           XFDT,D    COMP 0                    5353  PRINT
+     C*
+     C*    - MOVE EXPOSURE AMT. TO 10 DIGIT FIELD
+     C                     Z-ADDXFXP,D    FXPOS  100
+     C*
+     C*    - CALCULATE 80% OF THE FX LIMIT AMOUNT
+     C           XFLM,D    MULT .80       EIGHTY  90
+     C*
+     C*    - DO NOT PRINT ZERO EXPOSURES
+     C***********0         COMP XFXP,D                   48               088141
+     C***48******          GOTO CALNXT                                    088141
+     C  NU4      0         COMP XFXP,D                   48               088141
+     C   48NU4             GOTO CALNXT                                    088141
+     C*
+     C*    - COMPARE EXPOSURE TO 80% OF FX LIMIT AMOUNT
+     C  NU4      EIGHTY    COMP FXPOS                  4949
+     C  N49NU4             GOTO CALNXT
+     C*
+     C*    - HASH TOTAL RECORDS TO BE PRINTED
+     C           LSTV,D    DIV  1000      ZZAMT        25
+     C   25                Z-SUBZZAMT     ZZAMT
+     C                     Z-ADD2         S
+     C                     EXSR HASH
+     C*
+     C*    - COUNT RECORDS TO BE PRINTED
+     C   53                ADD  RLST,D    RLIST   40
+     C*
+     C*    - PRINT LINE (FOR USAGE THAT IS 80% OR MORE OF LIMIT)
+     C                     ADD  1         X
+     C           X         COMP 2                      5051
+     C                     EXCPT
+     C*
+     C*    - CALCULATE NEXT START OF PERIOD
+     C           CALNXT    TAG                             * CALNXT TAG *
+     C           XFDA,D    ADD  1         NEXTF   30
+     C*
+     C*    - IF LESS THAN SIX PERIODS PRINTED, DO AGAIN.
+     C           D         COMP 6                      89
+     C   89                GOTO DLOOP7
+     C*
+     C*    - IF ONLY ONE PERIOD PRINTED, PRINT TOWN.
+     C           X         COMP 1                        89
+     C   89                SETOF                     5053
+     C   89                SETON                     51
+     C   89                EXCPT
+     C           NOPRT     TAG                             *  NOPRT TAG  *
+     C                     ENDSR
+     C********************************************************************
+     C**                                                                **
+     C**   DLLMT SR. SETS UP ARRAYS OF LIMIT PERIODS & AMOUNTS,         **
+     C**   FOR FX LIMITS.                                               **
+     C**                                                                **
+     C           DLLMT     BEGSR                           ***  DLLMT  ***
+     C**
+     C**   FIRST RESET ARRAYS TO ZEROES
+     C                     Z-ADD0         XFDA
+     C                     Z-ADD0         XFDT
+     C                     Z-ADD0         XFLM
+     C                     Z-ADD0         XFXP
+     C                     Z-ADD0         XFXS
+     C                     Z-ADD0         XFPC
+     C                     Z-ADD0         RLST
+     C                     Z-ADD0         LSTV
+     C                     MOVE *BLANKS   FDESC   7
+     C                     MOVE *BLANKS   LDESC   7
+     C                     MOVE *BLANKS   FDEF    1
+     C                     MOVE *BLANKS   LDEF    1
+     C**
+     C                     SETOF                     3171
+     C**
+     C**
+     C**
+     C**   PROCESS FX LIMITS
+     C**   - CHECK FOR ZERO LIMIT TYPE OR IF LIMIT HAS EXPIRED
+     C           FLTY      COMP 0                    898930
+     C   89      FLED      COMP BJRDNB               893189
+     C  N89                MOVEL'EXPIRED' FDESC            IF EXPIRED.
+     C   89                GOTO BYPAS1                     IF NOT EXPIRED.
+     C**
+     C**   - IF EXPIRED, SET FIRST PERIOD END DAYS & DATE TO NINES
+     C**     & ZEROIZE AMOUNT
+     C                     Z-ADD999       XFDA,1
+     C                     Z-ADD99999     XFDT,1
+     C                     Z-ADD0         XFLM,1
+     C                     GOTO DLLEND
+     C**
+     C           BYPAS1    TAG                             **  BYPAS1  **
+     C** - NOT EXPIRED - ACCESS LIMITS TYPES
+     C* OUTPUT LIMIT RECORD EVEN THERE IS NO EXPOSURE                     088141
+     C                     MOVEL'Y'       EVREAD  1                       088141
+     C*                                                                   088141
+     C                     MOVELFLTY      @CRNB
+     C                     CALL 'AOLIMTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CRNB   3
+     C           SDLIMT    PARM SDLIMT    DSFDY
+     C           @RTCD     IFEQ *BLANK
+     C** IF LIMITS EXIST CONVERT EXPIRY DATE TO DDMMMYY FORMAT
+     C                     MOVELFLED      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    FDESC
+     C                     GOTO XFDTAG
+     C** ELSE, IF NO LIMITS ACCESS DEFAULTS
+     C                     ELSE
+     C                     MOVE 'Y'       FDEF
+     C                     MOVE *BLANKS   LDEF
+     C                     EXSR DL0131
+     C** IF NO DEFAULTS THEN THERE ARE NO LIMITS
+     C           FXLIM     IFEQ 0
+     C                     MOVEL'NO LIM.' FDESC
+     C                     ELSE
+     C                     MOVEL'DEFAULT' FDESC
+     C** IF ALL LOWER LEVEL LIMITS HAD SAME TYPE, USE THIS FOR 1ST PRD
+     C           FXSAME    IFEQ 'Y'
+     C                     MOVEAFXPER     XFDAA
+     C                     Z-ADDFXLIM     FLAM
+     C                     MOVE FXPC      XFPCIN
+     C           FLAM      DIV  XFPC,1    FLAM      H
+     C                     GOTO LMTSF
+     C                     ELSE
+     C**  ELSE SET UP SPOT PERIOD
+     C                     Z-ADDSP        XFDA,1
+     C           SP        ADD  BJRDNB    XFDT,1
+     C                     Z-ADD999       XFDA,2
+     C                     Z-ADD99999     XFDT,2
+     C                     Z-ADDFXLIM     XFLM,1
+     C                     GOTO DLLEND
+     C                     END
+     C                     END
+     C                     END
+     C**
+     C**   - MOVE DATA FROM INPUT FIELDS TO FX ARRAYS
+     C           XFDTAG    TAG                             **  XFDTAG   **
+     C** MOVE END OF LIMIT PERIODS INTO LEPSIN (DS)
+     C                     MOVELA2E1LP    XLEP1
+     C                     MOVELA2E2LP    XLEP2
+     C                     MOVELA2E3LP    XLEP3
+     C                     MOVELA2E4LP    XLEP4
+     C                     MOVELA2E5LP    XLEP5
+     C                     MOVELA2E6LP    XLEP6
+     C**
+     C**   - MOVE DATA FROM INPUT FIELDS TO FX ARRAYS
+     C                     MOVE LEPSIN    XFDAIN
+     C** MOVE %/LIMIT FOR PERIODS INTO UP LPCSIN (DS)
+     C                     MOVELA2PL1P    XLPC1
+     C                     MOVELA2PL2P    XLPC2
+     C                     MOVELA2PL3P    XLPC3
+     C                     MOVELA2PL4P    XLPC4
+     C                     MOVELA2PL5P    XLPC5
+     C                     MOVELA2PL6P    XLPC6
+     C                     MOVE LPCSIN    XFPCIN
+     C**
+     C**   DLLOOP1 PROCESSES XFDAA - IF ANY ELEMENT IS BLANK OR 999
+     C**   THE CORRESPONDING ELEMENTS IN XFDA & XFDT ARE SET TO NINES.
+     C**   ELSE,XFDT IS CALCULATED BY ADDING RUN DATE TO XFDA,
+     C**        XFLM,IS CALCULATED BY MULTIPLYING LIMIT AMOUNT BY XFPC
+     C**
+     C           LMTSF     TAG
+     C                     Z-ADD0         D       20
+     C           DLOOP1    TAG                             ** DLOOP1  **
+     C**
+     C           D         ADD  1         D
+     C********** XFDAA,D   COMP '   '                    88               BH1039
+     C           XFDAA,D   COMP '000'                    88               BH1039
+     C           XFDAA,D   COMP '999'                    87
+     C**
+     C   88                Z-ADD999       XFDA,D
+     C**
+     C  N71      XFDAA,1   COMP 'SP '                    71
+     C   71                Z-ADDSP        XFDA,1
+     C**
+     C           XFDA,D    ADD  BJRDNB    XFDT,D
+     C   88
+     COR 87                Z-ADD99999     XFDT,D
+     C**
+     C  N88      FLAM      MULT XFPC,D    XFLM,D
+     C**
+     C           D         COMP 6                      86
+     C   86N87N88          GOTO DLOOP1
+     C**
+     C******     *INU4     IFEQ '1'                                       088141
+     C******     XFLM,1    ANDGE9999999                                   088141
+     C******               Z-ADD0         XFLM                            088141
+     C******               SETON                       30                 088141
+     C******               END                                            088141
+     C**
+     C           DLLEND    ENDSR                           **  DLLEND  **
+     C**
+     C********************************************************************
+     C**                                                                **
+     C**   DLEXPF SR. CALCULATES EXPOSURE FOR A FX DEAL.                **
+     C**                                                                **
+     C           DLEXPF    BEGSR                           *** DLEXPF  ***
+     C**                                                                **
+     C**   DEFINE INPUT FIELDS
+     C                     Z-ADDDLVALU    DLVALU  50       VALUE DATE
+     C                     Z-ADDDLAMTF    DLAMTF 130       LIMIT CCY EQUIV
+     C**                                                       AMOUNT
+     C                     Z-ADD1         D
+     C**
+     C/COPY WNCPYSRC,DL0763C002
+     C  NU4      BJRDNB    ADD  2         RUNTWO  50
+     C  NU4      DLVALU    COMP RUNTWO                 19
+     C   19NU4             GOTO DLFEND
+     C/COPY WNCPYSRC,DL0763C003
+     C**
+     C                     Z-ADD0         D       20
+     C**
+     C           DLOOP3    TAG                             **  DLOOP3  **
+     C           D         ADD  1         D
+     C**
+     C**   ADD AMOUNT INTO THIS PERIOD
+     C           XFXP,D    ADD  DLAMTF    XFXP,D
+     C**
+     C**   LOOP AGAIN TO ADD AMOUNT INTO NEXT PERIOD IF
+     C**   - VALUE DATE EXCEEDS THIS END OF PERIOD DATE.
+     C**   - LESS THAN SIX PERIODS HAVE BEEN USED.
+     C           DLVALU    COMP XFDT,D               88
+     C           D         COMP 6                      87
+     C   87 88             GOTO DLOOP3
+     C**
+     C           DLFEND    ENDSR                           **  DLFEND  **
+     C**
+     C********************************************************************
+     C**                                                                **
+     C**   DLXCSF SR. WORKS OUT AVAILABLE/EXCESS EXPOSURE FOR FX        **
+     C**   -FIRST ROUNDS EXPOSURE FOR EACH PERIOD TO NEAREST 1000 UNITS **
+     C**   -THEN COMPARES EXPOSURE AMOUNTS TO CORRESP. LIMIT AMOUNTS.   **
+     C**                                                                **
+     C           DLXCSF    BEGSR                           *** DLXCSF  ***
+     C**                                                                **
+     C                     Z-ADD0         D       20
+     C           DLOOP5    TAG                             * DLOOP5 TAG *
+     C           D         ADD  1         D
+     C           XFXP,D    DIV  1000      XFXP,D    H
+     C           XFLM,D    SUB  XFXP,D    XFXS,D
+     C**
+     C**   LOOP ROUND AGAIN IF LESS THAN 6 PERIODS HAVE BEEN PROCESSED
+     C           D         COMP 6                      89
+     C   89                GOTO DLOOP5
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C**                                                                **
+     C**   HASH SR. TO ADD AMOUNT TO HASH TOTAL ARRAYS                  **
+     C**                                                                **
+     C           HASH      BEGSR                           ***  HASH  ***
+     C**                                                                **
+     C                     Z-ADDINT,S     ZZTOTI
+     C                     Z-ADDDEC,S     ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    INT,S  150
+     C                     Z-ADDZZTOTD    DEC,S   30
+     C                     ENDSR
+     C**                                                                **
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C/COPY ZSRSRC,ZFWDT
+     C/COPY ZSRSRC,ZACCH
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   P/DL0131 TO GET DEFAULT LIMITS FOR CUSTOMER LEVEL
+     C**
+     C           DL0131    BEGSR
+     C                     Z-ADD0         FXLIM   90
+     C                     Z-ADD0         LNLIM   90
+     C                     MOVE 'Y'       FXSAME  1
+     C                     MOVE 'Y'       LNSAME  1
+     C                     MOVE *BLANKS   FXPER  18
+     C                     MOVE *BLANKS   LNPER  18
+     C                     MOVE *BLANKS   FXPC   18
+     C                     MOVE *BLANKS   LNPC   18
+     C                     MOVE 'S'       @RLEV   1
+     C                     MOVE *BLANKS   ENTY    3
+     C                     CALL 'DL0131'
+     C                     PARM           CUNR
+     C                     PARM           @RLEV
+     C                     PARM           ENTY
+     C                     PARM           FDEF
+     C                     PARM           LDEF
+     C                     PARM           FRA     1
+     C                     PARM           IRS     1
+     C                     PARM           FXLIM
+     C                     PARM           LNLIM
+     C                     PARM           FRLIM   90
+     C                     PARM           IRLIM   90
+     C                     PARM           FXSAME
+     C                     PARM           LNSAME
+     C                     PARM           FXPER
+     C                     PARM           LNPER
+     C                     PARM           FXPC
+     C                     PARM           LNPC
+     C                     PARM           BJRDNB
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C*
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     ODL0763P1H   03   OF
+     O                                   22 'REFERENCE DL0763P1'
+     O*****************U4                33 ' - COMPLETE'                 E25548
+     O****************NU4                33 ' - 80%'                      E25548
+     O                         BJURPT    89
+     O                                  122 'DATE              PAGE'
+     O                         BJMRDT   112
+     O                         PAGE  Z  127
+     O        H 2      OF
+     O                                   77 'FX LIMIT USAGE IN 000''S'
+     O                         BNCYCD    81
+     O                 U4                92 ' - COMPLETE'                 E25548
+     O                NU4                87 ' - 80%'                      E25548
+     O        H 1      OF
+     O                                   77 '-----------------------'
+     O                                   81 '----'
+     O        H 32     OFNLR
+     O                                   23 'CUSTOMER'
+     O                                   46 'PERIOD'
+     O                                   63 'FX  LIMIT'
+     O                                   81 '80% OF LIMIT'
+     O                                   96 'USAGE'
+     O                                  123 'AVAILIBILITY/EXCESS'
+     O        EF2      50
+     O       OR 1      51
+     O       OR 1      53
+     O                    50   CUNR      11
+     O                    50   CRNM      34
+     O                    51   CTWN      24
+     O                       53NEXTF     43
+     O                       53          44 '-'
+     O                       53XFDA,D    47
+     O                 50 71             47 ' SPOT  '
+     O                       53XFLM,D1   64
+     O                 50 30             64 ' NO  LIMIT'
+     O                 50 31             64 '   EXPIRED'
+     O                       53EIGHTY1   81
+     O                       53FXPOS 1  100
+     O                       53XFXS,D   121 ' ,   ,   , 0 &-'
+     O        T   03   LR 46                                              096916
+     O                                   22 'REFERENCE DL0763P1'          096916
+     O                         BJURPT    89                               096916
+     O                                  122 'DATE              PAGE'      096916
+     O                         BJMRDT   112                               096916
+     O                         PAGE  Z  127                               096916
+     O        T 2      LR 46                                              096916
+     O                                   77 'FX LIMIT USAGE IN 000''S'    096916
+     O                         BNCYCD    81                               096916
+     O                 U4                92 ' - COMPLETE'                 096916
+     O                NU4                87 ' - 80%'                      096916
+     O        T 1      LR 46                                              096916
+     O                                   77 '-----------------------'     096916
+     O                                   81 '----'                        096916
+     O        T 2      LRN46
+     O                                   71 '*** END OF REPORT ***'
+     O        T 3      LR 46
+     O                                   63 '***   NO DETAILS TO REPO'
+     O                                   71 'RT   ***'
+     ODL0763AUT   03   LR
+     O                                   22 'REFERENCE DL0763AU'
+     O*****************U4                33 ' - COMPLETE'                 E25548
+     O****************NU4                33 ' - EXPOSURES 80+%'           E25548
+     O                         BJURPT    89
+     O                                  122 'DATE              PAGE'
+     O                         BJMRDT   112
+     O                         PAGE1 Z  127
+     O        T 2      LR
+     O                                   77 'FX LIMIT USAGE IN 000''S'
+     O                         BNCYCD    81
+     O                 U4                92 ' - COMPLETE'                 E25548
+     O                NU4                98 ' - EXPOSURES 80+%'           E25548
+     O        T 1      LR
+     O                                   77 '-----------------------'
+     O                                   81 '----'
+     O        T   20   LRNU7
+     O                                   18 'RUN CONTROLS'
+     O        T 2      LRNU7
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O        T 2      LRNU7
+     O                                   29 'EXTRACT FILE RECORDS '
+     O                                   34 'INPUT'
+     O                         HASHN 3   59
+     O                         INT,1 Z   81
+     O                         DEC,1     84
+     O        T 2      LRNU7
+     O                                   29 'EXTRACT FILE CONTROL '
+     O                                   35 'TOTALS'
+     O                         NORE  3   59
+     O                         HRWN  Z   81
+     O                         HRDC      84
+     O        T 2      LRNU7
+     O                                   30 'RECORDS LISTED IN THIS'
+     O                                   37 'REPORT'
+     O                         RLIST 3   59
+     O                         INT,2 Z   81
+     O                         DEC,2     84
+     O        T   26   LR U7
+     O                                   67 'RUN TERMINATED -'
+     O                                   82 'DATABASE ERROR'
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   FCT - CONVERSION FACTORS FOR DECIMAL POINT
+0001
+0010
+0100
+1000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

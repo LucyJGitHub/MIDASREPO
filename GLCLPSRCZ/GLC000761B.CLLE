@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Reports Management')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000761B - Midas GL Reports Management                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. CGL177  *CREATE    Date 11Jan16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&PYEAR)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2016')
+
+             DCL        VAR(&PYEAR) TYPE(*CHAR) LEN(4) VALUE('    ')
+             DCL        VAR(&PYRNO) TYPE(*CHAR) LEN(2) VALUE('  ')
+             DCL        VAR(&LDA)   TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DALIB) TYPE(*CHAR) LEN(7) VALUE('  DALIB')
+             DCL        VAR(&GLCRMDPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMDPD  ')
+             DCL        VAR(&GLCRMGPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMGPD  ')
+             DCL        VAR(&GLCRMIPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMIPD  ')
+
+/** Monitor for any errors and send appropriate message to MOPERQ */
+
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/** Send Pgm Message */
+
+             CHGVAR     VAR(&MEM) VALUE('GLC000761B - Report Management')
+             SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ)
+
+/** Clear switches */
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Get system prefix */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&PYRNO) VALUE(%SUBSTRING(&PYEAR 3 2))
+             CHGVAR     VAR(%SUBSTRING(&DALIB 1 2)) VALUE(&SYSID)
+
+             CHGVAR     VAR(%SUBSTRING(&GLCRMDPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLCRMGPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLCRMIPD 9 2)) VALUE(&PYRNO)
+
+
+             CPYF       FROMFILE(QTEMP/GLCRMDPD) TOFILE(&DALIB/&GLCRMDPD) +
+                          TOMBR(GLCRMDPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CPYF       FROMFILE(QTEMP/GLCRMGPD) TOFILE(&DALIB/&GLCRMGPD) +
+                          TOMBR(GLCRMGPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CPYF       FROMFILE(QTEMP/GLCRMIPD) TOFILE(&DALIB/&GLCRMIPD) +
+                          TOMBR(GLCRMIPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+ ERROR:
+             ENDPGM
+

@@ -1,0 +1,625 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG FF trans. input today extract')               *
+      ********************************************************************
+      *                                                               *  *
+      *  Midas FUTURES AND OPTIONS MODULE                             *
+      *                                                               *  *
+      *  CG4604  -  Transactions Input Today Extract                  *  *
+      *                                                               *  *
+      *  Function:  For each Future and Option Transaction Input or   *
+      *             Reversed today a record is extracted and set up   *
+      *             with relevant details.                            *
+      *                                                               *
+      *  Called By: FFC0850 - Transactions Input Today Report         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP208             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 111295             Date 09Jun98               *  *
+      *                 104683             Date 18DEC97               *  *
+      *                  CFF004              DATE 11SEP96             *
+      *                  096660              DATE 01AUG96             *  *
+      *                  S71062              DATE 29JAN96             *
+      *                  S01522              DATE 15MAY95             *
+      *                                                               *  *
+      *---------------------------------------------------------------*--*
+      *                                                               *  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAP208 - F&O Market Instrument API (Recompile)               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  111295 - After chaining to TRSET, program should check       *
+      *           the RECI against RECI from TRANSD.                  *
+      *  104683 - Recompile over amended file CGFFCFL1                *
+      *  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+      *  096660 - Conf. of 1ST IC/EOC not produced if EOC running     *
+      *           twice for the same market on same day               *
+      *  S71062 - FF/PM Interface (Just recompiled)                   *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  54   -    EOF indicator                                      *
+      *  55   -    EOF indicator                                      *
+      *  90   -    ROLBK indicator                                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FCGFFCFL1UF  E           K        DISK         KINFSR SRFILEA
+      **  Futures and Options Transactions Actioned Today File
+      *
+     FTRANS   IF  E           K        DISK         KINFSR SRFILE
+      **  Futures and Options Transactions
+      *
+      *
+     FTRSET   IF  E           K        DISK         KINFSR SRFILE
+      **  Futures and Options Transactions Settlement Details
+      *
+     FPOCHG4T IF  E           K        DISK         KINFSR SRFILE
+      **  Position Changes- transaction
+     FMKCTL   IF  E           K        DISK         KINFSR SRFILE
+      *
+      /EJECT
+      *
+      **  Copyright array.
+     E                    ##CPY   1   1 80
+      /COPY CGCPYSRC,SRERRE
+      /EJECT
+     ITRANSDF                                                             111295
+     I              RECI                            RECIX                 111295
+      *
+     IDSPARM    E DSCNFRPD
+      **  External DS for parameters
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+     ISDINTY    E DSINTYPD
+      **  Instrument Type DS
+     I              RECI                            RECII
+     I              ISTT                            ISTTI
+     I              ISCY                            ISCYI
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      *
+     IW0FMT     E DSCGUDTAPD
+      **  Record format of PF/CGUDTAPD for use as a parameter
+      *
+     IRUNDT     E DSRUNDAT
+      **  Data Area RUNDAT
+      *
+      /COPY CGCPYSRC,CGAUDTI
+      /COPY CGCPYSRC,SRERRI
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRMAIN - Main processing                                    *
+      *   SRFILA - File Accesses for Supplementary Data               *
+      *   SRINZ  - Initialise Fields on Each Invocation               *
+      *   SRINIT - Initial processing - On First Call                 *
+      *   SRAUDT - Audit Report Processing                            *
+      *   SRFILE - File Exception/Error Handling                      *
+      *   SRERR  - Report Error an Close Down Program                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0MRKT  2
+     C                     PARM           W0ENT   3
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      **  Detail process
+     C                     EXSR SRMAIN
+      *
+      **  Audit Process
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  SRFILA - File Access for Supplementary Data    *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Read all transactions
+     C           *LOVAL    SETLLTRANS
+     C                     READ TRANS                    55
+      *
+      **  For each record found ...
+     C           *IN55     DOWEQ*OFF                       B1
+      *
+      **  Increment the count of Transaction records read
+     C                     ADD  1         ##SREC  50        1
+      *
+      **  Determine if the record is to be processed...
+     C                     MOVE 'N'       ##PROC  1
+      *
+      **  If the Last Change Date = Today
+     C           LCD       IFEQ BUSD
+      *
+      **  If the Last Change Action is I - Insert or D - Delete
+     C           CHTP      IFEQ 'I'
+     C           CHTP      OREQ 'D'
+      *
+      **  If the Branch Code matches the Branch Code Parameter or the
+      **  Branch Code Parameter is 'ALL'
+     C           BRCA      IFEQ W0ENT
+     C           W0ENT     OREQ 'ALL'
+      *
+      **  If the Customer Code is NOT zero
+     C********** CUSC      IFNE *ZEROS                                                        CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C                     MOVE 'Y'       ##PROC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Process the record...
+     C           ##PROC    IFEQ 'Y'
+      *
+      **  Access files for supplementary data.
+     C                     EXSR SRFILA
+      *
+      **  Set up the fields for the Extract Driver record.
+     C                     MOVE 'D'       XXRECI
+     C                     MOVE BRCA      XXBRCA
+     C                     MOVE CUSC      XXCBCD
+     C                     MOVE ISCY      XXISCY
+     C                     MOVE ISTT      XXISTT
+     C                     Z-ADDYRNO      XXYRNO
+     C                     Z-ADDMTHN      XXMTHN
+     C                     MOVE PCAL      XXPCAL
+     C                     Z-ADDSTRP      XXSTRP
+     C                     Z-ADDTRSD      XXPOCD
+     C                     MOVE '0'       XXPAYI
+     C           RECI      IFEQ '*'
+     C           RECI      OREQ 'R'
+     C                     MOVE '1'       XXREVI
+     C                     ELSE
+     C                     MOVE '0'       XXREVI
+     C                     ENDIF
+     C                     Z-ADDTNBR      XXTNBR
+     C                     Z-ADDNUCO      XXTOCN
+     C                     MOVE CSLT      XXSETP
+     C                     MOVE CSLA      XXSETA
+     C                     MOVE BRSC      XXSEBR
+     C                     MOVE CBID      XXSBID
+     C                     MOVE CFAO      XXFACO
+     C                     MOVE CCPN      XXCNOS
+     C                     MOVE ISPT      XXISPT
+     C                     MOVE ISTI      XXISTI
+     C                     MOVE 'N'       XXPRTD
+      *
+      **  Output an Extract Driver record
+     C                     WRITE@FFCFL1
+      *
+      **  Increment the count of Extract records output
+     C                     ADD  1         ##OREC  50
+     C                     ENDIF
+      *
+      **  Read next Transaction.
+     C                     READ TRANS                    55
+      *
+     C                     ENDDO                           E1
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRFILA                                         *
+      * Function    :  File Access for supplementary data             *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRFILA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRFILA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Call access program for Instrument Type Details
+     C                     CALL 'AOFFITR0'
+     C                     PARM *BLANKS   ##RTCD  7        B:Return Cd
+     C                     PARM '*KEY'    ##OPTN  7        I:Option
+     C                     PARM           ISTT             I:Instr. Type
+     C           SDINTY    PARM *BLANK    DSFDY            O:Format
+      *
+     C           ##RTCD    IFNE *BLANKS
+     C           RECII     ORNE 'D'
+     C                     EXSR SRAUDT
+     C                     MOVEL'INTYP   'W0FILE
+     C                     MOVE *BLANKS   W0KEY
+     C                     MOVELISTT      W0KEY            ***************
+     C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Access the Transaction Settlement Details
+     C           TNBR      CHAINTRSET                55
+      *
+     C           *IN55     IFEQ *ON
+     C********** RECI      ORNE 'D'                                       111295
+     C           RECI      ORNE RECIX                                     111295
+     C                     EXSR SRAUDT
+     C                     MOVEL'TRSET   'W0FILE
+     C                     MOVE *BLANKS   W0KEY
+     C                     MOVELTNBR      W0KEY            ***************
+     C                     Z-ADD02        W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Access the Position Change - Transaction file for Charges,
+      **  Commissions and Profit/Loss.
+     C                     Z-ADD*ZEROS    XXTOCM
+     C                     Z-ADD*ZEROS    XXTOCG
+     C                     Z-ADD*ZEROS    XXTOPR
+     C           POCHGT    SETLLPOCHG4T
+     C           POCHGT    READEPOCHG4T                  55
+      *
+     C           *IN55     DOWEQ*OFF
+      *
+     C           PCGT      IFEQ 'B'
+     C                     ADD  PCGA      XXTOCM
+     C                     ENDIF
+      *
+     C           PCGT      IFEQ 'A'
+     C                     ADD  PCGA      XXTOCG
+     C                     ENDIF
+      *
+     C           PCGT      IFEQ 'C'
+     C                     ADD  PCGA      XXTOPR
+     C                     ENDIF
+      *
+     C           POCHGT    READEPOCHG4T                  55
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXFILA    TAG
+      *
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4604AU'I#SPLN
+     C                     MOVEL'CG4604'  I#REF     P
+     C           W0MRKT    IFEQ *BLANKS
+     C                     MOVE 'OTC'     I#REF
+     C                     ELSE
+     C                     MOVE W0MRKT    I#REF
+     C                     ENDIF
+     C                     MOVE 'CGD1412' I#TITL
+     C                     MOVE 'CGD1413' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      **  Retrieve the RUNDAT data area.
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C*    ACCESS MKCTLD FOR BUSINESS DATE IF NOT OTC
+     C*
+     C           W0MRKT    IFNE *BLANKS
+     C           W0MRKT    CHAINMKCTLDF              54
+     C           *IN54     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     EXSR SRAUDT
+     C                     MOVEL'MKCTLD  'W0FILE
+     C                     MOVE *BLANKS   W0KEY
+     C                     MOVELW0MRKT    W0KEY            ***************
+     C                     Z-ADD03        W0ERNB           * DB ERROR 03 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C                     ELSE
+     C                     Z-ADDAGRDNB    BUSD
+     C                     END
+      *
+      **  Position the extract driver file before recs for this Market
+      **  and access the next record.
+     C                     MOVE *BLANKS   ##ISTT  5
+     C           W0MRKT    IFEQ *BLANKS
+     C                     MOVE 'OTC  '   ##ISTT
+     C                     ELSE
+     C                     MOVELW0MRKT    ##ISTT
+     C                     ENDIF
+     C           ##ISTT    SETLLCGFFCFL1
+     C                     READ CGFFCFL1                 55
+      *
+      **  While records are read for the Market:
+      **  Delete existing extract driver records for this Market
+     C           *IN55     DOWEQ*OFF
+      *
+      **  OTCs
+     C           W0MRKT    IFEQ *BLANKS
+     C                     MOVELXXISTT    ##MKT3  3
+     C           ##MKT3    IFNE 'OTC'
+     C                     MOVE *ON       *IN55
+     C                     ENDIF
+      **  non-OTCs
+     C                     ELSE
+     C                     MOVELXXISTT    ##MKT2  2
+     C           ##MKT2    IFNE W0MRKT
+     C                     MOVE *ON       *IN55
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN55     IFEQ *OFF
+     C           XXPRTD    ANDEQ'Y'                                       096660
+     C                     DELET@FFCFL1
+     C                     ENDIF
+      *
+     C                     READ CGFFCFL1                 55
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##SREC
+     C                     Z-ADD*ZEROS    ##OREC
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+     C           POCHGT    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CUSC
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C                     KFLD           TRSD
+     C                     KFLD           TNBR
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4604'  I#REF     P
+     C           W0MRKT    IFEQ *BLANKS
+     C                     MOVE 'OTC'     I#REF
+     C                     ELSE
+     C                     MOVE W0MRKT    I#REF
+     C                     ENDIF
+     C                     MOVE 'CGD2516' I#TITL
+     C                     MOVE 'CGD2517' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'TRANS   'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##SREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Output the Number of records written
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4604'  I#REF     P
+     C           W0MRKT    IFEQ *BLANKS
+     C                     MOVE 'OTC'     I#REF
+     C                     ELSE
+     C                     MOVE W0MRKT    I#REF
+     C                     ENDIF
+     C                     MOVE 'CGD2516' I#TITL
+     C                     MOVE 'CGD2517' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'CGFFCFPD'I#SUB
+     C                     MOVEL'CAD1024' I#TEXT
+     C                     Z-ADD##OREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4604'  I#REF     P
+     C           W0MRKT    IFEQ *BLANKS
+     C                     MOVE 'OTC'     I#REF
+     C                     ELSE
+     C                     MOVE W0MRKT    I#REF
+     C                     ENDIF
+     C                     MOVE 'CGD2516' I#TITL
+     C                     MOVE 'CGD2517' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

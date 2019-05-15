@@ -1,0 +1,179 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME MT970 Last Deal No')                          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - ME Module                                            *
+      *                                                               *
+      *  ME0905 - ME MT970 Last Deal No.                              *
+      *                                                               *
+      *  Function: To locate the last valid deal no. for an account   *
+      *                                                               *
+      *  Called By: MEC0905 - Midas ME MT970 Last deal No             *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW099  *CREATE    Date 28Feb05               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CAP204 - Teller Related APIs - Account Transfer (Recompile)  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW099 - Creation of MT970 Netting Statements                *
+      *                                                               *
+      *****************************************************************
+     FRSACMTL1IF  E           K        DISK
+     F            APOSTPDF                          KIGNORE
+      *
+     FDEALSALLIF  E           K        DISK
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            MMDELDP0                          KIGNORE
+     F            MMDENBP0                          KIGNORE
+     F            MMDENSP0                          KIGNORE
+     F            FXDEALP0                          KIGNORE
+     F            DLBHISD0                          KIGNORE
+     F            DLCHISD0                          KIGNORE
+     F            DLDHISD0                          KIGNORE
+     F            DLEHISD0                          KIGNORE
+     F            DLGHISD0                          KIGNORE
+      *****************************************************************
+     F/EJECT
+      *
+     E                    CPY@    1   1 80
+      **  COPYRIGHT ARRAY.
+      *
+     E/EJECT
+      *****************************************************************
+      *
+      **  INITIAL PROCESSING
+     C                     EXSR INIT
+      *
+      **  MAIN PROCESSING
+     C                     EXSR MAIN
+      *
+      **  TERMINATION PROCESSING
+     C                     EXSR TERM
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAIN - MAIN PROCESSING.                                      *
+      *                                                               *
+      *  CALLED BY:  CONTROL PROCESSING                               *
+      *                                                               *
+      *  USES:       None                                             *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ** DO UNTIL END OF MT970 Accounts File
+     C           W0KEY1    CHAINRSACMTL1             9999
+      *
+     C           *IN99     DOWEQ*OFF
+      *
+     C                     MOVE TNMR      W0TNMR  60
+     C           W0TNMR    CHAINDEALSDBF             9898
+      *
+     C           *IN98     IFEQ *OFF
+     C           CLSS      ANDEQ'Y'
+     C           CHTP      ANDNE'D'
+     C           RECI      ANDNE'M'
+     C                     MOVE TNMR      W0DLNO
+     C                     ENDIF
+      *
+     C           W0KEY1    READERSACMTL1               9999
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE:  INIT - INITIAL PROCESSING                       *
+      *                                                               *
+      *  CALLED BY :  CONTROL PROCESSING                              *
+      *                                                               *
+      *  CALLS     :  None                                            *
+      *                                                               *
+      *  USES:     :  None                                            *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           LBRCA   3
+     C**********           PARM           LCNUM   60                                          CSD027
+     C                     PARM           LCNUM   6                                           CSD027
+     C                     PARM           LCCY    3
+     C                     PARM           LACOD  100
+     C                     PARM           LACSQ   20
+     C                     PARM           WVDTE   50
+     C                     PARM           W0DLNO  60
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     Z-ADD0         W0DLNO
+      *
+     C           W0KEY1    KLIST
+     C                     KFLD           LBRCA
+     C                     KFLD           LCNUM
+     C                     KFLD           LCCY
+     C                     KFLD           LACOD
+     C                     KFLD           LACSQ
+     C                     KFLD           WVDTE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  TERM      - TERMINATION PROCESSING                           *
+      *                                                               *
+      *  CALLED BY : CONTROL PROCESSING                               *
+      *                                                               *
+      *  CALLS     : Nonte                                            *
+      *                                                               *
+      *  USES      : None                                             *
+      *                                                               *
+      *****************************************************************
+     C           TERM      BEGSR
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2005

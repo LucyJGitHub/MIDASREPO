@@ -1,0 +1,910 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RR Setup recovery areas')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Restart Recovery Module
+     F*                                                                  *
+     F*     SD1770 - Display File/library/member file                    *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Prev Amend No. 205233             Date 2MAy02                *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01251             Date 03Feb90               *
+     F*                    E13205             Date  23Feb89              *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     New Progran Overview                                         *
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *     205233 - Recompile for a change in DSPF                      *
+     F*     S01251 - SYNON FIELD/PROGRAM NAME CHANGES                    *S01251
+     F*     E13205 - Program displays data from file SD1724L0 and        *
+     F*              allows selection, report and rebuilb options.       *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*     CHANGE DESCRIPTIONS                                          *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSD1770DFCF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS
+     FSD1724L0IF  E           K        DISK
+     FSD1770P1O   E             40     PRINTER                        UC
+     F*
+     F*
+     F* ID F  C  H  L    Function if indicators
+     F*
+     F*             LR   Shut down program - no implicit use
+     F*
+     F*     01-30        Screen command keys
+     F*
+     F*      01          Any valid command key but not enter
+     F*      03          Command 3 - exit program
+     F*      05          Command 5 - refresh subfile data
+     F*      10          Command 10- Top of subfile and reload
+     F*      12          Command 12- Previous screen
+     F*      14          Command 14- Unique/All access path select
+     F*      15          Command 15- Selection screen
+     F*      27          Roll down
+     F*
+     F*     31-59        Program defined indicators
+     F*
+     F*      40          Overflow line indication
+     F*      50          Unique or all paths
+     F*
+     F*     60-89        Screen error indicators
+     F*
+     F*      61          Error on library field on select screen
+     F*      62          Error on file field on select screen
+     F*      63          Error on member field on select screen
+     F*      64          Error on rebuilt field on select screen
+     F*      65          Error on unique field on select screen
+     F*      66          Error on delay field on select screen
+     F*
+     F*     90-97        Subfile control indicator fields
+     F*
+     F*      90          Put over in effect
+     F*      91          Subfile end
+     F*      92          Clear subfile
+     F*      93          Display subfile
+     F*      94          Next changed record indicator
+     F*
+     F*     98-99        General error monitoring
+     F*
+     F*      99          Monitor for condition specified by Operand
+     F/EJECT
+     E*
+     E*  Copyright table
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E*  Array to format file/library/member name
+     E*
+     E                    FNM        33  1
+     E*
+     E*  Table array of error messages for validation
+     E*
+     E                    ERR     1   8 60
+     E/EJECT
+     I*
+     I*  Data structure for compilation - copyright insertion
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I* Program data structure
+     I*
+     IPGMDS      SDS
+     I                                        1  10 #PGM
+     I                                      244 253 #WSID
+     I                                      254 263 #USER
+     I*
+     I* Subfile information data structure
+     I*
+     IINFDS       DS
+     I                                    B 378 3790SFPOS
+     I*
+     I* Data structure for run date
+     I*
+     IRUNDAT      DS                             13
+     I***********                             1   7 #MDATE                S01251
+     I                                        1   7 MRDT                  S01251
+     I***********                            12  12 #MDFMT                S01251
+     I                                       12  12 DFF                   S01251
+     I*
+     I* Data structure for date time display
+     I*
+     IDTTIM       DS                             17
+     I                                        1   2 DAY
+     I                                        3   3 S1
+     I                                        4   5 MONTH
+     I                                        6   6 S2
+     I                                        7   8 YEAR
+     I                                       10  11 HOUR
+     I                                       12  12 C1
+     I                                       13  14 MIN
+     I                                       15  15 C2
+     I                                       16  17 SEC
+     IDDMMYY      DS                              6
+     I                                        1   2 YY
+     I                                        3   4 MM
+     I                                        5   6 DD
+     ITIM         DS                              6
+     I                                        1   2 HH
+     I                                        3   4 MI
+     I                                        5   6 SS
+     C*
+     C* Key field lists
+     C*
+     C           KEY       KLIST
+     C                     KFLD           FILE
+     C                     KFLD           LIB
+     C                     KFLD           NAME
+     C*
+     C* Initialise program
+     C*
+     C                     EXSR SRINIT
+     C*
+     C* Reload subfile
+     C*
+     C                     EXSR SRSFRL
+     C*
+     C* Do until exit required
+     C*
+     C           *LOVAL    DO   *HIVAL
+     C*
+     C* Display screen
+     C*
+     C                     EXSR SRSFDP
+     C*
+     C* End program as F-3 pressed
+     C*
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRPGM
+     C                     END
+     C*
+     C* Process subfile records if some were output and enter pressed
+     C*
+     C           *IN93     IFEQ '1'
+     C           *IN01     ANDEQ'0'
+     C                     EXSR SRACT
+     C                     END
+     C*
+     C* Print selection F-4 pressed, reload subfile after print
+     C*
+     C           *IN04     IFEQ '1'
+     C                     EXSR SRPRT
+     C                     EXSR SRSFRL
+     C                     END
+     C*
+     C* Refresh subfile F-5 pressed
+     C*
+     C           *IN05     IFEQ '1'
+     C                     EXSR SRSFRF
+     C                     END
+     C*
+     C* Top of file request
+     C*
+     C           *IN10     IFEQ '1'
+     C                     EXSR SRSFRL
+     C                     END
+     C*
+     C* Switch between unique and all paths
+     C*
+     C           *IN14     IFEQ '1'
+     C                     EXSR SRSFUQ
+     C                     END
+     C*
+     C* Display selection screen and process
+     C*
+     C           *IN15     IFEQ '1'
+     C                     EXSR SRSELD
+     C                     END
+     C*
+     C* Rollup pressed
+     C*
+     C           *IN27     IFEQ '1'
+     C                     EXSR SRSFLP
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRINIT   : Initialise and define fields                      *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRINIT    BEGSR
+     C*
+     C*  Extract run date from data area
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C*  Select all types of logicals
+     C*
+     C                     SETON                     50
+     C*
+     CSR         EXINIT    ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSFRL   : Reload subfile                                    *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRSFRL    BEGSR
+     C*
+     C* Clear subfile page
+     C*
+     C                     SETON                     92
+     C                     WRITE#SFLCTL
+     C                     SETOF                     92
+     C*
+     C* Set file pointer to begin of file
+     C*
+     C           *LOVAL    SETLLSD1724L0
+     C                     Z-ADD0         ##RRMX  50
+     C*
+     C* Initialise first subfile page
+     C*
+     C                     EXSR SRSFLP
+     C*
+     CSR         EXSFRL    ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRPRT    : Print using selection specified                   *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRPRT     BEGSR
+     C*
+     C* Open printer file
+     C*
+     C                     OPEN SD1770P1
+     C                     Z-ADD0         COUNT   50
+     C*
+     C* Set file pointer to begin of file
+     C*
+     C           *LOVAL    SETLLSD1724L0
+     C*
+     C* Read file
+     C*
+     C                     READ SD1724L0                 99
+     C*
+     C* Write header of report and include selection criteria
+     C*
+     C                     WRITE@HEADER1
+     C*
+     C* Compare each field and place selection criteria into fields
+     C*
+     C           #LIB      IFNE *BLANKS
+     C                     MOVEL#LIB      @LIB
+     C                     ELSE
+     C                     MOVEL*BLANKS   @LIB
+     C                     MOVEL'*ANY'    @LIB
+     C                     END
+     C           #FILE     IFNE *BLANKS
+     C                     MOVEL#FILE     @FILE
+     C                     ELSE
+     C                     MOVEL*BLANKS   @FILE
+     C                     MOVEL'*ANY'    @FILE
+     C                     END
+     C           #NAME     IFNE *BLANKS
+     C                     MOVEL#NAME     @NAME
+     C                     ELSE
+     C                     MOVEL*BLANKS   @NAME
+     C                     MOVEL'*ANY'    @NAME
+     C                     END
+     C           #UNQ      IFNE *BLANKS
+     C                     MOVEL'*YES'    @UNQ
+     C                     ELSE
+     C                     MOVEL'*ANY'    @UNQ
+     C                     END
+     C           #REB      IFNE *BLANKS
+     C           #REB      IFEQ 'Y'
+     C                     MOVEL'*YES'    @REB
+     C                     ELSE
+     C                     MOVEL'*NO '    @REB
+     C                     END
+     C                     ELSE
+     C                     MOVEL'*ANY'    @REB
+     C                     END
+     C           #DLY      IFNE *BLANKS
+     C                     MOVEL'*YES'    @DLY
+     C                     ELSE
+     C                     MOVEL'*ANY'    @DLY
+     C                     END
+     C                     WRITE@HEADER2
+     C*
+     C                     WRITE@HEADER3
+     C*
+     C* Read through to end of file
+     C*
+     C           *IN99     DOWEQ'0'
+     C*
+     C* Print page header if necessary
+     C*
+     C           *IN40     IFEQ '1'
+     C                     WRITE@HEADER1
+     C                     WRITE@HEADER3
+     C                     SETOF                     40
+     C                     END
+     C*
+     C* Format data read
+     C*
+     C                     MOVEL'Y'       SEL     1
+     C                     EXSR SR1724
+     C                     EXSR SRSEL
+     C           SEL       IFEQ 'Y'
+     C                     ADD  1         COUNT
+     C                     WRITE@DETAIL
+     C                     END
+     C*
+     C* Read file
+     C*
+     C                     READ SD1724L0                 99
+     C                     END
+     C*
+     C* Print no details if necessary
+     C*
+     C           COUNT     IFEQ 0
+     C                     WRITE@NODETL
+     C                     END
+     C*
+     C* Write end of report line
+     C*
+     C           *IN40     IFEQ '1'
+     C                     WRITE@HEADER1
+     C                     WRITE@HEADER3
+     C                     SETOF                     40
+     C                     END
+     C                     WRITE@ENDRPT
+     C*
+     C* Close printer file
+     C*
+     C                     CLOSESD1770P1
+     C*
+     C* Close printer file
+     C*
+     C                     MOVE ERR,8     MSG
+     C                     EXSR SRMSG
+     C*
+     CSR         EXPRT     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSFDP   : Display the subfile                               *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRSFDP    BEGSR
+     C*
+     C                     WRITE#MSGCTL
+     C                     WRITE#HEADER
+     C                     WRITE#FOOTER
+     C*
+     C*   If No records to display then output no data record format
+     C*
+     C           #SFRC     IFEQ 0
+     C                     WRITE#NODATA
+     C                     END
+     C*
+     C*   Switch on put over if subfile page the same
+     C*
+     C                     SETOF                     90
+     C           SSFRC     IFEQ #SFRC
+     C                     SETON                     90
+     C                     END
+     C                     Z-ADD#SFRC     SSFRC   50
+     C*
+     C*   Display the screen
+     C*
+     C                     EXFMT#SFLCTL
+     C*
+     C*   Save subfile page if possible
+     C*
+     C           SFPOS     IFGT 0
+     C                     Z-ADDSFPOS     #SFRC
+     C                     END
+     C*
+     C*   Clear message program message queue
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     CSR         EXSFDP    ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSFLP   : Load a subfile page                               *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRSFLP    BEGSR
+     C*
+     C* Set up relative record pointers for display
+     C*
+     C           ##RRMX    ADD  1         #SFRC
+     C                     Z-ADD##RRMX    ##RR
+     C*
+     C* Position file pointer in file SD1724L0
+     C*
+     C                     Z-ADD0         ##RROK  50
+     C                     READPSD1724F                  99
+     C*
+     C* If begin of file then reposition to *LOVAL
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOVAL    SETLLSD1724L0
+     C                     END
+     C                     READ SD1724F                  91
+     C*
+     C* Loop until either EOF or page full
+     C*
+     C           *IN91     DOWEQ'0'
+     C           ##RROK    ANDLT11
+     C*
+     C* Format data read
+     C*
+     C                     MOVEL'Y'       SEL     1
+     C                     EXSR SR1724
+     C                     EXSR SRSEL
+     C           SEL       IFEQ 'Y'
+     C                     ADD  1         ##RRMX
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+     C                     END
+     C*
+     C* Read file and add to records read
+     C*
+     C                     READ SD1724F                  91
+     C*
+     C                     END
+     C*
+     C           ##RRMX    IFGT 0
+     C                     SETON                     93
+     C                     ELSE
+     C                     Z-ADD0         #SFRC
+     C                     SETOF                     93
+     C                     END
+     C*
+     CSR         EXSFLP    ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSFUQ   : Switch between unique and all paths               *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRSFUQ    BEGSR
+     C*
+     C* Change Selection criteria and reload subfile
+     C*
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'Y'       #UNQ    1
+     C                     SETOF                     50
+     C                     ELSE
+     C                     MOVEL' '       #UNQ
+     C                     SETON                     50
+     C                     END
+     C*
+     C                     EXSR SRSFRL
+     C*
+     CSR         EXSFUQ    ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSELD   : Display selection screen and process              *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRSELD    BEGSR
+     C*
+     C*  Initialise screen variables
+     C*
+     C                     MOVEL#LIB      SLIB
+     C                     MOVEL#FILE     SFILE
+     C                     MOVEL#NAME     SNAME
+     C                     MOVEL#REB      SREB
+     C                     MOVEL#UNQ      SUNQ
+     C                     MOVEL#DLY      SDLY
+     C*
+     C*  Display screen
+     C*
+     C                     MOVEL'Y'       DSPSEL  1
+     C           DSPSEL    DOWEQ'Y'
+     C                     MOVEL'N'       DSPSEL
+     C                     WRITE#MSGCTL
+     C                     WRITE#SELFTR
+     C                     EXFMT#SELECT
+     C*
+     C*   Clear message program message queue
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C*   Validate data
+     C*
+     C           SLIB      IFNE *BLANKS
+     C                     MOVELSLIB      IN
+     C                     CALL 'SDC1778A'             9999
+     C                     PARM           IN     10
+     C                     PARM *BLANKS   OUT    10
+     C           OUT       IFEQ ' '
+     C                     SETON                     61
+     C                     MOVE ERR,1     MSG
+     C                     MOVEL'Y'       DSPSEL
+     C                     EXSR SRMSG
+     C                     ELSE
+     C                     MOVELOUT       SLIB
+     C                     END
+     C                     END
+     C           SFILE     IFNE *BLANKS
+     C                     MOVELSFILE     IN
+     C                     CALL 'SDC1778A'             9999
+     C                     PARM           IN     10
+     C                     PARM *BLANKS   OUT    10
+     C           OUT       IFEQ ' '
+     C                     SETON                     62
+     C                     MOVE ERR,2     MSG
+     C                     MOVEL'Y'       DSPSEL
+     C                     EXSR SRMSG
+     C                     ELSE
+     C                     MOVELOUT       SFILE
+     C                     END
+     C                     END
+     C           SNAME     IFNE *BLANKS
+     C                     MOVELSNAME     IN
+     C                     CALL 'SDC1778A'             9999
+     C                     PARM           IN     10
+     C                     PARM *BLANKS   OUT    10
+     C           OUT       IFEQ ' '
+     C                     SETON                     63
+     C                     MOVE ERR,3     MSG
+     C                     MOVEL'Y'       DSPSEL
+     C                     EXSR SRMSG
+     C                     ELSE
+     C                     MOVELOUT       SNAME
+     C                     END
+     C                     END
+     C           SREB      IFNE 'Y'
+     C           SREB      ANDNE'N'
+     C           SREB      ANDNE' '
+     C                     SETON                     64
+     C                     MOVE ERR,4     MSG    60
+     C                     MOVEL'Y'       DSPSEL
+     C                     EXSR SRMSG
+     C                     END
+     C           SUNQ      IFNE 'Y'
+     C           SUNQ      ANDNE' '
+     C                     SETON                     65
+     C                     MOVE ERR,5     MSG
+     C                     MOVEL'Y'       DSPSEL
+     C                     EXSR SRMSG
+     C                     END
+     C           SDLY      IFNE 'Y'
+     C           SDLY      ANDNE' '
+     C                     SETON                     66
+     C                     MOVE ERR,6     MSG
+     C                     MOVEL'Y'       DSPSEL
+     C                     EXSR SRMSG
+     C                     END
+     C*
+     C*  If F-3 exit program
+     C*
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRPGM
+     C                     END
+     C*
+     C*  If F-12 return and display last screen
+     C*
+     C           *IN12     IFEQ '1'
+     C                     GOTO EXSELD
+     C                     END
+     C*  End do loop for screen
+     C                     END
+     C*
+     C*  Load variables from screen
+     C*
+     C                     MOVELSLIB      #LIB   10
+     C                     MOVELSFILE     #FILE  10
+     C                     MOVELSNAME     #NAME  10
+     C                     MOVELSREB      #REB    1
+     C                     MOVELSUNQ      #UNQ    1
+     C                     MOVELSDLY      #DLY    1
+     C*
+     C*  Update delay select flag
+     C*
+     C           #DLY      IFEQ 'Y'
+     C                     MOVEL'N'       #DLYR   1
+     C                     ELSE
+     C                     MOVEL' '       #DLYR
+     C                     END
+     C*
+     C*  Reload subfile with selection
+     C*
+     C                     EXSR SRSFRL
+     C*
+     C*  Alter command key line on selection
+     C*
+     C           #UNQ      IFEQ 'Y'
+     C                     SETOF                     50
+     C                     ELSE
+     C                     SETON                     50
+     C                     END
+     C*
+     CSR         EXSELD    ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSEL    : Determine if to select a file                     *
+     C*                                                               *
+     C*  CALLED BY: SRSFLP Load a subfile page                        *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRSEL     BEGSR
+     C*
+     C* Compare each field
+     C*
+     C           #LIB      IFNE *BLANKS
+     C           LIB       IFNE #LIB
+     C                     MOVEL'N'       SEL
+     C                     END
+     C                     END
+     C           #FILE     IFNE *BLANKS
+     C           FILE      IFNE #FILE
+     C                     MOVEL'N'       SEL
+     C                     END
+     C                     END
+     C           #NAME     IFNE *BLANKS
+     C           NAME      IFNE #NAME
+     C                     MOVEL'N'       SEL
+     C                     END
+     C                     END
+     C           #UNQ      IFNE *BLANKS
+     C           UNIQUE    IFNE #UNQ
+     C                     MOVEL'N'       SEL
+     C                     END
+     C                     END
+     C           #REB      IFNE *BLANKS
+     C           REBLT     IFNE #REB
+     C                     MOVEL'N'       SEL
+     C                     END
+     C                     END
+     C           #DLY      IFNE *BLANKS
+     C           ACCPTH    IFNE #DLYR
+     C                     MOVEL'N'       SEL
+     C                     END
+     C                     END
+     C*
+     CSR         EXSEL     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSFRF   : Refresh a subfile                                 *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRSFRF    BEGSR
+     C*
+     C* Position pointer to first record in subfile
+     C*
+     C                     Z-ADD1         ##RR    50
+     C           ##RR      DOWLE##RRMX
+     C           ##RR      CHAIN#SFLRCD              99
+     C*
+     C* Chain to SD1724L0 and if not found report error and reload
+     C*
+     C           KEY       CHAINSD1724F              99
+     C           *IN99     IFEQ '1'
+     C                     EXSR SRSFRL
+     C                     MOVE ERR,7     MSG
+     C                     EXSR SRMSG
+     C                     GOTO EXSFRF
+     C                     END
+     C*
+     C* Call format routine
+     C*
+     C                     EXSR SR1724
+     C*
+     C* Update record and read the next one
+     C*
+     C                     UPDAT#SFLRCD
+     C                     ADD  1         ##RR
+     C                     END
+     C*
+     CSR         EXSFRF    ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRACT    : Process action codes                              *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRACT     BEGSR
+     C*
+     C* Read changed records and call SD1724C1 if R in #SEL
+     C*
+     C                     READC#SFLRCD                  99
+     C           *IN99     DOWEQ'0'
+     C           #SEL      IFEQ 'R'
+     C                     CALL 'SDC1777'              9999
+     C                     PARM           LIB
+     C                     PARM           FILE
+     C                     PARM           NAME
+     C                     MOVEL' '       #SEL
+     C                     END
+     C*
+     C* Update record of  subfile
+     C*
+     C                     SETON                         94
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  99
+     C                     END
+     C                     SETOF                         94
+     C*
+     CSR         EXACT     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SR1724   : Format data read                                  *
+     C*                                                               *
+     C*  CALLED BY: SRSFLP                                            *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SR1724    BEGSR
+     C*
+     C* Format file/library/member name
+     C*
+     C                     MOVEA*BLANKS   FNM,1
+     C                     MOVEALIB       FNM,1
+     C                     Z-ADD1         X       20
+     C           ' '       LOKUPFNM,X                    99
+     C                     MOVEA'/'       FNM,X
+     C                     ADD  1         X
+     C                     MOVEAFILE      FNM,X
+     C           ' '       LOKUPFNM,X                    99
+     C                     ADD  1         X
+     C                     MOVEANAME      FNM,X
+     C                     MOVEAFNM       VNM
+     C*
+     C* Format rebuild, unique and not immediate data
+     C*
+     C                     MOVEL*BLANKS   DAT
+     C           REBLT     IFEQ 'Y'
+     C                     MOVEL'*YES'    REB
+     C                     EXSR SRDAT
+     C                     ELSE
+     C                     MOVEL*BLANKS   REB
+     C                     END
+     C           UNIQUE    IFEQ 'Y'
+     C                     MOVEL'*YES'    UNQ
+     C                     ELSE
+     C                     MOVEL*BLANKS   UNQ
+     C                     END
+     C           ACCPTH    IFEQ 'N'
+     C                     MOVEL'*YES'    NOT
+     C                     ELSE
+     C                     MOVEL*BLANKS   NOT
+     C                     END
+     C*
+     CSR         EX1724    ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRDAT    : Format date                                       *
+     C*                                                               *
+     C*  CALLED BY: SR1724                                            *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRDAT     BEGSR
+     C*
+     C                     MOVELDATE      DDMMYY
+     C                     MOVELTIMSTP    TIM
+     C***********#MDFMT    IFEQ 'D'                                       S01251
+     C           DFF       IFEQ 'D'                                       S01251
+     C                     MOVELDD        DAY
+     C                     MOVELMM        MONTH
+     C                     ELSE
+     C                     MOVELMM        DAY
+     C                     MOVELDD        MONTH
+     C                     END
+     C                     MOVELYY        YEAR
+     C                     MOVELHH        HOUR
+     C                     MOVELMI        MIN
+     C                     MOVELSS        SEC
+     C                     MOVEL'/'       S1
+     C                     MOVEL'/'       S2
+     C                     MOVEL':'       C1
+     C                     MOVEL':'       C2
+     C                     MOVELDTTIM     DAT
+     C*
+     CSR         EXDAT     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRPGM    : End the program                                   *
+     C*                                                               *
+     C*  CALLED BY: Main processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRPGM     BEGSR
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     CSR         EXPGM     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRMSG    : Send a message to this program via CPF9898        *
+     C*                                                               *
+     C*  CALLED BY: SRSELD                                            *
+     C*                                                               *
+     C*****************************************************************
+     CSR         SRMSG     BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM '    '    ZAPGM  10        Program queue
+     C                     PARM ' '       ZAPGRL  5        Rel queue
+     C                     PARM 'CPF9898' ZAMSID  7        Message Id.
+     C                     PARM 'QCPFMSG' ZAMSGF 10        Message file.
+     C                     PARM MSG       ZAMSDA132        Message data.
+     C                     PARM '*INFO'   ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     CSR         EXMSG     ENDSR
+**  CPY@ table
+(c) Finastra International Limited 2001
+**   Error messages for selction validation
+Library name must be a valid CPF name
+File name must be a valid CPF name
+Member name must be a valid CPF name
+Rebuilt must be either N (not rebuilt), Y (rebuilt) or blank
+Unique option must be Y (for unique) or blank
+Delay/Rebuild must be Y (for delay or rebuild) or blank
+Data reloaded as Library/File/Member combinations altered
+Selection printed

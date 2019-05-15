@@ -1,0 +1,221 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas GL MT950 File Extract')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - General Ledger Module                           */
+/*                                                                   */
+/*       GLC001431 - Midas GL MT950 File Extract                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD045952           Date 06Jul17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD023328           Date 11Nov13              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                      239494             Date 07Nov06              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CGL013  *CREATE    Date 31Apr02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD045952 - Ensure that COB MT940s only generated if         */
+/*                   calling pgm is GLC001430.                       */
+/*                - Recompile due to changes to CGL146_133,          */
+/*                  CGL146_134                                       */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD023328 - Parameters not passed to GL001430 & GL001431     */
+/*                  Added hooks: CGL146_131, CGL146_132, CGL146_134  */
+/*       239494 - Change commitment definition from CMTSCOPE(*ACTGRP)*/
+/*                to CMTSCOPE(*JOB).                                 */
+/*       CGL013 - MT94x Message Generation                           */
+/*                                                                   */
+/*********************************************************************/
+/*/COPY WNCPYSRC,GLC001431A                                          */
+             PGM
+ 
+/*/COPY WNCPYSRC,GLC001431A                                          */
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7) VALUE('       ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOURNAL) TYPE(*CHAR) LEN(10) +
+                          VALUE('JRNGL1431')
+             DCL        VAR(&RECEIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('RCVGL1431')
+             DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RDATE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+/*/COPY OFCPYSRCZ,CGL146_133                                         */                 /*MD023328*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check feature CGL013 MT94x Message Generation */
+ 
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE '*VERIFY' 'CGL013')
+             IF         COND(&RTNCDE *NE '       ') THEN(GOTO +
+                          CMDLBL(END))
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,GLC001431B                                          */
+ 
+/* Prepare the Jounaling environment if the feature CCB009 is off */
+ 
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE '*VERIFY' 'CCB009')
+             IF         COND(&RTNCDE = '       ') THEN(CHGVAR +
+                          VAR(&CCB009) VALUE('Y'))
+ 
+             IF         COND(&CCB009 = 'N') THEN(DO)
+ 
+               RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+               CHGVAR     VAR(&JLIB) VALUE(&SYSID *CAT 'JLIB')
+ 
+               ENDCMTCTL
+               MONMSG     MSGID(CPF0000)
+ 
+               ENDJRNPF   FILE(*ALL) JRN(&JLIB/&JOURNAL)
+               MONMSG     MSGID(CPF7032 CPF9801)
+ 
+               DLTJRN     JRN(&JLIB/&JOURNAL)
+               MONMSG     MSGID(CPF2105 CPF9801)
+ 
+               CHGJOB     INQMSGRPY(*DFT)
+ 
+               DLTJRNRCV  JRNRCV(&JLIB/&RECEIVER)
+               MONMSG     MSGID(CPF2105 CPF9801)
+ 
+               CHGJOB     INQMSGRPY(*RQD)
+ 
+               CRTJRNRCV  JRNRCV(&JLIB/&RECEIVER) AUT(*LIBCRTAUT)
+               CRTJRN     JRN(&JLIB/&JOURNAL) JRNRCV(&JLIB/&RECEIVER) +
+                          AUT(*LIBCRTAUT)
+ 
+             STRJRNPF   FILE(GLPOSTPD GLNWACPD MGF950PD MGX950PD +
+                        MGOMSGPD MGOREFPD) JRN(&JLIB/&JOURNAL) +
+                        IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+ 
+/*/COPY WNCPYSRC,GLC001431C                                          */
+ 
+             ENDDO
+ 
+/**********  STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))  */                            /*239494*/
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)                                                  /*239494*/
+ 
+/*/COPY WNCPYSRC,GLC001431D                                          */
+ 
+/* MT950 File Extract */
+ 
+/*/COPY OFCPYSRCZ,CGL146_131                                         */                 /*MD023328*/
+             CALLPRC    PRC(GL001431)
+/*/COPY OFCPYSRCZ,CGL146_134                                         */                 /*MD023328*/
+ 
+/*/COPY WNCPYSRC,GLC001431E                                          */
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(GBMIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Generate MT950 */
+ 
+             CALLPRC    PRC(MG000950)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(GBMIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*/COPY WNCPYSRC,GLC001431F                                          */
+ 
+/* Remove the Jounaling environment if the feature CCB009 is off */
+ 
+             IF         COND(&CCB009 = 'N') THEN(DO)
+ 
+               ENDCMTCTL
+               MONMSG     MSGID(CPF0000)
+ 
+               ENDJRNPF   FILE(*ALL) JRN(&JLIB/&JOURNAL)
+               MONMSG     MSGID(CPF7032 CPF9801)
+ 
+/*/COPY WNCPYSRC,GLC001431G                                          */
+ 
+               DLTJRN     JRN(&JLIB/&JOURNAL)
+               MONMSG     MSGID(CPF2105 CPF9801)
+ 
+               CHGJOB     INQMSGRPY(*DFT)
+ 
+               DLTJRNRCV  JRNRCV(&JLIB/&RECEIVER)
+               MONMSG     MSGID(CPF2105 CPF9801)
+ 
+               CHGJOB     INQMSGRPY(*RQD)
+ 
+             ENDDO
+ 
+/* Call Message Generation Audit Report                            */
+             CHGVAR     VAR(&RPARM) VALUE('GL            9501234')
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&RDATE)
+             IF         COND(%SST(&RDATE 1 1) *EQ ' ') THEN(CHGVAR +
+                          VAR(%SST(&RDATE 1 1)) VALUE('0'))
+             CALL       PGM(ZM0085) PARM(&RDATE &SDATE)
+             CHGVAR     VAR(%SST(&RPARM 23 6)) VALUE(&SDATE)
+             CHGVAR     VAR(%SST(&RPARM 29 6)) VALUE(&SDATE)
+             CALL       PGM(MEC0810) PARM('     ' 'B' 'ALL ' &RPARM)
+ 
+/*/COPY WNCPYSRC,GLC001431H                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/* Abnormal termination  */
+ 
+/*/COPY WNCPYSRC,GLC001431I                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC001431 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*/COPY WNCPYSRC,GLC001431J                                          */
+ 
+END:
+ 
+/*/COPY WNCPYSRC,GLC001431K                                          */
+ 
+             ENDPGM

@@ -1,0 +1,1209 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Gen base ccy equal entries for Fontis IAT')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL2828 - Generate Base Currency Equal Entries for Fontis IATs*
+      *                                                               *
+      *  Function:  This program will be called on the standard       *
+      *             submitted job GLC445 to generate base currency    *
+      *             equivalent postings for Fontis cross currency     *
+      *             IATs                                              *
+      *                                                               *
+      *                                                               *
+      *  Called By: GLC445  - Midas GL Shadow Postings                *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP207             Date 10Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSC024             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 170383             Date 08Nov99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL009  *Create    Date 18May99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAP207 - Account Balance Check extended to other APIs        *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC024 - Open Month End (Recompile)                          *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  170383 - Equiv Base Ccy entries are not generated if the     *
+      *           instruction in the batch is not a cross ccy IAT.    *
+      *           The fix is to fill in the multiple ds only for      *
+      *           cross ccy IATs.  Also, output t GLJENPPD numeric    *
+      *           fields should be explicitly coded to avoid          *
+      *           decimal data errors.                                *
+      *  CGL009 - Midas-Fontis Inter-Account Transfers (IAT) and      *
+      *           Third Party Payments (TPP) Interface                *
+      *                                                               *
+      *****************************************************************
+     FGLJENPL5IF  E           K        DISK
+     F            @BTREMG                           KRENAME@BTREMG5
+     FGLJENSL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FGLJENHL0UF  E           K        DISK         KCOMIT
+     F                                              KINFSR *PSSR
+     FGLIATXL1UF  E           K        DISK         KCOMIT
+     F                                              KINFSR *PSSR
+     FGLJENPPDO   E                    DISK         KCOMIT            UC
+     FGL2828P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    61           Non-display Value Date                        *
+      *    70           Chain Indicator                               *
+      *    80           Multi Branch Indicator                        *
+      *    98           Date Format Indicator                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    NARR    1   1 10
+      ** Array containing Copyright statement
+      *
+     E                    POWER   1   7  7 3
+      ** Array containing Powers for Currency Conversion
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+      /EJECT
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for GL2828P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     IMULT        DS                        200
+      **  Multiple occurrence data structure for totals
+      *
+     I                                        1  30 MTNBR
+     I                                       31  33 MBRCH
+     I***********                            34  390MBCUS                                     CSD027
+     I                                       34  39 MBCUS                                     CSD027
+     I**********                             40  43 MDCOD                                     CGL029
+     I**********                             44  580MDAMT                                     CGL029
+     I**********                             59  62 MCCOD                                     CGL029
+     I**********                             63  770MCAMT                                     CGL029
+     I**********                             78  81 MPRFC                                     CGL029
+     I                                       40  49 MDCOD                                     CGL029
+     I                                       50  640MDAMT                                     CGL029
+     I                                       65  74 MCCOD                                     CGL029
+     I                                       75  890MCAMT                                     CGL029
+     I                                       90  93 MPRFC                                     CGL029
+      *
+     ISAVE        DS                        400
+      **  Multiple occurrence data structure for Report Details
+      *
+     I                                        1   30SBINB
+     I                                        4   9 SCUST
+     I                                       10  12 SCYCD
+     I**********                             13  16 SACCD                                     CGL029
+     I**********                             17  18 SACSN                                     CGL029
+     I**********                             19  21 SIBCA                                     CGL029
+     I**********                             22  340SPTAM                                     CGL029
+     I**********                             35  35 SDCIN                                     CGL029
+     I**********                             36  65 SNRDC                                     CGL029
+     I**********                             66  700SVLDT                                     CGL029
+     I**********                             71  74 SPRCN                                     CGL029
+     I**********                             75  76 SBKCD                                     CGL029
+     I                                       13  22 SACCD                                     CGL029
+     I                                       23  24 SACSN                                     CGL029
+     I                                       25  27 SIBCA                                     CGL029
+     I                                       28  400SPTAM                                     CGL029
+     I                                       41  41 SDCIN                                     CGL029
+     I                                       42  71 SNRDC                                     CGL029
+     I                                       72  760SVLDT                                     CGL029
+     I                                       77  80 SPRCN                                     CGL029
+     I                                       81  82 SBKCD                                     CGL029
+      *
+      ** Data Structure to format Value date
+      *
+     I            DS
+     I                                        1   8 W#ALTP
+     I                                        1   2 W#ALT1
+     I I            '/'                       3   3 W#ALT4
+     I                                        4   5 W#ALT2
+     I I            '/'                       6   6 W#ALT5
+     I                                        7   8 W#ALT3
+      *
+      ** Data Structure to format Value date
+      *
+     I            DS
+     I                                        1   6 W#VDTP
+     I                                        1   2 W#SLT1
+     I                                        3   4 W#SLT2
+     I                                        5   6 W#SLT3
+      *
+      ** Data Structure to format Amount
+      *
+     I            DS
+     I                                        1  180W#TAMT
+     I                                        1  150W#TAM1
+     I                                       16  180W#TAM2
+      *
+      * #1 Hash normalisation data structure
+     I            DS
+     I                                        1  150W@FB15
+     I                                        1  140W@FB14
+     I                                        1  130W@FB13
+     I                                        1  120W@FB12
+     I                                       15  151W@FB01
+     I                                       14  152W@FB02
+     I                                       13  153W@FB03
+      *
+     I            DS
+      * #2 Hash normalisation data structure
+     I                                        1   93W@##09
+     I                                        1   60W@##06
+     I                                        7   90W@##03
+      /SPACE 3
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External DS for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External DS for Currency Details
+      *
+     ISDDEPT    E DSSDDEPTPD
+      ** External DS for Department Codes Details
+      *
+     ISDFONT    E DSSDFONTPD
+      ** External DS for Fontis Interface
+      *
+     ISDTRAD    E DSSDTRADPD
+      ** External DS for Trading Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      184 256 DBTXT
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial processing                                *
+      *  SRDETL  -  Detail processing                                 *
+      *  SRCONV  -  Convert spot trade totals to base currency eq     *
+      *  SRBASE  -  Generate base currency postings                   *
+      *  SRPOST  -  Write base currency postings to GLJENPPD          *
+      *  SRSAVE  -  Save base currency postings to multi-DS-SAVE      *
+      *  SRUSUM  -  Update summary record on GLJENSPD                 *
+      *  SRUHED  -  Update header record on GLJENHPD                  *
+      *  SRREPT  -  Generate report GL2828P1                          *
+      *  SRTRAN  -  Transfer postings details to report fields        *
+      *  SRDISP  -  Process details for output to GL2828P1            *
+      *  SRHEAD  -  Transfer header details to report fields          *
+      *  SRAUDT  -  Output no postings generated for batch entered    *
+      *  SRTRAL  -  Output trailer                                    *
+      *  SREND   -  End program                                       *
+      *  *PSSR   -  Error handling subroutine                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Main Program
+      *
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform different detailed processing
+      *
+     C                     EXSR SRDETL
+      *
+      ** Terminate program
+      *
+     C                     EXSR SREND
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Initial Processing                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : AOBANKR0 - Access Bank Details                    *
+      *             AOTRADR0 - Access Trading Details                 *
+      *             AOCURRR0 - Access Currency Details                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PBTCH   3
+      *
+      ** Define Data area RUNDAT to obtain rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL2828'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBTXT
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** Define Parameter List for AOCURRR0
+      *
+     C           PPAR1     PLIST
+     C                     PARM '*BLANKS 'PRTCD
+     C                     PARM           POPTN
+     C                     PARM           PKCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Define Key List for file GLJENSL0
+      *
+     C           KEY001    KLIST
+     C                     KFLD           W#BTNB  3
+     C                     KFLD           W#BCCY  3
+     C                     KFLD           W#BRCH  3
+      *
+      ** Initialise report Work fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     CLEARHEADP2
+     C                     CLEARHEADP3
+     C                     CLEARDETAIL
+      *
+      ** Retrieve bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve trading details
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDTRADPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set-up Date Format Indicator
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      ** Set Multi-branch Indicator
+      *
+     C           AGMBIN    IFEQ 'N'
+     C                     MOVE '1'       *IN80
+     C                     ENDIF
+      *
+      ** Retrieve Base currency's number of decimal places
+      *
+     C                     MOVEL'*KEY    'POPTN
+     C                     MOVELBJCYCD    PKCCY
+     C                     CALL 'AOCURRR0'PPAR1
+      *                                                                   170383
+     C                     MOVE *BLANKS   WSPOT   1                       170383
+      *
+      ** Initialise multi-DS transaction MULT
+      *
+     C                     Z-ADD1         X       30
+      *
+     C           X         DOWLE200
+     C           X         OCUR MULT
+     C                     MOVE *BLANKS   MTNBR
+     C                     MOVE *BLANKS   MBRCH
+     C**********           Z-ADD0         MBCUS                                               CSD027
+     C                     MOVE *BLANKS   MBCUS                                               CSD027
+     C                     MOVE *BLANKS   MDCOD
+     C                     Z-ADD0         MDAMT
+     C                     MOVE *BLANKS   MCCOD
+     C                     Z-ADD0         MCAMT
+     C                     MOVE *BLANKS   MPRFC
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+      ** Initialise multi-DS transaction SAVE
+      *
+     C                     Z-ADD1         Y       30
+      *
+     C           Y         DOWLE400
+     C           Y         OCUR SAVE
+     C                     Z-ADD0         SBINB
+     C                     MOVE *BLANKS   SCUST
+     C                     MOVE *BLANKS   SCYCD
+     C                     MOVE *BLANKS   SACCD
+     C                     MOVE *BLANKS   SACSN
+     C                     MOVE *BLANKS   SIBCA
+     C                     Z-ADD0         SPTAM
+     C                     MOVE *BLANKS   SDCIN
+     C                     MOVE *BLANKS   SNRDC
+     C                     Z-ADD0         SVLDT
+     C                     MOVE *BLANKS   SPRCN
+     C                     MOVE *BLANKS   SBKCD
+     C                     ADD  1         Y
+     C                     ENDDO
+      *
+      ** Access first occurrence of multi-DS
+      *
+     C                     Z-ADD1         X
+     C           X         OCUR MULT
+     C                     Z-ADD1         Y
+     C           Y         OCUR SAVE
+      *
+      ** Open Files for output
+      *
+     C                     OPEN GLJENPPD
+     C                     OPEN GL2828P1
+      *
+      ** Initialise work fields and indicators
+      *
+     C                     Z-ADDA6NBDP    W#NBDP  10
+     C                     Z-ADD0         W#TOTL 150
+     C                     Z-ADD0         W#TOTC 150
+     C                     Z-ADD0         W#TOTD 150
+     C                     Z-ADD0         W@##09
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL  -  Detail Processing                                 *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRCONV, SRBASE, SREND                             *
+      *             AOBRCHR1 - Access Branch Details                  *
+      *             AOCURRR0 - Access Currency Details                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      ** Retrieve GLJENHL0 record for the entry parm batch number
+      *
+     C           PBTCH     CHAINGLJENHL0             70
+      *
+      ** End program if Description does not begin with 'FONTIS'
+      *
+     C                     MOVELBRBDES    W#BDES  6
+      *
+     C           W#BDES    IFNE 'FONTIS'
+     C                     EXSR SREND
+     C                     ELSE
+     C                     MOVE BRHINC    W#CNTR  30
+     C                     ENDIF
+      *
+     C           PBTCH     CHAINGLJENPL5             70
+      *
+     C                     MOVE BTNRDC    W#NRDC 30
+      *
+     C           *IN70     DOWEQ'0'
+     C           BTACCD    IFEQ BLSPTA
+      *                                                                   170383
+     C                     MOVEL'Y'       WSPOT                           170383
+      *                                                                   170383
+     C                     EXSR SRCONV
+      *
+      ** Fill in data for multi-DS-MULT
+      *
+     C           MTNBR     IFEQ *BLANKS
+     C                     MOVE W#NRDC    MTNBR
+     C                     ENDIF
+      *
+     C           MBRCH     IFEQ *BLANKS
+      *
+     C                     MOVE BTIBCA    MBRCH
+      *
+      ** Retrieve internal customer for branch BTIBCA of GLJENPL5
+      *
+     C                     CALL 'AOBRCHR1'
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BTIBCA    PBRCA   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C                     MOVE A8BICN    MBCUS
+      *
+     C                     ENDIF
+      *
+      ** Credit Postings
+      *
+     C           BTDCIN    IFEQ 'C'
+     C                     MOVE A6SPAE    MDCOD
+     C                     MOVE W#BAMT    MDAMT
+     C                     ENDIF
+      *
+      ** Debit Postings
+      *
+     C           BTDCIN    IFEQ 'D'
+     C                     MOVE A6SPAE    MCCOD
+     C                     MOVE W#BAMT    MCAMT
+     C                     ENDIF
+      *
+     C           MPRFC     IFEQ *BLANKS
+     C                     MOVE BTPRCN    MPRFC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           PBTCH     READEGLJENPL5                 70
+      *
+      ** Set W#NRDC of new narrative and access next
+      ** multi-DS-occurrence
+      ** access next occurrence only if there us a spot trade entry       170383
+      ** on previous instruction.                                         170383
+      *
+     C           BTNRDC    IFNE W#NRDC
+     C           WSPOT     IFEQ 'Y'                                       170383
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     ENDIF                                          170383
+     C                     MOVE BTNRDC    W#NRDC
+     C                     MOVEL*BLANKS   WSPOT                           170383
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Create Base Currency Equivalent Postings
+      *
+     C                     EXSR SRBASE
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCONV  -  Convert Spot Trade Totals to Base Currency        *
+      *             Equivalent                                        *
+      *  Called by: SRDETL                                            *
+      *  Calls    : ZCONV                                             *
+      *             AOCURRR0 - Access Currency Details                *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCONV    BEGSR
+      *
+      ** Access currency information
+      *
+     C                     MOVEL'*KEY    'POPTN
+     C                     MOVELBTCYCD    PKCCY
+     C                     CALL 'AOCURRR0'PPAR1
+      *
+      ** Compute base currency equivalent amount of spot trade total
+      *
+     C                     Z-ADDBTPTAM    ZAMTCI
+     C                     Z-ADDA6SPRT    ZEXCH
+     C                     MOVE A6MDIN    ZMD
+     C                     Z-ADDA6NBDP    ZCDPI
+     C                     Z-ADDW#NBDP    ZCDPO
+     C                     EXSR ZCONV
+      *
+     C                     Z-ADDZAMTCO    W#BAMT 150
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBASE  -  Generate Base Currency Postings                   *
+      *  Called by: SRDETL                                            *
+      *  Calls    : SRPOST, SRUHED, SRUSUM                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBASE    BEGSR
+      *
+      ** Initialise work fields
+      *
+     C                     MOVE *BLANKS   W#DCIN  1
+     C                     Z-ADD1         Y
+     C                     Z-ADD1         X
+      *
+      ** Access data stored in multi-DS-MULT
+      *
+     C           X         DOWLE200
+     C           X         OCUR MULT
+      *
+     C           MTNBR     IFEQ *BLANKS
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           MDAMT     IFNE MCAMT
+     C           MDAMT     ADD  MCAMT     W#AVRG 150
+     C           W#AVRG    DIV  2         W#AVRG
+     C                     Z-ADDW#AVRG    MDAMT
+     C                     Z-ADDW#AVRG    MCAMT
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       W#DCIN
+     C*
+     C**  Write base currency journal posting record in GLJENPPD
+     C                     EXSR SRPOST
+     C*
+     C**  Update/write base currency journal summary record in GLJENSPD
+     C*
+     C                     EXSR SRUSUM
+     C                     ADD  1         X
+      *
+     C                     ENDDO
+      *
+     C                     EXSR SRUHED
+      *
+      ** Generate report GL2828P1 to display base currency
+      ** postings created
+      *
+     C                     EXSR SRREPT
+      *
+     C** Check totals balance
+     C                     EXSR SRBALN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOST  -  Write Base Currency Postings to GLJENPPD          *
+      *  Called by: SRBASE                                            *
+      *  Calls    : SRSAVE                                            *
+      *             AOFONTR0 - Access Electronic Banking ICD Details  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPOST    BEGSR
+      *
+      ** This process will occur two times, each one for debit
+      ** and credit postings
+      *
+     C           W#DCIN    DOWEQ'D'
+     C           W#DCIN    OREQ 'C'
+      *
+     C                     CLEAR@BTREMG
+      *
+     C                     ADD  1         W#CNTR
+      *
+     C                     MOVE PBTCH     BTBTNB
+     C***********          MOVE W#CNTR    BTBINB                          170383
+     C                     Z-ADDW#CNTR    BTBINB                          170383
+     C                     MOVE MBRCH     BTIBCA
+     C                     MOVE MBCUS     BTCUST
+     C                     MOVE BJCYCD    BTCYCD
+      *
+     C           W#DCIN    IFEQ 'D'
+     C                     MOVE MDCOD     BTACCD
+     C***********          MOVE MDAMT     BTPTAM                          170383
+     C                     Z-ADDMDAMT     BTPTAM                          170383
+     C                     MOVE 'D'       BTDCIN
+     C                     ELSE
+     C                     MOVE MCCOD     BTACCD
+     C***********          MOVE MCAMT     BTPTAM                          170383
+     C                     Z-ADDMCAMT     BTPTAM                          170383
+     C                     MOVE 'C'       BTDCIN
+     C                     ENDIF
+      *
+     C                     MOVE '01'      BTACSN
+     C                     Z-ADD0         BTRACN                          170383
+     C                     MOVE 'N'       BTRINE
+     C***********          MOVE AGRDNB    BTPTDT                          170383
+     C***********          MOVE AGRDNB    BTVLDT                          170383
+     C                     Z-ADDAGRDNB    BTPTDT                          170383
+     C                     Z-ADDAGRDNB    BTVLDT                          170383
+      *
+     C                     MOVELMTNBR     BTNRDC
+     C                     MOVE NARR,1    BTNRDC
+      *
+     C                     MOVE 'G'       BTACTY
+     C                     MOVE 'N'       BTCOIN
+     C                     MOVE MPRFC     BTPRCN
+     C                     MOVE BRBCDA    BTBCBH
+      *
+     C                     MOVE 'N'       BTRADP
+     C                     MOVE 'N'       BTSHPI
+     C                     Z-ADD0         BTRRNM                          170383
+     C                     MOVE 'N'       BTRNBE
+     C                     Z-ADD0         BTSPFC                          170383
+     C                     Z-ADD0         BTNITM                          170383
+     C                     Z-ADD0         BTOAMT                          170383
+      *
+      ** Access Fontis Interface Details
+      *
+     C                     CALL 'AOFONTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C           SDFONT    PARM SDFONT    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE F8IBKC    BTBKCD
+     C                     ENDIF
+      *
+      ** Write record to GLEJNPPD
+      *
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREMG
+      *
+      ** Add hash totals
+      *
+     C           BTDCIN    IFEQ 'D'
+     C                     ADD  BTPTAM    W#TOTD
+     C                     ELSE
+     C                     ADD  BTPTAM    W#TOTC
+     C                     ENDIF
+      *
+      **  Update hash totals
+     C                     EXSR SRHASH
+      *
+      ** Save details of base currency posting created for report
+      *
+     C                     EXSR SRSAVE
+      *
+      ** Set-up work field to control processing
+      *
+     C                     SELEC
+     C           W#DCIN    WHEQ 'D'
+     C                     MOVE 'C'       W#DCIN
+     C           W#DCIN    WHEQ 'C'
+     C                     MOVE *BLANKS   W#DCIN
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSAVE  -  Save Base Currency Postings to Multi-DS-SAVE      *
+      *  Called by: SRPOST                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSAVE    BEGSR
+      *
+     C           Y         OCUR SAVE
+     C                     Z-ADDBTBINB    SBINB
+     C                     MOVE BTCUST    SCUST
+     C                     MOVE BTCYCD    SCYCD
+     C                     MOVE BTACCD    SACCD
+     C                     MOVE BTACSN    SACSN
+     C                     MOVE BTIBCA    SIBCA
+     C                     Z-ADDBTPTAM    SPTAM
+     C                     MOVE BTDCIN    SDCIN
+     C                     MOVE BTNRDC    SNRDC
+     C                     Z-ADDBTVLDT    SVLDT
+     C                     MOVE BTPRCN    SPRCN
+     C                     MOVE BTBKCD    SBKCD
+     C                     ADD  1         Y
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUSUM  -  Update Summary Record on GLJENSPD                 *
+      *  Called by: SRBASE                                            *
+      *  Calls    : *none                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUSUM    BEGSR
+      *
+     C                     MOVE PBTCH     W#BTNB
+     C                     MOVE BJCYCD    W#BCCY
+     C                     MOVE MBRCH     W#BRCH
+      *
+      ** Update record in GLJENSL0 if it already exists
+      ** If not, write new record
+      *
+     C           KEY001    CHAINGLJENSL0             70
+     C           *IN70     IFEQ '0'
+     C                     ADD  MDAMT     BSDBTT
+     C                     ADD  MCAMT     BSCRTT
+     C                     UPDAT@BSREAI
+     C                     ELSE
+     C                     MOVE W#BTNB    BSBTNB
+     C                     MOVE W#BCCY    BSCYCD
+     C                     MOVE W#BRCH    BSBRCD
+     C                     Z-ADDMDAMT     BSDBTT
+     C                     Z-ADDMCAMT     BSCRTT
+     C                     WRITE@BSREAI
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUHED  -  Update Header Record on GLJENHPD                  *
+      *  Called by: SRBASE                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUHED    BEGSR
+      *
+     C           PBTCH     CHAINGLJENHL0             70
+      *
+     C           *IN70     IFEQ '0'
+      *
+      ** Compute sum of postings created and those already existing
+      *
+     C                     ADD  BRHICC    W#TOTL
+     C           BRHDCC    DIV  1000      W#DEC   93
+     C                     ADD  W#DEC     W@##09
+      *
+     C                     ADD  W@##06    W#TOTL
+     C                     Z-ADDW#TOTL    BRHICC
+     C                     Z-ADDW@##03    BRHDCC
+     C                     Z-ADDW#CNTR    BRHINC
+     C                     Z-ADDBRHICC    BRHIIN
+     C                     Z-ADDBRHDCC    BRHDIN
+     C                     Z-ADDW#CNTR    BRHINI
+      *
+      ** Update header file GLJENHPD
+      *
+     C                     UPDAT@BRREAG
+     C                     ENDIF
+      *
+      **  Update processed flag to 'A' for accepted
+      *
+     C           BRBDES    CHAINGLIATXL1             71
+     C           *IN71     IFEQ '0'
+     C                     MOVE 'A'       FCPROC
+     C                     UPDATGLIATXD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBALN  -  Check totals balance                              *
+      *  Called by: SRBASE                                            *
+      *  Calls    : SRTRAL, SREND                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBALN    BEGSR
+      *
+      ** Check if there is difference in total debit and total credit
+      *
+     C           W#TOTD    IFNE W#TOTC
+     C                     MOVE PBTCH     RDBTCH
+     C                     EXSR SRTRAL
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT  -  Generate Report GL2828P1                          *
+      *  Called by: SRBASE                                            *
+      *  Calls    : SRTRAN, SRDISP, SRAUDT, SRTRAL                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR
+      *
+      ** Access details stored in multi-DS-SAVE
+      *
+     C                     Z-ADD1         Y
+      *
+     C           Y         DOWLE400
+     C           Y         OCUR SAVE
+     C           SBINB     IFEQ 0
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ADD  1         RCOUNT  30
+      *
+     C                     EXSR SRTRAN
+     C                     EXSR SRDISP
+      *
+     C                     ADD  1         Y
+     C                     ENDDO
+      *
+      ** Determine number of base currency postings created
+      *
+     C           RCOUNT    IFEQ 0
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRAN  -  Transfer Postings Details to Report Fields        *
+      *  Called by: SRREPT                                            *
+      *  Calls    : ZFRPED, ZDATE2                                    *
+      *             AOCURRR0 - Access Currency Details                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTRAN    BEGSR
+      *
+     C                     MOVE SBINB     RDBINB
+     C                     MOVE SCUST     RDCUST
+     C                     MOVE SCYCD     RDCYCD
+     C                     MOVE SACCD     RDACCD
+     C                     MOVE SACSN     RDACSN
+     C                     MOVE SIBCA     RDIBCA
+      *
+      ** Edit Posting Amount
+      *
+     C                     MOVEL'*KEY    'POPTN
+     C                     MOVELSCYCD     PKCCY
+     C                     CALL 'AOCURRR0'PPAR1
+      *
+     C                     Z-ADDSPTAM     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RDPAMP
+      *
+     C                     MOVE SDCIN     RDDCIN
+     C                     MOVELSNRDC     RDNRTV
+      *
+      ** Value Date
+      *
+     C           SVLDT     IFNE 0
+     C                     MOVE SVLDT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     W#VDTP
+     C                     MOVE W#SLT1    W#ALT1
+     C                     MOVE W#SLT2    W#ALT2
+     C                     MOVE W#SLT3    W#ALT3
+     C                     MOVE W#ALTP    RDVDTP
+     C                     ELSE
+     C                     MOVE '1'       *IN61
+     C                     ENDIF
+      *
+     C                     MOVE SPRCN     RDPRCN
+     C                     MOVE SBKCD     RDBKCD
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDISP  -  Process Details for Output to GL2828P1            *
+      *  Called by: SRREPT                                            *
+      *  Calls    : SRHEAD                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDISP    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     EXSR SRHEAD
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     WRITEHEADP3
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHEAD  -  Transfer Header Details to Report Fields          *
+      *  Called by: SRDISP, SRTRAL                                    *
+      *  Calls    : ZFRPED                                            *
+      *             AOBRCHR1 - Access Branch Details                  *
+      *             AODEPTR0 - Access Department Codes Details        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRHEAD    BEGSR
+      *
+     C                     MOVELBRBCDA    R1BCBH
+      *
+      ** Obtain Branch Name
+      *
+     C                     CALL 'AOBRCHR1'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BRBCDA    PBRCA
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE A8BRNM    R1BNMD
+     C                     ENDIF
+      *
+     C                     MOVELBRBTNB    RBATCH
+     C                     MOVELBRBDES    RDESCR
+      *
+      ** Obtain Department Name
+      *
+     C                     CALL 'AODEPTR0'
+     C                     PARM '*BLANKS 'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BRDPCD    PDEPT   3
+     C           SDDEPT    PARM SDDEPT    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE AEDPCD    RDCODE
+     C                     MOVE AEDPNM    RDNAME
+     C                     ENDIF
+      *
+      ** Edit Total Input
+      *
+     C                     Z-ADDBRHIIN    W#TAM1
+     C                     Z-ADDBRHDIN    W#TAM2
+     C                     Z-ADDW#TAMT    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RINTOT
+      *
+     C                     MOVELBRMBRB    RMBRCH
+      *
+      ** Edit Calculated Amount
+      *
+     C                     Z-ADDBRHICC    W#TAM1
+     C                     Z-ADDBRHDCC    W#TAM2
+     C                     Z-ADDW#TAMT    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RCALCA
+      *
+     C                     MOVELBRWSID    RTERMI
+     C                     Z-ADDBRHINI    RINTEM
+     C                     Z-ADDBRHINC    RCALCI
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT  -  Output No Postings Generated for Batch Entered    *
+      *  Called by: SRREPT                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header
+      *
+     C                     WRITEHEADP1
+      *
+      ** Output no postings created
+      *
+     C                     MOVELPBTCH     RNOBAT
+     C                     WRITENODTLS
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHASH  -  Update hash totals                                *
+      *  Called by: SRDETL                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRHASH    BEGSR
+      *
+     C                     Z-ADD*ZERO     W@FB15           Set work field
+      *
+      * Normalise amount and add to calculated hash total :
+      *
+     C                     Z-ADDBTPTAM    W@FB15             To work fieldS01251
+      *
+     C           W#NBDP    IFEQ *ZERO                      IF DECIMAL=0   S01251
+     C                     ADD  W@FB15    W#TOTL             Hash integer S01251
+     C                     END                             FI
+      *
+     C           W#NBDP    IFEQ 1                          IF DECIMAL=1   S01251
+     C                     ADD  W@FB14    W#TOTL             Hash integer S01251
+     C                     ADD  W@FB01    W@##09             Check decimal
+     C                     END                             FI
+      *
+     C           W#NBDP    IFEQ 2                          IF DECIMAL=2   S01251
+     C                     ADD  W@FB13    W#TOTL             Hash integer S01251
+     C                     ADD  W@FB02    W@##09             Check decimal
+     C                     END                             FI
+      *
+     C           W#NBDP    IFEQ 3                          IF DECIMAL=3   S01251
+     C                     ADD  W@FB12    W#TOTL             Hash integer S01251
+     C                     ADD  W@FB03    W@##09             Check decimal
+     C                     END                             FI
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRAL  -  Output trailer                                    *
+      *  Called by: SRUSUM                                            *
+      *  Calls    : SRHEAD                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTRAL    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     EXSR SRHEAD
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     WRITEHEADP3
+     C                     ENDIF
+      *
+      ** Write out Imbalances on Credit and Debit postings
+      *
+     C                     WRITEIMBALN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND   -  End Program                                       *
+      *  Called by: Main routine, SRDETL, SRUSUM, *PSSR               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREND     BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  File Exception/Error Handling Subroutine          *
+      *  Called by: Various                                           *
+      *  Calls    : SREND                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+      /TITLE SR/ZCONV                                                     140611
+     C/COPY ZSRSRC,ZCONVZ1                                                140611
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZFRPED
+     C/COPY ZSRSRC,ZFRPEDZ3
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Finastra International Limited 2001
+**  NARR
+SYSTEM GEN
+**  POWER
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  ZYDY - Years in days cumulative, four year span
+0366073110961461
+**  ZMDY - Months in days cumulative through year
+000031059090120151181212243273304334365
+**  ZMNM - Months short names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

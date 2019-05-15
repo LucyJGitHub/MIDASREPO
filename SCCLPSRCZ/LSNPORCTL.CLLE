@@ -1,0 +1,380 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Cob Request to Listener Port Ctl AP')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - System Control Module                           */
+/*                                                                   */
+/*       LSNPORCTL - COB Request to Listener Port Controller         */
+/*                   Application.                                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2008                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD023899C          Date 19Aug14              */
+/*                      MD023899           Date 05May14              */
+/*                      AR1094242          Date 06Mar13              */
+/*                      AR1026350A         Date 07Mar13              */
+/*                      AR1026350          Date 07Mar13              */
+/*                      CLE134             Date 02Nov12              */
+/*                      CSC054             Date 23Feb12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BUG26555           Date 28Oct09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      257578  *CREATE    Date 26Nov08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD023899C - Do not fail only when expected response         */
+/*                   received from application server regarding      */
+/*                   listener status.                                */
+/*                 - Do not skip part of listener processing.        */
+/*                 - LSNPORTCTL fails with timeout error             */
+/*                   Patterned after MD021278.                       */
+/*                 - Use *CAT to allow compilation instead of pipe.  */
+/*       MD023899 - BF PRB Multiple JMS listeners auto starting      */
+/*                  during COB                                       */
+/*       AR1094242 - Event code not found                            */
+/*       AR1026350A - Do not fail the component when no message      */
+/*                    received. Applied for AR1091689.               */
+/*       AR1026350 - Clear data queues at start of program to        */
+/*                   prevent error due to invalid data. Applied      */
+/*                   for AR1091689.                                  */
+/*       CLE134 - Past Due Call Loan Processing                      */
+/*       CSC054 - Period End Adjustments                             */
+/*       BUG26555 - LSNPORCTL 00001 & 00002.  Applied GEMS fix       */
+/*                  258836.                                          */
+/*       258836 - Failed components in AA                            */
+/*       257578 - Transactions must not be processed during COB.     */
+/*                Transactions must be kept in the message queue     */
+/*                until the next input cycle.                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PACT)
+ 
+/* Declaration of variables */
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2008')
+ 
+             DCL        VAR(&PACT)     TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PACA)     TYPE(*CHAR) LEN(10)                                /*CLE134*/
+             DCL        VAR(&DQNME)    TYPE(*CHAR) LEN(10)  VALUE(' ')
+             DCL        VAR(&DQLIB)    TYPE(*CHAR) LEN(10)  VALUE('*LIBL')
+             DCL        VAR(&DQLEN)    TYPE(*DEC)  LEN(5 0) VALUE(100)
+             DCL        VAR(&DQDTA)    TYPE(*CHAR) LEN(100) VALUE(' ')
+             DCL        VAR(&DQWAIT)   TYPE(*DEC)  LEN(5 0) VALUE(30)
+             DCL        VAR(&DQKEYSLT) TYPE(*CHAR) LEN(2)   VALUE('EQ')
+             DCL        VAR(&DQKEYLEN) TYPE(*DEC)  LEN(3 0) VALUE(10)
+             DCL        VAR(&DQKEY)    TYPE(*CHAR) LEN(10)  VALUE(' ')
+             DCL        VAR(&DQSNDLEN) TYPE(*DEC)  LEN(3 0) VALUE(0)
+             DCL        VAR(&DQSND)    TYPE(*CHAR) LEN(8)   VALUE(' ')
+ 
+             DCL        VAR(&PRTCD)    TYPE(*CHAR) LEN(7)   VALUE(' ')
+             DCL        VAR(&PERMS)    TYPE(*CHAR) LEN(50)  VALUE(' ')
+             DCL        VAR(&PFULLCK)  TYPE(*CHAR) LEN(7)   VALUE('Y')
+             DCL        VAR(&PZONE)    TYPE(*CHAR) LEN(10)  VALUE(' ')
+             DCL        VAR(&PSHTC)    TYPE(*CHAR) LEN(4)   VALUE(' ')
+             DCL        VAR(&PRDNB)    TYPE(*DEC)  LEN(5 0) VALUE(0)
+             DCL        VAR(&PDNWD)    TYPE(*DEC)  LEN(5 0) VALUE(0)
+             DCL        VAR(&PBCCY)    TYPE(*CHAR) LEN(3)   VALUE(' ')
+             DCL        VAR(&PNJOB)    TYPE(*DEC)  LEN(1 0) VALUE(0)
+ 
+             DCL        VAR(&SVALK1)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK2)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK3)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK4)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK5)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK6)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK7)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK8)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK9)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVALK0)   TYPE(*CHAR) LEN(20)                                /*258836*/
+             DCL        VAR(&SVAL1)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL2)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL3)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL4)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL5)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL6)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL7)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL8)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL9)    TYPE(*CHAR) LEN(200)                               /*258836*/
+             DCL        VAR(&SVAL10)   TYPE(*CHAR) LEN(200)                               /*258836*/
+                                                                                          /*258836*/
+             DCL        VAR(&CLE134) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE134*/
+             DCL        VAR(&CSC054) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSC054*/
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)                                   /*CSC054*/
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)                                  /*CSC054*/
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)                              /*CSC054*/
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)                                   /*CSC054*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CSC054*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CSC054*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CSC054*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CSC054*/
+             DCL        VAR(&PRFL) TYPE(*CHAR) LEN(2)                                     /*CSC054*/
+             DCL        VAR(&COUNT)    TYPE(*DEC)  LEN(1 0) VALUE(1)                   /*MD023899C*/
+             DCLF       FILE(GPWASCL0) OPNID(THIS1)                                     /*MD023899*/
+             DCLF       FILE(GPWASCL1) OPNID(THIS2)                                     /*MD023899*/
+                                                                                          /*CSC054*/
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+                                                                                       /*AR1026350*/
+/** Clear data queues */                                                               /*AR1026350*/
+                                                                                       /*AR1026350*/
+/**********  CALL PGM(QCLRDTAQ)   PARM(GPCOBRQSDQ  *LIBL)                     /*AR1026350 MD023899*/
+/**********  CALL PGM(QCLRDTAQ)   PARM(GPCOBRSPDQ  *LIBL)                     /*AR1026350 MD023899*/
+                                                                                          /*CSC054*/
+/** Check if CSC054 is on */                                                              /*CSC054*/
+                                                                                          /*CSC054*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CSC054*/
+             CHGVAR     VAR(&SARD) VALUE('CSC054')                                        /*CSC054*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSC054*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SFMT)                       /*CSC054*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CSC054*/
+                CHGVAR     VAR(&CSC054) VALUE('Y')                                        /*CSC054*/
+             ENDDO                                                                        /*CSC054*/
+                                                                                          /*CLE134*/
+/** Check if CLE134 is on */                                                              /*CLE134*/
+                                                                                          /*CLE134*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE134*/
+             CHGVAR     VAR(&SARD) VALUE('CLE134')                                        /*CLE134*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE134*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SFMT)                       /*CLE134*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE134*/
+                CHGVAR     VAR(&CLE134) VALUE('Y')                                        /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+ 
+/* Get 'UseMQSeries' system value from file SDSVALPD */                                   /*258836*/
+                                                                                          /*258836*/
+             CHGVAR     VAR(&SVALK1) VALUE('UseMQSeries')                                 /*258836*/
+             CHGVAR     VAR(&SVALK2) VALUE('PEAIndicator')                                /*CSC054*/
+             CHGVAR     VAR(&SVALK3) VALUE('PEAHandShakingQM')                            /*CSC054*/
+             CHGVAR     VAR(&SVALK4) VALUE('PEAHandShakingOQ')                            /*CSC054*/
+             CHGVAR     VAR(&SVALK5) VALUE('PEALiveSystemPrefix')                         /*CSC054*/
+             CALL       PGM(AOSVALR0) PARM(&PRTCD &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)                                         /*258836*/
+                                                                                          /*258836*/
+             IF         COND(&PRTCD *NE '       ') THEN(GOTO ABNOR)                       /*258836*/
+/**********  IF         COND(%SST(&SVAL1 1 1) *NE 'Y') THEN(GOTO END)              /*258836 CLE134*/
+/**********  IF         COND(%SST(&SVAL1 1 1) *NE 'Y') THEN(GOTO PDP)           /*258836 MD023899C*/
+             IF         COND(%SST(&SVAL1 1 1) *NE 'Y') THEN(GOTO LIST)                 /*MD023899C*/
+                                                                                          /*258836*/
+/** If running under PEA system */                                                        /*CSC054*/
+                                                                                          /*CSC054*/
+             IF         COND((&CSC054 *EQ 'Y') *AND (%SST(&SVAL2 1 +
+                          1) *EQ 'Y') *AND (&PACT *EQ 'STOP')) THEN(DO)                   /*CSC054*/
+                                                                                          /*CSC054*/
+                CHGVAR     VAR(&MQMGR) VALUE(%SST(&SVAL3 1 48))                           /*CSC054*/
+                CHGVAR     VAR(&MQUEUE) VALUE(%SST(&SVAL4 1 48))                          /*CSC054*/
+                CHGVAR     VAR(&PRFL) VALUE(%SST(&SVAL5 1 2))                             /*CSC054*/
+                CHGVAR     VAR(&MSG) VALUE('PEA COB Started')                             /*CSC054*/
+                CALL       PGM(ZAMSGTOMQ) PARM(&RETURNCODE &PRFL &MQMGR +
+                             &MQUEUE &MSG)                                                /*CSC054*/
+                IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                             CMDLBL(ABNOR))                                               /*CSC054*/
+             ENDDO                                                                        /*CSC054*/
+                                                                                          /*CSC054*/
+LIST:                                                                                  /*MD023899C*/
+/* Retrieve Current Zone */
+ 
+             CALL       PGM(GOGETZONE) PARM(&PRTCD &PERMS &PFULLCK +
+                          &PZONE &PSHTC &PRDNB &PDNWD &PBCCY &PNJOB)
+ 
+/* Midas Standard Error Processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                             CMDLBL(ABNOR))
+ 
+             CLOF       OPNID(THIS1)                                                    /*MD023899*/
+             MONMSG     MSGID(CPF4520)                                                  /*MD023899*/
+             OPNDBF     FILE(GPWASCL0) OPTION(*INP) OPNID(THIS1)                        /*MD023899*/
+LOOP1:                                                                                  /*MD023899*/
+             RCVF       OPNID(THIS1)                                                    /*MD023899*/
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(PDP))                           /*MD023899*/
+             IF         COND(&THIS1_AXTRNL = 'N') THEN(DO)                              /*MD023899*/
+                        GOTO LOOP1                                                      /*MD023899*/
+             ENDDO                                                                      /*MD023899*/
+/* Send request to Listener Port Controller Application via D queue */
+ 
+/**********  CHGVAR     VAR(&DQNME) VALUE('GPCOBRQSDQ')                                 /*MD023899*/
+             CHGVAR     VAR(&DQNME) VALUE(&THIS1_AXREQD)                                /*MD023899*/
+/**********  CHGVAR     VAR(&DQDTA) VALUE(&PZONE || ' ' || &PACT)                      /*MD023899C*/
+             CHGVAR     VAR(&DQDTA) VALUE(&PZONE *CAT ' ' *CAT &PACT)                  /*MD023899C*/
+ 
+             CHGVAR     VAR(&COUNT) VALUE(1)                                           /*MD023899C*/
+RESEND1:                                                                               /*MD023899C*/
+             CALL       PGM(QCLRDTAQ) PARM(&THIS1_AXREQD *LIBL)                         /*MD023899*/
+             CALL       PGM(QCLRDTAQ) PARM(&THIS1_AXRSPD *LIBL)                         /*MD023899*/
+             CHGVAR     VAR(&DQLEN) VALUE(100)                                          /*MD023899*/
+             CALL       PGM(QSNDDTAQ) PARM(&DQNME &DQLIB &DQLEN &DQDTA)
+ 
+/* Receive response from GPCOBRSPDQ */
+ 
+/**********  CHGVAR     VAR(&DQNME) VALUE('GPCOBRSPDQ')                                 /*MD023899*/
+             CHGVAR     VAR(&DQNME) VALUE(&THIS1_AXRSPD)                                /*MD023899*/
+             CHGVAR     VAR(&DQKEY) VALUE(&PZONE)
+             CHGVAR     VAR(&DQDTA) VALUE(' ')
+ 
+             CALL       PGM(QRCVDTAQ) PARM(&DQNME &DQLIB &DQLEN +
+                          &DQDTA &DQWAIT &DQKEYSLT &DQKEYLEN &DQKEY +
+                          &DQSNDLEN &DQSND)
+ 
+             IF         COND(&DQLEN = 0) THEN(DO)
+             IF         COND(&COUNT <= 3) THEN(DO)                                     /*MD023899C*/
+             CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)                                  /*MD023899C*/
+             CHGVAR     VAR(&DQLEN) VALUE(100)                                         /*MD023899C*/
+             GOTO       RESEND1                                                        /*MD023899C*/
+             ENDDO                                                                     /*MD023899C*/
+             ELSE       (DO)                                                           /*MD023899C*/
+/**********  SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +  */            /*AR1026350A*/
+/**********               LSNPORCTL failed to receive any response +    */            /*AR1026350A*/
+/**********               from Listener Port Controller +               */            /*AR1026350A*/
+/**********               application') TOMSGQ(MOPERQ)                  */            /*AR1026350A*/
+/**********  GOTO       CMDLBL(ABNOR)                                   */            /*AR1026350A*/
+/**********  GOTO       CMDLBL(PDP)                                          /*AR1026350A MD023899*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LSNPORCTL failed to receive any response +
+                          from Listener Port Controller +
+                          application') TOMSGQ(MOPERQ)                                 /*MD023899C*/
+             GOTO       CMDLBL(ABNOR)                                                  /*MD023899C*/
+             ENDDO                                                                     /*MD023899C*/
+             GOTO       CMDLBL(LOOP1)                                                   /*MD023899*/
+             ENDDO
+ 
+/* Normal program termination */
+ 
+             IF         COND(&PACT = 'START' *AND %SST(&DQDTA 12 7) = 'STARTED' *OR +
+                             &PACT = 'STOP'  *AND %SST(&DQDTA 12 7) = 'STOPPED') THEN(DO)
+/**********  GOTO       CMDLBL(END)                                                       /*CLE134*/
+/**********  GOTO       CMDLBL(PDP)                                              /*CLE134 MD023899*/
+             GOTO       CMDLBL(LOOP1)                                                   /*MD023899*/
+             ENDDO
+ 
+/* Incorrect response */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LSNPORCTL failed to receive expected response +
+                          from Listener Port Controller +
+                          application - ' *CAT &DQDTA) TOMSGQ(MOPERQ)                  /*MD023899C*/
+/**********               application - ' || &DQDTA) TOMSGQ(MOPERQ)                    /*MD023899C*/
+             GOTO       CMDLBL(ABNOR)                                                  /*MD023899C*/
+ PDP:                                                                                     /*CLE134*/
+                                                                                          /*CLE134*/
+             IF         COND(&CLE134 *NE 'Y') THEN(GOTO END)                              /*CLE134*/
+                                                                                          /*CLE134*/
+             CALL       PGM(GOGETZONE) PARM(&PRTCD &PERMS &PFULLCK +
+                          &PZONE &PSHTC &PRDNB &PDNWD &PBCCY &PNJOB)                      /*CLE134*/
+                                                                                          /*CLE134*/
+             CLOF       OPNID(THIS2)                                                    /*MD023899*/
+             MONMSG     MSGID(CPF4520)                                                  /*MD023899*/
+             OPNDBF     FILE(GPWASCL1) OPTION(*INP) OPNID(THIS2)                        /*MD023899*/
+LOOP2:                                                                                  /*MD023899*/
+             RCVF       OPNID(THIS2)                                                    /*MD023899*/
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))                           /*MD023899*/
+             IF         COND(&THIS2_AXCOBL = 'N') THEN(DO)                              /*MD023899*/
+                        GOTO LOOP2                                                      /*MD023899*/
+             ENDDO                                                                      /*MD023899*/
+/* Send request to Listener Port Controller Application via D queue */                    /*CLE134*/
+                                                                                          /*CLE134*/
+/**********  CHGVAR     VAR(&DQNME) VALUE('GPCOBRQSDQ')                          /*CLE134 MD023899*/
+             CHGVAR     VAR(&DQNME) VALUE(&THIS2_AXREQD)                                /*MD023899*/
+                                                                                          /*CLE134*/
+             IF         COND(&PACT *EQ 'STOP') THEN(DO)                                   /*CLE134*/
+               CHGVAR     VAR(&PACA) VALUE('CBSTART')                                     /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+                                                                                          /*CLE134*/
+             IF         COND(&PACT *EQ 'START') THEN(DO)                                  /*CLE134*/
+               CHGVAR     VAR(&PACA) VALUE('CBSTOP')                                      /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+                                                                                          /*CLE134*/
+/**********  CHGVAR     VAR(&DQDTA) VALUE(&PZONE || ' ' || &PACA)               /*CLE134 MD023899C*/
+             CHGVAR     VAR(&DQDTA) VALUE(&PZONE *CAT ' ' *CAT &PACA)                  /*MD023899C*/
+                                                                                          /*CLE134*/
+/**********  CALL       PGM(QCLRDTAQ) PARM(&THIS1_AXREQD *LIBL)               /*MD023899 MD023899C*/
+/**********  CALL       PGM(QCLRDTAQ) PARM(&THIS1_AXRSPD *LIBL)               /*MD023899 MD023899C*/
+             CHGVAR     VAR(&COUNT) VALUE(1)                                           /*MD023899C*/
+RESEND2:                                                                               /*MD023899C*/
+             CALL       PGM(QCLRDTAQ) PARM(&THIS2_AXREQD *LIBL)                        /*MD023899C*/
+             CALL       PGM(QCLRDTAQ) PARM(&THIS2_AXRSPD *LIBL)                        /*MD023899C*/
+             CHGVAR     VAR(&DQLEN) VALUE(100)                                          /*MD023899*/
+             CALL       PGM(QSNDDTAQ) PARM(&DQNME &DQLIB &DQLEN &DQDTA)                   /*CLE134*/
+                                                                                          /*CLE134*/
+/* Receive response from GPCOBRSPDQ */                                                    /*CLE134*/
+                                                                                          /*CLE134*/
+/**********  CHGVAR     VAR(&DQNME) VALUE('GPCOBRSPDQ')                          /*CLE134 MD023899*/
+             CHGVAR     VAR(&DQNME) VALUE(&THIS2_AXRSPD)                                /*MD023899*/
+             CHGVAR     VAR(&DQKEY) VALUE(&PZONE)                                         /*CLE134*/
+             CHGVAR     VAR(&DQDTA) VALUE(' ')                                            /*CLE134*/
+                                                                                          /*CLE134*/
+             CALL       PGM(QRCVDTAQ) PARM(&DQNME &DQLIB &DQLEN +
+                          &DQDTA &DQWAIT &DQKEYSLT &DQKEYLEN &DQKEY +
+                          &DQSNDLEN &DQSND)                                               /*CLE134*/
+                                                                                          /*CLE134*/
+             IF         COND(&DQLEN = 0) THEN(DO)                                         /*CLE134*/
+             IF         COND(&COUNT <= 3) THEN(DO)                                     /*MD023899C*/
+             CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)                                  /*MD023899C*/
+             CHGVAR     VAR(&DQLEN) VALUE(100)                                         /*MD023899C*/
+             GOTO       RESEND2                                                        /*MD023899C*/
+             ENDDO                                                                     /*MD023899C*/
+             ELSE       (DO)                                                           /*MD023899C*/
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LSNPORCTL failed to receive any response +
+                          from Listener Port Controller +
+                          application') TOMSGQ(MOPERQ)                                    /*CLE134*/
+               GOTO       CMDLBL(ABNOR)                                                   /*CLE134*/
+             ENDDO                                                                     /*MD023899C*/
+             ENDDO                                                                        /*CLE134*/
+                                                                                          /*CLE134*/
+/* Normal program termination */                                                          /*CLE134*/
+                                                                                          /*CLE134*/
+/**********  IF         COND(&PACA = 'CBSTART   ' +                                    /*AR1094242*/
+/**********              *AND %SST(&DQDTA 12 10) = 'CBSTARTED ' *OR +                  /*AR1094242*/
+/**********                &PACA = 'CBSTOP    '  *AND +                                /*AR1094242*/
+/**********                %SST(&DQDTA 12 10) = 'CBSTOPPED ') THEN(DO)      /*CLE134*/ /*AR1094242*/
+/**********  IF         COND(%SST(&DQDTA 12 10) *NE '            ') +                  /*MD023899C*/
+/**********               THEN(DO)                                           /*AR1094242 MD023899C*/
+             IF         COND(&PACA = 'CBSTART   ' +
+                         *AND %SST(&DQDTA 12 10) = 'CBSTARTED ' *OR +
+                           &PACA = 'CBSTOP    '  *AND +
+                           %SST(&DQDTA 12 10) = 'CBSTOPPED ') THEN(DO)                 /*MD023899C*/
+               GOTO       CMDLBL(END)                                                     /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+                                                                                          /*CLE134*/
+/* Incorrect response */                                                                  /*CLE134*/
+                                                                                          /*CLE134*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LSNPORCTL failed to receive expected response +
+                          from Listener Port Controller +
+                          application - ' *CAT &DQDTA) TOMSGQ(MOPERQ)                  /*MD023899C*/
+/**********               application - ' || &DQDTA) TOMSGQ(MOPERQ)             /*CLE134 MD023899C*/
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LSNPORCTL ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DMPCLPGM                                                                  /*MD023899C*/
+ 
+/* End program */
+ 
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited +
+                          2008.')
+ 
+             ENDPGM

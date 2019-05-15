@@ -1,0 +1,109 @@
+ *****************************************************************
+ *                                                               *
+ * Bank Fusion Midas 1.4 Base -----------------------------------*
+ * Midas Plus 1.4 Base 04 ---------------------------------------*
+ * Midas Plus 1.4 Base ------------------------------------------*
+ * Midas Plus 1.3 ----------- Base ------------------------------*
+ * Midas Release 4 --------------- Base -------------------------*
+ * Midas DBA 3.05 -----------------------------------------------*
+ *  Last Amend No. CFF006             Date 28Nov00               *
+ *  Prev Amend No. CFF004             Date 21Aug96               *
+ *                                                               *
+ *****************************************************************
+ *                                                               *
+ * CFF006 - Fractional Ticks Enhancement.                        *
+ * CFF004 - Increase in size of Price Fields                     *
+ *                                                               *
+ *****************************************************************
+ 
+  FF STANDARD SUBROUTINE - FFAVPR
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  FF STANDARD SUBROUTINE - FFPRCS
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+**To*format*a*Price*in*file*format*(11,7P)*using*the*Tick*Denominator*****CFF004
+**and*Minimum*Price*Fluctuation,*into*a*screen*format*(12A)***************CFF004
+                                                                          CFF004
+  To format a Price in file format (15,8P) using the Tick Denominator     CFF004
+  and Minimum Price Fluctuation, into a screen format (16A)               CFF004
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC FFSRDSZ1 should be included in 'I' specs
+   /COPY ZSRSRC FFPRCSZ2 should be included in 'E' specs
+   - if program uses FFPRCS and FFPRVL - ONLY USE 'E' SPECS FROM FFPRVL
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC FFPRCSZ3 should be included in 'I' specs
+   - if program uses FFPRCS and FFPRVL - ONLY USE 'I' SPECS FROM FFPRCS
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC FFPRCSZ4 should be included in the subroutine section
+    of the 'C' specifications
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+   Input:
+   ~~~~~
+************************FFPRIC (11,7P) PRICE ( FILE FORMAT )              CFF004
+                        FFPRIC (15,8P) PRICE ( FILE FORMAT )              CFF004
+                        FFTKDM  (3,0P) TICKS DENOMINATOR
+************************FFMNPF (11,7P) MINIMUM PRICE FLUCTUATION          CFF004
+                        FFMNPF (15,8P) MINIMUM PRICE FLUCTUATION          CFF004
+ 
+   Procedure:
+   ~~~~~~~~~
+ 
+***1.*-*The*first*4*elements*are*transfered*to*first*4*characters*of******CFF004
+   1. - The first 7 elements are transfered to first 7 characters of      CFF004
+        formatted field
+ 
+   1a.- Suppress upto the first non-zero element, If all zero just
+********transfer*4th*character*as*zero************************************CFF004
+        transfer 7th character as zero                                    CFF004
+ 
+   2. - Setup fraction or decimal
+ 
+***2a.-*If*Ticks*Denominator*=*zero,*move*'.'*into*fifth*character********CFF004
+   2a.- If Ticks Denominator = zero, move '.' into eighth character       CFF004
+ 
+***2b.-*Else,*move*'-'*into*fifth*character*******************************CFF004
+   2b.- Else, move '-' into eighth character                              CFF004
+ 
+***3.*-*Transfer*last*7*characters*to*last*7*characters*of*formatted******CFF004
+   3. - Transfer last 8 characters to last 8 characters of formatted      CFF004
+        field
+                                                                          CFF006
+   3a.- If Ticks Denominator is not equal to 100 and Minimum Price        CFF006
+        Fluctuation is not equal to zero:                                 CFF006
+                                                                          CFF006
+      3a.1- Move significant digits to output field, maximum of 3         CFF006
+            digits, depending on the number of significant digits         CFF006
+            of the Tick Denominator.                                      CFF006
+                                                                          CFF006
+      3a.2- Move the second delimiter '.' if there are still digits       CFF006
+            to be moved.                                                  CFF006
+                                                                          CFF006
+      3a.3- Transfer remaining significant digits to output field.        CFF006
+            Number of significant digits after the second delimiter '.'   CFF006
+            depends on the number of significant digits of the            CFF006
+            Minimum Price Fluctuation.                                    CFF006
+ 
+ **3a.-*If*Ticks*Denominator*=*100,*elements*must*be*zero*suppressed***   CFF006
+   3b.- Else,If Ticks Denominator=100, elements must be zero suppressed   CFF006
+        after maximum no. of possible characters for the Minimum Price
+        Fluctuation
+ 
+ **3b.-*Else,*elements*must*be*zero*suppressed*after*the*maximum*no.***   CFF006
+   3c.- Else, elements must be zero suppressed after the maximum no.      CFF006
+        of possible characters for the Ticks Denominator
+             ie. if Ticks Denominator is LE 10 suppress after 1st Char
+                 if Ticks Denominator is GT 10 and LE 99
+                                               suppress after 2nd Char
+                 if Ticks Denominator is GT 100 suppress after 3rd Char
+ 
+   Outputs
+***~~~~~~~**************FFSPRC   (12A) PRICE ( SCREEN FORMAT )            CFF004
+   ~~~~~~~              FFSPRC   (16A) PRICE ( SCREEN FORMAT )            CFF004
+ 

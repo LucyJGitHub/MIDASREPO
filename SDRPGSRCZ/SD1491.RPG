@@ -1,0 +1,551 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Timetable <=syst time and > last req time')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1491 - Generate data feeds timetable (MDF) <= system time  *
+      *  and > last request time                                      *
+      *                                                               *
+      *  Function:  This module return a list of times LESS OR EQUAL  *
+      *  than the system time AND GREATER THAN request last time      *
+      *  WARNING:                                                     *
+      *  The system expects time to be passed correctly               *
+      *  0000 = *BLANK TIME                                           *
+      *  2400 = 00:00                                                 *
+      *  hhmm = HH:MM                                                 *
+      *                                                               *
+      *  Called By: SD1490 - Market data feed batch monitor           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. CSD006  *CREATE    Date 28Oct00               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+      ** Specific times
+     E                    @TS        20  4
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      ** Named constants
+     I              20                    C         @TSSIZ
+      ** Data structure for subroutines used to format time
+      /COPY SDCPYSRC,SD1451I002
+      *
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      ** Scheduled times parameter
+     IP@SCHD      DS                            300
+      ** Scheduled times working variable input
+     IWISCHD      DS                            300
+      ** Scheduled times working variable output
+     IWOSCHD      DS                            300
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+      ** OS400 time
+     C                     PARM           P@SYST  4
+      ** Last Request Time (Input)
+     C                     PARM           P@LRTI  4
+      ** First time
+     C                     PARM           P@FRST  4
+      ** Last time
+     C                     PARM           P@LAST  4
+      ** Interval time
+     C                     PARM           P@ITRV  4
+      ** Specific times
+     C                     PARM           P@SPTM 80
+      ** Last Request Time
+     C                     PARM           P@LRQT  4
+      ** Scheduled times
+     C                     PARM           P@SCHD
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+      ** Clear output parameters
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL*BLANK    P@LRQT
+     C                     MOVEL*BLANK    P@SCHD
+      *
+     C                     MOVEL'N'       WEND    1
+      *
+      ** Retrieve system data
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR RTVSYD
+     C                     ENDIF
+      *
+     C           EINZPG    ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      ** Process first time
+     C           P@RTN     IFEQ *BLANK
+     C           P@FRST    IFNE *BLANK
+     C           P@FRST    ANDNE*ZEROS
+     C                     EXSR PCFRST
+     C                     ENDIF
+     C                     ENDIF
+      ** Process interval time
+     C           P@RTN     IFEQ *BLANK
+     C           P@ITRV    IFNE *BLANK
+     C           P@ITRV    ANDNE*ZEROS
+     C                     EXSR PCITRV
+     C                     ENDIF
+     C                     ENDIF
+      ** Process specific times
+     C           P@RTN     IFEQ *BLANK
+     C           P@SPTM    IFNE *BLANK
+     C           P@SPTM    ANDNE*ZEROS
+     C                     EXSR PCSPTM
+     C                     ENDIF
+     C                     ENDIF
+      ** Process last time
+     C           P@RTN     IFEQ *BLANK
+     C           P@LAST    IFNE *BLANK
+     C           P@LAST    ANDNE*ZEROS
+      ** Flush output parameter in order to have just one time returned
+     C           P@FRST    IFEQ P@LAST
+     C                     MOVEL*BLANK    P@SCHD
+     C                     ENDIF
+     C                     EXSR PCLAST
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EMAIN     ENDSR
+      *****************************************************************
+      * RTVSYD - Retrieve System Data                                 *
+      *****************************************************************
+     C           RTVSYD    BEGSR
+     C           ERTSYD    ENDSR
+      *****************************************************************
+      * PCFRST - Process first time                                   *
+      *****************************************************************
+     C           PCFRST    BEGSR
+      ** P@FRST supposed to be filled at this stage
+      ** Other parameters filled correctly ?
+     C           P@SYST    IFNE *BLANK
+     C           P@LRTI    ANDNE*BLANK
+     C                     MOVELP@SYST    WSYST
+     C                     MOVELP@FRST    WTIME
+     C                     MOVELP@LRTI    WTIMEB
+     C                     MOVELP@SCHD    WISCHD
+      ** Check first time
+     C                     EXSR CKFRST
+     C                     MOVELWOSCHD    P@SCHD
+      ** Overwrite last request time
+     C           WLRQT     IFNE *BLANK
+     C                     MOVELWLRQT     P@LRQT
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'SDM0073' P@RTN
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * PCITRV - Process interval time                                *
+      *****************************************************************
+     C           PCITRV    BEGSR
+      ** P@ITRV supposed to be filled at this stage
+      ** Other parameters filled correctly ?
+     C           P@FRST    IFNE *BLANK
+     C           P@LAST    ANDNE*BLANK
+     C           P@SYST    ANDNE*BLANK
+     C           P@LRTI    ANDNE*BLANK
+     C                     MOVELP@SYST    WSYST
+     C                     MOVELP@LRTI    WTIMER
+     C                     MOVELP@FRST    WTIMEB
+     C                     MOVELP@LAST    WTIMEE
+     C                     MOVELP@ITRV    WTIMEI
+     C                     MOVELP@SCHD    WISCHD
+      ** Check interval time
+     C                     EXSR CKITRV
+     C                     MOVELWOSCHD    P@SCHD
+      ** Overwrite last request time
+     C           WLRQT     IFNE *BLANK
+     C                     MOVELWLRQT     P@LRQT
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'SDM0073' P@RTN
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * PCSPTM - Process specific time                                *
+      *****************************************************************
+     C           PCSPTM    BEGSR
+      ** P@SPTM supposed to be filled at this stage
+      ** Other parameters filled correctly ?
+     C           P@FRST    IFNE *BLANK
+     C           P@LAST    ANDNE*BLANK
+     C           P@SYST    ANDNE*BLANK
+     C           P@LRTI    ANDNE*BLANK
+     C                     MOVELP@SYST    WSYST
+     C                     MOVELP@LRTI    WTIMEB
+     C                     MOVEAP@SPTM    @TS
+     C                     MOVELP@SCHD    WISCHD
+      ** Check specific time
+     C                     EXSR CKSPTM
+     C                     MOVELWOSCHD    P@SCHD
+      ** Overwrite last request time
+     C           WLRQT     IFNE *BLANK
+     C                     MOVELWLRQT     P@LRQT
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'SDM0073' P@RTN
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * PCLAST - Process last time                                    *
+      *****************************************************************
+     C           PCLAST    BEGSR
+      ** P@LAST supposed to be filled at this stage
+      ** Other parameters filled correctly ?
+     C           P@SYST    IFNE *BLANK
+     C                     MOVELP@SYST    WSYST
+     C                     MOVELP@LAST    WTIME
+     C                     MOVELP@SCHD    WISCHD
+      ** Check last time
+     C                     EXSR CKLAST
+     C                     MOVELWOSCHD    P@SCHD
+      ** Overwrite last request time
+     C           WLRQT     IFNE *BLANK
+     C                     MOVELWLRQT     P@LRQT
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'SDM0073' P@RTN
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * CKFRST - Check first time                                     *
+      *****************************************************************
+     C           CKFRST    BEGSR
+     C           *LIKE     DEFN P@LRQT    WLRQT
+     C           *LIKE     DEFN P@SYST    WSYST
+     C           *LIKE     DEFN P@FRST    WTIME
+     C           *LIKE     DEFN MINUTS    WSYSTM
+     C           *LIKE     DEFN MINUTS    WTIMEM
+     C           *LIKE     DEFN MINUTS    WTIMBM
+      *
+     C                     MOVEL*BLANK    WOSCHD
+     C                     MOVEL*BLANK    WLRQT
+      ** Working time variable in minutes
+     C                     Z-ADD0         WTIMEM
+      ** System time variable in minutes
+     C                     Z-ADD0         WSYSTM
+      ** Begin time variable in minutes
+     C                     Z-ADD0         WTIMBM
+      *
+      ** Convert time HHMM in minutes before doing comparisons
+     C                     MOVE WTIME     HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTIMEM
+      *
+     C                     MOVE WSYST     HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WSYSTM
+      *
+     C                     MOVE WTIMEB    HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTIMBM
+      *
+     C                     MOVELWISCHD    WOSCHD
+      *
+     C           WTIMEM    IFLE WSYSTM
+     C           WTIMEM    ANDGTWTIMBM
+     C                     MOVE WTIME     HHMM
+     C                     EXSR FMTHCM
+     C           WOSCHD    IFNE *BLANK
+     C           WOSCHD    CAT  ',':0     WOSCHD
+     C                     ENDIF
+     C           WOSCHD    CAT  HHCMM:0   WOSCHD
+     C                     MOVELWTIME     WLRQT
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    WSYST
+     C                     MOVEL*BLANK    WTIME
+     C                     MOVEL*BLANK    WTIMEB
+     C                     MOVEL*BLANK    WISCHD
+     C                     ENDSR
+      *****************************************************************
+      * CKITRV - Check interval time                                  *
+      *****************************************************************
+     C           CKITRV    BEGSR
+     C           *LIKE     DEFN P@FRST    WTIMEB
+     C           *LIKE     DEFN P@LAST    WTIMEE
+     C           *LIKE     DEFN P@ITRV    WTIMEI
+     C           *LIKE     DEFN P@LRTI    WTIMER
+     C           *LIKE     DEFN MINUTS    WTIRM
+     C           *LIKE     DEFN MINUTS    WTIBM
+     C           *LIKE     DEFN MINUTS    WTIEM
+     C           *LIKE     DEFN MINUTS    WTIIM
+     C           *LIKE     DEFN MINUTS    WTISM
+     C           *LIKE     DEFN MINUTS    WTINM
+      *
+     C                     MOVEL*BLANK    WOSCHD
+     C                     MOVEL*BLANK    WLRQT
+      *
+     C                     Z-ADD0         WTIRM
+     C                     Z-ADD0         WTIBM
+     C                     Z-ADD0         WTIEM
+     C                     Z-ADD0         WTIIM
+     C                     Z-ADD0         WTISM
+     C                     Z-ADD0         WTINM
+      *
+     C                     MOVELWISCHD    WOSCHD
+      *
+     C                     MOVE WTIMER    WTIR    40
+     C                     MOVE WTIMEB    WTIB    40
+     C                     MOVE WTIMEE    WTIE    40
+     C                     MOVE WTIMEI    WTII    40
+     C                     MOVE WSYST     WTIS    40
+      ** Next time working variable
+     C                     Z-ADD0         WTIN    40
+      *
+      ** convert all the time in minutes
+     C                     Z-ADDWTIB      HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTIBM
+      *
+     C                     Z-ADDWTII      HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTIIM
+      *
+     C                     Z-ADDWTIE      HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTIEM
+      *
+     C                     Z-ADDWTIS      HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTISM
+      *
+     C                     Z-ADDWTIR      HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTIRM
+      *
+     C           WTIBM     ADD  WTIIM     WTINM
+      ** convert next time in hour/minutes
+     C                     Z-ADDWTINM     MINUTS
+     C                     EXSR CVHHMM
+     C                     Z-ADDHHMM      WTIN
+      *
+     C           WTINM     DOUGEWTIEM
+     C           WTINM     IFLE WTISM
+     C           WTINM     ANDGTWTIRM
+     C                     Z-ADDWTIN      HHMM
+     C                     EXSR FMTHCM
+     C           WOSCHD    IFNE *BLANK
+     C           WOSCHD    CAT  ',':0     WOSCHD
+     C                     ENDIF
+     C           WOSCHD    CAT  HHCMM:0   WOSCHD
+     C                     MOVE WTIN      WLRQT
+     C                     ENDIF
+     C           WTINM     ADD  WTIIM     WTINM
+      ** convert next time in hour/minutes
+     C                     Z-ADDWTINM     MINUTS
+     C                     EXSR CVHHMM
+     C                     Z-ADDHHMM      WTIN
+     C                     ENDDO
+      *
+     C                     MOVEL*BLANK    WSYST
+     C                     MOVEL*BLANK    WTIMEB
+     C                     MOVEL*BLANK    WTIMEE
+     C                     MOVEL*BLANK    WTIMEI
+     C                     MOVEL*BLANK    WISCHD
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKSPTM - Check specific time                                  *
+      *****************************************************************
+     C           CKSPTM    BEGSR
+     C           *LIKE     DEFN MINUTS    W@TSM
+      *
+     C                     MOVEL*BLANK    WOSCHD
+     C                     MOVEL*BLANK    WLRQT
+      *
+     C                     MOVEL*BLANK    W@TS    4
+      ** Working time variable in minutes
+     C                     Z-ADD0         W@TSM
+      ** System time variable in minutes
+     C                     Z-ADD0         WSYSTM
+      ** Begin time variable in minutes
+     C                     Z-ADD0         WTIMBM
+      *
+     C                     MOVELWISCHD    WOSCHD
+      *
+      ** Convert time HHMM in minutes before doing comparisons
+     C                     MOVE WSYST     HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WSYSTM
+      *
+     C                     MOVE WTIMEB    HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTIMBM
+      *
+     C                     DO   @TSSIZ    I       30
+     C           @TS,I     IFNE '0000'
+     C           @TS,I     ANDNE*BLANK
+     C                     MOVEA@TS,I     W@TS
+      ** Convert times HHMM in minutes before doing comparisons
+     C                     MOVE W@TS      HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    W@TSM
+      *
+     C           W@TSM     IFLE WSYSTM
+     C           W@TSM     ANDGTWTIMBM
+     C                     MOVEA@TS,I     W@TS
+     C                     MOVE W@TS      HHMM
+     C                     EXSR FMTHCM
+     C           WOSCHD    IFNE *BLANK
+     C           WOSCHD    CAT  ',':0     WOSCHD
+     C                     ENDIF
+     C           WOSCHD    CAT  HHCMM:0   WOSCHD
+     C                     MOVEA@TS,I     WLRQT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     MOVEL*BLANK    WSYST
+     C                     MOVEL*BLANK    WTIMEB
+     C                     MOVEL*BLANK    @TS
+     C                     MOVEL*BLANK    WISCHD
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKLAST - Check last time                                      *
+      *****************************************************************
+     C           CKLAST    BEGSR
+      *
+     C                     MOVEL*BLANK    WOSCHD
+     C                     MOVEL*BLANK    WLRQT
+      ** Working time variable in minutes
+     C                     Z-ADD0         WTIMEM
+      ** System time variable in minutes
+     C                     Z-ADD0         WSYSTM
+      *
+     C                     MOVELWISCHD    WOSCHD
+      *
+      ** Convert times HHMM in minutes before doing comparisons
+     C                     MOVE WSYST     HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WSYSTM
+      *
+     C                     MOVE WTIME     HHMM
+     C                     EXSR CVMINU
+     C                     Z-ADDMINUTS    WTIMEM
+      *
+     C           WTIMEM    IFLE WSYSTM
+     C                     MOVE WTIME     HHMM
+     C                     EXSR FMTHCM
+     C           WOSCHD    IFNE *BLANK
+     C           WOSCHD    CAT  ',':0     WOSCHD
+     C                     ENDIF
+     C           WOSCHD    CAT  HHCMM:0   WOSCHD
+     C                     MOVELWTIME     WLRQT
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    WSYST
+     C                     MOVEL*BLANK    WTIME
+     C                     MOVEL*BLANK    WISCHD
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      ** Subroutines to format time FMTHCM, FMTHM
+      /COPY SDCPYSRC,SD1451C001
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,284 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED MA extract from deleted control group')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Export Data Module                                   *
+      *                                                               *
+      *  ED0400 - MA Extract from Deleted Control Group               *
+      *                                                               *
+      *  Function: This program generates a single record on EDBULKPD *
+      *            for each management account deleted in the control *
+      *            group. The EDBULKPD record is formatted as a       *
+      *            deleted GLHIBLPD record in drip feed format.       *
+      *                                                               *
+      *  (COB phase)                                                  *
+      *                                                               *
+      *  Called By: MCC0203 - MA Drop Deleted Control Group           *
+      *                                                               *
+      *  Calls    : ED0410  - MA Extract from Deleted Control Group   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CED002             Date 23JUN97               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CED002 *CRT  Export Data Enhancements                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     FGLHIBLL1IF  E           K        DISK
+      *
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   90  - EOF GLHIBLL1                                          *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  PROC   - Read and Process GLHIBLL1                           *
+     F*  EXIT   - Program Termination Subroutine                      *
+     F*  *PSSR  - Error Handling Subroutine                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *
+     E                    JRNED    3971  1
+      *
+      ** Array for journal entry data
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     IGLHIBL    E DSGLHIBLPD
+     I* External DS for Midas MC Historic Balances
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C                     EXSR INIT
+     C                     EXSR PROC
+     C                     EXSR EXIT
+      *
+      *****************************************************************
+      *                                                               *
+      * INIT   - Program Initialisation                               *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MBRNM  10
+     C                     PARM           WRTCD   1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * PROC   - Reads file GLHIBLL1 and, upon a change of account,   *
+      *          calls ED0410 to write a record for that account      *
+      *          being deleted                                        *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls: Program ED0410                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC      BEGSR
+      *
+      * Initialise field to hold last account code to blanks
+      *
+     C                     MOVE *BLANKS   XRECD  52
+      *
+      * Read first record in GLHIBLL1
+      *
+     C                     READ GLHIBLL1                 90
+      *
+      * Process all records in GLHIBLL1
+      *
+     C           *IN90     DOWEQ*OFF
+      *
+      * If this is a change of management account then call ED0410
+      * (ie. if any field of the first 52 positions of this record have
+      * changed since the previous record)
+      *
+     C                     MOVELGLHIBL    HBRECD 52 P
+      *
+     C           HBRECD    IFNE XRECD
+      *
+     C                     MOVEAGLHIBL    JRNED
+      *
+     C                     CALL 'ED0410'
+     C                     PARM '*UPDATE' MODE    7
+     C                     PARM 'GLHIBLPD'FILE   10
+     C                     PARM MBRNM     MBR    10
+     C                     PARM 'ED0400'  PGM    10
+     C                     PARM 'DL'      JRNACT  2
+     C                     PARM           JRNED
+     C                     PARM           WRTCD
+      *
+      * Handle any error from ED0410
+      *
+     C           WRTCD     IFEQ 'E'
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'GLHIBLL1'DBFILE           *DB ERROR 001 *
+     C                     MOVELHBRECD    DBKEY            ***************
+     C                     MOVEL'ED0410  'DBPGM                        ***
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Save this management accnt as XRECD before reading next record
+      *
+     C                     MOVE HBRECD    XRECD     P
+      *
+      * Read next record from GLHIBLL1
+      *
+     C                     READ GLHIBLL1                 90
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * EXIT   - Program Termination                                  *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls: Program ED0410                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR
+      *
+      * Call ED0410 to close the batch
+      *
+     C                     CALL 'ED0410'
+     C                     PARM '*CLOSE ' MODE    7
+     C                     PARM 'GLHIBLPD'FILE   10
+     C                     PARM MBRNM     MBR    10
+     C                     PARM 'ED0400'  PGM    10
+     C                     PARM 'DL'      JRNACT  2
+     C                     PARM *BLANKS   JRNED
+     C                     PARM           WRTCD
+      *
+      * Handle any error from ED0410
+      *
+     C           WRTCD     IFEQ 'E'
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           *DB ERROR 002 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'ED0410'  DBPGM                        ***
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * End Program
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: PROC, EXIT                                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

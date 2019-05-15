@@ -1,0 +1,156 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - General Ledger Module                                         */
+/*                                                                             */
+/*       SDNOSTW5 - Bank Position Management Enquiry View                      */
+/*                                                                             */
+/*       (c) Finastra International Limited 2015                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. MD034975 *CREATE   Date 18Aug14                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       MD034975 - Bank position report not reflecting future or today mvmts  */
+/*                  for transit accounts.                                      */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+  MEMOS.CNUM AS MECNUM,                                                         :
+  MEMOS.CCY  AS MECCY,                                                          :
+  MEMOS.ACOD AS MEACOD,                                                         :
+  MEMOS.ACSQ AS MEACSQ,                                                         :
+  MEMOS.BRCA AS MEBRCA,                                                         :
+  MEMOS.ACNO AS MEACNO,                                                         :
+  MEMOS.CLBLN AS MEBAL0,                                                        :
+ ((SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                            :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD = (BJRDNB + 1) AND MEMOS.ACNO = CLEAR.ACNO AND              :
+   CLEAR.DRCR = 0)                                                              :
+ -  (SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD = (BJRDNB + 1) AND MEMOS.ACNO = CLEAR.ACNO AND              :
+   CLEAR.DRCR = 1)                                                              :
+ +  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT = (BJRDNB + 1) AND MEMOS.CNUM = RSAC.CUSN AND                :
+   MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE AND MEMOS.ACSQ = RSAC.ASNC  :
+   AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME' AND RSAC.DORC = 0)           :
+ -  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT = (BJRDNB + 1) AND MEMOS.CNUM = RSAC.CUSN AND                :
+   MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE AND MEMOS.ACSQ = RSAC.ASNC  :
+   AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME' AND RSAC.DORC = 1)           :
+   + MEMOS.CLBLN) AS MEBAL1,                                                    :
+   ((SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 2) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 0)                                  :
+ -  (SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 2) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 1)                                  :
+ +  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 2) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 0)                                                           :
+ -  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 2) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 1) + MEMOS.CLBLN) AS MEBAL2,                                 :
+   ((SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 3) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 0)                                  :
+ -  (SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 3) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 1)                                  :
+ +  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 3) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 0)                                                           :
+ -  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 3) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 1) + MEMOS.CLBLN) AS MEBAL3,                                 :
+   ((SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 4) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 0)                                  :
+ -  (SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 4) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 1)                                  :
+ +  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 4) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 0)                                                           :
+ -  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 4) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 1) + MEMOS.CLBLN) AS MEBAL4,                                 :
+   ((SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 5) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 0)                                  :
+ -  (SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 5) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 1)                                  :
+ +  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 5) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 0)                                                           :
+ -  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 5) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 1) + MEMOS.CLBLN) AS MEBAL5,                                 :
+   ((SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 6) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 0)                                  :
+ -  (SELECT IFNULL(SUM(CLEAR.PSTA), 0)                                          :
+   FROM CLEARPD CLEAR, SDBANKPD                                                 :
+   WHERE CLEAR.VALD >= (BJRDNB + 1) AND CLEAR.VALD <= (BJRDNB + 6) AND          :
+   MEMOS.ACNO = CLEAR.ACNO AND CLEAR.DRCR = 1)                                  :
+ +  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 6) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 0)                                                           :
+ -  (SELECT IFNULL(SUM(RSAC.MVAM), 0)                                           :
+   FROM RSACMTPD RSAC, SDBANKPD                                                 :
+   WHERE RSAC.VUDT >= (BJRDNB + 1) AND RSAC.VUDT <= (BJRDNB + 6) AND            :
+   MEMOS.CNUM = RSAC.CUSN AND MEMOS.CCY = RSAC.CCYD AND MEMOS.ACOD = RSAC.ACDE  :
+   AND MEMOS.ACSQ = RSAC.ASNC AND MEMOS.BRCA = RSAC.BRCA AND RSAC.TRYP = 'ME'   :
+   AND RSAC.DORC = 1) + MEMOS.CLBLN) AS MEBAL6                                  :
+   FROM MEMOS MEMOS                                                             :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Bank Position Management Enquiry View             ';                     :
+                                                                                :
+ 

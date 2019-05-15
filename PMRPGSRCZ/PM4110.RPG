@@ -1,0 +1,1992 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Performace event details maintenance')        *
+/*OVRF*: OVRDBF FILE(PMPEVTXX) TOFILE(PMPEVTLL) SHARE(*NO)          : *   73300
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  RPG/PM4110 - PERFORMANCE EVENT DETAIL MAINTENANCE            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG2627            Date 12May04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 18Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 15Jul96               *
+      *                 078956             Date 31Jan96               *
+     F*                 CPM004             Date 08Feb96               *
+     F*                 085862             DATE 16MAR95               *
+     F*                 S01486             DATE 30NOV94               *
+     F*                 73957              DATE 27JUL94               *
+     F*                 73300              DATE 08SEP94               *
+     F*                 72605              DATE 22JUN94               *
+     F*                 72242              DATE 15JUN94               *
+     F*                 53103              DATE 19OCT93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG2627- Re-compiled due to changed PM4110DF.                *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  207006 - Add Counterparty & Market Centre to SSI (Recompile) *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*  078956 - WHEN GENERATING 'XT' RECORD OUTPUT DLNO             *
+     F*  CPM004 - Bank Portfolios                                     *
+     F*  085862 - INCLUDE BRANCH IN ACCOUNTS                          *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  73957  - CORRECTIONS TO PM INSTRUCTION MANUAL                *
+     F*  73300  - WHEN DUPLICATING EVENTS PRICE IS ALWAYS UNIT PRICE  *
+     F*  72605  - ALLOW MARKET PRICE TO CHANGE                        *
+     F*  72242  - ALTERED TO ALLOW DELETION OF PERFORMANCE EVENTS     *
+     F*  53103  - FILE CREATED FOR PERFORMANCE RECONCILIATION CHANGES *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *         FILE DEFINITIONS
+      *         ----------------
+      *
+     F***PM4110DDCF**E                    WORKSTN      KINFSR *PSSR       S01486
+     FPM4110DFCF  E                    WORKSTN      KINFSR *PSSR          S01486
+      **  Display file - prefix DD
+      *
+     F***SDBANKPDIF**E           K        DISK         KINFSR *PSSR   UC  S01486
+      ****Bank*details*-*prefix*BJ*************************************   S01486
+      *
+     F***SDCURRL0IF**E           K        DISK         KINFSR *PSSR       S01486
+      ****Currencies*-*prefix*A6***************************************   S01486
+      *
+     F*SECTY*** IF  E           K        DISK         KINFSR *PSSR        72242
+      ****Security Details - No prefix                                    72242
+      ****                                                                72242
+     F***SDCUSTL1IF**E           K        DISK         KINFSR *PSSR       S01486
+      ****Customers*-*prefix*BB**(by*Cust.*no.)************************   S01486
+      *
+     FPMLKDML0IF  E           K        DISK         KINFSR *PSSR
+      **  Depot mvmts links - prefix LM (by Security+Reference)
+      *
+     FPMPEVTLLUF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FPMPEVTXXIF  E           K        DISK         KINFSR *PSSR          73300
+     F            PMPCAAP0                          KRENAMEPMPCAAPX       73300
+     F            PMPTRAP0                          KRENAMEPMPTRAPX       73300
+      **  Performace Events - prefix QS/QU (key Reference)
+      *
+     FPMCNSDLLIF  E           K        DISK         KINFSR *PSSR          CPM005
+      *                                                                   CPM005
+      ** PM Consolidated Portfolios - Prefix PN                           CPM005
+      *                                                                   CPM005
+     FDPTMV   UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      **  Depot movements - no prefix (keys Security+Reference)
+      *
+     F* PREFIX PN                                                         72605
+     F***PMPORTPPIF**E           K        DISK         KINFSR *PSSR 72605 S01486
+     FPMPORTPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     FPMPTRAL7UF  E           K        DISK         KINFSR *PSSR
+     F            PMPTRAP0                          KRENAMEPMPTRAP7
+     F                                              KCOMIT
+      **  Perf. Transact. Anal. - prefix QU (keys Cust+Port+Secu+Ref)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * FUNCTION OF INDICATORS
+      *
+      *      03         F3
+      *      09         F9
+      *      12         F12
+      *
+      *******31*********EOF*or*error*on*SDBANKPD***********************   S01486
+      *      32         EOF on PMPEVTLL
+      *******33*********EOF*on*SDCURRL0********************************   S01486
+      *      34         EOF on PMLKDML0
+      *      35         EOF on PMPTRAL7
+      *      36         EOF on DPTMV
+      *******37*********EOF*on*SDCUSTL1********************************   S01486
+      *
+      *      41         Enable F9
+      *      42         Duplicate mode
+      *      43         Protect Category
+      *      44         Display Applies to retail text
+      *      45         Protect Applies to retail field
+      *      46         Enable F12
+      *      47         Protect Capital change ind.
+      *      48         Protect Event Reference
+      *
+      *******51*********Record*from*PMPTRAPP***************************   S01486
+      *      51         Record from PMPTRAPD                              S01486
+      *      52         Duplication requested
+      *
+      *      70         Any error
+      *      71         Error in Event reference
+      *      72         Error in Perf. Category
+      *      73         Error in Perf. Event Amount
+      *      74         Error in Change to Portfolio Capital
+      *      75         Error in Applies to Retail
+      *
+      *
+      *      99         ZSR errors
+      *      U7         Program/file exception/error
+      *      U8         Data base error
+      *      LR         End of program
+      *
+      *
+      *       DATABASE ERRORS
+      *       ---------------
+      *
+      *      no.     file          access
+      *      ............................................
+      *      001     SDBANKPD      OPEN or READ
+      *      002     SDCURRL0      CHAIN (key DDPEAC)
+      *      003     DPTMV         CHAIN (key KSR#C)
+      *      004     SDCUSTL1      CHAIN (key DDCUST)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** FOR COMPILATION
+     E                    CPY@    1   1 80
+      *
+      *  For right justification of character field
+     E                    $AA         7  1
+      *
+      *  Categories and their texts
+     E****                $CA    10  10  2                                72242
+     E****                $CT     1  10 17                                72242
+      /COPY ZSRSRC,ZSEDITZ1                                               72242
+      /COPY ZSRSRC,ZASIGNZ1                                               72242
+      /COPY ZSRSRC,ZPOWER8Z1                                              72605
+     E                    $CA    11  11  2                                72242
+     E                    $CT     1  11 17                                72242
+     E                    ZT1        17  1 0                              078956
+     E                    ZT2        21  1                                078956
+     E                    ZD1        19  1                                078956
+     E                    ZD2        19  1                                078956
+      *****************************************************************
+      *
+      *  Record-identification indicators for LF/PMPEVTLL
+     IPMPCAAP0    01
+     IPMPTRAP0    51
+      *                                                                   73300
+      *  Record-identification indicators for LF/PMPEVTXX                 73300
+     IPMPCAAPX    01                                                      73300
+     IPMPTRAPX    51                                                      73300
+      *
+      **  PROGRAM STATUS DATA STRUCTURE
+     IDSPGM     ESDSY2PGDSP
+      /COPY ZSRSRC,ZSEDITZ2                                               72242
+     I            DS                                                      078956
+     I                                        1  170WORK17                078956
+     I                                        1  170ZT1                   078956
+      *
+      **  LOCAL DATA AREA FOR DATABASE ERRORS.
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      **  LOCAL DATA AREA FOR PM STATUS
+     IPMSTAT    E DSPMSTAT
+     I*
+     I*    MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+      *
+      **  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Constants
+     I              'GENERAL CASHFLOW'    C         C#GEN
+      *
+     IZMUSER      DS                             17                       S01486
+     I** Data area ZMUSER                                                 S01486
+     I                                       11  13 USRBCH                S01486
+     I*                                                                   S01486
+     IRUNDAT    E DS                                                      S01486
+     I**  Standard Data Area Layout for System flags and Run Date         S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for bank details                                 S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I**  Data structure for customer details                             S01486
+     I*                                                                   S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I**  Data structure for currencies details                           S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              CPM005
+      *                                                                   CPM005
+      ** Data structure for Portfolio Management details                  CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I**  Long data structure for access objects                          S01486
+     I*                                                                   S01486
+     IWDBKEY      DS                                                      CPM005
+     I**********                              1   60WWCNUM                             CPM005 CSD027
+     I                                        1   6 WWCNUM                                    CSD027
+     I                                        7  10 WWPTFR                CPM005
+      *                                                                   CPM005
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *        INDEX OF SUBROUTINES
+      *        --------------------
+      *
+      *  #INIT        - Initialization
+      *  #RSTIN       - Reset DSPF indicators and clear message queue
+      *  #DSP1        - Display initial screen
+      *  #PRC1        - Process initial screen
+      *    #TSTNU       - Test numeric field
+      *  #DSPMS       - Display Main Screen
+      *  #DSPDS       - Display Duplicate screen
+      *    #ZEVRF       - Get next event reference no.
+      *  #VALID       - Validate main/duplicate screen
+      *  #PRCMS       - Process Main screen
+      *  #PRCDS       - Process Duplicate screen
+      ***#DBERR*******-*Database*error*processing**********************   S01486
+      *  #SNDMS       - Send program message
+      *  *PSSR        - File/Program exception handler
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      CPY2@  80                       S01486
+     C*                                                                   S01486
+     C**  Read in DTAARA/RUNDAT                                           S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           RUNDAT                          S01486
+     C                     IN   RUNDAT                                    S01486
+     C*                                                                   S01486
+     C**  Read in DTAARA/ZMUSER                                           S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           ZMUSER                          S01486
+     C                     IN   ZMUSER                                    S01486
+     C*                                                                   S01486
+     C*                                                                   S01486
+      *  Key lists
+     C           KSR       KLIST
+     C                     KFLD           WWSECU 10
+     C**********           KFLD           WWDPRF  60                                          CLE148
+     C                     KFLD           WDPRFN  60                                          CLE148
+      *
+     C           KSR#C     KLIST
+     C                     KFLD           WWSECU 10
+     C                     KFLD           WWDPRC  6
+      *
+     C           KCPSR     KLIST
+     C**********           KFLD           WWCUST  60                                          CSD027
+     C                     KFLD           WWCUST  6                                           CSD027
+     C                     KFLD           WWPORT  4
+     C                     KFLD           WWSECU 10
+     C**********           KFLD           WWDPRF  60                                          CLE148
+     C                     KFLD           WDPRFA  6                                           CLE148
+      *
+     C           KPORT     KLIST                                          72605
+     C                     KFLD           QSCNUM                          72605
+     C                     KFLD           QSPTFR                          72605
+      *                                                                   72605
+      /EJECT
+      *****************************************************************
+      *                    ~~~~~~~~~~~~
+      *                    MAIN PROGRAM
+      *                    ~~~~~~~~~~~~
+      *
+      *  Initialization
+     C                     EXSR #INIT
+      *
+      *  Loop over complete processing steps
+     C           *IN03     DOUEQ*ON
+      *
+      *    - Loop over initial screens
+     C           *IN70     DOUEQ*OFF
+      *
+      *      -- Display initial screen, clear message queue
+     C                     EXSR #DSP1
+     C                     EXSR #RSTIN
+      *
+      *      -- If not F3 , validate init. screen
+     C           *IN03     IFEQ *OFF
+     C                     EXSR #PRC1
+     C                     ENDIF
+      *      --
+     C                     ENDDO
+      *
+      *    - If F3, finish
+     C           *IN03     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      *    - Loop over Main screens
+     C           *IN70     DOUEQ*OFF
+      *
+      *      -- Display Main screen, clear message queue
+     C                     EXSR #DSPMS
+     C                     EXSR #RSTIN
+      *
+      *      -- If not F3/F12, set *IN52 and validate main screen
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C****                 MOVE *IN09     *IN52                           72605
+     C                     MOVE '0'       *IN52                           72605
+     C           *IN09     IFEQ '1'                                       72605
+     C           *IN11     OREQ '1'                                       72605
+     C                     MOVE '1'       *IN52                           72605
+     C                     END                                            72605
+     C                     EXSR #VALID
+     C                     ENDIF
+      *      --
+     C                     ENDDO
+      *
+      *    - If F3, finish, if F12 restart from init. screen
+     C           *IN03     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+     C           *IN12     IFEQ *ON
+     C                     ITER
+     C                     ENDIF
+      *
+      *    - Update event from main screen
+     C                     EXSR #PRCMS
+      *
+      *    - If not F9, back to init. screen
+     C           *IN52     IFEQ *OFF
+     C                     ITER
+     C                     ENDIF
+      *
+      *    - Loop over Duplicate  screens
+     C           *IN70     DOUEQ*OFF
+      *
+      *      -- Display Duplicate screen, clear message queue
+     C                     EXSR #DSPDS
+     C                     EXSR #RSTIN
+      *
+      *      -- If not F3/F12, validate dupl. screen
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C                     EXSR #VALID
+     C                     ENDIF
+      *      --
+     C                     ENDDO
+      *
+      *    - If F3, finish, if F12 back to init. screen
+     C           *IN03     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+     C           *IN12     IFEQ *ON
+     C                     ITER
+     C                     ENDIF
+      *
+      *    - Write duplicated event
+     C                     EXSR #PRCDS
+      *    -
+     C                     ENDDO
+      *
+      *  Return
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #INIT  - INITIALIZATION                                      *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      ***CALLS*********:*#DBERR****************************************   S01486
+      *  CALLS         : *PSSR                                        *   S01486
+      *                                                               *
+      *  in  : SDBANKPD                                               *
+      *  out : DDJOB,DDPGM,DDDATE,DBPGM,WWRDNB,WWD,WWM,WWY,WWDATF     *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      *  Assign fields from SDS
+     C                     MOVE ##JOB     DDJOB
+     C                     MOVEL##PGM     DDPGM
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA                                       S01486
+     C                     MOVE 'L'       ZECODE                          72242
+      *
+      *  Read in SDBANKPD for run date and date format
+     C***********          OPEN SDBANKPD               31                 S01486
+     C***********          READ SDBANKPD               3131               S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD  7                       S01486
+     C                     PARM '*FIRST'  WLOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C************IN31     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDBANKPD'DBFILE                          S01486
+     C                     MOVE 'SDBANKPD'DBFILE                          S01486
+     C***********          MOVEL'READ'    DBKEY            *************  S01486
+     C                     MOVELWLOPTN    DBKEY            *************  S01486
+     C                     MOVE '001'     DBASE            * DBERR 001 *
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+      *
+      *  Assign its fields and close it
+     C                     MOVE BJRDNB    WWRDNB  50
+     C                     MOVE BJMRDT    DDDATE
+     C           2         SUBSTDDDATE:1  WW2     2
+     C                     MOVE WW2       WWD     20
+     C           3         SUBSTDDDATE:3  WWM     3
+     C           2         SUBSTDDDATE:6  WW2
+     C                     MOVE WW2       WWY     20
+     C                     MOVE BJDFIN    WWDATF  1
+     C***********          CLOSESDBANKPD               31                 S01486
+      *                                                                   CPM005
+      ** Access the Portfolio Management Details                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST ' WOPTN   7                       CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     MOVE '005'     DBASE            ***************CPM005
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 05 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #RSRIN - RESET ERROR INDICATORS IN DSPF AND MESSAGE QUEUE    *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  out : *IN70-75,message queue                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #RSTIN    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           DDPGM
+     C                     PARM '*SAME'   WWPGRL  5
+      *
+     C                     MOVE *OFF      *IN70
+     C                     MOVEA'00000'   *IN,71
+     C                     MOVE '0'       *IN76                           72605
+     C                     MOVE '0'       *IN55                           078956
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #DSP1  - DISPLAY INITIAL SCREEN                              *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  in  : *IN70                                                  *
+      *  out : *IN03,*IN12,DDREFE                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #DSP1     BEGSR
+      *
+      *  If no errors, clear Refrence field
+     C           *IN70     IFEQ *OFF
+     C                     CLEARDDREFE
+     C                     ENDIF
+      *
+      *  Display
+     C                     MOVEA'00000000'*IN,41
+     C                     MOVE '0'       *IN60                           72242
+     C                     MOVE '0'       *IN05                           72242
+     C                     MOVE '0'       *IN09                           72605
+     C                     MOVE '0'       *IN10                           72242
+     C                     MOVE '0'       *IN11                           72605
+     C                     MOVE '0'       *IN49                           72605
+     C                     MOVE '0'       *IN56                           72605
+     C                     MOVE '0'       *IN61                           72605
+     C                     MOVE '0'       *IN50                           078956
+     C                     WRITEPM4110F0
+     C                     WRITE#MSGCTL
+     C                     WRITEPM4110F1
+     C                     READ PM4110F0                 99
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRC1  - PROCESS INITIAL SCREEN                              *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         : #TSTNU                                       *
+      *                                                               *
+      *  i/o : DDREFE                                                 *
+      *  out : *IN70-71,WWREFE,file_record,A6NBDP                     *
+      *****************************************************************
+      *
+     C           #PRC1     BEGSR
+      *
+      *  Test format of Reference field
+     C                     MOVE DDREFE    WWNUM
+     C                     EXSR #TSTNU
+     C                     MOVE WWNUM     DDREFE
+      *
+     C           *IN54     IFEQ *ON
+     C                     MOVE 'PM41101' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#PR1
+     C                     ENDIF
+      *
+      *  Seek reference, set *IN51
+     C                     MOVE *OFF      *IN51
+      *
+      *    - Seek reference in PMPEVTLL
+     C                     MOVE DDREFE    WWREFE  70
+     C****       WWREFE    CHAINPMPEVTLL             32                   73300
+     C           WWREFE    CHAINPMPEVTXX             32                   73300
+      *
+      *    - If not found, error
+     C           *IN32     IFEQ *ON
+     C                     MOVE 'PM41102' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#PR1
+     C                     ENDIF
+      *
+      *  Find currency record for it
+     C           *IN51     IFEQ *OFF
+     C                     MOVE QSCCY     DDPEAC
+     C                     ELSE
+     C                     MOVE QUCCY     DDPEAC
+     C                     ENDIF
+      *
+     C***********DDPEAC    CHAINSDCURRL0             33                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD                          S01486
+     C                     PARM '*KEY  '  WLOPTN                          S01486
+     C                     PARM DDPEAC    WLCYCD  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+     C************IN33     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDCURRPD'DBFILE                          S01486
+     C                     MOVE 'SDCURRPD'DBFILE                          S01486
+     C                     MOVELDDPEAC    DBKEY            *************
+     C                     MOVE '002'     DBASE            * DBERR 002 *
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+      *
+     C           E#PR1     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #DSPMS - DISPLAY MAIN SCREEN                                 *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  in  : *IN70-75,pmpevtll,$CA,$CT                              *
+      *  i/o : WWPEAM,*IN41-47                                        *
+      *  out : DD..                                                   *
+      *****************************************************************
+      *
+     C           #DSPMS    BEGSR
+      *
+     C                     MOVE 'N'       WWDPMV                          72605
+      *                                                                   72605
+      *  If no errors before, read in SFL
+     C           *IN70     IFEQ *OFF
+      *
+      *    - Clear screen
+     C                     CLEARPM4110F2
+      *
+      *    - Fill Screen from either from PMPCAAPP
+     C           *IN51     IFEQ *OFF
+     C                     MOVE QSCNUM    DDCUST
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           QSPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    DDPORT                          CPM005
+     C           QSPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    DDPORT                          CPM005
+     C           QSPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    DDPORT                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVE QSPTFR    DDPORT
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVE 'RE'      DDMODU
+      *
+     C           QSINNR    IFEQ *BLANKS
+     C                     MOVE C#GEN     DDPORE
+     C                     MOVE *BLANKS   DDBRCD                          085862
+     C                     ELSE
+     C*********************MOVELQSCNUM    DDPORE    P                     CPM004
+     C                     MOVELQSACCU    DDPORE    P                     CPM004
+     C           DDPORE    CAT  QSCCY:1   DDPORE
+     C**********           MOVE QSACOD    WW4     4                                           CGL029
+     C                     MOVE QSACOD    WW4    10                                           CGL029
+     C           DDPORE    CAT  WW4:1     DDPORE
+     C                     MOVE QSACSQ    WW2     2
+     C           DDPORE    CAT  WW2:1     DDPORE
+     C                     MOVE QSBRCA    DDBRCD                          085862
+     C                     ENDIF
+      *
+     C                     Z-ADDQSCSHD    ZDAYNO
+     C                     MOVE QSTRAT    DDTRTP
+     C                     MOVE QSPFMC    DDPECA
+     C                     MOVE QSPFMC    DDPECT
+     C                     MOVE QSCCY     DDPEAC
+     C                     MOVE QSCSHA    WWPEAM
+     C                     MOVE QSCPTC    DDCHPC
+     C                     MOVE QSAPRA    DDAPRA
+      *
+      *****-*Or*from*PMPTRAPP******************************************   S01486
+     C**  - Or from PMPTRAPD                                              S01486
+     C                     ELSE
+     C                     MOVE QUCNUM    DDCUST
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           QUPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    DDPORT                          CPM005
+     C           QUPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    DDPORT                          CPM005
+     C           QUPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    DDPORT                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVE QUPTFR    DDPORT
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVE QUMODI    DDMODU
+      *
+     C           QUMODI    IFEQ 'SE'
+     C                     MOVELQUTDSS    DDPORE
+     C                     ELSE
+     C                     MOVELQUTRNB    DDPORE
+     C                     ENDIF
+      *
+     C                     Z-ADDQUPDAT    ZDAYNO
+     C           QUMODI    IFEQ 'SE'
+     C                     MOVE QUTTYP    DDTRTP
+     C                     ENDIF
+     C                     MOVE QUPFMC    DDPECA
+     C                     MOVE QUCCY     DDPEAC
+     C                     MOVE QUTAMT    WWPEAM
+     C                     MOVE QUCPTC    DDCHPC
+     C*                                                                   72605
+     C           QUTTYP    IFEQ 'WI'                       B3             72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C           QUTTYP    OREQ 'WO'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C           QUTTYP    OREQ 'MT'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C           QUTTYP    OREQ 'TS'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C           QUTTYP    OREQ 'TP'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C                     Z-ADD0         ZFLD15                          078956
+     C                     MOVE QUMPRC    ZFLD15                          72605
+     C                     Z-ADD8         ZDECS                           72605
+     C                     EXSR ZSEDIT                                    72605
+     C                     MOVE ZOUT21    DDMKTP                          72605
+     C                     ELSE                            X3             72605
+     C                     Z-ADDQUMPRC    WWMKTP 158                      72605
+     C                     ENDIF                           E3             72605
+     C                     ENDIF
+     C*                                                                   078956
+     C** FORMAT FX RATE FOR OUTPUT FOR DEPOT MOVEMENTS                    078956
+     C           QUTTYP    IFEQ 'WI'                       B1             078956
+     C           QUCPTC    ANDEQ'N'                                       078956
+     C           QUTTYP    OREQ 'WO'                                      078956
+     C           QUCPTC    ANDEQ'N'                                       078956
+     C           QUMFXR    DIV  1000      WWMFXR 308                      078956
+     C                     MOVELWWMFXR    WORK22 22                       078956
+     C                     MOVE WORK22    ZFLA17                          078956
+     C                     Z-ADD12        ZDECT                           078956
+     C                     EXSR ZTEDIT                                    078956
+     C                     MOVE ZOUT21    DDMFXR                          078956
+     C                     ENDIF                           E1             078956
+      *
+      *    - Find Customer Shortname
+     C***********DDCUST    CHAINSDCUSTL1             37                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD                          S01486
+     C                     PARM '*KEY   ' WLOPTN                          S01486
+     C                     PARM DDCUST    WLCUST 10                       S01486
+     C                     PARM           WLKYST  7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+     C************IN37     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDCUSTL1'DBFILE                          S01486
+     C                     MOVE 'SDCUSTPD'DBFILE                          S01486
+     C                     MOVELDDCUST    DBKEY            *************
+     C                     MOVE '004'     DBASE            * DBERR 004 *
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+     C                     MOVE BBCSSN    DDCUSH
+      *
+      *    - Convert event date
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM WWDATF    ZDATFM  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVE ZADATE    DDEVDT
+      *
+      *    - Set indicators for display
+     C                     MOVEA'00000000'*IN,41
+     C                     MOVE *ON       *IN43
+     C                     MOVE *ON       *IN46
+     C                     MOVE *ON       *IN48
+     C                     MOVE *OFF      *IN60                           72242
+     C                     MOVE *OFF      *IN49                           72605
+     C                     MOVE *ON       *IN61                           72605
+     C                     MOVE *OFF      *IN50                           078956
+     C           *IN51     IFEQ *OFF
+     C                     MOVE *ON       *IN44
+     C           QSPFMC    IFEQ ' N'
+     C                     MOVE *ON       *IN45
+     C           QSCPTC    IFEQ 'N'
+     C                     MOVE *ON       *IN41
+     C                     MOVE *ON       *IN56                           72605
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *OFF      *IN43
+     C                     ENDIF
+     C                     ELSE
+     C*                                                                   72605
+     C** ALLOW F9 TO DUPLICATE EVENTS FOR DEPOT MOVEMENT NOMINAL AND      72605
+     C           QUTTYP    IFEQ 'WI'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUCPTC    ANDEQ'N'                                       72605
+     C           QUTTYP    OREQ 'WO'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUCPTC    ANDEQ'N'                                       72605
+     C                     MOVE '1'       *IN41                           72605
+     C                     MOVE 'Y'       WWDPMV  1                       72605
+     C                     END                                            72605
+     C*                                                                   72605
+     C           QUTTYP    IFNE 'WO'
+     C           QUTTYP    ANDNE'WI'
+     C           QUPFMC    ORNE ' N'
+     C           QUPFMC    ANDNE'IP'
+     C                     MOVE *ON       *IN47
+     C                     ENDIF
+     C*                                                                   72605
+     C** ALLOW MARKET PRICE TO BE AMENDED FOR DEPOT MOVEMENT NOMINAL      72605
+     C           QUTTYP    IFEQ 'WI'                       B3             72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C           QUTTYP    OREQ 'WO'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C           QUTTYP    OREQ 'MT'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C           QUTTYP    OREQ 'TP'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C           QUTTYP    OREQ 'TS'                                      72605
+     C           QUPFMC    ANDEQ' N'                                      72605
+     C           QUMODI    ANDEQ'SE'                                      72605
+     C                     MOVE '1'       *IN49                           72605
+     C                     END                             E3             72605
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C*                                                                   72242
+     C** SET INDICATORS FOR DISPLAY OF DELETED PERFORMANCE EVENT          72242
+     C           *IN51     IFEQ *OFF                       B1             72242
+     C                     MOVE QSCHTP    WXCHTP  1                       72242
+     C                     ELSE                            X1             72242
+     C                     MOVE QUCHTP    WXCHTP                          72242
+     C                     END                             E1             72242
+     C*                                                                   72242
+     C           WXCHTP    IFEQ 'D'                        B1             72242
+     C                     MOVE *ON       *IN42                           72242
+     C                     MOVE *ON       *IN45                           72242
+     C                     MOVE *ON       *IN60                           72242
+     C                     MOVE *OFF      *IN41                           72242
+     C                     MOVE *OFF      *IN56                           72605
+     C                     MOVE *OFF      *IN61                           72605
+     C                     MOVE *OFF      *IN50                           078956
+     C                     END                             E1             72242
+     C*                                                                   078956
+     C** SET INDICATOR TO DISPLAY FX RATE FOR DEPOT MOVEMENT              078956
+     C           QUTTYP    IFEQ 'WI'                       B1             078956
+     C           QUCPTC    ANDEQ'N'                                       078956
+     C           QUTTYP    OREQ 'WO'                                      078956
+     C           QUCPTC    ANDEQ'N'                                       078956
+     C                     MOVE '1'       *IN50                           078956
+     C                     ENDIF                           E1             078956
+      *
+      *  Display
+      *
+      *    - Find Category text
+     C                     MOVE *BLANKS   DDPECT
+     C                     Z-ADD1         X
+     C           DDPECA    LOKUP$CA,X                    99
+     C           *IN99     IFEQ *OFF
+     C                     MOVEL'?????'   DDPECT
+     C                     ELSE
+     C                     MOVE $CT,X     DDPECT
+     C                     ENDIF
+      *
+      *    -- Format Amount, if not in error
+     C           *IN73     IFEQ *OFF
+      *
+      *    For SE changes of nominal position obtain security details from
+      *    LF/SECTY and edit amount with nominal decimal places
+     C           DDMODU    IFEQ 'SE'
+     C           QUPFMC    ANDEQ' N'
+      *
+     C****       QUTDSS    CHAINSECTY                37                   72242
+     C****       *IN37     IFEQ *ON                                       72242
+     C****                 MOVEL'SECTY   'DBFILE                          72242
+     C****                 MOVELQUTDSS    DBKEY            *************  72242
+     C****                 MOVE '024'     DBASE            * DBERR 004 *  72242
+     C****                 EXSR #DBERR                     *************  72242
+     C****                 ENDIF                                          72242
+      ****                                                                72242
+     C****                 MOVE WWPEAM    ZFIELD                          72242
+     C****                 CALL 'ZEDIT'                                   72242
+     C****                 PARM           ZFIELD 16                       72242
+     C****                 PARM NMDP      ZADEC   10                      72242
+     C****                 MOVE ZFIELD    DDPEAM                          72242
+     C                     Z-ADD0         ZFLD15                          078956
+     C                     MOVE WWPEAM    ZFLD15                          72242
+     C                     Z-ADDQUNMDP    ZDECS                           72242
+     C                     EXSR ZSEDIT                                    72242
+     C                     MOVE ZOUT21    DDPEAM                          72242
+      *
+      *    ...Otherwise edit with currency decimals
+     C                     ELSE
+     C****                 MOVE WWPEAM    ZFIELD                          72242
+     C****                 CALL 'ZEDIT'                                   72242
+     C****                 PARM           ZFIELD 16                       72242
+     C****                 PARM A6NBDP    ZADEC   10                      72242
+     C****                 MOVE ZFIELD    DDPEAM                          72242
+     C                     Z-ADD0         ZFLD15                          078956
+     C                     Z-ADDWWPEAM    ZFLD15                          72242
+     C                     Z-ADDA6NBDP    ZDECS                           72242
+     C                     EXSR ZSEDIT                                    72242
+     C                     MOVE ZOUT21    DDPEAM                          72242
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *    - Write/read records
+     C                     WRITEPM4110F0
+     C                     WRITEPM4110F2
+     C                     WRITE#MSGCTL
+     C                     WRITEPM4110F1
+     C                     READ PM4110F2                 99
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #VALID - VALIDATE MAIN/DUPLICATE SCREEN                      *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  in  : DDPECA,DDPEAC,DDPEAM,DDCHPC,DDAPRA,*IN42-45,$CA        *
+      *  out : *IN70,*IN72-75,WWPEAM,WWSECU,WWDPRF                    *
+      *****************************************************************
+      *
+     C           #VALID    BEGSR
+     C*                                                                   S01486
+     C**  Check first if user is authorised to action code                S01486
+     C*                                                                   S01486
+     C           *IN09     IFEQ '1'                                       S01486
+     C                     MOVE 'I'       WLACTC  1                       S01486
+     C                     ELSE                                           S01486
+     C                     MOVE 'A'       WLACTC                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           AGMBIN    IFNE 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  If single branch environment                                    S01486
+     C*                                                                   S01486
+     C                     CALL 'ZVACTU'                                  S01486
+     C                     PARM WLACTC    WLACTN  1                       S01486
+     C                     PARM *ZERO     WLERR   10                      S01486
+     C*                                                                   S01486
+     C           WLERR     IFNE *ZERO                                     S01486
+     C                     MOVE '1'       *IN70                           S01486
+     C                     MOVEL'PM51117' WWMSID                          S01486
+     C                     EXSR #SNDMS                                    S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C**  If multibranching environment                                   S01486
+     C*                                                                   S01486
+     C                     CALL 'ZVACTBU'                                 S01486
+     C                     PARM WLACTC    WLACTN  1                       S01486
+     C                     PARM USRBCH    WLBRCH  3                       S01486
+     C                     PARM *ZERO     WLERR   10                      S01486
+     C*                                                                   S01486
+     C           WLERR     IFEQ 1                                         S01486
+     C                     MOVE '1'       *IN70                           S01486
+     C                     MOVEL'PM51115' WWMSID                          S01486
+     C                     EXSR #SNDMS                                    S01486
+     C                     ELSE                                           S01486
+     C           WLERR     IFEQ 2                                         S01486
+     C                     MOVE '1'       *IN70                           S01486
+     C                     MOVEL'PM51116' WWMSID                          S01486
+     C                     EXSR #SNDMS                                    S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           WLERR     IFEQ *ZERO                                     S01486
+      *
+      *  Performance category
+     C           *IN43     IFEQ *OFF
+      *
+     C           DDPECA    LOKUP$CA                      99
+     C           *IN99     IFEQ *OFF
+     C           DDPECA    OREQ ' N'
+     C                     MOVE 'PM41103' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN70
+     C                     MOVE *ON       *IN72
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                   72605
+      *  FOR DEPOT MOVEMENTS DUPLICATED EVENT MUST BE 'DV' OR 'IR'        72605
+     C           *IN43     IFEQ *OFF                                      72605
+     C           WWDPMV    ANDEQ'Y'                                       72605
+      *                                                                   72605
+     C           DDPECA    IFNE 'DV'                                      72605
+     C           DDPECA    ANDNE'IR'                                      72605
+     C                     MOVE 'PM41109' WWMSID                          72605
+     C                     EXSR #SNDMS                                    72605
+     C                     MOVE *ON       *IN70                           72605
+     C                     MOVE *ON       *IN72                           72605
+     C                     ENDIF                                          72605
+      *                                                                   72605
+     C                     ENDIF                                          72605
+      *
+      *  Amount
+     C           *IN42     IFEQ *OFF
+      *
+     C****                 MOVE *BLANKS   ZFIELD                          72242
+     C                     MOVE *BLANKS   ZFLD17                          72242
+      *
+      *  For Security nominal amount
+     C           DDMODU    IFEQ 'SE'
+     C           QUPFMC    ANDEQ' N'
+     C****       13        SUB  NMDP      X                               72242
+     C****                 CALL 'ZALIGN'                                  72242
+     C****                 PARM           ZRTN    7                       72242
+     C****                 PARM DDPEAM    ZFIELD 16                       72242
+     C****                 PARM NMDP      ZADEC   10                      72242
+     C****                 PARM X         ZADIG   20                      72242
+     C****                 PARM           ZAFLD  16                       72242
+     C                     MOVE DDPEAM    ZFLD17                          72242
+     C           13        SUB  QUNMDP    ZSDIG                           72242
+     C                     Z-ADDQUNMDP    ZSDEC                           72242
+     C                     EXSR ZASIGN                                    72242
+     C                     ELSE
+     C****       13        SUB  A6NBDP    X                               72242
+     C****                 CALL 'ZALIGN'                                  72242
+     C****                 PARM           ZRTN    7                       72242
+     C****                 PARM DDPEAM    ZFIELD 16                       72242
+     C****                 PARM A6NBDP    ZADEC   10                      72242
+     C****                 PARM X         ZADIG   20                      72242
+     C****                 PARM           ZAFLD  16                       72242
+     C                     MOVE DDPEAM    ZFLD17                          72242
+     C*                                                                   72605
+     C** IF F11 TAKEN VALIDATE USING PORTFOLIO CURRENCY DECIMAL PLACES    72605
+     C           *IN11     IFEQ '1'                                       72605
+     C           *IN56     ANDEQ'0'                                       72605
+     C           13        SUB  PNPCDP    ZSDIG                           72605
+     C                     Z-ADDPNPCDP    ZSDEC                           72605
+     C                     EXSR ZASIGN                                    72605
+     C                     ELSE                                           72605
+     C           13        SUB  A6NBDP    ZSDIG                           72242
+     C                     Z-ADDA6NBDP    ZSDEC                           72242
+     C                     EXSR ZASIGN                                    72242
+     C                     ENDIF
+     C                     ENDIF                                          72605
+      *
+     C****       ZRTN      IFNE *BLANKS                                   72242
+     C           *IN99     IFEQ '1'                                       72242
+     C                     MOVE 'PM41106' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN70
+     C                     MOVE *ON       *IN73
+      *
+     C                     ELSE
+     C****                 MOVE ZFIELD    WWPEAM 130                      72242
+     C****       WWPEAM    IFLT 0                                         72242
+     C****                 MOVE 'PM41107' WWMSID                          72242
+     C****                 EXSR #SNDMS                                    72242
+     C****                 MOVE *ON       *IN70                           72242
+     C****                 MOVE *ON       *IN73                           72242
+     C****                 ENDIF                                          72242
+     C                     MOVE ZOUT15    WWPEAM 130                      72242
+     C           ZFSIGN    IFEQ '-'                                       72242
+     C                     Z-SUBWWPEAM    WWPEAM                          72242
+     C                     ENDIF                                          72242
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *  Change to Portfolio Capital
+     C           *IN42     IFEQ *OFF
+     C           *IN47     ANDEQ*OFF
+      *
+      *    - If Y and WO/WI, must not be linked
+     C           DDCHPC    IFEQ 'Y'
+      *
+     C           *IN51     IFEQ *ON
+     C                     MOVE QUTDSS    WWSECU
+     C**********           MOVE QUTRNB    WWDPRF                                              CLE148
+     C                     MOVE QUTRNB    WDPRFN                                              CLE148
+     C           KSR       CHAINPMLKDML0             34
+     C           *IN34     IFEQ *OFF
+     C                     MOVE 'PM41105' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN70
+     C                     MOVE *ON       *IN74
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *    - Else if not Y/N , error
+     C                     ELSE
+     C           DDCHPC    IFNE 'N'
+     C                     MOVE 'PM41104' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN70
+     C                     MOVE *ON       *IN74
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                   72605
+      *  VALIDATE MARKET PRICE IF CHANGED                                 72605
+     C           *IN49     IFEQ *ON                                       72605
+     C                     Z-ADD7         ZADIG                           72242
+     C                     Z-ADD8         ZADEC                           72242
+     C                     CALL 'ZALIGN'                                  72242
+     C                     PARM           ZRTN    7                       72242
+     C                     PARM DDMKTP    ZFIELD 16                       72242
+     C                     PARM           ZADEC   10                      72242
+     C                     PARM           ZADIG   20                      72242
+     C                     PARM           ZAFLD  16                       72242
+     C           ZRTN      IFNE *BLANKS                                   72605
+     C                     MOVE 'PM41108' WWMSID                          72605
+     C                     EXSR #SNDMS                                    72605
+     C                     MOVE *ON       *IN70                           72605
+     C                     MOVE *ON       *IN76                           72605
+     C                     ELSE                                           72605
+     C***********          MOVE ZAFLD     DDMKTP                    72605 078956
+     C                     Z-ADD0         ZFLD15                          078956
+     C                     MOVE ZAFLD     ZFLD15                          078956
+     C                     Z-ADD8         ZDECS                           078956
+     C                     EXSR ZSEDIT                                    078956
+     C                     MOVE ZOUT21    DDMKTP                          078956
+     C                     MOVE ZAFLD     WWMKTP                          72605
+     C                     END                                            72605
+     C                     END                                            72605
+      *                                                                   078956
+      *  VALIDATE FX RATE IF CHANGED (MUST BE NUMERIC 17,12)              078956
+     C           *IN50     IFEQ *ON                                       078956
+     C                     Z-ADD5         ZADIG                           078956
+     C                     Z-ADD12        ZATEC                           078956
+     C                     MOVE DDMFXR    ZTIELD 19                       078956
+     C                     EXSR ZATIGN                                    078956
+     C           *IN99     IFEQ '1'                                       078956
+     C                     MOVE 'PM41111' WWMSID                          078956
+     C                     EXSR #SNDMS                                    078956
+     C                     MOVE *ON       *IN70                           078956
+     C                     MOVE *ON       *IN55                           078956
+     C                     ELSE                                           078956
+     C                     Z-ADD0         WWMFXR                          078956
+     C                     MOVELZTIELD    WORK25 25                       078956
+     C                     MOVE WORK25    WWMFXR                          078956
+     C                     MOVELWWMFXR    WORK22 22                       078956
+     C                     MOVE WORK22    ZFLA17                          078956
+     C                     Z-ADD12        ZDECT                           078956
+     C                     EXSR ZTEDIT                                    078956
+     C                     MOVE ZOUT21    DDMFXR                          078956
+     C                     END                                            078956
+     C                     END                                            078956
+      *
+      *  Applies to Retail A/c
+     C           *IN44     IFEQ *ON
+     C           *IN45     ANDEQ*OFF
+      *
+     C           DDAPRA    IFNE 'N'
+     C           DDAPRA    ANDNE'Y'
+     C****                 MOVE 'PM41104' WWMSID                          73957
+     C                     MOVE 'PM41110' WWMSID                          73957
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN70
+     C                     MOVE *ON       *IN75
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C*                                                                   S01486
+     C                     END                                            S01486
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRCMS - PROCESS MAIN SCREEN                                 *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  in  : WWRDNB,##USR,DDPECA,WWPEAM,DDCHPC,DDAPRA               *
+      *  i/o : pmpevtll,dptmv                                         *
+      *  out : KSR,KCPSR,WWCHPC                                       *
+      *****************************************************************
+      *
+     C           #PRCMS    BEGSR
+      *
+      *  Either update PMPCAAPP
+     C           *IN51     IFEQ *OFF
+     C           WWREFE    CHAINPMPEVTLL             32                   73300
+      *
+      *    - Set last change fields
+     C           *IN05     IFEQ '1'                                       72242
+     C                     MOVE 'I'       QSCHTP                          72242
+     C                     ELSE                                           72242
+     C           *IN10     IFEQ '1'                                       72242
+     C                     MOVE 'D'       QSCHTP                          72242
+     C                     ELSE                                           72242
+     C                     MOVE 'A'       QSCHTP
+     C                     END                                            72242
+     C                     END                                            72242
+     C*                                                                   72242
+     C                     Z-ADDWWRDNB    QSLCD
+     C                     MOVE ##USR     QSUSER
+      *
+      *    - Set data fields
+     C                     MOVE DDPECA    QSPFMC
+     C                     Z-ADDWWPEAM    QSCSHA
+     C                     MOVE DDCHPC    QSCPTC
+     C                     MOVE DDAPRA    QSAPRA
+      *
+      *    - Update
+     C                     UPDATPMPCAAP0
+      *
+      ***Or*update*PMPTRAPP********************************************   S01486
+     C**  Or update PMPTRAPD                                              S01486
+     C                     ELSE
+      *                                                                   73300
+     C           WWREFE    CHAINPMPEVTLL             32                   73300
+      *
+      *    - Set up last change fields
+     C           *IN05     IFEQ '1'                                       72242
+     C                     MOVE 'I'       QUCHTP                          72242
+     C                     ELSE                                           72242
+     C           *IN10     IFEQ '1'                                       72242
+     C                     MOVE 'D'       QUCHTP                          72242
+     C                     ELSE                                           72242
+     C                     MOVE 'A'       QUCHTP
+     C                     END                                            72242
+     C                     END                                            72242
+     C*                                                                   72242
+     C                     Z-ADDWWRDNB    QULCD
+     C                     MOVE ##USR     QUUSER
+      *
+      *    - Set data fields
+     C                     Z-ADDWWPEAM    QUTAMT
+     C                     Z-ADDWWMKTP    QUMPRC                          72605
+     C*                                                                   078956
+     C           *IN50     IFEQ *ON                                       078956
+     C           WWMFXR    MULT 1000      QUMFXR                          078956
+     C                     END                                            078956
+     C*                                                                   078956
+     C                     MOVE QUCPTC    WWCHPC  1
+     C                     MOVE DDCHPC    QUCPTC
+      *
+      *****-*Update*record*in*PMPTRAPP*********************************   S01486
+     C**  - Update record in PMPTRAPD                                     S01486
+     C                     UPDATPMPTRAP0
+      *
+      *    - If WI/WO and change in Capital change indicator :
+     C           QUTTYP    IFEQ 'WI'
+     C           DDCHPC    ANDNEWWCHPC
+     C           QUTTYP    OREQ 'WO'
+     C           DDCHPC    ANDNEWWCHPC
+      *
+      *       -- Update depot movements Withdrawal/DElivery indic.
+     C                     MOVE QUTDSS    WWSECU
+     C                     MOVE QUTRNB    WWDPRC
+     C           KSR#C     CHAINDPTMV                36
+      *
+     C           *IN36     IFEQ *ON
+     C***********          MOVEL'DPTMV   'DBFILE                          S01486
+     C                     MOVE 'DPTMV   'DBFILE                          S01486
+     C                     MOVELWWSECU    DBKEY                        *
+     C                     MOVE WWDPRC    DBKEY            *************
+     C                     MOVE '003'     DBASE            * DBERR 003 *
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     EXSR *PSSR                      *************  S01486
+     C                     ENDIF
+      *
+     C                     MOVE DDCHPC    CWDI
+     C                     UPDATDPTMVDF
+      *
+      ********--*Update*all*records*in*PMPTRAPP*for*the*same***********   S01486
+     C**      -- Update all records in PMPTRAPD for the same              S01486
+      *          depot movement in Capital change indicator
+     C**********           Z-ADDQUCNUM    WWCUST                                              CSD027
+     C                     MOVE QUCNUM    WWCUST                                              CSD027
+     C                     MOVE QUPTFR    WWPORT
+     C                     MOVE QUTDSS    WWSECU
+     C**********           MOVE QUTRNB    WWDPRF                                              CLE148
+     C                     MOVE QUTRNB    WDPRFA                                              CLE148
+     C           KCPSR     CHAINPMPTRAL7             35
+      *
+     C           *IN35     DOWEQ*OFF
+     C                     MOVE 'A'       QUCHTP
+     C                     Z-ADDWWRDNB    QULCD
+     C                     MOVE ##USR     QUUSER
+     C                     MOVE DDCHPC    QUCPTC
+     C                     UPDATPMPTRAP7
+     C           KCPSR     READEPMPTRAL7                 35
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *  Comit changes
+     C                     COMIT
+      *
+     C           E#PRMS    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #DSPDS - DISPLAY DUPLICATE SCREEN                            *
+      *                                                               *
+      *  CALLED BY     : main program                                 *
+      *  CALLS         : ZEVRF                                        *
+      *                                                               *
+      *  in  : DD..,*IN70                                             *
+      *  i/o : event_no,DDREFE
+      *  out : DDDPRF,WWREFE                                          *
+      *****************************************************************
+      *
+     C           #DSPDS    BEGSR
+     C*                                                                   72605
+     C                     MOVE '0'       *IN56                           72605
+     C                     MOVE '0'       *IN61                           72605
+      *
+      *  If no errors :
+     C           *IN70     IFEQ *OFF
+      *
+      *    - Get next event reference no., left justify it
+     C                     MOVE DDREFE    DDDPRF
+     C                     EXSR ZEVRF
+     C                     MOVE ZNXTRF    WWREFE
+     C                     MOVE ZNXTRF    DDREFE
+     C           '0'       CHECKDDREFE    X
+     C           8         SUB  X         Y       10
+     C           Y         SUBSTDDREFE:X  DDREFE    P
+      *
+      *    - Empty category, default Applies to retail
+     C                     MOVE *BLANKS   DDPECA
+     C                     MOVE 'N'       DDAPRA
+      *
+      *    - Set display indicators
+     C                     MOVEA'00000000'*IN,41
+     C                     MOVE *ON       *IN42
+     C                     MOVE *ON       *IN44
+     C                     MOVE *ON       *IN46
+     C                     MOVE *ON       *IN48
+     C*                                                                   72605
+     C** SET DETAILS UP FOR "XT" PERFORMANCE EVENT                        72605
+     C           *IN11     IFEQ '1'                                       72605
+     C                     MOVE 'XT'      DDPECA                          72605
+     C                     MOVE '1'       *IN43                           72605
+     C                     MOVE '0'       *IN42                           72605
+     C                     MOVE '0'       *IN49                           72605
+     C                     MOVE '0'       *IN50                           078956
+      *                                                                   CPM005
+      ** If defined Portfolio, access portfolio details file              CPM005
+      *                                                                   CPM005
+     C           QSPTFR    IFNE '9997'                                    CPM005
+     C           QSPTFR    ANDNE'9998'                                    CPM005
+     C           QSPTFR    ANDNE'9999'                                    CPM005
+     C*                                                                   72605
+     C** OBTAIN PORTFOLIO BASE CURRENCY                                   72605
+     C***********KPORT     CHAINPMPORTPP             33             72605 S01486
+     C           KPORT     CHAINPMPORTPD             33                   S01486
+     C           *IN33     IFEQ *ON                                       72605
+     C***********          MOVEL'PMPORTPP'DBFILE                    72605 S01486
+     C                     MOVE 'PMPORTPD'DBFILE                          S01486
+     C***********          MOVELQSCNUM    DBKEY            *******  72605 CPM005
+     C                     MOVELWDBKEY    DBKEY            *************  CPM005
+     C                     MOVE '022'     DBASE            * DBERR 022 *  72605
+     C***********          EXSR #DBERR                     *********72605 S01486
+     C                     EXSR *PSSR                      *************  S01486
+     C                     ENDIF                                          72605
+      *                                                                   CPM005
+      ** Else, access consolidated Portfolio details file                 CPM005
+      *                                                                   CPM005
+     C                     ELSE                                           CPM005
+      *                                                                   CPM005
+     C           KPORT     CHAINPMCNSDLL             33                   CPM005
+     C           *IN33     IFEQ *ON                                       CPM005
+     C**********           Z-ADDQSCNUM    WWCNUM                                       CPM005 CSD027
+     C                     MOVE QSCNUM    WWCNUM                                              CSD027
+     C                     MOVE QSPTFR    WWPTFR                          CPM005
+     C                     MOVE 'PMCNSDLL'DBFILE                          CPM005
+     C                     MOVELWDBKEY    DBKEY            *************  CPM005
+     C                     MOVE '006'     DBASE            * DBERR 006 *  CPM005
+     C                     EXSR *PSSR                      *************  CPM005
+     C                     ENDIF                                          CPM005
+     C                     ENDIF                                          CPM005
+     C*                                                                   72605
+     C                     MOVE PNPTCY    DDPEAC                          72605
+     C                     MOVE *BLANKS   DDPEAM                          72605
+     C                     MOVE '1'       *IN45                           72605
+     C                     MOVE '1'       *IN47                           72605
+     C                     END                                            72605
+      *
+     C                     ENDIF
+      *
+      *  Find Category text
+     C                     MOVE *BLANKS   DDPECT
+     C                     Z-ADD1         X
+     C           DDPECA    LOKUP$CA,X                    99
+     C           *IN99     IFEQ *OFF
+     C                     MOVEL'?????'   DDPECT
+     C                     ELSE
+     C                     MOVE $CT,X     DDPECT
+     C                     ENDIF
+     C*                                                                   72605
+     C** FOR DEPOT MOVEMENTS PROTECT PRICE BUT ALLOW AMOUNT TO BE         72605
+     C** CHANGED                                                          72605
+     C           WWDPMV    IFEQ 'Y'                                       72605
+     C                     MOVE '1'       *IN42                           72605
+     C                     MOVE '1'       *IN45                           72605
+     C                     MOVE '1'       *IN47                           72605
+     C                     MOVE '0'       *IN49                           72605
+     C                     MOVE '0'       *IN50                           078956
+     C*
+     C** CALCULATE AMOUNT ADDED
+     C                     Z-ADD1         WWMKTP
+     C                     Z-ADDQUTAMT    ZNOML
+     C                     Z-ADDQUMPRC    ZAVPR
+     C                     Z-ADDQUNMDP    ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C****                 MOVE QUSPBS    ZPRCB                           73300
+     C                     MOVE 'U'       ZPRCB                           73300
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     WWPEAM
+     C*
+     C                     Z-ADD0         ZFLD15                          078956
+     C                     MOVE ZVALU     ZFLD15                          72605
+     C                     Z-ADDA6NBDP    ZDECS                           72605
+     C                     EXSR ZSEDIT                                    72605
+     C                     MOVE ZOUT21    DDPEAM                          72605
+     C*
+     C                     END                                            72605
+      *
+      *  Display duplicate screen
+     C                     WRITEPM4110F0
+     C                     WRITEPM4110F2
+     C                     WRITE#MSGCTL
+     C                     WRITEPM4110F1
+     C                     READ PM4110F2                 99
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                               *        *
+      * ZEVRF    - GET NEXT PM EVENT REFERENCE NO.                    *        *
+      *                                                               *        *
+      *  CALLED BY     : #DSPDS                                       *
+      *  CALLS         : no other subroutine                          *
+      *                                                               *
+      *  i/o : dtaara/PMSTAT                                          *
+      *  out : ZNXTRF                                                          *
+      **************************************************************************
+     C           ZEVRF     BEGSR
+      *
+     C           *NAMVAR   DEFN           PMSTAT
+     C           *LOCK     IN   PMSTAT
+     C                     MOVE DAEVRF    ZZEVRF  70
+     C                     Z-ADDZZEVRF    ZNXTRF  70
+     C                     ADD  1         ZZEVRF
+     C                     MOVE ZZEVRF    DAEVRF
+     C                     OUT  PMSTAT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRCDS - PROCESS DUPLICATE SCREEN                            *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         : ?                                            *
+      *                                                               *
+      *  in  : DD..,WWREFE                                            *
+      *  out : pmpcaapb                                               *
+      *****************************************************************
+      *
+     C           #PRCDS    BEGSR
+      *
+      *  Set last update fields
+     C           WWDPMV    IFNE 'Y'                                       72605
+     C                     MOVE 'I'       QSCHTP
+      *******
+      ***Set*data fields
+     C****       DDAPRA    IFEQ 'N'
+     C****                 MOVE *BLANKS   QSINNR
+     C****                 Z-ADD0         QSACOD
+     C****                 Z-ADD0         QSACSQ
+     C****                 ENDIF
+      *
+     C           *IN11     IFEQ '0'                                       72605
+     C           QSPFMC    IFEQ 'C '
+     C           DDPECA    OREQ 'F '
+     C                     MOVE 'TR'      QSPFMS
+     C                     ELSE
+     C                     MOVE *BLANKS   QSPFMS
+     C                     ENDIF
+      *
+     C           QSINIO    IFEQ 'I'
+     C                     MOVE 'O'       QSINIO
+     C                     ELSE
+     C                     MOVE 'I'       QSINIO
+     C                     ENDIF
+      *
+     C                     MOVELWWREFE    QSEVRF
+      *
+     C                     MOVE 'N'       QSCPTC
+     C                     MOVE DDPECA    QSPFMC
+     C                     MOVE DDAPRA    QSAPRA
+     C                     Z-ADD0         QSDLNO
+     C                     ELSE                                           72605
+     C*                                                                   72605
+     C** PREPARE DETAILS FOR DUPLICATED XT EVENT                          72605
+     C                     MOVE PNPTCY    QSCCY                           72605
+     C                     MOVE 'XT'      QSPFMC                          72605
+     C                     MOVE *BLANKS   QSPFMS                          72605
+     C                     Z-ADDWWPEAM    QSCSHA                          72605
+     C           1000000   MULT 1000000000QSMFXR                          72605
+     C***********          MOVE 'I'       QSINIO                    72605 078956
+     C                     MOVE 'O'       QSINIO                          078956
+     C                     MOVE 'N'       QSAPRA                          72605
+     C                     MOVE WWREFE    QSEVRF                          72605
+     C                     MOVE 'RE'      QSREMI                          72605
+     C***********          MOVE *BLANKS   QSFXAT                    72605 078956
+     C***********          Z-ADD0         QSDLNO                    72605 078956
+     C                     MOVE 'M'       QSFXAT                          078956
+     C                     END                                            72605
+      *
+      *  Write record to file
+     C                     WRITEPMPCAAP0
+     C*                                                                   72605
+     C** WRITE TRANSACTION PERFROMANCE EVENT                              72605
+     C                     ELSE                                           72605
+     C                     MOVE DDPECA    QUPFMC                          72605
+     C                     MOVE *BLANKS   QUPFMS                          72605
+     C                     Z-ADDWWPEAM    QUTAMT                          72605
+      *                                                                   72605
+     C           QUINIO    IFEQ 'I'                                       72605
+     C                     MOVE 'O'       QUINIO                          72605
+     C                     ELSE                                           72605
+     C                     MOVE 'I'       QUINIO                          72605
+     C                     ENDIF                                          72605
+      *                                                                   72605
+     C                     Z-ADD0         QURAMT                          72605
+     C                     MOVELWWREFE    QUEVRF                          72605
+     C                     MOVE 'N'       QUCPTC                          72605
+     C                     MOVE 'I'       QUCHTP                          72605
+      *                                                                   72605
+      *  Write record to file                                             72605
+     C                     WRITEPMPTRAP0                                  72605
+     C                     END                                            72605
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                               *        *
+      * #TSTNU   - RIGT JUSTIFY AND TEST NUMERIC FIELD                *        *
+      *                                                               *        *
+      *  CALLED BY     : #PRC1,#PRCMS,#PRCDS                          *
+      *  CALLS         : no other subroutine                          *
+      *                                                               *
+      *  i/o : WWNUM                                                  *
+      *  out : *IN54                                                           *
+      **************************************************************************
+     C           #TSTNU    BEGSR
+      *
+     C                     MOVE *OFF      *IN54
+      *
+      *  Right justify, if trailing blanks
+     C           ' '       CHEKRWWNUM     X       20
+     C****       X         IFLT 6                                         72242
+     C           X         IFLT 7                                         72242
+     C           X         ANDGT0
+     C           8         SUB  X         X
+     C                     MOVEA*BLANKS   $AA
+     C                     MOVEAWWNUM     $AA,X
+     C                     MOVEA$AA       WWNUM   7
+     C                     ENDIF
+      *
+      *  Test, if field contains only spaces and then (maybe) digits
+     C                     TESTN          WWNUM      999999
+     C                     MOVE WWNUM     WW1     1
+     C                     TESTZ          WW1            98
+      *
+     C           *IN99     IFEQ *OFF
+     C           *IN98     OREQ *OFF
+     C                     MOVE *ON       *IN54
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * ZTNLU1   - TO LOCK AND ACCESS DATA AREA AND GET TRANSAC. NBR           *
+      *                                                                        *
+      *  CALLED BY     : #PRCIN                                       *
+      *  CALLS         : no other subroutine                          *
+      *                                                               *
+      *  i/o : dtaara/MNATN(DNATN)                                    *
+      *  out : NATN                                                            *
+      **************************************************************************
+     C           ZTNLU1    BEGSR
+     C**
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C**
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ***#DBERR*-*DATABASE*ERROR*SUBROUTINE****************************   S01486
+      *****************************************************************   S01486
+      ***CALLED*BY*****:***********************************************   S01486
+      ***CALLS*********:*no*other*subroutine***************************   S01486
+      *****************************************************************   S01486
+      ***out*:**INU7,*INU8*********************************************   S01486
+      *****************************************************************   S01486
+      ***********                                                         S01486
+     C***********#DBERR    BEGSR                                          S01486
+      ***********                                                         S01486
+     C***********          MOVE *ON       *INU7                           S01486
+     C***********          MOVE *ON       *INU8                           S01486
+     C***********          EXSR *PSSR                                     S01486
+      ***********                                                         S01486
+     C***********          ENDSR                                          S01486
+      ***********                                                         S01486
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SNDMS - SEND PROGRAM MESSAGE                                *
+      *                                                               *
+      *  CALLED BY     : almost everywhere                            *
+      *  CALLS         : no other subroutine                          *
+      *
+      *  in : WWMSID
+      *****************************************************************
+      *
+     C           #SNDMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM DDPGM     ##PGM  10
+     C                     PARM *BLANK    WWPGRL  5
+     C                     PARM           WWMSID  7
+     C                     PARM 'PMUSRMSG'WWMSGF 10
+     C                     PARM *BLANK    WWMSDA132
+     C                     PARM *BLANK    WWMSTP  7
+      *
+     C                     ENDSR
+     C********************************************************************078956
+     C**                                                                  078956
+     C**   ZATIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.         078956
+     C**                                                                  078956
+     C           ZATIGN    BEGSR                           *** ZATIGN *** 078956
+     C**                                                                  078956
+     C                     SETOF                     929399               078956
+     C**                                                                  078956
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.                                078956
+     C                     MOVEAZTIELD    ZD1                             078956
+     C**                                                                  078956
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.         078956
+     C                     Z-ADDZADIG     ZADIG   20                      078956
+     C                     Z-ADDZATEC     ZATEC   30                      078956
+     C**                                                                  078956
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.                           078956
+     C                     MOVE ' '       ZD2                             078956
+     C                     MOVEAZD2       ZTIELD                          078956
+     C                     Z-ADD0         ZX      20                      078956
+     C                     Z-ADD0         ZY      20                      078956
+     C**                                                                  078956
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.             078956
+     C           ZTTAG1    TAG                             ** ZTTAG1 TAG *078956
+     C           ZX        ADD  1         ZX                              078956
+     C**                                                                  078956
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.        078956
+     C           ZD1,ZX    COMP '.'                      90               078956
+     C   90 93             SETON                     99                   078956
+     C   99                GOTO ZTEND                                     078956
+     C**                                                                  078956
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1                             078956
+     C   96                                                               078956
+     COR 97                MOVE ' '       ZD1,ZX                          078956
+     C**                                                                  078956
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.        078956
+     C           ZD1,ZX    COMP ' '                      91               078956
+     C   91 92             GOTO ZTTAG2                                    078956
+     C**                                                                  078956
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.                          078956
+     C  N90N91   ZD1,ZX    COMP '0'                    99                 078956
+     C  N90N91N99ZD1,ZX    COMP '9'                  99                   078956
+     C   99                GOTO ZTEND                      NOT NUMERIC    078956
+     C**                                                                  078956
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.                            078956
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.                        078956
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.              078956
+     C  N90N91   ZY        ADD  1         ZY         92                   078956
+     C  N90N91             MOVE ZD1,ZX    ZD2,ZY                          078956
+     C   90                Z-ADDZY        ZZ      20 93  93               078956
+     C**                                                                  078956
+     C           ZX        COMP 19                     94  CHECK IF ALL   078956
+     C   94                GOTO ZTTAG1                                    078956
+     C**                                                                  078956
+     C           ZTTAG2    TAG                             ** ZTTAG2 TAG *078956
+     C**                                                                  078956
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT              078956
+     C   96 93                                                            078956
+     COR 97 93   ZZ        DOWGTZY                                        078956
+     C           ZY        ADD  1         ZY                              078956
+     C                     MOVE '0'       ZD2,ZY                          078956
+     C                     END                                            078956
+     C**                                                                  078956
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS     078956
+     C   96N93             DO   6                                         078956
+     C           ZY        ADD  1         ZY                              078956
+     C                     MOVE '0'       ZD2,ZY                          078956
+     C                     END                                            078956
+     C**                                                                  078956
+     C   97N93             DO   3                                         078956
+     C           ZY        ADD  1         ZY                              078956
+     C                     MOVE '0'       ZD2,ZY                          078956
+     C                     END                                            078956
+     C**                                                                  078956
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.                 078956
+     C  N93                Z-ADDZY        ZZ                              078956
+     C**                                                                  078956
+     C**   CHECK FOR EMBEDDED BLANKS.                                     078956
+     C   91 92             MOVEAZD1,ZX    ZTIELD                          078956
+     C   91 92   ZTIELD    COMP ' '                  9999                 078956
+     C   99                GOTO ZTEND                      EMBEDDED BLANK 078956
+     C**                                                                  078956
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE               078956
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.                    078956
+     C           ZZ        COMP ZADIG                99                   078956
+     C           ZY        SUB  ZZ        ZX                              078956
+     C  N99      ZATEC     SUB  ZX        ZX           9995               078956
+     C   99                GOTO ZTEND                                     078956
+     C   95                GOTO ZTTAG4                     NO TRAILING    078956
+     C**                                                   BLANKS.        078956
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.                           078956
+     C           ZY        ADD  ZX        ZZ                              078956
+     C           ZTTAG3    TAG                             ** ZTTAG3 TAG *078956
+     C           ZY        ADD  1         ZY                              078956
+     C                     MOVE '0'       ZD2,ZY                          078956
+     C           ZY        COMP ZZ                     94                 078956
+     C   94                GOTO ZTTAG3                                    078956
+     C**                                                                  078956
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZD1.            078956
+     C           ZTTAG4    TAG                             ** ZTTAG4 TAG *078956
+     C                     MOVE '0'       ZD1                             078956
+     C                     Z-ADD17        ZX                              078956
+     C           ZTTAG5    TAG                             ** ZTTAG5 TAG *078956
+     C           ZY        COMP 0                        94               078956
+     C   94                GOTO ZTTAG6                                    078956
+     C                     MOVE ZD2,ZY    ZD1,ZX                          078956
+     C           ZY        SUB  1         ZY                              078956
+     C           ZX        SUB  1         ZX                              078956
+     C                     GOTO ZTTAG5                                    078956
+     C           ZTTAG6    TAG                             ** ZTTAG6 TAG *078956
+     C**                                                                  078956
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.      078956
+     C                     MOVEAZD1       ZTIELD                          078956
+     C**                                                                  078956
+     C                     SETOF                     9697                 078956
+     C**                                                                  078956
+     C           ZTEND     ENDSR                           * ZTEND ENDSR *078956
+     C**                                                                  078956
+     C**                                                                  078956
+     C********************************************************************078956
+     C********************************************************************078956
+     C**                                                                 *078956
+     C** ZTEDIT subroutine to insert a decimal point into a              *078956
+     C** numeric field and to blank out leading zeros (optionaly         *078956
+     C** inserting commas).                                              *078956
+     C**     Input fields:   ZFLA17 17/0                                 *078956
+     C**                     ZDECT  1/0                                  *078956
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *078956
+     C**                                                                 *078956
+     C**     Arrays:         ZT1    17/1/0                               *078956
+     C**                     ZT2    21/1/                                *078956
+     C**                                                                 *078956
+     C**     Output fields:  ZOUT21 21                                   *078956
+     C**                                                                 *078956
+     CSR         ZTEDIT    BEGSR                           **  ZTEDIT   * 078956
+     C*                                                                   078956
+     C* Define/Clear fields                                               078956
+     C*                                                                   078956
+     C                     Z-ADDZFLA17    ZFLA17 170                      078956
+     C                     Z-ADDZDECT     ZDECT   30                      078956
+     C                     MOVE ZECODE    ZECODE  1                       078956
+     C                     MOVE *BLANKS   ZOUT21 21                       078956
+     C*                                                                   078956
+     C*       SET UP WORK FIELDS                                          078956
+     C*                                                                   078956
+     C                     Z-ADD0         ZT1                             078956
+     C                     MOVE ' '       ZT2                             078956
+     C*                                                                   078956
+     C                     Z-ADD17        Z1      20                      078956
+     C                     Z-ADD20        Z2      20                      078956
+     C*                                                                   078956
+     C           17        SUB  ZDECT     ZINTS   20                      078956
+     C*                                                                   078956
+     C                     Z-ADDZFLA17    WORK17                          078956
+     C*                                                                   078956
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES                078956
+     C*                                                                   078956
+     C           ZDECT     CABEQ0         ZT10                            078956
+     C*                                                                   078956
+     C*       SET UP DECIMALS                                             078956
+     C*                                                                   078956
+     C                     Z-ADD*ZEROS    ZCNTT   30                      078956
+     C           ZCNTT     DOUEQZDECT                                     078956
+     C                     MOVE ZT1,Z1    ZT2,Z2                          078956
+     C                     SUB  1         Z2                              078956
+     C                     ADD  1         ZCNTT                           078956
+     C                     SUB  1         Z1                              078956
+     C                     END                                            078956
+     C*                                                                   078956
+     C*       PUT IN DECIMAL PLACE                                        078956
+     C*                                                                   078956
+     C                     MOVE '.'       ZT2,Z2                          078956
+     C                     SUB  1         Z2                              078956
+     C*                                                                   078956
+     C           ZT10      TAG                             ** ZT10 TAG ** 078956
+     C*                                                                   078956
+     C*       SET UP INTEGERS                                             078956
+     C*                                                                   078956
+     C                     Z-ADD*ZEROS    CNT3    10                      078956
+     C           Z1        DOUEQ*ZEROS                                    078956
+     C                     MOVE ZT1,Z1    ZT2,Z2                          078956
+     C                     SUB  1         Z1                              078956
+     C                     SUB  1         Z2                              078956
+     C*                                                                   078956
+     C* If edit code is 'J', insert a ',' before each group of three      078956
+     C* digits - not if beginning of array reached.                       078956
+     C*                                                                   078956
+     C           Z2        IFGT *ZEROS                                    078956
+     C           ZECODE    ANDEQ'J'                                       078956
+     C                     ADD  1         CNT3                            078956
+     C           CNT3      IFEQ 3                                         078956
+     C                     MOVE ','       ZS2,Z2                          078956
+     C                     SUB  1         Z2                              078956
+     C                     Z-ADD*ZEROS    CNT3                            078956
+     C                     END                                            078956
+     C                     END                                            078956
+     C*                                                                   078956
+     C                     END                                            078956
+     C*                                                                   078956
+     C*       PUT IN LEADING BLANKS                                       078956
+     C*                                                                   078956
+     C                     Z-ADD1         Z2                              078956
+     C           ZT2,Z2    DOWEQ'0'                                       078956
+     C           ZT2,Z2    OREQ ' '                                       078956
+     C           ZT2,Z2    OREQ ','                                       078956
+     C                     MOVE ' '       ZT2,Z2                          078956
+     C                     ADD  1         Z2                              078956
+     C           Z2        CABEQ22        ZT20                            078956
+     C                     END                                            078956
+     C*                                                                   078956
+     C*       IF NO INTEGERS PUT IN LEADING ZERO                          078956
+     C*                                                                   078956
+     C           ZT20      TAG                             ** ZS20 TAG ** 078956
+     C*                                                                   078956
+     C           Z2        IFEQ 22                                        078956
+     C                     SUB  2         Z2                              078956
+     C                     MOVE '0'       ZT2,Z2                          078956
+     C                     ELSE                                           078956
+     C*                                                                   078956
+     C           ZT2,Z2    IFEQ '.'                                       078956
+     C                     SUB  1         Z2                              078956
+     C                     MOVE '0'       ZT2,Z2                          078956
+     C                     END                                            078956
+     C                     END                                            078956
+     C*                                                                   078956
+     C*       SET UP OUTPUT FIELD                                         078956
+     C*                                                                   078956
+     C                     MOVEAZT2       ZOUT21                          078956
+     C*                                                                   078956
+     CSR                   ENDSR                                          078956
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - FILE/PROGRAM EXCEPTION HANDLER                      *
+      *                                                               *
+      *  CALLED BY     :                                              *
+      *  CALLS         : no other subroutine                          *
+      *  For file or program exception/error                          *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     ROLBK
+      *
+     C                     MOVE *ON       *INU7                           S01486
+     C                     MOVE *ON       *INU8                           S01486
+     C                     MOVE *ON       *INLR
+     C*                                                                   S01486
+     C                     CALL 'DBERRCTL'                                S01486
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /COPY ZSRSRC,ZSEDITZ3                                               72242
+      /COPY ZSRSRC,ZASIGNZ2                                               72242
+      /COPY ZSRSRC,ZAPNUM                                                 72605
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  $CA
+ NIPIRDVF T C OTTRTUXT
+**  $CT
+NOMINAL CHANGE
+INTEREST TRADED
+INTEREST EVENT
+DIVIDEND
+FEE/COMMISSION
+WITHOLDING TAX
+CHARGES
+TRANSACTION TAX
+REALISED MARKET
+UNREALISED MARKET
+REALISED FOREX

@@ -1,0 +1,133 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GP Change system value setting control')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GPC009510 - Change System Value Setting Control             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK018  *CREATE    Date 21Apr04              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CPK018 - MidasPlus packaging.  Global system values.        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSVALKEY &NEWSYSVAL &SUPPUPD)
+ 
+             DCL        VAR(&SysValKey) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&NewSysVal) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SuppUpd) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ') TEXT('Midas GP Midas +
+                          information screen data')
+             MONMSG     MSGID(CPF1023)
+ 
+             CHGDTAARA  DTAARA(QTEMP/MIDASMSG) VALUE(' ')
+ 
+/* Call program to update the GPSVALPD file */
+             CALL       PGM(GP009510) PARM(&SYSVALKEY &NEWSYSVAL +
+                          &SUPPUPD)
+ 
+             RTVJOBA    SWS(&SWS)
+ 
+             IF         COND(%SST(&SWS 7 2) *EQ '11') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call Midas information screen to inform the user that the */
+/*  system value was updated successfully.                   */
+             RTVMSG     MSGID(SDM0001) MSGF(GPUSRMSG) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(SDM0003) MSGF(GPUSRMSG) +
+                          MSGDTA(&SYSVALKEY) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (451 50)) +
+                          VALUE(%SST(&NEWSYSVAL 1 50))
+             CHGDTAARA  DTAARA(MIDASMSG (501 50)) +
+                          VALUE(%SST(&NEWSYSVAL 51 50))
+             CHGDTAARA  DTAARA(MIDASMSG (551 50)) +
+                          VALUE(%SST(&NEWSYSVAL 101 50))
+             CHGDTAARA  DTAARA(MIDASMSG (601 50)) +
+                          VALUE(%SST(&NEWSYSVAL 151 50))
+             CALL       PGM(SCC0010) PARM('GPC009510' 'ENTER' ' ')
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               CHGJOB     SWS(XXXXXX11)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GPC009510 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job. */
+             IF         COND((&JOBTYPE = '1') *AND (%SST(&SWS 7 2) +
+                          *EQ '11')) THEN(DO)
+ 
+/* Call Midas information screen to inform the user that the */
+/*  system value was not updated.                            */
+                RTVMSG     MSGID(SDM0002) MSGF(GPUSRMSG) +
+                             MSGDTA(&SYSVALKEY) MSG(&MESSAGE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                RTVMSG     MSGID(SDM0005) MSGF(GPUSRMSG) MSG(&MESSAGE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                CALL       PGM(SCC0010) PARM('GPC009510' 'ENTER' +
+                             ' ')
+                MONMSG     MSGID(CPF0000 MCH0000)
+ 
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+ 
+/* Call Midas information screen to inform the user that the */
+/* program ended abnormally                                  */
+ 
+                CHGJOB     SWS(XXXXXX11)
+                RTVMSG     MSGID(SDM0004) MSGF(GPUSRMSG) +
+                             MSGDTA('GPC009510') MSG(&MESSAGE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                CALL       PGM(SCC0010) PARM('GPC009510' 'JOBLOG' +
+                             'Y')
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

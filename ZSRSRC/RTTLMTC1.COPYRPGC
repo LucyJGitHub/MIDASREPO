@@ -1,0 +1,184 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     C*  Last Amend No. BUG8514            Date 30Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  Prev Amend No. 104270             DATE 17Sep97               *
+     C*                 CRT001  *CREATE    DATE 28Feb95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  BUG8514- Issue regarding teller overrides.                   *
+     C*  104270 - Initialise override (@O) array element(s).          *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+      *                                                               *
+      *            RTTLMT - Teller limit check                        *
+      *                                                               *
+      * CALLS      RTCCYS - Currency set up                           *
+      *            RTLCNV - Local currency conversion                 *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  Input                                              *
+      *            @TCCY  - Transaction currency                      *
+      *            @LCCY  - Local currency                            *
+      *            @TAM1  - Transaction amount 1                      *
+      *            @TAM2  - Transaction amount 2                      *
+      *            @TCI1  - Transaction type cash indicator 1         *
+      *            @TCI2  - Transaction type cash indicator 2         *
+      *            @TCI   - Transaction type cash indicator           *
+      *            @CHTL  - Cash transaction limit                    *
+      *            @NCTL  - Non-cash transaction limit                *
+      *            @TCAM  - Transaction currency amount               *
+      *            @V     - Validation indicators array               *
+      *            @TL    - Teller Limit array position               *
+      *            @I     - Array index                               *
+      *                                                               *
+      * FLDS USED  Output                                             *
+      *            @TCDP  - Transaction currency decimal positions    *
+      *            @TCMD  - Transaction currency multiple/divide ind. *
+      *            @TCRT  - Transaction currency spot rate            *
+      *            @LCAM  - Local currency amount                     *
+      *            @WI    - Warning  error index                      *
+      *            @TI    - Terminal error index                      *
+      *            @O     - Override indicators array                 *
+      *            @T     - Terminal message codes array              *
+      *            @W     - Warning  message codes array              *
+      *                                                               *
+      *****************************************************************
+     C           RTTLMT    BEGSR                           ** RTTLMT **
+      *
+      ** Define input parameters
+     C                     MOVEL@TCCY     @TCCY   3
+     C                     MOVEL@LCCY     @LCCY   3
+     C                     Z-ADD@TAM1     @TAM1  150
+     C                     Z-ADD@TAM2     @TAM2  150
+     C                     MOVEL@TCI1     @TCI1   1
+     C                     MOVEL@TCI2     @TCI2   1
+     C                     MOVE *BLANKS   @TCI    1
+     C                     Z-ADD@CHTL     @CHTL  150
+     C                     Z-ADD@NCTL     @NCTL  150
+     C                     SETON                     85
+      *                                                                   104270
+      ** Initialise override array element                                104270
+      *                                                                   104270
+     C           PFNCD     IFNE '***'                                                        BUG8514
+     C                     MOVE ' '       @O,@TL                          104270
+     C                     ENDIF                                                             BUG8514
+      *
+      ** Set up transaction currency
+     C                     MOVEL@TCCY     @CCY
+     C                     EXSR RTCCYS
+     C                     Z-ADDTDP,@I    @TCDP
+     C                     MOVELTMD,@I    @TCMD
+     C                     Z-ADDTRT,@I    @TCRT
+      *
+      ** Set up local currency
+     C                     MOVEL@LCCY     @CCY
+     C                     EXSR RTCCYS
+     C                     Z-ADDTDP,@I    @LCDP
+     C                     MOVELTMD,@I    @LCMD
+     C                     Z-ADDTRT,@I    @LCRT
+      *
+      ** Return tag
+     C           AGAIN     TAG                             ** AGAIN **
+      *
+      ** If first time (*IN85 = '1'), select transaction amount 1
+      ** Else (second time) select transaction amount 2
+     C           *IN85     IFEQ '1'
+     C                     Z-ADD@TAM1     @TCAM
+     C                     MOVEL@TCI1     @TCI
+     C                     ELSE
+     C                     Z-ADD@TAM2     @TCAM
+     C                     MOVEL@TCI2     @TCI
+     C                     END
+      *
+      ** Perform local currency conversion for transaction amount
+     C                     EXSR RTLCNV
+      *
+      ** C A S H   T R A N S A C T I O N
+      *
+     C           @TCI      IFEQ 'Y'
+      *
+      ** If local amount is greater than cash transaction limit?
+     C           @LCAM     IFGT @CHTL
+      *
+      ** Override allowed?
+     C           @V,@TL    IFEQ 'Y'
+     C                     ADD  1         @WI
+     C                     MOVEL'TLIMIT'  @W,@WI
+     C                     MOVE 'Y'       @O,@TL
+      ** If first time?
+     C           *IN85     IFEQ '1'
+     C                     MOVE '1 '      @W,@WI
+     C                     ELSE
+     C                     MOVE '2 '      @W,@WI
+     C                     END
+     C                     END
+      *
+      ** No override allowed?
+     C           @V,@TL    IFEQ 'N'
+     C                     ADD  1         @TI
+     C                     MOVEL'TLIMIT'  @T,@TI
+      ** If first time?
+     C           *IN85     IFEQ '1'
+     C                     MOVE '1 '      @T,@TI
+     C                     ELSE
+     C                     MOVE '2 '      @T,@TI
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** N O N - C A S H   T R A N S A C T I O N
+      *
+     C                     ELSE
+      *
+      ** If local amount is greater than non-cash transaction limit?
+     C           @LCAM     IFGT @NCTL
+      *
+      ** Override allowed?
+     C           @V,@TL    IFEQ 'Y'
+     C                     ADD  1         @WI
+     C                     MOVEL'TLIMIT'  @W,@WI
+     C                     MOVE 'Y'       @O,@TL
+      ** If first time?
+     C           *IN85     IFEQ '1'
+     C                     MOVE '1 '      @W,@WI
+     C                     ELSE
+     C                     MOVE '2 '      @W,@WI
+     C                     END
+     C                     END
+      *
+      ** No override allowed?
+     C           @V,@TL    IFEQ 'N'
+     C                     ADD  1         @TI
+     C                     MOVEL'TLIMIT'  @T,@TI
+      ** If first time?
+     C           *IN85     IFEQ '1'
+     C                     MOVE '1 '      @T,@TI
+     C                     ELSE
+     C                     MOVE '2 '      @T,@TI
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If first time has completed and second transaction amount is
+      ** not zero, do second time again for second transaction amount
+     C           *IN85     IFEQ '1'
+     C           @TAM2     ANDNE0
+     C                     SETOF                     85
+     C                     GOTO AGAIN
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************

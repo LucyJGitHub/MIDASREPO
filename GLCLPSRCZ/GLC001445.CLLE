@@ -1,0 +1,110 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas GL MT995 Message Generation')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - General Ledger Module                           */
+/*                                                                   */
+/*       GLC001445 - Midas GL MT995 Message Generation               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CGL013  *CREATE    Date 31Apr02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL013 - MT94x Message Generation                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*/COPY WNCPYSRC,GLC001445A                                          */
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7) VALUE('       ')
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check feature CGL013 MT995 Message Generation */
+ 
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE '*VERIFY' 'CGL013')
+             IF         COND(&RTNCDE *NE '       ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,GLC001445B                                          */
+ 
+/* Start commitment control for batch jobs with file updates */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+             ENDDO
+ 
+/* Generate MT995 Messages */
+ 
+             CALLPRC    PRC(MG000995)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(GBMIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+/*/COPY WNCPYSRC,GLC001445D                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GLC001445 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC001445 ended abnormally - see job +
+                          log') TOPGMQ(*EXT)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+ 
+/*/COPY WNCPYSRC,GLC001445E                                          */
+ 
+             ENDPGM

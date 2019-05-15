@@ -1,0 +1,304 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Dealing forward rate calculation')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module                                       *
+     F*                                                               *
+     F*  DLZFWR - DEALING FORWARD RATE CALCULATION                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247544             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CIR013             Date 25Apr05               *
+      *                 228543             Date 31Aug04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 182370             Date 05Jun01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 100317             Date 13Mar96               *
+      *                 CIR001             Date 13Jun95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
+      *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
+      *           processing as amended by 242286.  (Recompile)       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over ZCBDYS.                              *
+      *  228543 - Rounding off error for the interest rate            *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  182370 - Incorrect calculation of number of days for calcu-  *
+      *           lation basis 6. Amended /COPY such that for calcu-  *
+      *           lation basis 6, the number of days per year is      *
+      *           equal to 366 when the year in question is a leap    *
+      *           year, and 365 days/year for non-leap years. Calcu-  *
+      *           lation was made so that processing would be in-line *
+      *           with that of /COPY ZINTDY.                          *
+      *  CIR004 - Dealing Calculation Method Change (Recompiled due   *
+      *           change in ZCBDYSZ1)                                 *
+     F*  100317 - The straight-line method of interpolating discount  *
+     F*           factors using SR/ZINTPL did not provide satisfatory *
+     F*           results. As the discount factors curve is           *
+     F*           exponential, an PL1 program (ZEXPIN) is used to     *
+     F*           perform an exponential interpolation. This program  *
+     F*           has been amended to calculate the currency spot     *
+     F*           date and pass it on to PGM/DLZNPV.                  *
+     F*  CIR001 - Interest Rate Calendars                             *
+     F*                                                               *
+     F*****************************************************************
+      *----------------------------------------------------------------
+      * ID  F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       90-99       STANDARD SUBROUTINES
+      *----------------------------------------------------------------
+      /SPACE 5
+     E                    CPY@    1   1 80
+     E                    ZF29   14  32  5 0
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+     E/COPY ZSRSRC,ZDATE9Z1                                               182370
+      /SPACE 5
+     ISDCURR    E DSSDCURRPD
+      * CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+     I***SDGELR*   E DSSDGELRPD                                                    MD035545 MD047993
+     I**GENERAL*LEDGER*DETAILS*ACCESSED*VIA*ACCESS*PROGRAM*************            MD035545 MD047993
+     IDSSDY     E DSDSSDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *                                                                   182370
+      ** Data structure for subroutine ZCBDYS                             182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT1                182370
+     I                                        1   40ZZYYA                 182370
+     I                                        5   60ZZMMA                 182370
+     I                                        7   80ZZDDA                 182370
+      *                                                                   182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT2                182370
+     I                                        1   40ZZYYB                 182370
+     I                                        5   60ZZMMB                 182370
+     I                                        7   80ZZDDB                 182370
+      *                                                                   182370
+     I/COPY ZSRSRC,ZDATE9Z2                                               182370
+     I/COPY ZSRSRC,ZDAT10Z1                                               182370
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+      /SPACE 5
+     C**************************************************************************
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ZFWRTC  5
+     C                     PARM           ZFWCCY  3        * CURRENCY
+     C                     PARM           ZFWINC  1        * INT.CALC.METH.
+     C                     PARM           ZFWSDT  50       * SPOT DATE    100317
+     C                     PARM           ZFWNDT  50       * NEXT DATE
+     C                     PARM           ZFWFDT  50       * FAR DATE
+     C                     PARM           ZFWOUT 117
+     C                     PARM           ZFYLDC  5                                           CAS001
+      *
+      ***  Initialise fields.
+      *
+     C                     Z-ADD0         ZFWOUT
+     C*
+     C                     MOVE '0'       *IN98
+      *****************************************************************            MD035545 MD047993
+      ***Call*access*program*for*General*Ledger*details.***************            MD035545 MD047993
+      *****************************************************************            MD035545 MD047993
+     C**********           CALL 'AOGELRR1'                                         MD035545 MD047993
+     C**********           PARM '*MSG   ' @RTCD   7                                MD035545 MD047993
+     C**********           PARM '*FIRST ' @OPTN   7                                MD035545 MD047993
+     C********** SDGELR    PARM SDGELR    DSSDY                                    MD035545 MD047993
+      *                                                                                     MD035545
+     C********** @RTCD     IFNE *BLANK                                             MD035545 MD047993
+     C**********           MOVEL'SDGELRPD'DBFILE                                   MD035545 MD047993
+     C**********           MOVEL'062'     DBASE                                    MD035545 MD047993
+     C**********           MOVEL@OPTN     DBKEY                                    MD035545 MD047993
+     C**********           EXSR *PSSR                                              MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+      *                                                                                     MD035545
+      ** Retrieve system value setting                                                      MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   W0RTCD  7                                         MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'                             MD035545
+      *                                                                                     MD035545
+     C           W0RTCD    IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+     C*
+     C** On change of currency
+     C** Read currency file for default interest calculation method
+     C*
+     C           ZFWCCY    IFNE @CCY
+     C                     MOVELZFWCCY    @CCY    3
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           @CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C*
+     C** IF INTEREST CALCULATION METHOD NOT PRESENT, USE CURRENCY DEFAULT
+     C*
+     C           ZFWINC    IFEQ ' '
+     C           ZFWINC    OREQ '0'
+     C                     MOVELA6DICB    ZFWINC
+     C                     END
+     C*
+     C** CALCULATE DISCOUNT FACTOR AS AT NEAR DATE
+     C*
+     C**********           Z-ADDZFWNDT    ZNPSDT                          100317
+     C                     Z-ADDZFWNDT    ZNPFDT
+     C                     EXSR CALDF
+     C                     Z-ADDZNPDF     ZFWNEA 119H
+     C*
+     C** CALCULATE DISCOUNT FACTOR AS AT FAR DATE
+     C*
+     C**********           Z-ADDZFWFDT    ZNPSDT                          100317
+     C                     Z-ADDZFWFDT    ZNPFDT
+     C                     EXSR CALDF
+     C                     Z-ADDZNPDF     ZFWFAR 119H
+     C*
+     C** Calculate the number of days/divisor basis
+     C** from near date to far date
+     C*
+     C                     Z-ADDZFWNDT    ZCBSDT
+     C                     Z-ADDZFWFDT    ZCBEDT
+     C                     MOVELZFWINC    ZCBCBS
+     C                     EXSR ZCBDYS
+     C*
+     C** FORWARD RATE = {(NEAR DISCOUNT FACTOR/FAR DISCOUNT FACTOR) - 1}
+     C**                X DIVISOR BASIS / DAY BASIS
+     C*
+     C           ZFWFAR    IFNE *ZERO
+     C           ZFWNEA    DIV  ZFWFAR    ZFWWRK 219H
+     C                     SUB  1         ZFWWRK
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFWWRK
+     C                     END
+      *
+     C**********           MULT ZCBDIV    ZFWWRK                                              228543
+     C                     MULT ZCBDIV    ZFWWRK    H                                         228543
+     C                     MULT 100       ZFWWRK
+      *
+     C           ZCBDAY    IFNE *ZERO
+     C**********           DIV  ZCBDAY    ZFWWRK                                              228543
+     C                     DIV  ZCBDAY    ZFWWRK    H                                         228543
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFWWRK
+     C                     END
+      *
+      ** OUTPUT FORWARD RATE
+      *
+     C                     Z-ADDZFWWRK    ZFWOUT
+      *
+     C                     RETRN
+      *
+     C**************************************************************************
+      /SPACE 5
+     C********************************************************************
+     C* CALCULATE DISCOUNT FACTOR
+     C********************************************************************
+     C           CALDF     BEGSR
+     C                     CALL 'DLZNPV'
+     C                     PARM *BLANK    ZNPRTC  5
+     C                     PARM ZFWCCY    ZNPCCY  3        * CURRENCY
+     C                     PARM ZFWINC    ZNPINC  1        * INT.CALC.METH.
+     C**********           PARM           ZNPSDT  50       * SPOT DATE    100317
+     C                     PARM ZFWSDT    ZNPSDT  50       * SPOT DATE    100317
+     C                     PARM           ZNPFDT  50       * FORWARD DATE
+     C                     PARM *ZERO     ZNPAMT 130       * AMOUNT
+     C                     PARM *ZERO     ZNPRAT 117
+     C**********           PARM *ZERO     ZNPDF  119                                          CAS001
+     C                     PARM *ZERO     ZNPDF  139                                          CAS001
+     C                     PARM *ZERO     ZNPOUT 130
+     C                     PARM           ZFYLDC                                              CAS001
+     C*
+     C           ZNPRTC    IFEQ '*ERR*'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           ZNPRTC    IFEQ '*NRCD'
+     C                     MOVEL'*NRCD'   ZFWRTC
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /SPACE 5
+     C**************************************************************************
+     C           *PSSR     BEGSR
+     C           ZFWRTC    IFEQ *BLANK
+     C                     MOVE '*ERR*'   ZFWRTC
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/COPY ZSRSRC,ZCBDYSZ1
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZDATE9Z3                                               182370
+     C/COPY ZSRSRC,ZDAT10Z2                                               182370
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+     X/COPY ZSRSRC,ZDATE9Z4                                               182370

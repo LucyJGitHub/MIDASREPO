@@ -1,0 +1,562 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('SMI Yearly Profitability Enquiry By Security')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8408 - SMI Yearly Profitability Enquiry by Security        *
+      *                                                               *
+      *  Called by: SEC8407                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSE108 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+     FSE8408DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SUBFLREC
+     FSEYPDSL0IF  E           K        DISK
+     F            SEYPDSD0                          KRENAMESEYPDSX0
+     FSEYPDSL1IF  E           K        DISK
+     F            SEYPDSD0                          KRENAMESEYPDSX1
+     FSEYPDSL2IF  E           K        DISK
+     F            SEYPDSD0                          KRENAMESEYPDSX2
+     FSEYPDSL3IF  E           K        DISK
+     F            SEYPDSD0                          KRENAMESEYPDSX3
+     FSECTY   IF  E           K        DISK
+     E                    NAR     1   2 14
+     E/COPY ZSRSRC,ZSEDITZ1
+     I/COPY ZSRSRC,ZSEDITZ2
+     IDATA      E DSSEYPDSPD
+     I              YPNC                            ##YPNC
+     I              YPIN                            ##YPIN
+     I              YPSS                            ##YPSS
+     ILDA         DS                            256
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     IPSDS       SDS
+     I                                     *STATUS  ERROR
+     I                                      244 253 WKSID
+     I                                      254 263 USRID
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, long data srtructure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS for Bank details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for currency details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** External DS for GL details
+     ISDGELR    E DSSDGELRPD
+      *
+      ** INITIAL PROCESSING
+      *
+     C                     EXSR INIT
+      *
+      ** DISPLAY SCREEN
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR DSPLAY
+     C                     END
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      * DSPLAY - DISPLAY SCREEN                                       *
+      *                                                               *
+      *****************************************************************
+     C           DSPLAY    BEGSR
+      *
+      ** FILL SUBFILE
+      *
+     C                     EXSR FILLSB
+     C*
+     C                     WRITESUBFLCTL
+     C                     WRITESUBMESS
+     C                     READ SUBFLCTL                 99*
+     C                     MOVEL*BLANK    DDERR
+      *
+      ** CK3 OR CK12,  END
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVEL'EXIT'    RETC
+     C                     ELSE
+     C           *INKL     IFEQ '1'
+     C                     MOVEL'    '    RETC
+     C                     ELSE
+      *
+      ** ROLLDOWN
+      *
+     C           *IN05     IFEQ '1'
+     C                     EXSR ROLDWN
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * FILL SUBFILE                                                  *
+      *                                                               *
+      *****************************************************************
+     C           FILLSB    BEGSR
+     C                     MOVEA'000'     *IN,1
+     C                     MOVEA'1'       *IN,4
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITESUBFLCTL                   *
+      ** Position
+     C           PACTN     IFEQ 'D'
+     C  N50      YPSECK    SETLLSEYPDSX0
+     C   50      YPINVK    SETLLSEYPDSX1
+     C                     ELSE
+     C  N50      YPSECK    SETLLSEYPDSX2
+     C   50      YPINVK    SETLLSEYPDSX3
+     C                     END
+      ** Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '0'
+     C                     MOVELYPSS      ##YPSS
+     C                     MOVELYPNC      ##YPNC
+     C                     MOVELYPIN      ##YPIN
+     C                     ELSE
+     C                     MOVEL*BLANK    ##YPSS
+     C                     MOVEL*BLANK    ##YPNC
+     C                     MOVEL*BLANK    ##YPIN
+     C                     MOVEL*BLANK    YPSS
+     C                     MOVEL*BLANK    YPNC
+     C                     MOVEL*BLANK    YPIN
+     C           DDERR     IFEQ *BLANK
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT 80
+     C                     MOVEL'SSE8100' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03 80        Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN99     DOWEQ'0'
+     C                     ADD  1         RRN     40     04*
+     C                     WRITESUBFLREC
+     C           RRN       IFEQ 18
+      ** Read
+     C                     EXSR RDFFIL
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    YPSS
+     C                     MOVEL*BLANK    YPNC
+     C                     MOVEL*BLANK    YPIN
+     C           DDERR     IFEQ *BLANK
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8100' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ELSE
+     C                     SETON                         99*
+     C                     END
+     C                     ELSE
+      ** Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    YPSS
+     C                     MOVEL*BLANK    YPNC
+     C                     MOVEL*BLANK    YPIN
+     C           DDERR     IFEQ *BLANK
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8100' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     END
+      *
+      ** SET SUBFILE CONTROL INDICATORS
+      *
+     C           *IN,4     IFEQ '1'
+     C                     MOVEA'010'     *IN,1
+     C                     ELSE
+     C                     MOVEA'111'     *IN,1
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * ROLLDOWN REQUEST                                              *
+      *                                                               *
+      *****************************************************************
+     C           ROLDWN    BEGSR
+     C                     Z-ADD*ZERO     RRN
+     C                     MOVEL##YPSS    YPSS
+     C                     MOVEL##YPNC    YPNC
+     C                     MOVEL##YPIN    YPIN
+      ** Position
+     C           PACTN     IFEQ 'D'
+     C  N50      YPSECK    SETGTSEYPDSX0
+     C   50      YPINVK    SETGTSEYPDSX1
+     C                     ELSE
+     C  N50      YPSECK    SETGTSEYPDSX2
+     C   50      YPINVK    SETGTSEYPDSX3
+     C                     END
+      ** Read (Previous)
+     C                     EXSR RDPFIL
+      *
+     C           *IN99     DOWEQ'0'
+     C           RRN       ANDLT18
+      ** Read (Previous)
+     C                     EXSR RDPFIL
+      *
+     C                     ADD  1         RRN
+     C                     END
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    YPSS
+     C                     MOVEL*BLANK    YPNC
+     C                     MOVEL*BLANK    YPIN
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8101' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * READ (NEXT) FROM FILE                                         *
+      *                                                               *
+      *****************************************************************
+     C           RDFFIL    BEGSR
+      *
+     C           PACTN     IFEQ 'D'
+     C  N50      YPPART    READESEYPDSX0                 99*
+     C   50      YPPART    READESEYPDSX1                 99*
+     C                     ELSE
+     C  N50      YPPART    READESEYPDSX2                 99*
+     C   50      YPPART    READESEYPDSX3                 99*
+     C                     END
+      ** Select?
+     C                     EXSR SELCTN
+      *
+     C           SELT      DOWEQ'N'
+      *
+     C           PACTN     IFEQ 'D'
+     C  N50      YPPART    READESEYPDSX0                 99*
+     C   50      YPPART    READESEYPDSX1                 99*
+     C                     ELSE
+     C  N50      YPPART    READESEYPDSX2                 99*
+     C   50      YPPART    READESEYPDSX3                 99*
+     C                     END
+      *
+     C                     EXSR SELCTN
+      *
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * READ PREVIOUS FROM FILE                                       *
+      *                                                               *
+      *****************************************************************
+     C           RDPFIL    BEGSR
+      *
+     C           PACTN     IFEQ 'D'
+     C  N50      YPPART    REDPESEYPDSX0                 99*
+     C   50      YPPART    REDPESEYPDSX1                 99*
+     C                     ELSE
+     C  N50      YPPART    REDPESEYPDSX2                 99*
+     C   50      YPPART    REDPESEYPDSX3                 99*
+     C                     END
+      ** Select?
+     C                     EXSR SELCTN
+      *
+     C           SELT      DOWEQ'N'
+      *
+     C           PACTN     IFEQ 'D'
+     C  N50      YPPART    REDPESEYPDSX0                 99*
+     C   50      YPPART    REDPESEYPDSX1                 99*
+     C                     ELSE
+     C  N50      YPPART    REDPESEYPDSX2                 99*
+     C   50      YPPART    REDPESEYPDSX3                 99*
+     C                     END
+      ** Select?
+     C                     EXSR SELCTN
+      *
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * DETERMINE IF RECORD READ IS TO BE SELECTED FOR DISPLAY        *
+      *                                                               *
+      *****************************************************************
+     C           SELCTN    BEGSR
+      *
+      ** END OF FILE
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'*'       SELT    1
+     C                     GOTO ESELCT
+     C                     END
+      *
+     C                     MOVEL'Y'       SELT
+      *
+      ** GET SECURITY DETAILS
+      *
+     C           YPSS      CHAINSECTYDF              99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTY'   DBFILE
+     C                     MOVELYPSS      DBKEY
+     C                     Z-ADD04        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Access Currency file for Nominal Currency Decimal Places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM NMCY      WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELNMCY      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD005       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    NCDP    10
+      *
+     C                     MOVELYPSS      SYPSS
+      *
+      ** EDIT DAY CHANGE TO, OR TOTAL OF, YEAR TO DATE P/L FOR OUTPUT
+      *
+     C           PACTN     IFEQ 'D'
+      ** Real PL
+     C                     Z-ADDCTRP      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STRP
+      ** Unreal PL
+     C                     Z-ADDCUPN      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SUPN
+      ** Dividends
+     C                     Z-ADDCPSN      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SPSN
+      ** Total I/E
+     C           CTRP      ADD  CUPN      ZFLD15
+     C                     ADD  CPSN      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STIE
+      ** Base
+     C                     Z-ADDCBYTD     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SBYTD
+      *
+     C                     ELSE
+      ** Real PL
+     C                     Z-ADDTTRP      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STRP
+      ** Unreal PL
+     C                     Z-ADDTUPN      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SUPN
+      ** Dividends
+     C                     Z-ADDTPSN      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SPSN
+      ** Total I/E
+     C           TTRP      ADD  TUPN      ZFLD15
+     C                     ADD  TPSN      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STIE
+      ** Base
+     C                     Z-ADDTBYTD     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SBYTD
+      *
+     C                     END
+     C           ESELCT    ENDSR
+      *****************************************************************
+      *                                                               *
+      * INITIAL PROCESSING                                            *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** PARAMETERS
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PYECD   50
+     C                     PARM           PYPBK   2
+     C                     PARM           PYPBA   3
+     C                     PARM           PACTN   1
+     C                     PARM           PSSEQ   1
+     C                     PARM           PBOKD  30
+     C                     PARM           RETC    4
+      *
+      ** DISPLAY IN SECURITY OR NOMINAL CURRENCY/INVESTMENT TYPE SEQ.
+      *
+     C           PSSEQ     COMP 'I'                      50*
+      *
+      ** PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE8408'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access LF/SDBANKL1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 01 *
+     C                     MOVEL'SDBANKL1'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Access Currency file for Base Currency Decimal Places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM BJCYCD    WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELBJCYCD    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    BCDP    10
+      *
+      ** Call Access Program for GL Details
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** KEY LIST
+      *
+     C           YPSECK    KLIST
+     C                     KFLD           PYECD
+     C                     KFLD           PYPBK
+     C                     KFLD           PYPBA
+     C                     KFLD           YPSS
+     C           YPINVK    KLIST
+     C                     KFLD           PYECD
+     C                     KFLD           PYPBK
+     C                     KFLD           PYPBA
+     C                     KFLD           YPNC
+     C                     KFLD           YPIN
+     C                     KFLD           YPSS
+     C           YPPART    KLIST
+     C                     KFLD           PYECD
+     C                     KFLD           PYPBK
+     C                     KFLD           PYPBA
+      *
+      ** SET HEADING ON SCREEN
+      *
+     C           PACTN     IFEQ 'D'
+     C                     MOVELNAR,1     NARR
+     C                     ELSE
+     C                     MOVELNAR,2     NARR
+     C                     END
+      *
+     C                     MOVEL'SEUSRMSG'WUMSGF 10
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR - ERROR SUBROUTINE                                      *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     MOVEL'*CANCL'  RETURN  6
+     C                     ENDSRRETURN
+      *****************************************************************
+     C/COPY ZSRSRC,ZSEDITZ3
+** NAR
+- DAILY
+- YEAR TO DATE

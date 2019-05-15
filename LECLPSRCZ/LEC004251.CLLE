@@ -1,0 +1,57 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Account Officers Modified Today Extract')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       LEC004251 - Account Officers Modified Today Extract         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1089839          Date 19Feb13              */
+/*                      CLE075AJ *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1089839 - COBOP and 2.1 source clashes                    */
+/*       CLE075AJ - COB Restructure - LE COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RDNB) TYPE(*CHAR) LEN(5)
+             DCLF       FILE(SDBANKPD)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RCVF
+ 
+/* Select ACOFs which are modified today and insert into extract. */
+ 
+             CLRPFM     FILE(LECSTXPD)
+             CHGVAR     VAR(&RDNB) VALUE(&BJRDNB)
+/**********  RUNSQL     SQL('INSERT INTO LECSTXPD SELECT BBCUST, + */                  /*AR1089839*/
+/**********               BBACOC FROM SDCUSTPD WHERE BBLCD = ' *CAT +*/                /*AR1089839*/
+/**********               &RDNB) COMMIT(*NONE)                     */                  /*AR1089839*/
+             SCRUNSQL   SQL('INSERT INTO LECSTXPD SELECT BBCUST, +
+                          BBACOC FROM SDCUSTPD WHERE BBLCD = ' *CAT +
+                          &RDNB)                                                       /*AR1089839*/
+             MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('LEC004251 - Account Officers Modified +
+                          Today Extract terminated abnormally') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

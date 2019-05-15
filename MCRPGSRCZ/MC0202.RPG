@@ -1,0 +1,554 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Hist Bal Control Groups Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0202 - Control Groups Report                               *
+     F*                                                               *
+     F*  Function: Runs in Close of Business to report on all control *
+     F*  (COB)     groups inserted, deleted or amended today, delete  *
+     F*            the management accounts for control groups deleted *
+     F*            today and reset the daily figures. It can also be  *
+     F*            requested at any time to report on all control     *
+     F*            groups.                                            *
+     F*                                                               *
+     F*  Called by: MCC0202 - Control Groups Report Control           *
+     F*                                                               *
+     F*  Calls: AOBANKR0 - Bank Details Definition file               *
+     F*         ZSFILE   - Set Up Spool File Numbers file             *
+     F*                                                               *
+     F*  Parameters: 5A Sequence Number                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 137276             Date 18Jun98               *
+      *                                    Date                       *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  137276 - There is no END OF REPORT'.                         *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE
+     FGLHBCGL0UF  E           K        DISK         KINFSR INFSR
+      * Control Groups by Group Code
+     FGLFCTLL0UF  E           K        DISK         KINFSR INFSR      UC
+      * GL File Controls File
+     FMC0202P1O   E                    PRINTER      KINFSR INFSR      UC
+     F                                              KINFDS MCRPT
+      * Control Groups Report
+     FMC0202AUO   E                    PRINTER      KINFSR INFSR      UC
+     F                                              KINFDS MCAUD
+      * Control Groups Audit Report
+      /EJECT
+     E                    CPYP    1   1 80
+      ** CPYP  Copyright array
+      /COPY ZSRSRC,ZDATE2Z1
+      ** Copy in date formatting arrays
+      /EJECT
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  Bank details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IRUNDAT    E DS
+      *
+      **  Run Date DS
+     ILDA       E DSLDA
+      **  Local data structure used for error handling
+      *
+     IMCAUD       DS
+      **  File information DS for MC0202AU report
+     I                                       83  92 PFILE1
+     I                                    B 123 1240PFNUM1
+      *
+     IMCRPT       DS
+      **  File information DS for MC0202P1 report
+     I                                       83  92 PFILE2
+     I                                    B 123 1240PFNUM2
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      /EJECT
+      *****************************************************************
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      * 25 - Audit/List to be printed on header
+      * 31 - Chain fail on GLFCTLL0
+      * 32 - EOF on GLHBCGL0
+      * 40 - Details to report
+      * 41 - MC0202AU already open
+      * 50 - Multibranching is switched on
+      * 51 - Profit Centres are being used
+      * 98 - Date format indicator
+      * U1 - Audit Mode
+      * U7 - Database error
+      * U8 - Database error
+      *
+      **************************************************************
+      *
+      *  S U B R O U T I N E   I N D E X
+      *
+      *  MAIN     -    Main control routine
+      *  #A       -    Initial processing routine
+      *  #B       -    Write control group details
+      *  #C       -    Update file controls
+      *  #D       -    ZSFILE processing/output to audit report
+      *  INFSR    -    File error subroutine
+      *  *PSSR    -    Program error subroutine
+      *  ZDATE2   -    Convert day number to DDMMMYY
+      *
+      **************************************************************
+      *
+      *  P R O G R A M   C A L L E D   I N D E X
+      *
+      * MCC0203   - Delete Management Accounts for a group
+      * ZSFILE    - Log spool file to RCF
+      * AOBANKR0  - Obtain bank details
+      * AOGELRR0  - Obtain General Ledger details
+      *
+      **************************************************************
+      /EJECT
+      **************************************************************
+      * MAIN routine - Controlling routine
+      *
+      **************************************************************
+      *
+      **  Initial processing.
+     C                     EXSR #A
+      *
+     C           *INU7     CABEQ'1'       ENDPGM
+      *
+      **  If audit mode (*INU1 = '1') access file controls
+     C           *INU1     IFEQ '1'                        B1
+     C                     MOVEL'GLHBCGPD'PGLKEY
+     C                     OPEN GLFCTLL0
+     C           PGLKEY    CHAINGLFCTLL0             31
+      *
+      **  DB error if record not found.
+     C           *IN31     IFEQ '1'                        B2
+     C                     Z-ADD003       DBASE            *2
+     C                     MOVEL'GLHBCGPD'DBKEY            *2
+     C                     MOVEL'MC0202'  DBPGM            *2
+     C                     MOVEL'GLFCTLL0'DBFILE           *2
+     C                     SETON                     U7U8LR*2
+     C                     MOVE 'AU'      PPRTF   2        *2
+     C                     EXSR #D                         *2
+     C                     GOTO ENDPGM                     *2
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+      **  Perform detail processing.
+     C                     EXSR #B
+     C           *INU7     CABEQ'1'       ENDPGM
+      *                                                                   137276
+      **  Write 'END OF REPORT' if any details were printed.              137276
+     C           *IN40     IFEQ '1'                                       137276
+     C                     WRITEMC0202E1                                  137276
+     C                     END                                            137276
+      *
+      **  If audit mode (*INU1 = '1') update file controls.
+     C           *INU1     IFEQ '1'                        B1
+     C                     EXSR #C                         *1
+      *
+      **  No details have been reported.
+     C           *IN40     IFEQ '0'                        B2
+     C                     WRITEMC0202D2                   *2
+     C                     END                             E2
+     C                     CLOSEMC0202AU                   *1
+      *
+      **  No details have been reported.
+      **  Perform ZSFILE processing for MC0202AU.
+     C                     ELSE                            *1
+     C           *IN40     IFEQ '0'                        B2
+     C                     MOVE 'AU'      PPRTF            *2
+     C                     EXSR #D                         *2
+     C                     WRITEMC0202A1                   *2
+     C                     WRITEMC0202D2                   *2
+     C                     CLOSEMC0202AU                   *2
+     C                     END                             E2
+     C                     END                             E1
+      *
+      **  Terminate program.
+     C                     SETON                         LR
+     C           ENDPGM    TAG
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#A - Initial Processing
+      *
+      * Called from:     MAIN Processing
+      *
+      * Calls      :     PGM/AOBANKR0
+      *                  SR/#D
+      *
+      **************************************************************
+     C           #A        BEGSR
+      *
+      **  Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ
+      *
+      ** Use copyright array to ensure copyright gets into object
+     C                     MOVEACPYP      PBIS   80
+      *
+      **  Initialize indicators and variables.
+     C                     Z-ADD0         PNPPG   10
+     C                     Z-ADD0         PNDLT   50
+     C                     MOVE *BLANKS   PGLKEY 10
+     C                     SETOF                     253132
+     C                     SETOF                     4041
+      *
+     C           *INU1     IFEQ '1'                        B1
+     C                     SETON                     25    *1
+     C                     ELSE                            *1
+     C                     SETOF                     25    *1
+     C                     END                             E1
+      *
+      **  Obtain bank details.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDBANKPD'DBFILE           *1
+     C                     Z-ADD01        DBASE            *1
+     C                     MOVEL'*FIRST'  DBKEY            *1
+     C                     MOVEL'MC0202'  DBPGM            *1
+     C                     SETON                     U7U8LR*1
+     C                     MOVE 'AU'      PPRTF            *1
+     C                     EXSR #D                         *1
+     C                     GOTO #A9                        *1 GOTO
+     C                     END                             E1
+      *
+      ** Setup the date format indicator used by sr/ZDATE2
+     C           BJDFIN    IFEQ 'M'                        B1
+     C                     SETON                     98    *1
+     C                     END                             E1
+      *
+      ** In the Dataarea RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Setup the multibranching indicator used by report
+     C           AGMBIN    IFEQ 'Y'                        B1
+     C                     SETON                     50    *1
+     C                     END                             E1
+      *
+      ** Obtain General Ledger details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDGELRPD'DBFILE           *1
+     C                     Z-ADD06        DBASE            *1
+     C                     MOVEL'*FIRST'  DBKEY            *1
+     C                     MOVEL'MC0202'  DBPGM            *1
+     C                     SETON                     U7U8LR*1
+     C                     MOVE 'AU'      PPRTF            *1
+     C                     EXSR #D                         *1
+     C                     GOTO #A9                        *1 GOTO
+     C                     END                             E1
+      *
+      ** Setup the Profit Centres Used indicator used by report
+     C           BKPRCU    IFEQ 'Y'                        B1
+     C                     SETON                     51    *1
+     C                     END                             E1
+      *
+     C           #A9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#B - Subroutine to write Control Group details to report.
+      *
+      * Called from:     MAIN Processing
+      *
+      * Calls      :     PGM/MCC0203
+      *                  SR/ZDATE2
+      *
+      **************************************************************
+     C           #B        BEGSR
+      *
+     C                     READ GLHBCGL0                 32
+      *
+      **  Do while records still exist in GLHBCGL0.
+     C           *IN32     DOWEQ'0'                        B1
+      *
+      **  If Audit mode switch is off
+      **  OR Audit mode switch is on and last change date = run date.
+     C           *INU1     IFEQ '0'                        B2
+     C           *INU1     OREQ '1'                        B2
+     C           HCLCD     ANDEQBJRDNB                     B2
+      *
+      **  If first detail record being processed open print file.
+     C           *IN40     IFEQ '0'                        B3
+     C                     SETON                     40    *3
+     C                     OPEN MC0202P1                   *3
+      *
+      **  Perform standard ZSFILE processing for PRTF/MC0202P1.
+     C                     MOVE 'P1'      PPRTF            *3
+     C                     EXSR #D                         *3
+     C           *INU7     CABEQ'1'       #B9              *3
+     C                     WRITEMC0202H1                   *3
+     C                     END                             E3
+      *
+      **  Increment number printed on page by 1.
+     C                     ADD  1         PNPPG            *2
+      *
+      **  If number printed on page reaches 5, advance to new page.
+     C           PNPPG     IFEQ 5                          B3
+     C                     WRITEMC0202H1                   *3
+     C                     Z-ADD1         PNPPG            *3
+     C                     END                             E3
+      *
+      **  Set up output value for Change Type.
+     C                     MOVE *BLANKS   RCYTLC  6
+     C           HCTYLC    IFEQ 'A'                        B3
+     C                     MOVE 'Amend '  RCYTLC           *3
+     C                     ELSE                            X3
+     C           HCTYLC    IFEQ 'I'                        B4
+     C                     MOVE 'Insert'  RCYTLC           *4
+     C                     ELSE                            X4
+     C           HCTYLC    IFEQ 'D'                        B5
+     C                     MOVE 'Delete'  RCYTLC           *5
+     C                     END                             E5
+     C                     END                             E4
+     C                     END                             E3
+      *
+      ** Convert last change date to DDMMMYY format.
+     C                     MOVE HCLCD     ZDAYNO           *2
+     C                     EXSR ZDATE2                     *2
+     C                     MOVE ZADATE    RHCLCD           *2
+      *
+      **  Print record details.
+     C                     WRITEMC0202D1                   *2
+      *
+      **  If Audit mode switch is on and last change type = 'D'
+      **  delete all Management Accounts for the group then delete
+      **  the control group record.
+     C           *INU1     IFEQ '1'                        B3
+     C           HCTYLC    ANDEQ'D'                        *3
+     C                     CALL 'MCC0203'                  *3
+     C                     PARM           HCCGCD           *3
+     C                     DELET@BNREDZ                    *3
+     C                     ADD  1         PNDLT            *3
+     C                     END                             E3
+      *
+     C                     END                             E2
+      *
+     C                     READ GLHBCGL0                 32*1
+     C                     END                             E1
+      *
+     C           #B9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#C - Subroutine to update file controls.
+      *
+      * Called from:     MAIN Processing
+      *
+      * Calls      :     SR/#D
+      *
+      **************************************************************
+     C           #C        BEGSR
+      *
+      **  Move values to printer fields.
+     C           GFNORC    SUB  PNDLT     RFNORC  50
+     C                     Z-ADDGFNOIN    RFNOIN  50
+     C                     Z-ADDGFNOAM    RFNOAM  50
+     C                     Z-ADDPNDLT     RFNODL  50
+      *
+      **  Subtract number of deletions from number of records on file.
+     C           GFNORC    SUB  PNDLT     GFNORC
+     C                     Z-ADD0         GFNOIN
+     C                     Z-ADD0         GFNOAM
+     C                     Z-ADD0         GFNODL
+      *
+      **  Update GLFCTLL0.
+     C                     UPDAT@AHREAU
+     C                     CLOSEGLFCTLL0
+      *
+      **  Perform ZSFILE processing for MC0202AU.
+     C                     MOVE 'AU'      PPRTF
+     C                     EXSR #D
+      *
+     C           *INU7     IFEQ '1'
+     C                     GOTO #C9
+     C                     END
+      *
+      **  Write details to audit report.
+     C                     WRITEMC0202A1
+     C                     WRITEMC0202A2
+      *
+     C           #C9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#D  - ZSFILE Processing/Output to Audit Report
+      *
+      * Called from:     SR/#A
+      *                  SR/#C
+      *                  SR/INFSR
+      *                  SR/*PSSR
+      *                  MAIN processing
+      *
+      * Calls      :     PGM/ZSFILE
+      *
+      **************************************************************
+     C           #D        BEGSR
+      *
+      ** Open AU file if not already open
+     C           *IN41     IFEQ '0'                        B1
+     C           PPRTF     ANDEQ'AU'                       B1
+     C                     SETON                     41    *1
+     C                     OPEN MC0202AU                   *1
+     C                     END                             E1
+      *
+      ** Convert binary number to packed numeric for relevant file
+     C           PPRTF     IFEQ 'AU'                       B1
+     C                     Z-ADDPFNUM1    PSNUM            *1
+     C                     MOVELPFILE1    PFILE  10        *1
+     C                     ELSE                            *1
+     C                     Z-ADDPFNUM2    PSNUM            *1
+     C                     MOVELPFILE2    PFILE            *1
+     C                     END                             E1
+      *
+     C                     MOVE *BLANKS   PPRTF
+      *
+      ** Run processing to log printer file to RCF
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM *BLANKS   PPARM   3
+     C                     PARM           PFILE
+     C                     PARM           PSNUM   60
+     C                     PARM           PSERR   1
+      *
+     C           PSERR     IFEQ 'Y'                        B1
+     C                     Z-ADD002       DBASE            *1
+     C                     MOVELPFILE     DBFILE           *1
+     C                     MOVE *BLANKS   DBKEY            *1
+     C                     MOVEL'ZSFILE ' DBPGM            *1
+     C                     SETON                     U7U8LR*1
+      *
+      ** Open AU file if not already open
+     C           *IN41     IFEQ '0'                        B2
+     C                     SETON                     41    *2
+     C                     OPEN MC0202AU                   *2
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+      **  If error, write to audit report.
+     C           *INU7     IFEQ '1'                        B1
+     C                     WRITEMC0202A1                   *1
+     C                     WRITEMC0202A3                   *1
+     C                     CLOSEMC0202AU                   *1
+     C                     END                             E1
+      *
+     C           #D9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/INFSR - File error subroutine
+      *
+      * Called by:   Executes whenever file exception/error occurs
+      *
+      ***************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      ** Set PERR2 to 'Y' to prevent looping if further errors.
+     C           PERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR2   1        *1
+     C                     SETON                     U7U8  *1
+      *
+      ** Set up fields in LDA
+     C                     MOVEL'INFSR   'DBKEY            *1
+     C                     Z-ADD04        DBASE            *1
+     C                     MOVEL'MC0202'  DBPGM            *1
+      *
+      ** Produce error report on audit trail
+     C                     MOVE 'AU'      PPRTF            *1
+     C                     EXSR #D                         *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/*PSSR - Program error subroutine
+      *
+      * Called by:   Executes whenever program error occurs
+      *
+      ***************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Set PERR1 to 'Y' to prevent looping if further errors
+     C           PERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR1   1        *1
+     C                     SETON                     U7U8  *1
+      *
+      ** Set up fields in LDA
+     C                     MOVEL'*PSSR   'DBKEY            *1
+     C                     Z-ADD05        DBASE            *1
+     C                     MOVEL'MC0202'  DBPGM            *1
+      *
+      ** Produce error report on audit trail
+     C                     MOVE 'AU'      PPRTF            *1
+     C                     EXSR #D                         *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+** CPYP         OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN used by sr/ZDATE2
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR used by sr/ZDATE2
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES used by sr/ZDATE2
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

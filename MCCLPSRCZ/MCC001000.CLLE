@@ -1,0 +1,359 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF CoB Update All Control Groups')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Management Accounts Module                      */
+/*                                                                   */
+/*       MCC001000 - Update All Control Groups Control in CoB        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. MD052312           Date 14Nov18              */
+/*       Prev Amend No. CMC004  *CREATE    Date 13Jul18              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*   MD052312 - MCC001000 is looping when CMC001 is OFF              */
+/*   CMC004 - Update MC Control groups after FC Transfer             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+
+             DCL        VAR(&GROUPCODE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PERIODSET) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&POSTINGBAS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&STARTDATE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&SECTIONS) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&ANALYSIS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STARTTIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CMC001) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7) VALUE('       ')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10) VALUE('  DPLIB')
+             DCL        VAR(&GROUPCODE2) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+
+             COPYRIGHT TEXT('(C) Finastra International Limited 2018')
+
+/* Global error message                                              */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/** Create data area LDA if it does not exist */
+
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             MONMSG     MSGID(CPF1015) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          AUT(*ALL))
+
+/** Reset Job Switches                                               */
+
+             CHGJOB     SWS(XXXXXX00)
+/*                                                                   */
+/*  Check if CMC004 is installed.                                    */
+/*                                                                   */
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CMC004' +
+                          &DSFDY)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+             SNDPGMMSG  MSG('CMC004 feature not installed - control +
+                          groups will not be updated') TOMSGQ(MRUNQ +
+                          MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/*                                                                   */
+/*  Check if Management Accounts Enhancement is installed.           */
+/*                                                                   */
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CMC001' +
+                          &DSFDY)
+/*                                                                   */
+/*  If Management Accounts Enhancement is installed, exclusively     */
+/*  allocate DTAARA/MC0220 to indicate that mgmt a/cs are in use     */
+/*                                                                   */
+             IF         COND(&RTCD *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&CMC001) VALUE('Y')
+                ALCOBJ     OBJ((MC0220 *DTAARA *EXCLRD)) WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)
+                   SNDPGMMSG  MSG('Management accounts files cannot be +
+                                allocated at this time.') +
+                                TOMSGQ(MRUNQ MOPERQ)
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+
+/* Setup system prefix variable from SDSTAT data area.               */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+
+/* Call program CB0160 to get value of restart indicator.            */
+
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+
+/* If it is NOT a restart.                                           */
+
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+                DLTF       FILE(XGLEODPTD)
+                MONMSG     MSGID(CPF2105 CPF3219)
+                DLTF       FILE(XGLHIBLPD)
+                MONMSG     MSGID(CPF2105 CPF3219)
+                DLTF       FILE(XGLAVBLPD)
+                MONMSG     MSGID(CPF2105 CPF3219)
+
+                CPYF       FROMFILE(GLEODPTD) TOFILE(&DPLIB/XGLEODPTD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(GLHIBLPD) TOFILE(&DPLIB/XGLHIBLPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(GLAVBLPD) TOFILE(&DPLIB/XGLAVBLPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+
+/* If it is a restart.                                               */
+
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+                CPYF       FROMFILE(XGLEODPTD) TOFILE(GLEODPTD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(XGLHIBLPD) TOFILE(GLHIBLPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(XGLAVBLPD) TOFILE(GLAVBLPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+
+/* Call CB0150 to update restart indicator                           */
+
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+/* If GLEODPTD is not empty update the Posting Date                  */
+             CALL PGM(MC001000)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))
+
+/* Add daily files to GLEODPTD                                       */
+             CPYF       FROMFILE(GEDLPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GESOPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GECEPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEICPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GESFPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEFAPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GESPPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(CLEARPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEFRPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GECLPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(MANPOPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GELEPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEAAPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEIERPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GESTPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEFPPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEFFPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GECMPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GENAPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEPCPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GERTPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEHMPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GESCPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GETTPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+             CPYF       FROMFILE(GEPMPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+/* Post 2 Files                                                      */
+             CPYF       FROMFILE(GESRPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+
+/* Post 4 Files                                                      */
+             CPYF       FROMFILE(GEXFPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)
+             MONMSG     MSGID(CPF2817 CPF2972)
+
+/* Work through all defined Group Codes                              */
+/**/
+/**  Access PCA ICD for Primary Control Group                        */
+/**/
+             CALL       PGM(AOPCACR0) PARM(&RTCD '*FIRST' &DSFDY)
+             CHGVAR     VAR(&GROUPCODE2) VALUE(%SST(&DSFDY 15 2))
+
+TAG01:
+
+/* Call the Update All Control Groups program                        */
+             CALL       PGM(MC0265) PARM(&GROUPCODE &PERIODSET +
+                          &POSTINGBAS &STARTDATE &SECTIONS +
+                          &ANALYSIS &STARTTIME)
+
+/** If Group Code is equal to Primary control group                  */
+/****skip its processing.*********************************************/                 /*MD052312*/
+/**********  IF         COND(&GROUPCODE *EQ &GROUPCODE2) THEN(GOTO +
+/**********               CMDLBL(TAG01))                                                /*MD052312*/
+/**  and CMC001 is switched on, skipt its processing.                */                 /*MD052312*/
+             IF         COND((&GROUPCODE *EQ &GROUPCODE2) *AND +
+                          (&CMC001 *EQ 'Y')) THEN(GOTO CMDLBL(TAG01))                   /*MD052312*/
+/* If Group Code is not returned from MCC0265, skip out of loop      */
+             IF         COND(&GROUPCODE *EQ '  ') THEN(GOTO +
+                          CMDLBL(TAG02))
+/*                                                                   */
+/** If the required members do not exist, create them.               */
+/** This will be required where a database is restored containing    */
+/** control groups for which the pf/lf members do not exist.         */
+/*                                                                   */
+             CHKOBJ     OBJ(GLHIBLPD) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLHIBLPD) +
+                        MBR(&GROUPCODE))
+/* */
+             CHKOBJ     OBJ(GLHIBLL0) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDLFM FILE(GLHIBLL0) +
+                        MBR(&GROUPCODE) DTAMBRS((GLHIBLPD +
+                        (&GROUPCODE))))
+/* */
+             CHKOBJ     OBJ(GLHIBLL1) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDLFM FILE(GLHIBLL1) +
+                        MBR(&GROUPCODE) DTAMBRS((GLHIBLPD +
+                        (&GROUPCODE))))
+/* */
+             CHKOBJ     OBJ(GLHIBLL3) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDLFM FILE(GLHIBLL3) +
+                        MBR(&GROUPCODE) DTAMBRS((GLHIBLPD +
+                        (&GROUPCODE))))
+/* */
+             CHKOBJ     OBJ(GLHIBLL4) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDLFM FILE(GLHIBLL4) +
+                        MBR(&GROUPCODE) DTAMBRS((GLHIBLPD +
+                        (&GROUPCODE))))
+/* */
+             CHKOBJ     OBJ(GLAVBLPD) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLAVBLPD) +
+                        MBR(&GROUPCODE))
+/* */
+             CHKOBJ     OBJ(GLAVBLL0) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDLFM FILE(GLAVBLL0) +
+                        MBR(&GROUPCODE) DTAMBRS((GLAVBLPD +
+                        (&GROUPCODE))))
+/* */
+             CHKOBJ     OBJ(GLAVBLL1) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDLFM FILE(GLAVBLL1) +
+                        MBR(&GROUPCODE) DTAMBRS((GLAVBLPD +
+                        (&GROUPCODE))))
+/* */
+             CHKOBJ     OBJ(GLAVBLL3) OBJTYPE(*FILE) MBR(&GROUPCODE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDLFM FILE(GLAVBLL3) +
+                        MBR(&GROUPCODE) DTAMBRS((GLAVBLPD +
+                        (&GROUPCODE))))
+/* */
+/* Override to member for the Group Code                             */
+             OVRDBF     FILE(GLHIBLPD) TOFILE(*FILE) MBR(&GROUPCODE)
+             OVRDBF     FILE(GLHIBLL0) TOFILE(*FILE) MBR(&GROUPCODE)
+             OVRDBF     FILE(GLHIBLL1) TOFILE(*FILE) MBR(&GROUPCODE)
+             OVRDBF     FILE(GLHIBLL3) TOFILE(*FILE) MBR(&GROUPCODE)
+             OVRDBF     FILE(GLHIBLL4) TOFILE(*FILE) MBR(&GROUPCODE)
+
+             OVRDBF     FILE(GLAVBLPD) TOFILE(*FILE) MBR(&GROUPCODE)
+             OVRDBF     FILE(GLAVBLL0) TOFILE(*FILE) MBR(&GROUPCODE)
+             OVRDBF     FILE(GLAVBLL1) TOFILE(*FILE) MBR(&GROUPCODE)
+             OVRDBF     FILE(GLAVBLL3) TOFILE(*FILE) MBR(&GROUPCODE)
+
+             OVRDBF     FILE(APOSTPD)  TOFILE(GLEODPTD) SHARE(*YES)
+
+/* Call Select Postings using OPNQRYF program                        */
+/* These parameters are output by MC0265                             */
+             CALL       PGM(MCC0299) PARM(&PERIODSET &POSTINGBAS +
+                          &STARTDATE &SECTIONS &ANALYSIS 'N' +
+                          &STARTTIME)
+
+/* Call Update Management Accounts to Current End of Period program  */
+             CALL       PGM(MC0230) PARM(&GROUPCODE &RETURNCODE)
+
+/* Check for database error                                          */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))
+
+/* Call Update Management Accounts with Movements program            */
+/*      Override UPDBALPD to OPNQRYF generated by MCC0299            */
+             OVRDBF     FILE(UPDBALPD) TOFILE(GLPERDPD) SHARE(*YES)
+             CALL       PGM(MC0235) PARM(&GROUPCODE &RETURNCODE)
+             DLTOVR     FILE(UPDBALPD)
+
+/* Check for database error                                          */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))
+
+/* Call Rework DR/CR Average Balances program                        */
+             CALL       PGM(MCC0240) PARM(&GROUPCODE &RETURNCODE)
+
+/* Check for database error                                          */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))
+
+/* Delete all file overrides                                         */
+             DLTOVR     FILE(*ALL)
+
+/* End of processing run if MC0265 returns a Group Code              */
+/* Process the next Group Code                                       */
+             GOTO       CMDLBL(TAG01)
+
+ TAG02:
+             IF         COND(&CMC001 *EQ 'Y') THEN(DO)
+                DLCOBJ     OBJ((MC0220 *DTAARA *EXCLRD))
+             ENDDO
+
+/* Call CB0150 to update restart indicator.                          */
+
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             DLTF       FILE(XGLEODPTD)
+             MONMSG     MSGID(CPF2105 CPF3219)
+             DLTF       FILE(XGLHIBLPD)
+             MONMSG     MSGID(CPF2105 CPF3219)
+             DLTF       FILE(XGLAVBLPD)
+             MONMSG     MSGID(CPF2105 CPF3219)
+
+             CLRPFM     FILE(GLEODPTD)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Update All Control Groups ENDED +
+                          ABNORMALLY') TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+ENDPGM:      ENDPGM

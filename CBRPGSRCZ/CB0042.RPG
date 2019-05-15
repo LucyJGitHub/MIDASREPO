@@ -1,0 +1,87 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Sundry Postings - CoB Init Routine')
+      *****************************************************************
+      *                                                               *
+      *  Midas     - General Ledger Sundry Postings                   *
+      *                                                               *
+      *  RPG/CB0042  - CoB Initialisation Routine                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CGL030 *CREATE     Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL030 - Sundry Postings                                     *
+      *                                                               *
+      *****************************************************************
+     FGLRGSUPDUF  E           K        DISK
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACCR    10
+      *
+      ** There are 3 ANWD methods:
+      **  0 = run for today (POST 1) + (poss) another run to DNWD-1 (POST 5)
+      **  1 = run to DNWD-1 (POST 1)
+      **  2 = run to today (POST 1)
+      *
+      ** On Friday, ANWD=0 says APDA=Friday   (assuming daily accruals)
+      **            ANWD=1      APDA=Sunday
+      **            ANWD=2      APDA=Friday
+      *
+      ** There are 3 accrual day types:
+      **  1 = non-accrual day
+      **  2 = accrual day with either (ANWD=0 + no NWDs) or (ANWD=1,2)
+      **  3 = accrual day with (ANWD=0 + NWDs)
+      *
+      ** POST 1 runs always
+      ** POST 5 runs only on accrual day=3 (ie ANWD=0 and DNWD-1 > APDA)
+      *
+      ** Initialise status fields for all records
+      *
+     C           *LOVAL    SETLLGLRGSUPD
+     C                     READ GLRGSUPD                 81
+B01  C           *IN81     DOWEQ'0'
+      *
+      ** Check if retrieved feature is active
+      *
+ 01  C                     CALL 'AOSARDR0'
+ 01  C                     PARM *BLANKS   @RTCD   7
+ 01  C                     PARM '*VERIFY' @OPTN   7
+ 01  C                     PARM E1SARN    @SAR    6
+B02  C           @RTCD     IFEQ *BLANKS
+ 02  C                     MOVEL'Y'       FEATON  1
+ 02  C                     MOVEL'C'       CMPFLG  1
+ 02  C                     ELSE
+ 02  C                     MOVEL'N'       FEATON
+ 02  C                     MOVEL'*'       CMPFLG
+E02  C                     END
+      *
+B02  C           E1POST    IFEQ 'Y'
+ 02  C           FEATON    ANDEQ'Y'
+ 02  C                     MOVEL' '       E1STA1
+ 02  C                     ELSE
+ 02  C                     MOVELCMPFLG    E1STA1
+E02  C                     END
+B02  C           E1ANWD    IFEQ 'Y'
+ 02  C           ACCR      ANDEQ3
+ 02  C           FEATON    ANDEQ'Y'
+ 02  C                     MOVEL' '       E1STA2
+ 02  C                     ELSE
+ 02  C                     MOVELCMPFLG    E1STA2
+E02  C                     END
+B02  C           E1PROJ    IFEQ 'Y'
+ 02  C           FEATON    ANDEQ'Y'
+ 02  C                     MOVEL' '       E1STA3
+ 02  C                     ELSE
+ 02  C                     MOVELCMPFLG    E1STA3
+E02  C                     END
+ 01  C                     UPDATGLRGSUD0
+ 01  C                     READ GLRGSUPD                 81
+E01  C                     END
+     C                     SETON                     LR

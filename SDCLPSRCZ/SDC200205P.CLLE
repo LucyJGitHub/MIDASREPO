@@ -1,0 +1,168 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas Local Tax Office Statement')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - German Withholding Tax Module                       */
+/*                                                                   */
+/*       SDC200205P - Local Tax Office Statement                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG25533           Date 19Aug09              */
+/*                      CER054  *CREATE    Date 07Apr09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG25533 - Non Generation of Withholding Tax per Federal    */
+/*                  State Report during Input Cycle and after COB    */
+/*                  (Applied BUG24714 fix)                           */
+/*       BUG24714 - Non Generation of Withholding Tax per Federal    */
+/*                  State Report during Input Cycle and after COB    */
+/*       CER054 - German Feature - Church Tax                        */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM &PACT &PCMD)
+ 
+             DCLF       FILE(SD200205DF)
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&PACT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PCMD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SDDATE) TYPE(*DEC) LEN(6 0)
+             DCL        VAR(&SDDATA) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SDDAT8) TYPE(*DEC) LEN(8 0)
+             DCL        VAR(&WCFRDT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&WCTODT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&WNFRDT) TYPE(*DEC) LEN(8 0)
+             DCL        VAR(&WNTODT) TYPE(*DEC) LEN(8 0)
+             DCL        VAR(&PZAPGMQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PZAPGRL) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PZAMSID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PZAMSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PZAMSDA) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&PZAMSTP) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MITEM)   TYPE(*CHAR) LEN(10)                               /*BUG24714*/
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2009')
+ 
+/***  Monitor for Error Messages from System.  */
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 +
+                          RPG0000) EXEC(GOTO CMDLBL(END))
+ 
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&BJMRDT)
+             RTVJOBA    JOB(&DDWID) USER(&DDUSER)
+ 
+/***  Convert rundate to YYYYMMDD format.  */
+             CALLPRC    PRC(ZA3344) PARM(&SDDATE &SDDATA &SDDAT8)
+ 
+/***  Set initial value */
+             CHGVAR     VAR(&DDPGM) VALUE('SDC200205P')
+             CHGVAR     VAR(&PZAMSGF) VALUE('GBSDUSRMSG')
+             CHGVAR     VAR(&PZAPGRL) VALUE('*SAME')
+                                                                                        /*BUG24714*/
+             RTVDTAARA  DTAARA(ZMITEM (1 10)) RTNVAR(&MITEM)                            /*BUG24714*/
+             IF         COND(&MITEM = '0000004400') THEN(CHGVAR +
+                          VAR(&IN61) VALUE('1'))                                        /*BUG24714*/
+             IF         COND(&MITEM = '0000004401') THEN(CHGVAR +
+                          VAR(&IN62) VALUE('1'))                                        /*BUG24714*/
+             IF         COND(&MITEM = '0000004402') THEN(CHGVAR +
+                          VAR(&IN63) VALUE('1'))                                        /*BUG24714*/
+             IF         COND(&MITEM = '0000004403') THEN(CHGVAR +
+                          VAR(&IN64) VALUE('1'))                                        /*BUG24714*/
+ 
+ ERROR:      SNDF       RCDFMT(SD200205C0)
+ DSP:        SNDRCVF    RCDFMT(SD200205F0)
+ 
+/***  Reset screen indicator and clear message field.  */
+             CHGVAR     VAR(&IN11) VALUE('0')
+             CHGVAR     VAR(&IN12) VALUE('0')
+             CHGVAR     VAR(&PZAPGMQ) VALUE(&DDPGM)
+             CALL       PGM(Y2CLMSC) PARM(&PZAPGMQ &PZAPGRL)
+ 
+/***  When F3 is pressed. */
+             IF         COND(&IN03) THEN(DO)
+             CHGVAR     VAR(&PCMD) VALUE('E')
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/***  Validate 'From Date' and 'To Date' entries.  */
+             IF         COND((&DDFRDT *EQ ' ') *OR (&DDTODT *EQ ' +
+                          ')) THEN(DO)
+             CHGVAR     VAR(&PZAMSID) VALUE('USR8332')
+             CHGVAR     VAR(&PZAMSDA) VALUE(' ')
+             CALL       PGM(Y2SNMGC) PARM(&PZAPGMQ &PZAPGRL &PZAMSID +
+                          &PZAMSGF &PZAMSDA &PZAMSTP)
+             CHGVAR     VAR(&IN11) VALUE('1')
+             CHGVAR     VAR(&IN12) VALUE('1')
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             ELSE       CMD(IF COND((&DDFRDT *NE ' ') *AND (&DDTODT +
+                          *NE ' ')) THEN(DO))
+ 
+             CVTDAT     DATE(&DDFRDT) TOVAR(&WCFRDT) FROMFMT(*DMY) +
+                          TOFMT(*YYMD) TOSEP(*NONE)
+             MONMSG     MSGID(CPF0555 CPF0551) EXEC(DO)
+             CALL       PGM(Y2CLMSC) PARM(&PZAPGMQ &PZAPGRL)
+             CHGVAR     VAR(&PZAMSID) VALUE('USR4157')
+             CHGVAR     VAR(&PZAMSDA) VALUE(' ')
+             CALL       PGM(Y2SNMGC) PARM(&PZAPGMQ &PZAPGRL &PZAMSID +
+                          &PZAMSGF &PZAMSDA &PZAMSTP)
+             CHGVAR     VAR(&IN11) VALUE('1')
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHGVAR     VAR(&WNFRDT) VALUE(&WCFRDT)
+ 
+             IF         COND(&WNFRDT *GE &SDDAT8) THEN(DO)
+             CHGVAR     VAR(&PZAMSID) VALUE('USR8333')
+             CHGVAR     VAR(&PZAMSDA) VALUE(' ')
+             CALL       PGM(Y2SNMGC) PARM(&PZAPGMQ &PZAPGRL &PZAMSID +
+                          &PZAMSGF &PZAMSDA &PZAMSTP)
+             CHGVAR     VAR(&IN11) VALUE('1')
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CVTDAT     DATE(&DDTODT) TOVAR(&WCTODT) FROMFMT(*DMY) +
+                          TOFMT(*YYMD) TOSEP(*NONE)
+             MONMSG     MSGID(CPF0555 CPF0551) EXEC(DO)
+             CALL       PGM(Y2CLMSC) PARM(&PZAPGMQ &PZAPGRL)
+             CHGVAR     VAR(&PZAMSID) VALUE('USR4157')
+             CHGVAR     VAR(&PZAMSDA) VALUE(' ')
+             CALL       PGM(Y2SNMGC) PARM(&PZAPGMQ &PZAPGRL &PZAMSID +
+                          &PZAMSGF &PZAMSDA &PZAMSTP)
+             CHGVAR     VAR(&IN12) VALUE('1')
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHGVAR     VAR(&WNTODT) VALUE(&WCTODT)
+ 
+             IF         COND(&WNTODT *LT &SDDAT8) THEN(DO)
+             CHGVAR     VAR(&PZAMSID) VALUE('USR8334')
+             CHGVAR     VAR(&PZAMSDA) VALUE(' ')
+             CALL       PGM(Y2SNMGC) PARM(&PZAPGMQ &PZAPGRL &PZAMSID +
+                          &PZAMSGF &PZAMSDA &PZAMSTP)
+             CHGVAR     VAR(&IN12) VALUE('1')
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/***  If input dates are valid, change value of &RPARM with */
+/***  concatenated value of 'From Date' and 'To Date'. */
+             IF         COND((&IN11 *EQ '0') *AND (&IN12 *EQ '0')) +
+                          THEN(DO)
+             CHGVAR     VAR(&RPARM) VALUE(&WCFRDT *CAT &WCTODT)
+             ENDDO
+ 
+             ENDDO
+ 
+/***  End program. */
+ END:        ENDPGM

@@ -1,0 +1,1310 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Fontis Narrative Codes Table Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-Fontis Interface                               *
+      *                                                               *
+      *  GL2811 - Fontis Narrative Codes Table Maintenance            *
+      *                                                               *
+      *  Function - To add, enquire and update details on the Fontis  *
+      *             Narrative Codes Table                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CGL004 *CREATE     Date 25FEB97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL004 - Midas-Fontis Interface                              *
+      *                                                               *
+      *****************************************************************
+     F*
+     FGL2811DFCF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F*
+     FGLFNARL0UF  E           K        DISK                      A    UC
+     F                                              KCOMIT
+     F            GLFNARD0                          KRENAME@GLFNAR0
+     F*
+     F* File for update
+     F*
+     FGLFNARL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+     F            GLFNARD0                          KRENAME@GLFNAR1
+     F*
+     F* File for retrieval
+     F*
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  03 - Exit                                                    *
+     F*  05 - Refresh                                                 *
+     F*  09 - Change Modes                                            *
+     F*                                                               *
+     F*  27 - Rollup requested                                        *
+     F*                                                               *
+     F*  31 - Error in #2PMTT field                                   *
+     F*  32 - Error in #2FTTR field                                   *
+     F*  33 - Error in #1SEL field                                    *
+     F*  34 - Error in #PMTT field                                    *
+     F*  35 - Error in #FTTR field                                    *
+     F*  36 - Error in #LANC field                                    *
+     F*  37 - Error in #NATV field                                    *
+     F*  38 - Error in #STTI field                                    *
+     F*  39 - Error in #TRMD field                                    *
+     F*                                                               *
+     F*  78 - Protect fields from amendment                           *
+     F*  79 - Non-display of selection field                          *
+     F*  80 - SFLCLR                                                  *
+     F*  81 - SFLDSP                                                  *
+     F*  82 - SFLEND                                                  *
+     F*  84 - SFLNXTCHG                                               *
+     F*  86 - PUTOVR                                                  *
+     F*  87 - Enable entry                                            *
+     F*  88 - Protect key fields from amendment                       *
+     F*  89 - Add Mode                                                *
+     F*                                                               *
+     F*  90 - Chain for update unsuccessful                           *
+     F*  91 - Error in write to file                                  *
+     F*  92 - Read changed subfile record                             *
+     F*                                                               *
+     F*  98 - Subfile record invalid                                  *
+     F*  99 - Error found on subfile record                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F* BAIZSF - Initialise and load subfile                          *
+     F* BBLDSF - Load subfile page                                    *
+     F* CAEXFM - Display Screen                                       *
+     F* DAPR## - Process Screen Input                                 *
+     F* DBPRSF - Process Modified subfile records                     *
+     F* DCPRSR - Process Subfile record                               *
+     F* DDNLRC - Check for null record                                *
+     F* DEV1RC - Validate subfile record                              *
+     F* DFV2RC - Validate subfile record relations                    *
+     F* EAPRSF - Update DBF from subfile records                      *
+     F* EBPRSR - Process modified subfile record                      *
+     F* ECADRQ - Process add request                                  *
+     F* EDDLRQ - Process delete request                               *
+     F* EECHRQ - Process update request                               *
+     F* FACHMD - Change between Add and Change Mode                   *
+     F* FBRQRL - Request subfile reload                               *
+     F* GADSA1 - Set display attributes for subfile record            *
+     F* GADSA2 - Set display attributes for subfile control           *
+     F* MAIZ#1 - Initialise subfile record                            *
+     F* MBFL#1 - Move @GLFNAR1 fields to subfile                      *
+     F* MEIZ#2 - Initialise subfile control                           *
+     F* SACCRC - Create Transaction Type                              *
+     F* SCDLRC - Delete Transaction Type                              *
+     F* SECHRC - Change Transaction Type                              *
+     F* ZASNMS - Send message to program message queue                *
+     F* ZHHPKY - Display Help Text                                    *
+     F* ZXEXPG - Exit Program : Normal                                *
+     F* ZYEXPG - Exit Program : Direct                                *
+     F* ZZINIT - Initialisation                                       *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    TXT     1   2 78
+     E                    CPY@    1   1 80               Copyright     array
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+     I** Copyright Array
+     I*
+      *
+     ILDA         DS
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IJBDTTM      DS
+      * Job date/time.
+      *
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *
+     I            DS
+     I                                        1 132 ZAMSDA
+     I*  Data structure for passing data to messages
+     I                                        1  30 ZA0001
+     I                                        1  30 ZA0003
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Bank Details
+      *
+     ISDLANG    E DSSDLANGPD
+      *
+      ** External DS for Language Codes
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for Access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+     I** Second DS for Access Programs, Long Data Structure
+     I*
+      *
+     IINFDS#    E DSY2I#DSP
+      *
+      ** Display file data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+      *
+      ** File information data structure.
+      *
+     I@1DBRC    E DSGLFNARL0
+      *
+      * Current/previous master file format fields for change control.
+      *
+      *****************************************************************
+      *                                                               *
+      *  M A I N   P R O C E S S I N G                                *
+      *                                                               *
+      *****************************************************************
+      *
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise and load subfile page.
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested:
+     C           W0RSF     DOWEQ'N'
+      * Display screen.
+     C                     EXSR CAEXFM
+      * Process response:
+      * Exit request: Cancel & exit program.
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload.
+     C   05                CAS            FBRQRL
+      *   Display next SFL page.
+     C   27                CAS            BBLDSF
+      * Process screen input.
+     C                     CAS            DAPR##
+     C                     ENDCS
+      *
+     C                     ENDDO                           OD W0RSF
+     C                     ENDDO                           OD *HIVAL
+      *
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise & Load subfile page.
+      *================================================================
+      *
+      * Clear subfile.
+      *
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      *
+      * Reset no of records in subfile.
+      *
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialise subfile header
+      * Set Up Function Key Text - Standard Functions  *
+     C*
+     C           W0PMD     IFEQ 'CHG'
+     C                     MOVEATXT,1     ##CTX1
+     C                     ENDIF
+      *
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEATXT,2     ##CTX1
+     C                     ENDIF
+      *
+      * If CHANGE mode, then position file:
+      *
+     C           W0PMD     IFEQ 'CHG'
+     C           *LIKE     DEFN #2PMTT    WZPMTT
+     C                     MOVEL#2PMTT    WZPMTT           Trans. Type
+     C           *LIKE     DEFN #2FTTR    WZFTTR
+     C                     MOVEL#2FTTR    WZFTTR           Funds Trans.
+      *
+     C           KPOS      KLIST
+     C                     KFLD           F2PMTT           Trans. Type
+     C                     KFLD           F2FTTR           Funds Trans.
+      * Setup key.
+     C                     MOVEL#2PMTT    F2PMTT           Trans. Type
+     C                     MOVEL#2FTTR    F2FTTR           Funds Trans.
+      *
+     C           KPOS      SETLL@GLFNAR1             82    *82=EOF
+     C  N82                READ @GLFNAR1               9182*82=EOF
+     C                     ELSE
+     C                     SETOF                     82    *
+     C                     ENDIF
+      * Load subfile page.
+     C                     EXSR BBLDSF
+      *................................................................
+      * If no records found, display error message.
+     C   82      ##RR      IFEQ *ZERO                      IF
+      * Send message '*No data to display'
+     C                     MOVEL'USR0919' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ENDIF                           FI ##RR = *ZERO
+      *
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page (write empty page if add mode).
+      *================================================================
+      *
+     C                     SETOF                     84    No SFLNXTCHG
+      *
+      * Re-establish fields in read-ahead record.
+      *
+     C   27      W0PMD     IFEQ 'CHG'
+     C  N82                READP@GLFNAR1                 90*
+     C  N82                READ @GLFNAR1                 90*
+     C                     ENDIF
+      *
+      * Setof record error indicators.
+      *
+     C                     MOVE *ALL'0'   WKIND0  9
+      *
+      * Start at previous highest SFL record reached.
+      *
+     C                     Z-ADD##RRMX    ##RR    50
+     C                     Z-ADD*ZERO     ##RROK  50
+      *................................................................
+      * Load next page of SFL:
+      *
+     C  N82      ##RROK    DOWLT##SFPG                     DO
+     C                     MOVEAWKIND0    *IN,31
+     C                     SETOF                     87    *
+      * Clear SFL fields.
+     C                     EXSR MAIZ#1
+      * If change mode, load SFL fields.
+     C           W0PMD     IFEQ 'CHG'
+     C                     EXSR MBFL#1
+      * Record will be selected unless overridden.
+     C                     MOVEL'Y'       W0RSL   1
+      *
+      * USER: Initialise subfile record (existing record)
+      *
+     C                     MOVEL'Y'       WUDELA           Deletion Allowe
+     C                     MOVEL'Y'       WUAMAL           Amend allowed
+      * If record dropped...
+     C           W0RSL     CABNE'Y'       BB020
+      * Validate subfile record and calculate derived fields.
+     C                     EXSR DFV2RC
+      *
+     C                     ELSE
+      *
+      * USER: Initialise subfile record (new record)
+      *
+     C                     MOVEL'Y'       WUAMAL           Amend allowed
+      *
+      *CASE:     PGM.*Program mode is *ADD
+      *
+     C           W0PMD     IFEQ 'ADD'                      *IF
+     C                     MOVEL'N'       WUDELA           Deletion Allowe
+     C                     ENDIF                           *FI
+      *
+     C                     ENDIF
+      * Output to subfile.
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+      *
+      * Set screen conditioning indicators.
+      *
+     C                     EXSR GADSA1
+      *
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      *
+     C           W0PMD     IFEQ 'CHG'
+     C                     READ @GLFNAR1                 82*82=EOF
+     C                     ENDIF
+      *
+     C  N82                ENDDO                           OD 1 - #SFPG
+      *................................................................
+      * Save highest SFL rec, so load can continue at end point.
+      *
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests.
+      *================================================================
+      *
+      * Set screen conditioning indicators.
+      *
+     C                     EXSR GBDSA2
+      *
+      * Update screen time.
+      *
+     C                     TIME           ##TME            Screen time.
+      *
+     C                     MOVELUSER      ##USR
+     C                     MOVELWSID      ##JOB
+      *
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                     86
+      *
+     C           *IN89     IFNE CAIN89
+     C           *IN81     ORNE CAIN81
+     C                     SETOF                     86
+     C                     ENDIF
+      *
+     C                     MOVE *IN89     CAIN89  1
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      *
+      * If help requested, display help text.
+      *
+     C   25                EXSR ZHHPKY                     Display help te
+      *
+     C                     ENDDO
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      *
+      * Clear messages from program message queue.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input.
+      *================================================================
+      *
+      * Maintain subfile position where possible.
+      *
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     ENDIF
+      *
+     C           W0PMD     IFEQ 'CHG'
+      * Change of position specified?
+     C           WZPMTT    CASNE#2PMTT    FBRQRL           Trans. Type
+     C           WZFTTR    CASNE#2FTTR    FBRQRL           Funds Trans.
+     C                     ENDCS
+      *
+     C                     ENDIF
+      *
+      * Quit if reload requested.
+      *
+     C           W0RSF     CABEQ'Y'       DAEXIT
+      *
+     C   81                DO
+      * No data entered as yet.
+     C                     MOVEL'N'       WKIPIN  1
+      * Confirm/update is not defered.
+     C                     MOVEL'N'       W0DCF   1
+      * Process subfile records.
+     C                     EXSR DBPRSF
+      * If error, exit:
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested:
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * If data entered.
+     C           WKIPIN    IFEQ 'Y'
+      * Update DBF from subfile.
+     C                     EXSR EAPRSF
+      * If error during update, exit:
+     C           *IN99     CABEQ'1'       DAEXIT
+     C                     ENDIF                           WKIPIN
+      *
+     C                     ENDDO                           OD 81
+      *
+      *=====Process function keys=====
+      * Switch between *ADD/*CHANGE modes.
+     C   09                EXSR FACHMD
+      *
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile records.
+      *================================================================
+      *
+     C                     READC#SFLRCD                  92*
+      *
+     C           *IN92     DOWEQ'0'
+      *
+     C                     EXSR DCPRSR
+      *
+     C                     SETOF                     87    *
+      *
+      * Set screen conditioning indicators.
+      *
+     C                     EXSR GADSA1
+      *
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+      *
+     C                     ENDDO
+      *
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record.
+      *================================================================
+      *
+      * Setoff error indicators.
+      *
+     C                     MOVEAWKIND0    *IN,31
+     C                     SETOF                     98    No errors
+     C                     SETOF                     84    NO SFLNXTCHG
+      *
+     C           W0PMD     IFEQ 'ADD'
+      * Check for null record.
+     C                     EXSR DDNLRC
+      *
+     C           W0NLR     IFEQ 'Y'
+     C                     GOTO DCEXIT
+     C                     ENDIF
+      * If not null record, continue.
+     C                     ENDIF
+     C                     MOVEL'Y'       WKIPIN           Data entered
+     C                     SETON                     84    *SFLNXTCHG
+      * If delete request, bypass validation.
+     C           #1SEL     IFEQ 'D'
+     C                     GOTO DCEXIT
+     C                     ENDIF
+      * Validate subfile record.
+     C                     EXSR DEV1RC
+      * If SFLRCD invalid, note the fact.
+     C   98N99             Z-ADD##RR      ##SFRC     99    Invalid SFLRCD
+      *
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         DDNLRC    BEGSR
+      *================================================================
+      * Check for null record.
+      *================================================================
+      *
+     C                     MOVEL'N'       W0NLR   1
+      *
+     C           #PMTT     CABNE*BLANK    DDEXIT           Trans. Type
+     C           #FTTR     CABNE*BLANK    DDEXIT           Funds Trans.
+     C           #LANC     CABNE*BLANK    DDEXIT           Language Code
+     C           #STTI     CABNE*BLANK    DDEXIT           SWIFT Trans. Type
+     C           #TRMD     CABNE*BLANK    DDEXIT           Midas Module ID
+     C           #NATV     CABNE*BLANK    DDEXIT           NArrative Code
+      *
+     C                     MOVEL'Y'       W0NLR
+      *
+      *================================================================
+     CSR         DDEXIT    ENDSR
+      /EJECT
+     CSR         DEV1RC    BEGSR
+      *================================================================
+      * Validate input from screen.
+      *================================================================
+      * USER: Validate subfile record fields
+      *
+      * Clear messages from program message queue.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *
+      * Validate subfile record relations.
+      *
+     C                     EXSR DFV2RC
+      *
+      *================================================================
+     CSR         DEEXIT    ENDSR
+      /EJECT
+     CSR         DFV2RC    BEGSR
+      *==================================================================
+      * Validate records from file or screen and calculate derived fields
+      *==================================================================
+      *
+      * USER: Validate subfile record relations
+      *
+      * Transaction Type required
+      *
+     C           #PMTT     IFEQ *BLANK                     IF
+     C                     SETON                     9834  *
+      * Send message '*Value required'
+     C                     MOVEL'USR0921' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ENDIF                           FI
+      *
+      * Funds Transfer Type Required.
+      *
+     C           #FTTR     IFEQ *BLANK
+     C                     MOVEL'N'       #FTTR
+     C                     ENDIF
+      *
+      * Funds Transfer must be 'Y' or 'N'.
+     C*
+     C           #FTTR     IFNE 'Y'
+     C           #FTTR     ANDNE'N'
+     C                     SETON                     9835
+     C                     MOVEL'USR0924' ZAMSID
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      * Language code validation.
+      *
+     C           #LANC     IFNE *BLANKS
+      *
+      * Call Access object to obtain language codes
+      *
+     C                     CALL 'AOLANGR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM #LANC     @AQCD   2
+     C           SDLANG    PARM SDLANG    DSFDY
+      *
+      * Not valid, send message '*Language code invalid'
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     9836
+     C                     MOVEL'USR0925' ZAMSID
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *CASE:     RCD.Narrative code is *blank
+     C           #NATV     IFEQ *BLANK                     *IF
+      * Setup message data for message.
+     C                     MOVEL#NATV     ZA0003           Description of
+      * Send message 'Description not entered'
+     C                     MOVEL'USR0926' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     9837  *
+     C                     ENDIF                           *FI
+      *
+      * SWIFT Transaction Type default.
+      *
+     C           #STTI     IFEQ *BLANK
+     C                     MOVEL'MSC'     #STTI
+     C                     ENDIF
+      *
+      ** Midas Module ID required.
+      *
+     C           #TRMD     IFEQ *BLANK                     *IF
+     C                     SETON                     9839
+      * Send message '*Value required'
+     C                     MOVEL'USR0928' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ENDIF                           FI
+      *
+      *================================================================
+     CSR         DFEXIT    ENDSR
+      /EJECT
+     CSR         EAPRSF    BEGSR
+      *================================================================
+      * Update DBF from subfile records.
+      *================================================================
+      *
+      * Initialise subfile reload flag.
+      *
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL'Y'       W0RSF
+     C                     ELSE
+     C                     MOVEL'N'       W0RSF
+     C                     ENDIF
+      *
+      * Process all modified subfile records.
+      *
+     C                     READC#SFLRCD                  92*
+      *
+     C           *IN92     DOWEQ'0'
+      * Process modified subfile record.
+     C                     EXSR EBPRSR
+      *
+      * Error: ROLLBACK any DBF changes.
+      *
+     C           W0RTN     IFNE *BLANK
+     C                     ROLBK
+     C                     ELSE
+      *
+      * Otherwise COMMIT any DBF changes.
+      *
+     C                     COMIT
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    #1SEL
+      *
+      * Set screen conditioning indicators.
+      *
+     C                     EXSR GADSA1
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     ENDDO
+      *
+      * If any errors, cancel reload.
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'N'       W0RSF   1
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         EAEXIT    ENDSR
+      /EJECT
+     CSR         EBPRSR    BEGSR
+      *================================================================
+      * Process modified subfile record.
+      *================================================================
+      *
+      * Set off error indicators.
+      *
+     C                     MOVEAWKIND0    *IN,31           Clear errors
+     C                     SETOF                     98    No errors
+      *
+     C           W0PMD     IFEQ 'ADD'                      B001
+      * Process add request.
+     C           #1SEL     IFNE 'D'                        B002
+     C                     EXSR DDNLRC
+      *
+     C           W0NLR     IFNE 'Y'                        B003
+     C                     EXSR ECADRQ
+     C                     ENDIF                           E003
+      *
+     C                     ENDIF                           E002
+      *
+     C                     ELSE                            X001
+      *
+     C           #1SEL     IFEQ 'D'                        B002
+      * Process delete request.
+     C                     EXSR EDDLRQ
+     C                     ELSE                            X002
+      * Process change request.
+     C                     EXSR EECHRQ
+     C                     ENDIF                           E002
+      *
+     C                     ENDIF                           E001
+      * If error occurred on update, note the fact.
+     C           *IN98     IFEQ '1'
+     C           *IN99     IFEQ '0'
+     C                     Z-ADD##RR      ##SFRC     99    Error on update
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         ECADRQ    BEGSR
+      *================================================================
+      * Process add request.
+      *================================================================
+      * USER: Create DBF record
+      * Create Deal type/subtype record
+      *
+     C                     EXSR SACRRC
+     C           W0RTN     IFNE *BLANK
+      * Write error detected.
+     C                     MOVE '1'       *IN,34           Screen errors
+     C                     MOVE '1'       *IN,35           Screen errors
+     C                     MOVE '1'       *IN,36           Screen errors
+     C                     MOVE '1'       *IN,37           Screen errors
+     C                     MOVE '1'       *IN,38           Screen errors
+     C                     MOVE '1'       *IN,39           Screen errors
+     C                     SETON                     98    Format Error
+     C                     SETOF                     87    Enable entry
+     C                     SETON                     84    SFLNXTCHG
+     C                     ELSE
+      * DBF Write successful.
+     C                     SETON                     87    Disable entry
+     C                     SETOF                     84    No SFLNXTCHG
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         ECEXIT    ENDSR
+      /EJECT
+     CSR         EDDLRQ    BEGSR
+      *================================================================
+      * Process delete request.
+      *================================================================
+      * USER: Delete DBF record
+      * Delete Deal type/Subtype record  *
+      *
+     C                     EXSR SCDLRC
+     C           W0RTN     IFNE *BLANK
+      * Delete unsuccessful.
+     C                     MOVE '1'       *IN,33           Screen errors
+     C                     MOVE '1'       *IN,34           Screen errors
+     C                     MOVE '1'       *IN,35           Screen errors
+     C                     MOVE '1'       *IN,36           Screen errors
+     C                     MOVE '1'       *IN,37           Screen errors
+     C                     MOVE '1'       *IN,38           Screen errors
+     C                     MOVE '1'       *IN,39           Screen errors
+     C                     SETON                     98    Format Error
+     C                     SETOF                     87    Enable entry
+     C                     SETON                     84    SFLNXTCHG
+      *
+      * If record altered, reset subfile record.
+      *
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1           IF
+     C                     ENDCS
+      *
+     C                     ELSE
+      *
+      * DBF Delete successful.
+      * Blank out record and protect from entry.
+      *
+     C                     EXSR MAIZ#1
+     C                     SETON                     87    Disable entry
+     C                     SETOF                     84    No SFLNXTCHG
+     C                     MOVEL'Y'       W0RSF   1        Reload subfile
+     C                     ENDIF                           FI W0RTCD
+      *
+      *================================================================
+     CSR         EDEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request.
+      *================================================================
+      * USER: Change DBF record
+      * Change Deal type/subtype record
+      *
+     C                     EXSR SECHRC
+     C           W0RTN     IFNE *BLANK
+      * DBF Update error detected.
+     C                     MOVE '1'       *IN,34           Screen errors
+     C                     MOVE '1'       *IN,35           Screen errors
+     C                     MOVE '1'       *IN,36           Screen errors
+     C                     MOVE '1'       *IN,37           Screen errors
+     C                     MOVE '1'       *IN,38           Screen errors
+     C                     MOVE '1'       *IN,39           Screen errors
+     C                     SETON                     98    Format Error
+     C                     SETOF                     87    Enable entry
+     C                     SETON                     84    SFLNXTCHG
+      * Reset subfile record if changed record.
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1           IF
+     C                     ENDCS
+      *
+     C                     ELSE
+      * DBF Update successful.
+     C                     SETOF                     87    Enable entry
+     C                     SETOF                     84    No SFLNXTCHG
+     C                     ENDIF                           FI W0RTCD
+      *
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         FACHMD    BEGSR
+      *================================================================
+      * Flip between *ADD and *CHANGE modes.
+      *================================================================
+      *
+     C           W0PMD     IFNE 'ADD'
+     C                     MOVEL'ADD'     W0PMD
+     C                     ELSE
+     C                     MOVEL'CHG'     W0PMD
+     C                     ENDIF
+      *
+     C                     EXSR FBRQRL
+      *
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload.
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         GADSA1    BEGSR
+      *================================================================
+      * Set display attributes for Subfile record.
+      *================================================================
+      *
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect keys if change mode or updated record.
+     C                     SETON                     88    *
+     C   89N87             SETOF                     88    *
+     C                     MOVEL*IN87     *IN79
+      *
+     C           WUDELA    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     ENDIF                           *FI
+      *
+     C                     MOVEL*IN87     *IN78
+      *
+     C           WUAMAL    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN78
+     C                     ENDIF                           *FI
+      *
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSA2    BEGSR
+      *================================================================
+      * Set display attributes for Subfile control.
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise subfile record.
+      *================================================================
+      *
+     C                     MOVEL*BLANK    #1DBRC           Previous values
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+     C                     MOVEL*BLANK    #PMTT            Trans. Type
+     C                     MOVEL*BLANK    #FTTR            Funds Trans.
+     C                     MOVEL*BLANK    #LANC            Language Code
+     C                     MOVEL*BLANK    #NATV            Narrative
+     C                     MOVEL*BLANK    #STTI            SWIFT Trans. Type
+     C                     MOVEL*BLANK    #TRMD            Midas Module ID
+      *
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @GLFNAR1 fields to subfile.
+      *================================================================
+      *
+     C                     Z-ADDF2LCD     #1LCD            Last Change Dat
+     C                     MOVELF2TYLC    #1TYLC           Type of Last Ch
+     C                     MOVELF2PMTT    #PMTT            Trans. Type
+     C                     MOVELF2FTTR    #FTTR            Funds Transfer
+     C                     MOVELF2LANC    #LANC            Language Code
+     C                     MOVELF2NATV    #NATV            Narrative
+     C                     MOVELF2STTI    #STTI            SWIFT Trans. Type
+     C                     MOVELF2TRMD    #TRMD            Midas Module ID
+      *
+      * Hold current record image for change detection.
+      *
+     C                     MOVEL@1DBRC    #1DBRC
+      *
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control.
+      *================================================================
+     C                     MOVEL*BLANK    #2PMTT           Trans. type
+     C                     MOVEL*BLANK    #2FTTR           Funds Transfer
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SACRRC    BEGSR
+      *================================================================
+      * Create Transaction types/Funds Transfer
+      *================================================================
+      *
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to record
+     C                     MOVEL#PMTT     F2PMTT           Trans. Type
+     C                     MOVEL#FTTR     F2FTTR           Funds Transfer
+     C                     Z-ADDWURDNB    F2LCD            Last Change Dat
+     C                     MOVEL'I'       F2TYLC           Type of Last Ch
+     C                     MOVEL#LANC     F2LANC           Language Code
+     C                     MOVEL#NATV     F2NATV           Narrative
+     C                     MOVEL#STTI     F2STTI           SWIFT Trans. Type
+     C                     MOVEL#TRMD     F2TRMD           Midas Module ID
+      *
+     C           KLCRSA    KLIST
+     C                     KFLD           F2PMTT           Trans. Type
+     C                     KFLD           F2FTTR           Funds Transfer
+      *
+      * Check for duplicate primary key.
+      *
+     C           KLCRSA    SETLL@GLFNAR0                 90*
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'USR0922' W0RTN   7
+      * Send message 'Trans.Type/Funds Transfer already exists.'
+     C                     MOVEL'USR0922' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SAEXIT
+     C                     ENDIF
+      *
+     C                     WRITE@GLFNAR0               91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SCDLRC    BEGSR
+      *================================================================
+      * Delete Transaction Types/Funds Transfer
+      *================================================================
+      *
+     C                     MOVEL*BLANK    W0RTN   7
+      *
+      * Move key fields to @GLFNAR0
+      *
+     C                     MOVEL#PMTT     F2PMTT           Trans. Type
+     C                     MOVEL#FTTR     F2FTTR           Funds Transfer
+      *
+     C           KLDLSC    KLIST
+     C                     KFLD           F2PMTT           Trans. Type
+     C                     KFLD           F2FTTR           Funds Transfer
+      *
+     C           KLDLSC    CHAIN@GLFNAR0             9091  *
+      * Record already deleted.
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'USR0920' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'USR0920' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SCEXIT
+     C                     ENDIF
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SCEXIT
+     C                     ENDIF
+      *
+      * Check for changed record.
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'USR0930' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'USR0939' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+      * Use SETLL to release record lock.
+     C           KLDLSC    SETLL@GLFNAR0             9091  *
+     C                     GOTO SCEXIT
+     C                     ENDIF                           FI #1DBRC
+      *................................................................
+     C                     DELET@GLFNAR0               91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Delete error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SECHRC    BEGSR
+      *================================================================
+      * Change Transaction Types/Funds Transfer
+      *================================================================
+      *
+     C                     MOVEL*BLANK    W0RTN   7
+      *
+      * Move key fields to @GLFNAR0
+      *
+     C                     MOVEL#PMTT     F2PMTT           Trans Type
+     C                     MOVEL#FTTR     F2FTTR           Funds Transfer
+      *
+     C           KLCHSE    KLIST
+     C                     KFLD           F2PMTT           Trans Type
+     C                     KFLD           F2FTTR           Funds Transfer
+      *
+     C           KLCHSE    CHAIN@GLFNAR0             9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found.
+     C                     MOVEL'USR0920' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'USR0920' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SEEXIT
+     C                     ENDIF
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SEEXIT
+     C                     ENDIF
+      *
+      * Check for changed record.
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'USR0930' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'USR0930' ZAMSID           Message id.
+     C                     MOVEL'GLUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+      * Use SETLL to release record lock.
+     C           KLCHSE    SETLL@GLFNAR0             9091  *
+     C                     GOTO SEEXIT
+     C                     ENDIF                           FI #1DBRC
+      *
+      * Move Non-key fields to @GLFNAR0
+      *
+     C                     Z-ADDWURDNB    F2LCD            Last Change Dat
+     C                     MOVEL'A'       F2TYLC           Type of Last Ch
+     C                     MOVEL#LANC     F2LANC           Language Code
+     C                     MOVEL#NATV     F2NATV           Narrative
+     C                     MOVEL#STTI     F2STTI           SWIFT Trans Type
+     C                     MOVEL#TRMD     F2TRMD           Midas Module ID
+      *
+     C                     UPDAT@GLFNAR0               91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Change error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+      *
+     C                     ELSE
+      *
+      * DBF Change successful.
+      * Update saved record image.
+      *
+     C                     MOVEL@1DBRC    #1DBRC
+      *
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         SEEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+      *
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF
+      *
+      * If no message file specified use default.
+      *
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     ENDIF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      * Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text.
+      *================================================================
+      *
+     C                     MOVEL'Y'       W0HLP   1        Signal help req
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Member name.
+     C                     PARM *BLANK    YYHPFL 10        *DFT text file.
+     C                     PARM *BLANK    YYHPLB 10        Help text lib.
+     C                     PARM           W0RTN   7        Return Code.
+      *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal.
+      *================================================================
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      *
+      * ROLLBACK any uncommitted DBF changes.
+      *
+     C                     ROLBK                       90
+      *
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+      *
+     C                     MOVE *BLANK    P0RTN   7
+     C                     MOVE *BLANK    W0RTN   7
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Define work field Deletion Allowed
+     C                     MOVEL*BLANK    WUDELA  1
+      * Define work field Amend allowed
+     C                     MOVEL*BLANK    WUAMAL  1
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Test ? in Key Field
+     C                     MOVEL*BLANK    WUTQKF  1
+      * Obtain default message file.
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Type of Last Change
+     C                     MOVEL*BLANK    WUTYLC  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Open files.
+      * Begin commit control.
+      *
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     ENDIF
+      *
+     C                     OPEN GLFNARL0
+      *
+     C                     Z-ADD15        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+     C                     Z-ADD*ZERO     ##RRMX           MAX RECNO
+      *................................................................
+      * If member empty, set to *ADD mode, else to *CHANGE mode.
+      *
+     C           @1NROP    IFEQ *ZERO
+     C                     MOVEL'ADD'     W0PMD   3        Add mode
+     C                     ELSE
+     C                     MOVEL'CHG'     W0PMD            Change mode
+     C                     ENDIF
+      *
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Get Rundate - Rundate  *
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT           RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+      * Copyright Statement - Standard Functions  * copyright
+      * Initialise subfile control.
+     C                     EXSR MEIZ#2
+      *
+      **  Call Access object to obtain Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE            *************
+     C                     MOVEL'01'      DBASE             *DBERROR 001*
+     C                     MOVEL@OPTN     DBKEY             *************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      *================================================================
+     C*
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *================================================================
+**
+D=Delete   F3=Exit   F5=Refresh   F9=Go to 'Add' Mode
+F3=Exit   F5=Reset Screen   F9=Go to 'Change' Mode
+** CPY@     : Copyright notice
+(c) Finastra International Limited 2001

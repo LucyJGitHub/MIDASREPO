@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Historu of Customer Information')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC009696 - Midas SD History of Customer Info Processing    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL132             Date 01May13              */
+/*                      CSD092  *CREATE    Date 01May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL132 - FATCA Phase 1 - Customers' Identification and      */
+/*                Classification - Master                            */
+/*       CSD092 - Account Review                                     */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Ltd. 2013')
+ 
+/** Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SDC009696 - History of Customer +
+                          Info Processing') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Setup system prefix variable from SDSTAT data area. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+ 
+             CHKOBJ     OBJ(QTEMP/FFDCUSTPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(PROCESS))
+ 
+             GOTO       CMDLBL(END)
+ 
+PROCESS:
+/** Display list of file fields to outfile. */
+ 
+             DSPFFD     FILE(&DMLIB/SDCUSTPD) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/FFDCUSTPD)
+ 
+             DSPFFD     FILE(&DMLIB/SDACUSPD) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/FFDACUSPD)
+                                                                                          /*CGL132*/
+             DSPFFD     FILE(&DMLIB/SDFTCSPD) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/FFDFTCSPD)                                        /*CGL132*/
+ 
+             DSPFFD     FILE(&DMLIB/SDJACCPD) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/FFDJACCPD)
+ 
+             CPYF       FROMFILE(FFDACUSPD) TOFILE(FFDCUSTPD) +
+                          FROMMBR(*FIRST) TOMBR(*FIRST) +
+                          MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                                                                                          /*CGL132*/
+             CPYF       FROMFILE(FFDFTCSPD) TOFILE(FFDCUSTPD) +
+                          FROMMBR(*FIRST) TOMBR(*FIRST) +
+                          MBROPT(*ADD)                                                    /*CGL132*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CGL132*/
+ 
+             CPYF       FROMFILE(FFDJACCPD) TOFILE(FFDCUSTPD) +
+                          FROMMBR(*FIRST) TOMBR(*FIRST) +
+                          MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC008900 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             ENDPGM

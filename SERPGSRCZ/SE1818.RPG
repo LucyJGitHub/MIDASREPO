@@ -1,0 +1,587 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trades Auth Extension Maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1818 - Trades Input Details - Extension File for MT5xx     *
+     F*                                                               *
+     F*  Function: This program allows input of the fields needed     *
+     F*   (I/C)    to produce the SWIFT Messages - MT5xx.             *
+     F*                                                               *
+     F*  Called By: SE0180 - Trades Input Maintenance                 *
+     F*                                                               *
+     F*         NB. ANY CHANGE MADE TO THIS PGM WILL ALMOST           *
+     F*             DEFINITELY NEED TO BE APPLIED TO SE1807,SE1805    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CSE028             Date 06Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 084735             Date 23May95               *
+      *                 S01401             Date 16Jun93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSE028 - Standing Settlement Instructions Enhancement.       *
+      *         - Replace this program with new ILE version SE181M.   *
+     F*  084735 - Recompile over changed file SE50DT.                 *
+     F*  S01401 - The generation of MT5xx SWIFT Messages if the       *
+     F*           option is available.  NEW PROGRAM.                  *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FTRADSDY1IF  E           K        DISK
+     F            TRADSDD1                          KRENAMERTVIDX
+     F*
+     FSE1818DFCF  E                    WORKSTN
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    08  - Rolldown                                             *
+     F*    09  - Protect Input Fields                                 *
+     F*    14  - Enable Rolldown                                      *
+     F*    21  - Settlement Message request                           *
+     F*    22  - Instructions type                                    *
+     F*    23  - Instructions sub-type                                *
+     F*    24  - Counterparty Euroclear/Cedel code                    *
+     F*    25  - Safekeeping Account                                  *
+     F*    26  - Requested Priority                                   *
+     F*    27  - Confirmation Message request                         *
+     F*    28  - Further Identification (MT510)                       *
+     F*    29  - Customer/Counterparty Indicator                      *
+     F*    30  - Time of Trade                                        *
+     F*    31  - Guaranteed Delivery                                  *
+     F*    32  - Fungibility Code                                     *
+     F*    33  - Fungible Trade Indicator                             *
+     F*    34  - Sender`s Role                                        *
+     F*    41  - Work indicator                                       *
+     F*    42  - Position Cursor                                      *
+     F*    50  - Control of call to ZM1100                            *
+     F*    69  - Indicator for SFLEND in SE1818DF                     *
+     F*    75  - General error in validation                          *
+     F*    81  - Control of call to DBERRCTL                          *
+     F*    85  - Work indicator                                       *
+     F*    86  - Work indicator                                       *
+     F*                                                               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*    KC  - End (exit to menu)                                   *
+     F*    KL  - Previous screen requested                            *
+     F*    KS  - F18 - Override requested                             *
+     F*    KT  - F19 - Reset Requested                                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SRRTRY - Process Re-entry                                    *
+     F*  SRSMSG - Routine to send messages to message subfile.        *
+     F*  SRRTRN - Routine to set up return code for calling program   *
+     F*  SRSCRN - Routine to handle screen                            *
+     F*  SRFTOS - Routine to move file fields to screen fields        *
+     F*  SRPOSS - Routine to call Extended Settlements Program        *
+     F*  SR1100 - Determine Network and Addresses                     *
+     F*  SRINIT - Routine to handle initial processing                *
+     F*  *PSSR  - Routine to handle database errors                   *
+     F*                                                               *
+     F*  ZA0340 - Send a message to the program message queue         *
+     F*  ZA0250 - Clear program message queue                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,SE1818E001
+      *
+     I            DS
+      ** KMGECO data structure
+     I                                        1  20 WWGECO
+     I                                        1   5 WWSENT
+     I                                        6  12 WWINST
+     I                                       13  20 WWINSS
+      *
+     I            DS
+      ** Euroclear/Cedel code validation
+     I                                        1  10 SEUCL
+     I                                        1   1 SEU11
+     I                                        1   4 SEU14
+     I                                        3   3 SEU33
+     I                                        2   7 SEU27
+     I                                        5   9 SEU59
+     I                                        5  10 SEU51
+      *
+     I            DS
+      ** Safekeeping Account
+     I                                        1   6 SSAFA
+     I                                        2   6 SSA26
+      *
+     I           SDS
+      * Get program name from PSDS
+     I                                     *PROGRAM WWPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDSECS    E DSSDSECSPD
+      ** Security Customer Details
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPDATA     E DSSE50DT
+      ** Data structure to receive parameters from SE0180 for MT5xxs
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ** Initialisation routine
+     C                     EXSR SRINIT
+      *
+      ** Execute specific routine depending on action
+     C                     EXSR SRRTRY
+      *
+      ** Execute routine to setup return code and exit program
+     C                     EXSR SRRTRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRTRY - Routine to handle 'Re-entry' action.                *
+      *                                                               *
+      *  CALLED - MAIN                                                *
+      *  CALLS  - SRSMSG, SRSSRN, *PSSR, SRSTOW, SRCOMP, SRPOSS.      *
+      *****************************************************************
+      *
+     C           SRRTRY    BEGSR
+      *
+      ** Check whether record exists
+     C           KEY001    CHAINRTVIDX               89
+      *
+      ** If record not found then setup message, protect fields for
+      ** display, display screen and handle database error.
+     C           *IN89     IFEQ '1'
+      *
+     C                     MOVEL'SEW9999' ZAMSID
+     C                     EXSR SRSMSG
+      *
+     C                     MOVE '1'       *IN09
+     C                     EXSR SRSCRN
+      *
+     C                     MOVEL'TRADSDX1'DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     MOVELKEY001    DBKEY            ***************
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+      ** Handle screens until F3, F5 or F12 taken or no errors
+     C           *IN75     DOUEQ*OFF
+     C           *INKC     OREQ *ON
+     C           *INKE     OREQ *ON
+     C           *INKL     OREQ *ON
+      *
+     C/COPY WNCPYSRC,SE1818C001
+     C                     EXSR SRSCRN
+      *
+      ** If F3, F5, and F12 NOT taken then continue
+      ** (else repeat 'do until' loop).
+     C           *INKC     IFEQ *OFF
+     C           *INKE     ANDEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      ** Clear messages for redisplay
+     C                     CALL 'ZA0250'
+      *
+     C/COPY WNCPYSRC,SE1818C002
+     C                     EXSR SRSTOW
+     C                     EXSR SRCOMP
+     C/COPY WNCPYSRC,SE1818C003
+      *
+      ** If no errors on validation/comparison
+     C           *IN75     IFEQ *OFF
+      *
+     C                     EXSR SRPOSS
+      *
+      ** if F3 taken in SE1819 (trade amendment lost) return to menu;
+     C                     SELEC
+      *
+     C           PCMD      WHEQ '03'
+     C                     MOVE '1'       *INKC
+     C           PCMD      WHEQ '05'
+     C                     MOVE '1'       *INKE
+     C           PCMD      WHEQ '12'
+     C                     MOVE '1'       *INKL
+     C                     EXSR SRSCRN
+     C                     CALL 'ZA0250'
+      *
+     C                     ENDSL
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** Reset override indicators
+     C                     MOVE ' '       OVER1   1
+     C                     MOVE ' '       OVER2   1
+      *
+      ** If Trade sale and non-fungible and Deliver from is Cedel and
+      ** F3, F5 and F12 not taken then call certificate numbers program
+     C           PTDTP     IFEQ 'TS'
+     C           SFTID     ANDEQ'N'
+     C           PDELF     ANDEQPDC02
+     C           *INKC     ANDEQ*OFF
+     C           *INKE     ANDEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+     C                     MOVE 'R'       WWRANG
+     C                     Z-ADDPNOML     WWNML  110
+     C                     CALL 'SE1852'
+     C                     PARM           PSESN
+     C                     PARM           WWNML
+     C                     PARM           PTDRF
+     C                     PARM           PACTN
+     C                     PARM           WWRTCD  1
+     C                     PARM 'R'       WWRANG  1
+      *
+      ** If error returned from SE1852 then produce error message
+     C           WWRTCD    IFEQ '2'
+     C                     MOVE '1'       *IN75
+     C                     MOVEL'SEW5852' ZAMSID
+     C                     EXSR SRSMSG
+     C                     MOVE '1'       *IN09
+      *
+     C                     EXSR SRSCRN
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSMSG - Routine to send messages to message subfile.        *
+      *                                                               *
+      *  CALLED - SRRTRY                                              *
+      *  CALLS  - NONE                                                *
+      *****************************************************************
+      *
+     C           SRSMSG    BEGSR
+      *
+      ** Send specified message from specified message file to program
+      ** message queue; then clear message id and message file
+     C                     CALL 'ZA0340'
+     C                     PARM 'SEUSRMSG'ZAMSGF 10
+     C                     PARM           ZAMSID 10
+      *
+     C                     MOVEL*BLANK    ZAMSID
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRTRN - Routine to set up return code for calling program.  *
+      *                                                               *
+      *  CALLED - MAIN                                                *
+      *  CALLS  - NONE                                                *
+      *****************************************************************
+      *
+     C           SRRTRN    BEGSR
+      *
+     C                     MOVE 'N'       PERR
+     C                     MOVE '00'      PCMD
+      *
+      ** If re insert matches does not match extension file - 'Y'
+     C           *IN75     IFEQ *ON
+     C                     MOVE 'Y'       PERR
+     C                     END
+      *
+      ** If F12 taken (for previous screen) or if rolldown and in
+      ** enquiry mode then set Return Command to '12'
+     C           *INKL     IFEQ *ON
+     C           *IN08     OREQ *ON
+     C           PACTN     ANDEQ'E'
+     C                     MOVE '12'      PCMD
+     C                     ELSE
+      *
+      ** If F3 taken (for End) then set Return Command to '03'
+     C           *INKC     IFEQ *ON
+     C                     MOVE '03'      PCMD
+     C                     ELSE
+      *
+      ** If F5 taken (for Refresh) then set Return Command to '05'
+     C           *INKE     IFEQ *ON
+     C                     MOVE '05'      PCMD
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** Move Input field TIME to be an output parameter
+     C                     MOVELSTRTT     PTRTT
+      *
+      ** Exit program
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSCRN - Routine to handle screen.                           *
+      *                                                               *
+      *  CALLED - SRRTRY                                              *
+      *  CALLS  - NONE                                                *
+      *****************************************************************
+      *
+     C           SRSCRN    BEGSR
+      *
+      ** Display messages and display screen
+     C                     WRITESE1818C1
+     C                     EXFMTSE1818F1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSTOW - Routine to move screen fields to file fields.       *
+      *                                                               *
+      *  CALLED - SRRTRY                                              *
+      *  CALLS  - NONE                                                *
+      *****************************************************************
+      *
+     C           SRSTOW    BEGSR
+      *
+      ** Move key fields to file fields
+     C                     MOVELKEY001    W1TDRF
+      *
+     C                     MOVELSGMES     W1GMES
+     C                     MOVELSINST     W1INST
+     C                     MOVELSINSS     W1INSS
+     C                     MOVELSEUCL     W1EUCL
+     C                     MOVELSSAFA     W1SAFA
+     C                     MOVELSRPTY     W1RPTY
+     C                     MOVELSGMEC     W1GMEC
+     C                     MOVELSFID1     W1FID1
+     C                     MOVELSCCID     W1CCID
+     C                     MOVELSTRTT     W1TRTT
+     C                     MOVELSGDEL     W1GDEL
+     C                     MOVELSFCOD     W1FCOD
+     C                     MOVELSFTID     W1FTID
+     C                     MOVELSSROL     W1SROL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOSS - Routine to Call Extended Settlements Program.       *
+      *                                                               *
+      *  CALLED - SRRTRY                                              *
+      *  CALLS  - NONE                                                *
+      *****************************************************************
+      *
+     C           SRPOSS    BEGSR
+      *
+     C                     MOVE WWSENT    PSENT
+     C                     MOVE SGMES     PGMES
+     C                     MOVE SGMEC     PGMEC
+     C                     MOVE SCCID     PCCID
+      *
+     C                     CALL 'SE1819'
+     C                     PARM '00'      PCMD
+     C                     PARM 'N'       PERR
+     C                     PARM           PDATA
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCOMP - Compare screen fields with file fields.             *
+      *                                                               *
+      *  CALLED - SRRTRY                                              *
+      *  CALLS  - NONE                                                *
+      *****************************************************************
+      *
+     C           SRCOMP    BEGSR
+      *
+     C           W1TDRF    IFEQ T1TDRF
+     C           W1GMES    ANDEQT1GMES
+     C           W1INST    ANDEQT1INST
+     C           W1INSS    ANDEQT1INSS
+     C           W1EUCL    ANDEQT1EUCL
+     C           W1SAFA    ANDEQT1SAFA
+     C           W1RPTY    ANDEQT1RPTY
+     C           W1GMEC    ANDEQT1GMEC
+     C           W1FID1    ANDEQT1FID1
+     C           W1CCID    ANDEQT1CCID
+     C           W1TRTT    ANDEQT1TRTT
+     C           W1GDEL    ANDEQT1GDEL
+     C           W1FCOD    ANDEQT1FCOD
+     C           W1FTID    ANDEQT1FTID
+     C           W1SROL    ANDEQT1SROL
+      *
+     C                     MOVE *OFF      *IN75
+     C                     ELSE
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'SEW7007' ZAMSID
+     C                     EXSR SRSMSG
+     C                     END
+     C                     ENDSR
+      *
+     C/COPY WNCPYSRC,SE1818C004
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Routine to handle initial processing.               *
+      *                                                               *
+      *  CALLED - MAIN                                                *
+      *  CALLS  - NONE                                                *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Copyright Statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Get parameters from calling program
+     C           *ENTRY    PLIST
+     C                     PARM           PCMD    2
+     C                     PARM           PERR    1
+     C                     PARM           PDATA
+      *
+      ** Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C                     MOVE BJMRDT    SDATE
+     C/COPY WNCPYSRC,SE1818C005
+      *
+      ** Setup keys values using transaction data passed from caller
+     C           *LIKE     DEFN T1TDRF    KEY001
+     C                     MOVELPTDRF     KEY001
+      *
+      ** Initialise error indicators
+     C                     SETOF                     303132
+     C                     SETOF                     333475
+      *
+      ** Initialize Non-screen fields
+     C                     Z-ADD*ZEROS    T1LSWS
+     C                     Z-ADD*ZEROS    T1LSSC
+     C                     MOVE 'N'       T1CONG
+     C                     MOVE 'N'       T1RCDG
+      *
+      ** Initialize Clearance type (1 to 4 is MT580 for Settlements)
+     C           PCLTY     IFEQ '1'
+     C           PCLTY     OREQ '2'
+     C           PCLTY     OREQ '3'
+     C           PCLTY     OREQ '4'
+     C                     MOVE '14'      WWCLTY  2
+     C                     END
+      *
+      ** Set up non-input capable screen fields
+     C                     MOVE PACTN     SACTN
+     C                     MOVE PTDRF     STDRF
+     C                     MOVE PBLKR     SBLKR
+     C                     MOVE PSESN     SSESN
+     C                     MOVE PSRPN     SSRPN
+      *
+      ** Initialize work fields
+     C           *LIKE     DEFN T1TDRF    W1TDRF
+      *
+     C           *LIKE     DEFN T1GMES    W1GMES
+     C           *LIKE     DEFN T1INST    W1INST
+     C           *LIKE     DEFN T1INSS    W1INSS
+     C           *LIKE     DEFN T1EUCL    W1EUCL
+     C           *LIKE     DEFN T1SAFA    W1SAFA
+     C           *LIKE     DEFN T1RPTY    W1RPTY
+     C           *LIKE     DEFN T1GMEC    W1GMEC
+     C           *LIKE     DEFN T1FID1    W1FID1
+     C           *LIKE     DEFN T1CCID    W1CCID
+     C           *LIKE     DEFN T1TRTT    W1TRTT
+     C           *LIKE     DEFN T1GDEL    W1GDEL
+     C           *LIKE     DEFN T1FCOD    W1FCOD
+     C           *LIKE     DEFN T1FTID    W1FTID
+     C           *LIKE     DEFN T1SROL    W1SROL
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Routine to handle database errors.                  *
+      *                                                               *
+      *  CALLED - SRRTRY                                              *
+      *  CALLS  - NONE                                                *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'SE1818'  DBPGM
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVE DBERR     WLDA
+     C                     OUT  WLDA
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+      *
+      ** Call standard DB error handler
+     C                     CALL 'DBERRCTL'             81
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

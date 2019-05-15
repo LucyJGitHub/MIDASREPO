@@ -1,0 +1,974 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Detailed Security Balances on Depot')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE1136 - DETAILED SECURITY BALANCES AT DEPOT REPORT          *
+     F*           BY BRANCH                                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  Function:  This program produces a report by branch showing  *
+     F*  (COB)      the total holdings of all securities at each      *
+     F*             depot.                                            *
+     F*                                                               *
+     F*  Called by: SEC1135                                           *
+     F*                                                               *
+     F*  Frequency: On request during COB.                            *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG7985            Date 07Jul05               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 135266             Date 28Dec00               *
+      *                 162751             Date 14Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 21Dec98               *
+      *                 S01514 *CREATE     Date 10Aug94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG7985- Several components failed due to accessing TABLETR  *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  135266 - Recompiled over changed SE1136P1 printer file.      *
+      *  162751 - Interest date and maturity date are duplicated on   *
+      *           SE1136P1. FLD40 is blanked for security when PROT=4.*
+      *  CAC005 - PCA-SE Enhancement.                                 *
+     F*  S01514 - SE Depot Holdings Report and Enquiry                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FCUDPD   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FSE1136P1O   E             01     PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FSE1136AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FTABSE   IF  E           K        DISK
+     F            TABTB11F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*    15       PRINT SECURITY SHORTNAME FOR NEW SECURITY
+      *   30  - CAC005 ON                                             *   CAC005
+     F*    80       ERROR ON CHAIN
+     F*    81       PREVIOUS OUTPUT
+     F*    82       PRINT PAGE HEADINGS FOR NEW BRANCH/DEPOT
+     F*    89       END OF FILE
+     F*    90-99    USED IN Z-SUBROUTINES
+     F*
+     F*    U7            DATABASE ERROR
+     F*    U8            DATABASE ERROR
+     F*****************************************************************
+      /EJECT
+     F* I N D E X   T O  S U B R O U T I N E S
+     F*
+     F*   FIRST       - ACCESSES ICD 1 AND SE
+     F*   ZSYSTM      - ACCESSES ICD 1
+     F*   ZICDSE      - ACCESSES ICD FOR SE
+     F*   AUDIT  - OUTPUTS CONTROL REPORT
+     F*   *PSSR  - Error handling
+     F*   RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     F*   RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     F*   ZDATE2      - DAYNO - DATE conversion
+     F*   ZSEDIT      - Insert a decimal point and sign into a numeric
+     F*                 field and blank out leading zeros
+     F*
+     F*
+     F*****************************************************************
+     E                    CPY@    1   1 80
+     E                    ARR1        4  1
+     E                    ARR2        7  1
+     E                    ARRS       40  1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     ICDEPPDF     10
+     IUDEPPDF     11
+     I*
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ISPOOL       DS
+     I**  DS FOR P1 SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IRUNDT       DS
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I/COPY ZSRSRC,ZSDESCZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+     I* EXTERNAL FILES
+     I*
+     I* DATA STRUCTURE TO REDEFINE BRANCH
+     I            DS
+     I                                        1   3 BRNCH
+     I                                        1   3 CDPA
+     I                                        1   3 UDBA
+     I*
+     I* DATA STRUCTURE TO REDEFINE SECURITY
+     I            DS
+     I                                        1  10 SECUR
+     I                                        1  10 CDSN
+     I                                        1  10 UDSN
+     I*
+     I* DATA STRUCTURE TO REDEFINE DEPOT
+     I            DS
+     I**********                              1   60DEPOT                                     CSD027
+     I**********                              1   60CDPT                                      CSD027
+     I**********                              1   60UDPT                                      CSD027
+     I                                        1   6 DEPOT                                     CSD027
+     I                                        1   6 CDPT                                      CSD027
+     I                                        1   6 UDPT                                      CSD027
+     I* DATA STRUCTURE FOR TABLE FILE KEY
+     I*
+     ITABKEY      DS
+     I                                        1  12 KEY
+     I                                        1   2 TYPE
+     I                                        5  12 KCPN
+     I                                        8  10 KCCY
+     I                                        9  11 KCCY2
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+     I              A8BRNM                          BRNM                                     BUG7985
+     IDSSDY     E DSDSSDY                                                                    BUG7985
+     I*
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* DEFINE FIELDS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           ENT     3
+     C*
+     C           *LIKE     DEFN BRNCH     LBRNCH
+     C           *LIKE     DEFN BRNCH     LBRNM
+     C           *LIKE     DEFN SECUR     LSECUR
+     C*
+     C* PREPARE LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE1136'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C** IN THE DATAAREA RUNDAT
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *                                                                   S01447
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     37                   E29170
+     C                     END                                            E29170
+     C*
+     C** RCF Processing for Audit File
+     C                     EXSR RCFAU
+     C*
+     C* FIRST CYCLE PROCESSING
+     C                     EXSR FIRST
+     C*
+     C* IF ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C                     EXSR AUDIT
+     C                     GOTO PGEND
+     C                     END
+     C*
+     C* INITIALISE FIELDS
+     C*
+     C*                    Z-ADD0         LINCNT  50
+     C                     Z-ADD0         IRECC   50
+     C                     Z-ADD0         IRECU   50
+     C                     MOVE *BLANK    FILOPN  1
+     C                     MOVEL'**NOT FO'WNFND  15
+     C                     MOVE 'UND**  ' WNFND
+     C                     MOVE *BLANKS   DBRNM
+     C                     MOVE *BLANKS   DNAME
+     C                     MOVE *BLANKS   DTOWN
+     C*
+     C** IF A PARTICULAR BRANCH REQUEST THEN POSITION FILE TO FIRST
+     C** RECORD FOR THIS BRANCH
+     C*
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNE*BLANKS
+     C           ENT       SETLLCUDPD
+     C                     END
+     C* READ CUDPD
+     C*
+     C                     READ CUDPD                    89
+     C*
+     C** IF THE BRANCH READ IS NOT THE BRANCH REQUESTED STOP PROCESSING
+     C*
+     C           *IN89     IFEQ '0'
+     C           MBIN      ANDEQ'Y'
+     C           ENT       ANDNE'ALL'
+     C           ENT       ANDNEBRNCH
+     C                     SETON                     89
+     C                     END
+     C*
+     C* DO UNTIL EOF
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C                     MOVE '0'       *IN15
+     C*
+     C* OPEN PRINTER FILE IF FIRST TIME
+     C*
+     C           *IN81     IFEQ '0'
+     C                     OPEN SE1136P1
+     C                     MOVE 'Y'       FILOPN
+     C*
+     C** RCF Processing for Detail Printer File
+     C                     EXSR RCFP1
+     C                     END
+     C*
+     C* IF NEW BRANCH OR NEW DEPOT OR NEW SECURITY
+     C*
+     C           BRNCH     IFNE LBRNCH
+     C           DEPOT     ORNE LDEPOT
+     C           SECUR     ORNE LSECUR
+     C*
+     C* IF PREVIOUS OUTPUT
+     C*
+     C           *IN81     IFEQ '1'
+     C*
+     C* REFORMAT TOTALS
+     C*
+     C                     Z-ADDSECTCT    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    TOTCT
+     C*
+     C                     Z-ADDSECTCV    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    TOTCV
+     C*
+     C                     Z-ADDSECTCS    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    TOTCS
+     C*
+     C* PRINT TOTALS
+     C*
+     C           *IN01     IFEQ '1'
+     C* Move back old value of branch and depot details
+     C                     WRITEHEADP1
+     C                     SETOF                     01
+     C                     END
+     C                     WRITEDTOTAL
+     C*
+     C*                    ADD  4         LINCNT
+     C*
+     C                     Z-ADD0         SECTCT
+     C                     Z-ADD0         SECTCV
+     C                     Z-ADD0         SECTCS
+     C*
+     C* IF NEW BRANCH
+     C*
+     C           BRNCH     IFNE LBRNCH
+     C*
+     C* WRITE END OF REPORT MESSAGE
+     C*
+     C           *IN01     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     SETOF                     01
+     C                     END
+     C                     WRITETRAILP1
+     C*
+     C* START NEW PRINTER FILE
+     C*
+     C                     CLOSESE1136P1
+     C                     Z-ADD0         PAGE
+     C                     OPEN SE1136P1
+     C*
+     C** RCF Processing for Detail Printer File
+     C                     EXSR RCFP1
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NEW DEPOT OR NEW BRANCH, GET DETAILS
+     C*
+     C           DEPOT     IFNE LDEPOT
+     C           BRNCH     ORNE LBRNCH
+     C*
+     C                     MOVE '1'       *IN82
+     C*
+     C           BRNCH     IFNE LBRNCH
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE *BLANKS   KEY
+     C**********           MOVEL'10      'KEY                                                BUG7985
+     C**********           MOVE BRNCH     KEY                                                BUG7985
+     C********** TABKEY    CHAINTABLETRF             80                                      BUG7985
+     C********** *IN80     IFEQ '0'                                                          BUG7985
+     C********** RECI      ANDEQ'*'                                                          BUG7985
+     C**********           SETON                     80                                      BUG7985
+     C**********           END                                                               BUG7985
+     C********** *IN80     IFEQ '1'                                                          BUG7985
+     C                     CALL 'AOBRCHR1'                                                   BUG7985
+     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+     C                     PARM BRNCH     PBRCH   3                                          BUG7985
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+      *                                                                                      BUG7985
+     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+     C           *LOCK     IN   LDA
+     C**********           MOVE 'TABLE'   DBFILE           *****************                 BUG7985
+     C**********           MOVELTABKEY    DBKEY            ** DB ERROR 03 **                 BUG7985
+     C                     MOVE 'SDBRCHPD'DBFILE                                             BUG7985
+     C                     MOVELBRNCH     DBKEY                                              BUG7985
+     C                     Z-ADD3         DBASE            *****************
+     C                     OUT  LDA
+     C                     SETON                     99U7U8
+     C                     EXSR AUDIT
+     C                     GOTO PGEND
+     C                     END
+     C                     END
+     C*
+     C* SAVE VALUE OF BRANCH
+     C*
+     C                     MOVE BRNCH     LBRNCH
+     C                     MOVELBRNCH     DBRCA
+     C                     MOVE *BLANKS   DBRNM
+     C                     MOVELBRNM      DBRNM
+     C                     END
+     C*
+     C           DEPOT     IFNE LDEPOT
+     C           DEPOT     CHAINCLINTCBF             80
+     C           *IN80     IFEQ '0'
+     C           RECI      ANDEQ'*'
+     C                     SETON                     80
+     C                     END
+     C*
+     C           *IN80     IFEQ '1'
+     C                     MOVEL*BLANKS   DNAME
+     C                     MOVEL*BLANKS   DTOWN
+     C                     MOVELWNFND     DNAME
+     C                     MOVELWNFND     DTOWN
+     C                     ELSE
+     C                     MOVELCRNM      DNAME
+     C                     MOVELCTWN      DTOWN
+     C                     END
+     C*
+     C* SAVE VALUE OF DEPOT
+     C*
+     C**********           MOVELDEPOT     LDEPOT  60                                          CSD027
+     C                     MOVELDEPOT     LDEPOT  6                                           CSD027
+     C                     MOVELDEPOT     DDEPOT
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NEW SECURITY SAVE VALUE OF SECURITY SHORTNAME
+     C*
+     C           SECUR     IFNE LSECUR
+     C*
+     C           SECUR     CHAINSECTY                80
+     C           *IN80     IFEQ '0'
+     C           RECI      ANDEQ'*'
+     C                     SETON                     80
+     C                     END
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECTY'   DBFILE           *****************
+     C                     MOVELSECUR     DBKEY            ** DB ERROR 04 **
+     C                     Z-ADD4         DBASE            *****************
+     C                     OUT  LDA
+     C                     SETON                     99U7U8
+     C                     EXSR AUDIT
+     C                     GOTO PGEND
+     C                     END
+     C                     MOVE SECUR     LSECUR
+     C                     MOVE '1'       *IN15
+     C                     EXSR DESC
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF RECORD FROM CLIENT DEPOT POSITIONS
+     C*
+     C           *IN10     IFEQ '1'
+     C*
+     C           CDCN      CHAINCLINTCBF             80
+     C           *IN80     IFEQ '0'
+     C           RECI      ANDEQ'*'
+     C                     SETON                     80
+     C                     END
+     C           *IN80     IFEQ '1'
+     C                     MOVELWNFND     CNAME
+     C                     MOVEL*BLANKS   CTWN
+     C                     ELSE
+     C                     MOVELCRNM      CNAME
+     C                     MOVELCTWN      CTOWN
+     C                     END
+     C*
+     C* ADD VALUES INTO SECURITY TOTALS
+     C*
+     C                     ADD  CDNT      SECTCT 150
+     C           SNPT      ADD  CDST      TWORK  150
+     C                     ADD  TWORK     SECTCT
+     C                     ADD  CDNV      SECTCV 150
+     C           SNPT      ADD  CDST      VWORK  150
+     C                     ADD  VWORK     SECTCV
+     C                     ADD  CDNS      SECTCS 150
+     C                     ADD  CNSI      SECTCS
+     C*
+     C* REFORMAT NOMINAL - TRADE DATE
+     C*
+     C*                    Z-ADDCDNT      ZFLD15
+     C           TWORK     ADD  CDNT      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    NOMTD
+     C*
+     C* REFORMAT NOMINAL - VALUE DATE
+     C*
+     C*                    Z-ADDCDNV      ZFLD15
+     C           VWORK     ADD  CDNV      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    NOMVD
+     C*
+     C* REFORMAT NOMINAL - SETTLEMENT DATE
+     C*
+     C*                    Z-ADDCDNS      ZFLD15
+     C           CNSI      ADD  CDNS      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    NOMSD
+     C*
+     C* ELSE RECORD FROM USER DEPOT HOLDINGS
+     C*
+     C                     ELSE
+     C*
+     C* ADD VALUES INTO SECURITY TOTALS
+     C*
+     C                     ADD  UDNT      SECTCT
+     C           UDTP      ADD  UDTS      UTWORK 150
+     C                     ADD  UTWORK    SECTCT
+     C                     ADD  UDNV      SECTCV
+     C           UDPV      ADD  UDSV      UVWORK 150
+     C                     ADD  UVWORK    SECTCV
+     C                     ADD  UDNS      SECTCS
+     C                     ADD  UNSI      SECTCS
+     C*
+     C* REFORMAT NOMINAL - TRADE DATE
+     C*
+     C*                    Z-ADDUDNT      ZFLD15
+     C           UTWORK    ADD  UDNT      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    NOMNT
+     C*
+     C* REFORMAT NOMINAL - VALUE DATE
+     C*
+     C*                    Z-ADDUDNV      ZFLD15
+     C           UVWORK    ADD  UDNV      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    NOMNV
+     C*
+     C* REFORMAT NOMINAL - SETTLEMENT DATE
+     C*
+     C*                    Z-ADDUDNS      ZFLD15
+     C           UNSI      ADD  UDNS      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    NOMNS
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' POPTN   7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM UDBK      PMPSBK  2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPMBKCD    UDBK                            CAC005
+     C                     MOVE PMPRFC    PPRFC                           CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVEL*BLANKS   PPRFC                           CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C           UDBK      CHAINBOOKD                80
+     C           *IN80     IFEQ '0'
+     C           RECI      ANDEQ'*'
+     C                     SETON                     80
+     C                     END
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'BOOKD'   DBFILE           *****************
+     C                     MOVELUDBK      DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD5         DBASE            *****************
+     C                     OUT  LDA
+     C                     SETON                     99U7U8
+     C                     EXSR AUDIT
+     C                     GOTO PGEND
+     C                     END
+     C*
+     C                     MOVELBOKD      BNAME
+     C*
+     C                     END
+     C*
+     C* OUTPUT HEADINGS IF REQUIRED
+     C*
+     C           *IN82     IFEQ '1'
+     C           *IN01     OREQ '1'
+     C                     WRITEHEADP1
+     C                     SETOF                     01
+     C*                    Z-ADD8         LINCNT
+     C                     END
+     C*
+     C* PRINT DETAILS
+     C*
+     C           *IN01     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     SETOF                     01
+     C                     END
+     C                     WRITEDETAIL
+     C*
+     C*                    ADD  2         LINCNT
+     C                     SETOF                     821011
+     C*
+     C* READ NEXT RECORD
+     C*
+     C                     READ CUDPD                    89
+     C*
+     C** IF THE BRANCH READ IS NOT THE BRANCH REQUESTED STOP PROCESSING
+     C*
+     C           *IN89     IFEQ '0'
+     C           MBIN      ANDEQ'Y'
+     C           ENT       ANDNE'ALL'
+     C           ENT       ANDNEBRNCH
+     C                     SETON                     89
+     C                     END
+     C*
+     C           *IN81     IFEQ '0'
+     C                     SETON                     81
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF PREVIOUS OUTPUT
+     C*
+     C           *IN81     IFEQ '1'
+     C*
+     C* REFORMAT TOTALS
+     C*
+     C                     Z-ADDSECTCT    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    TOTCT
+     C*
+     C                     Z-ADDSECTCV    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    TOTCV
+     C*
+     C                     Z-ADDSECTCS    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    TOTCS
+     C*
+     C           *IN01     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     SETOF                     01
+     C                     END
+     C                     WRITEDTOTAL
+     C*
+     C*                    ADD  4         LINCNT
+     C*
+     C* WRITE END OF REPORT MESSAGE
+     C*
+     C           *IN01     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     SETOF                     01
+     C                     END
+     C                     WRITETRAILP1
+     C*
+     C                     END
+     C*
+     C           FILOPN    IFEQ *BLANK
+     C                     WRITEHEADAU
+     C                     WRITENONE
+     C                     END
+     C*
+     C           PGEND     TAG
+     C*
+     C                     SETON                     LR
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C/EJECT
+      *****************************************************************
+      *
+      *  AUDIT  - Subroutine to Output Audit Report.
+      *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C**  OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C*
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM ENT       SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C**
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C**
+     C                     ENDSR
+      *
+      *****************************************************************
+     C*****************************************************************
+     C*
+     C* SUBROUTINE TO ACCESS ICD 1 AND ICD FOR SE
+     C* CALLS: ZSYSTM, ZICDSE
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C* ERROR IN ZSYSTM
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            *****************
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ** DB ERROR 01 **
+     C                     MOVEL'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA
+     C                     ELSE
+     C*
+     C* GET ICD SE RECORD
+     C*
+     C                     EXSR ZICDSE
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVEL'ICDR '   DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA
+     C                     END
+     C                     END
+      *                                                                   CAC005
+      ** Check if CAC005 - PCA-SE Enhancement is on.                      CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     MOVE *OFF      *IN30                           CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   @RTCD   7                       CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     MOVE *ON       *IN30                           CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*******************************************************************
+     C*    DESC S.R. - TO COMPRESS SECURITY DESCRIPTION/COUPON RATE/
+     C*    MATURITY DATE INTO SHORTEST POSSIBLE FIELD
+     C*
+     C           DESC      BEGSR                           ***  DESC  ***
+     C*
+     C                     MOVE *BLANK    ARRS
+     C                     MOVE *BLANK    FLD40                           162751
+     C                     Z-ADD1         X       50
+     C*
+     C*    MOVE COUPON RATE INTO WORK ARRAYS
+     C           CPNR      IFEQ 0
+     C                     GOTO SECMAT
+     C                     END
+     C                     MOVELCPNR      FLD4    4
+     C                     MOVE CPNR      FLD7    7
+     C                     MOVEAFLD4      ARR1
+     C                     MOVEAFLD7      ARR2
+     C*
+     C*    SUPPRESS LEADING ZEROS
+     C           ARR1,1    IFGT '0'
+     C                     MOVEAARR1      ARRS,X
+     C           X         ADD  4         X
+     C                     GOTO NEXT
+     C                     END
+     C           ARR1,2    IFGT '0'
+     C                     MOVEAARR1,2    ARRS,X
+     C           X         ADD  3         X
+     C                     GOTO NEXT
+     C                     END
+     C           ARR1,3    IFGT '0'
+     C                     MOVEAARR1,3    ARRS,X
+     C           X         ADD  2         X
+     C                     GOTO NEXT
+     C                     END
+     C           ARR1,4    IFGT '0'
+     C                     MOVEAARR1,4    ARRS,X
+     C           X         ADD  1         X
+     C                     END
+     C*
+     C           NEXT      TAG                             ** NEXT TAG ***
+     C*
+     C*    INSERT DEC POINT & SUPPRESS TRAILING ZEROS
+     C                     MOVE '.'       ARRS,X
+     C           X         ADD  1         X
+     C                     MOVE 7         Q       10
+     C           AGIN      TAG                             ** AGIN TAG ***
+     C           ARR2,Q    IFEQ '0'
+     C                     MOVE ' '       ARR2,Q
+     C                     END
+     C*
+     C           Q         IFNE 1
+     C           ARR2,Q    IFEQ '0'
+     C           Q         SUB  1         Q
+     C                     GOTO AGIN
+     C                     END
+     C                     ELSE
+     C           ARR2,Q    IFEQ '0'
+     C           X         SUB  1         X
+     C                     MOVE ' '       ARRS,X
+     C           X         ADD  1         X
+     C                     END
+     C                     END
+     C*
+     C           ARR2,Q    IFNE '0'
+     C                     MOVEAARR2      ARRS,X
+     C           Q         ADD  1         Q
+     C           Q         ADD  X         X
+     C                     END
+     C*
+     C           SECMAT    TAG                             ** SECMAT TAG *
+     C           MATY      IFEQ 0
+     C           MATY      OREQ 99999
+     C                     GOTO SECEND
+     C                     END
+     C*
+     C*    CONVERT FINAL MATURITY DATE IN DD/MM/YY
+     C                     Z-ADDMATY      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     CDATE   60
+     C*
+     C*    EDIT MATURITY DATE
+     C                     MOVE CDATE     YY      2
+     C                     MOVELCDATE     DATE    4
+     C                     MOVELDATE      DD      2
+     C                     MOVE DATE      MM      2
+     C                     MOVEADD        ARRS,X
+     C           X         ADD  2         X
+     C                     MOVE '/'       ARRS,X
+     C           X         ADD  1         X
+     C                     MOVEAMM        ARRS,X
+     C           X         ADD  2         X
+     C                     MOVE '/'       ARRS,X
+     C           X         ADD  1         X
+     C                     MOVEAYY        ARRS,X
+     C*
+     C                     MOVEAARRS      FLD40
+     C*
+     C           SECEND    ENDSR                                       SR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     C*
+     C*****************************************************************
+     C*    SUBROUTINE- ZICDSE
+     C*    ACCESS ICD RECORD FROM TABTB36 FOR SECURITIES TRADING
+     C*
+     C*  1.TABTB36 MUST BE DECLARED IN THE PROGRAM
+     C*  2.ON RETURN FROM THIS S/R THE PROGRAM MUST CHECK U7/U8 -
+     C*    AND IF ON MUST EXECUTE STD DATABASE ERROR ROUTINE
+     C*  3.*IN99 IS USED
+     C*
+     C*****************************************************************
+     C*
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C**
+     C*****************************************************************
+     C**                                                              *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a  *
+     C** numeric field and to blank out leading zeros (optionaly      *
+     C** inserting commas).                                           *
+     C**     Input fields:   ZFLD15 15/0                              *
+     C**                     ZDECS  1/0                               *
+     C**                     ZECODE 1/  ('J', 'L' or blank)           *
+     C**                                                              *
+     C**     Arrays:         ZS1    15/1/0                            *
+     C**                     ZS2    21/1/                             *
+     C**                                                              *
+     C**     Output fields:  ZOUT21 21                                *
+     C**                                                              *
+      /COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

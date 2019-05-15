@@ -1,0 +1,210 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_CLTRCLN - Customer loans linked to a facility and SD used to        */
+/*                   identify DataFile trigger recalculation                   */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CLE141             Date 08Feb16                        */
+/*                      CGL165             Date 23Feb15                        */
+/*                      CLE134             Date 01Aug12                        */
+/*                      CLE148             Date 23Jul12                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CLE143             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER048             Date 19May08                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/*                      BUG21960           Date 21Jan09                        */
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      SC137339           Date 01Aug06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 10Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CAS011             Date 16May05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG3644 *CREATE    Date 12Jul04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CLE141 - Currency and Location Business Day Convention                */
+/*                (Recompile)                                                  */
+/*       CGL165 - Dual Withholding Tax (Recompile)                             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CLE148 - Alpha Loan Reference                                         */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CLE143 - Original Loan Contract Date & Effective Interest             */
+/*                Rate (Recompile)                                             */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER048 - German Features - Taxes (Recompile)                          */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       BUG21960 - Facility available amount and current exposure is not      */
+/*                  updating in Facility availability enquiry as Loan is       */
+/*                  change from Autosettle "No" to "Yes".                      */
+/*       SC137339 - Include a status column in the Facility Transactions       */
+/*                  Enquiry screen                                             */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       CLE106 - Syndications Manager (Recompile)                             */
+/*       CAS011 - EIR/AC Accounting Upgrade to MP1 (Recompile)                 */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG3644 - Serious Error in Collateralised Lending                     */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  T_ZONE ,                                                                      :
+  T_ID ,                                                                        :
+  T_MOD ,                                                                       :
+  T_SMOD ,                                                                      :
+  T_SNAM ,                                                                      :
+  RCCY ,                                                                        :
+  T_RCCY ,                                                                      :
+  T_NBDP ,                                                                      :
+  T_SPRT ,                                                                      :
+  T_MDIN ,                                                                      :
+  T_TDAT ,                                                                      :
+  T_SDAT ,                                                                      :
+  T_EDAT ,                                                                      :
+  T_TRTP ,                                                                      :
+  T_TRST ,                                                                      :
+  RECI ,                                                                        :           SC137339
+  LNRF ,                                                                        :
+  PTYP ,                                                                        :
+  FCXR ,                                                                        :
+  FMDI ,                                                                        :
+  BRCA ,                                                                        :
+  CNUM ,                                                                        :
+  FACT ,                                                                        :
+  FCNO ,                                                                        :
+  FCCY ,                                                                        :
+  FCNBDP ,                                                                      :
+  FCSPRT ,                                                                      :
+**FCMDIN*)**********************************************************************:           BUG21960
+  FCMDIN ,                                                                      :           BUG21960
+  AUTO )                                                                        :           BUG21960
+  AS                                                                            :
+  SELECT                                                                        :
+  T_ZONE                                                                        :
+  ,T_ID                                                                         :
+  ,T_MOD                                                                        :
+  ,T_SMOD                                                                       :
+  ,T_SNAM                                                                       :
+  ,T_RCCY AS RCCY                                                               :
+  ,CASE WHEN T_VCCY = TRIM('') THEN T_RCCY                                      :
+  ELSE T_VCCY END AS T_RCCY                                                     :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6NBDP                                 :
+  ELSE VCCY.A6NBDP END AS T_NBDP                                                :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6SPRT                                 :
+  ELSE VCCY.A6SPRT END AS T_SPRT                                                :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6MDIN                                 :
+  ELSE VCCY.A6MDIN END AS T_MDIN                                                :
+  ,T_TDAT                                                                       :
+  ,T_SDAT                                                                       :
+  ,T_EDAT                                                                       :
+  ,T_TRTP                                                                       :
+  ,T_TRST                                                                       :
+  ,LOAN.RECI AS RECI                                                            :           SC137339
+  ,LNRF                                                                         :
+  ,PTYP                                                                         :
+  ,FCXR                                                                         :
+  ,FMDI                                                                         :
+  ,FCLTY.BRCA                                                                   :
+  ,FCLTY.CNUM                                                                   :
+  ,FCLTY.FACT                                                                   :
+  ,FCLTY.FCNO                                                                   :
+  ,FCLTY.FCCY                                                                   :
+  ,FCCY.A6NBDP AS FCNBDP                                                        :
+  ,FCCY.A6SPRT AS FCSPRT                                                        :
+  ,FCCY.A6MDIN AS FCMDIN                                                        :
+  ,LOAN.AUTO AS AUTO                                                            :           BUG21960
+  FROM                                                                          :
+  GPTRAPPD                                                                      :
+  LEFT OUTER JOIN                                                               :
+  GZSDCURRPD VCCY                                                               :
+  ON                                                                            :
+  T_VCCY = VCCY.A6CYCD                                                          :
+  AND T_ZONE = VCCY.A6ZONE                                                      :
+  ,GZSDBRCHPD AS      FCLTBR                                                    :
+  ,GZCLOANCL AS LOAN                                                            :
+  ,GZFCLTYFM AS FCLTY                                                           :
+  ,GZSDCURRPD AS RCCY                                                           :
+  ,GZSDCURRPD AS FCCY                                                           :
+  WHERE                                                                         :
+  T_MOD = 'LE'                                                                  :
+  AND T_SMOD = 'LOAN'                                                           :
+**AND*T_TR6N*=*LNRF*************************************************************:             CLE148
+  AND T_TR6A = LNRF                                                             :             CLE148
+  AND T_TRTP = LTYP                                                             :
+  AND T_TRST = SUTP                                                             :
+  AND T_BRCA = LOAN.BRCA                                                        :
+  AND FCUS = FCLTY.CNUM                                                         :
+  AND FTYP = FCLTY.FACT                                                         :
+  AND FSEQ = FCLTY.FCNO                                                         :
+  AND FCLTY.BRCA = FCLTBR.A8BRCD                                                :
+  AND FCLTBR.A8ZONE = T_ZONE                                                    :
+  AND T_RCCY = RCCY.A6CYCD                                                      :
+  AND T_ZONE = RCCY.A6ZONE                                                      :
+  AND FCLTY.FCCY = FCCY.A6CYCD                                                  :
+  AND T_ZONE = FCCY.A6ZONE ;                                                    :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  T_ZONE IS 'Zone' ,                                                            :
+  T_ID IS 'Identifier' ,                                                        :
+  T_MOD IS 'Module' ,                                                           :
+  T_SMOD IS 'Sub-Module' ,                                                      :
+  T_SNAM IS 'Shortname' ,                                                       :
+  LNRF IS 'Loan Number' ,                                                       :
+  PTYP IS 'Loan                Proc                Type' ,                      :
+  FCXR IS 'Facility ccy        Exchange            Rate' ,                      :
+  FMDI IS 'Fac Mult/Div        Ind' ,                                           :
+  BRCA IS 'Brch Code' ,                                                         :
+  CNUM IS 'Customer Number' ,                                                   :
+  FACT IS 'Facil Type' ,                                                        :
+  FCNO IS 'Fac No' ,                                                            :
+  FCCY IS 'Facil Curr' ) ;                                                      :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  T_ZONE TEXT IS 'Zone' ,                                                       :
+  T_ID TEXT IS 'Identifier' ,                                                   :
+  T_MOD TEXT IS 'Module' ,                                                      :
+  T_SMOD TEXT IS 'Sub-Module' ,                                                 :
+  T_SNAM TEXT IS 'Shortname' ,                                                  :
+  RCCY TEXT IS 'Risk Currency' ,                                                :
+  LNRF TEXT IS 'Loan number' ,                                                  :
+  PTYP TEXT IS 'Loan processing type' ,                                         :
+  FCXR TEXT IS 'Facility ccy exch. rate' ,                                      :
+  BRCA TEXT IS 'Branch Code - Alpha' ,                                          :
+  FCXR TEXT IS 'Fac Mult/Div Ind' ,                                             :
+  CNUM TEXT IS 'Customer number' ,                                              :
+  FACT TEXT IS 'Facility type' ,                                                :
+  FCNO TEXT IS 'Facility number' ,                                              :
+  FCCY TEXT IS 'Facility currency' ,                                            :
+  FCNBDP TEXT IS 'Number of Decimal Places' ,                                   :
+  FCSPRT TEXT IS 'Spot Rate' ,                                                  :
+**FCMDIN*TEXT*IS*'Multiply/Divide*Indicator'*)*;********************************:           BUG21960
+  FCMDIN TEXT IS 'Multiply/Divide Indicator' ,                                  :           BUG21960
+  AUTO TEXT IS 'Auto-Settlement Indicator' ) ;                                  :           BUG21960
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE Customer Loans                           ';                     :
+                                                                                :

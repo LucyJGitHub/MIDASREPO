@@ -1,0 +1,296 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE History actions update - LEO actions')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LER035 - Update of History Actions file from LEO Actions.    *
+      *                                                               *
+      *  Function: This program extracts details from the LEO actions *
+      *  (COB)     file PF/LEOACTPD from CMIU35 & CMIU36) related to  *
+      *            changes in principal, for the update of the        *
+      *            History Actions file PF/HISACT and the Facilities  *
+      *            Actioned file PF/FACACT.                           *
+      *                                                               *
+      *  Called By: CLP/LERC30A                                       *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 225591             Date 08Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01473             Date 20Jul94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  225591 - Facility history changes for repayments due to      *
+      *           rollover (recompile)                                *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CLE023 - Lending Facility History Improvements. (Recompiled) *
+      *  S01473 - Leo Midas Integration. Update of PF/HISACT and      *
+      *           PF/FACACT the Leo Actions.                          *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FLEOACTPDIF  E                    DISK
+     FFACACT  UF  E           K        DISK         KINFSR *PSSR A
+     FHISACT  O   E                    DISK
+     FLER035AUO   E                    PRINTER                        UC
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    10  - Read of PF/LEOACT                                    *
+      *    20  - Chain to PF/FACACT                                   *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program initialisation.                             *
+      *  PROCES - Detail processing.                                  *
+      *  *PSSR  - Program exception processing.                       *
+      *  TERM   - Program termination.                                *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+     E** Array containing Copyright statement
+     E*
+     E/SPACE 3
+      *
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID.
+      *
+      *
+     I            DS
+     I                                        1  110FCLT
+     I***********                             1   60FCNUM                 CSD027
+     I                                        1   6 FCNUM                 CSD027
+     I                                        7  110FCTY
+      ** Facility Reference Data Structure.
+      *
+     ILDA       E DSLDA
+      ** Local Data Area.
+      *
+     ILERSTS    E DSLERSTS
+     I              LERC2030                        RENAM1
+     I              LERC135                         RENAM2
+     I              LERC315                         RENAM3
+     I              FACHISD                         TONDAT
+     I              LERC425                         RENAM4
+     I              EOYFLAG                         RENAM5
+      ** Profitability Status Data Area.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details.
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs.
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access programs.
+      *
+     C/EJECT
+     C/TITLE Main Processing
+      *
+      ** Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ** Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      ** Program Termination.
+     C                     EXSR TERM
+      *
+     C/EJECT
+      *****************************************************************
+      *  INIT   - Program initialisation subroutine.                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA.
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define LERSTS.
+     C           *NAMVAR   DEFN           LERSTS
+     C                     IN   LERSTS
+      *
+      ** Key list for PF/FACACT.
+     C           FACKEY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           HACNUM
+     C                     KFLD           HAFCTY
+      *
+      ** Access bank specific details.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER035  'DBPGM
+     C                     MOVEL'*READ   'DBKEY
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  PROCES - Detail processing subroutine.                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** Read PF/LEOACTPD until EOF.
+     C                     READ LEOACTD0                 10
+      *
+     C           *IN10     DOWEQ'0'
+      *
+      ** Format PF/HISACT record.
+     C                     MOVE ACBRCA    BRCA
+     C**********           Z-ADDACFCUS    HACNUM                                              CSD027
+     C                     MOVELACFCUS    HACNUM                                              CSD027
+     C                     Z-ADDACFCTY    HAFCTY
+     C           ACEDAT    IFLT TONDAT
+     C                     Z-ADDTONDAT    HADATE
+     C                     ELSE
+     C                     MOVE ACEDAT    HADATE
+     C                     END
+     C                     Z-ADD99        HASEQ
+     C**********           Z-ADD0         HALOAN                                              CLE148
+     C                     MOVEL*BLANKS   HALOAN                                              CLE148
+     C                     MOVE ACACTN    HAACTN
+     C                     Z-ADDACAAMT    HAAAMT
+     C                     MOVE *BLANKS   HAPART
+     C                     MOVE ACLCRF    HALCRF
+      *
+      ** Write PF/HISACT record.
+     C                     WRITEHISACTF
+      *
+      ** Access PF/FACACT record for the facility.
+     C           FACKEY    CHAINFACACT               20
+      *
+      ** If PF/FACACT record for the facility exists, if earliest facility
+      ** action date is after history action date, update with history
+      ** date.
+     C           *IN20     IFEQ '0'
+     C           HADATE    IFLT FCDATE
+     C                     MOVE HADATE    FCDATE
+     C                     UPDATFACACTF
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** If PF/FACACT record for the facility does not exist, output new
+      ** record.
+     C                     MOVE HACNUM    FCCNUM
+     C                     MOVE HAFCTY    FCFCTY
+     C                     MOVE HADATE    FCDATE
+     C                     WRITEFACACTF
+     C                     END
+      *
+      ** Read PF/LEOACTPD
+     C                     READ LEOACTPD                 10
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * *PSSR  - Program exception processing.                        *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: VARIOUS                                           *
+      *  Calls:     AUDIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Ensure dump is executed only once.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8
+     C                     DUMP
+      *
+      ** Produce error report
+     C                     OPEN LER035AU
+     C                     WRITELER035A1
+     C                     WRITEDBFMTAU
+     C                     CLOSELER035AU
+      *
+     C                     EXSR TERM
+     C                     END
+      *
+      ** Exit program.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  TERM   - Program termination subroutine.                     *
+      *                                                               *
+      *  Called By: Main Processing, *PSSR                            *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TERM      BEGSR
+      *
+      ***  End Program and Return.
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+** CPY@
+(c) Finastra International Limited 2001

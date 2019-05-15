@@ -1,0 +1,756 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Period Details Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0150 - PERIOD DETAILS REPORT                               *
+     F*                                                               *
+     F*  Function: This program can be run in Input Cycle to          *
+     F*  (I/C Int) produce a list of all Period Sets and Details      *
+     F*   (COB)    held in PF/GLPERSPD & PF/GLPERDPD.  If called      *
+     F*            in COB, an audit report is produced of all Period  *
+     F*            Sets inserted or amended today.  A file control    *
+     F*            report is also written, and file controls on       *
+     F*            PF/GLFCTLPA are updated.                           *
+     F*                                                               *
+     F*  Called by: MCC0150 - Period Details Report Control           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CMC001             Date 18Mar96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Print the period's closure date if CMC001           *
+     F*           feature is installed.                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FMC0150P1O   E             60     PRINTER      KINFDS SPOOL      UC
+     FMC0150AUO   E             61     PRINTER      KINFDS SPOOLU     UC
+     FGLFCTLL0UF  E           K        DISK
+     FGLPERSL1IF  E           K        DISK
+     FGLPERDL1IF  E           K        DISK
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10  -  Change in value of Period Year                        *
+      *  11  -  Change in value of Start of Term 1 Date               *
+      *  12  -  Change in value of Start of Term 2 Date               *
+      *  40  -  Audit titles required for headers                     *
+      *  41  -  Header title for 'No Details to Report'               *
+      *  50  -  Record written to report                              *
+      *  55  -  Management Accounts Enhancement (CMC001) is installed *   CMC001
+      *  60  -  Overflow/new page for report                          *
+      *  70  -  No details to report                                  *
+      *  80  -  End of file LF/GLPERSL1                               *
+      *  81  -  No record found LF/GLFCTLL0                           *
+      *  82  -  End of file LF/GLPERDL1                               *
+      *                                                               *
+      *  98  -  System Date Format = M                                *
+      *                                                               *
+      *  U1  -  Audit Mode                                            *
+      *  U7  -  Database Error                                        *
+      *  U8  -  Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT    -  Initial Processing                                *
+      *  SETDTL  -  Write Period Set Details to report                *
+      *  WRTSET  -  Setup Report Details for Set Details              *
+      *  PRDDTL  -  Write Period Details to report                    *
+      *  OVRFLW  -  Test for Page Overflow                            *
+      *  AUDIT   -  Produce Audit Report Details                      *
+      *  INITRP  -  Initialise Report fields                          *
+      *  RCFP1   -  Register P1 Printer file via RCF                  *
+      *  RCFAU   -  Register AU Printer file via RCF                  *
+      *  DBERRS  -  Process Database Errors                           *
+      *                                                               *
+      *  *PSSR   -  Abnormal error conditions                         *
+      *                                                               *
+      *  ZDATE2  -  Convert Dayno. to Date for display                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+     ISPOOL       DS
+      *
+      **  Spool information data structure for main print
+      *
+     I                                       83  90 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+      *
+     ISPOOLU      DS
+      *
+      **  Spool information data structure for audit print
+      *
+     I                                       83  90 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ILDA       E DSLDA
+     IPSDS       SDS
+      *
+      **  Program Status DS
+      *
+     I                                      244 253 JOB
+      *
+     IDSFDY     E DSDSFDY
+      *
+      **  First DS for access programs, Short Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      **  Bank Details
+      *
+     ISCSARD    E DSSCSARDPD                                              CMC001
+      **  Switchable Features file details                                CMC001
+      *
+     IPDKY        DS
+      *
+      **  Key fields for LF/GLPERDL3
+      *
+     I                                        1   1 KPSTC
+     I                                        2   3 KPDCT
+     I                                        4   5 KPDYR
+     I                                        6   7 KPDNO
+      *
+     I            DS
+      *
+      **  Data Structure for date
+      *
+     I                                        1   4 PCTYRA
+     I                                        1   2 PDCT
+     I                                        3   4 PDYR
+     I                                        1   40PCTYRN
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Key List for GLPERDL3
+      *
+     C           PDKEY     KLIST
+     C                     KFLD           KPSTC
+     C                     KFLD           KPDCT
+     C                     KFLD           KPDYR
+     C                     KFLD           KPDNO
+      *
+      **  Initial processing
+      *
+     C                     EXSR INIT
+      *
+      **  Read first record on Period Sets file
+      *
+     C                     READ GLPERSL1                 80
+      *
+      **  Set indicator if no details to report
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN70
+     C                     ELSE
+      *
+      **  Open Detail report and perform standard ZSFILE processing
+      *
+     C                     EXSR RCFP1
+     C                     END
+      *
+      **  If records on file
+      **  Write Set & Period Details to report for each Period Set
+      *
+     C           *IN80     DOWEQ'0'
+     C                     EXSR SETDTL
+     C                     END
+      *
+      **  If Audit Mode (U1 on),  produce Audit report
+      *
+     C           *INU1     IFEQ '1'
+     C                     EXSR AUDIT
+      *
+      **  If indicator 70 on, write 'No Details to Report'
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITENODETS
+     C                     END
+      *
+      **  If U1 off and indicator 70 on
+      **  If spool file not already open, open audit report and perform
+      **  standard ZSFILE processing
+      *
+     C                     ELSE
+     C           *IN70     IFEQ '1'
+     C                     EXSR RCFAU
+     C                     MOVEA'01'      *IN,40
+     C                     ADD  1         PAGEA
+     C                     WRITEHEADAU
+     C                     WRITENODETS
+     C                     END
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT - SR TO INITIALISE FIELDS AND ACCESS STANDING DATA      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  Initialise spool file controls, & record written indicator
+      *
+     C                     MOVE 'N'       OPEN1
+     C                     MOVE 'N'       OPENA
+     C                     MOVE '0'       *IN50
+      *
+      **  In the Dataarea LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0150'  DBPGM
+     C                     OUT  LDA
+      *
+      **  Access Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERRS
+     C                     END
+      *
+      **  Check System Date Format, DDMMYY or MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *                                                                   CMC001
+      **  Check if Management Accounts Enhancement (CMC001 feature)       CMC001
+      **  is installed                                                    CMC001
+      *                                                                   CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM *BLANKS   @RTCD                           CMC001
+     C                     PARM '*VERIFY' @OPTN                           CMC001
+     C                     PARM 'CMC001'  PSARN   6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+     C           @RTCD     IFNE *BLANK                                    CMC001
+     C           @RTCD     IFNE '*NRF'                                    CMC001
+     C           *LOCK     IN   LDA                                       CMC001
+     C                     MOVEL*BLANKS   DBKEY                           CMC001
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CMC001
+     C                     MOVELPSARN     DBKEY            * DB ERROR 04 *CMC001
+     C                     Z-ADD4         DBASE            ***************CMC001
+     C                     OUT  LDA                                       CMC001
+     C                     EXSR DBERRS                                    CMC001
+     C                     ENDIF                                          CMC001
+     C                     ELSE                                           CMC001
+      *                                                                   CMC001
+      **  Seton indicator 55 to print the period's closure date           CMC001
+      *                                                                   CMC001
+     C                     MOVE *ON       *IN55                           CMC001
+     C                     ENDIF                                          CMC001
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SETDTL - SR TO WRITE PERIOD SET DETAILS TO REPORT            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SETDTL    BEGSR
+      *
+      **  If U1 on (Audit Mode) select only those Period Sets changed
+      **  today
+      *
+     C           *INU1     IFEQ '0'
+     C           *INU1     OREQ '1'
+     C           STLCD     ANDEQBJRDNB
+      *
+      **  Read Period Details for Period Set
+      *
+     C                     MOVELSTPSTC    KPSTC
+     C                     MOVEL*BLANKS   KPDCT
+     C                     MOVEL*BLANKS   KPDYR
+     C                     MOVEL*BLANKS   KPDNO
+     C           PDKEY     SETLLGLPERDL1
+     C                     READ GLPERDL1                 82
+      *
+      **  Database error if no details exist for Period Set
+      *
+     C           DTPSTC    IFNE STPSTC
+     C           *IN82     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'GLPERDL1'DBFILE           ***************
+     C                     MOVELSTPSTC    DBKEY            * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERRS
+     C                     END
+      *
+      **  Write page heading, Period Set heading & Detail heading
+      *
+     C           *INU1     IFEQ '1'
+     C                     MOVE '1'       *IN40
+     C                     END
+      *
+     C                     WRITEHEAD1
+     C                     EXSR WRTSET
+     C                     WRITEPERSET
+     C                     WRITEPERHDR
+      *
+     C           DTPSTC    DOWEQSTPSTC
+     C           *IN82     ANDEQ'0'
+     C                     EXSR PRDDTL
+     C                     END
+      *
+      **  Set on *IN50 to show at least one record written
+      *
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      **  Read next Period Set record
+      *
+     C                     READ GLPERSL1                 80
+      *
+     C           *IN50     IFEQ '1'
+     C           *IN80     IFEQ '1'
+     C                     WRITEENDRPT
+     C                     ELSE
+      *
+      **  If not end of Period Sets, start new page for new Period
+      *
+     C                     MOVE '1'       *IN60
+      *
+      **  Initialise save fields used for monitoring output of fields
+      *
+     C                     Z-ADD0         PCTYRS
+     C                     MOVEL*BLANKS   PSTD1S
+     C                     MOVEL*BLANKS   PSTD2S
+     C                     END
+      *
+     C                     END
+      *
+      **  No records written & end of file reached for Period Sets -
+      **  Set on indicator for 'No Details to Report'
+      *
+     C           *IN50     IFEQ '0'
+     C           *IN80     ANDEQ'1'
+     C                     MOVE '1'       *IN70
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   WRTSET - SR TO SETUP REPORT FIELDS FOR SET DETAILS          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTSET    BEGSR
+      *
+      **  Move Period Set details to report fields
+      *
+      *
+     C                     MOVELSTPSTC    PSPSTC
+     C                     MOVELSTPSNM    PSPSNM
+     C                     Z-ADDSTPPAN    PSPPAN
+     C                     Z-ADDSTPTM1    PSPTM1
+     C                     Z-ADDSTPTM2    PSPTM2
+     C                     MOVELSTPFCD    PSPFCD
+     C                     Z-ADDSTPFBD    PSPFBD
+     C                     Z-ADDSTHPYR    PSHPYR
+     C                     Z-ADDSTFPYR    PSFPYR
+      *
+     C                     Z-ADDSTLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PSLCD
+      *
+     C           STTYLC    IFEQ 'I'
+     C                     MOVEL'Insert'  PSTYLC
+     C                     END
+      *
+     C           STTYLC    IFEQ 'A'
+     C                     MOVEL'Amend '  PSTYLC
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   PRDDTL - SR TO WRITE PERIOD DETAILS TO REPORT               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRDDTL    BEGSR
+      *
+      **  Clear report fields
+      *
+     C                     EXSR INITRP
+     C                     MOVEA'000'     *IN,10
+      *
+      **  Set up Period Year, if not equal to saved value
+      **  set on indicator to write field
+      *
+     C                     MOVELDTPDCT    PDCT
+     C                     MOVELDTPDYR    PDYR
+     C           PCTYRN    IFNE PCTYRS
+     C                     MOVE '1'       *IN10
+     C                     Z-ADDPCTYRN    PDPRCY
+     C                     Z-ADDPCTYRN    PCTYRS  40
+      *
+      **  Format Start of Year Date to DDMMMYY
+      *
+     C                     Z-ADDDTSOYD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PDSYDA
+     C                     END
+      *
+      **  Move Period No. in Year to report field
+      **  Move Relative Period No. to report field
+      *
+     C                     MOVE DTPDNY    PDPDNY
+     C                     Z-ADDDTRPDN    PDRPDN
+      *
+      **  Set up Start of Term 1 Date, if not equal to saved value
+      **  set on indicator to write field
+      *
+     C           DTST1D    IFNE PSTD1S
+     C                     MOVE '1'       *IN11
+     C                     Z-ADDDTST1D    PSTD1S  50
+     C                     Z-ADDDTST1D    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PDST1A
+     C                     END
+      *
+      **  Set up Start of Term 2 Date, if not equal to saved value
+      **  set on indicator to write field
+      *
+     C           DTST2D    IFNE PSTD2S
+     C                     MOVE '1'       *IN12
+     C                     Z-ADDDTST2D    PSTD2S  50
+     C                     Z-ADDDTST2D    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PDST2A
+     C                     END
+      *
+      **  Format Start of Period Date to DDMMMYY
+      *
+     C                     Z-ADDDTSPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PDSPDA
+      *
+      **  Format End of Period Date to DDMMMYY
+      *
+     C                     Z-ADDDTEPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PDEPDA
+      *
+      **  Move Period Name to report field
+      *
+     C                     MOVELDTPDNM    PDPDNM
+      *                                                                   CMC001
+      **  Format period's Closure Date if it is to be printed             CMC001
+      *                                                                   CMC001
+     C           *IN55     IFEQ *ON                                       CMC001
+     C           DTCLSD    IFEQ *ZEROS                                    CMC001
+     C                     MOVE *BLANKS   RCLSD                           CMC001
+     C                     ELSE                                           CMC001
+     C                     Z-ADDDTCLSD    ZDAYNO                          CMC001
+     C                     EXSR ZDATE2                                    CMC001
+     C                     MOVE ZADATE    RCLSD                           CMC001
+     C                     ENDIF                                          CMC001
+     C                     ENDIF                                          CMC001
+      *
+      **  Write Period detail line
+      *
+     C                     WRITEPERDET
+      *
+      **  Read Period Details file
+      *
+     C                     READ GLPERDL1                 82
+      *
+      **  Check for more records for the Period, test for overflow
+      **  Set indicator if new page required and write headers
+      *
+     C           DTPSTC    IFEQ STPSTC
+     C                     Z-ADD2         RQDLN   20
+     C                     EXSR OVRFLW
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEAD1
+     C                     WRITEPERHDR
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  OVRFLW - SR TO TEST FOR PAGE OVERFLOW                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OVRFLW    BEGSR
+      *
+     C           OFLLN     SUB  PRTLN     REMLN   20
+     C           REMLN     IFLT RQDLN
+     C                     MOVE '1'       *IN60
+     C                     ELSE
+     C                     MOVE '0'       *IN60
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT - SR TO PRODUCE AUDIT REPORT DETAILS                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      **  Access file control details
+      *
+     C                     MOVEL'GLPERSPD'CTLKEY 10
+     C           CTLKEY    CHAINGLFCTLL0             81
+      *
+      **  Database error if no record found
+      *
+     C           *IN81     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'GLFCTLL0'DBFILE           ***************
+     C                     MOVELCTLKEY    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERRS
+     C                     ELSE
+      *
+      **  If spool file not already open, open Audit report and perform
+      **  standard ZSFILE processing
+      *
+     C                     EXSR RCFAU
+      *
+      **  Write report
+      *
+     C                     MOVE GFNOIN    NOINS
+     C                     MOVE GFNOAM    NOAMD
+     C                     MOVE GFNODL    NODEL
+     C                     MOVE GFNORC    NOREC
+     C                     MOVEA'10'      *IN,40
+     C                     ADD  1         PAGEA
+     C                     WRITEHEADAU
+     C                     WRITEAUDDET
+      *
+      **  Update file controls
+      *
+     C                     Z-ADD0         GFNOIN
+     C                     Z-ADD0         GFNOAM
+     C                     Z-ADD0         GFNODL
+     C                     UPDAT@AHREAU
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INITRP - SR TO INITIALISE REPORT FIELDS                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INITRP    BEGSR
+      *
+      **  Initialise report fields for period details
+      *
+     C                     Z-ADD0         PDPRCY
+     C                     MOVEL*BLANKS   PDPDNY
+     C                     Z-ADD0         PDRPDN
+     C                     MOVEL*BLANKS   PDSYDA
+     C                     MOVEL*BLANKS   PDST1A
+     C                     MOVEL*BLANKS   PDST2A
+     C                     MOVEL*BLANKS   PDSPDA
+     C                     MOVEL*BLANKS   PDEPDA
+     C                     MOVEL*BLANKS   PDPDNM
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   RCFP1 -- SR TO REGISTER P1 PRINTER FILE VIA RCF             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR
+      *
+     C           OPEN1     IFEQ 'N'
+     C                     OPEN MC0150P1
+     C                     MOVE 'Y'       OPEN1   1
+      *
+      **  Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  Error duirng ZSFILE processing, return to calling program
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   RCFAU - SR TO REGISTER AU PRINTER FILE VIA RCF              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR
+      *
+     C           OPENA     IFEQ 'N'
+     C                     OPEN MC0150AU
+     C                     MOVE 'Y'       OPENA   1
+      *
+      **  Ensure audit spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  Error during ZSFILE processing, return to calling program
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERRS - SR TO PROCESS DATABASE ERRORS                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERRS    BEGSR
+      *
+     C                     EXSR RCFAU
+      *
+      **  Output DB Error details for AU
+      *
+     C                     MOVEA'01'      *IN,40
+     C                     ADD  1         PAGEA
+     C                     WRITEHEADAU
+     C                     WRITEDBERR
+      *
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - SR TO HANDLE ABNORMAL ERROR CONDITIONS               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

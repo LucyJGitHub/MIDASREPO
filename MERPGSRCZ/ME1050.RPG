@@ -1,0 +1,696 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Update I.M.M. FT part detail status')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1050 - I.M.M. FT Part Detail Status Update                 *
+     F*                                                               *
+     F*  Function:  This program updates the status of a particular   *
+     F*  network message that is associated with either an Incoming   *
+     F*  or an Outgoing Funds Transfer payment.                       *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFT002             Date 17Nov98               *
+      *                 069250             Date 03May94               *
+     F*                 S01435             DATE 23JUL93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CFT002 - Straight Through Processing Phase 1                 *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  60    Chain fail on MEINFTL0                                 *
+     F*  90    Chain fail                                             *
+     F*  99    EOF on Read                                            *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FMEINFTL0UF  E           K        DISK         KINFSR SRFILEA    UC
+     F                                              KCOMIT
+      *
+      *  Incoming Message Funds Transfer Transaction Status file
+      *
+     F/COPY WNCPYSRC,ME1050DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E                    CMD@    1   1 80
+      *
+      *  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     E/COPY WNCPYSRC,ME1050DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     E/EJECT
+      *
+      * Rename fields on MEINFTL0 to prevent overwriting from the
+      * parameter data structure
+      *
+     I@INFTL0
+     I              FTMSGR                          F#MSGR
+     I              FTKPRT                          F#KPRT
+     I              FTBRCA                          F#BRCA
+     I              FTINFG                          F#INFG
+     I              FTIPRF                          F#IPRF
+     I              FTOTFG                          F#OTFG
+     I              FTOPRF                          F#OPRF
+     I              FTFRGL                          F#FRGL
+     I              FTTOGL                          F#TOGL
+     I              FTAJOB                          F#AJOB
+     I              FTAUSR                          F#AUSR
+     I              FTATIM                          F#ATIM
+     I              FTARDT                          F#ARDT
+     I              FTAACT                          F#AACT
+     I              FTRDNB                          F#RDNB
+      *
+     I/COPY WNCPYSRC,ME1050DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IINFT      E DSMEINFTPD
+      *
+      *  Define Incoming Message FT Transaction Status Update file
+      *
+     IINLF      E DSMEINLFPD
+      *
+      *  Define parameters to be passed for Log file update
+      *
+     IACTION      DS                            132
+      *
+      *  Breakdown of Action Result Data
+      *
+     I                                        1   6 ANWRK
+     I                                        7  140AMSGR
+     I                                       15  29 AIPRF
+     I                                       30  44 AOPRF
+     I**********                             45  62 AFRGL                                     CGL029
+     I**********                             63  80 ATOGL                                     CGL029
+     I**********                             81  83 ABRCA                                     CGL029
+     I                                       45  68 AFRGL                                     CGL029
+     I                                       69  92 ATOGL                                     CGL029
+     I                                       93  95 ABRCA                                     CGL029
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0ACT   8
+     C                     PARM           W0CPGM 10
+     C                     PARM           W0NWRK  6
+     C                     PARM           W0LMSG  7
+     C           INFT      PARM           W0DATA129
+     C                     PARM           W0RTN   7
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW0DATA    W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Determine the mode of processing and execute subroutine :-
+      *
+      *
+      *  Action Code : *FT INC
+      *  ---------------------
+      *
+      *  Called to update the status of an Incoming Message.
+      *
+      *
+      *  Action Code : *FT OUT
+      *  ---------------------
+      *
+      *  Called to update the status of an Outgoing Message.
+      *
+      *
+      *  If invalid Action Code passed then report as an error.
+      *
+     C           W0ACT     CASEQ'*FT INC 'SRIN
+     C           W0ACT     CASEQ'*FT OUT 'SROUT
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIN     : Update Incoming Message FT Transaction Status     *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRBLNK  - Clear MEINFTL0 file fields              *
+      *             SRLOG   - Update Log File                         *
+      *                                                               *
+      *****************************************************************
+     CSR         SRIN      BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRIN  '  @STK,Q
+      *
+      *  Access Transaction status record
+      *  If no record exists, clear file fields.
+      *
+     C                     Z-ADDFTMSGR    F#MSGR
+     C                     Z-ADDFTKPRT    F#KPRT
+     C           KYINFT    CHAINMEINFTL0             60
+      *
+     C   60                EXSR SRBLNK
+      *
+      *  Move passed parameter data to file fields
+      *
+     C                     MOVELFTINFG    F#INFG           Processing Flag
+     C                     MOVELFTIPRF    F#IPRF           Incoming Ref
+     C                     MOVELFTBRCA    F#BRCA           Branch
+      *
+      *  Only update Funds if not blank
+      *
+     C           FTFRGL    IFNE *BLANKS
+     C                     MOVELFTFRGL    F#FRGL           Funds From
+     C                     END
+      *
+     C           FTTOGL    IFNE *BLANKS
+     C                     MOVELFTTOGL    F#TOGL           Funds To
+     C                     END
+      *
+      *  Set Audit Stamp
+      *
+     C                     EXSR SRAUDT
+      *
+      *  /Copy point for FT Incoming Action
+      *
+     C/COPY WNCPYSRC,ME1050DINC
+      *
+      *  Add/update Transaction status record
+      *
+     C           FTINFG    IFEQ 'MIN0031'                                 CFT002
+     C                     MOVEL*BLANKS   F#INFG                          CFT002
+     C                     MOVEL*BLANKS   F#IPRF                          CFT002
+     C                     MOVEL*BLANKS   F#FRGL                          CFT002
+     C                     MOVEL*BLANKS   F#TOGL                          CFT002
+     C                     ENDIF                                          CFT002
+     C*                                                                   CFT002
+     C  N60                UPDAT@INFTL0
+     C   60                WRITE@INFTL0
+      *
+      *  Set return code
+      *
+     C                     MOVEL'MIN0097' W0RTN
+      *
+      *  Add record to Incoming Message Log File
+      *
+     C                     EXSR SRLOG
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXIN      TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROUT    : Update Outgoing Message FT Transaction Status     *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRBLNK  - Clear MEINFTL0 file fields              *
+      *             SRLOG   - Update Log File                         *
+      *                                                               *
+      *****************************************************************
+     CSR         SROUT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROUT '  @STK,Q
+      *
+      *  Access Transaction status record.
+      *  If new record blank all file fields.
+      *
+     C                     Z-ADDFTMSGR    F#MSGR
+     C                     Z-ADDFTKPRT    F#KPRT
+     C           KYINFT    CHAINMEINFTL0             60
+      *
+     C   60                EXSR SRBLNK
+      *
+      *  Move passed parameter data to file fields
+      *
+     C                     MOVELFTOTFG    F#OTFG           Processing Flag
+     C                     MOVELFTOPRF    F#OPRF           Outgoing Ref
+     C                     MOVELFTBRCA    F#BRCA           Branch
+      *
+      *  Only update Funds to if not blank
+      *
+     C           FTTOGL    IFNE *BLANKS
+     C                     MOVELFTTOGL    F#TOGL           Funds To
+     C                     END
+      *
+      *  If msg is an Outgoing and an Incoming Reference does not exist
+      *  then update the Funds From field
+      *
+      *  AND
+      *
+      *  Only update Funds from if not blank
+      *
+     C           F#IPRF    IFEQ *BLANKS
+     C           FTFRGL    ANDNE*BLANKS
+     C                     MOVELFTFRGL    F#FRGL           Funds From
+     C                     END
+      *
+      *  Set Audit Stamp
+      *
+     C                     EXSR SRAUDT
+      *
+      *  /Copy point for FT Outgoing Action
+      *
+     C/COPY WNCPYSRC,ME1050DOUT
+      *
+      *  Add/update Transaction status record
+      *
+     C           FTOTFG    IFEQ 'MIN0031'                                 CFT002
+     C           F#IPRF    ANDEQ*BLANKS                                   CFT002
+     C                     MOVEL*BLANKS   F#OTFG                          CFT002
+     C                     MOVEL*BLANKS   F#OPRF                          CFT002
+     C                     MOVEL*BLANKS   F#FRGL                          CFT002
+     C                     MOVEL*BLANKS   F#TOGL                          CFT002
+     C                     ENDIF                                          CFT002
+     C*                                                                   CFT002
+     C  N60                UPDAT@INFTL0
+     C   60                WRITE@INFTL0
+      *
+      *  Set return code
+      *
+     C                     MOVEL'MIN0097' W0RTN
+      *
+      *  Add record to Incoming Message Log File
+      *
+     C                     EXSR SRLOG
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXOUT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBLNK   : Clear MEINFTL0 file fields                        *
+      *                                                               *
+      *  CALLED BY: SRIN    - Update Incoming Msg Transaction Status  *
+      *             SROUT   - Update Outgoing Msg Transaction Status  *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBLNK    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBLNK'  @STK,Q
+      *
+      *  Clear fields
+      *
+     C                     MOVEL*BLANKS   F#INFG           Incoming Flag
+     C                     MOVEL*BLANKS   F#IPRF           Incoming Ref
+     C                     MOVEL*BLANKS   F#OTFG           Outgoing Flag
+     C                     MOVEL*BLANKS   F#OPRF           Outgoing Ref
+     C                     MOVEL*BLANKS   F#TOGL           Funds To
+     C                     MOVEL*BLANKS   F#FRGL           Funds From
+     C                     MOVEL*BLANKS   F#BRCA           Branch
+     C                     MOVEL*BLANKS   F#AJOB           Job Name
+     C                     MOVEL*BLANKS   F#AUSR           User
+     C                     Z-ADD0         F#ATIM           Action Time
+     C                     MOVEL*BLANKS   F#ARDT           Action Date
+     C                     MOVEL*BLANKS   F#AACT           Action Type
+     C                     Z-ADD0         F#RDNB           Run Day No.
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXBLNK    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT   : Set up Audit Stamp                                *
+      *                                                               *
+      *  CALLED BY: SRIN    - Update Incoming Msg Status              *
+      *             SROUT   - Update Outgoing Msg Status              *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRAUDT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *  Set Audit Stamp
+      *
+     C                     TIME           TIME    60
+      *
+     C                     MOVEL##JOB     F#AJOB           Job Name
+     C                     MOVEL##USR     F#AUSR           User
+     C                     Z-ADDTIME      F#ATIM           Action Time
+     C                     MOVELAGMRDT    F#ARDT           Action Date
+     C                     Z-ADDAGRDNB    F#RDNB           Run Day No.
+      *
+      *  Set Audit Stamp Action Type
+      *
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'I'       F#AACT           Action Type
+     C                     ELSE
+     C                     MOVEL'A'       F#AACT           Action Type
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXAUDT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOG    : Add Incoming Message Log File record              *
+      *                                                               *
+      *  CALLED BY: SRIN    - Update Incoming Message                 *
+      *             SROUT   - Update Outgoing Message                 *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLOG     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRLOG '  @STK,Q
+      *
+      *  Fill Action Result Data structure
+      *
+     C                     MOVELW0NWRK    ANWRK            Network
+     C                     Z-ADDFTMSGR    AMSGR            Unique Ref.
+     C                     MOVELFTIPRF    AIPRF            Input Ref.   ID
+     C                     MOVELFTOPRF    AOPRF            Output Ref.
+     C                     MOVELFTTOGL    ATOGL            Funds To
+     C                     MOVELFTFRGL    AFRGL            Funds From
+     C                     MOVELFTBRCA    ABRCA            Branch
+      *
+      *  Fill record format data structure with available data
+      *
+     C                     CLEARINLF
+      *
+     C                     Z-ADDFTMSGR    LFMSGR           Unique Ref.
+     C                     Z-ADDFTKPRT    LFKPRT           Part No.
+     C                     MOVELW0LMSG    LFMSID           Action - Msg ID
+     C                     MOVELACTION    LFMSDT           Action Data
+     C                     MOVEL'MIN0097' LFARSM           Action Result
+     C                     MOVEL*BLANKS   LFARSD           Act Result Data
+     C                     MOVELW0CPGM    LFCPGM           Calling Process
+     C                     MOVEL##PGM     LFRPGM           Called Process
+      *
+      *  /Copy point for FT Log file Action
+      *
+     C/COPY WNCPYSRC,ME1050DLFA
+      *
+      *  N.B. Audit Stamp details are determined in called program
+      *
+      *
+      *  Set up data to be passed using the rcd format data structure
+      *
+     C                     CALL 'ME1040'               90
+     C                     PARM '*ADD    'W2ACT   8
+     C                     PARM           INLF
+     C                     PARM *BLANKS   W2RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W2RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1040  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 02 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXLOG     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 03 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    * SRACCS - valid access                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  Define fields
+      *
+      *
+      *  Set keylist for Incoming Message Part No. File
+      *
+     C           KYINFT    KLIST
+     C                     KFLD           FTMSGR
+     C                     KFLD           FTKPRT
+      *
+      *  Open Files
+      *
+      *
+      *  Override file MEINFTL0 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'MEINFTL0'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C                     OPEN MEINFTL0
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C/COPY WNCPYSRC,ME1050C001
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1050DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1050DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Finastra International Limited 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

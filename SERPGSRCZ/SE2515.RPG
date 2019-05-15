@@ -1,0 +1,224 @@
+     H        1
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Drop deleted trades and related settlemen')   *
+     F*****************************************************************
+     F*                                                               *
+     F*  MidasPlus - Securities Module                                *
+     F*                                                               *
+     F*  SE2515 - DROP DELETED TRADES AND CORRESPONDENT SETTLEMENT    *
+     F*           RECORDS                                             *
+     F*                                                               *
+     F* Called by: SEC1002 - Drop off Historic Trades                 *
+     F*            only when feature S01513 IS ON.                    *
+     F*            Frequency:                                         *
+     F*            - Automatically at end of month                    *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2007                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 095907 *C *CREATE  Date 24Nov95               *
+     F*                                                               *
+     F*****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+     F*  095907 -  NEW PROGRAM TO DROP RECORDS IN TRADSD HAVING RECI  *
+     F*            = '*' AND CORRESPONDENT RECORD IN SETLED AND IN    *
+     F*            TRADSDX9 IF EXISTS  AND IN MT5XX EXTENSION FILES   *
+     F*            IF S01401 FEATURE IS PRESENT                       *
+     F*         - Applied 198643, CSE023, 198655, 198655, 172470,     *
+     F*           194296.                                             *
+     F*  198643 - Error in first cycle to read TABTB36                *
+     F*  CSE023 - Treaty Withholding Tax                              *
+     F*  198655 - 'Asterisked'or 'Historic' trades are not dropped    *
+     F*           Linked with 194296 (Retention period)               *
+     F*  172470 - If Switchable Feature CSW003 is 'On', delete trade  *
+     F*           records from extension file TRADSDX1.               *
+     F*  194296 - 'Reversed' trades are not dropped                   *
+     F*         - Take retention period into consideration            *
+     F*****************************************************************
+     F***TRADS   UP  E           K        DISK                            198655
+     FSEDROPL1UP  E           K        DISK                               198655
+     FSETLT   UF  E           K        DISK
+     FSETLEA  UF  E           K        DISK
+     FTRADSDY1UF  E           K        DISK
+     FTRADSDY2UF  E           K        DISK
+      *                                                                   194296
+     FSDBANKPDIF  E                    DISK                               194296
+     FTABTB36 IF  E                    DISK                               194296
+      *                                                                   194296
+     ITRADSDF
+     I              RECI                            RECIX
+     C*
+     C           *IN32     IFEQ '0'                        - B1
+     C                     EXSR AOSARD
+      *                                                                   194296
+      ** Check if CSE023 - Treaty Withholding Tax present                 CSE023
+      *                                                                   CSE023
+     C                     MOVE 'N'       CSE023  1                       CSE023
+     C                     CALL 'AOSARDR0'                                CSE023
+     C                     PARM *BLANKS   @RTCD   7                       CSE023
+     C                     PARM '*VERIFY' @OPTN   7                       CSE023
+     C                     PARM 'CSE023'  @SARD   6                       CSE023
+      *                                                                   CSE023
+     C           @RTCD     IFEQ *BLANK                                    CSE023
+     C                     MOVE 'Y'       CSE023                          CSE023
+     C           31        MULT 18        @MINR   30                      CSE023
+     C                     ENDIF                                          CSE023
+      *                                                                   CSE023
+      ** Retrieve retention period                                        194296
+     C           31        MULT RTST      WK5N    50                      194296
+     C*                                                                   CSE023
+     C** If CSE023 is present, the minimum retention period is            CSE023
+     C** 18 months.                                                       CSE023
+     C*                                                                   CSE023
+     C           CSE023    IFEQ 'Y'                                       CSE023
+     C           WK5N      ANDLT@MINR                                     CSE023
+     C                     Z-ADD@MINR     WK5N                            CSE023
+     C                     END                                            CSE023
+     C*                                                                   CSE023
+     C           BJRDNB    SUB  WK5N      RTNTDT  50                      194296
+     C                     SETON                     32
+     C                     END                             - E1
+     C           KEY1      KLIST
+     C                     KFLD           TDBA
+     C                     KFLD           TDRF
+     C*
+     C                     Z-ADDTDVD      LATERD  50                      194296
+     C           TDFS      IFGT LATERD                                    194296
+     C                     Z-ADDTDFS      LATERD                          194296
+     C                     END                                            194296
+      *                                                                   194296
+     C           RECIX     IFEQ '*'                        - B1
+     C           LATERD    ANDLERTNTDT                                    194296
+      *                                                                   194296
+     C           RECIX     OREQ 'R'                                       194296
+     C           LATERD    ANDLERTNTDT                                    194296
+     C*
+     C           TDRF      SETLLSETLEDF
+     C                     SETOF                     33
+     C           *IN33     DOWEQ'0'                        - B2
+     C           TDRF      READESETLEDF                  33
+     C           *IN33     IFEQ '0'                        - B3
+     C           RECI      IFEQ 'D'                        - B4
+     C                     ADD  1         TSDEL   50
+     C                     END                             - E4
+     C                     DELETSETLEDF
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** Drop extension files
+     C*                                                                   172470
+     C*   FIX 172470 - Suppress records in Tradsdx1 - one record in       172470
+     C*                TRADSDX1 if CSW003 is 'off' and two if 'on'        172470
+     C*                                                                   172470
+     C***        S01401    IFEQ 'Y'                                095907 172470
+     C***        TDRF      CHAINTRADSDY1             34            095907 172470
+     C***        *IN34     IFEQ '0'                                095907 172470
+     C***                  DELETTRADSDD1                           095907 172470
+     C***                  END                                     095907 172470
+     C***        TDRF      CHAINTRADSDY2             35            095907 172470
+     C***        *IN35     IFEQ '0'                                095907 172470
+     C***                  DELETTRADSDD2                           095907 172470
+     C***                  END                                     095907 172470
+     C***                  END                                     095907 172470
+      *                                                                   172470
+      ** If Switchable Feature S01401 is on and CSW003 is off, only       172470
+      ** one record must be deleted from TRADSDX1.                        172470
+      *                                                                   172470
+     C           S01401    IFEQ 'Y'                                       095907
+     C           CSW003    ANDEQ'N'                                       172470
+     C           TDRF      CHAINTRADSDY1             34                   095907
+     C           *IN34     IFEQ '0'                                       095907
+     C                     DELETTRADSDD1                                  095907
+     C                     END                                            095907
+     C           TDRF      CHAINTRADSDY2             35                   095907
+     C           *IN35     IFEQ '0'                                       095907
+     C                     DELETTRADSDD2                                  095907
+     C                     END                                            095907
+     C                     END                                            095907
+      *                                                                   172470
+      ** If both features are on, more than one records must be           172470
+      ** deleted from file TRADSDX1.                                      172470
+      *                                                                   172470
+     C           S01401    IFEQ 'Y'                                       172470
+     C           CSW003    ANDEQ'Y'                                       172470
+      *                                                                   172470
+     C           DY1KY     KLIST                                          172470
+     C                     KFLD           W#TDRF  6                       172470
+     C                     KFLD           W#WHEN  1                       172470
+      *                                                                   172470
+     C                     MOVELTDRF      W#TDRF                          172470
+     C                     MOVE 'A'       W#WHEN                          172470
+      *                                                                   172470
+     C           DY1KY     CHAINTRADSDY1             40                   172470
+      *                                                                   172470
+     C           *IN40     IFEQ *OFF                       IF*2           172470
+     C                     DELETTRADSDD1                                  172470
+     C                     ENDIF                           FI*2           172470
+      *                                                                   172470
+     C                     MOVE 'B'       W#WHEN                          172470
+     C           DY1KY     CHAINTRADSDY1             40                   172470
+      *                                                                   172470
+     C           *IN40     IFEQ *OFF                       IF*2           172470
+     C                     DELETTRADSDD1                                  172470
+     C                     ENDIF                           FI*2           172470
+      *                                                                   172470
+     C                     ENDIF                           FI*1           172470
+      *                                                                   172470
+     C                     DELETTRADSDF
+     C                     END                             - E1
+     CLR                   CLOSETRADSDY1
+     CLR                   CLOSETRADSDY2
+     CLR                   READ SETLEA                   89
+     CLR         SLRB      SUB  TSDEL     SLRB
+     CLR         NORE      SUB  TSDEL     NORE
+     CLR                   UPDATSETLEAF
+      *****************************************************************
+      *                                                               *
+      * AOSARD - Subroutine to call access object : Switchabe Features*
+      *                                                               *
+      *****************************************************************
+      *
+     C           AOSARD    BEGSR                           ** AOSARD **
+      *
+     C                     MOVE 'N'       S01401
+      *
+      **  Access Switchable features file for MT5xx processing -
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01401'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01401  1
+     C                     END
+      *                                                                   172470
+     C                     MOVE 'N'       CSW003                          172470
+      *                                                                   172470
+      **  Access Switchable features file for CSW003.                     172470
+      *                                                                   172470
+     C                     CALL 'AOSARDR0'                                172470
+     C                     PARM '       ' @RTCD                           172470
+     C                     PARM '*VERIFY' @OPTN                           172470
+     C                     PARM 'CSW003'  @SARD   6                       172470
+      *                                                                   172470
+     C           @RTCD     IFEQ *BLANK                                    172470
+     C                     MOVE 'Y'       CSW003  1                       172470
+     C                     END                                            172470
+      *                                                                   095907
+      *                                                      194296
+      ** Retrieve Bank details                               194296
+     C           1         SETLLSDBANKPD                     194296
+     C                     READ SDBANKPD                 68  194296
+      *                                                      194296
+      ** Retrieve SE I.C.D. details                          194296
+     C           1         SETLLTABTB36                      194296
+     C***                  READ SDBANKPD                 69        194296 198643
+     C                     READ TABTB36                  69               198643
+      *                                                                   194296
+      *                                                      194296
+     C                     ENDSR

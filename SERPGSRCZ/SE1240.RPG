@@ -1,0 +1,481 @@
+     H        1                                                           SE1240
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Automatic Settlement Merge')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1240 - AUTOMATIC SETTLEMENT MERGE                          *
+     F*                                                               *
+     F*  Function: To merge the settlements received from EUCLID with *
+     F*   (I/C)    the unaccepted settlements received from EUCLID    *
+     F*            from an earlier backlog file.                      *
+     F*                                                               *
+     F*  Called by: SEC1202 - Euclid Reformat Backlog File            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10Jan94               *
+     F*                 E29170             Date 15OCT91               *
+     F*                 S01117             DATE 03JUN91               *
+     F*                 S01190             DATE 24/04/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility program changes             *
+     F*  S01117 - Multibranching                                      *
+     F*  S01190 - EUCLID FIX/ENHANCEMENT                              *   S01190
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FESETTSS IF  E                    DISK
+     FESETTST IF  E                    DISK
+     FEBSETSS IF  E                    DISK
+     F            ESETTSSF                          KRENAMEEBSETSSF
+     FEBSETST IF  E                    DISK
+     F            ESETTSTF                          KRENAMEEBSETSTF
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F* ICD1      TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FENSET   O   E           K        DISK                      A
+     F            ESETTSSF                          KRENAMEENSETSSF
+     F            ESETTSTF                          KRENAMEENSETSTF
+     FSE1240AUO   F     132     OF     PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - READ OF S/ESETT - FORMAT ESETTSSF                     *
+     F*   02  -    "    S/ESETT - FORMAT ESETTSTF                     *
+     F*   03  -    "    S/EBSET - FORMAT EBSETSSF                     *
+     F*   04  -    "    S/EBSET - FORMAT EBSETSTF                     *
+     F*   05  -    "    S/TABLE - FORMAT TABTB10F                     *
+     F*                                                               *
+     F*   20  - READ/LOKUP FAIL                                       *
+     F*                                                               *
+     F*   70  - FILE CONTROLS OUT OF BALANCE - S/ESETT                *
+     F*   71  - FILE CONTROLS OUT OF BALANCE - S/EBSET                *
+     F*                                                               *
+     F* 90-99 - USED IN STANDARD SUBROUTINES                          *
+     F*                                                               *
+     F*NU7+U8 - FILE CONTROLS OUT OF BALANCE                          *
+     F* U7+U8 - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+     IESETTSSF    01
+     I*
+     I**  S/ESETT FILE
+     I*
+     IESETTSTF    02
+     IEBSETSSF    03
+     I*
+     I**  S/EBSET FILE
+     I*
+     IEBSETSTF    04
+     ITABTB10F    05
+     I*
+     I**  S/TABLE FILE
+     I*
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I**  LOCAL DATA AREA
+     I*
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C**  MAIN PROCESSING
+     C**  CALLS : FIRST, DETLS, TRAILS, DETLB, TRAILB
+     C*
+     C**  INITIALISATION PROCESSING
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  DETAIL PROCESSING FOR S/ESETT(SS)
+     C*
+     C  NU8                EXSR DETLS
+     C*
+     C**  TRAILER PROCESSING FOR S/ESETT(ST)
+     C*
+     C  NU8                EXSR TRAILS
+     C*
+     C**  DETAIL PROCESSING FOR S/EBSET(SS)
+     C*
+     C  NU8                EXSR DETLB
+     C*
+     C**  TRAILER PROCESSING FOR S/EBSET(ST)
+     C*
+     C  NU8                EXSR TRAILB
+     C*                                                    ***  END  ***
+     C**  OUTPUT FILE CONTROL REPORT
+     C*
+     C                     EXCPTREPORT
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C*
+     C**  PROCESSING COMPLETE, FINISH PROGRAM
+     C*
+     C                     SETON                     LR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  FIRST SR. - TO DO THE INITIALISATION PROCESSING
+     C*
+     C*  CALLED BY : MAIN PROCESSING
+     C*  CALLS : ZSYSTM
+     C*
+     C********************************************************************
+     C*
+     C           FIRST     BEGSR                           ***  BEGSR  ***
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVE 'SE1240  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     Z-ADD0         NESETT  50
+     C                     Z-ADD0         NEBSET  50
+     C                     Z-ADD0         NENSET  50
+     C*
+     C**  GET I.C.D.R. 1, DATABASE ERROR IF NOT FOUND
+     C*
+     C                     EXSR ZSYSTM
+     C  N99                GOTO FIRT01
+     C*
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C           FIRT01    ENDSR                           *** FIRT01 ***
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  DETLS SR. - TO HANDLE THE S/ESETT DETAIL RECORD PROCESSING
+     C*
+     C*  CALLED BY : MAIN PROCESSING
+     C*
+     C********************************************************************
+     C*
+     C           DETLS     BEGSR                           *** DETLS ***
+     C*
+     C           DETS01    TAG                             *** DETS01 ***
+     C*
+     C**  READ NEXT RECORD ON S/ESETT,SS
+     C*
+     C                     SETOF                     01
+     C                     READ ESETTSS                  20
+     C   01      RECI      COMP 'D'                      01
+     C*
+     C**N01******                                                         S01190
+     C*R*20******          GOTO DETS02                                    S01190
+     C   20                GOTO DETS02                                    S01190
+     C  N01                GOTO DETS01                                    S01190
+     C*
+     C           NESETT    ADD  1         NESETT
+     C*
+     C**  WRITE DETAIL RECORD TO S/ENSET
+     C*
+     C                     EXCPTENSETS
+     C           NENSET    ADD  1         NENSET
+     C                     GOTO DETS01
+     C*
+     C           DETS02    ENDSR                           *** DETS02 ***
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  DETLB SR. - TO HANDLE THE S/EBSET DETAIL RECORD PROCESSING
+     C*
+     C*  CALLED BY : MAIN PROCESSING
+     C*
+     C********************************************************************
+     C*
+     C           DETLB     BEGSR                           *** DETLB ***
+     C*
+     C           DETB01    TAG                             *** DETB01 ***
+     C*
+     C**  READ NEXT RECORD ON S/EBSET,SS
+     C*
+     C                     SETOF                     03
+     C                     READ EBSETSS                  20
+     C   03      RECI      COMP 'D'                      03
+     C*
+     C  N03
+     COR 20                GOTO DETB02
+     C*
+     C           NEBSET    ADD  1         NEBSET
+     C*
+     C**  WRITE DETAIL RECORD TO S/ENSET
+     C*
+     C                     EXCPTENSETS
+     C           NENSET    ADD  1         NENSET
+     C                     GOTO DETB01
+     C*
+     C           DETB02    ENDSR                           *** DETB02 ***
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  TRAILS SR. - TO HANDLE THE S/ESETT TRAILER RECORD PROCESSING
+     C*
+     C*  CALLED BY : MAIN PROCESSING
+     C*
+     C********************************************************************
+     C*
+     C           TRAILS    BEGSR                           *** TRAILS ***
+     C*
+     C**  READ TRAILER
+     C*
+     C                     SETOF                     02
+     C                     READ ESETTST                  20
+     C   02      RECI      COMP 'T'                      02
+     C*
+     C   02                GOTO TRAS01
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'ESETT'   DBFILE           ***************
+     C                     MOVEL'TRAILER' DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO TRAS02
+     C*
+     C           TRAS01    TAG                             *** TRAS01 ***
+     C*
+     C           NESETT    ADD  1         NESETT
+     C*
+     C**  CHECK FILE CONTROLS FOR S/ESETT
+     C*
+     C                     Z-ADDNORE      NORES   50
+     C           NORES     COMP NESETT               7070
+     C   70                SETON                     U8
+     C*
+     C           TRAS02    ENDSR                           *** TRAS02 ***
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  TRAILB SR. - TO HANDLE THE S/EBSET TRAILER RECORD PROCESSING
+     C*
+     C*  CALLED BY : MAIN PROCESSING
+     C*
+     C********************************************************************
+     C*
+     C           TRAILB    BEGSR                           *** TRAILB ***
+     C*
+     C**  READ TRAILER
+     C*
+     C                     SETOF                     04
+     C                     READ EBSETST                  20
+     C   04      RECI      COMP 'T'                      04
+     C*
+     C   04                GOTO TRAB01
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EBSET'   DBFILE           ***************
+     C                     MOVEL'TRAILER' DBKEY            * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO TRAB02
+     C*
+     C           TRAB01    TAG                             *** TRAB01 ***
+     C*
+     C           NEBSET    ADD  1         NEBSET
+     C*
+     C**  CHECK FILE CONTROLS FOR S/EBSET
+     C*
+     C                     Z-ADDNORE      NOREB   50
+     C           NOREB     COMP NEBSET               7171
+     C   71                SETON                     U8
+     C*
+     C**  WRITE TRAILER RECORD TO S/ENSET
+     C*
+     C   U8                GOTO TRAB02
+     C           NENSET    ADD  1         NENSET
+     C                     Z-ADDNENSET    NORE
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'I'       CHTP
+     C                     Z-ADD0         TNLU
+     C                     EXCPTENSETT
+     C*
+     C           TRAB02    ENDSR                           *** TRAB02 ***
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     O/EJECT
+     O********************************************************************
+     O*
+     O*   FILE CONTROL REPORT
+     O*
+     OSE1240AUE  203           REPORT
+     O                                   23 'REFERENCE SE1240AU'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        E  1             REPORT
+     O                                   49 'SECURITIES TRADING '
+     O                                   70 'AUTOMATIC SETTLEMENT '
+     O                                   82 'MERGE REPORT'
+     O                                   97 ' - RUN CONTROLS'
+     O        E  1             REPORT
+     O                                   49 '-------------------'
+     O                                   70 '---------------------'
+     O                                   82 '------------'
+     O        E 21             REPORT
+     O                                   61 'FILE CONTROL'
+     O                                   90 'CALCULATED'
+     O        E  2             REPORT
+     O                                   58 'NUMBER'
+     O                                   87 'NUMBER'
+     O        E  1             REPORT
+     O                                   19 'FILE - UNACCEPTED'
+     O                                   40 'SETTLEMENTS RECEIVED'
+     O                                   53 '- PF/ESETTSS'
+     O        E  2             REPORT
+     O                                   20 '------------------'
+     O                                   41 '---------------------'
+     O                                   53 '------------'
+     O        E  2             REPORT
+     O                                   23 'NO. OF RECORDS'
+     O                         NORES 3   58
+     O                         NESETT3   87
+     O                    70            112 '*** DIFFERENCE ***'
+     O        E 21             REPORT
+     O                                   16 'FILE - BACKLOG'
+     O                                   37 'SETTLEMENTS RECEIVED'
+     O                                   50 '- PF/EBSETSS'
+     O        E  2             REPORT
+     O                                   17 '---------------'
+     O                                   38 '---------------------'
+     O                                   50 '------------'
+     O        E  2             REPORT
+     O                                   23 'NO. OF RECORDS'
+     O                         NOREB 3   58
+     O                         NEBSET3   87
+     O                    71            112 '*** DIFFERENCE ***'
+     O        E 21             REPORT
+     O                                   23 'FILE - NEW UNACCEPTED'
+     O                                   46 'SETTLEMENTS - LF/ENSET'
+     O        E  2             REPORT
+     O                                   24 '----------------------'
+     O                                   46 '----------------------'
+     O        E  2             REPORT
+     O                                   23 'NO. OF RECORDS'
+     O                         NENSET3   87
+     O        E  243      U7 U8REPORT
+     O                                   56 'DATABASE ERROR AT'
+     O***********              DBASE     59                               S01117
+     O***********                        64 ', KEY'                       S01117
+     O***********              DBKEY     94                               S01117
+     O                         DBASE     60                               S01117
+     O                                   65 ', KEY'                       S01117
+     O                         DBKEY     95                               S01117
+     O        E  1        U7 U8REPORT
+     O                                   64 'FILE NAME'
+     O***********              DBFILE    70                               S01117
+     O                         DBFILE    73                               S01117
+     O        E  149     NU7 U8REPORT
+     O                                   64 '*** FILE CONTROLS OUT OF'
+     O                                   76 ' BALANCE ***'
+     O********E**153           REPORT                                     E29170
+     O***********                        69 '*** END OF REPORT ***'       E29170
+     O********************************************************************
+     O*
+     O*   S/ENSET
+     O*
+     OENSETSSFEADD             ENSETS
+     O                         *ALL
+     OENSETSTFEADD             ENSETT
+     O                         *ALL
+**  CPY@
+(c) Finastra International Limited 2001

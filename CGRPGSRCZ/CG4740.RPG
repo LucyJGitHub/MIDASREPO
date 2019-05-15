@@ -1,0 +1,4009 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Futures and options extract program.')        *
+/*OVRF*: OVRDBF (TSCCYD)  (TSCCY1)                                   :  **
+     H********************************************************************
+     H**                                                                **
+     H**  Midas - User Defined Correspondence                           **
+     H**                                                                **
+     H**  CG4740 -  - Futures and options extract program               **
+     H**                                                                **
+     H**  Function:   This program receives data from the extract       **
+     H**               driver program, and formats and outputs it.      **
+     H**                                                                **
+     H**  Called By:  CG4730 - Futures and options extract driver.      **
+     H**                                                                **
+      *  (c) Finastra International Limited 2001                      *
+     H**                                                                **
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG9646            Date 20Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 11Sep96               *
+      *                 089776             Date 17Apr96               *
+     H**                 S71062             DATE 29JAN96                **
+     H**                 086918             DATE 02MAY95                **
+     H**                 S01522             DATE 15MAR95                **
+     H**                                                                **
+     H**----------------------------------------------------------------**
+     H**                                                                **
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9646- Changes in CGPACKE causes programs not to compile   *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CCG015 - Correspondence Manager Phase 1                      *
+     H**  CFF004 - Increase in size of Price Fields                     **
+     H**         - (##WK11 Redefined as 15,0)                           **
+     H**  089776 - Add 'Account officer' details                        **
+     H**  S71062 - FF/PM Interface (Just recompiled)                    **
+     H**  086918 - Add customer town RDE to Group set CUST.             **
+     H**  S01522 - User Defined Correspondence                          **
+     H**                                                                **
+     H********************************************************************
+     H/EJECT
+     H********************************************************************
+     H**                                                                **
+     H**  This program extracts data for the following items:           **
+     H**                                                                **
+     H**  Repeater (group set \FF_TRD)                                  **
+     H**     |                                                          **
+     H**     |--- Header (group set \FF_HDR) ---------- Statement date  **
+     H**     |                                       |- Last date       **
+     H**     |                                       |- FAO             **
+     H**     |                                       `- COB flag        **
+     H**     |                                                          **
+     H**     |--- Branch (group set \BRANCH) ---------- Branch code     **
+     H**     |                                       `- Branch name     **
+     H**     |                                                          **
+     H**     |--- Customer (group set \CUST) ---------- Customer number **
+     H**     |                                       |- Customer name   **
+     H**     |                                       |- Address line 1  **
+     H**     |                                       |-              2  **
+     H**     |                                       |-              3  **
+     H**     |                                       `-              4  **
+     H**     |                                                          **
+     H**     |--- Acc. Off (group set \ACOF) --- Account Off. Code      **089776
+     H**     |                                |-              Dept      **089776
+     H**     |                                |-              Name      **089776
+     H**     |                                |-              Tel Num   **089776
+     H**     |                                `-              Tel Ext   **089776
+     H**     |--- Currency (group set \CCY) ----------- Currency code   **
+     H**     |                                       `- Description     **
+     H**     |                                                          **
+     H**     |--- Detail (group set \FF_DTL)                            **
+     H**     |      |                                                   **
+     H**     |      |--- Instrument (\INSTR) ---------- Instrument type **
+     H**     |      |                                |- Instrument name **
+     H**     |      |                                |- OTC flag        **
+     H**     |      |                                `- Denominator     **
+     H**     |      |                                                   **
+     H**     |      |--- Market (\MARKET) ------------- Market code     **
+     H**     |      |                                `- Market name     **
+     H**     |      |                                                   **
+     H**     |      |--- Brought forward (\FFBFWD) ---- Forward date    **
+     H**     |      |                                |- Position        **
+     H**     |      |                                |- Position flag   **
+     H**     |      |                                |- Month           **
+     H**     |      |                                |- Year            **
+     H**     |      |                                |- Put/call flag   **
+     H**     |      |                                |- Strike price    **
+     H**     |      |                                `- Forward price   **
+     H**     |      |                                                   **
+     H**     |      |--- Date (\FFDATE)                                 **
+     H**     |      |      |                                            **
+     H**     |      |      |--- Detail (\FFDDTL)                        **
+     H**     |      |      |      |                                     **
+     H**     |      |      |      |--- Transaction ---- Change date     **
+     H**     |      |      |      |     (\FFTRNS)    |- Trans. number   **
+     H**     |      |      |      |                  |- Reversal flag   **
+     H**     |      |      |      |                  |- Trans. type     **
+     H**     |      |      |      |                  |- Contract price  **
+     H**     |      |      |      |                  |- Closed out      **
+     H**     |      |      |      |                  `- Narrative       **
+     H**     |      |      |      |                                     **
+     H**     |      |      |      `--- Total ---------- Contr. before   **
+     H**     |      |      |            (\FFTTTL)    |- Comm. before    **
+     H**     |      |      |                         |- Charges before  **
+     H**     |      |      |                         |- P&L before      **
+     H**     |      |      |                         |- Contr. after    **
+     H**     |      |      |                         |- Comm. after     **
+     H**     |      |      |                         |- Charges after   **
+     H**     |      |      |                         `- P&L after       **
+     H**     |      |      |                                            **
+     H**     |      |      `--- Charges (\FFDCHG) ----- Change date     **
+     H**     |      |                                |- Realised P&L    **
+     H**     |      |                                `- Reversed P&L    **
+     H**     |      |                                                   **
+     H**     |      `--- Carried forward (\FFCFWD) ---- Forward date    **
+     H**     |                                       |- Profit/loss     **
+     H**     |                                       |- Position        **
+     H**     |                                       |- Position flag   **
+     H**     |                                       `- Forward price   **
+     H**     |                                                          **
+     H**     `--- Trailer (group set \FF_FTR) --------- Commission      **
+     H**                                             |- Charges         **
+     H**                                             |- Realised P/L    **
+     H**                                             |- Unrealised P/L  **
+     H**                                             |- Total margin    **
+     H**                                             `- Collateral      **
+     H**                                                                **
+     H********************************************************************
+     H/EJECT
+     H********************************************************************
+     H**                                                                **
+     H**  Indicator usage                                               **
+     H**  ~~~~~~~~~~~~~~~                                               **
+     H**                                                                **
+     H**  41 -- Record read is POCHGCCF.                                **
+     H**  42 -- Record read is POCHGRCF.                                **
+     H**  43 -- Record read is POCHGTCF.                                **
+     H**  81 -- Record found in file POCHGCCF.                          **
+     H**  82 -- Record found in file POCHGRCF.                          **
+     H**  83 -- Record found in file POCHGTCF.                          **
+     H**  84 -- EOF on file POCHG4R.                                    **
+     H**  85 -- Currency found in array #CC.                            **
+     H**  90 -- Work indicator -- typically I/O error.                  **
+     H**  91 -- EOF on file TRCCY1.                                     **
+     H**  92 -- Record not found in file POSTNC1                        **
+     H**  93 -- Record not found in file INTYP or INTYP2.               **
+     H**  94 -- Record not found in file ACCNT, MARKT or PRICSD.        **
+     H**  95 -- Look-up successful.                                     **
+     H**  96 -- EOF on file POCHG4C.                                    **
+     H**  97 -- EOF on file POCHG4T.                                    **
+     H**  98 -- Run date is in mmddyy format.                           **
+     H**  99 -- Work indicator.                                         **
+     H**  U1 -- On  -- Run is interim                                   **
+     H**        Off -- Run is close of business                         **
+     H**                                                                **
+     H********************************************************************
+     H**                                                                **
+     H**  Subroutines list                                              **
+     H**  ~~~~~~~~~~~~~~~~                                              **
+     H**  SRITEM -- Determine a UDC item number.                        **
+     H**  SRPROC -- Read records for processing.                        **
+     H**  SRHEAD -- Write values for group set S01HDR.                  **
+     H**  SRBRCH -- Write values for group set BRANCH.                  **
+     H**  SRCUST -- Write values for group set CUST.                    **
+     H**  SRCURR -- Write values for group set CCY.                     **
+     H**  SRFOOT -- Write values for group set FF_FTR.                  **
+     H**  SRDTL1 -- Determine values to be extracted (FF_DTL).          **
+     H**  SRINST -- Write values for group set INSTR.                   **
+     H**  SRMKT  -- Write values for group set MARKET.                  **
+     H**  SRBFWD -- Write values for group set FFBFWD.                  **
+     H**  SRCFWD -- Write values for group set FFCFWD.                  **
+     H**  SRDATE -- Determine values to be extracted (FFDATE).          **
+     H**  SRSDTE -- Process values for the same change date.            **
+     H**  SRTRNS -- Write values for group set FFTRNS.                  **
+     H**  SRTTTL -- Write values for group set FFTTTL.                  **
+     H**  SRDCHG -- Write values for group set FFDCHG.                  **
+     H**  SRFDTL -- Format data for transactions.                       **
+     H**  SRRVAL -- Handle revaluation details.                         **
+     H**  SRFLAG -- Set the "record processed" flag.                    **
+     H**  SRSET  -- Update account master details.                      **
+     H**  SRRRDE -- Retrieve RDE information for a group set.           **
+     H**  SRADTA -- Accumulate RDE data.                                **
+     H**  SRFORM -- Reformat RDE data.                                  **
+     H**  SRODTA -- Output RDE data.                                    **
+     H**  SRNDPS -- Number of "decimal" places for tick denominator.    **
+     H**  SRSEL  -- Select the POCHG4X record to be processed.          **
+     H**  SRCHGX -- Process a POCHG4C or POCHG4T record.                **
+     H**  SRCHGC -- Process a POCHG4C record.                           **
+     H**  SRCHGT -- Process a POCHG4T record.                           **
+     H**  SRCHTX -- Process a POCHG4T record -- position change blank.  **
+     H**  SRCHTA -- Process a POCHG4T record -- position change "A".    **
+     H**  SRCHTB -- Process a POCHG4T record -- position change "B".    **
+     H**  SRCHTC -- Process a POCHG4T record -- position change "C".    **
+     H**  SRINIT -- Prepare and initialise.                             **
+     H**  SRDEFN -- Definitions (not executed).                         **
+     H**                                                                **
+     H**  *PSSR  -- Program error handling.                             **
+     H**  SRFILE -- File error handling.                                **
+     H**  SRERR  -- Database error handling.                            **
+     H**                                                                **
+     H********************************************************************
+     F/EJECT
+     F*===================================================================
+     F* File opened under commitment control:
+     F*
+     FTSCCY1  UF  E           K        DISK         KINFSR SRFILE     UC
+     F            TSCCYDF                           KRENAMETSCCYDF1
+     F                                              KCOMIT
+     F*
+     F* Customer trading statements settlement accounts
+     F*-------------------------------------------------------------------
+     F* File opened not under commitment control:
+     F*             ~~~
+     FTSCCYD  UF  E           K        DISK         KINFSR SRFILE     UC
+     F*
+     F* Customer trading statements settlement accounts
+     F*===================================================================
+     FPOSTNC1 UF  E           K        DISK         KINFSR SRFILE
+     F                                              KCOMIT
+     F* Customer / broker positions for settlement accounts
+     F*-------------------------------------------------------------------
+     FPOCHG4C UF  E           K        DISK         KINFSR SRFILE
+     F                                              KCOMIT
+     F* Close-out change not printed
+     F*-------------------------------------------------------------------
+     FPOCHG4R UF  E           K        DISK         KINFSR SRFILE
+     F                                              KCOMIT
+     F* Revaluation not printed
+     F*-------------------------------------------------------------------
+     FPOCHG4T UF  E           K        DISK         KINFSR SRFILE
+     F                                              KCOMIT
+     F* Transaction not printed
+     F*===================================================================
+     FINTYP   IF  E           K        DISK         KINFSR SRFILE
+     F* Instrument types
+     F*-------------------------------------------------------------------
+     FINTYP2  IF  E           K        DISK         KINFSR SRFILE
+     F            INTYPDF                           KRENAMEINTYP2F
+     F* Instrument types
+     F*-------------------------------------------------------------------
+     FMARKT   IF  E           K        DISK         KINFSR SRFILE
+     F* Market information
+     F*-------------------------------------------------------------------
+     FACCNT   IF  E           K        DISK         KINFSR SRFILE
+     F* Account master
+     F*-------------------------------------------------------------------
+     FPRICS1  IF  E           K        DISK         KINFSR SRFILE
+     F* Market prices
+     F*-------------------------------------------------------------------
+     FTRANS2  IF  E           K        DISK         KINFSR SRFILE
+     F* Transactions
+     FSDACOFL0IF  E           K        DISK         KINFSR SRFILE         089776
+     F*===================================================================
+     E/SPACE
+     E*-------------------------------------------------------------------
+     E                    ##CPY   1   1 80               Copyright text.
+     E********************##GRP   1  57 10   ##RDEA 22   Group; RDE, etc. 086918
+     E******************* ##GRP   1  58 10   ##RDEA 22   Group; RDE,086918089776
+     E                    ##GRP   1  63 10   ##RDEA 22                    089776
+     E                    ##W        20  1               Numeric editing.
+     E                    ##NUMA     29  1               Numeric editing.
+     E                    #CC       100  3               Known currencies.
+     E                    #CD       100 15               Currency details.
+     E*
+     E* Data packing arrays:  ##R -- RDEs and attributes -- 20 x  22;
+     E*                       ##D -- data                -- 20 x 256;
+     E*                       ##S -- data string         -- 20 x 256.
+     E/COPY CGCPYSRC,CGPACKE
+     E*
+     E* Error handling array (@STK -- subroutine stack):
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*-------------------------------------------------------------------
+     I/SPACE
+     I*-------------------------------------------------------------------
+     IINTYP2F
+     I              RECI                            F#RECI
+     I              ISTT                            F#ISTT
+     I              ISTI                            F#ISTI
+     I              ISPT                            F#ISPT
+     I              ISCY                            F#ISCY
+     I              QOTC                            F#QOTC
+     I              TKDM                            TKDM2
+     I              MNPF                            MNPF2
+     I              TKVL                            F#TKVL
+     I              OTHC                            F#OTHC
+     I*
+     I* Instrument type via future type reference
+     I*-------------------------------------------------------------------
+     IPOCHGCCF    41
+     I              RECI                            RECIC
+     I              BRCA                            BRCAC
+     I              CBCD                            CBCDC
+     I              ISTT                            ISTTC
+     I              YRNO                            YRNOC
+     I              MTHN                            MTHNC
+     I              PCAL                            PCALC
+     I              STRP                            STRPC
+     I              POCD                            POCDC
+     I*
+     I* The close-out number is renamed to transaction number
+     I*  for use in the key comparison data structure:
+     I*
+     I              CLON                            TNBRC
+     I*
+     I              RLPL                            RLPLC
+     I              ISCY                            ISCYC
+     I              AOSI                            AOSIC
+     I              ATCI                            ATCIC
+     I              PUPI                            PUPIC
+     I              REVI                            REVIC
+     I*...................................................................
+     IPOCHGRCF    42
+     I              RECI                            RECIE
+     I              BRCA                            BRCAE
+     I              CBCD                            CBCDE
+     I              ISTT                            ISTTE
+     I              YRNO                            YRNOE
+     I              MTHN                            MTHNE
+     I              PCAL                            PCALE
+     I              STRP                            STRPE
+     I              POCD                            POCDE
+     I              ULPL                            ULPLE
+     I              ISCY                            ISCYE
+     I              AOSI                            AOSIE
+     I              ATCI                            ATCIE
+     I              PUPI                            PUPIE
+     I*...................................................................
+     IPOCHGTCF    43
+     I              RECI                            RECID
+     I              BRCA                            BRCAD
+     I              CBCD                            CBCDD
+     I              ISTT                            ISTTD
+     I              YRNO                            YRNOD
+     I              MTHN                            MTHND
+     I              PCAL                            PCALD
+     I              STRP                            STRPD
+     I              POCD                            POCDD
+     I              TNBR                            TNBRD
+     I              PCGT                            PCGTD
+     I              POCQ                            POCQD
+     I              PCGA                            PCGAD
+     I              ISCY                            ISCYD
+     I              AOSI                            AOSID
+     I              ATCI                            ATCID
+     I              PUPI                            PUPID
+     I              PAYI                            PAYID
+     I              REVI                            REVID
+     I*-------------------------------------------------------------------
+     ICGUDCR    E DSCGUDCRPD
+     I* UDC data reference details
+     I*
+     IP0CCYD    E DSTSCCYD
+     I              BRCA                            P0BRCA
+     I* Settlement account details
+     I*-------------------------------------------------------------------
+     IACCTDS    E DSACCNT
+     I              RECI                            A#RECI
+     I              CCY                             A#CCY
+     I* Account details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* Bank details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I* Branch details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* Currency details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I* Customer details
+     I*
+     IDSFDY     E DSDSFDY
+     I* Access programs data structure -- short version
+     I*
+     IDSSDY     E DSDSSDY
+     I* Access programs data structure -- long version
+     I*-------------------------------------------------------------------
+     I/COPY CGCPYSRC,CGPACKI
+     I*
+     I* RDE definition data structure
+     I*-------------------------------------------------------------------
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error-processing fields
+     I*-------------------------------------------------------------------
+     ISESTAT    E DSSESTAT
+     I*
+     I* SE status data structure
+     I*-------------------------------------------------------------------
+     IW0FMT     E DSCGUDTAPD
+     I*
+     I* CGUDTAPD output data parameter
+     I*-------------------------------------------------------------------
+     ISRDTDS      DS                         30
+     I                                    P   1   50W0PBIN
+     I                                    P   6  100W0TBIN
+     I                                       11  80 W0SPTH
+     I*
+     I* This multiple-occurrence data structure
+     I*  stores subroutine-specific data:
+     I*
+     I*  W0PBIN - previous bind number;
+     I*  W0TBIN - this bind number;
+     I*  W0SPTH - saved path.
+     I*-------------------------------------------------------------------
+     I* These data structures contain the key fields of POCHG4C (PCHG4C)
+     I*  and POCHGTC (PCHG4T) for comparison in subroutine SRSEL. The
+     I*  record with the lower value is processed first.
+     I*
+     IPCHG4C      DS
+     I                                    P   1   30POCDC
+     I                                        4   90TNBRC
+     I                                       10  100REVIC
+     IPCHG4T      DS
+     I                                    P   1   30POCDD
+     I                                        4   90TNBRD
+     I                                       10  100REVID
+     I*-------------------------------------------------------------------
+     I* RDE definition array look-up string:
+     I*
+     I##GRPX      DS
+     I                                        1   6 ##GRPS
+     I                                        7  100##RDEN
+     I*-------------------------------------------------------------------
+     I* Split the account ID:
+     I*
+     IATIDDS      DS
+     I**********                              1   60P0CUST                                    CSD027
+     I                                        1   6 P0CUST                                    CSD027
+     I                                        7   9 P0CCY
+     I**********                             10  130P0ACCT                                    CGL029
+     I**********                             14  150P0ACSQ                                    CGL029
+     I                                       10  190P0ACCT                                    CGL029
+     I                                       20  210P0ACSQ                                    CGL029
+     I*-------------------------------------------------------------------
+     I* Number to array matching data structure:
+     I*
+     I##NUMX      DS
+     I                                        1  20 ##W
+     I                                        1  200##WNUM
+     I*-------------------------------------------------------------------
+     I* Packed data string:
+     I*
+     I##SDS       DS
+     I**********                              15120 ##S                                      BUG9646
+     I                                        15632 ##S                                      BUG9646
+     I*-------------------------------------------------------------------
+     I* Named constant:
+     I*
+     I              'Over-the-counter'    C         ##OTC
+     ISCSARD    E DSSCSARDPD                                                                  CCG015
+      *                                                                                       CCG015
+      **  Data structure for SAR data.                                                        CCG015
+      *                                                                                       CCG015
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM W0RTN     P0RTN   7
+     C                     PARM           P0CCYD
+     C                     PARM           P0PTYP 10
+     C                     PARM           P0STYP 10
+     C                     PARM           P0CMT   3
+     C                     PARM           P0UPDT  1
+     C                     PARM           P0SUPP  1
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     Z-ADD1         Q
+     C                     MOVEL'@Main@'  @STK,Q
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* Determine the UDC item number:
+     C*
+     C                     EXSR SRITEM
+     C*
+     C* If CGD1270 returned, suppress this transaction:
+     C*
+     C           P1RTN     IFEQ 'CGD1270'
+     C                     MOVE 'Y'       P0SUPP
+     C                     ENDIF
+     C*
+     C* If update files and close of business, or if not suppressed,
+     C*  process this item:
+     C*
+     C           P0UPDT    IFEQ 'Y'
+     C           *INU1     ANDEQ*OFF
+     C           P0SUPP    ORNE 'Y'
+     C                     EXSR SRPROC
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the update flag is set and the run is Interim,
+     C*  update the statement required flag to No:
+     C*
+     C           P0UPDT    IFEQ 'Y'
+     C           *INU1     ANDEQ*ON
+     C                     EXSR SRFLAG
+     C                     ENDIF
+     C*
+     C* If the update flag is set and the run is Close of business,
+     C*  update the cleared balance, statement dates and the
+     C*  statement required flag:
+     C*
+     C           P0UPDT    IFEQ 'Y'
+     C           *INU1     ANDEQ*OFF
+     C                     EXSR SRSET
+     C                     ENDIF
+     C*
+     C* If required, commit changes:
+     C*
+     C           P0CMT     IFEQ 'YES'
+     C                     COMIT
+     C                     ENDIF
+     C*
+     C           EXMAIN    TAG                             * <<<=== EXMAIN
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRITEM seeks a UDC item number.                    **
+     C********************************************************************
+     C           SRITEM    BEGSR                           * S R I T E M *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRITEM'  @STK,Q
+     C*
+     C* Prepare parameter values:
+     C*
+     C                     MOVE ATID      ATIDDS            Split ATID
+     C                     MOVE P0BRCA    DRBRCA
+     C                     MOVE P0BRCA    DRORBR
+     C                     MOVEL'FF'      DRMODI
+     C                     MOVE *BLANKS   DRMTRN
+     C                     MOVE *BLANKS   DRMACT
+     C                     MOVELATID      DRMACT
+     C                     MOVE P0BRCA    DRMACT
+     C                     MOVE P0PTYP    DRPTYP
+     C                     MOVE P0STYP    DRPSTP
+     C                     MOVE 'N'       DRATRM
+     C*
+     C                     MOVE CBCD      P1CUST
+     C*
+     C                     CALL 'CG9010'
+     C                     PARM           P1RTN   7
+     C                     PARM '*GEN'    P1MODE 10
+     C                     PARM           P0CMT
+     C                     PARM           P1CUST  6
+     C                     PARM           CGUDCR
+     C                     PARM           P1ITEM  8
+      *                                                                                       CCG015
+      ** If return code is blank, generate the 'begin' and 'end'                              CCG015
+      ** New Extraction Records                                                               CCG015
+      *                                                                                       CCG015
+     C                     MOVE P1ITEM    ##ITEM  80                                          CCG015
+      *                                                                                       CCG015
+     C           P1RTN     IFEQ *BLANKS                                                       CCG015
+     C           DRPTYP    CAT  ':':0     COLON  11 P                                         CCG015
+     C           COLON     CAT  DRPSTP:0  ##REFR    P                                         CCG015
+     C                     EXSR WRAPRF                                                        CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* A blank return code implies "Generate correspondence".
+     C* A return code of "CGD1270" suppresses output for this transaction.
+     C* Any other return code is an error.
+     C*
+     C           P1RTN     IFNE *BLANKS
+     C           P1RTN     ANDNE'CGD1270'
+     C                     MOVEL'CG9010  'W0FILE
+     C                     MOVELP1RTN     W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           ** Error 1.  **
+     C                     MOVEL'CGD1286' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C* Convert the item number to a numeric value:
+     C*
+     C                     MOVE P1ITEM    W0ITEM  80
+      *                                                                                       CCG015
+      ** Move W0ITEM to ##ITEM                                                                CCG015
+      *                                                                                       CCG015
+     C                     Z-ADDW0ITEM    ##ITEM                                              CCG015
+      *                                                                                       CCG015
+     C*
+     C           EXITEM    TAG                             * <<<=== EXITEM
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRPROC handles unsuppressed values.                **
+     C**                                                                **
+     C**  This subroutine is occurrence level 1.                        **
+     C********************************************************************
+     C           SRPROC    BEGSR                           * S R P R O C *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+     C*
+     C* Set "Path", "Previous bind number" and "This bind number":
+     C*
+     C           1         OCUR SRDTDS
+     C                     MOVEL'\FF_TRD' S#PATH256
+     C                     MOVELS#PATH    W0SPTH
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Generate header-level records:
+     C*
+     C* + Header:
+     C                     EXSR SRHEAD
+     C*
+     C* Reset "Path", "Previous bind number" and "This bind number":
+     C*
+     C           1         OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C* + Branch details:
+     C                     EXSR SRBRCH
+     C* Reset:
+     C           1         OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* + Customer details:
+     C                     EXSR SRCUST
+     C* Reset:
+     C           1         OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+      *                                                                   089776
+      ** Counterparty Account Officer Details                             089776
+     C                     EXSR ACOF                                      089776
+     C           1         OCUR SRDTDS                      1             089776
+     C                     MOVELW0SPTH    S#PATH            1             089776
+     C                     Z-ADDW0PBIN    S#PBIN                          089776
+     C                     Z-ADDW0TBIN    S#TBIN                          089776
+     C*
+     C* + Currency:
+     C                     EXSR SRCURR
+     C* Reset:
+     C           1         OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C* Generate detail-level records:
+     C*
+     C                     EXSR SRDTL1
+     C* Reset:
+     C           1         OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C* Footer records:
+     C                     EXSR SRFOOT
+     C* Reset:
+     C           1         OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C           EXPROC    TAG                             * <<<=== EXPROC
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRHEAD extracts RDEs for the statement header.     **
+     C**                                                                **
+     C**  This subroutine is occurrence level 2.                        **
+     C********************************************************************
+     C           SRHEAD    BEGSR                           * S R H E A D *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRHEAD'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           2         OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FF_HDR' W0PNAM  7
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'FF_HDR'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the statement date,
+     C*      the last statement date,
+     C*      the "For attention of" value and
+     C*      the close of business / interim flag:
+     C*
+     C                     MOVELBJRDNB    ##D,1
+     C                     MOVELLSDA      ##D,2
+     C                     MOVELFTAO      ##D,3
+     C                     MOVEL'C'       ##D,4
+     C           *INU1     IFEQ *ON
+     C                     MOVEL'I'       ##D,4
+     C                     ENDIF
+     C*
+     C* Set the first/subsequent/last indicator:
+     C*
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Accumulate RDEs and associated data;
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C           EXHEAD    TAG                             * <<<=== EXHEAD
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBRCH extracts RDEs for the branch.               **
+     C**                                                                **
+     C**  This subroutine is occurrence level 3.                        **
+     C********************************************************************
+     C           SRBRCH    BEGSR                           * S R B R C H *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBRCH'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           3         OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\BRANCH' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'BRANCH'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Get branch details if the branch has changed:
+     C*
+     C           P0BRCA    IFNE A8BRCD
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG    '##RTCD
+     C                     PARM '*KEY    '##OPTN
+     C                     PARM           P0BRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C* If the branch was not found, database error:
+     C*
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'SDBRCHPD'W0FILE
+     C                     MOVELP0BRCA    W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB error 2. *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* Move the branch code and
+     C*      the branch name:
+     C*
+     C                     MOVELA8BRCD    ##D,1
+     C                     MOVELA8BRNM    ##D,2
+     C*
+     C* Set the first/subsequent/last indicator:
+     C*
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C           EXBRCH    TAG                             * <<<=== EXBRCH
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCUST extracts RDEs for the customer.             **
+     C**                                                                **
+     C**  This subroutine is occurrence level 4.                        **
+     C********************************************************************
+     C           SRCUST    BEGSR                           * S R C U S T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCUST'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           4         OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\CUST  ' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'CUST  '  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*
+     C* Get customer details if the customer has changed:
+     C*
+     C                     MOVE CBCD      W0CUST  6
+     C           W0CUST    IFNE BBCUST
+     C                     MOVE W0CUST    ##KEY1    P
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY   ' ##OPTN
+     C                     PARM           ##KEY1 10
+     C                     PARM *BLANKS   ##KYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the customer was not found, database error:
+     C*
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCUSTPD'W0FILE
+     C                     MOVELW0CUST    W0KEY            ***************
+     C                     Z-ADD3         W0ERNB           * DB error 3. *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* Move the customer number,
+     C*          customer name,
+     C*          address line 1,
+     C*          address line 2,
+     C*          address line 3 and
+     C*          address line 4:
+     C*
+     C                     MOVELBBCUST    ##D,1
+     C                     MOVELBBCRNM    ##D,2
+     C                     MOVELBBCNA1    ##D,3
+     C                     MOVELBBCNA2    ##D,4
+     C                     MOVELBBCNA3    ##D,5
+     C                     MOVELBBCNA4    ##D,6
+      *                                                                   086918
+      ** Customer Town                                                    086918
+     C                     MOVELBBCRTN    ##D,7                           086918
+     C*
+     C* Set the first/subsequent/last indicator:
+     C*
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C           EXCUST    TAG                             * <<<=== EXCUST
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT                                                              089776
+      *****************************************************************   089776
+      * Subroutine  :  ACOF                                           *   089776
+      * Function    :  Account Officer Details                        *   089776
+      *                                                               *   089776
+      **  This subroutine is occurrence level 12.                     *   089776
+      *****************************************************************   089776
+     C           ACOF      BEGSR                                          089776
+      *                                                                   089776
+      **  Set up subroutine stack name                                    089776
+      *                                                                   089776
+     C                     ADD  1         Q                               089776
+     C                     MOVEL'ACOF  '  @STK,Q                          089776
+      *                                                                   089776
+      **  Retrieve subroutine specific data.                              089776
+      *                                                                   089776
+     C           7         OCUR SRDTDS                                    089776
+      *                                                                   089776
+      **  Set up Path.                                                    089776
+      *                                                                   089776
+     C                     MOVEL'\ACOF  ' W0PNAM                          089776
+     C           S#PATH    CAT  W0PNAM:0  S#PATH                          089776
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH                          089776
+     C                     Z-ADDS#PBIN    W0PBIN                          089776
+     C                     Z-ADDS#TBIN    W0TBIN                          089776
+      *................................................................   089776
+      *                                                                   089776
+      **  Retrieve RDE information for RDE's in Group Set                 089776
+      *                                                                   089776
+     C                     MOVEL'ACOF  '  ##GRPS                          089776
+     C                     Z-ADD1         ##RDEN                          089776
+     C                     EXSR SRRRDE                                    089776
+      *                                                                   089776
+      **  Do not process if Account Officer blank.                        089776
+     C           BBACOC    IFEQ *BLANKS                                   089776
+     C                     GOTO EXACOF                                    089776
+     C                     ENDIF                                          089776
+      *                                                                   089776
+      **  Account Officer details                                         089776
+     C           BBACOC    CHAINSDACOFL0             50                   089776
+      *                                                                   089776
+      **  Account Officer details not found                               089776
+     C           *IN50     IFEQ '1'                                       089776
+     C                     GOTO EXACOF                                    089776
+     C                     END                                            089776
+      *                                                                   089776
+      **  Account Officer Code                                            089776
+     C                     MOVELAZACOC    ##D,1                           089776
+      *                                                                   089776
+      **  Account Officer Dept                                            089776
+     C                     MOVELAZDPCD    ##D,2                           089776
+      *                                                                   089776
+      **  Account Officer Name                                            089776
+     C                     MOVELAZACON    ##D,3                           089776
+      *                                                                   089776
+      **  Account Officer Telephone Number                                089776
+     C                     MOVELAZAPHN    ##D,4                           089776
+      *                                                                   089776
+      **  Account Officer Telephone Extension                             089776
+     C                     MOVELAZAEXT    ##D,5                           089776
+      *                                                                   089776
+      **  Set up First/Subsequent/Last Indicator                          089776
+     C                     MOVE 'FR'      W0FSLI                          089776
+      *                                                                   089776
+      **  Accumulate RDE's and associated data and output to              089776
+      **  PF/CGUDTAPD.                                                    089776
+     C                     EXSR SRADTA                                    089776
+     C                     EXSR SRODTA                                    089776
+      *                                                                   089776
+      *................................................................   089776
+      *                                                                   089776
+      **  Unwind subroutine stack name                                    089776
+      *                                                                   089776
+     C           EXACOF    TAG                                            089776
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVEA*BLANKS   @STK,Q                          089776
+     C                     SUB  1         Q                               089776
+      *                                                                   089776
+     C                     ENDSR                                          089776
+      *****************************************************************   089776
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCURR extracts RDEs for the deal currency.        **
+     C**                                                                **
+     C**  This subroutine is occurrence level 5.                        **
+     C********************************************************************
+     C           SRCURR    BEGSR                           * S R C U R R *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCURR'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           5         OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\CCY   ' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'CCY   '  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Check the array listing currencies already known:
+     C*
+     C                     Z-ADD1         @C
+     C           CCY       LOKUP#CC,@C                   85
+     C*
+     C* If no match is found, retrieve the description:
+     C*
+     C           *IN85     IFEQ *OFF
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY   ' ##OPTN
+     C                     PARM           CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C* If the customer was not found, database error:
+     C*
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'W0FILE
+     C                     MOVELCCY       W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           * DB error 4. *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C* If there is space in the currencies arrays,
+     C*  save the currency code, name and decimal places:
+     C*
+     C           @D        IFLT 100
+     C                     ADD  1         @D
+     C                     MOVE CCY       #CC,@D
+     C                     MOVELA6CYNM    #CD,@D
+     C                     MOVE A6NBDP    #CHAR1  1
+     C                     MOVE #CHAR1    #CD,@D
+     C                     ENDIF
+     C*
+     C* If the currency was found, retrieve the stored description:
+     C*
+     C                     ELSE
+     C                     MOVEL#CD,@C    A6CYNM
+     C                     MOVE #CD,@C    #CHAR1
+     C                     MOVE #CHAR1    A6NBDP
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the currency code and
+     C*      the currency description:
+     C*
+     C                     MOVELCCY       ##D,1
+     C                     MOVELA6CYNM    ##D,2
+     C*
+     C* Set the first/subsequent/last indicator:
+     C*
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C* Save the currency decimal places:
+     C*
+     C                     Z-ADDA6NBDP    ##DECS  10
+     C*
+     C           EXCURR    TAG                             * <<<=== EXCURR
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRFOOT extracts RDEs for the totals.               **
+     C**                                                                **
+     C**  This subroutine is occurrence level 6.                        **
+     C********************************************************************
+     C           SRFOOT    BEGSR                           * S R F O O T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRFOOT'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           6         OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FF_FTR' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'FF_FTR'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Retrieve the details for the final totals.
+     C*
+     C* Move the commission amount,
+     C*      the charge amount,
+     C*      the realised profit and loss,
+     C*      the unrealised profit and loss,
+     C*      the margin,
+     C*  and the collateral:
+     C*
+     C                     MOVELTSCOMM    ##D,1
+     C                     MOVE ##DECS    ##D,1
+     C                     MOVELTSCHRG    ##D,2
+     C                     MOVE ##DECS    ##D,2
+     C                     MOVELTSRPL     ##D,3
+     C                     MOVE ##DECS    ##D,3
+     C                     MOVELTULPL     ##D,4
+     C                     MOVE ##DECS    ##D,4
+     C                     MOVELTMAR      ##D,5
+     C                     MOVE ##DECS    ##D,5
+     C                     MOVELCLCO      ##D,6
+     C                     MOVE ##DECS    ##D,6
+     C*
+     C* Set the first/subsequent/last indicator:
+     C*
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C           EXFOOT    TAG                             * <<<=== EXFOOT
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRDTL1 produces the required extracts.             **
+     C**                                                                **
+     C**  This subroutine is occurrence level 11.                       **
+     C********************************************************************
+     C           SRDTL1    BEGSR                           * S R D T L 1 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDTL1'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           11        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FF_DTL' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Move the first/subsequent/last indicator:
+     C*
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Flag "no formatted records awaiting output":
+     C*
+     C                     MOVE 'N'       W0FORM  1
+     C*
+     C* Set the Previous bind level to the caller's To level:
+     C*
+     C                     Z-ADDW0TBIN    S#PBIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Read the customer/broker positions file for
+     C*   the current branch, customer and currency:
+     C*
+     C           KKPOST    SETLLPOSTNC1
+     C*
+     C           *IN91     DOUEQ*ON
+     C           KKPOST    READEPOSTNC1                  91
+     C           *IN91     IFEQ *OFF
+     C*
+     C* Is this record to be processed?
+     C*
+     C* Check for unprinted position changes:
+     C*
+     C           KKCHG4    SETLLPOCHG4C                  81
+     C           KKCHG4    SETLLPOCHG4R                  82
+     C           KKCHG4    SETLLPOCHG4T                  83
+     C                     MOVEA*IN,81    ##IND3  3
+     C*
+     C* The record is to be processed if the long open position is
+     C*  not zero, the short open position is not zero, or if any
+     C*   unprinted changes records were found:
+     C*
+     C           LOPE      IFNE *ZERO
+     C           SOPE      ORNE *ZERO
+     C           ##IND3    ORNE '000'
+     C*
+     C* Step the bind level number:
+     C*
+     C                     ADD  1         W0BNDC
+     C                     Z-ADDW0BNDC    S#TBIN
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* + Instrument details:
+     C*
+     C                     EXSR SRINST
+     C* Reset:
+     C           11        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C*-------------------------------------------------------------------
+     C* + Market details:
+     C*
+     C                     EXSR SRMKT
+     C* Reset:
+     C           11        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C*-------------------------------------------------------------------
+     C* + Brought-forward values:
+     C*
+     C                     EXSR SRBFWD
+     C* Reset:
+     C           11        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C*-------------------------------------------------------------------
+     C* + Transactions by date:
+     C*
+     C                     EXSR SRDATE
+     C* Reset:
+     C           11        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* + Revaluation details:
+     C*
+     C                     EXSR SRRVAL
+     C* Reset:
+     C           11        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C*-------------------------------------------------------------------
+     C* + Carried-forward values:
+     C*
+     C                     EXSR SRCFWD
+     C* Reset:
+     C           11        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXDTL1    TAG                             * <<<=== EXDTL1
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINST extracts RDEs for the instrument details.   **
+     C**                                                                **
+     C**  This subroutine is occurrence level 12.                       **
+     C********************************************************************
+     C           SRINST    BEGSR                           * S R I N S T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINST'  @STK,Q
+     C*
+     C* Mark as "First":
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           12        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\INSTR ' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'INSTR '  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*
+     C* Get instrument type information:
+     C*
+     C           ISTT      CHAININTYP                93
+     C*
+     C* If the instrument type was not found, database error:
+     C*
+     C           *IN93     IFEQ *ON
+     C                     MOVEL'INTYP   'W0FILE
+     C                     MOVELISTT      W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB error 5. *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C* If the instrument indicator is N (non-OTC), and the instrument
+     C*  processing type is greater than 3 (but not 7), re-read the
+     C*  instrument file keyed by future type reference:
+     C*
+     C           ISTI      IFEQ 'N'
+     C           ISPT      ANDGT3
+     C           ISPT      ANDNE7
+     C                     MOVE ISTT      F#ISTT            ABCDE
+     C                     MOVE FTRF      F#ISTT              678
+     C           F#ISTT    CHAININTYP2               93     AB678
+     C           *IN93     IFEQ *ON
+     C                     MOVEL'INTYP2  'W0FILE
+     C                     MOVELF#ISTT    W0KEY            ***************
+     C                     Z-ADD6         W0ERNB           * DB error 6. *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the instrument type,
+     C*      the instrument name,
+     C*      the over-the-counter flag, and
+     C*      the tick denominator:
+     C*
+     C                     MOVELISTT      ##D,1
+     C                     MOVELISTN      ##D,2
+     C*
+     C           ISTI      IFEQ 'Y'
+     C                     MOVEL'Y'       ##D,3
+     C                     ELSE
+     C                     MOVEL'N'       ##D,3
+     C                     ENDIF
+     C*
+     C                     MOVELTKDM      ##D,4
+     C*
+     C* Tick denominator -- determine the number of "decimal" places:
+     C*
+     C                     Z-ADDTKDM      Z#TKDM
+     C                     Z-ADDMNPF      Z#MNPF
+     C                     EXSR SRNDPS
+     C*
+     C* The number of "decimal" places is held in Z#NDPS.
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C           EXINST    TAG                             * <<<=== EXINST
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRMKT extracts RDEs for the market details.        **
+     C**                                                                **
+     C**  This subroutine is occurrence level 13.                       **
+     C********************************************************************
+     C           SRMKT     BEGSR                           * S R M K T   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRMKT '  @STK,Q
+     C*
+     C* Mark as "First":
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           13        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\MARKET' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'MARKET'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* For an over-the-counter position,
+     C*  move an appropriate description:
+     C*
+     C           ISTI      IFEQ 'Y'
+     C                     MOVEL##OTC     ##D,1
+     C                     ELSE
+     C*
+     C* otherwise get the market description
+     C*  using the start of the instrument type:
+     C*
+     C                     MOVELISTT      #CHAR2  2
+     C           #CHAR2    CHAINMARKT                94
+     C           *IN94     IFEQ *ON
+     C                     MOVEL'MARKT   'W0FILE
+     C                     MOVELF#ISTT    W0KEY            ***************
+     C                     Z-ADD7         W0ERNB           * DB error 7. *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     MOVEL#CHAR2    ##D,1
+     C                     ENDIF
+     C*
+     C* Move the market name:
+     C*
+     C                     MOVELMKTN      ##D,2
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C           EXMKT     TAG                             * <<<=== EXMKT
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBFWD extracts RDEs                               **
+     C**   for the brought-forward values.                              **
+     C**                                                                **
+     C**  This subroutine is occurrence level 14.                       **
+     C********************************************************************
+     C           SRBFWD    BEGSR                           * S R B F W D *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBFWD'  @STK,Q
+     C*
+     C* Mark as "First":
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           14        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FFBFWD' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'FFBFWD'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*
+     C* Set the long / short position flag:
+     C*
+     C                     MOVE 'L'       #CHAR1  1
+     C           LSPO      IFLT *ZERO
+     C                     MOVE 'S'       #CHAR1
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the brought-forward date,
+     C*      the long / short position,
+     C*      the long / short position flag,
+     C*      the month,
+     C*      the year,
+     C*  and the put / call flag,
+     C*      the strike price,
+     C*      the brought-forward price:
+     C*
+     C                     MOVELLSDA      ##D,1
+     C                     MOVE ##DECS    ##D,1
+     C                     MOVELLSPO      ##D,2
+     C                     MOVEL#CHAR1    ##D,3
+     C                     MOVELMTHN      ##D,4
+     C                     MOVELYRNO      ##D,5
+     C                     MOVELPCAL      ##D,6
+     C*
+     C*  Set up, according to the number of decimal places,
+     C*      the strike price,
+     C*      the brought-forward price:
+     C***********          MOVELSTRP      ##WK11 110                      CFF004
+     C***********7         SUB  Z#NDPS    ##WK01  10                      CFF004
+     C                     MOVELSTRP      ##WK11 150                      CFF004
+     C           8         SUB  Z#NDPS    ##WK01  10                      CFF004
+     C                     DO   ##WK01
+     C                     DIV  10        ##WK11
+     C                     ENDDO
+     C                     MOVEL##WK11    ##D,7
+     C                     MOVE Z#NDPS    ##D,7
+     C*
+     C***********          MOVELLSCP      ##WK11 110                      CFF004
+     C***********7         SUB  Z#NDPS    ##WK01  10                      CFF004
+     C                     MOVELLSCP      ##WK11                          CFF004
+     C           8         SUB  Z#NDPS    ##WK01                          CFF004
+     C                     DO   ##WK01
+     C                     DIV  10        ##WK11
+     C                     ENDDO
+     C                     MOVEL##WK11    ##D,8
+     C                     MOVE Z#NDPS    ##D,8
+     C*
+     C* If the ticks denominator is not 100, change the default
+     C*  format code for the prices from 'L' to 'T':
+     C*
+     C           TKDM      IFNE 100
+     C           'L':'T'   XLATE##R,7:12  ##R,7
+     C           'L':'T'   XLATE##R,8:12  ##R,8
+     C                     ENDIF
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C           EXBFWD    TAG                             * <<<=== EXBFWD
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCFWD extracts RDEs for carried-forward values.   **
+     C**                                                                **
+     C**  This subroutine is occurrence level 15.                       **
+     C********************************************************************
+     C           SRCFWD    BEGSR                           * S R C F W D *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCFWD'  @STK,Q
+     C*
+     C* Mark as "First":
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           15        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FFCFWD' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'FFCFWD'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Get the last end-of-centre price:
+     C*
+     C           KKPRIC    CHAINPRICS1               94
+     C           *IN94     IFEQ *ON
+     C                     Z-ADD*ZERO     PLEC
+     C                     ENDIF
+     C*
+     C* Set the long / short position flag:
+     C*
+     C                     MOVE 'L'       #CHAR1
+     C           ##POSN    IFLT *ZERO
+     C                     MOVE 'S'       #CHAR1
+     C                     ENDIF
+     C*
+     C* Move the carried-forward date,
+     C*      the unrealised profit / loss,
+     C*      the long / short position,
+     C*      the long / short position flag,
+     C*
+     C                     MOVELNSTD      ##D,1
+     C                     MOVELIULPL     ##D,2
+     C                     MOVE ##DECS    ##D,2
+     C                     MOVEL##POSN    ##D,3
+     C                     MOVE ##DECS    ##D,3
+     C                     MOVEL#CHAR1    ##D,4
+     C*
+     C* Set up, according to number decimal places,
+     C*      the carried-forward price:
+     C                     MOVELPLEC      ##WK11
+     C***********7         SUB  Z#NDPS    ##WK01                          CFF004
+     C           8         SUB  Z#NDPS    ##WK01                          CFF004
+     C                     DO   ##WK01
+     C                     DIV  10        ##WK11
+     C                     ENDDO
+     C                     MOVEL##WK11    ##D,5
+     C                     MOVE Z#NDPS    ##D,5
+     C*
+     C* If the ticks denominator is not 100,
+     C*  change the default format code from 'L' to 'T':
+     C*
+     C           TKDM      IFNE 100
+     C           'L':'T'   XLATE##R,5:12  ##R,5
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C* Update position details file,
+     C*  if required and if close of business:
+     C*
+     C           P0UPDT    IFEQ 'Y'
+     C           *INU1     ANDEQ*OFF
+     C                     Z-ADDNETP      LSPO
+     C                     Z-ADDNSTD      LSDA
+     C                     Z-ADDPLEC      LSCP
+     C                     UPDATPOSTNCDF
+     C                     ENDIF
+     C*
+     C* Clear running totals:
+     C*
+     C                     Z-ADD*ZERO     IULPL
+     C                     Z-ADD*ZERO     ##POSN
+     C*
+     C           EXCFWD    TAG                             * <<<=== EXCFWD
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRDATE handles the date-level repeater.            **
+     C**                                                                **
+     C**  This subroutine is occurrence level 21.                       **
+     C********************************************************************
+     C           SRDATE    BEGSR                           * S R D A T E *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDATE'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           21        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FFDATE' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C                     Z-ADD*ZERO     TNBR
+     C                     Z-ADD*ZERO     TNBRO   60
+     C                     Z-ADD*ZERO     REVI
+     C                     Z-ADD*ZERO     REVIO
+     C                     SETOF                     4143
+     C*
+     C* Mark as "First":
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Set the Previous bind level to the caller's To level:
+     C*
+     C                     Z-ADDW0TBIN    S#PBIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Access a position change record from POCHG4C and from POCHG4T
+     C*  for the current branch, customer, instrument type, year, month,
+     C*  put/call flag and strike price, and process the record with
+     C*  the lower key value. Key field contents come from POSTNC1.
+     C*
+     C           KKCHG4    SETLLPOCHG4C
+     C           KKCHG4    READEPOCHG4C                  96
+     C*
+     C           KKCHG4    SETLLPOCHG4T
+     C           KKCHG4    READEPOCHG4T                  97
+     C*
+     C* Reset the combined EOF flag:
+     C*
+     C                     MOVE 'N'       EOF     1
+     C*
+     C* Select the record with the lower key value for processing,
+     C*  and move the values read from the files into work fields.
+     C*
+     C                     EXSR SRSEL
+     C*
+     C* Do while not at EOF for both files:
+     C*
+     C           EOF       DOWEQ'N'                        Do while ¬ EOF:
+     C                     Z-ADDPOCD      POCDO              position
+     C*                                                       change date
+     C*
+     C* Step the bind level number:
+     C*
+     C                     ADD  1         W0BNDC
+     C                     Z-ADDW0BNDC    S#TBIN
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Processing for an unchanged date:
+     C*
+     C                     EXSR SRSDTE
+     C* Reset:
+     C           21        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C* If the change date has changed, produce date totals:
+     C*
+     C                     EXSR SRDCHG
+     C* Reset:
+     C           21        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C                     ENDDO
+     C*
+     C           EXDATE    TAG                             * <<<=== EXDATE
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSDTE handles data for the same change date.      **
+     C**                                                                **
+     C**  This subroutine is occurrence level 22.                       **
+     C********************************************************************
+     C           SRSDTE    BEGSR                           * S R S D T E *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSDTE'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           22        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FFDDTL' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Set the Previous bind level to the caller's To level:
+     C*
+     C                     Z-ADDW0TBIN    S#PBIN
+     C*
+     C           EOF       DOWEQ'N'                        Do while same
+     C           POCD      ANDEQPOCDO                        change date:
+     C                     Z-ADDTNBR      TNBRO
+     C*
+     C* Step the bind level number:
+     C*
+     C                     ADD  1         W0BNDC
+     C                     Z-ADDW0BNDC    S#TBIN
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the transaction number is non-zero
+     C*   access TRANS2 for the new transaction:
+     C*
+     C           TNBR      IFNE *ZERO
+     C*
+     C           TNBR      CHAINTRANS2               99
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TRANS'   DBFILE
+     C                     MOVELTNBR      DBKEY            ***************
+     C                     Z-ADD11        DBASE            * DB error 11 *
+     C                     EXSR SRERR                      ***************
+     C                     OUT  LDA
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C* While same change date and same transaction number,
+     C*  continue processing:
+     C*
+     C           EOF       DOWEQ'N'                          Do while same
+     C           POCD      ANDEQPOCDO                         transaction
+     C           TNBR      ANDEQTNBRO                          number:
+     C*
+     C* Save reversal indicator:
+     C*
+     C                     Z-ADDREVI      REVIO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* While same change date, same transaction number
+     C*   and same reversal indicator,
+     C*  process the POCHGxC record:
+     C*
+     C           EOF       DOWEQ'N'
+     C           POCD      ANDEQPOCDO
+     C           TNBR      ANDEQTNBRO
+     C           REVI      ANDEQREVIO
+     C                     EXSR SRCHGX
+     C                     SETOF                     4143
+     C*
+     C* If both files are at EOF, perform database error processing:
+     C*
+     C           EOF       IFEQ 'Y'
+     C                     MOVE 'POCHG'   DBFILE
+     C                     MOVEL'EOF  '   DBKEY            ***************
+     C                     Z-ADD12        DBASE            * DB error 12 *
+     C                     EXSR SRERR                      ***************
+     C                     ENDIF
+     C*
+     C* If the variable which indicates the file last processed
+     C*   is equal to 'C', read the next record from POCHG4C;
+     C*  otherwise, read the next record from POCHG4T:
+     C*
+     C           FILE      IFEQ 'C'
+     C           KKCHG4    READEPOCHG4C                  96
+     C                     ELSE
+     C           KKCHG4    READEPOCHG4T                  97
+     C                     ENDIF
+     C*
+     C* Select the record with the lower key value for processing
+     C*  and move the values read from the files into work fields.
+     C*
+     C                     EXSR SRSEL
+     C*
+     C* Enddo while same change date, same transaction number
+     C*         and same reversal indicator:
+     C*
+     C                     ENDDO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If a level-break -- the change date has changed,
+     C*                     the transaction number has changed, or
+     C*                     the reversal indicator has changed --
+     C*   and the transaction number is non-zero,
+     C*  produce transaction totals and running totals:
+     C*
+     C           TNBRO     IFNE *ZERO
+     C*
+     C                     EXSR SRTRNS
+     C* Reset:
+     C           22        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C                     EXSR SRTTTL
+     C* Reset:
+     C           22        OCUR SRDTDS
+     C                     MOVELW0SPTH    S#PATH
+     C                     Z-ADDW0PBIN    S#PBIN
+     C                     Z-ADDW0TBIN    S#TBIN
+     C*
+     C                     ENDIF
+     C*
+     C* Enddo while same change date and same transaction number:
+     C*
+     C                     ENDDO
+     C*
+     C* Enddo while same change date:
+     C*
+     C                     ENDDO
+     C*
+     C           EXSDTE    TAG                             * <<<=== EXSDTE
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRTRNS extracts RDEs for transaction values.       **
+     C**                                                                **
+     C**  This subroutine is occurrence level 23.                       **
+     C********************************************************************
+     C           SRTRNS    BEGSR                           * S R T R N S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRTRNS'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           23        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FFTRNS' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'FFTRNS'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*
+     C* Format the transaction number, the reversal flag, the transaction
+     C*  type, the contract price and the closed-out flag.
+     C* Accumulate the total contracts into the net position:
+     C*
+     C                     EXSR SRFDTL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the position change date,
+     C*      the transaction number,
+     C*      the reversal flag,
+     C*      the transaction type,
+     C*      the contract price,
+     C*      the closed-out flag, and
+     C*      the transaction narrative:
+     C*
+     C                     MOVELPOCD      ##D,1
+     C                     MOVELW0TNBR    ##D,2
+     C                     MOVELW0REV     ##D,3
+     C                     MOVELW0TTYP    ##D,4
+     C                     MOVELW0COF     ##D,6
+     C                     MOVELTNAR      ##D,7
+     C*
+     C* Set up, according to number decimal places,
+     C*      the contract price,
+     C***********          MOVELCOPR      ##WK11 110                      CFF004
+     C***********7         SUB  Z#NDPS    ##WK01  10                      CFF004
+     C                     MOVELCOPR      ##WK11                          CFF004
+     C           8         SUB  Z#NDPS    ##WK01                          CFF004
+     C                     DO   ##WK01
+     C                     DIV  10        ##WK11
+     C                     ENDDO
+     C                     MOVEL##WK11    ##D,5
+     C                     MOVE Z#NDPS    ##D,5
+     C*
+     C* If the ticks denominator is not 100,
+     C*  change the default format code from 'L' to 'T':
+     C*
+     C           TKDM      IFNE 100
+     C           'L':'T'   XLATE##R,5:12  ##R,5
+     C                     ENDIF
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C* Mark all following records as "Subsequent":
+     C*
+     C                     MOVE 'SU'      W0FSLI
+     C*
+     C           EXTRNS    TAG                             * <<<=== EXTRNS
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRTTTL extracts RDEs for transaction totals.       **
+     C**                                                                **
+     C**  This subroutine is occurrence level 25.                       **
+     C********************************************************************
+     C           SRTTTL    BEGSR                           * S R T T T L *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRTTTL'  @STK,Q
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           25        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FFTTTL' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'FFTTTL'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the total contracts before and after the transaction,
+     C*      the total commission before and after the transaction,
+     C*      the total charges before and  after the transaction,
+     C*  and the total profit and loss before and after the transaction:
+     C*
+     C                     MOVELTTCTS     ##D,1
+     C                     MOVE '0'       ##D,1
+     C                     MOVELTTCTE     ##D,5
+     C                     MOVE '0'       ##D,5
+     C*
+     C                     MOVELTTCOMS    ##D,2
+     C                     MOVE ##DECS    ##D,2
+     C                     MOVELTTCOME    ##D,6
+     C                     MOVE ##DECS    ##D,6
+     C*
+     C                     MOVELTTCHS     ##D,3
+     C                     MOVE ##DECS    ##D,3
+     C                     MOVELTTCHE     ##D,7
+     C                     MOVE ##DECS    ##D,7
+     C*
+     C                     MOVELTTRPLS    ##D,4
+     C                     MOVE ##DECS    ##D,4
+     C                     MOVELTTRPLE    ##D,8
+     C                     MOVE ##DECS    ##D,8
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Clear running totals:
+     C*
+     C                     Z-ADD*ZERO     TTCTS
+     C                     Z-ADD*ZERO     TTCTE
+     C*
+     C                     Z-ADD*ZERO     TTCHS
+     C                     Z-ADD*ZERO     TTCHE
+     C*
+     C                     Z-ADD*ZERO     TTRPLS
+     C                     Z-ADD*ZERO     TTRPLE
+     C*
+     C                     Z-ADD*ZERO     TTCOMS
+     C                     Z-ADD*ZERO     TTCOME
+     C*
+     C           EXTTTL    TAG                             * <<<=== EXTTTL
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRDCHG extracts RDEs for date-change totals.       **
+     C**                                                                **
+     C**  This subroutine is occurrence level 26.                       **
+     C********************************************************************
+     C           SRDCHG    BEGSR                           * S R D C H G *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDCHG'  @STK,Q
+     C*
+     C* Mark as "First":
+     C                     MOVE 'FR'      W0FSLI
+     C*
+     C* Point the multiple-occurrence data structure:
+     C*
+     C           26        OCUR SRDTDS
+     C*
+     C* Set the current path:
+     C*
+     C                     MOVE '\FFDCHG' W0PNAM
+     C           S#PATH    CAT  W0PNAM:0  S#PATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+     C                     MOVELS#PATH    W0SPTH
+     C*
+     C* Set the bind numbers:
+     C*
+     C                     Z-ADDS#PBIN    W0PBIN
+     C                     Z-ADDS#TBIN    W0TBIN
+     C*
+     C* Retrieve RDE information for RDEs in the group set:
+     C*
+     C                     MOVE 'FFDCHG'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the position change date,
+     C*      the total realised profit and loss, and
+     C*      the total reversed profit and loss:
+     C*
+     C                     MOVELPOCD      ##D,1
+     C                     MOVELTCDR0     ##D,2
+     C                     MOVE ##DECS    ##D,2
+     C                     MOVELTCDR1     ##D,3
+     C                     MOVE ##DECS    ##D,3
+     C*
+     C* Accumulate RDEs and associated data:
+     C*
+     C                     EXSR SRADTA
+     C*
+     C* Output to CGUDTAPD if not suppressed:
+     C*
+     C           P0SUPP    IFNE 'Y'
+     C                     EXSR SRODTA
+     C                     ENDIF
+     C*
+     C* Clear running totals:
+     C*
+     C                     Z-ADD*ZERO     TCDR0
+     C                     Z-ADD*ZERO     TCDR1
+     C*
+     C           EXDCHG    TAG                             * <<<=== EXDCHG
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRFDTL formats data for transaction details.       **
+     C********************************************************************
+     C           SRFDTL    BEGSR                           * S R F D T L *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRFDTL'  @STK,Q
+     C*
+     C* Reset the transaction number, reversal flag, transaction type,
+     C*  contract price and closed-out flag:
+     C*
+     C                     MOVE *BLANKS   W0TNBR 10
+     C                     MOVE *BLANK    W0TTYP  1
+     C                     MOVE 'N'       W0REV   1
+     C                     MOVE 'N'       W0COF   1
+     C*
+     C* Transaction number may be negative (for trades at maturity)
+     C*
+     C           TNBRO     IFGT *ZERO
+     C                     MOVELTNBRO     W0TNBR
+     C                     MOVE '    '    W0TNBR
+     C                     ELSE
+     C                     Z-SUBTNBRO     #@TNBR  60
+     C                     MOVEL#@TNBR    W0TNBR
+     C                     MOVE '-(M)'    W0TNBR
+     C                     END
+     C*
+     C* Reversal flag:
+     C*
+     C           REVI      IFEQ 1
+     C                     MOVE 'Y'       W0REV
+     C                     ENDIF
+     C*
+     C* Closed-out flag:
+     C*
+     C           FCIN      IFEQ 'Y'
+     C           TTCTE     ANDNE*ZERO
+     C                     MOVE 'Y'       W0COF
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the transaction type is 'P'
+     C*   If no broker is involved
+     C*     report transaction as 'S'
+     C*    otherwise
+     C*     report transaction as 'P'
+     C*    Endif
+     C*  Endif
+     C*
+     C                     SELEC                           * Select
+     C           TRTY      WHEQ 'P'
+     C*
+     C********** BOCO      IFEQ *ZERO                                                         CSD027
+     C           BOCO      IFEQ *BLANKS                                                       CSD027
+     C                     MOVE 'S'       W0TTYP
+     C                     ELSE
+     C                     MOVE 'P'       W0TTYP
+     C                     ENDIF
+     C*
+     C* If the transaction type is 'S'
+     C*   If no broker is involved
+     C*     report transaction as 'P'
+     C*    otherwise
+     C*     report transaction as 'S'
+     C*    Endif
+     C*  Endif
+     C*
+     C           TRTY      WHEQ 'S'
+     C*
+     C********** BOCO      IFEQ *ZERO                                                         CSD027
+     C           BOCO      IFEQ *BLANKS                                                       CSD027
+     C                     MOVE 'P'       W0TTYP
+     C                     ELSE
+     C                     MOVE 'S'       W0TTYP
+     C                     ENDIF
+     C*
+     C* If the transaction type is 'E'
+     C*   report transaction as 'E'
+     C*
+     C           TRTY      WHEQ 'E'
+     C                     MOVE 'E'       W0TTYP
+     C*
+     C                     ENDSL                           EndSelect
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Accumulate the total contacts into the net position:
+     C*
+     C                     SELEC                           * Select
+     C           W0TTYP    WHEQ 'P'
+     C                     ADD  TTCTS     NETP
+     C                     ADD  TTCTE     NETP
+     C*
+     C           W0TTYP    WHEQ 'S'
+     C                     SUB  TTCTS     NETP
+     C                     SUB  TTCTE     NETP
+     C*
+     C           W0TTYP    WHEQ 'E'
+     C*
+     C* If no broker is involved and
+     C*   the underlying transaction type is 'S'
+     C*  or a broker is involved and
+     C*   the underlying transaction type is 'P'
+     C*  add the total number of transaction contracts
+     C*    to the net position
+     C*
+     C********** BOCO      IFEQ *ZERO                                                         CSD027
+     C           BOCO      IFEQ *BLANKS                                                       CSD027
+     C           ULTT      ANDEQ'S'
+     C********** BOCO      ORGT *ZERO                                                         CSD027
+     C           BOCO      ORGT *BLANKS                                                       CSD027
+     C           ULTT      ANDEQ'P'
+     C                     ADD  TTCTS     NETP
+     C                     ADD  TTCTE     NETP
+     C                     ELSE
+     C*
+     C* If no broker is involved and
+     C*   the underlying transaction type is 'P'
+     C*  or a broker is involved and
+     C*   the underlying transaction type is 'S'
+     C*  subtract the total number of transaction contracts
+     C*    from the net position
+     C*
+     C                     SUB  TTCTS     NETP
+     C                     SUB  TTCTE     NETP
+     C                     ENDIF
+     C*
+     C                     ENDSL                           EndSelect
+     C*
+     C           EXFDTL    TAG                             * <<<=== EXFDTL
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRRVAL handles revaluation details.                **
+     C********************************************************************
+     C           SRRVAL    BEGSR                           * S R R V A L *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRRVAL'  @STK,Q
+     C*
+     C           KKCHG4    SETLLPOCHG4R
+     C*
+     C           *IN84     DOUEQ*ON
+     C           KKCHG4    READEPOCHG4R                  84
+     C           *IN84     IFEQ *OFF
+     C*
+     C* Add the Unrealised profit and loss
+     C*   to the Total unrealised profit and loss
+     C*  and the Instrument unrealised profit and loss:
+     C*
+     C                     ADD  ULPLE     TULPL
+     C                     ADD  ULPLE     IULPL
+     C*
+     C* Update the Appeared on statement indicator
+     C*  if the Update files flag is on
+     C*   and the run is Close of business:
+     C*
+     C           P0UPDT    IFEQ 'Y'
+     C           *INU1     ANDEQ*OFF
+     C                     MOVE 'Y'       AOSIE
+     C                     EXCPTEAOSIE
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXRVAL    TAG                             * <<<=== EXRVAL
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRFLAG sets the statement required flag off.       **
+     C********************************************************************
+     C           SRFLAG    BEGSR                           * S R F L A G *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRFLAG'  @STK,Q
+     C*
+     C           P0CMT     IFEQ 'YES'
+     C           KKCCY1    CHAINTSCCY1               92
+     C                     ELSE
+     C           KKCCY1    CHAINTSCCYD               92
+     C                     ENDIF
+     C*
+     C* Set the flag:
+     C                     MOVE 'N'       STRQ
+     C* Update:
+     C           P0CMT     IFEQ 'YES'
+     C                     EXCPTESTRQ1
+     C                     ELSE
+     C                     EXCPTESTRQD
+     C                     ENDIF
+     C*
+     C           EXFLAG    TAG                             * <<<=== EXFLAG
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSET executes a period-end update.                **
+     C********************************************************************
+     C           SRSET     BEGSR                           * S R S E T   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSET '  @STK,Q
+     C*
+     C* Retrieve the current cleared balance from the account master file:
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM '*MSG    '##RTCD
+     C                     PARM '*KEY    '##OPTN
+     C                     PARM           ##RETL 10
+     C                     PARM           P0CUST
+     C                     PARM           P0CCY
+     C                     PARM           P0ACCT
+     C                     PARM           P0ACSQ
+     C                     PARM           P0BRCA
+     C           ACCTDS    PARM ACCTDS    DSSDY
+     C*
+     C           P0CMT     IFEQ 'YES'
+     C           KKCCY1    CHAINTSCCY1               92
+     C                     ELSE
+     C           KKCCY1    CHAINTSCCYD               92
+     C                     ENDIF
+     C*
+     C* Set the Brought forward statement balance equal to the
+     C*         Current cleared balance from the account master file,
+     C*     the Last statement date equal to the next statement date,
+     C*     the Next statement date to zero,
+     C* and the Statement required flag to N (No):
+     C*
+     C           KKACCT    CHAINACCNT                94
+     C                     Z-ADDCLBL      BFSB
+     C                     Z-ADDNSTD      LSDA
+     C                     Z-ADD*ZERO     NSTD
+     C                     MOVE 'N'       STRQ
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Update:
+     C           P0CMT     IFEQ 'YES'
+     C                     EXCPTEPEUP1
+     C                     ELSE
+     C                     EXCPTEPEUPD
+     C                     ENDIF
+     C*
+     C           EXSET     TAG                             * <<<=== EXSET
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRRRDE retrieves RDE information by group set.     **
+     C********************************************************************
+     C           SRRRDE    BEGSR                           * S R R R D E *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRRRDE'  @STK,Q
+     C*
+     C* Reset arrays:
+     C*
+     C                     MOVE *BLANKS   ##R
+     C                     MOVE *BLANKS   ##D
+     C                     MOVE *BLANKS   ##S
+     C*
+     C* Get information about the next 20 RDEs in the group set
+     C*  from compile-time arrays:
+     C*
+     C                     Z-ADD*ZERO     #1
+     C           *IN95     DOUEQ*OFF
+     C           #1        OREQ 20
+     C                     Z-ADD1         #2
+     C           ##GRPX    LOKUP##GRP,#2                 95
+     C           *IN95     IFEQ *ON
+     C                     ADD  1         #1
+     C                     MOVEL##RDEA,#2 ##R,#1
+     C                     ADD  1         ##RDEN
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXRRDE    TAG                             * <<<=== EXRRDE
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRADTA accumulates RDEs and associated data.       **
+     C********************************************************************
+     C           SRADTA    BEGSR                           * S R A D T A *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRADTA'  @STK,Q
+     C*
+     C* Reformat RDE data:
+     C*
+     C                     EXSR SRFORM
+     C*
+     C* Pack RDEs and associated data into a data string:
+     C*
+     C                     CLEAR##SDS
+     C*
+      *                                                                                       CCG015
+      ** If CCG015 is installed move '*NEWARR' to W0ACT                                       CCG015
+      ** else move '*PACK'.                                                                   CCG015
+      *                                                                                       CCG015
+     C           CCG015    IFEQ 'Y'                                                           CCG015
+     C                     MOVEL'*NEWARR 'W0ACT                                               CCG015
+     C                     MOVELS#PATH    W0SPAT                                              CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVEL'*PACK   'W0ACT                                               CCG015
+     C                     MOVEL*BLANK    W0SPAT                                              CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     CALL 'CG3999'
+     C                     PARM *BLANK    P3RTN   7
+     C**********           PARM '*PACK   'W0ACT                                               CCG015
+     C                     PARM           W0ACT                                               CCG015
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+     C                     PARM           W0SPAT 70                                           CCG015
+     C                     PARM           ##RN                                                CCG015
+     C                     PARM           ##DN                                                CCG015
+     C                     PARM           ##FM                                                CCG015
+     C*
+     C* Database error:
+     C*
+     C           P3RTN     IFNE *BLANK
+     C                     MOVEL'CG3999  'W0FILE
+     C                     MOVELP3RTN     W0KEY            ***************
+     C                     Z-ADD9         W0ERNB           * DB error 9. *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *                                                                                       CCG015
+     C                     EXSR WRTRDE                                                        CCG015
+      *                                                                                       CCG015
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Initialise write format parameter:
+     C*
+     C                     CLEARW0FMT
+     C*
+     C* Prepare control information:
+     C*
+     C                     MOVE W0ITEM    DEITEM
+     C                     ADD  1         W0OSEQ
+     C                     Z-ADDW0OSEQ    DEOSEQ
+     C                     Z-ADDW0PBIN    DEPBIN
+     C                     Z-ADDW0TBIN    DETBIN
+     C                     MOVE W0FSLI    DEFSLI
+     C*
+     C                     MOVELS#PATH    W0PATH    P
+     C*
+     C* Append data from the pack routine:
+     C*
+     C           W0FMT     CAT  ##SDS:0   W0FMT
+     C*
+     C* Set flag to show record formatted:
+     C*
+     C                     MOVE 'Y'       W0FORM
+     C*
+     C           EXADTA    TAG                             * <<<=== EXADTA
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRFORM reformats RDE data.                         **
+     C********************************************************************
+     C           SRFORM    BEGSR                           * S R F O R M *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFMN'  @STK,Q
+     C*
+     C* Loop through RDEs and data:
+     C*
+     C                     DO   20        #1      30
+     C                     MOVEL##R,#1    R#DEFN
+     C                     MOVEL##D,#1    R#DATA
+     C*
+     C* If data present and RDE is edited:
+     C*
+     C           R#DATA    IFNE *BLANK
+     C           ##RDEC    ANDNE*BLANK
+     C*
+     C* Reformat amount:
+     C*
+     C                     Z-ADD1         #2      30
+     C           *BLANK    LOKUP##NUMA,#2                95  First blank
+     C                     Z-ADD20        #3      30
+     C                     Z-ADD*ZERO     ##WNUM
+     C*
+     C* Right-justify the amount:
+     C*
+     C           #2        DOWGT1
+     C           #2        ANDLE20
+     C           #3        ANDGT1
+     C                     SUB  1         #2
+     C                     MOVEL##NUMA,#2 ##W,#3
+     C                     SUB  1         #3
+     C                     ENDDO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Apply the sign to the amount:
+     C*
+     C           ##SIGN    IFEQ '-'
+     C                     Z-SUB##WNUM    ##NUMB
+     C                     ELSE
+     C                     Z-ADD##WNUM    ##NUMB
+     C                     ENDIF
+     C*
+     C* Default edit type:
+     C*
+     C           ##EDTT    IFEQ *BLANK
+     C                     MOVEL##RDET    ##EDTT
+     C                     ENDIF
+     C*
+     C* Default decimal places:
+     C*
+     C           ##DCPA    IFEQ *BLANK
+     C                     MOVEL##RDED    ##DCPA
+     C                     ENDIF
+     C*
+     C* New RDE data:
+     C*
+     C                     MOVELR#DATA    ##D,#1
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXFORM    TAG                             * <<<=== EXFORM
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRODTA outputs data to file CGUDTxPD.              **
+     C********************************************************************
+     C           SRODTA    BEGSR                           * S R O D T A *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRODTA'  @STK,Q
+     C*
+     C* Output PF/CGUDTAPD record:
+     C*
+      *                                                                                       CCG015
+     C           CCG015    IFEQ 'N'                                                           CCG015
+      *                                                                                       CCG015
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    P3RTN
+     C                     PARM '*WRITE  'W0ACT
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM *BLANK    W0TITL  7
+     C                     PARM *BLANK    W0ULIN  7
+     C                     PARM           P0CMT
+     C*
+     C* Database error:
+     C*
+     C           P3RTN     IFNE *BLANK
+     C                     MOVEL'CG9020  'W0FILE
+     C                     MOVEL##RTCD    W0KEY            ***************
+     C                     Z-ADD10        W0ERNB           * Database    *
+     C                     MOVEL'MEM5003' W0MSGD           *  error 10.  *
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     ENDIF
+      *                                                                                       CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C*
+     C* Reset flag to show formatted data output:
+     C*
+     C                     MOVE 'N'       W0FORM
+     C*
+     C           EXODTA    TAG                             * <<<=== EXODTA
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRNDPS determines the number of "decimal" places   **
+     C**   used to show the tick denominator.                           **
+     C********************************************************************
+     C           SRNDPS    BEGSR                           * S R N D P S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRNDPS'  @STK,Q
+     C*
+     C* Define and prepare the subroutine's workfields:
+     C*
+     C                     Z-ADD*ZERO     Z#NDPS  10
+     C*
+     C* If the ticks denominator is not 100, calculate the number
+     C*  of places from the number of signicant digits used:
+     C*
+     C           Z#TKDM    IFNE 100                        Not 100,
+     C*
+     C                     SELEC
+     C           Z#TKDM    WHLE 10                          1..10:
+     C                     Z-ADD1         Z#NDPS             1 place;
+     C           Z#TKDM    WHLE 100                         11..99:
+     C                     Z-ADD2         Z#NDPS             2 places;
+     C           Z#TKDM    WHLE 1000                        101..1000:
+     C                     Z-ADD3         Z#NDPS             3 places;
+     C                     OTHER                            otherwise:
+     C                     Z-ADD4         Z#NDPS             4 places.
+     C                     ENDSL
+     C                     ELSE                            else (100)
+     C*
+     C* The ticks denominator is 100. Calculate the number of places
+     C*  by reference to the minimum price fluctuation value:
+     C*
+     C***********          MOVE Z#MNPF    #WK7A   7         find rightmostCFF004
+     C***********'0'       CHEKR#WK7A     Z#NDPS             non-zero.    CFF004
+     C                     MOVE Z#MNPF    #WK8A   8                       CFF004
+     C           '0'       CHEKR#WK8A     Z#NDPS                          CFF004
+     C                     ENDIF                           Endif not 100.
+     C*
+     C           EXNDPS    TAG                             * <<<=== EXNDPS
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSEL selects whichever record of POCHG4C and      **
+     C**   POCHG4R has the lower key value,  and moves values from      **
+     C**   the selected record into work fields.                        **
+     C********************************************************************
+     C           SRSEL     BEGSR                           * S R S E L   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSEL '  @STK,Q
+     C*
+     C* If not EOF for POCHG4C and not EOF for POCHG4T:
+     C*
+     C           *IN96     IFEQ *OFF
+     C           *IN97     ANDEQ*OFF
+     C*
+     C* If position change date, trade number and reversal indicator
+     C*  on POCHG4C is less than or equal to same fields on POCHG4T:
+     C*
+     C           PCHG4C    IFLE PCHG4T
+     C*
+     C* Set the variable which indicates the file being processed
+     C*  to 'C', to indicate that POCHG4C fields were used:
+     C*
+     C                     MOVE 'C'       FILE    1
+     C*
+     C* Set the format identification indicator to mimic the
+     C*  indicator values when details were read from POCHG4:
+     C*
+     C                     SETON                     41
+     C                     SETOF                     43
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the details read into work fields:
+     C*
+     C                     MOVE RECIC     RECI
+     C                     MOVE BRCAC     BRCAPG
+     C                     MOVE CBCDC     CBCDPG
+     C                     MOVE ISTTC     ISTTPG
+     C                     MOVE YRNOC     YRNOPG
+     C                     MOVE MTHNC     MTHNPG
+     C                     MOVE PCALC     PCALPG
+     C                     MOVE STRPC     STRPPG
+     C                     MOVE POCDC     POCD
+     C                     MOVE TNBRC     TNBR
+     C                     MOVE RLPLC     RLPL
+     C                     MOVE ISCYC     ISCYPG
+     C                     MOVE AOSIC     AOSI
+     C                     MOVE ATCIC     ATCI
+     C                     MOVE PUPIC     PUPI
+     C                     Z-ADDREVIC     REVI
+     C*
+     C* The record from POCHG4T has a lower key value:
+     C*
+     C                     ELSE
+     C*
+     C* Set the variable which indicates the file being processed
+     C*  to 'T', to indicate that POCHG4T fields were used:
+     C*
+     C                     MOVE 'T'       FILE
+     C*
+     C* Set the format identification indicator to mimic the
+     C*  indicator values when details were read from POCHG4C:
+     C*
+     C                     SETOF                     41
+     C                     SETON                     43
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the details read into work fields:
+     C*
+     C                     MOVE RECID     RECI
+     C                     MOVE BRCAD     BRCAPG
+     C                     MOVE CBCDD     CBCDPG
+     C                     MOVE ISTTD     ISTTPG
+     C                     MOVE YRNOD     YRNOPG
+     C                     MOVE MTHND     MTHNPG
+     C                     MOVE PCALD     PCALPG
+     C                     MOVE STRPD     STRPPG
+     C                     MOVE POCDD     POCD
+     C                     MOVE TNBRD     TNBR
+     C                     MOVE PCGTD     PCGT
+     C                     MOVE POCQD     POCQ
+     C                     MOVE PCGAD     PCGA
+     C                     MOVE ISCYD     ISCYPG
+     C                     MOVE AOSID     AOSI
+     C                     MOVE ATCID     ATCI
+     C                     MOVE PUPID     PUPI
+     C                     MOVE PAYID     PAYI
+     C                     Z-ADDREVID     REVI
+     C*
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* If not EOF for POCHG4C, but EOF for POCHG4T:
+     C*
+     C           *IN96     IFEQ *OFF
+     C           *IN97     ANDEQ*ON
+     C*
+     C* Set the variable which indicates the file being processed
+     C*  to 'C', to indicate that POCHG4C fields were used:
+     C*
+     C                     MOVE 'C'       FILE    1
+     C*
+     C* Set the format identification indicator to mimic the
+     C*  indicator values when details were read from POCHG4
+     C*
+     C                     SETON                     41
+     C                     SETOF                     43
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the details read into work fields:
+     C*
+     C                     MOVE RECIC     RECI
+     C                     MOVE BRCAC     BRCAPG
+     C                     MOVE CBCDC     CBCDPG
+     C                     MOVE ISTTC     ISTTPG
+     C                     MOVE YRNOC     YRNOPG
+     C                     MOVE MTHNC     MTHNPG
+     C                     MOVE PCALC     PCALPG
+     C                     MOVE STRPC     STRPPG
+     C                     MOVE POCDC     POCD
+     C                     MOVE TNBRC     TNBR
+     C                     MOVE RLPLC     RLPL
+     C                     MOVE ISCYC     ISCYPG
+     C                     MOVE AOSIC     AOSI
+     C                     MOVE ATCIC     ATCI
+     C                     MOVE PUPIC     PUPI
+     C                     Z-ADDREVIC     REVI
+     C                     ENDIF
+     C*
+     C* If not EOF for POCHG4T, but EOF for POCHG4C:
+     C*
+     C           *IN96     IFEQ *ON
+     C           *IN97     ANDEQ*OFF
+     C*
+     C* Set the variable which indicates the file being processed
+     C*  to 'T', to indicate that POCHG4T fields were used:
+     C*
+     C                     MOVE 'T'       FILE
+     C*
+     C* Set the format identification indicator to mimic the
+     C*  indicator values when details were read from POCHG4
+     C*
+     C                     SETOF                     41
+     C                     SETON                     43
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the details read into work fields:
+     C*
+     C                     MOVE RECID     RECI
+     C                     MOVE BRCAD     BRCAPG
+     C                     MOVE CBCDD     CBCDPG
+     C                     MOVE ISTTD     ISTTPG
+     C                     MOVE YRNOD     YRNOPG
+     C                     MOVE MTHND     MTHNPG
+     C                     MOVE PCALD     PCALPG
+     C                     MOVE STRPD     STRPPG
+     C                     MOVE POCDD     POCD
+     C                     MOVE TNBRD     TNBR
+     C                     MOVE PCGTD     PCGT
+     C                     MOVE POCQD     POCQ
+     C                     MOVE PCGAD     PCGA
+     C                     MOVE ISCYD     ISCYPG
+     C                     MOVE AOSID     AOSI
+     C                     MOVE ATCID     ATCI
+     C                     MOVE PUPID     PUPI
+     C                     MOVE PAYID     PAYI
+     C                     Z-ADDREVID     REVI
+     C                     ENDIF
+     C*
+     C* If EOF for POCHG4C and EOF for POCHG4T:
+     C*
+     C           *IN96     IFEQ *ON
+     C           *IN97     ANDEQ*ON
+     C*
+     C* Set the indicator to show EOF on both files:
+     C*
+     C                     MOVE 'Y'       EOF
+     C                     ENDIF
+     C*
+     C           EXSEL     TAG                             * <<<=== EXSEL
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHGX processes a POCHGxC record.                 **
+     C********************************************************************
+     C           SRCHGX    BEGSR                           * S R C H G X *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHGX'  @STK,Q
+     C*
+     C* POCHG4C record (indicator 41) or POCHG4T record (indicator 43):
+     C*
+     C           *IN41     CASEQ'1'       SRCHGC
+     C           *IN43     CASEQ'1'       SRCHGT
+     C                     ENDCS
+     C*
+     C           EXCHGX    TAG                             * <<<=== EXCHGX
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHGC processes a POCHG4C record                  **
+     C**   (close-out change not printed -- indicator 41).              **
+     C********************************************************************
+     C           SRCHGC    BEGSR                           * S R C H G C *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHGC'  @STK,Q
+     C*
+     C* If the reversal indicator is on
+     C*   reverse the sign of the realised P&L amount
+     C*  Endif
+     C*
+     C* If the transaction number is non-zero
+     C*   add the realised P&L amount to the total after transaction
+     C*  else
+     C*   add the amount to the P&L realised date total
+     C*               or to the P&L reversed date total, as appropriate
+     C*  Endif
+     C*
+     C* Add the P&L amount to the P&L realised final total
+     C*
+     C           REVIC     IFEQ 1
+     C                     Z-SUBRLPLC     WRLPL
+     C                     ELSE
+     C                     Z-ADDRLPLC     WRLPL
+     C                     ENDIF
+     C*
+     C           TNBR      IFEQ *ZERO
+     C*
+     C           REVIC     IFEQ 1
+     C                     ADD  WRLPL     TCDR1             Total PL rev
+     C                     ELSE
+     C                     ADD  WRLPL     TCDR0             Total PL real
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C                     ADD  WRLPL     TTRPLS            PL after trans
+     C                     ENDIF
+     C*
+     C                     ADD  WRLPL     TSRPL             PL realised
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Update the Appeared on statement indicator
+     C*  if the Update files flag is on
+     C*   and the run is Close of business:
+     C*
+     C           P0UPDT    IFEQ 'Y'
+     C           *INU1     ANDEQ*OFF
+     C                     MOVE 'Y'       AOSIC
+     C                     EXCPTEAOSIC
+     C                     ENDIF
+     C*
+     C           EXCHGC    TAG                             * <<<=== EXCHGC
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHGT processes a POCHG4T record                  **
+     C**   (transaction not printed -- indicator 43).                   **
+     C********************************************************************
+     C           SRCHGT    BEGSR                           * S R C H G T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHGT'  @STK,Q
+     C*
+     C* If the reversal indicator is on
+     C*   reverse the sign of the Position change quantity
+     C*   reverse the sign of the position change amount
+     C*  Endif
+     C*
+     C           REVID     IFEQ 1
+     C                     Z-SUBPOCQD     WPOCQ
+     C                     Z-SUBPCGAD     WPCGA
+     C                     ELSE
+     C                     Z-ADDPOCQD     WPOCQ
+     C                     Z-ADDPCGAD     WPCGA
+     C                     ENDIF
+     C*
+     C* If the position change type is *BLANK -- number of contracts
+     C* If the position change type is 'A'    -- charges
+     C* If the position change type is 'B'    -- commission
+     C* If the position change type is 'C'    -- profit and loss
+     C*
+     C           PCGT      CASEQ*BLANK    SRCHTX
+     C           PCGT      CASEQ'A'       SRCHTA
+     C           PCGT      CASEQ'B'       SRCHTB
+     C           PCGT      CASEQ'C'       SRCHTC
+     C                     ENDCS
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Update the Appeared on statement indicator
+     C*  if the Update files flag is on
+     C*   and the run is Close of business:
+     C*
+     C           P0UPDT    IFEQ 'Y'
+     C           *INU1     ANDEQ*OFF
+     C                     MOVE 'Y'       AOSID
+     C                     EXCPTEAOSID
+     C                     ENDIF
+     C*
+     C           EXCHGT    TAG                             * <<<=== EXCHGT
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHTX processes a POCHG4T record                  **
+     C**   with a position change type of blank.                        **
+     C********************************************************************
+     C           SRCHTX    BEGSR                           * S R C H T X *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHTX'  @STK,Q
+     C*
+     C* If the Payable indicator is '0'
+     C*   add the change quantity
+     C*     to the total transaction number of contracts at start
+     C*  else
+     C*   add the change quantity
+     C*     to the total transaction number of contracts at end
+     C*  Endif
+     C*
+     C           PAYID     IFEQ '0'
+     C                     ADD  WPOCQ     TTCTS             contrs start
+     C                     ELSE
+     C                     ADD  WPOCQ     TTCTE             contrs at end
+     C                     ENDIF
+     C*
+     C           EXCHTX    TAG                             * <<<=== EXCHTX
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHTA processes a POCHG4T record                  **
+     C**   with a position change type of "A".                          **
+     C********************************************************************
+     C           SRCHTA    BEGSR                           * S R C H T A *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHTA'  @STK,Q
+     C*
+     C* If the payable indicator is '0'
+     C*   add the position change amount
+     C*     to the total transaction charge amount at start
+     C*  else
+     C*   add to the total transaction charge amount at end
+     C*  Endif
+     C*
+     C* Add to the total settlement account charge amount
+     C*
+     C           PAYID     IFEQ '0'
+     C                     ADD  WPCGA     TTCHS             charges start
+     C                     ELSE
+     C                     ADD  WPCGA     TTCHE             charges end
+     C                     ENDIF
+     C*
+     C                     ADD  WPCGA     TSCHRG            settle charges
+     C*
+     C           EXCHTA    TAG                             * <<<=== EXCHTA
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHTB processes a POCHG4T record                  **
+     C**   with a position change type of "B".                          **
+     C********************************************************************
+     C           SRCHTB    BEGSR                           * S R C H T B *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHTB'  @STK,Q
+     C*
+     C* If the payable indicator is '0'
+     C*   add the saved position change amount
+     C*     to the total transaction commission amount at start
+     C*  else
+     C*   add the position change amount to the
+     C*     the total transaction commission amount at end
+     C*  Endif
+     C*
+     C* Add to the total settlement account commission amount
+     C*
+     C           PAYID     IFEQ '0'
+     C                     ADD  WPCGA     TTCOMS            comm at start
+     C                     ELSE
+     C                     ADD  WPCGA     TTCOME            comm at end
+     C                     ENDIF
+     C*
+     C                     ADD  WPCGA     TSCOMM            settle comm
+     C*
+     C           EXCHTB    TAG                             * <<<=== EXCHTB
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHTC processes a POCHG4T record                  **
+     C**   with a position change type of "C".                          **
+     C********************************************************************
+     C           SRCHTC    BEGSR                           * S R C H T C *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHTC'  @STK,Q
+     C*
+     C* If the payable indicator is '0'
+     C*   add the position change amount
+     C*     to the total transaction realised P/L amount at start
+     C*  else
+     C*   add the amount to the realised P/L amount at end
+     C*  Endif
+     C*
+     C* Add tha amount to the total settlement account premium amount
+     C*            and to the P&L realised final total
+     C*
+     C           PAYID     IFEQ '0'
+     C                     ADD  WPCGA     TTRPLS            real P&L start
+     C                     ELSE
+     C                     ADD  WPCGA     TTRPLE            real P&L end
+     C                     ENDIF
+     C*
+     C                     ADD  WPCGA     TSPREM            settle premium
+     C                     ADD  WPCGA     TSRPL             settle premium
+     C*
+     C           EXCHTC    TAG                             * <<<=== EXCHTC
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT handles initialisation requirements.        **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*___________________________________________________________________
+     C* This section is executed only once:
+     C*
+     C           W0NULL    IFEQ *BLANKS
+     C*
+     C* Open files according to the commitment control flag:
+     C*
+     C           P0CMT     IFEQ 'YES'
+     C                     OPEN TSCCY1
+     C                     ELSE
+     C                     OPEN TSCCYD
+     C                     ENDIF
+     C*
+     C* Read the FF data structure:
+     C*
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C*
+     C                     Z-ADD*ZERO     @TODAY
+     C*
+     C* Access bank details:
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST ' ##OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* If the bank details record was not found, database error:
+     C*
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'W0FILE
+     C                     MOVEL'*FIRST'  W0KEY            ***************
+     C                     Z-ADD11        W0ERNB           * Database    *
+     C                     MOVEL'MEM5004' W0MSGD           *  error 11.  *
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Set indicator 98 for the date routines:
+     C*
+     C*   *ON  = date is in mmddyy format;
+     C*   *OFF = date is in ddmmyy format;
+     C*
+     C           BJDFIN    COMP 'M'                      98
+     C*
+     C* Move the copyright statement to *NULL:
+     C*
+     C                     MOVE ##CPY,1   W0NULL 80
+     C*
+     C                     ENDIF
+     C*
+     C* End of once-only section.
+     C*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C* Clear the return code and suppression flag:
+     C*
+     C                     MOVE *BLANKS   P0RTN
+     C                     MOVE *BLANK    P0SUPP
+     C* Clear the path:
+     C                     MOVE *BLANKS   S#PATH
+     C* Initialise binds:
+     C                     Z-ADD1         S#PBIN
+     C                     Z-ADD1         S#TBIN
+     C                     Z-ADD1         W0BNDC
+     C* Reset sequence:
+     C                     Z-ADD*ZERO     W0OSEQ
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Clear totals:
+     C                     Z-ADD*ZERO     TTCTS            Contracts
+     C                     Z-ADD*ZERO     TTCTE             before / after
+     C*
+     C                     Z-ADD*ZERO     TTCHS            Charges before
+     C                     Z-ADD*ZERO     TTCHE            Charges after
+     C*
+     C                     Z-ADD*ZERO     TTRPLS           Realised P&L
+     C                     Z-ADD*ZERO     TTRPLE            before / after
+     C*
+     C                     Z-ADD*ZERO     TTCOMS           Commission
+     C                     Z-ADD*ZERO     TTCOME            before / after
+     C*
+     C                     Z-ADD*ZERO     TULPL            Tot. unrealised
+     C                     Z-ADD*ZERO     IULPL            Inst unrealised
+     C*
+     C                     Z-ADD*ZERO     TCDR1            Total PL rev
+     C                     Z-ADD*ZERO     TCDR0            Total PL real
+     C*
+     C                     Z-ADD*ZERO     TTRPLS           PL after trans
+     C                     Z-ADD*ZERO     TSRPL            PL realised
+     C*
+     C                     Z-ADD*ZERO     TSCHRG           Settle charges
+     C                     Z-ADD*ZERO     TSCOMM           Settle comm
+     C                     Z-ADD*ZERO     TSPREM           Settle premium
+     C*
+     C                     Z-ADD*ZERO     ##POSN 150       Position.
+     C*
+     C* Currency details arrays:
+     C*
+     C                     MOVE *BLANKS   #CC
+     C                     MOVE *BLANKS   #CD
+     C                     Z-ADD*ZERO     @C      30
+     C                     Z-ADD*ZERO     @D      30
+      *                                                                                       CCG015
+      ** Determine if Correspondence Manager Phase 1 Development                              CCG015
+      ** on iSeries is installed                                                              CCG015
+      *                                                                                       CCG015
+     C                     CALL 'AOSARDR0'                                                    CCG015
+     C                     PARM *BLANKS   PRTCD   7                                           CCG015
+     C                     PARM '*VERIFY' POPTN   7                                           CCG015
+     C                     PARM 'CCG015'  PSARD   6                                           CCG015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CCG015
+      *                                                                                       CCG015
+     C           PRTCD     IFEQ *BLANKS                                                       CCG015
+     C                     MOVE 'Y'       CCG015  1                                           CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVE 'N'       CCG015                                              CCG015
+      *                                                                                       CCG015
+     C           PRTCD     IFNE '*NRF    '                                                    CCG015
+     C                     MOVEL'SCSARDPD'W0FILE                                              CCG015
+     C                     MOVEL'*CALL   'W0KEY                                               CCG015
+     C                     Z-ADD13        W0ERNB                                              CCG015
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG015
+     C                     EXSR SRERR                                                         CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C           *LIKE     DEFN P0CMT     W0CMT                                               CCG015
+     C                     MOVELP0CMT     W0CMT                                               CCG015
+      *                                                                                       CCG015
+      ** Initialise XML increment                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR INIXML                                                        CCG015
+      *                                                                                       CCG015
+     C*
+     C           EXINIT    TAG                             * <<<=== EXINIT
+     C*
+     C* Remove subroutine name from stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRDEFN contains definitions only.                  **
+     C**  It is not executed.                                           **
+     C********************************************************************
+     C           SRDEFN    BEGSR                           * S R D E F N *
+     C*
+     C* Reference definitions:
+     C*
+     C           *LIKE     DEFN DEPBIN    W0BNDC
+     C           *LIKE     DEFN DEPBIN    S#PBIN
+     C           *LIKE     DEFN DETBIN    S#TBIN
+     C           *LIKE     DEFN DEFSLI    W0FSLI
+     C           *LIKE     DEFN DEOSEQ    W0OSEQ
+     C           *LIKE     DEFN LSDA      @TODAY
+     C*
+     C           *LIKE     DEFN RLPLC     WRLPL            Realised P&L
+     C           *LIKE     DEFN RLPLC     TCDR0            CD P&L realised
+     C           *LIKE     DEFN RLPLC     TCDR1            CD P&L reversed
+     C           *LIKE     DEFN RLPLC     TSRPL            Total real P&L
+     C*
+     C           *LIKE     DEFN POCQD     WPOCQ            Pos change qty
+     C           *LIKE     DEFN PCGAD     WPCGA            Pos change amnt
+     C*
+     C           *LIKE     DEFN POCQD     TTCTS            Contracts at
+     C           *LIKE     DEFN POCQD     TTCTE             start and end
+     C*
+     C           *LIKE     DEFN PCGAD     TTCHS            Charges at
+     C           *LIKE     DEFN PCGAD     TTCHE             start and end
+     C           *LIKE     DEFN PCGAD     TSCHRG           Settle charges
+     C           *LIKE     DEFN PCGAD     TTCOMS           Commission at
+     C           *LIKE     DEFN PCGAD     TTCOME            start and end
+     C           *LIKE     DEFN PCGAD     TSCOMM           Settle comm
+     C           *LIKE     DEFN PCGAD     TTRPLS           Real P&L start
+     C           *LIKE     DEFN PCGAD     TTRPLE           Real P&L end
+     C           *LIKE     DEFN PCGAD     TSPREM           Settle premium
+     C*
+     C           *LIKE     DEFN ULPLE     TULPL            Tot. unrealised
+     C           *LIKE     DEFN ULPLE     IULPL            Inst unrealised
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           *LIKE     DEFN POCDD     POCDO            Pos change date
+     C           *LIKE     DEFN REVID     REVIO            Reversal indic
+     C           *LIKE     DEFN BRCA      BRCAPG
+     C           *LIKE     DEFN CBCD      CBCDPG
+     C           *LIKE     DEFN ISTT      ISTTPG
+     C           *LIKE     DEFN YRNO      YRNOPG
+     C           *LIKE     DEFN MTHN      MTHNPG
+     C           *LIKE     DEFN PCAL      PCALPG
+     C           *LIKE     DEFN STRP      STRPPG
+     C           *LIKE     DEFN ISCY      ISCYPG
+     C           *LIKE     DEFN RLPLC     RLPL             Released P&L
+     C           *LIKE     DEFN AOSIC     AOSI             Appear on stmt
+     C           *LIKE     DEFN ATCIC     ATCI             Appear on telex
+     C           *LIKE     DEFN PAYID     PAYI             Payable indic
+     C           *LIKE     DEFN PCGAD     PCGA             Pos change amnt
+     C           *LIKE     DEFN PCGTD     PCGT             Pos change type
+     C           *LIKE     DEFN POCDD     POCD             Pos change date
+     C           *LIKE     DEFN POCQD     POCQ             Pos change qty
+     C           *LIKE     DEFN PUPID     PUPI             Pos update ind
+     C           *LIKE     DEFN REVID     REVI             Reversal indic
+     C           *LIKE     DEFN TKDM      Z#TKDM
+     C           *LIKE     DEFN MNPF      Z#MNPF
+     C*
+     C           *LIKE     DEFN LSPO      NETP
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Key lists:
+     C*
+     C* TSCCYx:
+     C           KKCCY1    KLIST                           Key by:
+     C                     KFLD           P0BRCA            branch;
+     C                     KFLD           CBCD              cust / broker;
+     C                     KFLD           CCY               currency.
+     C* POSTNC1:
+     C           KKPOST    KLIST                           Key by:
+     C                     KFLD           P0BRCA            branch;
+     C                     KFLD           CBCD              cust / broker;
+     C                     KFLD           CCY               currency.
+     C* POCHGxC:
+     C           KKCHG4    KLIST                           Key by:
+     C                     KFLD           BRCA              branch;
+     C                     KFLD           CBCD              cust / broker;
+     C                     KFLD           ISTT              instrument;
+     C                     KFLD           YRNO              year;
+     C                     KFLD           MTHN              month;
+     C                     KFLD           PCAL              put / call;
+     C                     KFLD           STRP              strike price.
+     C* ACCNT:
+     C           KKACCT    KLIST                           Key by:
+     C                     KFLD           P0CUST            cust / broker;
+     C                     KFLD           P0CCY             currency;
+     C                     KFLD           P0ACCT            account;
+     C                     KFLD           P0ACSQ            account seq;
+     C                     KFLD           P0BRCA            branch.
+     C* PRICS1:
+     C           KKPRIC    KLIST                           Key by:
+     C                     KFLD           ISTT              instrument;
+     C                     KFLD           YRNO              year;
+     C                     KFLD           MTHN              month;
+     C                     KFLD           PCAL              put / call;
+     C                     KFLD           STRP              strike price.
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* Standard program error handling routine:
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* Standard database error handling routine:
+     C*
+     C/COPY CGCPYSRC,SRERRC
+      ********************************************************************                    CCG015
+     C/EJECT                                                                                  CCG015
+      ********************************************************************                    CCG015
+      *                                                                                       CCG015
+      ** Subroutine for Correspondence Manger Phase 1 Development on                          CCG015
+      ** iSeries                                                                              CCG015
+      *                                                                                       CCG015
+     C/COPY CGCPYSRC,CGNWEX                                                                   CCG015
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     O**  POCHG4C -- Update the Appeared on statement flag (AOSI).      **
+     O********************************************************************
+     OPOCHGCCFE                EAOSIC
+     O                         AOSIC
+     O********************************************************************
+     O/EJECT
+     O********************************************************************
+     O**  POCHG4R -- Update the Appeared on statement flag (AOSI).      **
+     O********************************************************************
+     OPOCHGRCFE                EAOSIE
+     O                         AOSIE
+     O********************************************************************
+     O/EJECT
+     O********************************************************************
+     O**  POCHG4T -- Update the Appeared on statement flag (AOSI).      **
+     O********************************************************************
+     OPOCHGTCFE                EAOSID
+     O                         AOSID
+     O********************************************************************
+     O/EJECT
+     O********************************************************************
+     O**  TSCCYD -- Update the Statement required flag.                 **
+     O********************************************************************
+     OTSCCYDF E                ESTRQD
+     O                         STRQ
+     O********************************************************************
+     O**  TSCCYD -- Update the Period end values.                       **
+     O********************************************************************
+     O        E                EPEUPD
+     O                         BFSB
+     O                         LSDA
+     O                         NSTD
+     O                         STRQ
+     O********************************************************************
+     O/EJECT
+     O********************************************************************
+     O**  TSCCY1 -- Update the Statement required flag.                 **
+     O********************************************************************
+     OTSCCYDF1E                ESTRQ1
+     O                         STRQ
+     O********************************************************************
+     O**  TSCCY1 -- Update the Period end values.                       **
+     O********************************************************************
+     O        E                EPEUP1
+     O                         BFSB
+     O                         LSDA
+     O                         NSTD
+     O                         STRQ
+     O********************************************************************
+** ##CPY -- Copyright statement
+(c) Finastra International Limited 2001
+** ##GRP / ##RDEA -- Group sets and RDE information (see CGPACKI)
+FF_HDR0001 STMT_DATE  Date      | Header: Statement date
+FF_HDR0002 STMT_LSD   Date      |         Last statement date
+FF_HDR0003 FORATTENTN           |         For attention of
+FF_HDR0004 COB/INTER            |         Close business / interim flag
+BRANCH0001 BRANCH               | Branch 1:    Branch code
+BRANCH0002 BRANCH NAM           |        2:    Branch name
+CUST  0001 CUSTOMER             | Customer 1:  Customer number
+CUST  0002 CUST_NAME            |          2:  Customer name
+CUST  0003 CUST_ADR1            |          3:  Customer address line 1
+CUST  0004 CUST_ADR2            |          4:                        2
+CUST  0005 CUST_ADR3            |          5:                        3
+CUST  0006 CUST_ADR4            |          6:                        4
+CUST  0007 CUST_TOWN            |          7:                             086918
+ACOF  0001 ACOF_CODE                     Account Officer Code             089776
+ACOF  0002 ACOF_DEPT                     Account Officer Dept             089776
+ACOF  0003 ACOF_NAME                     Account Officer Name             089776
+ACOF  0004 ACOF_TELP                     Account Officer Telephone Num.   089776
+ACOF  0005 ACOF_TELX                     Account Officer Telephone Ext.   089776
+CCY   0001 CURRENCY             | Currency: Deal currency
+CCY   0002 CCY_DESC             |           Currency description
+INSTR 0001 INSTRUMENT           | Instrument: Instrument type
+INSTR 0002 INSTRNAME            |             Instrument name
+INSTR 0003 OTC_FLAG             |             Over-the-counter flag
+INSTR 0004 TICK_DENOM AmountL   |             Tick denominator
+MARKET0001 MARKET_COD           | Market: Market code
+MARKET0002 MARKET_NAM           |         Market name
+FFBFWD0001 BR_FWD_DAT Date      | Brought forward: B/Fwd date
+FFBFWD0002 LNG/SHTPOS AmountL   |                  Long/short position
+FFBFWD0003 LONG/SHORT           |                  Position flag
+FFBFWD0004 MONTH                |                  Month
+FFBFWD0005 YEAR                 |                  Year (yy)
+FFBFWD0006 PUT/CALL             |                  Put / call flag
+FFBFWD0007 STRIKEPRC  AmountL   |                  Strike price
+FFBFWD0008 BF_PRICE   AmountL   |                  B/Fwd price
+FFTRNS0001 POSNCHGDT  Date      | Details: Position change date
+FFTRNS0002 FF_TRN_NBR           |          Transaction number
+FFTRNS0003 REVERSED             |          Reversal flag
+FFTRNS0004 FF_TRN_TYP           |          Transaction type
+FFTRNS0005 CONTRCTPRC AmountL   |          Contract price
+FFTRNS0006 CLOSED_OUT           |          Closed-out flag
+FFTRNS0007 FF_TRN_NAR           |          Transaction narrative
+FFTTTL0001 TOT_CON_B  AmountL   | Running totals: Contracts before
+FFTTTL0002 TOT_COM_B  AmountL   |                 Commission before
+FFTTTL0003 TOT_CHG_B  AmountL   |                 Charges before
+FFTTTL0004 TOT_P/L_B  AmountL   |                 Profit/loss before
+FFTTTL0005 TOT_CON_A  AmountL   |                 Contracts after
+FFTTTL0006 TOT_COM_A  AmountL   |                 Commission after
+FFTTTL0007 TOT_CHG_A  AmountL   |                 Charges after
+FFTTTL0008 TOT_P/L_A  AmountL   |                 Profit/loss after
+FFDCHG0001 POSNCHGDT  Date      | Date change totals: Change date
+FFDCHG0002 TOT_PL_RL  AmountL   |                     P&L realised
+FFDCHG0003 TOT_PL_REV AmountL   |                     P&L reversed
+FFCFWD0001 C_FWD_DATE Date      | Carried forward: C/Fwd date
+FFCFWD0002 INST_UN_PL AmountL   |                  Unrealised P&L
+FFCFWD0003 INST_NET_P AmountL   |                  Net position
+FFCFWD0004 LONG/SHORT           |                  Position flag
+FFCFWD0005 CF_PRICE   AmountL   |                  C/Fwd price
+FF_FTR0001 FF_COMM    AmountL   | Account totals: Commission amount
+FF_FTR0002 FF_CHARGE  AmountL   |                 Charge amount
+FF_FTR0003 FF_PL_REAL AmountL   |                 P&L realised
+FF_FTR0004 FF_PL_UNRL AmountL   |                 P&L unrealised
+FF_FTR0005 FF_MARGIN  AmountL   |                 Margin
+FF_FTR0006 FF_COLLAT  AmountL   |                 Collateral

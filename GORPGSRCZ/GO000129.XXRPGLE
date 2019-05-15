@@ -1,0 +1,229 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                     MD020185
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GO000129 - Midas GPGLCUSL Replication Program                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. MD020185 *REDUNDANTDate 29Apr13               *
+      *  Prev Amend No. AR994306 *CREATE   Date 26Jun12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD020185 - Replace GO000129 with GPGLCSGEN                   *
+      *  AR994306 - Replication program for GPGLCUSL                  *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas GP Global Customer Details
+O    FGPGLCUSLL1UF A E           K DISK    INFSR(*PSSR)
+      *
+      ** Midas SD Customer Details
+     FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)
+      *
+      ** Midas GZ Branch Codes
+     FGZSDBRCHL0IF   E           K DISK    INFSR(*PSSR)
+      *
+      ** Midas GP Global A/c Officer Codes X-Reference
+     FGPACOFXL0 IF   E           K DISK    INFSR(*PSSR)
+      *
+      ** Midas GP Global Industries X-Reference
+     FGPINDSXL0 IF   E           K DISK    INFSR(*PSSR)
+      *
+      ** Midas GP Global Customers X-Reference
+     FGPCUSTXL1 IF   E           K DISK    INFSR(*PSSR)
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+B    D #_BR            S              3    DIM(999)
+B    D #_ZN            S             10    DIM(999)
+      *
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+     D WRUN            S              1A
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN PROCEDURE                                                *
+      *****************************************************************
+      *
+      ** Use SDCUSTPD key to chain to GPGLCUSLL1
+      *
+     C     *LOVAL        SETLL     SDCUSTL1
+     C                   READ      SDCUSTL1
+     C                   DOW       NOT %EOF(SDCUSTL1)
+O    C     K_SDCUSTL1    CHAIN     GPGLCUSL                           99
+O    C     K_SDCUSTL1    CHAIN     GPCUSTXD0                          97
+     C                   IF        *IN97 = *ON
+O    C                   CLEAR                   GPGLCUSL
+      *
+      ** Move SDCUSTPD fields into layout for GPGLCUSLL1
+      *
+     C                   EXSR      SRCustDetails
+     C                   IF        *IN99 = *ON
+O    C                   WRITE     GPGLCUSL
+     C                   ELSE
+O    C                   UPDATE    GPGLCUSL
+     C                   ENDIF
+     C                   ENDIF
+     C                   READ      SDCUSTL1
+     C                   ENDDO
+      *
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      * SRCustDetails - Set output fields for a local customer        *
+      *                                                               *
+      *****************************************************************
+     C     SRCustDetails BEGSR
+      *
+      ** Zone
+      *
+     C                   Z-ADD     1             #X
+     C     BBBRCD        LOOKUP    #_BR(#X)                               98
+     C                   EVAL      Zone_ID  = #_ZN(#X)
+      *
+B     ** Branch and Customer Number
+      *
+     C                   EVAL      CGBRCD   = BBBRCD
+     C                   EVAL      CGCUST   = BBCUST
+     C                   MOVE      BBCUST        CGCNUM
+      *
+B     ** Global Customer ID and Customer Shortname
+      *
+     C                   EVAL      CGGLOB   = BBBRCD + '-' + BBCUST
+     C                   EVAL      CGCSSN   = BBCSSN
+      *
+B     ** Cust. Name & Address 1 - 4
+      *
+     C                   EVAL      CGNA1    = BBCNA1
+     C                   EVAL      CGNA2    = BBCNA2
+     C                   EVAL      CGNA3    = BBCNA3
+     C                   EVAL      CGNA4    = BBCNA4
+      *
+B     ** Customer Report Name, Customer Report Town and
+B     ** Bank/non-bank Indicator
+      *
+     C                   EVAL      CGRNM    = BBCRNM
+     C                   EVAL      CGRTN    = BBCRTN
+     C                   EVAL      CGNBI    = BBBNBI
+      *
+B     ** Global Industry Code
+      *
+     C     GPINDSXK      CHAIN     GPINDSXL0                          98
+     C                   EVAL      CGICD    = IDGIND
+      *
+B     ** Global Account Officer Code
+      *
+     C     GPACOFXK      CHAIN     GPACOFXL0                          98
+     C                   EVAL      CGACO    = ACGACO
+      *
+B     ** Country of Citizenship
+B     ** Country of Location
+      *
+     C                   EVAL      CGCNCZ   = BBCNCZ
+     C                   EVAL      CGCOLC   = BBCOLC
+      *
+B     ** Date Deleted and Zone
+      *
+     C                   EVAL      CGDTDL   = BBDTDL
+     C                   EVAL      CGZONE   = Zone_ID
+      *
+B     ** SWIFT Financial Institution Indicator
+      *
+     C                   IF        BBSWFI = 'Y'
+     C                   EVAL      CGSWFI   = 'Y'
+     C                   ELSE
+     C                   EVAL      CGSWFI   = 'N'
+     C                   ENDIF
+      *
+B     ** Status
+      *
+     C                   IF        BBDTDL > 0  OR BBCLST = 'Y'
+     C                   EVAL      STATUS   = 'C'
+     C                   ELSE
+     C                   EVAL      STATUS   = 'L'
+     C                   ENDIF
+      *
+B     ** Local Customer Shortname, Report Name and Town, SWIFT ID
+      *
+     C                   EVAL      CGLCSSN = BBCSSN
+     C                   EVAL      CGLRNM = BBCRNM
+     C                   EVAL      CGLRTN = BBCRTN
+     C                   EVAL      CGCSID = BBCSID
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initial subroutine called automatically at pgm start *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+      *
+      ** Read all branches
+      *
+     C                   Z-ADD     0             #X                3 0
+     C     *LOVAL        SETLL     SDBRCHD0
+     C                   READ      SDBRCHD0                               98
+     C     *IN98         DOWEQ     *OFF
+     C                   ADD       1             #X
+     C                   MOVEL     A8BRCD        #_BR(#X)
+     C                   MOVEL     A8ZONE        #_ZN(#X)
+     C                   READ      SDBRCHD0                               98
+     C                   ENDDO
+O     *
+O     ** Key lists
+O     *
+O    C     K_SDCUSTL1    KLIST
+O    C                   KFLD                    BBBRCD
+O    C                   KFLD                    BBCUST
+      *
+     C     GPACOFXK      KLIST
+     C                   KFLD                    Zone_ID
+     C                   KFLD                    BBACOC
+      *
+     C     GPINDSXK      KLIST
+     C                   KFLD                    Zone_ID
+     C                   KFLD                    BBLICD
+      *
+     C                   MOVE      *BLANK        Zone_ID          10
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program Exception Error Routine                      *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+      *
+     C                   IF        WRUN = *BLANK
+     C                   EVAL      WRUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C                   ENDSR

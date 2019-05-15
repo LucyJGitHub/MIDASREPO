@@ -1,0 +1,575 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Incoming payments valid. s5/lvl 2')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0354 - Validate Incoming Payments - Screen 5, Level 2      *
+      *                                                               *
+      *  Function:  This program validates the level 2 screen 5       *
+      *             input for Incoming Payments                       *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSW209  *CREATE    Date 01Apr09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *                                                               *
+      *  50    ZALIGNm Initialised                                    *
+      *  90    ZALIGN pgm error                                       *
+      *                                                               *
+      *****************************************************************
+     E/COPY FTCPYSRC,SFTSWFTF
+      *
+      ** /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Copyright table
+      ** /Copy point for Arrays
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      ** End of Copysource for error processing
+      ** Error Codes Output
+      *
+     E                    ERCD       38  4               Codes
+     E/COPY FTCPYSRC,SFTSWFTE
+      *
+      ** Warning codes array
+      *
+     E                    WRN@       40  1
+     E/EJECT
+      *
+      ** /Copy point for Input specifications
+      *
+     ICPYR@#      DS
+      *
+      ** Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY FTCPYSRC,SRERRI
+      *
+      ** End of Program Error Processing source
+      ** Data Structures for parameters to access programs
+      *
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+      *
+      ** Data Structures used by access programs
+      *
+     ISDCURR    E DSSDCURRPD
+     ISDCUST    E DSSDCUSTPD
+     ISDCNST    E DSSDCNSTPD
+     IMEBICD    E DSMEBICDPD
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      ** Define rundat data area
+      *
+     IZMUSER    E DSZMUSER
+      *
+      ** User / Branch Data Area
+      *
+     E/COPY FTCPYSRC,SFT0355SB
+     E/COPY FTCPYSRC,SFTVALDI
+     E/COPY FTCPYSRC,SFT0355FB
+     E/COPY FTCPYSRC,SFT0355IB
+     E/COPY FTCPYSRC,SFTADDRI
+     E/COPY FTCPYSRC,SFT0355SA
+     ICLSWTK      DS
+      *
+     IDSMTR       DS
+      *
+      ** Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                       15  30 #MPREF
+     I                                    P   1   20#MPART
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     E/COPY FTCPYSRC,SFTVALCS
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      ** Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           SBDATA
+     C                     PARM           V#DATA
+     C                     PARM           FBDATA
+     C                     PARM           E#DATA
+     C                     PARM           C#DATA
+     C                     PARM           IBDATA
+     C                     PARM           SADATA
+      *
+      ** Set up Primary Reference for database errors
+      *
+     C                     MOVELSBDATA    W0PREF
+      *
+      ** Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      ** Determine the mode of processing and execute subroutine :-
+      ** Action Code : *VALID
+      *  --------------------
+      *
+      ** Called from FT0300 to validate all input fields on the detail
+      ** screen. Once verified, control returns to the calling program
+      ** where the appropriate error indicators are set on and the
+      ** processing continues.
+      *
+     C           W0ACT     CASEQ'*VALID  'SRPROC
+     C                     CAS            SRACT
+     C                     END
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      ** Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Validate All Detail Fields Entered                *
+      *             Seton appropriate indicators and set up the array *
+      *             of relevant error codes for display.              *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPROC    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+      *
+      ** Move warning array passed to WRN@ and error indicators
+      *
+     C                     MOVEAE#WARA    WRN@
+     C                     MOVEA*BLANKS   ERCD
+     C                     CLEARIBDATA
+     C                     Z-ADD0         X       50
+      *
+      ** Validate Remittance Information (Cover)
+      *
+     C                     EXSR SRICDP
+      *
+      ** Validate Sender to Receiver Information (Cover)
+      *
+     C                     EXSR SRICBB
+      *
+      ** Validate Instructed Currency and Amount (Cover)
+      *
+     C                     EXSR SRICIC
+      *
+      ** Move waring array back and errors
+      *
+     C                     MOVEAWRN@      E#WARA
+     C                     MOVEAERCD      C#ERCD
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXPROC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRICDP   : Validate Remittance Information (Cover)           *
+      *                                                               *
+      *  CALLED BY: SRPROC                                            *
+      *                                                               *
+      *****************************************************************
+     C           SRICDP    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRICDP'  @STK,Q
+      *
+     C           V#NWRK    IFEQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           V#MTPY    ANDEQ'202'
+     C           V#NWRK    OREQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           V#MTPY    ANDEQ'205'
+      *
+      ** Remittance Information (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C                     ELSE
+     C           SBCDP     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCDP1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00214' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCDP1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCDP
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SBCDP     IFNE *BLANKS
+     C                     MOVELSBCDP     ADDRSS
+      *
+     C                     MOVEL'Y'       ADLINE  1
+     C                     EXSR ADCHK
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCDP1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00215' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCDP1
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C           ENDCDP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRICBB   : Sender to Receiver Information (Cover)            *
+      *                                                               *
+      *  CALLED BY: SRPROC                                            *
+      *                                                               *
+      *****************************************************************
+     C           SRICBB    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRICBB'  @STK,Q
+      *
+     C           V#NWRK    IFEQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           V#MTPY    ANDEQ'202'
+     C           V#NWRK    OREQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           V#MTPY    ANDEQ'205'
+      *
+      ** Sender to Receiver (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C                     ELSE
+     C           SBCBB     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCBB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00212' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCBB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBB
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SBCBB     IFNE *BLANKS
+     C                     MOVELSBCBB     ADDRSS
+      *
+     C                     MOVEL'Y'       ADLINE
+     C                     EXSR ADCHK
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCBB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00213' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCBB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C           ENDCBB    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRICIC   : Validate Instructed Currency and Amount (Cover)   *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Process of Validation            *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRICIC    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRICIC'  @STK,Q
+      *
+     C           V#NWRK    IFEQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           V#MTPY    ANDEQ'202'
+     C           V#NWRK    OREQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           V#MTPY    ANDEQ'205'
+      *
+      ** Instructed Currency and Amount (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C                     ELSE
+     C           SBCICY    IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCICY    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00216' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCICY
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCIC
+     C                     ENDIF
+      *
+     C           SBCIAM    IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCIAM    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00217' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCIAM
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCIC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Instructed Currency (Cover)
+      *
+     C           SBCICY    IFNE *BLANKS
+     C           PMODE     IFEQ '*FRONT'
+     C           '?'       SCAN SBCICY                   01
+     C           *IN01     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCICY    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00218' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCICY
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCIC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY'    POPTN   7
+     C           SBCICY    PARM SBCICY    PCCY    3
+     C           SDCURR    PARM SDCURR    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCICY    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00218' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCICY
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCIC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Instructed Amount (Cover)
+      *
+     C           SBCIAM    IFNE *BLANKS
+     C           SBCICY    IFEQ *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCIAM    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00220' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCIAM
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCIC
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SBCIAM    ZFIELD    P
+     C                     MOVE '0'       *IN90
+      *
+     C                     CALL 'ZALIGN'               90
+     C                     PARM *BLANKS   ZRTN    7
+     C                     PARM           ZFIELD 16
+     C                     PARM A6NBDP    ZADEC   10
+     C                     PARM 13        ZADIG   20
+     C                     PARM *BLANKS   ZAFLD  16
+      *
+     C           ZRTN      IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSBCIAM    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00221' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IBCIAM
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCIC
+     C                     ENDIF
+      *
+     C                     MOVE ZFIELD    SBCIAM
+     C                     MOVE ZFIELD    FBCIAM
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C           ENDCIC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *
+     E/COPY FTCPYSRC,SFTADDRC
+     E/COPY FTCPYSRC,SFTADDRSC
+     E/COPY FTCPYSRC,SFTSWFTC
+     E/COPY FTCPYSRC,SFTSNMSC
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      ** Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 41 *
+     C                     Z-ADD41        W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+     C                     MOVEL*BLANKS   PMODE   6
+      *
+      ** Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *
+      ** /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      ** File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+     C/EJECT
+      *
+      ** /Copy point for Outputs
+      *
+     O/EJECT
+**  CPY@ table
+(c) Finastra International Limited 2009

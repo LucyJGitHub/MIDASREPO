@@ -1,0 +1,169 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Shared format inconsistencies')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade Module                                       *
+      *                                                               *
+      *  UP0026 - Report on shared format inconsistencies             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CUP002 *CREATE     Date 28Apr99               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CUP002 - Introduction of post-upgrade checks                 *
+      *                                                               *
+      *****************************************************************
+     FUPFMTCQFIF  E                    DISK
+     FUP0026P1O   E             37     PRINTER
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *LIKE     DEFN CFFSHD    WFSHD
+     C           *LIKE     DEFN CFLIB1    WLIB1
+     C           *LIKE     DEFN CFLIB2    WLIB2
+      *
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           1         SETLLUPFMTCD0
+      *
+     C                     READ UPFMTCD0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * If there are no records at all write 'no records'
+     C           *IN20     IFEQ *ON
+     C                     WRITENORECS                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     GOTO ENDPGM
+      *
+     C                     ENDIF
+      *
+     C           *IN20     DOUEQ*ON
+      *
+     C           CFFSHD    IFEQ WFSHD
+     C                     MOVE *BLANKS   @FSHD
+     C                     ELSE
+     C                     MOVELCFFSHD    @FSHD
+     C                     ENDIF
+     C                     MOVELCFFILE    @FILE
+     C                     Z-ADDCFLEN1    @LEN1
+     C                     Z-ADDCFLEN2    @LEN2
+     C           CFLIB1    IFEQ WLIB1
+     C                     MOVE *BLANKS   @LIB1
+     C                     ELSE
+     C                     MOVELCFLIB1    @LIB1
+     C                     ENDIF
+     C           CFLIB2    IFEQ WLIB2
+     C                     MOVE *BLANKS   @LIB2
+     C                     ELSE
+     C                     MOVELCFLIB2    @LIB2
+     C                     ENDIF
+      *
+     C                     WRITEDTL
+      *
+      * Store names for presentation purposes
+     C                     MOVELCFFSHD    WFSHD
+     C                     MOVELCFLIB1    WLIB1
+     C                     MOVELCFLIB2    WLIB2
+      *
+      * If overflow on then write header
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     MOVE *BLANKS   WFSHD
+     C                     MOVE *BLANKS   WLIB1
+     C                     MOVE *BLANKS   WLIB2
+     C                     SETOF                     37
+     C                     ENDIF
+      *
+     C                     READ UPFMTCD0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *                                                                **
+      * Write trailer and end program
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

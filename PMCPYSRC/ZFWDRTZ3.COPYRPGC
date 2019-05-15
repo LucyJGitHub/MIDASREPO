@@ -1,0 +1,235 @@
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Midas - Copy Source                                          *
+      *                                                               *
+      *  ZFWDRT - Calculates the Forward FX Rate between two ccys     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005 *CREATE     DATE 26JUN96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZFWDRT    BEGSR
+      *****************************************************************
+      *
+      *  Input Fields:
+      *       ZAMTF  15N0    'FROM' Amount
+      *       ZCCYF   3A     'FROM' Currency
+      *       ZCCYT   3A     'TO' Currency
+      *       ZMDINF  1A     'FROM' Currency Multiply/Divide Indicator
+      *       ZMDINT  1A     'TO' Currency Multiply/Divide Indicator
+      *       ZCDPF   1N0    'FROM' Currency Number of Decimal Places
+      *       ZCDPT   1N0    'TO' Currency Number of Decimal Places
+      *       ZSPOTF 13N8    'FROM' Currency Spot Rate
+      *       ZSPOTT 13N8    'TO' Currency Spot Rate
+      *       ZDATN   5N0    Forward Date (MIDAS day number format)
+      *       ZRDATE  5N0    Run Date, SDBANKPD (MIDAS day no. format)
+      *
+      *  Output Fields:
+      *       ZAMTT  15N0    ZAMTF converted into 'TO' Currency
+      *                      using Forward Rates
+      *       ZCRSRT 13N8    Fwd FX Rate between 'FROM' & 'TO' ccys
+      *                      (Always a multiply rate)
+      *
+      *  Work Fields:
+      *       DFWDS          Data structure (75 = 25 X 3P)
+      *       RFWDS          Data structure (175 = 25 X 7P)
+      *       DF             Forward Days array (25 X 3 0)
+      *       RF             Forward Rates array (25 X 13 8)
+      *       DYF            Forward Dates array (26 X 3 0)
+      *       RAF            Forward Rates array (26 X 13 8)
+      *       ZWCCY   3A     Currency
+      *       ZWSPOT 13N8    Spot Rate
+      *       I       1N0    Index to process 'FROM' and 'TO' ccys
+      *       J       2N0    Index to access elements of arrays
+      *       K       2N0    Index to access elements of arrays
+      *       ZWRATE 13N8    Forward Rate
+      *       ZRATEF 13N8    'FROM' Ccy Forward Rate (Input for ZCCYCN)
+      *       ZRATET 13N8    'TO' Ccy Forward Rate (Input for ZCCYCN)
+      *       ZWDAT1  5N0    Date (MIDAS day number format)
+      *       ZWDAT2  5N0    Date (MIDAS day number format)
+      *       ZWDDT1  5N0    Date (MIDAS day number format)
+      *       ZWDDT2  5N0    Date (MIDAS day number format)
+      *       ZWRAT1 13N8    Rate
+      *       ZWRAT2 13N8    Rate
+      *       ZWRDIF 15N8    Rate
+      *
+      *  Indicators Used:
+      *       *IN91,92,93,*  Used on search for ZDATN on Fwd Dates Arr
+      *       *IN99          Used on chain to LF/FWDRT
+      *
+      *  Also Required:
+      *       Data structure for Forward Days from file FWDRT (CHAR)
+      *       Data structure for Forward Rates from file FWDRT (CHAR)
+      *       Array for Forward Days from file FWDRT (NUM)
+      *       Array for Forward Rates from file FWDRT (NUM)
+      *       Array for all Fwd Dates (Run date & R.D.+days from file)
+      *       Array for all Fwd Rates (Spot rate & Rates from file)
+      *
+      *  Calls:  ZCCYCN
+      *
+      *  Called by:
+      *
+      *****************************************************************
+      *
+      **  Define input and output fields
+      *
+     C                     Z-ADDZAMTF     ZAMTF  150
+     C                     MOVE ZCCYF     ZCCYF   3
+     C                     MOVE ZCCYT     ZCCYT   3
+     C                     MOVE ZMDINF    ZMDINF  1
+     C                     MOVE ZMDINT    ZMDINT  1
+     C                     Z-ADDZCDPF     ZCDPF   10
+     C                     Z-ADDZCDPT     ZCDPT   10
+     C                     Z-ADDZSPOTF    ZSPOTF 138
+     C                     Z-ADDZSPOTT    ZSPOTT 138
+     C                     Z-ADDZDATN     ZDATN   50
+     C                     Z-ADDZRDATE    ZRDATE  50
+     C                     Z-ADD0         ZAMTT  150
+     C                     Z-ADD0         ZCRSRT 138
+      *
+      **  Calculate the forward rate first for the 'FROM' currency
+      **  and then for the 'TO' currency by using the same processing
+      *
+     C                     Z-ADD1         I       20
+     C           I         DOUEQ3                          B1
+      *
+      **  I = 1 : 'FROM' currency, I = 2 : 'TO' currency
+      *
+     C           I         IFEQ 1                          B2
+     C                     MOVE ZCCYF     ZWCCY   3
+     C                     Z-ADDZSPOTF    ZWSPOT 138
+     C                     ELSE                            X2
+     C                     MOVE ZCCYT     ZWCCY
+     C                     Z-ADDZSPOTT    ZWSPOT
+     C                     ENDIF                           E2
+      *
+      **  Initialise forward dates and forward rates arrays
+      *
+     C                     MOVEA*ZERO     DYF
+     C                     MOVEA*ZERO     RAF
+     C                     Z-ADDZRDATE    DYF,1
+     C                     Z-ADDZWSPOT    RAF,1
+      *
+      **  Access LF/FWDRT and set up further elements of the two arrays
+      *
+     C           ZWCCY     CHAINFWDRT                99
+      *
+     C           *IN99     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE DFW       DFWDS
+     C                     MOVE RFW       RFWDS
+     C                     Z-ADD1         J       30
+     C                     Z-ADD2         K       30
+      *
+      **  Set up each element of forward dates array
+      *
+     C           J         DOWLT26                         B3
+     C           DF,J      IFNE 0                          B4
+     C           ZRDATE    ADD  DF,J      DYF,K
+     C                     ADD  1         J
+     C                     ADD  1         K
+     C                     ELSE                            X4
+     C                     Z-ADD90        J
+     C                     ENDIF                           E4
+     C                     ENDDO                           E3
+      *
+      **  Set up elements of forward rates array
+      *
+     C                     MOVEARF        RAF,2
+      *
+     C                     ENDIF                           E2
+      *
+      **  Determine if ZDATN is equal to an element of fwd dates array
+      *
+     C                     Z-ADD1         J
+     C           ZDATN     LOKUPDYF,J                    91
+     C           *IN91     IFEQ '1'                        B2
+      *
+      **  ZDATN is equal to a forward date in the array
+      *
+     C                     Z-ADDRAF,J     ZWRATE 138
+      *
+      **  Determine if ZDATN is greater than last date of array
+      **  or if ZDATN falls between two dates in array
+      *
+     C                     ELSE                            X2
+     C                     MOVE '0'       *IN92
+     C                     MOVE '0'       *IN93
+      *
+     C           J         DOUGT26                         B3
+     C           *IN92     OREQ '1'
+     C           *IN93     OREQ '1'
+     C           ZDATN     IFLT DYF,J                      B4
+     C                     MOVE '1'       *IN92
+     C                     ELSE                            X4
+     C           DYF,J     IFEQ 0                          B5
+     C                     MOVE '1'       *IN93
+     C                     ELSE                            X5
+     C                     ADD  1         J
+     C                     ENDIF                           E5
+     C                     ENDIF                           E4
+     C                     ENDDO                           E3
+      *
+      **  ZDATN is greater than the last forward date in the array
+      *
+     C           *IN92     IFEQ '0'                        B3
+     C                     SUB  1         J
+     C                     Z-ADDRAF,J     ZWRATE
+      *
+      **  ZDATN is between two forward dates in the array
+      *
+     C                     ELSE                            X3
+     C                     Z-ADDDYF,J     ZWDAT2  50
+     C                     Z-ADDRAF,J     ZWRAT2 138
+     C                     SUB  1         J
+     C                     Z-ADDDYF,J     ZWDAT1  50
+     C                     Z-ADDRAF,J     ZWRAT1 138
+     C           ZDATN     SUB  ZWDAT1    ZWDDT1  50
+     C           ZWDAT2    SUB  ZWDAT1    ZWDDT2  50
+     C           ZWRAT2    SUB  ZWRAT1    ZWRDIF 158
+     C                     MULT ZWDDT1    ZWRDIF
+     C                     DIV  ZWDDT2    ZWRDIF    H
+     C           ZWRAT1    ADD  ZWRDIF    ZWRATE
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C           I         IFEQ 1                          B2
+     C                     Z-ADDZWRATE    ZRATEF 138
+     C                     ELSE                            X2
+     C                     Z-ADDZWRATE    ZRATET 138
+     C                     ENDIF                           E2
+      *
+     C                     ADD  1         I
+     C                     ENDDO                           E1
+      *
+      **  Call SR/ZCCYCN to calculate the forward FX rate
+      **  using the calculated forward rates
+      *
+     C                     EXSR ZCCYCN
+      *
+      **  If the cross rate mult/div ind is 'D', inverse fwd FX rate
+      *
+     C           ZCRSMD    IFEQ 'D'                        B1
+     C           1         DIV  ZCRSRT    ZCRSRT    H
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *
+      ********************************************************************

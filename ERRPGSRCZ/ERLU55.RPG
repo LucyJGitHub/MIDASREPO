@@ -1,0 +1,700 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Investment Company Codes Table Maint')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting                                   *
+      *                                                               *
+      *  ERLU55 - Investment Company Codes Table Maintenance          *
+      *                                                               *
+      *  Function:  This program maintains Investment Company Codes   *
+      *  (phase(s)) Input Cycle                                       *
+      *                                                               *
+      *  Called By: ERCLU55 - Investment Company Codes Table Maint.   *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX008  *CREATE    Date 17Feb00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses *
+      *                                                               *
+      *****************************************************************
+      *  Subroutines used                                             *
+      *  ----------------                                             *
+      *  *INZSR     - Program initialisation                          *
+      *                                                               *
+      *  #INZSF     - Subfile initialisation                          *
+      *  #LOAD      - Subfile load                                    *
+      *  #INP       - Input requested                                 *
+      *  #RLUP      - Rollup requested                                *
+      *  #ACTN      - Amend, Enquiry or Delete requested              *
+      *                                                               *
+      *  #INIT2     - Initialise screen 2                             *
+      *  #SCRN2     - Display screen 2                                *
+      *  #VAL       - Validate screen 2                               *
+      *  #UPD       - Update after validation                         *
+      *                                                               *
+      *  #CLR       - Clear message file                              *
+      *  #MSG       - Error messages                                  *
+      *                                                               *
+      *  #RFR1      - F5 requested on screen 1                        *
+      *  #RFR2      - F5 requested on screen 2                        *
+      *  #DEL       - F10 requested, delete                           *
+      *  #PRV       - F12 requested, go back to screen 1              *
+      *  #END       - End requested, exit program                     *
+      *****************************************************************
+     FERLU55DFCF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE ERLU55S0
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      *
+     FERLUCCV0UF  E           K        DISK                      A    UC
+     F            ERLUCCD0                          KRENAMEUPDIDX
+     F                                              KINFSR *PSSR
+     FERLUCCV1IF  E           K        DISK                           UC
+     F            ERLUCCD0                          KRENAMERTVIDX
+     F                                              KINFSR *PSSR
+     FERLUCCV2IF  E           K        DISK                           UC
+     F            ERLUCCD0                          KRENAMECNAME
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      /EJECT
+      *****************************************************************
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IINFDS#    E DSY2I#DSP
+      **  Display file information data structure
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+     IDSSDY     E DSDSSDY
+      *
+     I            DS
+     I                                        1  64 WWSEL
+     I                                        1   4 W1SEL
+     I                                        5  64 W2SEL
+      *
+     I            DS
+     I                                        1  64 WSCRN
+     I                                        1   4 DINCC
+     I                                        5  64 DINNM
+      *
+     I              'ABCDEFGHIJKLMNOPQRST-C         ALPHA
+     I              'UVWXYZ1234567890./#'
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           @PATH   4
+     C                     PARM           @CODE   4
+      *****************************************************************
+      *
+      **  Initialise & load subfile
+     C                     EXSR #INZSF
+     C                     EXSR #LOAD
+      *
+     C                     MOVE 'N'       WRLD    1
+     C           WRLD      DOWEQ'N'
+      *
+      **  Putover
+     C                     MOVE *ON       *IN86
+     C           *IN81     IFNE WWIN81
+     C                     MOVE *OFF      *IN86
+     C                     ENDIF
+     C                     MOVE *IN81     WWIN81  1
+      *
+      **  Display screen
+     C                     WRITE#MSGCT1
+     C                     EXFMTERLU55C0
+     C                     EXSR #CLR
+      *
+     C           *IN03     CASEQ*ON       #END
+     C           *IN05     CASEQ*ON       #RFR1
+     C           *IN09     CASEQ*ON       #INP
+     C           *IN27     CASEQ*ON       #RLUP
+     C                     CAS            #ACTN
+      *
+     C                     END
+     C                     END
+      /EJECT
+      ********************************************************************
+      *  #ACTN - Action Taken on Screen 1
+      ********************************************************************
+     C           #ACTN     BEGSR
+      *
+      **  Selection by user
+     C           WSCRN     IFNE WWSEL
+     C                     MOVELDINCC     W1SEL
+     C                     MOVELDINNM     W2SEL
+      **  Reload subfile
+     C                     MOVE 'Y'       WRLD
+     C                     GOTO EXACT
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ *ON                                - B1
+     C                     READCERLU55S0                 92
+     C           *IN92     DOWEQ*OFF                               - B2
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN32
+     C                     MOVE *OFF      *IN33
+     C                     MOVE *OFF      *IN98
+      *
+     C           @PATH     IFEQ 'REQS'
+     C           SACTN     IFNE '1'
+     C                     MOVE 'ERI0010' ZAMSID
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR #MSG
+     C                     ELSE
+     C                     MOVELSINCC     @CODE
+     C                     MOVE *ON       *IN03
+     C                     EXSR #END
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Action Delete
+     C           SACTN     IFEQ 'D'                                - B3
+     C                     MOVELSINCC     KINCC
+     C                     Z-ADD##SFRC    WPOS    40
+     C                     MOVELSACTN     WMODE2
+     C                     EXSR #INIT2
+     C                     EXSR #SCRN2
+      *
+      **  Reload subfile
+     C                     MOVEL'Y'       WRLD
+     C                     ELSE                                    - X3
+      *
+     C           SACTN     IFNE *BLANK                             - B4
+     C                     MOVE 'ERL0811' ZAMSID
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR #MSG
+     C           *IN98     IFEQ *ON                                - B5
+     C                     MOVE *ON       *IN84
+     C  N99                Z-ADD##RR      ##SFRC     99
+     C                     ELSE                                    - X5
+     C                     MOVE *OFF      *IN84
+     C                     MOVE *BLANK    SACTN
+     C                     ENDIF                                   - E5
+     C                     ENDIF                                   - E4
+     C                     ENDIF                                   - E3
+      *
+     C                     UPDATERLU55S0
+     C                     READCERLU55S0                 92
+     C                     ENDDO                                   - E2
+     C                     ENDIF                                   - E1
+      *
+     C           EXACT     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #INZSF - Initialise subfile
+      ********************************************************************
+     C           #INZSF    BEGSR
+      *
+     C                     SELEC
+     C           @PATH     WHEQ 'MENU'
+     C                     MOVE *OFF      *IN26
+     C                     MOVE *ON       *IN27
+     C           @PATH     WHEQ 'REQS'
+     C                     MOVE *ON       *IN26
+     C                     MOVE *OFF      *IN27
+     C                     ENDSL
+      **  Clear subfile
+     C                     Z-ADD0         ##RRMX  40 81
+     C                     SETON                     80
+     C                     WRITEERLU55C0
+     C                     SETOF                     80
+      *
+     C                     Z-ADD0         ##SFRC
+      *
+      **  Position in file ERLUCCV0 or ERLUCCV2
+     C           DINCC     IFEQ *BLANKS
+     C           DINNM     ANDEQ*BLANKS
+     C                     MOVEL'Y'       WRTVI   1
+     C           *LOVAL    SETLLRTVIDX
+     C                     READ RTVIDX                 8770
+     C                     ENDIF
+      *
+     C           DINCC     IFNE *BLANKS
+     C           DINNM     ANDNE*BLANKS
+     C           DINCC     ORNE *BLANKS
+     C           DINNM     ANDEQ*BLANKS
+     C                     MOVEL'Y'       WRTVI
+     C           DINCC     SETLLRTVIDX
+     C                     READ RTVIDX                 8770
+     C                     ENDIF
+      *
+     C           DINCC     IFEQ *BLANKS
+     C           DINNM     ANDNE*BLANKS
+     C                     MOVEL'N'       WRTVI
+     C           DINNM     SETLLCNAME
+     C                     READ CNAME                  8770
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #LOAD - Load subfile
+      ********************************************************************
+     C           #LOAD     BEGSR
+      *
+      **  Initiate screen line counter
+     C                     Z-ADD0         WWLIN   20
+     C                     Z-ADD##RRMX    ##RR    40
+      *
+      **  Setof record error indicators
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN32
+     C                     MOVE *OFF      *IN33
+      *
+     C           *IN70     DOWEQ*OFF
+     C           WWLIN     ANDLT13
+      *
+     C                     CLEARERLU55S0
+      *
+     C           X6LCTP    IFNE 'D'
+     C                     MOVE *BLANK    SACTN
+     C                     MOVELX6INCC    SINCC
+     C                     MOVELX6INNM    SINNM
+      *
+     C                     ADD  1         ##SFRC     81
+     C                     ADD  1         ##RR
+     C                     ADD  1         WWLIN
+      *
+     C                     WRITEERLU55S0
+     C                     ENDIF
+      *
+     C           WRTVI     IFEQ 'Y'
+     C                     READ RTVIDX                 8770 70=EOF
+     C                     ELSE
+     C                     READ CNAME                  8770 70=EOF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      **  No records found
+     C           ##RR      IFEQ 0
+     C           *IN70     ANDEQ*ON
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR #MSG
+     C                     ENDIF
+      *
+      **  Save
+     C                     Z-ADD##SFRC    WSFRC   40
+     C                     Z-ADD##RR      ##RRMX
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #INP - Input mode
+      ********************************************************************
+     C           #INP      BEGSR
+      *
+     C                     MOVEL'I'       WMODE2  1
+     C                     MOVEL*BLANKS   KINCC   4
+     C                     EXSR #INIT2
+     C                     EXSR #SCRN2
+      *
+      **  Reload subfile
+     C                     MOVE 'Y'       WRLD
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #INIT2 - Initialise screen 2
+      ********************************************************************
+     C           #INIT2    BEGSR
+      *
+     C                     SELEC
+     C           WMODE2    WHEQ 'D'
+     C                     MOVE *ON       *IN34
+     C                     MOVE *OFF      *IN35
+     C                     MOVE *ON       *IN38
+     C           WMODE2    WHEQ 'I'
+     C                     MOVE *OFF      *IN34
+     C                     MOVE *ON       *IN35
+     C                     MOVE *OFF      *IN36
+     C                     MOVE *OFF      *IN37
+     C                     MOVE *OFF      *IN38
+     C                     ENDSL
+      *
+     C           KINCC     CHAINRTVIDX               89
+     C           *IN89     IFEQ *OFF
+     C                     MOVELX6INCC    FINCC
+     C                     MOVELX6INNM    FINNM
+      *
+     C                     ELSE
+     C                     MOVEL*BLANKS   FINCC
+     C                     MOVEL*BLANKS   FINNM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #SCRN2 - Display screen 2
+      ********************************************************************
+     C           #SCRN2    BEGSR
+      *
+     C                     MOVEL'N'       WWEND   1
+     C           WWEND     DOWEQ'N'
+      *
+      ** If error write messages
+     C           *IN65     IFEQ '1'
+     C                     WRITE#MSGCT2
+     C                     ENDIF
+      *
+     C                     EXFMTERLU55F2
+     C                     EXSR #CLR
+      *
+     C           *IN03     CASEQ*ON       #END
+     C           *IN05     CASEQ*ON       #RFR2
+     C           *IN10     CASEQ*ON       #DEL
+     C           *IN12     CASEQ*ON       #PRV
+     C                     CAS            #VAL
+     C                     ENDCS
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #VAL  - Validate Screen 2
+      ********************************************************************
+     C           #VAL      BEGSR
+      *
+     C           WMODE2    IFEQ 'D'
+     C                     MOVE *ON       *IN65
+     C                     MOVE 'XXX9001' ZAMSID
+     C**********           MOVEL'XXUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR #MSG
+     C                     GOTO #EXVAL
+     C                     ENDIF
+      *
+      ** Input mode
+     C                     MOVEL'Y'       WWEND
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *OFF      *IN36
+     C                     MOVE *OFF      *IN37
+     C           ALPHA     CHEKRFINCC     WRESUL  10     87
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN65
+     C                     MOVE *ON       *IN36
+     C                     MOVEL'N'       WWEND
+     C                     MOVE 'ERL0813' ZAMSID
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR #MSG
+     C                     ENDIF
+      *
+     C           FINNM     IFEQ *BLANKS
+     C                     MOVE *ON       *IN65
+     C                     MOVE *ON       *IN37
+     C                     MOVEL'N'       WWEND
+     C                     MOVE 'ERL0812' ZAMSID
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     EXSR #MSG
+     C                     ENDIF
+      ** Insert Mode.                                                                         CER001
+     C           WMODE2    IFEQ 'I'                                                           CER001
+      *                                                                                       CER001
+     C           FINCC     CHAINUPDIDX               8988                                     CER001
+      *                                                                                       CER001
+      **  If record locked, display screen again, with information message.                   CER001
+     C           *IN88     IFEQ *ON                                                           CER001
+     C                     MOVEL'XXX9000' ZAMSID                                              CER001
+     C**********           MOVEL'XXUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'N'       WWEND                                               CER001
+     C                     MOVE *ON       *IN65                                               CER001
+     C                     EXSR #MSG                                                          CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** If the record exists, check if it has been deleted before                            CER001
+     C           *IN89     IFEQ *OFF                                                          CER001
+     C           X6LCTP    ANDNE'D'                                                           CER001
+     C                     MOVEL'ERL0814' ZAMSID                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'N'       WWEND                                               CER001
+     C                     MOVE *ON       *IN65                                               CER001
+     C                     MOVE *ON       *IN36                                               CER001
+     C                     EXSR #MSG                                                          CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+      *
+     C           WWEND     IFEQ 'Y'
+     C                     MOVELFINCC     KINCC
+     C                     EXSR #UPD
+     C                     ENDIF
+      *
+     C           #EXVAL    ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #UPD  - Update/Write
+      ********************************************************************
+     C           #UPD      BEGSR
+      *
+      ** Insert Mode.
+     C           WMODE2    IFEQ 'I'
+      **********                                                                              CER001
+     C********** KINCC     CHAINUPDIDX               8988                                     CER001
+      **********                                                                              CER001
+      ****If*record*locked,*display*screen*again,*with*information*message.                   CER001
+     C********** *IN88     IFEQ '1'                                                           CER001
+     C**********           MOVEL'XXX9000' ZAMSID                                              CER001
+     C**********           MOVEL'XXUSRMSG'ZAMSGF                                              CER001
+     C**********           MOVEL'N'       WWEND                                               CER001
+     C**********           MOVE *ON       *IN65                                               CER001
+     C**********           EXSR #MSG                                                          CER001
+     C**********           GOTO #EXUPD                                                        CER001
+     C**********           END                                                                CER001
+      **********                                                                              CER001
+      ***If*the*record*exists,*check*if*it*has*been*deleted*before                            CER001
+     C********** *IN89     IFEQ *OFF                                                          CER001
+     C********** X6LCTP    ANDNE'D'                                                           CER001
+     C**********           MOVEL'ERL0814' ZAMSID                                              CER001
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C**********           MOVEL'N'       WWEND                                               CER001
+     C**********           MOVE *ON       *IN65                                               CER001
+     C**********           EXSR #MSG                                                          CER001
+     C**********           GOTO #EXUPD                                                        CER001
+     C**********           ENDIF                                                              CER001
+      *
+     C                     MOVELFINCC     X6INCC
+     C                     MOVELFINNM     X6INNM
+     C                     MOVEL'I'       X6LCTP
+     C                     Z-ADDBJRDNB    X6LCDT
+     C           *IN89     IFEQ *OFF
+     C                     UPDATUPDIDX
+     C                     ELSE
+     C                     WRITEUPDIDX
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           #EXUPD    ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #DEL  - Delete record
+      ********************************************************************
+     C           #DEL      BEGSR
+      *
+      ** If the record does not exist, or has been modified by another user
+     C           KINCC     CHAINUPDIDX               8491
+      *
+      **  If record locked, display screen again, with information message.
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'XXX9000' ZAMSID
+     C**********           MOVEL'XXUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     MOVE 'N'       WWEND
+     C                     MOVE *ON       *IN65
+     C                     EXSR #MSG
+     C                     GOTO ENDDEL
+     C                     ENDIF
+      *
+     C           *IN84     IFEQ *ON
+     C                     MOVEL'XXX9000' ZAMSID
+     C**********           MOVEL'XXUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'N'       WWEND
+     C                     MOVE *ON       *IN65
+     C                     EXSR #MSG
+      *
+     C                     ELSE
+     C                     MOVEL'D'       X6LCTP
+     C                     Z-ADDBJRDNB    X6LCDT
+     C                     UPDATUPDIDX
+     C                     MOVEL'Y'       WWEND
+     C                     ENDIF
+      *
+     C           ENDDEL    ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #PRV  - Goto Screen 1
+      ********************************************************************
+     C           #PRV      BEGSR
+      *
+     C                     MOVEL'Y'       WWEND
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #RFR1 - Refresh Screen 1
+      ********************************************************************
+     C           #RFR1     BEGSR
+      *
+     C                     MOVEL*BLANKS   DINCC
+     C                     MOVEL*BLANKS   DINNM
+     C                     MOVEL*BLANKS   WWSEL
+     C                     MOVE 'Y'       WRLD
+     C                     EXSR #INZSF
+     C                     EXSR #LOAD
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #RFR2 - Refresh Screen 2
+      ********************************************************************
+     C           #RFR2     BEGSR
+      *
+     C                     EXSR #CLR
+     C                     WRITE#MSGCT2
+     C                     MOVEA'000'     *IN,35
+     C                     EXSR #INIT2
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #END  - Exit program
+      ********************************************************************
+     C           #END      BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #CLR  - Clear message file
+      ********************************************************************
+     C           #CLR      BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  #RLUP - Display screen
+      ********************************************************************
+     C           #RLUP     BEGSR
+      *
+     C                     Z-ADDWSFRC     ##SFRC
+      *
+     C   27                DO
+     C  N70                READPRTVIDX                   90
+     C  N70                READ RTVIDX                   90
+     C                     END
+      *
+     C                     EXSR #LOAD
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *  SR #MSG  - Error messages generation
+      ********************************************************************
+     C           #MSG      BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+     C           ZAMSGF    IFEQ *BLANK
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SR *INZSR - Program initialisation - Screen 1
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Check if switchable feature ULX008 installed
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'ULX008'  @FEAT   6
+      *
+      ** If feature not installed
+     C           @RTCD     IFNE *BLANKS
+     C                     EXSR #END
+     C                     ELSE
+     C                     OPEN ERLUCCV0
+     C                     OPEN ERLUCCV1
+     C                     OPEN ERLUCCV2
+     C                     OPEN ERLU55DF
+     C                     ENDIF
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C                     MOVELUSER      SUSER
+     C                     MOVELBJMRDT    SRUNA
+     C                     MOVELWSID      SWSID
+      *
+     C                     MOVEL*BLANKS   WWSEL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2005

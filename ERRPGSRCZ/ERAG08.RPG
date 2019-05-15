@@ -1,0 +1,991 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AGDL Extract Details')                           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - AGDL Reporting Module                                *
+      *                                                               *
+      *  ERAG08 - AGDL Reporting Extract Details                      *
+      *                                                               *
+      *  Function:  This program run at EOY to extract details        *
+      *  (phase(s)) Input cycle and end of year                       *
+      *                                                               *
+      *  Called By: ERCAG08  - AGDL extract details                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 11May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 03Oct04               *
+      *                 175783             Date 08Mar00               *
+      *                 174247             Date 08Feb00               *
+      *                 173116             Date 05Jan00               *
+      *                 166705             Date 18Nov99               *
+      *                 166704             Date 02Sep99               *
+      *                 CC0001             Date 19Jul99               *
+      *                 155076             Date 11Feb99               *
+      *                 ULX010  *CREATE    Date 15apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to upgrade to R4.02                   *
+      *  175783 - Do not report deal with VDAT > EOY                 *
+      *  174247 - Link does not work properly                         *
+      *  173116 - Correct number of participants                      *
+      *  166705 - Correct number of participants                      *
+      *  166704 - Date format do not match with ERAG10                *
+      *  CC0001 - Change Control 001 for Dealing Extract              *
+      *  155076 - New fonctionalities of ULX010                       *
+      *  ULX010 - AGDL Reporting statistiques sur les d{pôts garantis *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FDEALSDC IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Money Market Deals
+      *
+     F******CLOANCL IF  E           K        DISK         KINFSR *PSSR    155076
+      *
+      ** Loans file
+      *
+     F******AGDLACV0IF  E           K        DISK         KINFSR *PSSR    166705
+     FAGDLACV0IF  E           K        DISK         KINFSR *PSSR          166705
+     FAGDLACV1IF  E           K        DISK         KINFSR *PSSR          166705
+     F            AGDLACD0                          KRENAMEAGDLACDX       166705
+      *
+      ** AGDL Account file
+      *
+      *
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Account customers
+      *
+     FAGDLCUV0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** AGDL Customers linked
+      *
+     FAGDLSEPPIF  E                    DISK         KINFSR *PSSR
+      *
+      ** AGDL ICD setup
+      *                                                                   CC0001
+     FAGDLDLV0IF  E           K        DISK         KINFSR *PSSR          CC0001
+      ** AGDL Deposit File                                                CC0001
+      *
+     FAGDLEXPPO   E                    DISK         KINFSR *PSSR A
+      *
+      ** Extract details
+      *
+     FERAG08AUO   E             66     PRINTER
+     F                                              KINFDS SPOOLU
+      *
+     E                    POWER   1   7  7 3             Power Array
+      *
+     E**********          LIN         3  6 0                                                 CSD027A
+     E                    LIN         3  6                                                   CSD027A
+      ** Array containing CUSTOMERS  LINKED
+      *
+     E                    CPY@    1   1 80
+     IAGDLACDX                                                            166705
+     I              ALBRCA                          Z1BRCA                166705
+     I              ALCUST                          Z1CUST                166705
+     I              ALCURR                          Z1CURR                166705
+     I              ALACOD                          Z1ACOD                166705
+     I              ALACSQ                          Z1ACSQ                166705
+     I              ALPART                          Z1PART                166705
+     I              ALLIN1                          Z1LIN1                166705
+     I              ALLIN2                          Z1LIN2                166705
+     I              ALLIN3                          Z1LIN3                166705
+      ** Array containing Copyright statement
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure for acces programs
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure for acces programs
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+     ISDCUST    E DSSDCUSTPD
+      ** Data Structure for customer details
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+     ISDRETL    E DSSDRETLPD                                              166705
+     ISDACCT    E DSACCNTAB                                               166705
+     I              RECI                            XXRECI                166705
+     I              CNUM                            XXCNUM                166705
+     I              CCY                             XXCCY                 166705
+     I              ACOD                            XXACOD                166705
+     I              ACSQ                            XXACSQ                166705
+     I              ZZ006                           XXZZ06                166705
+     I              BRCA                            XXBRCA                166705
+     I              ATYP                            XXATYP                166705
+     I              STYP                            XXSTYP                166705
+     I              MFFQ                            XXMFFQ                166705
+     I              ACST                            XXACST                166705
+     I              DACO                            XXDACO                166705
+     I              DACC                            XXDACC                166705
+     I              ANAM                            XXANAM                166705
+     I              LDBL                            XXLDBL                166705
+     I              CLBL                            XXCLBL                166705
+     I              STFQ                            XXSTFQ                166705
+     I              STDY                            XXSTDY                166705
+     I              LSTD                            XXLSTD                166705
+     I              NSTD                            XXNSTD                166705
+     I              LSTP                            XXLSTP                166705
+     I              CFSB                            XXCFSB                166705
+     I              LMVD                            XXLMVD                166705
+     I              EPLB                            XXEPLB                166705
+     I              EPCB                            XXEPCB                166705
+     I              YTDB                            XXYTDB                166705
+     I              GLBT                            XXGLBT                166705
+     I              ADREF1                          XXADR1                166705
+     I              PRFC                            XXPRFC                166705
+     I              ZZ004                           XXZZ04                166705
+     I              ORED                            XXORED                166705
+     I              DLIM                            XXDLIM                166705
+     I              LRCR                            XXLRCR                166705
+     I              RTCB                            XXRTCB                166705
+     I              RTLB                            XXRTLB                166705
+     I              DITM                            XXDITM                166705
+     I              CITM                            XXCITM                166705
+     I              ADREF2                          XXADR2                166705
+     I              ZZ002                           XXZZ02                166705
+     I              CDIR                            XXCDIR                166705
+     I              CCIR                            XXCCIR                166705
+     I              ACNO                            XXACNO                166705
+     I              RETB                            XXRETB                166705
+     I              ODSC                            XXODSC                166705
+     I              ODLN                            XXODLN                166705
+     I              ODED                            XXODED                166705
+     I              DIOD                            XXDIOD                166705
+     I              FACT                            XXFACT                166705
+     I              FCNO                            XXFCNO                166705
+     I              EFAC                            XXEFAC                166705
+     I              HELD                            XXHELD                166705
+     I              MINB                            XXMINB                166705
+     I              LACD                            XXLACD                166705
+     I              LISP                            XXLISP                166705
+     I              RRNM                            XXRRNM                166705
+     I              DRIB                            XXDRIB                166705
+     I              DRIS                            XXDRIS                166705
+     I              DRCD                            XXDRCD                166705
+     I              DRIC                            XXDRIC                166705
+     I              DRIF                            XXDRIF                166705
+     I              DRDY                            XXDRDY                166705
+     I              NDID                            XXNDID                166705
+     I              LDID                            XXLDID                166705
+     I              LDIA                            XXLDIA                166705
+     I              SDAP                            XXSDAP                166705
+     I              LPAR                            XXLPAR                166705
+     I              DIIE                            XXDIIE                166705
+     I              DAIC                            XXDAIC                166705
+     I              MADI                            XXMADI                166705
+     I              GADI                            XXGADI                166705
+     I              DDIS                            XXDDIS                166705
+     I              DDIA                            XXDDIA                166705
+     I              OLDR                            XXOLDR                166705
+     I              OLDB                            XXOLDB                166705
+     I              OLDS                            XXOLDS                166705
+     I              CRIB                            XXCRIB                166705
+     I              CRIS                            XXCRIS                166705
+     I              CRCD                            XXCRCD                166705
+     I              CRIC                            XXCRIC                166705
+     I              CRIF                            XXCRIF                166705
+     I              CRDY                            XXCRDY                166705
+     I              NCID                            XXNCID                166705
+     I              LCID                            XXLCID                166705
+     I              LCIA                            XXLCIA                166705
+     I              SCAP                            XXSCAP                166705
+     I              LPAP                            XXLPAP                166705
+     I              CIIE                            XXCIIE                166705
+     I              CAIC                            XXCAIC                166705
+     I              MACI                            XXMACI                166705
+     I              GACI                            XXGACI                166705
+     I              CDIS                            XXCDIS                166705
+     I              DCIA                            XXDCIA                166705
+     I              OLCR                            XXOLCR                166705
+     I              OLCB                            XXOLCB                166705
+     I              OLCS                            XXOLCS                166705
+     I              LCD                             XXLCD                 166705
+     I              CHTP                            XXCHTP                166705
+     I              TNLU                            XXTNLU                166705
+     I              BRTCA                           XXBRTA                166705
+     I              NACSG                           XXNACG                166705
+     I              R4ACNT                          XXR4AT                166705
+     I              ENOC                            XXENOC                166705
+     I              EPNO                            XXEPNO                166705
+     I              ECFB                            XXECFB                166705
+     I              LTAB                            XXLTAB                166705
+     I              LTAC                            XXLTAC                166705
+     I              LTAS                            XXLTAS                166705
+     I              HCFB                            XXHCFB                166705
+     I              PTFR                            XXPTFR                166705
+     I              HLEX                            XXHLEX                166705
+     I              A5TIAC                          XXA5TC                166705
+     I              A5TIAN                          XXA5TN                166705
+     I              A5TIAS                          XXA5TS                166705
+     I              EUSB                            XXEUSB                166705
+      *
+      ** Audit report
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOLU      DS
+      *
+      ***  File Information Data Structure for ERAG08AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IPONS        DS                                                      CC0001
+     I**********                              1   60DSCNUM                            CC0001 CSD027A
+     I**********                              7  100DSACOD                             CC0001 CER001
+     I**********                             11  120DSACSQ                             CC0001 CER001
+     I**********                              1  100DSACNO                             CC0001 CER001
+     I                                        1   6 DSCNUM                                   CSD027A
+     I                                        7  160DSACOD                                    CER001
+     I                                       17  180DSACSQ                                    CER001
+     I                                        1  160DSACNO                                    CER001
+      /SPACE 3
+      ****************************************************************
+      ** Program Start                                               *
+      ****************************************************************
+      *
+     C                     EXSR #INIT
+      *
+      ** Read Money Market deals
+     C                     READ DEALSDC                  70
+      **
+     C           *IN70     DOWEQ*OFF                       B1
+      *
+      ** Access to DEALSDC
+     C                     EXSR #DEAL
+      *
+      ** Access to SDCUSTPD
+      *
+     C   40                EXSR #CUST
+      ** Access to AGDLCUV0
+      *
+     C   40                EXSR #LINK
+      *
+      ** Access to SDCURRPD
+      *
+     C   40                EXSR #CURR
+      *                                                                   CC0001
+      ** Fill Nbr of Participant                                          CC0001
+      *                                                                   CC0001
+     C   40                EXSR #NBPA                                     CC0001
+      *
+      ** Write record
+      *
+     C   40                EXSR #WRIT
+      *
+     C                     READ DEALSDC                  70
+     C                     ENDDO                           E1
+      **
+      ** Read Loans
+      **
+     C******               READ CLOANCL                  71               155076
+     C******     *IN71     DOWEQ*OFF                       B1             155076
+      ******                                                              155076
+      ***Access to CLOANCL                                                155076
+     C******               EXSR #LOAN                                     155076
+      ******                                                              155076
+      ***Access to SDCUSTPD                                               155076
+      ******                                                              155076
+     C***40*               EXSR #CUST                                     155076
+      ***Access to AGDLCUV0                                               155076
+      ******                                                              155076
+     C***40*               EXSR #LINK                                     155076
+      ******                                                              155076
+      ***Access to SDCURRPD                                               155076
+      ******                                                              155076
+     C***40*               EXSR #CURR                                     155076
+      ***Write record                                                     155076
+      ******                                                              155076
+     C***40*               EXSR #WRIT                                     155076
+     C******               READ CLOANCL                  71               155076
+     C******               ENDDO                           E1             155076
+      **
+      ** Read Account customers
+      **
+     C                     READ AGDLACV0                 72
+     C           *IN72     DOWEQ*OFF                       B1
+      *
+      ** Access to Accntab
+     C                     EXSR #ACCT
+      *
+      ** Access to SDCUSTPD
+      *
+     C   40                EXSR #CUST
+      ** Access to AGDLCUV0
+      *
+     C   40                EXSR #LINK
+      *
+      ** Access to SDCURRPD
+      *
+     C   40                EXSR #CURR
+      *
+      ** Write record
+      *
+     C   40                EXSR #WRIT
+      *
+     C                     READ AGDLACV0                 72
+     C                     ENDDO                           E1
+      ****************************************************************
+      ** Program End                                                 *
+      ****************************************************************
+     C                     SETON                       LR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #DEAL    Subroutine Access DEALSDC                            *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: *none                                                  *
+      *                                                               *
+      *****************************************************************
+     C           #DEAL     BEGSR
+      **
+     C                     MOVE *OFF      *IN40
+     C           *IN70     IFEQ '0'                        B1
+      *
+     C           RECI      IFEQ 'D'                        B2
+     C           VDAT      ANDLEBJRDNB                                    175783
+     C           DLST      ANDNE'FI'                                      175783
+     C           DTYP      IFEQ 'CD'                       B3
+     C           DTYP      OREQ 'TD'                       3
+     C******     DTYP      OREQ 'CL'                       3              155076
+     C******     DTYP      OREQ 'LN'                       3              155076
+     C******     DTYP      OREQ 'TI'                       3              155076
+      *
+     C******     DTYP      IFEQ 'CL'                       B4             155076
+     C******     DTYP      OREQ 'LN'                       4              155076
+     C******     DTYP      OREQ 'TI'                       4              155076
+     C******               Z-ADDDLNO      AXLNNO                          155076
+     C******               Z-ADD*ZEROS    AXDLNO                          155076
+     C******               ELSE                            X4             155076
+     C                     Z-ADDDLNO      AXDLNO
+     C**********           Z-ADD*ZEROS    AXLNNO                                              CLE148
+     C                     MOVEL*BLANKS   AXLNNO                                              CLE148
+     C******               ENDIF                           E4             155076
+     C                     MOVELBRCA      AXBRCA
+     C                     MOVELCCY       AXCURR
+     C**********           Z-ADDCNUM      ZZCNUM  60       From DEALSDC               166705 CSD027A
+     C                     MOVE CNUM      ZZCNUM  6        From DEALSDC                      CSD027A
+     C                     Z-ADDPCPL      AXAMNT
+     C                     Z-ADDAIPD      AXINTR
+     C                     Z-ADD0         AXACOD
+     C                     Z-ADD0         AXACSQ
+     C                     Z-ADD1         AXPART
+     C                     MOVE *ON       *IN40
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ACCT    Subroutine Access AGDLACV0                           *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: *none                                                  *
+      *                                                               *
+      *****************************************************************
+     C           #ACCT     BEGSR
+      **
+     C                     MOVE *OFF      *IN40
+     C           *IN72     IFEQ '0'                        B1
+     C                     MOVELALBRCA    AXBRCA
+     C                     MOVELALCURR    AXCURR
+     C                     Z-ADDALACOD    AXACOD
+     C                     Z-ADDALACSQ    AXACSQ
+     C                     Z-ADDALPART    AXPART
+     C                     Z-ADD0         AXDLNO
+     C**********           Z-ADD0         AXLNNO                                              CLE148
+     C                     MOVEL*BLANKS   AXLNNO                                              CLE148
+      *
+     C           KACCNT    CHAINACCNT                75
+     C           *IN75     IFEQ '0'                        B2
+     C           LDBL      ANDNE0                          2
+     C           LDBL      IFLT *ZEROS                     B3             155076
+     C***********          Z-ADDLDBL      AXAMNT                          155076
+     C                     Z-SUBLDBL      AXAMNT                          155076
+      *                                                                   155076
+     C           DAIC      ADD  CAIC      AXINTR
+      *                                                                   155076
+     C                     Z-SUBAXINTR    AXINTR                          155076
+      *                                                                   155076
+     C                     MOVE *ON       *IN40
+     C                     ENDIF                           E3             155076
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * #LINK    Subroutine Access AGDLCUVO                           *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+     C           #LINK     BEGSR
+     C                     MOVE *OFF      *IN40
+      *
+     C**********           Z-ADD*ZEROS    AXLINK                                             CSD027A
+     C**********           Z-ADD*ZEROS    AXCUST                                             CSD027A
+     C                     MOVE *BLANKS   AXLINK                                             CSD027A
+     C                     MOVE *BLANKS   AXCUST                                             CSD027A
+     C           CNUM      CHAINAGDLCUV0             76
+     C           *IN76     IFEQ *OFF                               B1
+     C********** ADLINK    IFEQ 0                                  B2                        CSD027A
+     C**********           Z-ADDADCUST    AXLINK                                             CSD027A
+     C**********           Z-ADDADCUST    AXCUST                                             CSD027A
+     C           ADLINK    IFEQ *BLANKS                            B2                        CSD027A
+     C                     MOVE ADCUST    AXLINK                                             CSD027A
+     C                     MOVE ADCUST    AXCUST                                             CSD027A
+     C                     ELSE                                    X2
+     C**********           Z-ADDADLINK    AXLINK                                             CSD027A
+     C**********           Z-ADDADCUST    AXCUST                                             CSD027A
+     C                     MOVE ADLINK    AXLINK                                             CSD027A
+     C                     MOVE ADCUST    AXCUST                                             CSD027A
+     C                     ENDIF                                   E2
+     C                     MOVE *ON       *IN40
+     C                     ENDIF                                   E1
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #CUST    Subroutine Access AOCUSTR0                           *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+     C           #CUST     BEGSR
+      *
+     C                     MOVE *OFF      *IN40
+     C                     MOVE CNUM      WNUM   10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM WNUM      WKEY10 10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS                    B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ****************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 001 *
+     C                     MOVELWNUM      DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+     C                     MOVELBBCRNM    AXNAME
+     C                     MOVELBBCRTN    AXTOWN
+     C                     MOVE *ON       *IN40
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #CURR    Subroutine Access AOCURRR0                           *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+     C           #CURR     BEGSR
+      *
+     C                     MOVE *OFF      *IN40
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM CCY       WKEY10 10
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS                    B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 003 *
+     C                     MOVELCCY       DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+     C                     Z-ADDA6SPRT    AXRATE
+     C                     Z-ADDA6NBDP    AXDECI
+     C                     Z-ADDA6SPRT    RATEF  138
+     C                     Z-ADDA6NBDP    CDPF    10
+     C                     MOVE A6MDIN    AXMULT
+     C                     MOVE A6MDIN    ZMDINF
+     C                     MOVE *ON       *IN40
+      *
+     C                     ENDSR
+      /EJECT                                                              155076
+      *****************************************************************   155076
+      ******                                                          *   155076
+      **#LOAN    Subroutine Access CLOANCL                            *   155076
+      ******                                                          *   155076
+      **Called by: MAIN                                               *   155076
+      ******                                                          *   155076
+      **Calls: *none                                                  *   155076
+      ******                                                          *   155076
+      *****************************************************************   155076
+     C******     #LOAN     BEGSR                                          155076
+      ******                                                              155076
+     C******               MOVE *OFF      *IN40                           155076
+     C******     *IN71     IFEQ '0'                        B1             155076
+      ******                                                              155076
+     C******     RECI      IFEQ 'D'                        B2             155076
+     C******     LTYP      IFNE '66'                       B3             155076
+     C******     LTYP      ORNE '67'                       3              155076
+     C******               MOVELBRCA      AXBRCA                          155076
+     C******               MOVELCCY       AXCURR                          155076
+     C******               Z-ADDLNRF      AXLNNO                          155076
+     C******               Z-ADD0         AXDLNO                          155076
+     C******               Z-ADDCPAM      AXAMNT                          155076
+     C******               Z-ADDAIPD      AXINTR                          155076
+     C******               Z-ADD0         AXACOD                          155076
+     C******               Z-ADD0         AXACSQ                          155076
+     C******               Z-ADD1         AXPART                          155076
+     C******               MOVE *ON       *IN40                           155076
+     C******               ENDIF                           E3             155076
+     C******               ENDIF                           E2             155076
+     C******               ENDIF                           E1             155076
+     C******               ENDSR                                          155076
+      ******                                                              155076
+      /EJECT                                                              155076
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Subroutine to do program initialisation              *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR                           ** #INIT **
+      *
+      ** Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Access to bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS                    B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 004 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+     C*                                                                   166705
+     C***  Access to Retail ICD                                           166705
+     C*                                                                   166705
+     C                     CALL 'AORETLR0'                                166705
+     C                     PARM *BLANKS   WRTCD                           166705
+     C                     PARM '*FIRST ' WOPTN                           166705
+     C           SDRETL    PARM SDRETL    DSFDY                           166705
+     C*                                                                   166705
+     C           WRTCD     IFNE *BLANKS                    B1             166705
+     C           *LOCK     IN   LDA                                       166705
+     C                     Z-ADD099       DBASE            ****************66705
+     C                     MOVEL'SDRETLPD'DBFILE           * DB ERROR 099 *66705
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************66705
+     C                     MOVELPGM       DBPGM     P                     166705
+     C                     OUT  LDA                                       166705
+     C                     EXSR *PSSR                                     166705
+     C                     ENDIF                           E1             166705
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'                        B1
+     C                     SETON                     98
+     C                     ENDIF                           E1
+      *
+      ** Access Agdlsepp
+      *
+     C           1         CHAINAGDLSEPP             72
+     C           *IN72     IFEQ *ON                        B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE            ****************
+     C                     MOVEL'AGDLSEPP'DBFILE           * DB ERROR 006 *
+     C                     MOVELAGCURR    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      **Access sdcurrpd
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM AGCURR    WKEY10 10
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS                    B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD005       DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 005 *
+     C                     MOVELAGCURR    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      *
+     C                     Z-ADDA6SPRT    RATET  138
+     C                     Z-ADDA6NBDP    CDPT    10
+     C                     MOVE A6MDIN    ZMDINT
+      *
+     C           KACCNT    KLIST
+     C                     KFLD           ALCUST
+     C                     KFLD           ALCURR
+     C                     KFLD           ALACOD
+     C                     KFLD           ALACSQ
+     C                     KFLD           ALBRCA
+      *                                                                   CC0001
+     C           KAGDL     KLIST                                          CC0001
+     C                     KFLD           KKRBR   3                       CC0001
+     C**********           KFLD           KKCUS   60                      CC0001             CSD027A
+     C                     KFLD           KKCUS   6                                          CSD027A
+     C                     KFLD           KKCCY   3                       CC0001
+     C**********           KFLD           KKACD   40                                   CC0001 CER001
+     C                     KFLD           KKACD  100                                   CC0001 CER001
+     C                     KFLD           KKACS   20                      CC0001
+      *
+     C                     ENDSR
+      /EJECT                                                              CC0001
+      *****************************************************************   CC0001
+      *                                                               *   CC0001
+      * #NBPA  - Subroutine to fill Nbr of Participant                *   CC0001
+      *                                                               *   CC0001
+      * Called by: MAIN                                               *   CC0001
+      *                                                               *   CC0001
+      * Calls: None                                                   *   CC0001
+      *                                                               *   CC0001
+      *****************************************************************   CC0001
+      *                                                                   CC0001
+     C           #NBPA     BEGSR                           ** #PART  **   CC0001
+      *                                                                   CC0001
+     C           PSTM      IFEQ 04                         B1             CC0001
+     C           PSTM      OREQ 05                                        CC0001
+     C           PSTM      OREQ 14                                        CC0001
+      *                                                                   CC0001
+     C           PSTM      IFEQ 05                         B2             CC0001
+     C                     MOVE *BLANKS   WACNO                           CC0001
+     C                     MOVE DSCNUM    WWCUS                           CC0001
+     C                     MOVE AXCURR    WWCCY                           CC0001
+     C                     MOVE DSACOD    WWACD                           CC0001
+     C                     MOVE DSACSQ    WWACS                           CC0001
+     C                     MOVE AXBRCA    WWRBR                           CC0001
+     C                     ELSE                            X2             CC0001
+     C           PSTM      IFEQ 14                         B3             166705
+     C                     MOVE DSACNO    WACNO                           CC0001
+     C                     MOVE *BLANKS   WWCUS                           CC0001
+     C                     MOVE *BLANKS   WWCCY                           CC0001
+     C                     MOVE *BLANKS   WWACD                           CC0001
+     C                     MOVE *BLANKS   WWACS                           CC0001
+     C                     MOVE *BLANKS   WWRBR                           CC0001
+     C                     ELSE                            X3             166705
+     C                     MOVE *BLANKS   WACNO                           166705
+     C                     MOVE ZZCNUM    WWCUS                           166705
+     C                     MOVE AXCURR    WWCCY                           166705
+     C                     MOVE BMACCD    WWACD                           166705
+     C                     MOVE 01        WWACS                           166705
+     C                     MOVE AXBRCA    WWRBR                           166705
+     C                     ENDIF                           E3             166705
+     C                     ENDIF                           E2             CC0001
+      *                                                                   CC0001
+     C                     CALL 'AOACCTR0'                                CC0001
+     C                     PARM           @RTCD   7                       CC0001
+     C                     PARM '*KEY    '@OPTN   7                       CC0001
+     C                     PARM           WACNO  10                       CC0001
+     C                     PARM           WWCUS   6                       CC0001
+     C                     PARM           WWCCY   3                       CC0001
+     C**********           PARM           WWACD   4                                    CC0001 CER001
+     C                     PARM           WWACD  10                                    CC0001 CER001
+     C                     PARM           WWACS   2                       CC0001
+     C                     PARM           WWRBR   3                       CC0001
+     C           SDACCT    PARM SDACCT    DSSDY                           CC0001
+      *                                                                   CC0001
+     C                     MOVE XXCNUM    KKCUS                           CC0001
+     C                     MOVE XXCCY     KKCCY                           CC0001
+     C                     MOVE XXACOD    KKACD                           CC0001
+     C                     MOVE XXACSQ    KKACS                           CC0001
+     C                     MOVE XXBRCA    KKRBR                           CC0001
+      *                                                                   CC0001
+     C******     KAGDL     CHAINAGDLACV0             88            CC0001 166705
+     C           KAGDL     CHAINAGDLACV1             88                   166705
+     C           *IN88     IFEQ *OFF                       B2             CC0001
+     C******               Z-ADDALPART    AXPART                   CC0001 166705
+     C******               Z-ADDALLIN1    ALLIN1                   CC0001 166705
+     C******               Z-ADDALLIN2    ALLIN2                   CC0001 166705
+     C******               Z-ADDALLIN3    ALLIN3                   CC0001 166705
+     C                     Z-ADDZ1PART    AXPART                          166705
+     C**********           Z-ADDZ1LIN1    ALLIN1                                      166705 CSD027A
+     C**********           Z-ADDZ1LIN2    ALLIN2                                      166705 CSD027A
+     C**********           Z-ADDZ1LIN3    ALLIN3                                      166705 CSD027A
+     C                     MOVE Z1LIN1    ALLIN1                                             CSD027A
+     C                     MOVE Z1LIN2    ALLIN2                                             CSD027A
+     C                     MOVE Z1LIN3    ALLIN3                                             CSD027A
+     C                     ELSE                            X2             CC0001
+     C                     Z-ADD1         AXPART                          CC0001
+     C**********           Z-ADD*ZEROS    ALLIN1                                      CC0001 CSD027A
+     C**********           Z-ADD*ZEROS    ALLIN2                                      CC0001 CSD027A
+     C**********           Z-ADD*ZEROS    ALLIN3                                      CC0001 CSD027A
+     C                     MOVE *BLANKS   ALLIN1                                             CSD027A
+     C                     MOVE *BLANKS   ALLIN2                                             CSD027A
+     C                     MOVE *BLANKS   ALLIN3                                             CSD027A
+     C                     ENDIF                           E2             CC0001
+     C                     ELSE                            X1             CC0001
+      *                                                                   CC0001
+     C           DLNO      CHAINAGDLDLV0             88                   CC0001
+     C           *IN88     IFEQ *OFF                       B2             CC0001
+     C                     Z-ADDAMPART    AXPART                          CC0001
+     C**********           Z-ADDAMLIN1    ALLIN1                                      CC0001 CSD027A
+     C**********           Z-ADDAMLIN2    ALLIN2                                      CC0001 CSD027A
+     C**********           Z-ADDAMLIN3    ALLIN3                                      CC0001 CSD027A
+     C                     MOVE AMLIN1    ALLIN1                                             CSD027A
+     C                     MOVE AMLIN2    ALLIN2                                             CSD027A
+     C                     MOVE AMLIN3    ALLIN3                                             CSD027A
+     C                     ELSE                            X2             CC0001
+     C                     Z-ADD1         AXPART                          CC0001
+     C**********           Z-ADD*ZEROS    ALLIN1                                      CC0001 CSD027A
+     C**********           Z-ADD*ZEROS    ALLIN2                                      CC0001 CSD027A
+     C**********           Z-ADD*ZEROS    ALLIN3                                      CC0001 CSD027A
+     C                     MOVE *BLANKS   ALLIN1                                             CSD027A
+     C                     MOVE *BLANKS   ALLIN2                                             CSD027A
+     C                     MOVE *BLANKS   ALLIN3                                             CSD027A
+     C                     ENDIF                           E2             CC0001
+      *                                                                   CC0001
+     C                     ENDIF                           E1             CC0001
+      *                                                                   CC0001
+     C                     ENDSR                                          CC0001
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #WRIT  - Subroutine to write a record to AGDLEXPP             *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #WRIT     BEGSR                           ** #WRIT  **
+      *
+      *
+      ** Add a record
+      *
+     C                     MOVEL'SYSTEM'  AXUSER
+     C******               TIME           AX12   120                      166704
+     C******               MOVELAX12      AXTIME                          166704
+     C******               MOVE AX12      AXDATE                          166704
+     C                     MOVE UDATE     AXDATE           System Date    166704
+     C                     TIME           AXTIME           System Time    166704
+     C                     MOVE AXLINK    AXOVER                          174247
+     C**
+     C           AXAMNT    ADD  AXINTR    AXTOTC
+     C**
+     C                     Z-ADDAXTOTC    ZAMTF
+     C                     MOVELAXCURR    ZCCYF
+     C                     MOVELAGCURR    ZCCYT
+     C                     Z-ADDRATEF     ZRATEF
+     C                     Z-ADDRATET     ZRATET
+     C                     Z-ADDCDPF      ZCDPF
+     C                     Z-ADDCDPT      ZCDPT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     AXTOTL
+      *
+     C           AXTOTL    DIV  AXPART    AXOWNT    H
+      **
+      ** Participants if greater than 1 =  write more records
+      **
+     C           AXPART    IFGT 1                          B1
+     C                     EXSR #PART
+     C                     ELSE                            X1
+     C                     Z-ADD1         AXSEQU                          173116
+     C                     WRITEAGDLEXD0
+     C                     ENDIF                           E1
+      **
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #PART  - Sr to write into AGDLEXPP when number of             *
+      *          Participant is greater than 1                        *
+      *                                                               *
+      * Called by: #WRIT                                              *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           #PART     BEGSR
+      *
+      **  Write first record with same customer
+     C                     Z-ADD1         AXSEQU                          173116
+     C*********            MOVE AXCUST    AXLINK                          173116
+     C                     WRITEAGDLEXD0
+     C                     Z-ADD1         X       20
+      *
+     C                     MOVE ALLIN1    LIN,1
+     C                     MOVE ALLIN2    LIN,2
+     C                     MOVE ALLIN3    LIN,3
+      *
+      **  Write others records
+     C******     X         DOWLEAXPART                     BW1            166705
+     C           X         DOWLTAXPART                     BW1            166705
+      *
+     C           X         IFGT 3                          B1
+     C                     MOVE 999999    AXLINK
+     C                     MOVEL*BLANKS   AXNAME                          CC0002
+     C                     MOVEL*BLANKS   AXTOWN                          CC0002
+     C                     ADD  1         AXSEQU                          174247
+     C                     WRITEAGDLEXD0
+     C                     ELSE                            X1
+      *
+     C***********LIN,X     IFNE 0                          B2             CC0001
+      *
+      ** Check if these customer is linked to another customer
+     C           LIN,X     CHAINAGDLCUV0             74
+     C           *IN74     IFEQ *OFF                       B3
+      *
+     C                     Z-ADD1         AXSEQU                          173116
+     C********** ADLINK    IFNE 0                          B4                                CSD027A
+     C**********           Z-ADDADLINK    AXLINK                                             CSD027A
+     C           ADLINK    IFNE *BLANKS                    B4                                CSD027A
+     C                     MOVE ADLINK    AXLINK                                             CSD027A
+     C                     ELSE                            X4
+     C**********           Z-ADDLIN,X     AXLINK                                             CSD027A
+     C                     MOVE LIN,X     AXLINK                                             CSD027A
+     C                     ENDIF                           E4
+      *
+     C                     ELSE                            X3
+     C                     ADD  1         AXSEQU                          173116
+     C**********           Z-ADD999999    AXLINK                                             CSD027A
+     C                     MOVE 999999    AXLINK                                             CSD027A
+     C                     MOVEL*BLANKS   AXNAME                          CC0002
+     C                     MOVEL*BLANKS   AXTOWN                          CC0002
+     C                     ENDIF                           E3
+     C                     WRITEAGDLEXD0
+     C***********          ENDIF                           E2             CC0001
+     C                     ENDIF                           E1
+      *
+     C                     ADD  1         X
+     C                     ENDDO                           EW1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       @RUN    1
+     C                     ENDIF                           - E1
+      *
+     C           DBASE     IFEQ 0                          - B1
+     C                     Z-ADD999       DBASE
+     C                     ENDIF                           - E1
+      *
+      ***  Print error message in Audit report
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     WRITEENDAU
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZCCYCN
+      /EJECT
+**  POWER
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Finastra International Limited 2005

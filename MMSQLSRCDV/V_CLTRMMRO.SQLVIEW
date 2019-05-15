@@ -1,0 +1,103 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Money Market Module                                           */
+/*                                                                             */
+/*       V_CLTRMMRO  - MM Rollover deals today                                 */
+/*                                                                             */
+/*       (c) Finastra International Limited 2013                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. MD023081 *CREATE   Date 19Nov13                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       MD023081 - [LE CORE][Enquiry][LE3180P1] Unknown Loan in the Facility  */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+     R_DN38                                                                     :
+  ,  R_DADN                                                                     :
+  ,  R_PCPL                                                                     :
+  ,  R_DTYP                                                                     :
+  ,  R_VDAT                                                                     :
+  ,  R_MDAT                                                                     :
+  ,  R_CCY                                                                      :
+  ,  R_FCCY                                                                     :
+  ,  R_SPR1                                                                     :
+  ,  R_MDI1                                                                     :
+  ,  R_NBD1                                                                     :
+  ,  R_SPR2                                                                     :
+  ,  R_MDI2                                                                     :
+  ,  R_NBDP                                                                     :
+  )                                                                             :
+                                                                                :
+  AS                                                                            :
+  SELECT                                                                        :
+    HKDN38                                                                      :
+  , HKDADN                                                                      :
+  , DEALS.PCPL                                                                  :
+  , DEALS.DTYP                                                                  :
+  , DEALS.VDAT                                                                  :
+  , DEALS.MDAT                                                                  :
+  , DEALS.CCY                                                                   :
+  ,  FCLT.FCCY                                                                  :
+  ,  CURR.A6SPRT                                                                :
+  ,  CURR.A6MDIN                                                                :
+  ,  CURR.A6NBDP                                                                :
+  , CURR2.A6SPRT                                                                :
+  , CURR2.A6MDIN                                                                :
+  , CURR2.A6NBDP                                                                :
+  FROM                                                                          :
+  MMDELDPP                                                                      :
+  LEFT JOIN                                                                     :
+  SDBANKPD BANK                                                                 :
+  ON                                                                            :
+  HKLCD = BANK.BJRDNB                                                           :
+                                                                                :
+  LEFT JOIN DEALSDC DEALS ON                                                    :
+       HKDN38 = DEALS.DLNO                                                      :
+                                                                                :
+  LEFT JOIN DLDLDCQD DLDC ON                                                    :
+       DEALS.DLNO = DLDC.F1DLNO                                                 :
+                                                                                :
+  LEFT JOIN FCLTYFM FCLT ON                                                     :
+       DLDC.F1FCCU = FCLT.CNUM                                                  :
+       AND DLDC.F1FACT = FCLT.FACT AND DLDC.F1FCNO = FCLT.FCNO                  :
+                                                                                :
+  LEFT JOIN SDCURRPD CURR ON                                                    :
+       DEALS.CCY = CURR.A6CYCD                                                  :
+                                                                                :
+  LEFT JOIN SDCURRPD CURR2 ON                                                   :
+       FCLT.FCCY = CURR2.A6CYCD                                                 :
+  WHERE                                                                         :
+  HKLCD = BANK.BJRDNB                                                           :
+  AND                                                                           :
+  HKRBSI = 'N'                                                                  :
+  ;                                                                             :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  R_DN38 IS 'Rollover Deal',                                                    :
+  R_DADN IS 'Original Deal Number',                                             :
+  R_PCPL IS 'Principal',                                                        :
+  R_DTYP IS 'Deal Type',                                                        :
+  R_VDAT IS 'Value Date',                                                       :
+  R_MDAT IS 'Maturity Date',                                                    :
+  R_CCY  IS 'Currency',                                                         :
+  R_FCCY IS 'Facility Currency',                                                :
+  R_SPR1 IS 'Spot Rate',                                                        :
+  R_MDI1 IS 'M/D Indicator',                                                    :
+  R_NBD1 IS 'No. of Dec. Places',                                               :
+  R_SPR2 IS 'Facility Spot Rate',                                               :
+  R_MDI2 IS 'Facility M/D Indicator',                                           :
+  R_NBDP IS 'Facility No. of Dec. Places');                                     :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas MM Rollovers Today                          ';                     :
+                                                                                :
+ 

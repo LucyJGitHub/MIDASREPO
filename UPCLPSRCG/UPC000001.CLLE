@@ -1,0 +1,99 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Drop and create stored procedures')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000001 - Drop and create stored procedures               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. CUT008              Date 08Feb11             */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CUP094             Date 11Feb05              */
+/*                      CPK021  *CREATE    Date 23Sep04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT008  - CRTOBJ rewrite.                                   */
+/*                 Change of CRTOBJ parameters.                      */
+/*       CUP094 - Upgrade not selecting between global and zone.     */
+/*       CPK021 - New Bridge option.                                 */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&XLIB &SRCLIB)                                            */ /*CUP094*/
+             PGM        PARM(&XLIB &SRCLIB &COMPARE)                                      /*CUP094*/
+ 
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMPARE) TYPE(*CHAR) LEN(8)                                  /*CUP094*/
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SUFFIX) TYPE(*CHAR) LEN(8)                                   /*CUP094*/
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             DCLF       FILE(UPDLVCPD)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&PREFIX) VALUE(%SST(&XLIB 1 2))
+             CHGVAR     VAR(&OWNER) VALUE(&PREFIX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&PREFIX *TCAT 'ADOPT')
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UPC000001')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&AUMBTP *EQ 'SQLPROC') THEN(DO)
+                CHGVAR     VAR(&SUFFIX) VALUE(%SST(&AUSRCF 3 8))                          /*CUP094*/
+                IF         COND(&SUFFIX *EQ &COMPARE) THEN(DO)                            /*CUP094*/
+/* Build string to drop procedure. */
+                   CHGVAR     VAR(&STM_STR) VALUE('DROP PROCEDURE' *BCAT +
+                                &XLIB *TCAT '/' *TCAT &AUMBNM)
+/* Call standard program to write to source file ... */
+                   CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+/* ... and run the SQL. */
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   MONMSG     MSGID(SQL9010)
+/* Create new procedure. */
+/**********        CRTOBJ     SRCMBR(&AUMBNM) SRCFILE(&SRCLIB/&AUSRCF) +               */ /*CUT008*/
+/**********                     PLIB(&XLIB) OWNER(&OWNER) AUTL(&AUTL)                  */ /*CUT008*/
+                   CRTOBJ     OBJ(&XLIB/&AUMBNM) SRCFILE(&SRCLIB/&AUSRCF) +
+                                SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                    /*CUT008*/
+                ENDDO                                                                     /*CUP094*/
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

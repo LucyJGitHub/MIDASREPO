@@ -1,0 +1,125 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Global Upd Acc Ext - Start TS')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC0110T1 - Global Update Acc Ext - Start TS                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGP017  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGP017 - Global Layer - GOC0100 Task Split                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOC011001')
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE(ACBXDVPD)
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                          VALUE(ACBXIXPD)
+             DCL        VAR(&NAME1) TYPE(*CHAR) LEN(5) VALUE('ACBXD')
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOACBXSRV')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
+             DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+ 
+             DCLF       FILE(CBCMPNLC)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ. */
+ 
+             SNDPGMMSG  MSG('GOC0110T1 - Midas GO Global Update +
+                          Accounts Extension - Start Task Split') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Determine full DTAQLIB library name. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Clear index file. */
+ 
+             CLRPFM     FILE(&INDEXFL)
+ 
+/* Remove all members from driving file */
+ 
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Clear main data queue. */
+ 
+             CALL       PGM(QCLRDTAQ) PARM(&RCVDTAQ '*LIBL')
+ 
+/* Retrieve number of sub-tasks. */
+ 
+CHAIN:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
+             IF         COND((&DHCOTT *NE &CNAME) *OR (&NAME2_N *NE +
+                          &CSEQ)) THEN(DO)
+                GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+/* Add all members and create data queues. */
+ 
+             CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
+LOOP:
+             IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
+                GOTO       CMDLBL(START)
+             ENDDO
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
+             ADDPFM     FILE(&DRIVER) MBR(&MEMBER)
+ 
+/* Create data queue if it doesn't already exist and set authorities. */
+ 
+             CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)
+             ENDDO
+             CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
+ 
+             IF         COND(&LOOP *EQ 1) THEN(DO)
+                   CHGVAR     VAR(&NAME2_N) VALUE(01000)
+                   CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
+             ENDDO
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
+             CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
+             GOTO       CMDLBL(LOOP)
+START:
+ 
+             GOTO       CMDLBL(END)
+ABNOR:
+             SNDPGMMSG  MSG('Program GOC0110T1 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

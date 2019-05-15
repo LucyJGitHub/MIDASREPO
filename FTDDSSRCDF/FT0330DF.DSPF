@@ -1,0 +1,863 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas FT Auto gen prompt info.')
+     A**************************************************************
+     A*                                                            *
+     A*  Midas - Funds Transfer Module
+     A*                                                            *
+     A*   DSPF/FT0330DF - FT Auto Generarion Prompt                *
+     A*                                                            *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                            *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CFT032             Date 11Sep06               *
+      *                 CGL029             Date 01Sep03               *
+      *                 221066             Date 04Sep03               *
+      *                 CSW203             Date 26May03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 090199             Date 12Jul95               *
+      *                 S01435             Date 18Oct93               *
+     A*                                                            *
+     A**************************************************************
+     A*                                                            *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  221066 - MT103/MT100 Customer text shld display when only    *
+      *           CFT014 is switched on                               *
+      *  CSW203 - SWIFT 2003 Standards Update                         *
+     A*  090199  -  Recompile to include new Multi-Language Suport    *
+     A*             messages IDs from 10.6 packaging into core.       *
+     A*  S01435  -  Incoming Message Management                    *
+     A*                                                            *
+     A**************************************************************
+     A*                                                            *
+     A*  Indicator usage for special processing                    *
+     A*                                                            *
+     A*  79 - Protect input fields                                 *
+     A*  78 - Multibranched system                                 *
+     A*  77 - Originating branches used                            *
+     A*  76 - Display error codes                                  *
+     A*  75 - Allow Input extra function keys                      *
+     A*  73 - Add mode                                             *
+     A*  72 - Profit Centre control                                *
+     A*  71 - "   "   "   "  "   "                                 *
+     A*  70 - "   "   "   "  "   "                                 *
+     A*  60 - Generated from Incoming Payments                     *
+     A*                                                            *
+     A**************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A          R FT0340S1                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  75                                  CF05(05 'Reset.')
+     A                                      CA07(07 'Next.')
+     A                                      CF15(15 'View.')
+     A  75                                  CF20(20 'Change Action')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1BRCA')
+     A                                      SETOF(32 'Invalid: #1ORBR')
+     A                                      SETOF(33 'Invalid: #1PYTP')
+     A                                      SETOF(34 'Invalid: #1PYST')
+     A                                      SETOF(35 'Invalid: #1STMT')
+     A                                      SETOF(36 'Invalid: #1SWPC')
+     A                                      SETOF(37 'Invalid: #1DST1')
+     A                                      SETOF(38 'Invalid: #1DST2')
+     A                                      SETOF(39 'Invalid: #1DST3')
+     A                                      SETOF(40 'Invalid: #1DST4')
+     A                                      SETOF(41 'Invalid: #1ODMT')
+     A                                      SETOF(42 'Invalid: #1ORC1')
+     A                                      SETOF(43 'Invalid: #1ORC2')
+     A                                      SETOF(44 'Invalid: #1ORC3')
+     A                                      SETOF(45 'Invalid: #1ORC4')
+     A                                      SETOF(46 'Invalid: #1ORBK')
+     A                                      SETOF(47 'Invalid: #1ORBB')
+     A                                      SETOF(48 'Invalid: #1SNCO')
+     A                                      SETOF(49 'Invalid: #1SNMT')
+     A                                      SETOF(50 'Invalid: #1SMAM')
+     A                                      SETOF(51 'Invalid: #1SMCY')
+     A                                      SETOF(52 'Invalid: #1SLDT')
+     A                                      SETOF(53 'Invalid: #1PYAM')
+     A                                      SETOF(54 'Invalid: #1PCCY')
+     A                                      SETOF(55 'Invalid: #1PVDT')
+     A                                      SETOF(56 'Invalid: #1RATE')
+     A                                      SETOF(57 'Invalid: #1OVRD')
+     A                                      SETOF(58 'Invalid: #1ADDC')
+     A                                      SETOF(59 'Invalid: #1BOKC')
+     A                                      SETOF(72 'Invalid: #1PRFC')
+     A                                      SETOF(61 'Invalid: #1RPAY')
+     A                                      SETOF(62 'Invalid: #1PAYF')
+     A                                      SETOF(63 'Invalid: #1DYIM')
+     A                                      SETOF(64 'Invalid: #1NDAT')
+     A                                      SETOF(65 'Invalid: #1FIND')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'FT0330F1'
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  2 26'Outgoing Payments Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3  6'Enter action code'
+     A            #1ACTC         1A  O  3 25TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 29'Payment reference'
+     A            #1PREF        15A  O  3 48
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A            #1STAT        10A  O  3 71DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A  78                              4 29'Booking branch'
+     A  78        #1BRCA         3A  B  4 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  31                                  DSPATR(RI PC)
+     A N31N79                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *
+     A  77                              4 51'Orig branch'
+     A  77        #1ORBR         3A  B  4 64
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A N32N79                               DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  5  2'Payment type'
+     A            #1PYTP         2A  B  5 16
+     A N25                                  OVRDTA
+     A  73
+     AO 79                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N33N79N73                            DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  5 20'Payment sub-type'
+     A            #1PYST         2A  B  5 38
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N34N79                               DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  5 42'Settlement type'
+     A            #1STMT         2A  B  5 59
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A N35N79                               DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  5 63'SWIFT priority'
+     A            #1SWPC         1A  B  5 79
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  36                                  DSPATR(RI PC)
+     A N36N79                               DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  6  2'Destination'
+     A            #1DST1        35A  B  7  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  37                                  DSPATR(RI PC)
+     A N37N79                               DSPATR(UL)
+     A N37                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1DST2        35A  B  7 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  38                                  DSPATR(RI PC)
+     A N38N79                               DSPATR(UL)
+     A N38                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1DST3        35A  B  8  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  39                                  DSPATR(RI PC)
+     A N39N79                               DSPATR(UL)
+     A N39                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1DST4        35A  B  8 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  40                                  DSPATR(RI PC)
+     A N40N79                               DSPATR(UL)
+     A N40                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  9  2'Ordering customer'
+      **Start of change CSW203
+     A**********                        9 45'MT100 Customer'                                  CSW203
+      **Start of change CFT032
+     A*N81N82***                        9 45'MT100 Customer'                                  CFT032
+     A**81*82***                        9 45'MT103 Customer'                                  CFT032
+      **Start of Change 221066
+     A**81******                        9 45'MT103/MT00 Customer'                             221066
+     A**81N82***                        9 45'MT103/MT00 Customer'                             CFT032
+      **End of Change 221066
+      **End of change CSW203
+     A                                 13 31'MT103 Account'                                   CFT032
+     A**********  #1ODMT        10A  B  9 70                                                  CFT032
+     A            #1ODMT        34A  B 13 45
+     A N25                                  OVRDTA
+      **Start of change CSW203
+     A*N81*82***                            DSPATR(ND)                                        CFT032
+     A**79******                            DSPATR(PR)                                        CSW203
+     A*N81*82*79                            DSPATR(PR)                                        CFT032
+     A  79                                  DSPATR(PR)                                        CFT032
+      **End of Change CSW203
+     A  41                                  DSPATR(RI PC)
+      **Start of change CSW203
+     A*N41N79***                            DSPATR(UL)                                        CSW203
+     A*N41N79N81                                                                              CFT032
+     A*AN822****                                                                              CFT032
+     A*ON41N799811                                                                            CFT032
+     A*A*82*****                                                                              CFT032
+     A*ON41N799811                          DDSPATR(UL)                                       CFT032
+     A N41N79                               DSPATR(UL)
+      **End of Change CSW203
+      **End of change CFT032
+     A N41                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CFT032
+     A**********  #1ORC1        35A  B 10  2                                                  CFT032
+     A            #1ORC1        35A  B  9 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  42                                  DSPATR(RI PC)
+     A N42N79                               DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**********  #1ORC2        35A  B 10 45                                                  CFT032
+     A            #1ORC2        35A  B 10  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  43                                  DSPATR(RI PC)
+     A N43N79                               DSPATR(UL)
+     A N43                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**********  #1ORC3        35A  B 11  2                                                  CFT032
+     A            #1ORC3        35A  B 10 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  44                                  DSPATR(RI PC)
+     A N44N79                               DSPATR(UL)
+     A N44                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**********  #1ORC4        35A  B 11 45                                                  CFT032
+     A            #1ORC4        35A  B 11  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  45                                  DSPATR(RI PC)
+     A N45N79                               DSPATR(UL)
+     A N45                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1ORC5        35A  B 11 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  66                                  DSPATR(RI PC)
+     A N66N79                               DSPATR(UL)
+     A N66                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**End of change CFT032
+      *
+     A                                 12  2'Ord Bank'
+     A**Start of change CGL029
+     A**********  #1ORBK        12A  B 12 12                                                  CGL029
+     A            #1ORBK        18A  B 12 11
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  46                                  DSPATR(RI PC)
+     A N46N79                               DSPATR(UL)
+     A N46                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**Start of change CGL029
+     A**78******  #1ORBB         3A  B 12 25                                                  CGL029
+     A  78        #1ORBB         3A  B 12 30
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  47                                  DSPATR(RI PC)
+     A N47N79                               DSPATR(UL)
+     A N47                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A**Start of change CGL029
+     A**********                       12 31'Sender''s correspondent'                         CGL029
+     A**********  #1SNCO        10A  B 12 55                                                  CGL029
+     A                                 12 34'Sender''s correspondent'
+     A            #1SNCO        10A  B 12 57
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  48                                  DSPATR(RI PC)
+     A N48N79                               DSPATR(UL)
+     A N48                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**Start of change CGL029
+     A**********                       12 67'MT202 ind'                                       CGL029
+     A**********  #1SNMT         1A  B 12 78                                                  CGL029
+     A                                 12 69'MT202 ind'
+     A            #1SNMT         1A  B 12 79
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  49                                  DSPATR(RI PC)
+     A N49N79                               DSPATR(UL)
+     A N49                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,FT0330DF01
+      *
+     A                                 14  2'Settle amount'
+     A            #1SMAM        14A  B 14 17
+     A N25                                  OVRDTA
+     A  60
+     AO 79                                  DSPATR(PR)
+     A  50                                  DSPATR(RI PC)
+     A N50N79N60                            DSPATR(UL)
+     A N50                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 14 33'Settle currency'
+     A            #1SMCY         3A  B 14 50
+     A N25                                  OVRDTA
+     A  60
+     AO 79                                  DSPATR(PR)
+     A  51                                  DSPATR(RI PC)
+     A N51N79N60                            DSPATR(UL)
+     A N51                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 14 55'Settle value date'
+     A            #1SLDT         6A  B 14 74
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  52                                  DSPATR(RI PC)
+     A N52N79                               DSPATR(UL)
+     A N52                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 15  2'Pay amount'
+     A            #1PYAM        14A  B 15 17
+     A N25                                  OVRDTA
+     A  60
+     AO 79                                  DSPATR(PR)
+     A  53                                  DSPATR(RI PC)
+     A N53N79N60                            DSPATR(UL)
+     A N53                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 15 33'Pay currency'
+     A            #1PCCY         3A  B 15 50
+     A N25                                  OVRDTA
+     A  60
+     AO 79                                  DSPATR(PR)
+     A  54                                  DSPATR(RI PC)
+     A N54N79N60                            DSPATR(UL)
+     A N54                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 15 55'Pay value date'
+     A            #1PVDT         6A  B 15 74
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  55                                  DSPATR(RI PC)
+     A N55N79                               DSPATR(UL)
+     A N55                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 16 11'Rate'
+     A            #1RATE        14A  B 16 17
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  56                                  DSPATR(RI PC)
+     A N56N79                               DSPATR(UL)
+     A N56                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 16 33'Override'
+     A            #1OVRD         1A  B 16 44
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  57                                  DSPATR(RI PC)
+     A N57N79                               DSPATR(UL)
+     A N57                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 16 55'Add/deduct charges ind'
+     A            #1ADDC         1A  B 16 78
+     A N25                                  OVRDTA
+     A  60
+     AO 79                                  DSPATR(PR)
+     A  58                                  DSPATR(RI PC)
+     A N58N79N60                            DSPATR(UL)
+     A N58                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 17  2'Book Code'
+      *
+     A            #1BOKC         2A  B 17 19
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  59                                  DSPATR(RI PC)
+     A N59N79                               DSPATR(UL)
+     A N59                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A N70                             17 26'Profit Centre'
+     A N70        #1PRFC         4A  B 17 46
+     A N25                                  OVRDTA
+     A  70
+     AON71
+     AO 79                                  DSPATR(PR)
+     A N70 72                               DSPATR(RI PC)
+     A N79
+     AAN70 71                               DSPATR(UL)
+     A N70N72                               DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 18  2'Regular payment'
+     A            #1RPAY         1A  B 18 19
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  61                                  DSPATR(RI PC)
+     A N61N79                               DSPATR(UL)
+     A N61                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 18 26'Payment frequency'
+     A            #1PAYF         1A  B 18 46
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  62                                  DSPATR(RI PC)
+     A N62N79                               DSPATR(UL)
+     A N62                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 18 56'Payment day in month'
+     A            #1DYIM         2A  B 18 78
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  63                                  DSPATR(RI PC)
+     A N63N79                               DSPATR(UL)
+     A N63                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 19  2'Next payment date'
+     A            #1NDAT         6A  B 19 21
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  64                                  DSPATR(RI PC)
+     A N64N79                               DSPATR(UL)
+     A N64                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 19 33'Final payment date'
+     A            #1FIND         6A  B 19 53
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  65                                  DSPATR(RI PC)
+     A N65N79                               DSPATR(UL)
+     A N65                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1ERR1        76     20  2
+     A N76                                  DSPATR(ND)
+     A  76                                  DSPATR(RI)
+     A                                      OVRDTA
+     A            #1ERR2        76     21  2
+     A N76                                  DSPATR(ND)
+     A  76                                  DSPATR(RI)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,FT0330DF03
+     A*=========================================================================
+     A          R FT0350S1                  TEXT('Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  75                                  CF05(05 'Reset.')
+     A                                      CA07(07 'Next.')
+     A                                      CF15(15 'View.')
+     A  75                                  CF20(20 'Change Action')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #2BRCA')
+     A                                      SETOF(32 'Invalid: #2ORBR')
+     A                                      SETOF(33 'Invalid: #2PYTP')
+     A                                      SETOF(34 'Invalid: #2PYST')
+     A                                      SETOF(35 'Invalid: #2SWPC')
+     A                                      SETOF(36 'Invalid: #2SND1')
+     A                                      SETOF(37 'Invalid: #2SND2')
+     A                                      SETOF(38 'Invalid: #2SND3')
+     A                                      SETOF(39 'Invalid: #2SND4')
+     A                                      SETOF(40 'Invalid: #2RCCO')
+     A                                      SETOF(41 'Invalid: #2ACBK')
+     A                                      SETOF(42 'Invalid: #2ACBB')
+     A                                      SETOF(43 'Invalid: #2BNC1')
+     A                                      SETOF(44 'Invalid: #2BNC2')
+     A                                      SETOF(45 'Invalid: #2BNC3')
+     A                                      SETOF(46 'Invalid: #2BNC4')
+     A                                      SETOF(47 'Invalid: #2BNC5')
+     A                                      SETOF(48 'Invalid: #2BOKC')
+     A                                      SETOF(72 'Invalid: #2PRFC')
+     A                                      SETOF(49 'Invalid: #2SMAM')
+     A                                      SETOF(50 'Invalid: #2SMCY')
+     A                                      SETOF(51 'Invalid: #2SLDT')
+     A                                      SETOF(52 'Invalid: #2PYAM')
+     A                                      SETOF(53 'Invalid: #2PCCY')
+     A                                      SETOF(54 'Invalid: #2PVDT')
+     A                                      SETOF(55 'Invalid: #2RATE')
+     A                                      SETOF(56 'Invalid: #2OVRD')
+     A                                      SETOF(57 'Invalid: #2ADDC')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'FT0330F2'
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  2 26'Incoming Payments Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3  6'Enter action code'
+     A            #2ACTC         1A  O  3 25TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 29'Payment reference'
+     A            #2PREF        15A  O  3 48
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A            #2STAT        10A  O  3 71DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A  78                              4  2'Booking branch'
+     A  78        #2BRCA         3A  B  4 17
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  31                                  DSPATR(RI PC)
+     A N31N79                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *
+     A                                  4 29'SWIFT reference'
+     A            #2MIR         28A  O  4 48
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  5 29'Sequence number'
+     A            #2SEQN         2A  O  5 48
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A  77                              5  2'Orig. branch'
+     A  77        #2ORBR         3A  B  5 17
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A N32N79                               DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  6  2'Payment type'
+     A            #2PYTP         2A  B  6 16
+     A N25                                  OVRDTA
+     A  73
+     AO 79                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N33N79N73                            DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  6 21'Payment sub-type'
+     A            #2PYST         2A  B  6 39
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N34N79                               DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  6 44'SWIFT priority code'
+     A            #2SWPC         1A  B  6 65
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A N35N79                               DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  8  2'Sender'
+     A            #2SND1        35A  B  9  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  36                                  DSPATR(RI PC)
+     A N36N79                               DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2SND2        35A  B  9 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  37                                  DSPATR(RI PC)
+     A N37N79                               DSPATR(UL)
+     A N37                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2SND3        35A  B 10  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  38                                  DSPATR(RI PC)
+     A N38N79                               DSPATR(UL)
+     A N38                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2SND4        35A  B 10 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  39                                  DSPATR(RI PC)
+     A N39N79                               DSPATR(UL)
+     A N39                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 12  2'Receiver''s correspondent'
+     A            #2RCCO        10A  B 12 31
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  40                                  DSPATR(RI PC)
+     A N40N79                               DSPATR(UL)
+     A N40                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 12 44'A/c with bank'
+     A**Start of change CGL029
+     A**********  #2ACBK        12A  B 12 61                                                  CGL029
+     A            #2ACBK        18A  B 12 58
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  41                                  DSPATR(RI PC)
+     A N41N79                               DSPATR(UL)
+     A N41                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**Start of change CGL029
+     A**78******  #2ACBB         3A  B 12 74                                                  CGL029
+     A  78        #2ACBB         3A  B 12 77
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  42                                  DSPATR(RI PC)
+     A N42N79                               DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 14  2'Beneficiary'
+     A            #2BNC1        35A  B 14 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  43                                  DSPATR(RI PC)
+     A N43N79                               DSPATR(UL)
+     A N43                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BNC2        35A  B 15  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  44                                  DSPATR(RI PC)
+     A N44N79                               DSPATR(UL)
+     A N44                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BNC3        35A  B 15 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  45                                  DSPATR(RI PC)
+     A N45N79                               DSPATR(UL)
+     A N45                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BNC4        35A  B 16  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  46                                  DSPATR(RI PC)
+     A N46N79                               DSPATR(UL)
+     A N46                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BNC5        35A  B 16 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  47                                  DSPATR(RI PC)
+     A N47N79                               DSPATR(UL)
+     A N47                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 17  2'Book Code'
+     A            #2BOKC         2A  B 17 18
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  48                                  DSPATR(RI PC)
+     A N48N79                               DSPATR(UL)
+     A N48                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A N70                             17 33'Profit Centre'
+     A N70        #2PRFC         4A  B 17 50
+     A N25                                  OVRDTA
+     A  70
+     AON71
+     AO 79                                  DSPATR(PR)
+     A N70 72                               DSPATR(RI PC)
+     A N79
+     AAN70 71                               DSPATR(UL)
+     A N70N72                               DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 18  2'Settle amount'
+     A            #2SMAM        14A  B 18 17
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  49                                  DSPATR(RI PC)
+     A N49N79                               DSPATR(UL)
+     A N49                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 18 33'Settle currency'
+     A            #2SMCY         3A  B 18 50
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  50                                  DSPATR(RI PC)
+     A N50N79                               DSPATR(UL)
+     A N50                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 18 55'Settle value date'
+     A            #2SLDT         6A  B 18 74
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  51                                  DSPATR(RI PC)
+     A N51N79                               DSPATR(UL)
+     A N51                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 19  2'Pay amount'
+     A            #2PYAM        14A  B 19 17
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  52                                  DSPATR(RI PC)
+     A N52N79                               DSPATR(UL)
+     A N52                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 19 33'Pay currency'
+     A            #2PCCY         3A  B 19 50
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  53                                  DSPATR(RI PC)
+     A N53N79                               DSPATR(UL)
+     A N53                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 19 55'Pay value date'
+     A            #2PVDT         6A  B 19 74
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  54                                  DSPATR(RI PC)
+     A N54N79                               DSPATR(UL)
+     A N54                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 20 11'Rate'
+     A            #2RATE        14A  B 20 17
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  55                                  DSPATR(RI PC)
+     A N55N79                               DSPATR(UL)
+     A N55                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 20 33'Override'
+     A            #2OVRD         1A  B 20 44
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  56                                  DSPATR(RI PC)
+     A N56N79                               DSPATR(UL)
+     A N56                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 20 55'Add/deduct charges ind'
+     A            #2ADDC         1A  B 20 78
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  57                                  DSPATR(RI PC)
+     A N57N79                               DSPATR(UL)
+     A N57                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            #2ERR1        76     21  2
+     A N76                                  DSPATR(ND)
+     A  76                                  DSPATR(RI)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,FT0330DF02
+     A*=========================================================================
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+     A            ##CMD1        78     22  2TEXT('Command Line 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##CMD2        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================

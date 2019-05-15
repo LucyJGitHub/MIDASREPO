@@ -1,0 +1,431 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BTS Process TRANSD')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Standing Data module
+     F*                                                               *
+     F*  SD4108 - BTS Process TRANSD                                  *
+     F*                                                               *
+     F*  Called By: SDC4100 - BTS COB Control Component               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD004             Date 10Mar99               *
+      *                 CFF004             Date 02Oct96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CSD004 - Report split by business entity                     *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  S01411 - New program for Business Transaction Statistics     *
+     F*           Switchable Feature.                                 *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F*   Insr   -  Counts Number of Inserted record
+     F*   Live   -  Counts Number of Live records
+     F*   Inst   -  Determines Instrument Type
+     F*   Output -  Writes a record to PF/SDBTFFPD
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F***01*******End*of*file*LF/TRANS11*******
+     F*  01       End of file LF/TRANSDM
+     F*  U7 & U8  Standard Database error indicators
+     F*  LR       Last Record - End of Program
+     F**---------------------------------------------------------------
+      *
+      * Transaction files to be processed
+      *
+     F***********TRANS11 IF  E           K        DISK                    CSD004
+     FTRANSDM IF  E           K        DISK                               CSD004
+      *
+     FINTYP   IF  E           K        DISK
+      *
+      * Business Transaction Statistics temporary file
+      * for today's data
+      *
+     FSDBTFFPDO   E                    DISK
+      *
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      * Define layout of SDBANKPD for AOBANKR0 call return string
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Define Access Object Branch detail                                CSD004
+      *                                                                   CSD004
+     ISDBRCH    E DSSDBRCHPD                                              CSD004
+      *
+      * Define Access Object call output string
+      *
+     I@FMT      E DSDSFDY
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Program Initiation Processing:                                *
+      *                                                               *
+      * Sets up the copyright statement.                              *
+      * Obtains rundate.                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Obtain rundate from SDBANKPD
+      *
+     C                     MOVEL'*FIRST ' BANKOP  7
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   BANKRC  7        Return code
+     C                     PARM           BANKOP           Option
+     C           SDBANK    PARM SDBANK    @FMT             Format
+      *
+      ** Check for error in SDBANKPD
+      *
+     C           BANKRC    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SD4108'  DBPGM            **************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001*
+     C                     MOVEL'BANK'    DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Save today's date
+      *
+     C           *LIKE     DEFN BJRDNB    RUNDAT
+     C                     Z-ADDBJRDNB    RUNDAT
+      *
+      ** Initialise the live and inserted record counters
+      *
+     C           *LIKE     DEFN E0TTLV    OCTTLV
+     C           *LIKE     DEFN E0TTIN    OCTTIN
+     C           *LIKE     DEFN E0TTLV    MTTTLV
+     C           *LIKE     DEFN E0TTIN    MTTTIN
+     C           *LIKE     DEFN BRCA      UCBRCA                          CSD004
+     C                     MOVEL*HIVAL    UCBRCA                          CSD004
+      *
+      *****************************************************************
+      *                                                               *
+      * Program Main Processing:                                      *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Read Transaction File until EOF
+      ** TRANSD11 contains live records only
+      *
+     C           *IN01     DOUEQ'1'
+     C***********          READ TRANS11                0101               CSD004
+     C                     READ TRANSDM                0101               CSD004
+      *
+      ** If record found
+      *
+     C           *IN01     IFEQ '0'
+      *
+      ** Use only the 'D'etails records with an accouting indicator       CSD004
+      *  set to 'N'                                                       CSD004
+      *                                                                   CSD004
+     C           RECI      IFEQ 'D'                                       CSD004
+     C           ACNI      ANDEQ'N'                                       CSD004
+      *                                                                   CSD004
+     C           UCBRCA    IFEQ *HIVAL                                    CSD004
+     C                     MOVELBRCA      UCBRCA                          CSD004
+     C                     ENDIF                                          CSD004
+      *                                                                   CSD004
+      ** On each break down on branch - output totals to                  CSD004
+      ** SDBTFFPD                                                         CSD004
+     C           BRCA      IFNE UCBRCA                                    CSD004
+     C                     MOVE UCBRCA    @DSNB                           CSD004
+     C                     EXSR RVBRCA                                    CSD004
+     C                     EXSR OUTPUT                                    CSD004
+     C                     MOVELBRCA      UCBRCA                          CSD004
+     C                     ENDIF                                          CSD004
+      ** count the Live records
+      *
+     C           FCDA      IFEQ 0
+     C           FCDA      OREQ RUNDAT
+      *
+      ** Chain to INTYP to obtain Instrument indicator (market/OTC)
+      ** to include it in today's count
+      *
+     C                     EXSR INST
+      *
+     C           *IN40     IFEQ '0'
+     C                     EXSR LIVE
+     C                     END
+      *
+     C                     END
+      *
+      ** count the Inserted records
+      *
+     C           ORED      IFEQ RUNDAT
+      *
+      ** Chain to INTYP to obtain Instrument indicator (market/OTC)
+      ** to include it in today's count
+      *
+     C                     EXSR INST
+      *
+     C           *IN40     IFEQ '0'
+     C                     EXSR INSR
+     C                     END
+      *
+     C                     END
+      *                                                                   CSD004
+     C                     ENDIF                                          CSD004
+      *
+     C                     ELSE                                           CSD004
+      *                                                                   CSD004
+      ** End of the file / TRANSDM                                        CSD004
+      ** At least one record found                                        CSD004
+     C           UCBRCA    IFNE *HIVAL                                    CSD004
+     C                     MOVE BRCA      @DSNB                           CSD004
+     C                     EXSR RVBRCA                                    CSD004
+     C                     ENDIF                                          CSD004
+      *
+     C                     END
+     C                     END
+      *                                                                   CSD004
+      *                                                                   CSD004
+      *
+      ***When*all*records*have*been*processed*-*output*totals*to*******   CSD004
+      ***SDBTFFPD**********************************                       CSD004
+      *
+     C           UCBRCA    IFNE *HIVAL                                    CSD004
+     C                     EXSR OUTPUT
+     C                     ENDIF                                          CSD004
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INST   - Determines Instrument type                           *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INST      BEGSR
+      *
+     C           ISTT      CHAININTYP                40
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * LIVE   - Calculates Live records                              *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LIVE      BEGSR
+      *
+      ** Instrument type is 'Over the counter'
+      *
+     C           ISTI      IFEQ 'Y'
+     C                     ADD  1         OCTTLV
+     C                     END
+      *
+      ** Instrument type is 'Market instrument'
+      *
+     C           ISTI      IFEQ 'N'
+     C                     ADD  1         MTTTLV
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INSR   - Calculates Inserted Records                          *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSR      BEGSR
+      *
+      ** Instrument type is 'Over the counter'
+      *
+     C           ISTI      IFEQ 'Y'
+     C                     ADD  1         OCTTIN
+     C                     END
+      *
+      ** Instrument type is 'Market instrument'
+      *
+     C           ISTI      IFEQ 'N'
+     C                     ADD  1         MTTTIN
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OUTPUT - Outputs today's totals to SDBTFFPD.                  *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTPUT    BEGSR
+      *
+      ** Move Transaction File name, Transaction File module
+      ** and Midas run date into SDBTFFPD fields ready for output
+      *
+     C                     MOVEL'TRANSD'  E0FNME
+     C                     MOVEL'FF'      E0MMOD
+     C                     Z-ADDBJRDNB    E0DATE
+      *
+      ** Move branch and company codes                                    CSD004
+      *                                                                   CSD004
+     C                     MOVE A8BRCD    E0BRCA                          CSD004
+     C                     MOVE A8CMCD    E0CMPY                          CSD004
+      *                                                                   CSD004
+      ** Output processing for 'Over the counter'
+      *
+      ** Move Transaction Type, total inserts today and total
+      ** live records into SDBTFFPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'OC'      E0TNTY
+     C                     Z-ADDOCTTIN    E0TTIN
+     C                     Z-ADDOCTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFFPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for 'Market instrument'
+      *
+      ** Move Transaction Type, total inserts today and total
+      ** live records into SDBTFFPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'MT'      E0TNTY
+     C                     Z-ADDMTTTIN    E0TTIN
+     C                     Z-ADDMTTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFFPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ***When*all*Transaction*Type*records*have*been*written*to********   CSD004
+      ***SDBTFFPD*-*end*program*normally***************                   CSD004
+      *
+      *  Reset the count variables for the next branch                    CSD004
+     C                     Z-ADD0         OCTTLV                          CSD004
+     C                     Z-ADD0         OCTTIN                          CSD004
+     C                     Z-ADD0         MTTTLV                          CSD004
+     C                     Z-ADD0         MTTTIN                          CSD004
+      *                                                                   CSD004
+     C                     ENDSR
+      /EJECT
+      *****************************************************************   CSD004
+      *                                                               *   CSD004
+      * RVBRCA - Retrieve Branch Details.                             *   CSD004
+      *                                                               *   CSD004
+      * Called by: Main processing                                    *   CSD004
+      *                                                               *   CSD004
+      *****************************************************************   CSD004
+      *                                                                   CSD004
+     C           RVBRCA    BEGSR                                          CSD004
+     C**********           CALL 'AOBRCHR0'                                             CSD004 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM           @RTCD   7                       CSD004
+     C                     PARM '*KEY   ' @OPTN   7                       CSD004
+     C                     PARM           @DSNB   3                       CSD004
+     C********** SDBRCH    PARM SDBRCH    @FMT                                         CSD004 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   CSD004
+     C           *LOCK     IN   LDA                                       CSD004
+     C                     Z-ADD002       DBASE                           CSD004
+     C                     MOVEL'SD4108'  DBPGM            ************** CSD004
+     C                     MOVEL'SDBRCHPD'DBFILE           *DB ERROR 002* CSD004
+     C                     MOVELBRCA      DBKEY            ************** CSD004
+     C                     OUT  LDA                                       CSD004
+     C                     EXSR *PSSR                                     CSD004
+     C                     END                                            CSD004
+     C                     ENDSR                                          CSD004
+      /EJECT                                                              CSD004
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

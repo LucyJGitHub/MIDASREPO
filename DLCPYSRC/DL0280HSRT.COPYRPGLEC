@@ -1,0 +1,104 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280HSRT                           *
+      *                                                               *
+      *  Last Amend No. MD031283 *CREATE   Date 23Feb15               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031283 - Different wrong/strange base rates applied to the *
+      *             backdated MM deals on a value date                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DLHSRT - Check and read the multiple BR records for          *
+      *           backdated MM deals                                  *
+      *                                                               *
+      *****************************************************************
+     C     DLHSRT        BEGSR
+      *
+      ** If a base rate change occurs for a backdated deal
+      ** check and read the multiple BR records
+      *
+     C                   IF        *IN03 = *ON    AND
+     C                             *IN41 = *ON    AND
+     C                             ORED  = BJRDNB AND
+     C                             VDAT  < BJRDNB
+      *
+     C                   MOVE      BrttDM        @Bsrc
+     C                   CALL      'AOBSRTR0'
+     C                   PARM      *BLANKS       @Rtcd
+     C                   PARM      '*KEY   '     @Optn
+     C                   PARM      PCCY          @@Cycd
+     C                   PARM                    @Bsrc
+     C     SDBSRT        PARM      SDBSRT        DSFDY
+      *
+     C                   IF        @RTCD <> *BLANK
+     C                   EVAL      DBFILE = 'BASERATE'
+     C                   EVAL      DBASE  = '54'
+     C                   EVAL      DBKEY  = @Bsrc
+     C                   SETON                                        U7U8LR
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ENDIF
+      *
+     C                   IF        BALCD = BJRDNB
+      *
+     C                   EVAL      VdatDMW = IACD
+     C                   IF        BAVDNR  > IACD
+     C                   EVAL      VdatDMW = BAVDNR
+     C                   ENDIF
+      *
+      ** Backdated maturity
+      *
+     C                   IF        MDAT < BJRDNB AND
+     C                             MDAT > 0
+     C                   EVAL      VdatDMW = MDAT
+     C                   ENDIF
+      *
+     C                   DOW       VdatDM < VdatDMW
+      *
+     C                   EVAL      DlnoDMSV = DlnoDM
+     C                   EVAL      VdatDMSV = VdatDM
+     C                   EVAL      RtspDMSV = RtspDM
+      *
+     C                   READ      DAMSX                                  42
+      *
+     C                   IF        *IN42  = *Off AND
+     C                             DlnoDM = DLNO AND
+     C                             AMTP   = 'BR'
+     C                   ADD       1             CtrBV
+     C                   EVAL      ZiBegBV(CtrBV)  = VdatDMSV
+     C                   EVAL      ZiEndBV(CtrBV)  = VdatDM
+     C                   EVAL      BsrtBV(CtrBV)   = RtspDMSV + Rtsp
+      *
+      ** Control total
+      *
+     C     TOTDMD        ADD       1             TOTDMD
+     C     TOTDMS        ADD       1             TOTDMS
+      *
+     C                   ELSE
+      *
+      ** If non BR then restore previous BR data
+      *
+     C                   EVAL      *IN42 = *Off
+     C                   EVAL      AMTP  = 'BR'
+     C                   EVAL      DlnoDM= DlnoDMSV
+     C                   EVAL      VdatDM= VdatDMSV
+     C                   EVAL      RtspDM= RtspDMSV
+     C                   LEAVE
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280HSRT                                       *
+      *****************************************************************

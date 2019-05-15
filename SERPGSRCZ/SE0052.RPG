@@ -1,0 +1,445 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Delete Reversed Book Position Actions')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0052 - Delete Reversed Book Position Actions               *
+      *           (Based on core SE2240)                              *
+      *                                                               *
+      *  Function: Actions on the Historic Book Position Actions file *
+      *   (COB)    which have been made redundant by today's I/C, are *
+      *            deleted by this program.  This ensures that these  *
+      *            actions are not reapplied in the Book Posn A/c Keys*
+      *            - Forward component (SE2220).                      *
+      *            This program is run after all the Historic actions *
+      *            have been reversed in SE2220 reversal mode.        *
+      *                                                               *
+      *  Called by: SEC0605C - Delete Reversed Book Posn Actions      *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CSE111 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSE111 - Suppress Account Keys on Back-Value of dividends    *
+      *  MD046248 - Finastra Rebranding                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FBPACB   IF  E           K        DISK
+     FBPCHDLL1UF  E           K        DISK         KINFDS ACHDS
+     F                                              KINFSR ACHSR
+     FHTRACT  UF  E           K        DISK
+     F            BPACHDF                           KRENAMEHTRACTF
+     F            BPACCDF                           KIGNORE
+     F            BPACBDF                           KIGNORE
+     FBPACHA  UF  E                    DISK         KINFDS ACADS
+     F                                              KINFSR ACASR
+     FBPACBA  IF  E                    DISK
+     FSE0052AUO   E                    PRINTER
+     FTABICD  IF  E           K        DISK
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F            TABTB35F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB50F                          KIGNORE
+     F            TABTB55F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   50 - DIFFERENCE IN FILE AND CALCULATED TOTAL                *
+      *   88 - END OF FILE ON BPCHDL OR CHAIN FAIL ON HTRACT          *
+      *   89 - END OF FILE BPACB                                      *
+      *                                                               *
+      *   97 - DISPLAY STATUS ON DATABASE ERROR REPORT                *
+      *                                                               *
+      *   U8 - DIFFERENCE IN FILE AND CALCULATED TOTAL                *
+      *U7-U8 - DATABASE ERROR                                         *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E S   I N D E X                            *
+      *                                                               *
+      *  FIRST  - ACCESSES INFO FROM ICD                              *
+      *  AUDIT  - OUTPUTS CONTROL REPORT AND UPDATES AUDIT FILES      *
+      *  *PSSR  - Error handling                                      *
+      *                                                               *
+      *  ZICDSE - OBTAINS ICD INFO FROM TABTB36                       *
+      *  ZSYSTM - OBTAINS ICD INFO FROM TABTB10                       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+      *
+      ** File Keys
+      *
+     I            DS
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+      *
+     I            DS
+     I                                        1  29 BCKEY
+     I                                        1  10 BBSS
+     I                                       11  13 BBBA
+     I                                       14  14 BBMK
+     I                                       15  16 BBBO
+     I                                       17  17 BBTV
+     I                                    P  18  200BBAD
+     I                                       21  22 BBAS
+     I                                       23  28 BBTR
+      *
+      ** Data Structures for ERROR HANDLING
+     IACHDS       DS
+     I                                     *STATUS  STSACH
+      *
+     IACADS       DS
+     I                                     *STATUS  STSACA
+      *
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Data Structure For Compilation  - Copyright Insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Keylists For File Chains
+      *
+      **  - Book Position Actions
+      *
+     C           BKAKEY    KLIST
+     C                     KFLD           BBSS
+     C                     KFLD           BBBA
+     C                     KFLD           BBMK
+     C                     KFLD           BBBK
+     C                     KFLD           BBTV
+     C                     KFLD           BBAD
+     C                     KFLD           BBAS
+     C                     KFLD           BBTR
+      *
+      ** - Book Position Trade Actions
+      *
+     C           HTRKEY    KLIST
+     C                     KFLD           BBTR
+     C                     KFLD           BBTV
+     C                     KFLD           BBSS
+      *
+      ** - TABLE
+      *
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+      *
+      ** Clear LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE0052  'DBPGM
+     C                     OUT  LDA
+      *
+      ** Access ICD information
+      *
+     C                     EXSR FIRST
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+      *
+      ** Define and Clear work fields
+      *
+     C                     Z-ADD0         IREC    50
+     C                     Z-ADD0         DREC    50
+      *
+      ** Read and process all Book Position Actions until EOF
+      *
+     C           *IN89     DOUEQ'1'
+     C                     READ BPACB                    89
+     C           *IN89     IFEQ '1'
+     C                     GOTO ENDLP
+     C                     END
+      *
+     C                     ADD  1         IREC
+      *
+      ** If Reversal Indicator is not 'Y' - no further action is taken
+      *
+     C           BBRI      IFEQ 'Y'
+      *
+      ***  For Trade Actions, use HTRACT rather than BPCHDL to ensure
+      ***  that Reversed Actions will be deleted if BCAD has been
+      ***  corrupted.
+      *
+     C           BBAS      IFEQ '40'
+     C           HTRKEY    CHAINHTRACTF              88
+     C           *IN88     IFEQ '0'
+     C           RECI      IFEQ 'D'
+     C                     ADD  1         LREC
+     C                     END
+     C                     DELETHTRACTF
+     C                     ADD  1         DREC
+     C                     END
+     C                     ELSE
+      *
+      ** Access BPCHDLL1 to match records with BPACB record read
+      **  - UPDATE RECI OF MATCHING RECORD
+      *
+     C           BKAKEY    CHAINBPCHDLL1             88
+     C           *IN88     DOWEQ'0'
+      *
+     C           BCAS      IFEQ '30'
+     C           BCAS      OREQ '35'
+     C           BCAS      OREQ '05'
+     C           BCCP      ANDEQBBCA
+     C           BCAS      OREQ '20'
+     C           BCCF      ANDEQBBCF
+     C           BCAS      OREQ '50'
+     C           BCNC      ANDEQBBNC
+     C           BCAS      OREQ '60'
+     C           BCPR      ANDEQBBPR
+     C           RECI      IFEQ 'D'
+     C                     ADD  1         LREC    50
+     C                     END
+     C                     MOVE '1'       *IN88
+     C                     DELETBPACHDF
+     C                     ADD  1         DREC
+     C                     ELSE
+      *
+      ** If no match found - Read through records with same key
+      ** for a match
+      *
+     C           BCAS      IFNE '30'
+     C           BCAS      ANDNE'35'
+     C           BKAKEY    READEBPCHDLL1                 88
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           ENDLP     TAG
+     C                     END
+      *
+      ** Update AUDIT records and output control report
+      *
+     C           EAUDIT    TAG
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - Subroutine to access ICD Information and to         *
+      *           calculate the Accrual Control Date.                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+      *
+      ** Access ICD
+      *
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+     C                     EXSR ZICDSE
+      *
+      ** Error in ZICDSE
+      *
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'TABLE'   DBFILE           * DB ERROR 02 *
+     C                     MOVELTKEY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to update Audit records and Output the   *
+      *           Audit Control Report.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+      *
+      ** Check no DBASE error has been encountered so far
+      **    -  Update Book Position Header Audit Record
+      *
+     C           *INU7     IFEQ '0'
+      *
+     C                     READ BPACBAF                  99
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BPACB'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDNORE      BPAREC  50
+     C           NORE      IFNE IREC
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+     C                     READ BPACHAF                  99
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BPACH'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDNORE      BKPREC  50
+     C           NORE      SUB  DREC      BPTREC  50
+     C                     Z-ADDBPTREC    NORE
+     C                     SUB  LREC      RFGA
+     C                     UPDATBPACHAF
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** -  OUTPUT CONTROL REPORT
+      *
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ '0'
+      *
+     C                     WRITECONTROL
+      *
+     C                     ELSE
+      *
+     C                     WRITEERROR
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ACHSR  - Subroutine for Error Handling of Book Posn. Actions *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACHSR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'BPACH'   DBFILE
+     C                     MOVELBCKEY     DBKEY
+     C                     Z-ADD90        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE STSACH    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  ACASR  - Subroutine for Error Handling of Book Position      *
+      *           Action Audit record.                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACASR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'BPACH'   DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD91        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE STSACA    DBSTAT
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+**  CPY@
+(c) Finastra International Limited 2017

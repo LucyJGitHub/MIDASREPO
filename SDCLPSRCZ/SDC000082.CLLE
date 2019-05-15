@@ -1,0 +1,167 @@
+/*********************************************************************/
+/*S*D****CLPBASEMOD***************************************************/                 /*BG14615A*/
+/*STD    CLPBASEBND                                                  */                 /*BG14615A*/
+/*EXI *  TEXT('Midas SD Update Equation with Midas SD details ctl')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLLE/SDC000082 - Update Equation with Midas Standing Data   */
+/*                        Details Control                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG14620A          Date 22Aug07              */
+/*                      BG14615A           Date 20Aug07              */
+/*                      BG14620            Date 20Aug07              */
+/*                      CRE026C *CREATE    Date 02May07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*      BUG14620A - Migration Program dumps                          */
+/*      BG14615A- Addition of mode processing.                       */
+/*                - Changed to a CLPBASEBND.                         */
+/*      BG14620 - Remove call to currencies migration program.       */
+/*      CRE026C - Consumer Banking Data Migration                    */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM */                                                                     /*BG14615A*/
+             PGM        PARM(&RTCDE &PMODE)                                             /*BG14615A*/
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)                                  /*BG14615A*/
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)                                  /*BG14615A*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2007')
+ 
+ /* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+ /** Create LDA for job in QTEMP if it does not already exist **/
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                         CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+                        ENDDO
+ /**  Create DTAARA PMODE  **/                                                         /*BUG14620A*/
+             CHKOBJ     OBJ(QTEMP/PMODEINIT) OBJTYPE(*DTAARA)                          /*BUG14620A*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                        /*BUG14620A*/
+                         CRTDTAARA  DTAARA(QTEMP/PMODEINIT) TYPE(*CHAR) LEN(1)         /*BUG14620A*/
+                        ENDDO                                                          /*BUG14620A*/
+ 
+             SNDPGMMSG  MSG('SDC000082 - Update Equation with Midas +
+                          Standing Data Details Control Program') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGDTAARA  DTAARA(PMODEINIT) VALUE(&PMODE)                                /*BUG14620A*/
+             CLRPFM     FILE(SDEXCPEQPD)                                               /*BUG14620A*/
+             CHGJOB     SWS(XXXXXX00)
+START:
+ 
+/* Mode 1 - First call and Mode 2 - Second call */                                      /*BG14615A*/
+                                                                                        /*BG14615A*/
+             IF         COND((&PMODE *EQ '1') *OR (&PMODE *EQ '2')) +
+                          THEN(DO)                                                      /*BG14615A*/
+                                                                                        /*BG14615A*/
+/* Call Collateral Locations */
+ 
+             CALL       PGM(SD000092)
+ 
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/**********                                               */                             /*BG14620*/
+/**Call*Currencies**/                                                                    /*BG14620*/
+/**********                                               */                             /*BG14620*/
+/**********  CALL       PGM(SD000093)                     */                             /*BG14620*/
+/**********                                               */                             /*BG14620*/
+/**Database*error*processing**/                                                          /*BG14620*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)  */                             /*BG14620*/
+/**********  GOTO       CMDLBL(ABNOR)                     */                             /*BG14620*/
+/**********  ENDDO                                        */                             /*BG14620*/
+ 
+/* Call Industry codes */
+ 
+             CALL       PGM(SD000098)
+ 
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call Location */
+ 
+             CALL       PGM(SD000095)
+ 
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call Spot rates */
+ 
+             CALL       PGM(SD000096)
+ 
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call Holidays   */
+ 
+             CALL       PGM(SD000097)
+ 
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDDO                                                                      /*BG14615A*/
+                                                                                        /*BG14615A*/
+/* Mode 3 - Deletion */                                                                 /*BG14615A*/
+                                                                                        /*BG14615A*/
+             IF         COND(&PMODE *EQ '3') THEN(DO)                                   /*BG14615A*/
+                                                                                        /*BG14615A*/
+/* There is no processing in Mode 3 */                                                  /*BG14615A*/
+                                                                                        /*BG14615A*/
+             ENDDO                                                                      /*BG14615A*/
+                                                                                        /*BG14615A*/
+/*Successful Processing */
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+/* Abnormal termination  */
+ 
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC000082 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2007')
+ 
+             ENDPGM

@@ -1,0 +1,2449 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Fees, buy-outs and processing method')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Windows                                              *
+     F*                                                               *
+     F*  DL1600WC - Fees, Buy-Outs & Processing Method Maintenance    *
+     F*                                                               *
+     F*  Function:  This program will be called from programs         *
+     F*             DL1602I/A/R/E and DL1603I/A/R/E to maintain       *
+     F*             the Up-Front Fee and Buy-Out details, Interest    *
+     F*             Processing Method and the Next Principal Change   *
+     F*             Date for Single Currency (RS) and Cross           *
+     F*             Currency (RX) Interest Rate Swap (IRS) deals.     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 207296             Date 09Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007             Date 11May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 188420             Date 09Jan01               *
+      *                 CIR006             Date 13Sep00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 01MAR99               *
+      *                 CEU003             Date 26Nov97               *
+     F*                 S01408             Date 03Oct96               *
+     F*                 100291             Date 08Mar96               *
+     F*                 CIR002 *CREATE     DATE 13JUN95               *
+     F*                 CIR001 *CREATE     DATE 13JUN95               *
+     F*                                                               *
+     F*****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  207296 - Upfront fee details are not 'Amendable' only if the *
+      *           Runday Number (AGRDNB) is greater than the Upfront  *
+      *           Value-Date (UPVD). Store old value of up-front fee  *
+      *           to PF/DLDGUPFE once amended.                        *
+      *  CIR007 - Overnight Index Swaps                               *
+      *  188420 - FRA/IRS Pay/Receive Messages for Swaps              *
+      *         - Fields are not protected for repair processing      *
+      *           with 'N' action                                     *
+      *  CIR006 - Amortisation of Caps/Collars/Floors and Individual  *
+      *           Compounding Swaps.                                  *
+     F*  CPL002 - Midas-Plato Interface                               *
+     F*           Addition of Princial Amount parameter to PGM/DL4020 *
+     F*  CEU003 - EMU Dealing Settlement Ccy Conversion               *
+     F*  S01408 - Addition of Core Hook DL1600WC13
+     F*           Addition of Core Hook DL1600WC12
+     F*           Addition of Core Hook Dl1600WC11
+     F*           Addition of Core Hook Dl1600WC10
+     F*           Addition of Core Hook Dl1600WCC9
+     F*           Addition of Core Hook DL1600WCC8
+     F*           Addition of Core Hook Dl1600WCC7
+     F*           Addition of Core Hook Dl1600WCC6
+     F*           Addition of Core Hook Dl1600WCC5
+     F*           Addition of Core Hook DL1600WCC4
+     F*           Addition of Core Hook Dl1600WCC3
+     F*           Addition of Core Hook Dl1600WCC2
+     F*           Addition of Core Hook Dl1600WCC1
+     F*  100291 - The next principal change date must be greater      *
+     F*           than the interest accrual control date and not      *
+     F*           equal to it.                                        *
+     F*  CIR002 - Compounding of Interest.                            *
+     F*  CIR001 - Interest Rate Calendars.                            *
+     F*                                                               *
+     F*****************************************************************
+     FDLDTSCL0IF  E           K        DISK
+     FDLDTSCPDIF  E           K        DISK
+     F            DLDTSCD0                          KRENAMEDLDTSCDD
+     FDLDGUPFEO   E           K        DISK                                                   207296
+     F            DLDGREF                           KRENAMEDLDGREFF                           207296
+     F                                              KCOMIT                                    207296
+     FDLDGUPL1UF  E           K        DISK                                                   207296
+     F                                              KCOMIT                                    207296
+     F/COPY WNCPYSRC,DL1600WCN0
+     FDL1600#CCF  E                    WORKSTN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *       01        No record found on PF/DLDGUPFE                *                       207296
+      *       03      F3 pressed                                      *
+      *       08      F8 pressed                                      *
+      *       12      F12 pressed                                     *
+      *       24      Enquiry mode - F8 to display next screen        *
+      *       25      Protect interest processing method              *
+      *       26      Protect up-front fee details                    *
+      *       27      Protect buy-out details                         *
+      *       28      Protect next principal change date              *
+      *               and interest processing method                  *
+      *       29      Protect up-front fee and buy-out details        *
+      *       30      Redisplay screen if OFF                         *
+      *       32      Display unsettled interest and                  *
+      *               unsettled interest adjustment                   *
+      *       40      Our next principal change date in error         *
+      *       41      Their next principal change date in error       *
+      *       42      Our interest processing method in error         *
+      *       43      Their interest processing method in error       *
+      *       44      Up-front value date in error                    *
+      *       45      Up-front fee amount in error                    *
+      *       46      Up-front pay/rec indicator in error             *
+      *       47      Buy-out value date in error                     *
+      *       48      Buy-out amount in error                         *
+      *       49      Buy-out pay/rec indicator in error              *
+      *       50      At least one field in error                     *
+      *       51      Display warning message                         *
+      *       52      Protect all fields and display warning message  *
+      *       78      Chain to DLDTSCL0 failed                        *
+      *       79      READE DLDTSCPD failed                           *
+      *       80      SETLL DLDTSCL0 equal found                      *
+      *       83      Multibranching indicator                        *
+      *       85      LOKUP indicator                                 *
+      *     90-99     Used by standard routines                       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #LSCRP       Process screen                                  *
+      *  #LPRCS       Principal change schedule                       *
+      *  #LVALD       Validate screen                                 *
+      *  #LUPFN       Set up Up-front details                         *
+      *  UPDUPF       Update PF/DLDGUPFE once Up-front fee is amended *                       207296
+      *  #LSCRE       Initialise screen                               *
+      *  #LCLEA       Clear message file and error indicators         *
+      *  #LRETU       Return field values to calling program          *
+      *  #LPREV       Exit program if F12 has been pressed            *
+      *  #LEXIT       Exit program if F3 has been pressed             *
+      *  #LINIT       Initial processing                              *
+      *  ZASNMS       Send message to program's message queue         *
+      *  *PSSR        Program exception error routine                 *
+      *                                                               *
+      *  Standard routines:                                           *
+      *  ZDATE2       Convert day number to a date                    *
+      *  ZSEDIT       Insert decimal point and sign into numeric      *
+      *  ZALIGN       Validate/right align numeric fields             *
+      *  ZDATE1       Validate and convert date to a day number       *
+      *  ZACCH        Access record for holidays file routine         *
+      *  ZCHKH        Check if holiday for currency/location          *
+      *  ZFWDT        Find nth working day from given date            *
+      *  ZTNLU1       Lock/update/release transaction number DTAARA   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    PBAL        5 15 0
+     E                    PPAY        5 15 0
+     E                    PREC        5 15 0
+     E                    PDAT        5  5 0A
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZHOLE
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     I            DS
+      ** Data structure for Up-front/Buy-out update parameters.
+      *
+     I**********                              1  18 XXACC                                     CGL029
+     I                                        1  24 XXACC                                     CGL029
+     I                                        1   60XXCNUM
+     I                                        7   9 XXCCY
+     I**********                             10  130XXACOD                                    CGL029
+     I**********                             14  150XXACSQ                                    CGL029
+     I**********                             16  18 XXBRCA                                    CGL029
+     I                                       10  190XXACOD                                    CGL029
+     I                                       20  210XXACSQ                                    CGL029
+     I                                       22  24 XXBRCA                                    CGL029
+      *
+     I            DS
+     I                                        1  56 INFLDS
+     I                                        1   6 SUPVD
+     I                                        7  20 SUPFE
+     I                                       21  21 SUPPR
+     I                                       22  27 SBOVD
+     I                                       28  41 SBOAM
+     I                                       42  42 SBAPR
+     I                                       43  48 SUNPCD
+     I                                       49  49 SUINPM
+     I                                       50  55 STNPCD
+     I                                       56  56 STINPM
+     I/COPY WNCPYSRC,DL1600WCI1
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Rundate data area
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General ledger details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currencies
+      *
+     ISCSARD    E DSSCSARDPD
+      ** SAR descriptions
+      *
+     ISDBROK    E DSSDBROKPD
+      ** Broker codes
+      *
+     ISDNOST    E DSSDNOSTPD                                              CEU003
+     I              QQACCD                          QQACC1                                    CGL029
+     I** Nostro Details                                                   CEU003
+     I*                                                                   CEU003
+     IDSFDY     E DSDSFDY
+      ** First DS for Access Programs, short data structure
+      *
+     I/COPY QWINDSRC,DL1600GDTA
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+     I/COPY WNCPYSRC,DL1600WCI2
+     I/COPY ZSRSRC,ZTNLU1Z1
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** Standard parameter list for window manager
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *                                                               *
+      *                M A I N  P R O C E S S I N G                   *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR #LINIT
+      *
+      ** In reversal mode, do not display window or call DL4020,
+      ** but go straight to update processing
+      *
+     C           #1ACTN    IFNE 'R'
+      *
+     C                     EXSR #LSCRE
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C                     MOVE *BLANKS   SAVFLD
+     C                     MOVE 'N'       VERIFY
+     C           *IN30     DOUEQ'1'
+     C           ACTN      OREQ 'X'                                       188420
+      *
+      ** Display error and warning messages
+      *
+     C/COPY WNCPYSRC,DL1600WCK5
+     C                     WRITE#MSGCTL
+      *
+     C           #1DTYP    IFEQ 'RS'
+     C                     EXFMTDL1600X1
+     C                     ELSE
+     C*
+     C/COPY WNCPYSRC,DL1600WCC1
+     C*
+     C           #1DTYP    IFEQ 'RX'                                      CIR006
+     C                     EXFMTDL1600X2
+      *                                                                   CIR006
+     C                     ELSE                                           CIR006
+      *                                                                   CIR006
+     C           CIR006    IFEQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RP'                                      CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RR'                                      CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RF'                                      CIR006
+     C                     MOVE *OFF      *IN35                           CIR006
+     C                     MOVE *OFF      *IN36                           CIR006
+      *                                                                   CIR006
+     C                     SELEC                                          CIR006
+     C           #1DTYP    WHEQ 'RP'                                      CIR006
+     C                     MOVE *ON       *IN35                           CIR006
+     C           #1DTYP    WHEQ 'RF'                                      CIR006
+     C                     MOVE *ON       *IN36                           CIR006
+     C                     ENDSL                                          CIR006
+      *                                                                   CIR006
+     C                     EXFMTDL1600X3                                  CIR006
+      *                                                                   CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL1600WCC2
+     C*
+      *
+      ** If no details changed on verification,
+      ** proceed to updates.
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C           VERIFY    ANDEQ'Y'
+     C           SAVFLD    ANDEQINFLDS
+     C                     LEAVE
+     C                     END
+      *
+     C                     EXSR #LCLEA
+      *
+     C           #1ACTN    IFNE 'E'
+     C           #1ACTN    OREQ 'E'
+     C           *IN03     ANDEQ'1'
+     C           #1ACTN    OREQ 'E'
+     C           *IN12     ANDEQ'1'
+     C           #1ACTN    OREQ 'E'
+     C           *IN08     ANDEQ'1'
+      *
+     C                     EXSR #LSCRP
+      *
+      ** If all input valid and warning messages exists,
+      ** redisplay screen to confirm update.
+      *
+     C           *IN30     IFEQ '1'
+     C           *IN51     ANDEQ'1'
+     C                     MOVE '0'       *IN30
+     C                     MOVE INFLDS    SAVFLD 56
+     C                     MOVE 'Y'       VERIFY  1
+     C                     ELSE
+     C                     MOVE *BLANKS   SAVFLD
+     C                     MOVE 'N'       VERIFY
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           #1ACTN    IFNE 'E'
+     C/COPY WNCPYSRC,DL1600WCC4
+      *
+     C                     EXSR ZTNLU1
+      *
+      ** Set up Up-front fee details.
+      *
+     C                     EXSR #LUPFN
+      *
+     C                     END
+      *
+      ** Return input field values to calling program
+      *
+     C                     EXSR #LRETU
+      *
+      ** Exit from program
+      *
+     C                     MOVE '1'       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LSCRP - Process screen                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LSCRP    BEGSR
+      *
+      ** F3 pressed.
+      *
+     C           *IN03     CASEQ'1'       #LEXIT
+      *
+      ** F12 pressed.
+      *
+     C           *IN12     CASEQ'1'       #LPREV
+      *
+      ** ENTER pressed - validate input fields.
+      *
+     C                     CAS            #LVALD
+      *
+     C                     ENDCS
+      *
+      ** If all input fields are valid
+      *
+     C           *IN50     IFEQ '0'
+     C                     MOVE '1'       *IN30
+      *
+      ** Dealtype = 'RS' and next principal change date entered.
+      *
+     C           #1DTYP    IFEQ 'RS'
+     C           SUNPCD    ANDNE*BLANKS
+     C*
+     C/COPY WNCPYSRC,DL1600WCC3
+     C*
+     C                     Z-ADD#1DLNO    @DNUM
+     C                     MOVE #1DTYP    @DTYP
+     C                     MOVE *BLANKS   @OTIN
+     C                     MOVE SUNPCD    @CTLD
+     C                     MOVE SVDAT     @VALD
+     C                     MOVE SMDAT     @MATD
+     C***********          MOVE SUCUCY    @CURR                           CEU003
+     C                     MOVELWPSCY     @CURR                           CEU003
+     C                     Z-ADDWUCDP     @NBDP
+     C                     Z-ADD#1UPAM    @PAMT                                               CPL002
+     C                     MOVE SACTN     @PSCD
+     C                     MOVE *BLANKS   @RETC
+      *
+      ** Principal change schedule
+      *
+     C                     EXSR #LPRCS
+      *
+      ** F3 pressed
+      *
+     C           @RETC     IFEQ 'Y2U9999'
+     C                     EXSR #LEXIT
+     C                     END
+      *
+      ** F12 pressed
+      *
+     C           @RETC     IFEQ 'USR0790'
+     C                     MOVE '0'       *IN30
+     C                     END
+      *
+      ** If date has changed, display error message
+      *
+     C           @RETC     IFEQ *BLANKS
+     C           @CTLD     ANDNESUNPCD
+     C                     MOVE @CTLD     SUNPCD
+     C                     MOVEL'WNE0050' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN50
+     C                     MOVE '0'       *IN30
+     C                     END
+      *
+     C                     END
+      *                                                                   CIR006
+      ** Cap/Collar/Floor deal and Next Principal Change Date entered     CIR006
+      *                                                                   CIR006
+     C           CIR006    IFEQ 'Y'                                       CIR006
+     C           SUNPCD    ANDNE*BLANK                                    CIR006
+      *                                                                   CIR006
+     C           #1DTYP    IFEQ 'RP'                                      CIR006
+     C           #1DTYP    OREQ 'RR'                                      CIR006
+     C           #1DTYP    OREQ 'RF'                                      CIR006
+      *                                                                   CIR006
+     C                     Z-ADD#1DLNO    @DNUM                           CIR006
+     C                     MOVE #1DTYP    @DTYP                           CIR006
+     C                     MOVE *BLANKS   @OTIN                           CIR006
+     C                     MOVE SUNPCD    @CTLD                           CIR006
+     C                     MOVE SVDAT     @VALD                           CIR006
+     C                     MOVE SMDAT     @MATD                           CIR006
+     C                     MOVELWPSCY     @CURR                           CIR006
+     C                     Z-ADDWUCDP     @NBDP                           CIR006
+     C                     Z-ADD#1UPAM    @PAMT                           CIR006
+     C                     MOVE SACTN     @PSCD                           CIR006
+     C                     MOVE *BLANKS   @RETC                           CIR006
+      *                                                                   CIR006
+      ** Principal change schedule                                        CIR006
+      *                                                                   CIR006
+     C                     EXSR #LPRCS                                    CIR006
+      *                                                                   CIR006
+      ** F3 pressed                                                       CIR006
+      *                                                                   CIR006
+     C           @RETC     IFEQ 'Y2U9999'                                 CIR006
+     C                     EXSR #LEXIT                                    CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+      ** F12 pressed                                                      CIR006
+      *                                                                   CIR006
+     C           @RETC     IFEQ 'USR0790'                                 CIR006
+     C                     MOVE *OFF      *IN30                           CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+      ** If date has changed, display error message                       CIR006
+      *                                                                   CIR006
+     C           @RETC     IFEQ *BLANKS                                   CIR006
+     C           @CTLD     ANDNESUNPCD                                    CIR006
+     C                     MOVE @CTLD     SUNPCD                          CIR006
+     C                     MOVEL'WNE0050' ZAMSID                          CIR006
+     C                     MOVEL'WNMSGF'  ZAMSGF                          CIR006
+     C                     EXSR ZASNMS                                    CIR006
+     C                     MOVE *ON       *IN40                           CIR006
+     C                     MOVE *ON       *IN50                           CIR006
+     C                     MOVE *OFF      *IN30                           CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C                     ENDIF                                          CIR006
+      *
+      ** Dealtype = 'RX'
+      *
+     C           #1DTYP    IFEQ 'RX'
+      *
+     C                     MOVE '1'       *IN31
+     C           *IN31     DOUEQ'1'
+      *
+      ** Our next principal change date entered.
+      *
+     C           SUNPCD    IFNE *BLANKS
+     C                     Z-ADD#1DLNO    @DNUM
+     C                     MOVE #1DTYP    @DTYP
+     C                     MOVE 'U'       @OTIN
+     C                     MOVE SUNPCD    @CTLD
+     C                     MOVE SVDAT     @VALD
+     C                     MOVE SMDAT     @MATD
+     C***********          MOVE SUCUCY    @CURR                           CEU003
+     C                     MOVELWPSCY     @CURR                           CEU003
+     C                     Z-ADDWUCDP     @NBDP
+     C                     Z-ADD#1UPAM    @PAMT                                               CPL002
+     C                     MOVE SACTN     @PSCD
+     C                     MOVE *BLANKS   @RETC
+      *
+      ** Principal change schedule
+      *
+     C                     EXSR #LPRCS
+     C                     MOVE @RETC     URETC   7
+     C                     MOVE @CTLD     UCTLD   6
+      *
+      ** F3 pressed
+      *
+     C           @RETC     IFEQ 'Y2U9999'
+     C                     EXSR #LEXIT
+     C                     ELSE
+      *
+      ** F12 pressed
+      *
+     C           @RETC     IFEQ 'USR0790'
+     C                     MOVE '1'       *IN31
+     C                     MOVE '0'       *IN30
+     C                     ITER
+     C                     ELSE
+      *
+      ** F8 pressed
+      *
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN30
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Their next principal change date entered.
+      *
+     C           STNPCD    IFNE *BLANKS
+     C                     Z-ADD#1DLNO    @DNUM
+     C                     MOVE #1DTYP    @DTYP
+     C                     MOVE 'T'       @OTIN
+     C                     MOVE STNPCD    @CTLD
+     C                     MOVE SVDAT     @VALD
+     C                     MOVE SMDAT     @MATD
+     C***********          MOVE STCUCY    @CURR                           CEU003
+     C                     MOVELWRSCY     @CURR                           CEU003
+     C                     Z-ADDWTCDP     @NBDP
+     C                     Z-ADD#1TPAM    @PAMT                                               CPL002
+     C                     MOVE SACTN     @PSCD
+     C                     MOVE *BLANKS   @RETC
+      *
+      ** Principal change schedule
+      *
+     C                     EXSR #LPRCS
+     C                     MOVE @RETC     TRETC   7
+     C                     MOVE @CTLD     TCTLD   6
+      *
+      ** F3 pressed
+      *
+     C           @RETC     IFEQ 'Y2U9999'
+     C                     EXSR #LEXIT
+     C                     ELSE
+      *
+      ** F12 pressed
+      *
+     C           @RETC     IFEQ 'USR0790'
+     C           SUNPCD    IFNE *BLANKS
+     C                     MOVE '0'       *IN31
+     C                     ELSE
+     C                     MOVE '1'       *IN31
+     C                     MOVE '0'       *IN30
+     C                     END
+     C                     ELSE
+      *
+      ** F8 pressed
+      *
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN30
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** If date has changed, display error message
+      *
+     C           URETC     IFEQ *BLANKS
+     C           UCTLD     ANDNESUNPCD
+     C                     MOVE UCTLD     SUNPCD
+     C                     MOVEL'WNE0051' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN50
+     C                     MOVE '0'       *IN30
+     C                     END
+      *
+     C           TRETC     IFEQ *BLANKS
+     C           TCTLD     ANDNESTNPCD
+     C                     MOVE TCTLD     STNPCD
+     C                     MOVEL'WNE0052' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN50
+     C                     MOVE '0'       *IN30
+     C                     END
+      *
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** Errors exist - redisplay screen
+      *
+     C                     MOVE '0'       *IN30
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LPRCS - Principal Change Schedule                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LPRCS    BEGSR
+      *
+     C                     CALL 'DL4020'
+     C                     PARM           @DNUM   60
+     C                     PARM           @DTYP   2
+     C                     PARM           @OTIN   1
+     C                     PARM           @CTLD   6
+     C                     PARM           @VALD   6
+     C                     PARM           @MATD   6
+     C                     PARM           @CURR   3
+     C                     PARM           @NBDP   10
+     C                     PARM           @PAMT  150                                          CPL002
+     C                     PARM           @PSCD   1
+     C                     PARM           @RETC   7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LVALD - Validate screen                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LVALD    BEGSR
+      *
+     C           #1ACTN    IFEQ 'I'
+     C           #1ACTN    OREQ 'A'
+      *
+      ** Validate Up-Front details
+      *
+     C                     Z-ADD0         WUPVD
+      *
+      ** Validate Up-Front Fee Value date
+      *
+     C           SUPVD     IFEQ *BLANKS
+      *
+      ** If Up-Front fee amount and pay/rec indicator
+      ** are not blank, the value date cannot be blank.
+      *
+     C           SUPFE     IFNE *BLANKS
+     C           SUPPR     ORNE *BLANKS
+     C                     MOVEL'WNE0013' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN50
+     C                     END
+     C                     ELSE
+      *
+     C                     TESTN          SUPVD      20
+     C                     MOVE SUPVD     ZDATE
+     C                     EXSR ZDATE1
+      *
+      ** Must be a valid date
+      *
+     C           *IN99     IFEQ '1'
+     C           *IN20     OREQ '0'
+     C                     MOVEL'WNE0014' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+      *
+     C                     Z-ADDZDAYNO    WUPVD
+      *
+      ** Must be greater than or equal to deal date AND
+      ** less than maturity date.
+      *
+     C           ZDAYNO    IFLT #1DDAT
+     C           ZDAYNO    ORGE #1MDAT
+     C                     MOVEL'WNE0015' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Warning: Must be less than or equal to deal value date.
+      *
+     C           ZDAYNO    IFGT #1VDAT
+     C                     MOVEL'WNE0016' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN51
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      ** Validate Up-Front Fee amount
+      *
+     C                     Z-ADD0         WUPFE
+      *
+     C           SUPFE     IFEQ *BLANKS
+      *
+      ** If Up-Front fee value date and pay/rec indicator
+      ** are not blank, the amount cannot be blank.
+      *
+     C           SUPVD     IFNE *BLANKS
+     C           SUPPR     ORNE *BLANKS
+     C                     MOVEL'WNE0017' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN45
+     C                     MOVE '1'       *IN50
+     C                     END
+     C                     END
+      *
+      ** Validate Up-Front Pay/Rec indicator
+      *
+     C           SUPPR     IFEQ *BLANKS
+      *
+      ** If Up-Front fee value date and amount are not blank,
+      ** pay/rec indicator cannot be blank.
+      *
+     C           SUPVD     IFNE *BLANKS
+     C           SUPFE     ORNE *BLANKS
+     C                     MOVEL'WNE0018' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN46
+     C                     MOVE '1'       *IN50
+     C                     END
+     C                     ELSE
+      *
+      ** Must be P or R
+      *
+     C           SUPPR     IFNE 'P'
+     C           SUPPR     ANDNE'R'
+     C                     MOVEL'WNE0019' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN46
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+      *
+      ** Up-Front Fee must be a valid numeric field
+      ** with the correct number of decimal places
+      ** depending on currency (based on the pay/rec
+      ** indicator).
+      *
+     C           SUPFE     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SUPFE     ZFIELD
+     C           SUPPR     IFEQ 'P'
+     C                     Z-ADDWUCDP     ZADEC
+     C                     ELSE
+     C                     Z-ADDWTCDP     ZADEC
+     C                     END
+     C           13        SUB  ZADEC     ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'WNE0020' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN45
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+     C                     MOVE ZFIELD    WUPFE
+     C                     Z-ADDWUPFE     ZFLD15
+     C                     Z-ADDZADEC     ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SUPFE
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      ** Check if the Up-Front Fee value date is a holiday
+      *
+     C           WUPVD     IFNE 0
+      *
+     C           SUPPR     IFEQ 'P'
+     C           #1USEN    IFEQ 01
+     C           #1USEN    OREQ 02
+     C           #1USEN    OREQ 07
+     C           #1USEN    OREQ 08
+     C           #1USEN    OREQ 12
+      *
+     C***********          MOVE #1UCUC    ZCCY                            CEU003
+     C                     MOVELWPSCY     ZCCY                            CEU003
+     C                     Z-ADDWUPVD     ZDAYNO
+     C***********          MOVE BJSLCD    ZLOC                            CEU003
+     C                     MOVELWPNLOC    ZLOC                            CEU003
+     C                     EXSR ZCHKH
+     C           ZIND      IFEQ 'H'
+      *
+      ** Warning: Holiday in Our currency
+      *
+     C                     MOVEL'WNE0021' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN51
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     MOVE BJLCCY    ZCCY
+     C                     Z-ADDWUPVD     ZDAYNO
+     C                     MOVE BJSLCD    ZLOC
+     C                     EXSR ZCHKH
+     C           ZIND      IFEQ 'H'
+      *
+      ** Warning: Holiday in local currency
+      *
+     C                     MOVEL'WNE0022' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN51
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C           SUPPR     IFEQ 'R'
+     C           #1TSEN    IFEQ 01
+     C           #1TSEN    OREQ 02
+     C           #1TSEN    OREQ 07
+     C           #1TSEN    OREQ 08
+     C           #1TSEN    OREQ 12
+      *
+     C***********          MOVE #1TCUC    ZCCY                            CEU003
+     C                     MOVELWRSCY     ZCCY                            CEU003
+     C                     Z-ADDWUPVD     ZDAYNO
+     C***********          MOVE BJSLCD    ZLOC                            CEU003
+     C                     MOVELWRNLOC    ZLOC                            CEU003
+     C                     EXSR ZCHKH
+     C           ZIND      IFEQ 'H'
+      *
+      ** Warning: Holiday in Their currency
+      *
+     C                     MOVEL'WNE0023' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN51
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     MOVE BJLCCY    ZCCY
+     C                     Z-ADDWUPVD     ZDAYNO
+     C                     MOVE BJSLCD    ZLOC
+     C                     EXSR ZCHKH
+     C           ZIND      IFEQ 'H'
+      *
+      ** Warning: Holiday in local currency
+      *
+     C                     MOVEL'WNE0022' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN51
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** Validate Buy-Out details
+     C*
+     C/COPY WNCPYSRC,DL1600WC04
+     C*
+      *
+     C                     Z-ADD0         WBOVD
+      *
+      ** Validate Buy-Out Value date
+      *
+     C           SBOVD     IFEQ *BLANKS
+      *
+      ** If Buy-Out amount and pay/rec indicator
+      ** are not blank, the value date cannot be blank.
+      *
+     C           SBOAM     IFNE *BLANKS
+     C           SBAPR     ORNE *BLANKS
+     C                     MOVEL'WNE0024' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN47
+     C                     MOVE '1'       *IN50
+     C                     END
+     C                     ELSE
+      *
+     C                     TESTN          SBOVD      20
+     C                     MOVE SBOVD     ZDATE
+     C                     EXSR ZDATE1
+      *
+      ** Must be a valid date
+      *
+     C           *IN99     IFEQ '1'
+     C           *IN20     OREQ '0'
+     C                     MOVEL'WNE0025' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN47
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+      *
+     C                     Z-ADDZDAYNO    WBOVD
+      *
+      ** Must be greater than or equal to deal date of deal
+      ** AND less than maturity date.
+      *
+     C           ZDAYNO    IFLT #1DDAT
+     C           ZDAYNO    ORGE #1MDAT
+     C                     MOVEL'WNE0026' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN47
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Must be greater than or equal to Our/Their
+      ** Interest Accrual Control Date.
+      *
+     C           ZDAYNO    IFLT #1UIAC
+     C           ZDAYNO    ORLT #1TIAC
+     C                     MOVEL'WNE0027' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN47
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      ** Validate Buy-Out amount
+      *
+     C                     Z-ADD0         WBOAM
+      *
+     C           SBOAM     IFEQ *BLANKS
+      *
+      ** If Buy-Out value date and pay/rec indicator
+      ** are not blank, amount cannot be blank.
+      *
+     C           SBOVD     IFNE *BLANKS
+     C           SBAPR     ORNE *BLANKS
+     C                     MOVEL'WNE0028' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN50
+     C                     END
+     C                     END
+      *
+      ** Validate Buy-Out Pay/Rec indicator
+      *
+     C           SBAPR     IFEQ *BLANKS
+      *
+      ** If Buy-Out value date and amount are not blank,
+      ** pay/rec indicator cannot be blank.
+      *
+     C           SBOVD     IFNE *BLANKS
+     C           SBOAM     ORNE *BLANKS
+     C                     MOVEL'WNE0029' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN49
+     C                     MOVE '1'       *IN50
+     C                     END
+     C                     ELSE
+      *
+      ** Must be P or R
+      *
+     C           SBAPR     IFNE 'P'
+     C           SBAPR     ANDNE'R'
+     C                     MOVEL'WNE0030' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN49
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+      *
+      ** Buy-Out amount must be a valid numeric field
+      ** with the correct number of decimal places
+      ** depending on currency (based on the pay/rec
+      ** indicator).
+      *
+     C           SBOAM     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SBOAM     ZFIELD
+     C           SBAPR     IFEQ 'P'
+     C                     Z-ADDWUCDP     ZADEC
+     C                     ELSE
+     C                     Z-ADDWTCDP     ZADEC
+     C                     END
+     C           13        SUB  ZADEC     ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'WNE0031' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+     C                     MOVE ZFIELD    WBOAM
+     C                     Z-ADDWBOAM     ZFLD15
+     C                     Z-ADDZADEC     ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SBOAM
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL1600WCC5
+     C*
+      *
+      ** Validate Our Next Principal Change Date
+      *
+     C                     Z-ADD0         WUNPCD
+      *
+     C           SUNPCD    IFNE *BLANKS
+      *
+     C                     TESTN          SUNPCD     20
+     C                     MOVE SUNPCD    ZDATE
+     C                     EXSR ZDATE1
+      *
+      ** Must be a valid date
+      *
+     C           *IN99     IFEQ '1'
+     C           *IN20     OREQ '0'
+     C                     MOVEL'WNE0001' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+      *
+     C                     Z-ADDZDAYNO    WUNPCD
+      *
+      ** Must be greater than value date AND
+      ** less than or equal to maturity date.
+      *
+     C           ZDAYNO    IFLE #1VDAT
+     C           ZDAYNO    ORGT #1MDAT
+     C                     MOVEL'WNE0002' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Must be greater than or equal to Our Interest Accrual
+      ** Control Date.
+      *
+     C********** ZDAYNO    IFLT #1UIAC                                    100291
+     C           ZDAYNO    IFLE #1UIAC                                    100291
+     C           #1DTYP    IFEQ 'RS'
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RP'                                      CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RR'                                      CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RF'                                      CIR006
+     C*
+     C/COPY WNCPYSRC,DL1600WCC6
+     C*
+     C                     MOVEL'WNE0003' ZAMSID
+     C                     ELSE
+     C                     MOVEL'WNE0033' ZAMSID
+     C                     END
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Must be greater than or equal to Their Interest Accrual
+      ** Control Date.
+      *
+     C           #1DTYP    IFEQ 'RS'
+     C********** ZDAYNO    ANDLT#1TIAC                                    100291
+     C           ZDAYNO    ANDLE#1TIAC                                    100291
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RP'                                      CIR006
+     C           ZDAYNO    ANDLE#1TIAC                                    CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RR'                                      CIR006
+     C           ZDAYNO    ANDLE#1TIAC                                    CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1DTYP    ANDEQ'RF'                                      CIR006
+     C           ZDAYNO    ANDLE#1TIAC                                    CIR006
+     C*
+     C/COPY WNCPYSRC,DL1600WCC7
+     C*
+     C                     MOVEL'WNE0032' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN50
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** Validate Our Interest Processing Method
+     C*
+     C/COPY WNCPYSRC,DL1600WCC8
+     C*
+      *                                                                                       CIR007
+      ** If Our Rate Change Frequency Code is 'O', then Our Interest                          CIR007
+      ** Processing Method must be blank.                                                     CIR007
+      *                                                                                       CIR007
+     C           SUINPM    IFNE *BLANKS                                                       CIR007
+     C           CIR007    ANDEQ'Y'                                                           CIR007
+     C           #1UICF    ANDEQ'O'                                                           CIR007
+     C                     MOVEL'WNE0042' ZAMSID                                              CIR007
+     C                     MOVEL'WNMSGF'  ZAMSGF                                              CIR007
+     C                     EXSR ZASNMS                                                        CIR007
+     C                     MOVE *ON       *IN42                                               CIR007
+     C                     MOVE *ON       *IN50                                               CIR007
+     C                     ENDIF                                                              CIR007
+      *
+     C           SUINPM    IFNE *BLANKS
+     C           *IN42     ANDEQ*OFF                                                          CIR007
+      *
+      ** Must be D, Y, C or K
+      *
+     C           SUINPM    IFNE 'D'
+     C           SUINPM    ANDNE'Y'
+     C           SUINPM    ANDNE'C'
+     C           SUINPM    ANDNE'K'
+     C           CIR006    ANDEQ'N'                                       CIR006
+     C                     MOVEL'WNE0007' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN50
+     C                     END
+      *                                                                   CIR006
+      ** Must be D, Y, C, K, A, I, L for CIR006                           CIR006
+      *                                                                   CIR006
+     C           SUINPM    IFNE 'D'                                       CIR006
+     C           SUINPM    ANDNE'Y'                                       CIR006
+     C           SUINPM    ANDNE'C'                                       CIR006
+     C           SUINPM    ANDNE'K'                                       CIR006
+     C           SUINPM    ANDNE'A'                                       CIR006
+     C           SUINPM    ANDNE'I'                                       CIR006
+     C           SUINPM    ANDNE'L'                                       CIR006
+     C           CIR006    ANDEQ'Y'                                       CIR006
+     C                     MOVEL'WNE0038' ZAMSID                          CIR006
+     C                     MOVEL'WNMSGF'  ZAMSGF                          CIR006
+     C                     EXSR ZASNMS                                    CIR006
+     C                     MOVE *ON       *IN42                           CIR006
+     C                     MOVE *ON       *IN50                           CIR006
+     C                     ENDIF                                          CIR006
+      *
+      ** Principal schedule is not allowed with interest up front or
+      **   if interest is capitalised.
+      *
+     C           SUNPCD    IFNE *BLANKS
+     C                     MOVEL'WNE0008' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+     C           SUINPM    IFEQ 'D'
+     C           SUINPM    OREQ 'Y'
+      *                                                                   CIR006
+      ** Interest up front is not allowed for Caps/Collars/Floors         CIR006
+      *                                                                   CIR006
+     C           CIR006    IFEQ 'Y'                                       CIR006
+      *                                                                   CIR006
+     C           #1DTYP    IFEQ 'RP'                                      CIR006
+     C           #1DTYP    OREQ 'RR'                                      CIR006
+     C           #1DTYP    OREQ 'RF'                                      CIR006
+     C                     MOVEL'WNE0039' ZAMSID                          CIR006
+     C                     MOVEL'WNMSGF'  ZAMSGF                          CIR006
+     C                     EXSR ZASNMS                                    CIR006
+     C                     MOVE *ON       *IN42                           CIR006
+     C                     MOVE *ON       *IN50                           CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C                     ENDIF                                          CIR006
+      *
+      ** Our Interest Rate Change Frequency must be 'Z'
+      *
+     C           #1UICF    IFNE *BLANKS
+     C           #1UICF    ANDNE'Z'
+     C                     MOVEL'WNE0009' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Our Interest Payment Frequency must be 'Z'
+      *
+     C           #1UIPF    IFNE *BLANKS
+     C           #1UIPF    ANDNE'Z'
+     C                     MOVEL'WNE0036' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Access IRS Date Schedule and check if last
+      ** interest payment date = maturity date.
+      *
+     C           KDSCH1    KLIST
+     C                     KFLD           KDLNO1  60
+     C                     KFLD           KOTIN1  1
+     C                     KFLD           KRCIP1  1
+     C                     KFLD           KPRDT1  50
+      *
+     C           KDSCH2    KLIST
+     C                     KFLD           KDLNO2  60
+     C                     KFLD           KOTIN2  1
+     C                     KFLD           KRCIP2  1
+      *
+     C                     Z-ADD#1DLNO    KDLNO1
+     C                     MOVE 'U'       KOTIN1
+     C                     MOVE 'P'       KRCIP1
+     C                     Z-ADD#1MDAT    KPRDT1
+      *
+     C           KDSCH1    SETLLDLDTSCD0                 80
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'WNE0034' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Interest rate change date must have corresponding
+      ** interest payment date in IRS Date Schedule.
+      *
+     C                     Z-ADD#1DLNO    KDLNO2
+     C                     MOVE 'U'       KOTIN2
+     C                     MOVE 'R'       KRCIP2
+      *
+      ** Read rate change date
+      *
+     C                     MOVE '0'       *IN78
+     C           KDSCH2    SETLLDLDTSCDD
+     C           KDSCH2    READEDLDTSCDD                 79
+     C           *IN79     DOWEQ'0'
+     C           *IN78     ANDEQ'0'
+      *
+      ** Read payment date
+      *
+     C                     Z-ADDPRDT      KPRDT1
+     C           KDSCH1    CHAINDLDTSCD0             78
+     C           *IN78     IFEQ '1'
+     C                     MOVEL'WNE0035' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Read next rate change date
+      *
+     C           KDSCH2    READEDLDTSCDD                 79
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL1600WCC9
+     C*
+      *
+      ** Validate Their Next Principal Change Date
+      *
+     C                     Z-ADD0         WTNPCD
+      *
+     C           #1DTYP    IFEQ 'RX'
+     C           STNPCD    IFNE *BLANKS
+      *
+     C                     TESTN          STNPCD     20
+     C                     MOVE STNPCD    ZDATE
+     C                     EXSR ZDATE1
+      *
+      ** Must be a valid date
+      *
+     C           *IN99     IFEQ '1'
+     C           *IN20     OREQ '0'
+     C                     MOVEL'WNE0004' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+      *
+     C                     Z-ADDZDAYNO    WTNPCD
+      *
+      ** Must be greater than value date AND
+      ** less than or equal to maturity date.
+      *
+     C           ZDAYNO    IFLE #1VDAT
+     C           ZDAYNO    ORGT #1MDAT
+     C                     MOVEL'WNE0005' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Must be greater than or equal to Their Interest Accrual
+      ** Control Date.
+      *
+     C********** ZDAYNO    IFLT #1TIAC                                    100291
+     C           ZDAYNO    IFLE #1TIAC                                    100291
+     C                     MOVEL'WNE0006' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN50
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     ELSE
+     C                     Z-ADDWUNPCD    WTNPCD
+     C                     END
+      *
+      ** Validate Their Interest Processing Method
+      *
+     C*
+     C/COPY WNCPYSRC,DL1600WC10
+     C*
+      *                                                                                       CIR007
+      ** If Their Rate Change Frequency Code is 'O',then Their Interest                       CIR007
+      ** Processing Method must be blank.                                                     CIR007
+      *                                                                                       CIR007
+     C           STINPM    IFNE *BLANKS                                                       CIR007
+     C           CIR007    ANDEQ'Y'                                                           CIR007
+     C           #1TICF    ANDEQ'O'                                                           CIR007
+     C                     MOVEL'WNE0043' ZAMSID                                              CIR007
+     C                     MOVEL'WNMSGF'  ZAMSGF                                              CIR007
+     C                     EXSR ZASNMS                                                        CIR007
+     C                     MOVE *ON       *IN43                                               CIR007
+     C                     MOVE *ON       *IN50                                               CIR007
+     C                     ENDIF                                                              CIR007
+      *                                                                                       CIR007
+     C           STINPM    IFNE *BLANKS
+     C           *IN43     ANDEQ*OFF                                                          CIR007
+      *
+      ** Must be D, Y, C or K
+      *
+     C           STINPM    IFNE 'D'
+     C           STINPM    ANDNE'Y'
+     C           STINPM    ANDNE'C'
+     C           STINPM    ANDNE'K'
+     C           CIR006    ANDEQ'N'                                       CIR006
+     C                     MOVEL'WNE0010' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN50
+     C                     END
+      *                                                                   CIR006
+      ** Must be D, Y, C, K, A, I, L for CIR006                           CIR006
+      *                                                                   CIR006
+     C           STINPM    IFNE 'D'                                       CIR006
+     C           STINPM    ANDNE'Y'                                       CIR006
+     C           STINPM    ANDNE'C'                                       CIR006
+     C           STINPM    ANDNE'K'                                       CIR006
+     C           STINPM    ANDNE'A'                                       CIR006
+     C           STINPM    ANDNE'I'                                       CIR006
+     C           STINPM    ANDNE'L'                                       CIR006
+     C           CIR006    ANDEQ'Y'                                       CIR006
+     C                     MOVEL'WNE0041' ZAMSID                          CIR006
+     C                     MOVEL'WNMSGF'  ZAMSGF                          CIR006
+     C                     EXSR ZASNMS                                    CIR006
+     C                     MOVE *ON       *IN43                           CIR006
+     C                     MOVE *ON       *IN50                           CIR006
+     C                     ENDIF                                          CIR006
+      *
+      ** Principal schedule is not allowed with interest up front or
+      **   interest is capitalised.
+      *
+     C           #1DTYP    IFEQ 'RS'
+     C           SUNPCD    ANDNE*BLANKS
+     C           #1DTYP    OREQ 'RX'
+     C           STNPCD    ANDNE*BLANKS
+     C                     MOVEL'WNE0011' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN50
+     C                     END
+      *                                                                   CIR006
+     C           CIR006    IFEQ 'Y'                                       CIR006
+     C           SUNPCD    ANDNE*BLANK                                    CIR006
+      *                                                                   CIR006
+     C           #1DTYP    IFEQ 'RP'                                      CIR006
+     C           #1DTYP    OREQ 'RR'                                      CIR006
+     C           #1DTYP    OREQ 'RF'                                      CIR006
+     C                     MOVEL'WNE0011' ZAMSID                          CIR006
+     C                     MOVEL'WNMSGF'  ZAMSGF                          CIR006
+     C                     EXSR ZASNMS                                    CIR006
+     C                     MOVE *ON       *IN43                           CIR006
+     C                     MOVE *ON       *IN50                           CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C                     ENDIF                                          CIR006
+      *
+     C           STINPM    IFEQ 'D'
+     C           STINPM    OREQ 'Y'
+      *                                                                   CIR006
+      ** Interest up front is not allowed for Caps/Collars/Floors         CIR006
+      *                                                                   CIR006
+     C           CIR006    IFEQ 'Y'                                       CIR006
+      *                                                                   CIR006
+     C           #1DTYP    IFEQ 'RP'                                      CIR006
+     C           #1DTYP    OREQ 'RR'                                      CIR006
+     C           #1DTYP    OREQ 'RF'                                      CIR006
+     C                     MOVEL'WNE0039' ZAMSID                          CIR006
+     C                     MOVEL'WNMSGF'  ZAMSGF                          CIR006
+     C                     EXSR ZASNMS                                    CIR006
+     C                     MOVE *ON       *IN43                           CIR006
+     C                     MOVE *ON       *IN50                           CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C                     ENDIF                                          CIR006
+      *
+      ** Their Interest Rate Change Frequency must be 'Z'
+      *
+     C           #1TICF    IFNE *BLANKS
+     C           #1TICF    ANDNE'Z'
+     C                     MOVEL'WNE0012' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Their Interest Payment Frequency must be 'Z'
+      *
+     C           #1TIPF    IFNE *BLANKS
+     C           #1TIPF    ANDNE'Z'
+     C                     MOVEL'WNE0037' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Access IRS Date Schedule and check if last
+      ** interest payment date = maturity date.
+      *
+     C                     Z-ADD#1DLNO    KDLNO1
+     C                     MOVE 'T'       KOTIN1
+     C                     MOVE 'P'       KRCIP1
+     C                     Z-ADD#1MDAT    KPRDT1
+      *
+     C           KDSCH1    SETLLDLDTSCD0                 80
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'WNE0034' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Interest rate change date must have corresponding
+      ** interest payment date in IRS Date Schedule.
+      *
+     C                     Z-ADD#1DLNO    KDLNO2
+     C                     MOVE 'T'       KOTIN2
+     C                     MOVE 'R'       KRCIP2
+      *
+      ** Read rate change date
+      *
+     C                     MOVE '0'       *IN78
+     C           KDSCH2    SETLLDLDTSCDD
+     C           KDSCH2    READEDLDTSCDD                 79
+     C           *IN79     DOWEQ'0'
+     C           *IN78     ANDEQ'0'
+      *
+      ** Read payment date
+      *
+     C                     Z-ADDPRDT      KPRDT1
+     C           KDSCH1    CHAINDLDTSCD0             78
+     C           *IN78     IFEQ '1'
+     C                     MOVEL'WNE0035' ZAMSID
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** Read next rate change date
+      *
+     C           KDSCH2    READEDLDTSCDD                 79
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL1600WC11
+     C*
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LUPFN - Set up Up-front fee details                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LUPFN    BEGSR
+      *
+      ** If any of the Up-front fee details have been
+      ** amended, set Confirmation Required indicator to Y
+      ** otherwise, set to N.
+      *
+     C           #1UPVD    IFNE WUPVD
+     C           #1UPFE    ORNE WUPFE
+     C           #1UPPR    ORNE SUPPR
+     C                     MOVE 'Y'       #1CNRQ
+     C                     EXSR UPDUPF                                                        207296
+     C                     ELSE
+     C                     MOVE 'N'       #1CNRQ
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                                                  207296
+      *****************************************************************                       207296
+      *                                                               *                       207296
+      *  UPDUPF SR.    Write into PF/DLDGUPFE old values of up-front  *                       207296
+      *                value date, fee and P/R indicator              *                       207296
+      *                                                               *                       207296
+      *****************************************************************                       207296
+      *                                                                                       207296
+     C           UPDUPF    BEGSR                                                              207296
+      *                                                                                       207296
+     C           #1ACTN    IFEQ 'A'                                                           207296
+     C                     MOVE #1DLNO    DDLNO   60                                          207296
+     C           DDLNO     CHAINDLDGUPL1             01                                       207296
+     C           *IN01     IFEQ '1'                                                           207296
+     C                     MOVE DDLNO     DLNO                                                207296
+     C                     MOVE #1UPVD    UPVD                                                207296
+     C                     MOVE #1UPFE    UPFE                                                207296
+     C                     MOVE #1UPPR    UPPR                                                207296
+     C                     WRITEDLDGREFF                                                      207296
+     C                     ELSE                                                               207296
+     C                     MOVE #1UPFE    UPFE                                                207296
+     C                     MOVE #1UPVD    UPVD                                                207296
+     C                     MOVE #1UPPR    UPPR                                                207296
+     C                     UPDATDLDGREF                                                       207296
+     C                     END                                                                207296
+     C                     END                                                                207296
+      *                                                                                       207296
+     C                     ENDSR                                                              207296
+      *****************************************************************                       207296
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LSCRE - Initialise screen                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LSCRE    BEGSR
+      *
+      ** Initialise screen indicators
+      *
+     C                     MOVEA'00000'   *IN,25
+     C                     MOVE '0'       *IN32
+     C                     MOVE *OFF      *IN33                           CIR006
+     C                     MOVE *OFF      *IN34                           CIR006
+     C                     MOVE *OFF      *IN37                           CIR006
+     C                     MOVE *OFF      *IN38                           CIR006
+      *
+      ** Initialise screen fields
+      *
+     C                     MOVELWSID      SWSID
+     C                     MOVE SDLNO     WDLNO   6
+     C                     MOVE #1DLNO    SDLNO
+     C                     MOVE #1ACTN    SACTN
+     C                     MOVE SDTYP     WDTYP   2
+     C                     MOVE #1DTYP    SDTYP
+     C                     MOVE #1DLST    SDLST
+      *
+      ** Convert dates to MMDDYY or DDMMYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+      *
+     C                     MOVE #1DDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SDDAT
+      *
+     C                     MOVE #1VDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SVDAT
+      *
+     C                     MOVE #1MDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SMDAT
+      *
+     C                     MOVE #1BRCA    SBRCA
+     C                     MOVE #1BRKC    SBRKC
+      *
+     C           #1BRKC    IFNE 'TELX'
+     C           #1BRKC    ANDNE'PHON'
+     C           #1BRKC    ANDNE'MAIL'
+      *
+      ** Format Brokerage according to number of decimal places
+      ** of broker currency
+      *
+     C                     CALL 'AOBROKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM #1BRKC    @BRKC   4
+     C           SDBROK    PARM SDBROK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL#1BRKC    DBKEY            ***************
+     C                     MOVEL'SDBROKPD'DBFILE           * DB ERROR 003*
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM A9BRCY    @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELA9BRCY    DBKEY            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 004*
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADD#1BAGE    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SBAGE
+     C                     END
+      *
+     C           #1LNKD    IFNE 0
+     C                     MOVE #1LNKD    SLNKDN
+     C                     ELSE
+     C                     MOVE *BLANKS   SLNKDN
+     C                     END
+      *
+     C                     MOVEL#1CNUM    SCNUM
+     C                     MOVE #1CDAS    SCDAS
+      *
+     C                     MOVE #1UCUC    SUCUCY
+      *
+     C           #1DTYP    IFEQ 'RX'
+     C                     MOVE #1TCUC    STCUCY
+     C                     END
+      *
+      ** Format the amounts using the currency decimal places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM #1UCUC    @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL#1UCUC    DBKEY            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 001*
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Our principal amount
+      *
+     C                     Z-ADD#1UPAM    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SUPAMT
+      *
+     C                     Z-ADDA6NBDP    WUCDP   10
+     C                     Z-ADDA6NBDP    WTCDP   10
+      *
+     C           #1DTYP    IFEQ 'RX'
+      *
+      ** Their principal amount
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM #1TCUC    @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL#1TCUC    DBKEY            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 002*
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADD#1TPAM    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STPAMT
+      *
+     C                     Z-ADDA6NBDP    WTCDP
+     C                     END
+      *
+     C           #1ACTN    IFEQ 'I'
+     C           SDLNO     ANDNEWDLNO
+     C           #1ACTN    OREQ 'I'
+     C           SDTYP     ANDNEWDTYP
+     C                     MOVE *BLANKS   INFLDS
+     C                     END
+      *
+     C           CIR002    IFEQ 'Y'
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C/COPY WNCPYSRC,DL1600WCN1
+     C           #1ACTN    IFEQ 'E'
+     C           #1ACTN    OREQ 'A'
+     C           #1ACTN    OREQ 'R'
+     C/COPY WNCPYSRC,DL1600WCK1
+      *
+      ** Display unsettled interest and interest adjustment.
+      *
+     C                     MOVE '1'       *IN32
+      *                                                                   CIR006
+     C           CIR006    IFEQ 'Y'                                       CIR006
+     C           #1UINP    ANDEQ'A'                                       CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1UINP    ANDEQ'I'                                       CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1UINP    ANDEQ'L'                                       CIR006
+     C           CIR006    OREQ 'N'                                       CIR006
+      *
+      ** Format Our unsettled interest
+      *
+     C                     Z-ADD#1OUSI    ZFLD15
+     C                     Z-ADDWUCDP     ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SOUSI
+      *
+      ** Format Our unsettled interest adjustment
+      *
+     C                     Z-ADD#1OUSA    ZFLD15
+     C                     Z-ADDWUCDP     ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SOUSA
+      *                                                                   CIR006
+     C                     MOVE *ON       *IN37                           CIR006
+     C                     MOVE *ON       *IN33                           CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C           CIR006    IFEQ 'Y'                                       CIR006
+     C           #1TINP    ANDEQ'A'                                       CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1TINP    ANDEQ'I'                                       CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           #1TINP    ANDEQ'L'                                       CIR006
+     C           CIR006    OREQ 'N'                                       CIR006
+      *
+      ** Format Their unsettled interest
+      *
+     C                     Z-ADD#1TUSI    ZFLD15
+     C                     Z-ADDWTCDP     ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STUSI
+      *
+      ** Format Their unsettled interest adjustment
+      *
+     C                     Z-ADD#1TUSA    ZFLD15
+     C                     Z-ADDWTCDP     ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STUSA
+      *                                                                   CIR006
+     C                     MOVE *ON       *IN38                           CIR006
+     C                     MOVE *ON       *IN34                           CIR006
+     C                     ENDIF                                          CIR006
+      *
+     C                     END
+     C                     END
+      *
+     C           #1ACTN    IFNE 'I'
+      *
+      ** Up-Front Fee details
+      *
+     C           #1UPVD    IFNE 0
+     C                     MOVE #1UPVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SUPVD
+      *
+     C           #1UPPR    IFEQ 'P'
+     C                     Z-ADDWUCDP     WUPDP   10
+     C                     ELSE
+     C                     Z-ADDWTCDP     WUPDP
+     C                     END
+      *
+     C                     MOVE #1UPPR    SUPPR
+      *
+     C                     Z-ADD#1UPFE    ZFLD15
+     C                     Z-ADDWUPDP     ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SUPFE
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   SUPVD
+     C                     MOVE *BLANKS   SUPPR
+     C                     MOVE *BLANKS   SUPFE
+     C                     END
+      *
+     C           #1ACTN    IFEQ 'A'
+     C********** #1ORED    ANDNEAGRDNB                                                        207296
+     C           AGRDNB    ANDGT#1UPVD                                                        207296
+     C           #1UPVD    ANDNE0                                                             207296
+     C           #1ACTN    OREQ 'E'
+     C           #1ACTN    OREQ 'R'
+     C/COPY WNCPYSRC,DL1600WCK2
+      *
+      ** Protect Up-Front Fee details
+      *
+     C                     MOVE '1'       *IN26
+     C                     END
+      *
+      ** Buy-Out details
+      *
+     C           #1BOVD    IFNE 0
+     C                     MOVE #1BOVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SBOVD
+      *
+     C           #1BAPR    IFEQ 'P'
+     C                     Z-ADDWUCDP     WBODP   10
+     C                     ELSE
+     C                     Z-ADDWTCDP     WBODP
+     C                     END
+      *
+     C                     MOVE #1BAPR    SBAPR
+      *
+     C                     Z-ADD#1BOAM    ZFLD15
+     C                     Z-ADDWBODP     ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SBOAM
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   SBOVD
+     C                     MOVE *BLANKS   SBAPR
+     C                     MOVE *BLANKS   SBOAM
+     C                     END
+      *
+     C           #1ACTN    IFEQ 'A'
+     C           AGRDNB    ANDGT#1BODD
+     C           #1BODD    ANDNE0
+     C           #1ACTN    OREQ 'E'
+     C           #1ACTN    OREQ 'R'
+     C/COPY WNCPYSRC,DL1600WCK3
+      *
+      ** Protect Buy-out details
+      *
+     C                     MOVE '1'       *IN27
+     C                     END
+      *
+      ** Our Next principal change date
+      *
+     C           #1UNPC    IFNE 0
+     C                     MOVE #1UNPC    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SUNPCD
+     C                     ELSE
+     C                     MOVE *BLANKS   SUNPCD
+     C                     END
+      *
+      ** Their Next principal change date
+      *
+     C           #1DTYP    IFEQ 'RX'
+     C           #1TNPC    IFNE 0
+     C                     MOVE #1TNPC    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     STNPCD
+     C                     ELSE
+     C                     MOVE *BLANKS   STNPCD
+     C                     END
+     C                     ELSE
+     C                     MOVE *BLANKS   STNPCD
+     C                     END
+      *
+      ** Our Interest processing method
+      *
+     C                     MOVE #1UINP    SUINPM
+      *
+      ** Their Interest processing method
+      *
+     C                     MOVE #1TINP    STINPM
+      *
+     C                     END
+      *
+      ** Buy-out details can only be entered if value
+      ** date of the deal has passed
+      ** Buy-outs will not be available for OIS Deals.                                        CIR007
+      *
+     C           #1ACTN    IFEQ 'I'
+     C           #1ACTN    OREQ 'A'
+     C           #1VDAT    IFGT AGRDNB
+     C           #1UICF    OREQ 'O'                                                           CIR007
+     C           CIR007    ANDEQ'Y'                                                           CIR007
+     C           #1TICF    OREQ 'O'                                                           CIR007
+     C           CIR007    ANDEQ'Y'                                                           CIR007
+     C                     MOVE '1'       *IN27
+     C                     END
+     C                     END
+      *
+     C           CIR001    IFNE 'Y'
+     C           #1ACTN    OREQ 'E'
+     C           #1ACTN    OREQ 'R'
+     C           ACTN      OREQ 'X'                                       188420
+     C/COPY WNCPYSRC,DL1600WCK4
+      *
+      ** Protect Next Principal Change Date and
+      ** Processing Method
+      *
+     C                     MOVE '1'       *IN28
+      *
+      ** Protect Up-Front Fee and Buy-Out details
+      *
+     C                     MOVE '1'       *IN29
+     C                     END
+      *
+      ** Interest processing method is not amendable.
+      *
+     C           #1ACTN    IFNE 'I'
+     C                     MOVE '1'       *IN25
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LCLEA - Clear message file and error indicators         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LCLEA    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Initialise screen error indicators
+      *
+     C                     MOVEA'00000000'*IN,40
+     C                     MOVEA'0000'    *IN,48
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LRETU - Return field values to calling program          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LRETU    BEGSR
+      *
+     C           #1ACTN    IFEQ 'I'
+     C           #1ACTN    OREQ 'A'
+     C*
+     C/COPY WNCPYSRC,DL1600WC12
+     C*
+     C                     MOVE SUINPM    #1UINP
+     C                     Z-ADDWUNPCD    #1UNPC
+     C                     MOVE STINPM    #1TINP
+     C                     Z-ADDWTNPCD    #1TNPC
+     C                     Z-ADDWUPVD     #1UPVD
+     C                     Z-ADDWUPFE     #1UPFE
+     C                     MOVE SUPPR     #1UPPR
+      *
+     C           WBOVD     IFEQ 0
+     C                     Z-ADD0         #1BODD
+     C                     ELSE
+     C           #1BOVD    IFEQ 0
+     C                     Z-ADDBJRDNB    #1BODD
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDWBOVD     #1BOVD
+     C                     Z-ADDWBOAM     #1BOAM
+     C                     MOVE SBAPR     #1BAPR
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL1600WC13
+     C*
+      *
+     C                     MOVE *BLANKS   W0RTN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LPREV - Exit from program if F12 has been pressed       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LPREV    BEGSR
+      *
+      **   Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LEXIT - Exit from program if F3 has been pressed        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LEXIT    BEGSR
+      *
+      **   Set F3 return code and end program
+      *
+      *
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LINIT - Initial Processing                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LINIT    BEGSR
+      *
+      ** Copyright Statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN83
+     C                     ELSE
+     C                     MOVE '0'       *IN83
+     C                     END
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** General ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Calculate Event Control Date as lesser of the
+      ** Next Working Day - 1 and the Accrual Profit Date.
+      *
+     C           BJDNWD    SUB  1         EVCD    50
+      *
+     C           BKAPDT    IFLT EVCD
+     C                     Z-ADDBKAPDT    EVCD
+     C                     END
+      *
+      ** Access AOSARDR0 to check if CIR001 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CIR001'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CIR001  1
+     C                     ELSE
+     C                     MOVE 'N'       CIR001
+     C                     END
+      *
+      ** Access AOSARDR0 to check if CIR002 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CIR002'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CIR002  1
+     C                     ELSE
+     C                     MOVE 'N'       CIR002
+     C                     END
+     C/COPY WNCPYSRC,DL1600WCN2
+      *                                                                   CEU003
+      ** Determine if SAR CEU003 (EMU Dealing Settlement Ccy Conversion)  CEU003
+      ** is installed.                                                    CEU003
+      *                                                                   CEU003
+     C                     CALL 'AOSARDR0'                                CEU003
+     C                     PARM *BLANKS   P@RTCD  7                       CEU003
+     C                     PARM '*VERIFY 'P@OPTN  7                       CEU003
+     C                     PARM 'CEU003'  P@SARD  6                       CEU003
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU003
+     C           P@RTCD    IFEQ *BLANKS                                   CEU003
+     C                     MOVE 'Y'       CEU003  1                       CEU003
+     C                     ELSE                                           CEU003
+     C                     MOVE 'N'       CEU003                          CEU003
+     C                     ENDIF                                          CEU003
+      *
+      ** Determine if SAR CIR006 is installed                             CIR006
+      *                                                                   CIR006
+     C                     CALL 'AOSARDR0'                                CIR006
+     C                     PARM *BLANKS   @RTCD                           CIR006
+     C                     PARM '*VERIFY '@OPTN                           CIR006
+     C                     PARM 'CIR006'  @SARD                           CIR006
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR006
+      *                                                                   CIR006
+     C           @RTCD     IFNE *BLANKS                                   CIR006
+     C           @RTCD     ANDNE'*NRF   '                                 CIR006
+     C                     MOVEL'SCSARDPD'DBFILE                          CIR006
+     C                     Z-ADD5         DBASE                           CIR006
+     C                     MOVEL'CIR006'  DBKEY                           CIR006
+     C                     EXSR *PSSR                                     CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C           @RTCD     IFEQ *BLANKS                                   CIR006
+     C                     MOVE 'Y'       CIR006  1                       CIR006
+     C                     ELSE                                           CIR006
+     C                     MOVE 'N'       CIR006                          CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                                       CIR007
+      ** Access SAR details file to determine if CIR007                                       CIR007
+      ** (Overnight Index Swaps) is switched on.                                              CIR007
+      *                                                                                       CIR007
+     C                     CALL 'AOSARDR0'                                                    CIR007
+     C                     PARM *BLANKS   PRTCD   7                                           CIR007
+     C                     PARM '*VERIFY 'POPTN   7                                           CIR007
+     C                     PARM 'CIR007'  PSARD   6                                           CIR007
+     C           SCSARD    PARM SCSARD    DSFDY                                               CIR007
+      *                                                                                       CIR007
+     C           PRTCD     IFNE *BLANKS                                                       CIR007
+     C           PRTCD     ANDNE'*NRF   '                                                     CIR007
+     C                     MOVEL'SCSARDPD'DBFILE                                              CIR007
+     C                     Z-ADD6         DBASE                                               CIR007
+     C                     MOVEL'CIR007'  DBKEY                                               CIR007
+     C                     EXSR *PSSR                                                         CIR007
+     C                     ENDIF                                                              CIR007
+      *                                                                                       CIR007
+     C           PRTCD     IFEQ *BLANKS                                                       CIR007
+     C                     MOVE 'Y'       CIR007  1                                           CIR007
+     C                     ELSE                                                               CIR007
+     C                     MOVE 'N'       CIR007                                              CIR007
+     C                     ENDIF                                                              CIR007
+      *
+      ** Define work fields
+      *
+     C           *LIKE     DEFN #1UNPC    WUNPCD
+     C           *LIKE     DEFN #1TNPC    WTNPCD
+     C           *LIKE     DEFN #1UPVD    WUPVD
+     C           *LIKE     DEFN #1UPFE    WUPFE
+     C           *LIKE     DEFN #1BOVD    WBOVD
+     C           *LIKE     DEFN #1BOAM    WBOAM
+      *
+     C           #1ACTN    IFEQ 'E'
+     C                     MOVE '1'       *IN24
+     C                     ELSE
+     C                     MOVE '0'       *IN24
+     C                     END
+      *                                                                   CEU003
+      ** Determine our and their effective setllement currency            CEU003
+      ** workfields and corresponding nostro location.                    CEU003
+      *                                                                   CEU003
+     C                     MOVE *BLANKS   WPSCY   3                       CEU003
+     C                     MOVE *BLANKS   WPNLOC  3                       CEU003
+     C                     MOVE *BLANKS   WRSCY   3                       CEU003
+     C                     MOVE *BLANKS   WRNLOC  3                       CEU003
+      *                                                                   CEU003
+     C           CEU003    IFEQ 'Y'                                       CEU003
+     C           #1PSCY    ANDNE*BLANKS                                   CEU003
+     C                     MOVEL#1PSCY    WPSCY                           CEU003
+     C                     ELSE                                           CEU003
+     C                     MOVEL#1UCUC    WPSCY                           CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+     C           CEU003    IFEQ 'Y'                                       CEU003
+     C           #1RSCY    ANDNE*BLANKS                                   CEU003
+     C                     MOVEL#1RSCY    WRSCY                           CEU003
+     C                     ELSE                                           CEU003
+     C                     MOVEL#1TCUC    WRSCY                           CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+      ** Access nostro location for our-effective-settlement-currency     CEU003
+      *                                                                   CEU003
+     C                     CALL 'AONOSTR0'                                CEU003
+     C                     PARM *BLANKS   P@RTCD  7                       CEU003
+     C                     PARM '*KEY   ' P@OPTN  7                       CEU003
+     C                     PARM *BLANK    P@CUST  6                       CEU003
+     C                     PARM WPSCY     P@CCY   3                       CEU003
+     C**********           PARM *BLANKS   P@ACCD  4                                    CEU003 CGL029
+     C                     PARM *BLANKS   P@ACCD 10                                           CGL029
+     C                     PARM *BLANKS   P@ACSN  2                       CEU003
+     C                     PARM #1UNON    P@NOST  20                      CEU003
+     C                     PARM *BLANKS   P@BRCD  3                       CEU003
+     C                     PARM *BLANKS   P@CSSN 10                       CEU003
+     C                     PARM *BLANKS   P@PNOI  1                       CEU003
+     C           SDNOST    PARM SDNOST    DSFDY                           CEU003
+      *                                                                   CEU003
+     C           P@RTCD    IFEQ *BLANKS                                   CEU003
+     C                     MOVE A7NOSN    WPNLOC                          CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+      ** Access nostro location for their-effective-settlement-currency   CEU003
+      *                                                                   CEU003
+     C                     CALL 'AONOSTR0'                                CEU003
+     C                     PARM *BLANKS   P@RTCD  7                       CEU003
+     C                     PARM '*KEY   ' P@OPTN  7                       CEU003
+     C                     PARM *BLANK    P@CUST  6                       CEU003
+     C                     PARM WRSCY     P@CCY   3                       CEU003
+     C**********           PARM *BLANKS   P@ACCD  4                                    CEU003 CGL029
+     C                     PARM *BLANKS   P@ACCD                                              CGL029
+     C                     PARM *BLANKS   P@ACSN  2                       CEU003
+     C                     PARM #1TNON    P@NOST  20                      CEU003
+     C                     PARM *BLANKS   P@BRCD  3                       CEU003
+     C                     PARM *BLANKS   P@CSSN 10                       CEU003
+     C                     PARM *BLANKS   P@PNOI  1                       CEU003
+     C           SDNOST    PARM SDNOST    DSFDY                           CEU003
+      *                                                                   CEU003
+     C           P@RTCD    IFEQ *BLANKS                                   CEU003
+     C                     MOVE A7NOSN    WRNLOC                          CEU003
+     C                     ENDIF                                          CEU003
+      *
+     C                     EXSR #LCLEA
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R ZASNMS - Send message to program's message queue.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R *PSSR - Program exception error routine                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,249 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Securities Interest for Macro Use')           *
+     F*****************************************************************
+     F*                                                               *
+     F*   Midas - Midas/Q Module                                      *
+     F*                                                               *
+     F*         MQ503X -  Calculate securities interest               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      *                 MD034776           Date 08Jul15               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183A         Date 20Nov12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMQ001             Date 08Dec97               *
+      *                                    Date DDMmmYY               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  CMQ001 - MidasQ rationalisation.  Remove definition for      *
+     F*           ZAMT as this is correctly defined in SR/ZACCR.      *
+     F*                                                               *
+     F*****************************************************************
+     FSDBANKPDIF  E           K        DISK
+     FSDCURRL1IF  E           K        DISK
+     FTABTB11 IF  E                    DISK
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+      **
+     E                    CD         12  4 0             CD01-12 ARRAY
+     E                    CR         12  1               CR01-12 ARRAY
+     E                    ZF29   14  32  5 0             29TH FEB ARRAY
+     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    POWER8  1   8  8 4             POWER8 ARRAY
+      **
+     I/COPY ZSRSRC,ZNCDZ2
+      **
+      * INPUT PARAMETERS
+      **
+     C           *ENTRY    PLIST
+     C                     PARM           SESN   10
+     C                     PARM           NOML   110
+     C                     PARM           ACIN    1
+     C                     PARM           INTROT 130
+      **
+     C           INVTPK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      **
+      **
+      ** GET ICD RECORD TO FIND DATE FORMAT AND RUNDATE
+      **
+     C                     EXSR GETICD
+      **
+      ** GET SECURITY DETAILS
+      **
+     C                     EXSR GETSEC
+      **
+      ** INTEREST CALCULATION
+      **
+     C           *IN20     IFEQ '0'
+     C           MATY      ANDNE*ZERO
+     C           DYBS      ANDNE'4'
+     C           CD01      ANDNE*ZERO
+     C                     EXSR INTCAL
+     C                     ELSE
+     C                     Z-ADD*ZERO     INTROT
+     C                     END
+      **
+     C                     SETON                     LR
+     C                     RETRN
+      **
+      ********************************************************************
+      **
+     C           GETICD    BEGSR
+      **
+      ** GET SDBANKPD ICD RECORD
+      **
+     C                     READ SDBANKPD                 01
+      **
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ELSE
+     C                     SETOF                     98
+     C                     END
+      **
+     C                     Z-ADDBJRDNB    RUND    50
+      **
+     C                     ENDSR
+      **
+      ********************************************************************
+      **
+     C           GETSEC    BEGSR
+      **
+      ** GET SECURITY DETAILS
+      **
+     C           SESN      CHAINSECTYDF              20
+     C           *IN20     CABEQ'1'       EGETSE
+      **
+      ** ACCESS SDCURRPD FOR NOMINAL CURRENCY (NMCY) DECIMAL PLACES
+      ** SET CDP TO NOMINAL CURRENCY DECIMAL PLACES
+      **
+     C           NMCY      CHAIN@A6REA3              20
+     C           *IN20     CABEQ'1'       EGETSE
+     C                     Z-ADD0         CDP
+      **
+      ** GET INVESTMENT TYPE DETAILS USING NMCY AND SITP FROM SECTYD
+      ** (FOR PROCESSING TYPE (PROT)
+      **
+     C           INVTPK    CHAININVTPDF              20    *
+      **
+     C           EGETSE    ENDSR
+      **
+     C********************************************************************
+      **
+     C           INTCAL    BEGSR
+      **
+      ** CALCULATE NEXT COUPON DATE (NCD) AFTER LAST COUPON DATE
+      **
+     C                     Z-ADD0         ECD     50
+     C           LCPN      ADD  1         ECD
+     C                     EXSR ZNCD
+      **
+      ** IF EX, CALC INT. FROM 'TO DATE' TO NEXT COUPON DATE
+      **
+     C           ACIN      IFEQ 'X'
+     C                     Z-ADDRUND      ZDCSDT  50
+     C                     Z-ADDNCD       ZDCEDT  50
+     C                     ELSE
+      **
+      ** IF CUM, CALC INT. FROM 'FROM DATE' TO 'TO DATE'
+      **
+     C           ACIN      IFNE 'F'
+     C                     Z-ADDLCPN      ZDCSDT
+     C                     Z-ADDRUND      ZDCEDT
+     C                     ELSE
+     C                     Z-ADDLCPN      ZDCSDT
+     C                     Z-ADDNCD       ZDCEDT
+     C                     END
+     C                     END
+      **
+     C***********          Z-ADDNOML      ZAMT   110                      CMQ001
+     C                     Z-ADDNOML      ZAMT                            CMQ001
+      **
+     C                     Z-ADDNMDP      NMDP    10
+     C                     Z-ADDCDP       CDP     10
+     C                     MOVE PROT      PROT    1
+      **
+     C                     EXSR ZACCZ
+     C                     MOVE ZDCINT    INTROT
+      **
+      ** IF EX-COUPON, REVERSE SIGN OF INTEREST
+      **
+     C           ACIN      IFEQ 'X'
+     C                     Z-SUBINTROT    INTROT
+     C                     END
+     C                     ENDSR
+      **********************************************************************
+     C/COPY ZSRSRC,ZACCZZ1
+     C/COPY ZSRSRC,ZACCRZ1
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/COPY ZSRSRC,ZNCDZ3
+     C/COPY ZSRSRC,ZDYYRZ3
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZLCDZ1
+     C*
+     C* THIS USED TO BE A /COPY TO ZICD2Z1, BUT IT DIDN7T WORK
+     C* SO IT WES COPIED IN AND AMENDED HERE
+     C********************************************************************
+     C*    SUBROUTINE- ZICD2
+     C*    ACCESS ICD RECORD 2 FROM TABTB11 FOR SECURITIES TRADING
+     C*
+     C*  1.TABTB11 MUST BE DECLARED IN THE PROGRAM
+     C*  2.ON RETURN FROM THIS S/R THE PROGRAM MUST CHECK U7/U8 -
+     C*    AND IF ON MUST EXECUTE STD DATABASE ERROR ROUTINE
+     C*  3.*IN99 IS USED
+     C*
+     C********************************************************************
+     C*
+     C           ZICD2     BEGSR                           *** ZICD2  ***
+     C*
+     C                     READ TABTB11F                 99
+      * ERROR IF NO RECORD FOUND OR IF IT IS DELETED
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8
+     C                     ELSE
+     C           RECI      IFNE 'D'
+     C                     SETON                     U7U8
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*
+     C/COPY ZSRSRC,ZRATEZ1
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

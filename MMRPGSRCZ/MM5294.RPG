@@ -1,0 +1,136 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Penalty Termination Check - Blocking')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS¦ABS - Dealing Money Market Module                      *
+      *                                                               *
+      *  MM5294 - Penalty Termination Check for Blocking.             *
+      *                                                               *
+      *  Function:  This program checks if the deal is due for        *
+      *             penalty termination so it will be blocked for     *
+      *             deal amendment, deal deletion and entry of        *
+      *             interest adjustment.                              *
+      *                                                               *
+      *  Called By: DL0100 -  Midas DL Accrued interest adjustments   *
+      *             MM0028 -  Midas MM Deal amendments maintenance    *
+      *             MMM089 -  Midas MM Loans/Deposits/NA issued input *
+      *             MMDEAMRTV - Midas MM Deal amendment rtv           *
+      *             MMLDNIRTV - Midas MM Loans/Deposits rtv           *
+      *                                                               *
+      *  (C) Copyright Finastra International Limited 2008            *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG26488           Date 19Oct09               *
+      *                 258692             Date 02Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256795   *Create   Date 25Sep08               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG26488 - MMPTRMPD compiled with error - attributes are     *
+      *             incompatible (Recompile)                          *
+      *  258692 - Incorrect type of PTCNUM field in MMPTRMPD          *
+      *           (Recompile).                                        *
+      *  256795 - Penalty Termination of Time Deposits (CDL052).      *
+      *                                                               *
+      *****************************************************************
+      *
+     FMMPTRML1IF  E           K        DISK         KINFSR *PSSR
+      *
+      *-------------------------------------------------------------------
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   30 - MMPTRML1 Chain fail indicator
+      *   90 - General Purpose Indicator
+      *
+      *-------------------------------------------------------------------
+      *
+     E                    CPY@    1   1 80               MKI Copyright array
+     E                    ERRM    1   1 55               Error Messages
+      *-------------------------------------------------------------------
+      *
+     ILDA       EUDSLDA                         256
+      *
+      *-------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@DLNO           Deal Number
+     C                     PARM           P@ERR            Error Indicator
+     C                     PARM           P@ERRM           Error Message
+      *
+     C                     EXSR SRINIT
+     C                     EXSR SRCHCK
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRCHCK - Check for Penalty Termination                          *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRCHCK    BEGSR
+      *
+     C           P@DLNO    CHAINMMPTRML1            N30
+      *
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       P@ERR             Block the deal
+     C                     MOVELERRM,1    P@ERRM
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRINIT - Initial Program Subroutine                             *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Receive the parameters
+     C                     Z-ADDP@DLNO    P@DLNO  60
+     C                     MOVE 'N'       P@ERR   1
+     C                     MOVE *BLANKS   P@ERRM 55
+      *
+      ** Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - Program Exception Error Routine                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MM5294'  DBPGM
+     C                     MOVEL'MMPTRMPD'DBFILE
+     C                     MOVEL'*FIRST'  DBASE
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+** CPY@     : Copyright notice for inclusion in all FINASTRA programs
+(C) Copyright Finastra International Limited 2008
+** ERRM     : Error Messages
+Deal has been blocked due to penalty termination.

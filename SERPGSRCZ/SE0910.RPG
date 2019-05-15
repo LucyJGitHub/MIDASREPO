@@ -1,0 +1,400 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Unrealised P & L Analysis Extrac')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0910 - CREATE UNREALISED PROFIT AND LOSS ANALYSIS EXTRACT  *
+     F*                                                               *
+     F*  Function: Details are extracted from the Book Position       *
+     F*   (COB)    Header (Trade or Value Date Basis) for all non-zero*
+     F*            Positions for the User. The extract is used in the *
+     F*            production of the Unrealised Profit and Loss Report*
+     F*            (Program SE0915).                                  *
+     F*                                                               *
+     F*  Called by: SEC0902 - Unrealised Profit and Loss Analysis     *
+     F*                                                               *
+     F*            Frequency:                                         *
+     F*            - on request during COB                            *
+     F*            - Automatically at end of month                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 219437             Date 11May16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 111158             Date 11Apr97               *
+     F*                 052254             Date 10Jan94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 E35999             DATE 01FEB93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 31OCT91               *
+     F*                 S01117             DATE 20MAY91               *
+     F*                 E20087             DATE 13JUN89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  219437 - Should also check the Latest Nominal Position Change*
+      *           Date (LPCD) when deciding for the price date.       *
+      *         - Applied for MD-38412.                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS006 - Hedge Accounting Phase B                            *
+     F*  111158 - Billion dollar amounts truncated on SE0915P1        *
+     F*           Old field name URNP (6P 11,0) redefined in file as  *
+     F*           new field ERNP (8P 15,0).                           *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  E35999 - Securities trading valuation rept SE0915P1 for both *
+     F*           'TRADE DATE' & 'VALUE DATE' show incorrect 'AVERAGE *
+     F*           RATE'. To fix the error, LATD is used as the price  *
+     F*           date if it is greater than LPSD, else LPRC is used  *
+     F*           if it is greater than LPSD, else LPSD is used.      *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  E20087 - Discount Amortisation Processing:                   *   E20087
+     F*          - The Average Price should be taken off BKPHDD and   *   E20087
+     F*            not BKPOSD.(Fix E18660 from S/38 omitted from AS.)*    E20087
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FBKPHJ3T IP  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     FUPLEXD  O   E                    DISK
+     FUPLEXA  O   E                    DISK
+     FIACEX   IF  E           K        DISK         KINFSR *PSSR                              CAS006
+      ** Midas SE Interest Accruals Extract                                                   CAS006
+      *                                                                                       CAS006
+     F/COPY WNCPYSRC,SE0910F001
+     FSE0910AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   20  - FIRST CYCLE INDICATOR                                 *
+     F*   21  - PARAMETER INPUT = T                                   *
+     F*   22  - RECORD READ MATCHES PARAMETER INPUT                   *
+      *   23  - IACEX Search (CHAIN) Indicator                        *                       CAS006
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - Database Error.                                       *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - FIRST TIME THROUGH PROCESS                          *
+     F*  W01    - WRITE RECORD TO OUTPUT FILE                         *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZSYSTM - Obtains ICD1.                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80                                S01117
+      /EJECT                                                              S01117
+     IIACEXDF                                                                                 CAS006
+     I              RECI                            IRID                                      CAS006
+     I              IARC                            IAIR                                      CAS006
+      ** IACEXDF Record Format                                                                CAS006
+      *                                                                                       CAS006
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA********UDS                            256                      S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I*                                                                   S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     IDSFDY     E DSDSFDY                                                                     CAS006
+      ** Short Access Object Data Structure                                                   CAS006
+      *                                                                                       CAS006
+     ISCSARD    E DSSCSARDPD                                                                  CAS006
+      ** Switchable Feature Details Data Structure                                            CAS006
+      *                                                                                       CAS006
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TYPE    1
+      *                                                                                       CAS006
+      ** Midas SE Interest Accruals Extract Key List                                          CAS006
+      *                                                                                       CAS006
+     C           KIACE     KLIST                                                              CAS006
+     C                     KFLD           KBRCH   3                                           CAS006
+     C                     KFLD           KBKCD   2                                           CAS006
+     C                     KFLD           KCCY    3                                           CAS006
+     C                     KFLD           KINVT   3                                           CAS006
+     C                     KFLD           KSESN  10                                           CAS006
+     C*
+     C           MAIN      TAG                             ***  MAIN  ***
+     C*
+     C* FIRST TIME THROUGH PROCESSING
+     C*
+     C           *IN20     IFEQ '0'
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT                           S01117
+     C                     MOVEL'SE0910'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     EXSR FIRST
+      *                                                                                       CAS006
+      ** Check if CAS006 is enabled.                                                          CAS006
+      *                                                                                       CAS006
+     C                     CALL 'AOSARDR0'                                                    CAS006
+     C                     PARM *BLANKS   PRTCD   7                                           CAS006
+     C                     PARM '*VERIFY' POPTN   7                                           CAS006
+     C                     PARM 'CAS006'  PSARD   6                                           CAS006
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS006
+      *                                                                                       CAS006
+     C                     MOVE 'N'       CAS006  1                                           CAS006
+     C           PRTCD     IFEQ *BLANKS                                                       CAS006
+     C                     MOVE 'Y'       CAS006                                              CAS006
+     C                     ELSE                                                               CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFNE '*NRF'                                                        CAS006
+     C           *LOCK     IN   LDA                                                           CAS006
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS006
+     C                     MOVEL'CAS006'  DBKEY                                               CAS006
+     C                     Z-ADD4         DBASE                                               CAS006
+     C                     OUT  LDA                                                           CAS006
+     C                     EXSR *PSSR                                                         CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C                     ENDIF                                                              CAS006
+     C*
+     C* DETERMINE INPUT PARAMETER
+     C*
+     C           TYPE      COMP 'T'                      21
+     C                     SETON                     20
+     C                     END
+     C*
+     C* ADD TO INPUT COUNT AND DETERMINE PARAMETER ON RECORD
+     C*
+     C                     ADD  1         INCNT   50
+     C   21      BHTV      COMP 'T'                      22
+     C  N21      BHTV      COMP 'V'                      22
+     C*
+     C* CHECK INFO FROM OTHER FILES IF NOT REPORT ERROR ONLY
+     C* ERROR IF NO NOMINAL CURRENCY
+     C*
+     C           NMCY      IFEQ '   '
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELBHSC      DBKEY            * DB ERROR 02 *
+     C***********          MOVE '02'      DBASE            ***************S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEERROR
+     C                     END
+      *
+     C* ERROR IF NO INVESTMENT TYPE
+     C           INAM      IFEQ *BLANKS
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INVTP'   DBFILE
+     C                     MOVELNMCY      ITKEY   6
+     C                     MOVE SITP      ITKEY            ***************
+     C                     MOVELITKEY     DBKEY            * DB ERROR 03 *
+     C***********          MOVE '03'      DBASE            ***************S01117
+     C                     Z-ADD3         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEERROR
+     C                     END
+     C/COPY WNCPYSRC,SE0910C001
+     C*
+     C* OUTPUT RECORD IF NOMINAL POSITION NE ZERO
+     C* AND RECORD MATCHES INPUT PARAMETER
+     C*
+     C           NPSN      IFNE 0
+     C           *IN22     ANDEQ'1'
+     C                     EXSR W01
+     C                     ADD  1         OUTCNT  50
+     C                     END
+      *
+      *================================================================
+     C*                                                               *
+     C* LAST RECORD PROCESSING - OUTPUT CONTROL REPORT AND AUDIT REC  *
+     C*                                                               *
+     CLRN20                EXSR FIRST
+     CLR                   Z-ADDOUTCNT    NORE
+     CLR                   WRITEUPLEXAF
+     CLR                   WRITECONTROL
+     C***LR*********          WRITETRAIL                                  E29170
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - Subroutine to Access the ICD1 record.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           *** FIRST  ***
+      *
+     C                     MOVEL'SE0910'  DBPGM
+     C                     EXSR ZSYSTM
+     C                     WRITEHEADAU
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C***********          MOVE '01'      DBASE            ***************S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEERROR
+     C                     END
+     C/COPY WNCPYSRC,SE0910C002
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W01    - Subroutine to Write record to Extract File.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W01       BEGSR                           ***  W01   ***
+      *
+     C                     MOVE 'D'       RECI
+     C***********          MOVE BHBR      URBR                            S01117
+     C                     MOVE BHBA      URBA                            S01117
+     C                     MOVE BHBK      URBK
+     C                     MOVE NMCY      URCY
+     C                     MOVE BHMK      URMK
+     C                     MOVE SITP      URIT
+     C                     MOVE BHSC      URSS
+     C***********          Z-ADDNPSN      URNP                            111158
+     C                     Z-ADDNPSN      ERNP                            111158
+     C***********          Z-ADDAPPB      URAP                            E20087
+     C                     Z-ADDLAVP      URAP                            E20087
+      *                                                                   E35999
+      ** Use LATD if it is greater than LPSD, else use LPRC if it is      E35999
+      ** greater than LPSD, else use LPSD as the price date.              E35999
+      *                                                                   E35999
+     C           LATD      IFGT LPSD                                      E35999
+     C                     Z-ADDLATD      PRDT                            E35999
+     C                     ELSE                                           E35999
+     C           LPRC      IFGT LPSD                                      E35999
+     C                     Z-ADDLPRC      PRDT                            E35999
+     C                     ELSE                                           E35999
+     C                     Z-ADDLPSD      PRDT                            E35999
+     C                     END                                            E35999
+      *                                                                                       219437
+     C           LPCD      IFGT PRDT                                                          219437
+     C                     Z-ADDLPCD      PRDT                                                219437
+     C                     ENDIF                                                              219437
+      *                                                                                       219437
+     C                     END                                            E35999
+      *                                                                                       CAS006
+      ** Set the Accrued Interest field if CAS006 is enabled.                                 CAS006
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+      *                                                                                       CAS006
+     C                     MOVE URBA      KBRCH                                               CAS006
+     C                     MOVE URBK      KBKCD                                               CAS006
+     C                     MOVE URCY      KCCY                                                CAS006
+     C                     MOVE URIT      KINVT                                               CAS006
+     C                     MOVE URSS      KSESN                                               CAS006
+      *                                                                                       CAS006
+     C           KIACE     SETLLIACEX                                                         CAS006
+     C           KIACE     READEIACEX                    23                                   CAS006
+      *                                                                                       CAS006
+     C                     Z-ADD0         WIAIR  130                                          CAS006
+     C                     Z-ADD0         IARC                                                CAS006
+     C           *IN23     DOWEQ'0'                                                           CAS006
+     C                     ADD  IAIR      WIAIR  130                                          CAS006
+     C           KIACE     READEIACEX                    23                                   CAS006
+     C                     ENDDO                                                              CAS006
+      *                                                                                       CAS006
+     C           WIAIR     IFNE 0                                                             CAS006
+     C                     Z-ADDWIAIR     IARC                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C                     ENDIF                                                              CAS006
+     C*                                                                   E35999
+     C                     WRITEUPLEXDF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+**  CPY@
+(c) Finastra International Limited 2001

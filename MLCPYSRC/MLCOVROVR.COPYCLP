@@ -1,0 +1,200 @@
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Multiple Language Support Module                    */
+/*                                                                   */
+/*       MLCOVROVR - Declare Statements for ML Overrides             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR316373           Date 03Jun15              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CER001             Date 25Apr05              */
+/*                      CAP084             Date 04Jul03              */
+/*                      CSF002             Date 11Aug03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CSC014             Date 21Oct99              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      149175             Date 21Oct99              */
+/* Midas DBA 3.01 ---------------------------------------------------*/
+/*                      CPB001             Date 02Jun99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CPL002             Date 08Mar99              */
+/*                      CUT004             Date 08Oct98              */
+/*                      CTI002             Date 07OCT98              */
+/*                      CAP002             Date 06May98              */
+/*                      CEU001             Date 26JAN98              */
+/*                      CTI001             Date 03OCT97              */
+/*                      CRT003             Date 22JUL96              */
+/*                      CAAA01  *CREATE    Date 01MAY95              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       NOTE: If this /COPY is amended, the following programs      */
+/*             will require recompilation:                           */
+/*                                                                   */
+/*       CER001 - LUX Upgrade to MidasPlus                           */
+/*             FCC0200  - Input cycle report requests batch program. */
+/*             FTC0630  - Pay/receive events input cycle.            */
+/*             GLC441   - Component for enquiry program GL4441.      */
+/*             GLC442   - Component for enquiry program GL4442.      */
+/*             GLC443   - Component for enquiry program GL4443.      */
+/*             GLC444   - Component for enquiry program GL4444.      */
+/*             MLC0000  - Input cycle overrides.                     */
+/*             MLC0020  - Batch overrides.                           */
+/*             MLC0030  - Input cycle overrides - Java               */                   /*CAP084*/
+/*             REC3361  - Component for enquiry program RE3661.      * *149175*/
+/*             REC3362  - Component for enquiry program RE3362.      * *149175*/
+/*             REC3363  - Component for enquiry program RE3363.      * *149175*/
+/*             REC361   - Component for enquiry program.             * *149175*/
+/*             SCBEGIN  - System start-up menu.                      */
+/*             SCC3010M - Switchable features control.               */
+/*             TIC0015  - Check links to TI.                         */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR316373 - Add BYUSRMSG message file.                       */
+/*       CAP084 - Java wrapper project                               */
+/*       CSF002 - Global layer.                                      */
+/*                - Remove MITEM* overrides.                         */
+/*       CSC014 - Allow DBCS supprt                                  */
+/*       149175 - Add in REC3361, REC3362, REC3363 and REC361.       */
+/*       CPB001 - Private Banking Module                             */
+/*       CPL002 - Midas / Plato Interface Enhancement.               */
+/*       CUT004 - Allow Core and Non-Core mode of multilanguage      */
+/*                compiles of display files                          */
+/*       CTI002 - MIDAS/TI INTERFACE PHASE II                        */
+/*       CAP002 - Conversion of transaction inputs into modular      */
+/*                structure to use as APIs.                          */
+/*       CEU001 - EMU Base Currency For Accounting Conversion        */
+/*       CTI001 - Midas/TI Interface Phase 1                         */
+/*       CRT003 - Cashier Interface.                                 */
+/*       CAAA01 - New /COPY to externalise the ML processing.        */
+/*                                                                   */
+/*********************************************************************/
+ 
+/* Retrieve data areas for Multiple Language Support */
+ 
+             RTVDTAARA  DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)
+             RTVDTAARA  DTAARA(MIMGFLA) RTNVAR(&MIMGFLA10)
+             RTVDTAARA  DTAARA(CBMGFLA) RTNVAR(&CBMGFLA10)
+ 
+/* Bypass access to MUSER if language is to be determined by the */                       /*CAP084*/
+/* Java front end.                                               */                       /*CAP084*/
+             IF         COND(&IGNMUSER *NE 'Y') THEN(DO)                                  /*CAP084*/
+                                                                                          /*CAP084*/
+/* Initial processing for user defined menus */
+ 
+             CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
+                          &ERRORC &MULT)
+ 
+             IF         COND(&MULT *EQ '  ') THEN(DO)
+                CHGVAR     VAR(&MULT) VALUE('GB')
+             ENDDO
+             ENDDO                                                                        /*CAP084*/
+ 
+/* Build Multiple Language Support object names */
+ 
+             CHGVAR     VAR(&ZZMSGF) VALUE('ZZ' *CAT &MULT *CAT 'MSGF')
+             CHGVAR     VAR(&ZZXMSGF) VALUE('ZZ' *CAT &MULT *CAT 'XXMSGF')      /*CUT004*/
+/**********  CHGVAR     VAR(&MITLG) VALUE(&MULT *CAT 'MITEM     ')                        /*CSF002*/
+/**********  CHGVAR     VAR(&MITZLG) VALUE(&MULT *CAT 'MITEMZZ   ')                       /*CSF002*/
+/**********  CHGVAR     VAR(&MITCLG) VALUE(&MULT *CAT 'MITMC     ')                       /*CSF002*/
+             CHGVAR     VAR(&Y2MGFLA8) VALUE(%SST(&Y2MGFLA10 1 8))
+             CHGVAR     VAR(&MIMGFLA8) VALUE(%SST(&MIMGFLA10 1 8))
+             CHGVAR     VAR(&CBMGFLA8) VALUE(%SST(&CBMGFLA10 1 8))
+             CHGVAR     VAR(&SDUSRLG) VALUE(&MULT *CAT &Y2MGFLA8)
+             CHGVAR     VAR(&GLUSRLG) VALUE(&MULT *CAT &MIMGFLA8)
+             CHGVAR     VAR(&CBUSRLG) VALUE(&MULT *CAT &CBMGFLA8)
+             CHGVAR     VAR(&MIDASLG) VALUE(&MULT *CAT 'MIDAS     ')
+             CHGVAR     VAR(&DRSMMLG) VALUE(&MULT *CAT 'DRSMM     ')
+             CHGVAR     VAR(&MACLG) VALUE(&MULT *CAT 'MACMSG    ')
+             CHGVAR     VAR(&MIUSRLG) VALUE(&MULT *CAT 'MIUSRMSG  ')
+             CHGVAR     VAR(&WNLG) VALUE(&MULT *CAT 'WNMSGF    ')
+             CHGVAR     VAR(&Y1USRLG) VALUE(&MULT *CAT 'Y1USRMSG  ')
+             CHGVAR     VAR(&Y2USRLG) VALUE(&MULT *CAT 'Y2USRMSG  ')
+             CHGVAR     VAR(&Y2USRPMLG) VALUE(&MULT *CAT 'Y2USRPMT  ')
+             CHGVAR     VAR(&FCUSRLG)  VALUE(&MULT *CAT 'FCUSRMSG  ')
+             CHGVAR     VAR(&MIDASMSG) VALUE(&MULT *CAT 'MIDASMSG  ')
+             CHGVAR     VAR(&HFMSGF)   VALUE(&MULT *CAT 'HFMSGF    ')
+             CHGVAR     VAR(&XXUSRLG)  VALUE(&MULT *CAT 'XXUSRMSG  ')
+             CHGVAR     VAR(&SEUSRMSG) VALUE(&MULT *CAT 'SEUSRMSG  ')
+             CHGVAR     VAR(&LERMSGF) VALUE(&MULT *CAT 'LERMSGF  ')
+             CHGVAR     VAR(&MEMSG) VALUE(&MULT *CAT 'MEMSG     ')
+             CHGVAR     VAR(&FTUSRMSG) VALUE(&MULT *CAT 'FTUSRMSG  ')
+             CHGVAR     VAR(&REUSRLG) VALUE(&MULT *CAT 'REUSRMSG  ')
+             CHGVAR     VAR(&REPTMSGF) VALUE(&MULT *CAT 'REPTMSGF  ')
+             CHGVAR     VAR(&CGUSRMSG) VALUE(&MULT *CAT 'CGUSRMSG  ')
+             CHGVAR     VAR(&PMUSRMSG) VALUE(&MULT *CAT 'PMUSRMSG  ')
+             CHGVAR     VAR(&LBUSRMSG) VALUE(&MULT *CAT 'LBUSRMSG  ')
+             CHGVAR     VAR(&RTSMSGF)  VALUE(&MULT *CAT 'RTSMSGF   ')
+             CHGVAR     VAR(&SFUSRMSG) VALUE(&MULT *CAT 'SFUSRMSG  ')
+             CHGVAR     VAR(&CIMSGF)   VALUE(&MULT *CAT 'CIMSGF    ') /*CRT003*/
+             CHGVAR     VAR(&TIUSRMSG) VALUE(&MULT *CAT 'TIUSRMSG  ') /*CTI001*/
+             CHGVAR     VAR(&EUMSGF)   VALUE(&MULT *CAT 'EUMSGF    ') /*CEU001*/
+             CHGVAR     VAR(&APMSGF)   VALUE(&MULT *CAT 'APMSGF    ') /*CAP002*/
+             CHGVAR     VAR(&EMUSRMSG) VALUE(&MULT *CAT 'EMUSRMSG  ') /*CTI002*/
+             CHGVAR     VAR(&REUSRMSG) VALUE(&MULT *CAT 'REUSRMSG  ') /*CUT004*/
+             CHGVAR     VAR(&PLUSRMSG) VALUE(&MULT *CAT 'PLUSRMSG  ') /*CPL002*/
+             CHGVAR     VAR(&PBUSRMSG) VALUE(&MULT *CAT 'PBUSRMSG  ') /*CPB001*/
+             CHGVAR     VAR(&STUSRMSG) VALUE(&MULT *CAT 'STUSRMSG  ')                     /*CER001*/
+             CHGVAR     VAR(&BYUSRMSG) VALUE(&MULT *CAT 'BYUSRMSG  ')                   /*AR316373*/
+ 
+/* Apply Multiple Language Support overrides */
+ 
+/**********  OVRDBF     FILE(MITEM) MBR(&MITLG) SHARE(*NO)                                /*CSF002*/
+/**********  OVRDBF     FILE(MITEMJ0) MBR(&MITLG) SHARE(*NO)                              /*CSF002*/
+/**********  OVRDBF     FILE(MITEMJ1) MBR(&MITLG) SHARE(*NO)                              /*CSF002*/
+/**********  OVRDBF     FILE(MITEMJ3) MBR(&MITLG) SHARE(*YES)                             /*CSF002*/
+/**********  OVRDBF     FILE(MITEMJ4) MBR(&MITLG) SHARE(*YES)                             /*CSF002*/
+/**********  OVRDBF     FILE(MITEMZZ) MBR(&MITZLG)                                        /*CSF002*/
+/**********  OVRDBF     FILE(MITMC) MBR(&MITCLG)                                          /*CSF002*/
+ 
+             OVRMSGF    MSGF(ZZGBMSGF) TOMSGF(&ZZMSGF)
+             OVRMSGF    MSGF(ZZGBXXMSGF) TOMSGF(&ZZXMSGF)             /*CUT004*/
+             OVRMSGF    MSGF(&Y2MGFLA10) TOMSGF(&SDUSRLG)
+             OVRMSGF    MSGF(&MIMGFLA10) TOMSGF(&GLUSRLG)
+             OVRMSGF    MSGF(&CBMGFLA10) TOMSGF(&CBUSRLG)
+             OVRMSGF    MSGF(MIDAS) TOMSGF(&MIDASLG)
+             OVRMSGF    MSGF(DRSMM) TOMSGF(&DRSMMLG)
+             OVRMSGF    MSGF(MACMSG) TOMSGF(&MACLG)
+             OVRMSGF    MSGF(MIUSRMSG) TOMSGF(&MIUSRLG)
+             OVRMSGF    MSGF(WNMSGF) TOMSGF(&WNLG)
+             OVRMSGF    MSGF(Y1USRMSG) TOMSGF(&Y1USRLG)
+             OVRMSGF    MSGF(Y2USRMSG) TOMSGF(&Y2USRLG)
+             OVRMSGF    MSGF(Y2USRPMT) TOMSGF(&Y2USRPMLG)
+             OVRMSGF    MSGF(FCUSRMSG) TOMSGF(&FCUSRLG)
+             OVRMSGF    MSGF(MIDASMSG) TOMSGF(&MIDASMSG)
+             OVRMSGF    MSGF(HFMSGF)   TOMSGF(&HFMSGF)
+             OVRMSGF    MSGF(XXUSRMSG) TOMSGF(&XXUSRLG)
+             OVRMSGF    MSGF(SEUSRMSG) TOMSGF(&SEUSRMSG)
+             OVRMSGF    MSGF(LERMSGF) TOMSGF(&LERMSGF)
+             OVRMSGF    MSGF(MEMSG) TOMSGF(&MEMSG)
+             OVRMSGF    MSGF(FTUSRMSG) TOMSGF(&FTUSRMSG)
+             OVRMSGF    MSGF(REUSRMSG) TOMSGF(&REUSRLG)
+             OVRMSGF    MSGF(REPTMSGF) TOMSGF(&REPTMSGF)
+             OVRMSGF    MSGF(CGUSRMSG) TOMSGF(&CGUSRMSG)
+             OVRMSGF    MSGF(PMUSRMSG) TOMSGF(&PMUSRMSG)
+             OVRMSGF    MSGF(LBUSRMSG) TOMSGF(&LBUSRMSG)
+             OVRMSGF    MSGF(RTSMSGF)  TOMSGF(&RTSMSGF)
+             OVRMSGF    MSGF(SFUSRMSG) TOMSGF(&SFUSRMSG)
+             OVRMSGF    MSGF(CIMSGF)   TOMSGF(&CIMSGF)                /*CRT003*/
+             OVRMSGF    MSGF(TIUSRMSG) TOMSGF(&TIUSRMSG)              /*CTI001*/
+             OVRMSGF    MSGF(EUMSGF)   TOMSGF(&EUMSGF)                /*CEU001*/
+             OVRMSGF    MSGF(APMSGF)   TOMSGF(&APMSGF)                /*CAP002*/
+             OVRMSGF    MSGF(EMUSRMSG) TOMSGF(&EMUSRMSG)              /*CTI002*/
+             OVRMSGF    MSGF(REUSRMSG) TOMSGF(&REUSRMSG)              /*CUT004*/
+             OVRMSGF    MSGF(PLUSRMSG) TOMSGF(&PLUSRMSG)              /*CPL002*/
+             OVRMSGF    MSGF(PBUSRMSG) TOMSGF(&PBUSRMSG)              /*CPB001*/
+             OVRMSGF    MSGF(STUSRMSG) TOMSGF(&STUSRMSG)                                  /*CER001*/
+             OVRMSGF    MSGF(BYUSRMSG) TOMSGF(&BYUSRMSG)                                /*AR316373*/
+ 
+/* Put in overrides for DBCS files, if DBCS enabled  */                                   /*CSC014*/
+                                                                                          /*CSC014*/
+             CALL       PGM(SCC0108)                                                      /*CSC014*/
+ 

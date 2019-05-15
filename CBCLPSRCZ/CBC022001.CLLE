@@ -1,0 +1,614 @@
+/*********************************************************************/
+/*XBIA   OVRDBF FILE(CHG022001T) TOFILE(UPFDALTPD)                   */
+/*XBIB   OVRDBF FILE(RGZ022001T) TOFILE(UPFDMBTPD)                   */
+/*XBIC   OVRDBF FILE(MBR022001T) TOFILE(UPFDMBTPD)                   */
+/*XBID   OVRDBF FILE(DBR022001T) TOFILE(UPDBRLTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB Generic COB component')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC022001 - Midas CB Generic COB component                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD036885           Date 11May16              */
+/*                      MD024006A          Date 08Jan14              */
+/*                      MD024006           Date 12Dec13              */
+/*                      MD023005A          Date 31Oct13              */
+/*                      MD023005           Date 23Oct13              */
+/*                      MD022941           Date 18Oct13              */
+/*                      MD022394A          Date 11Oct13              */
+/*                      MD022554           Date 02Oct13              */
+/*                      MD022015B          Date 11Sep13              */
+/*                      MD022015           Date 27Aug13              */
+/*                      CCB022A *REWRITE   Date 06Aug12              */
+/*                      CCB022  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD036885 - Close of business component CBC022001            */
+/*       MD024006A - Rewrite to simplify generic component again     */
+/*       MD024006 - Inefficiency in COB File Manager                 */
+/*       MD023005A - Duplicate key values not ignored                */
+/*       MD023005 - Change of LF access path during reopen IC proc   */
+/*       MD022941 - Do not process *DLY for LFs with *REBLD          */
+/*       MD022394A - Lack in functionality of Reopen IC procedure    */
+/*       MD022554 - CBC022001 issues on missing members              */
+/*                - Avoid conflict of ADDLF between GLAC and APOSTPD */
+/*       MD022015B - Rebuild access path maintenance locking issue   */
+/*       MD022015 - Rebuild access path maintenance locking issue    */
+/*       CCB022A- COB Restructure - COB File Manager                 */
+/*       CCB022 - COB Restructure - COB File Manager                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &MEMBER &ACTION &ACTIONTYPE)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ACTIONTYPE) TYPE(*CHAR) LEN(6)
+ 
+             DCL        VAR(&ADDLFM) TYPE(*CHAR) LEN(1000)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(1000)
+             DCL        VAR(&NOOFMBRS) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MBRCOUNT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LOOPCOUNT) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&ALL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LFRMVRTN) TYPE(*INT)
+             DCL        VAR(&ADDRTN) TYPE(*INT)
+             DCL        VAR(&PFADDRTN) TYPE(*INT)
+             DCL        VAR(&ADDMBRRTN) TYPE(*INT)
+             DCL        VAR(&RMVRTN) TYPE(*INT)
+             DCL        VAR(&ERRFOUND) TYPE(*CHAR) LEN(1)                               /*MD036885*/
+ 
+             DCLF       FILE(CHG022001T) OPNID(CHG)
+             DCLF       FILE(RGZ022001T) OPNID(RGZ)
+             DCLF       FILE(MBR022001T) OPNID(MBR)
+             DCLF       FILE(DBR022001T) OPNID(DBR)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/** Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/** For each type of action perform a separate subroutine. */
+ 
+             IF         COND(&ACTION *EQ '*ADD') THEN(DO)
+                CALLSUBR   SUBR(ADD)
+                IF         COND(&ADDRTN *EQ 1) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&ACTION *EQ '*CHG') THEN(DO)
+                CALLSUBR   SUBR(CHG)
+             ENDDO
+             IF         COND(&ACTION *EQ '*CLR') THEN(DO)
+                CALLSUBR   SUBR(CLR)
+             ENDDO
+             IF         COND(&ACTION *EQ '*RGZ') THEN(DO)
+                CALLSUBR   SUBR(RGZ)
+             ENDDO
+             IF         COND(&ACTION *EQ '*RMV') THEN(DO)
+                CALLSUBR   SUBR(RMV)
+                IF         COND(&RMVRTN *EQ 1) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to add logical file members back in.                            */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(ADD)
+ 
+/** The add function performs in two modes:                        */
+/**  1 - add member(s) for a single logical file                   */
+/**  2 - add member(s) for all logical files built over a physical */
+ 
+/** If the member is blank then it means this is mode 2.  */
+ 
+             IF         COND(&MEMBER *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ALL) VALUE('Y')
+                CALLSUBR   SUBR(PFADD)
+                IF         COND(&PFADDRTN *EQ 1) THEN(DO)
+                   CHGVAR     VAR(&ADDRTN) VALUE(1)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&MEMBER *EQ '*FILE') THEN(DO)
+                   CHGVAR     VAR(&MEMBER) VALUE(&FILE)
+                ENDDO
+                IF         COND(&MEMBER *EQ '*ALL') THEN(DO)
+                   CHGVAR     VAR(&ALL) VALUE('Y')
+                ENDDO
+                CALLSUBR   SUBR(ADDMBR)
+                IF         COND(&ADDMBRRTN *EQ 1) THEN(DO)
+                   CHGVAR     VAR(&ADDRTN) VALUE(1)
+                ENDDO
+             ENDDO
+ 
+ ADDEND:
+             ENDSUBR    RTNVAL(&ADDRTN)
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to change logical files access path maintenance.                */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CHG)
+ 
+/** Retrieve current access path maintenance value. */
+ 
+             CRTDUPOBJ  OBJ(UPFDALTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(CHG022001T)
+             DSPFD      FILE(&FILE) TYPE(*ATR) OUTPUT(*OUTFILE) +
+                          FILEATR(*LF) OUTFILE(QTEMP/CHG022001O)
+             RCVMSG     MSGTYPE(*DIAG)
+             CPYF       FROMFILE(QTEMP/CHG022001O) +
+                          TOFILE(QTEMP/CHG022001T) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             RCVF       OPNID(CHG)
+ 
+/** If the current access path maintenance matches the request */
+/** then ignore */
+ 
+             IF         COND(&CHG_LGMANT *EQ 'I' *AND &ACTIONTYPE *EQ +
+                          '*IMMED') THEN(DO)
+                GOTO       CMDLBL(CHGEND)
+             ENDDO
+             IF         COND(&CHG_LGMANT *EQ 'R' *AND &ACTIONTYPE *EQ +
+                          '*REBLD') THEN(DO)
+                GOTO       CMDLBL(CHGEND)
+             ENDDO
+             IF         COND(&CHG_LGMANT *EQ 'D' *AND &ACTIONTYPE *EQ +
+                          '*DLY') THEN(DO)
+                GOTO       CMDLBL(CHGEND)
+             ENDDO
+ 
+/** If the request is '*DLY' then only change the access path */
+/** maintenance if the current value is not '*REBLD')         */
+ 
+             IF         COND(&ACTIONTYPE *EQ '*DLY') THEN(DO)
+                IF         COND(&CHG_LGMANT *NE 'R') THEN(DO)
+                   CHGLF      FILE(&FILE) MAINT(&ACTIONTYPE)
+                   MONMSG     MSGID(CPF0000)
+                ENDDO
+                ELSE       CMD(DO)
+                   GOTO    CMDLBL(CHGEND)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                CHGLF      FILE(&FILE) MAINT(&ACTIONTYPE)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+/** Update file with data about current access path maintenance */
+/** setting. */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&CHG_LGMANT)
+             CALL       PGM(CB022001) PARM('*ACC' &FILE &MEMBER 0 ' ')
+ 
+ CHGEND:
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to clear physical file members.                                 */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CLR)
+ 
+/** If the member is '*FILE' then change the member value. */
+ 
+             IF         COND(&MEMBER *EQ '*FILE') THEN(DO)
+                CHGVAR     VAR(&MEMBER) VALUE(&FILE)
+             ENDDO
+ 
+             CLRPFM     FILE(&FILE) MBR(&MEMBER)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to reorganise physical file members.                            */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(RGZ)
+ 
+/** If the member is not *ALL the perform simple reorganise ... */
+ 
+             IF         COND(&MEMBER *NE '*ALL') THEN(DO)
+ 
+/** If the member is '*FILE' then change the member value. */
+ 
+                IF         COND(&MEMBER *EQ '*FILE') THEN(DO)
+                   CHGVAR     VAR(&MEMBER) VALUE(&FILE)
+                ENDDO
+                RGZPFM     FILE(&FILE) MBR(&MEMBER)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+/** ...otherwise build up a list of members and reorganise each one.*/
+ 
+             ELSE       CMD(DO)
+ 
+/** Build a list of members. */
+ 
+                CRTDUPOBJ  OBJ(UPFDMBTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                             TOLIB(QTEMP) NEWOBJ(RGZ022001T)
+                DSPFD      FILE(&FILE) TYPE(*MBR) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/RGZ022001O)
+                RCVMSG     MSGTYPE(*DIAG)
+                CPYF       FROMFILE(QTEMP/RGZ022001O) +
+                             TOFILE(QTEMP/RGZ022001T) MBROPT(*REPLACE) +
+                             FMTOPT(*MAP *DROP)
+ 
+/** Read list and perform reorganise for each member. */
+ 
+ RGZREAD:
+                RCVF       OPNID(RGZ)
+                MONMSG     MSGID(CPF0864) EXEC(DO)
+                   GOTO       CMDLBL(RGZEND)
+                ENDDO
+                RGZPFM     FILE(&FILE) MBR(&RGZ_MBNAME) RBDACCPTH(*NO) +
+                             ALWCANCEL(*YES)
+                MONMSG     MSGID(CPF0000)
+                GOTO       CMDLBL(RGZREAD)
+             ENDDO
+ 
+ RGZEND:
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to remove logical file members.                                 */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(RMV)
+ 
+/** The remove function performs in two modes:                         */
+/**  1 - remove member(s) from a single logical file                   */
+/**  2 - remove member(s) from all logical files built over a physical */
+ 
+/** If the member is blank then it means this is mode 2.  */
+/** The member value should always be '*ALL'.             */
+ 
+             IF         COND(&MEMBER *EQ ' ') THEN(DO)
+                CALLSUBR   SUBR(PFRMV)
+                CHGVAR     VAR(&MEMBER) VALUE('*ALL')
+             ENDDO
+             ELSE       CMD(DO)
+                CALLSUBR   SUBR(LFRMV) RTNVAL(&LFRMVRTN)
+             ENDDO
+ 
+/** If a return of '1' came back from the subroutine then skip the */
+/** read of the member list as the member will already have been   */
+/** removed. */
+ 
+             IF         COND(&LFRMVRTN *EQ 1) THEN(DO)
+                GOTO       CMDLBL(RMVEND)
+             ENDDO
+             IF         COND(&LFRMVRTN *EQ 2) THEN(DO)
+                CHGVAR     VAR(&RMVRTN) VALUE(1)
+                GOTO       CMDLBL(RMVEND)
+             ENDDO
+ 
+/** Read list and remove members; note that this may try to */
+/** remove the same member more than once.                  */
+ 
+ RMVREAD:
+             RCVF       OPNID(MBR)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(RMVEND)
+             ENDDO
+             CHGVAR     VAR(&LOOPCOUNT) VALUE(1)
+ 
+ RMVM:
+             IF         COND(&LOOPCOUNT *NE 3) THEN(DO)
+                RMVM       FILE(&MBR_MBFILE) MBR(&MBR_MBNAME)
+                MONMSG     MSGID(CPF7310) EXEC(DO)
+                   RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)
+ 
+/** If the member has already been removed. */
+ 
+                   IF         COND(&MSGID *EQ 'CPF5815') THEN(DO)
+                      GOTO       CMDLBL(RMVREAD)
+                   ENDDO
+/** If there is an allocation problem. */
+ 
+                   IF         COND(&MSGID *EQ 'CPF3203') THEN(DO)
+                      CHGVAR     VAR(&LOOPCOUNT) VALUE(&LOOPCOUNT + 1)
+                      DLYJOB     DLY(10)
+                      GOTO       CMDLBL(RMVM)
+                   ENDDO
+                   CHGVAR     VAR(&RMVRTN) VALUE(1)
+                   GOTO       CMDLBL(RMVEND)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&RMVRTN) VALUE(1)
+                GOTO       CMDLBL(RMVEND)
+             ENDDO
+ 
+/** If the removal is successful then write record to SCFMBRTD. */
+ 
+             CALL       PGM(CB022001) PARM('*WRT' &MBR_MBFILE +
+                          &MEMBER 0 ' ')
+ 
+             GOTO       CMDLBL(RMVREAD)
+ 
+ RMVEND:
+             ENDSUBR    RTNVAL(&RMVRTN)
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to process all logicals for a physical.                         */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(PFRMV)
+ 
+/** Create working files, */
+ 
+             CRTDUPOBJ  OBJ(UPDBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(DBR022001T)
+             CRTDUPOBJ  OBJ(UPFDMBTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(MBR022001T)
+             CRTDUPOBJ  OBJ(UPFDBATPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(ATR022001T)
+ 
+/** Build a list of files built over the physical. */
+ 
+             DSPDBR     FILE(&FILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/DBR022001O)
+             RCVMSG     MSGTYPE(*DIAG)
+             CPYF       FROMFILE(QTEMP/DBR022001O) +
+                          TOFILE(QTEMP/DBR022001T) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/** Remove duplicates and blank records from DBR file. */
+ 
+             CALL       PGM(CB022001) PARM('*DBR' ' ' ' ' 0 ' ')
+ 
+ DBRREAD:
+             RCVF       OPNID(DBR)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(PFRMVEND)
+             ENDDO
+ 
+/** Build list of members and attributes of logicals. */
+ 
+             DSPFD      FILE(&DBR_WHREFI) TYPE(*MBR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/MBR022001O)
+             RCVMSG     MSGTYPE(*DIAG)
+             CPYF       FROMFILE(QTEMP/MBR022001O) +
+                          TOFILE(QTEMP/MBR022001T) MBROPT(*ADD) +
+                          FMTOPT(*MAP *DROP)
+             DSPFD      FILE(&DBR_WHREFI) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/ATR022001O)
+             RCVMSG     MSGTYPE(*DIAG)
+             CPYF       FROMFILE(QTEMP/ATR022001O) +
+                          TOFILE(QTEMP/ATR022001T) MBROPT(*ADD) +
+                          FMTOPT(*MAP *DROP)
+ 
+             GOTO       CMDLBL(DBRREAD)
+ 
+ PFRMVEND:
+ 
+/** Call program to remove all SQL type files from list of members. */
+ 
+             CALL       PGM(CB022001) PARM('*ATR' ' ' ' ' 0 ' ')
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to process a single logical.                                    */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(LFRMV)
+ 
+ 
+/** Set up files for member data. */
+ 
+                CRTDUPOBJ  OBJ(UPFDMBTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                             TOLIB(QTEMP) NEWOBJ(MBR022001T)
+                DSPFD      FILE(&FILE) TYPE(*MBR) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/MBR022001O)
+                RCVMSG     MSGTYPE(*DIAG)
+                CPYF       FROMFILE(QTEMP/MBR022001O) +
+                             TOFILE(QTEMP/MBR022001T) MBROPT(*ADD) +
+                             FMTOPT(*MAP *DROP)
+ 
+/** If the member is '*FILE' then change the member value. */
+ 
+             IF         COND(&MEMBER *NE '*ALL') THEN(DO)
+                CHGVAR     VAR(&LFRMVRTN) VALUE(1)
+                IF         COND(&MEMBER *EQ '*FILE') THEN(DO)
+                   CHGVAR     VAR(&MEMBER) VALUE(&FILE)
+                ENDDO
+                CHGVAR     VAR(&LOOPCOUNT) VALUE(1)
+ LFRMV:
+                IF         COND(&LOOPCOUNT *LT 4) THEN(DO)
+                   RMVM       FILE(&FILE) MBR(&MEMBER)
+                   MONMSG     MSGID(CPF7310) EXEC(DO)
+                      RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)
+ 
+/** If the member has already been removed. */
+ 
+                      IF         COND(&MSGID *EQ 'CPF5815') THEN(DO)
+                         GOTO       CMDLBL(LFRMVEND)
+                      ENDDO
+ 
+/** If there is an allocation problem. */
+ 
+                      IF         COND(&MSGID *EQ 'CPF3203') THEN(DO)
+                         CHGVAR     VAR(&LOOPCOUNT) VALUE(&LOOPCOUNT + 1)
+                         DLYJOB     DLY(10)
+                         GOTO       CMDLBL(LFRMV)
+                      ENDDO
+                      CHGVAR     VAR(&LFRMVRTN) VALUE(2)
+                      GOTO       CMDLBL(LFRMVEND)
+                   ENDDO
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&LFRMVRTN) VALUE(2)
+                   GOTO       CMDLBL(LFRMVEND)
+                ENDDO
+ 
+/** If the removal is successful then write record to SCFMBRTD. */
+ 
+                CALL       PGM(CB022001) PARM('*WRT' &FILE &MEMBER 0 ' ')
+                GOTO       CMDLBL(LFRMVEND)
+             ENDDO
+ 
+ LFRMVEND:
+             ENDSUBR    RTNVAL(&LFRMVRTN)
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to process all logicals for a physical.                         */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(PFADD)
+ 
+/** Build a list of files built over the physical. */
+ 
+             CRTDUPOBJ  OBJ(UPDBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(DBR022001T)
+             DSPDBR     FILE(&FILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/DBR022001O)
+             RCVMSG     MSGTYPE(*DIAG)
+             CPYF       FROMFILE(QTEMP/DBR022001O) +
+                          TOFILE(QTEMP/DBR022001T) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/** Call program to remove duplicates and blank records. */
+ 
+             CALL       PGM(CB022001) PARM('*DBR' ' ' ' ' 0 ' ')
+ 
+/** When add members for all logicals for a pysical *ALL members */
+/** is assumed. */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE('*ALL')
+ DBRREAD:
+             RCVF       OPNID(DBR)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(PFADDEND)
+             ENDDO
+             CHGVAR     VAR(&FILE) VALUE(&DBR_WHREFI)
+ 
+             CALLSUBR   SUBR(ADDMBR)
+             IF         COND(&ADDMBRRTN *EQ 1) THEN(DO)
+                CHGVAR     VAR(&PFADDRTN) VALUE(1)
+             ENDDO
+ 
+             GOTO       CMDLBL(DBRREAD)
+ 
+ PFADDEND:
+             ENDSUBR    RTNVAL(&PFADDRTN)
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to add logical file members back.                               */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(ADDMBR)
+ 
+/** Use this count to keep track if there are mutiple members. */
+ 
+             CHGVAR     VAR(&MBRCOUNT) VALUE(1)
+ADDLOOP:
+             IF         COND(&ALL *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&MEMBER) VALUE('*ALL')
+             ENDDO
+ 
+/** Call program to build ADDLFM string; do this for each member. */
+/** If *ALL was specified then a specific member name is returned */
+/** from this call. */
+ 
+             CALL       PGM(CB022001) PARM('*BLD' &FILE &MEMBER +
+                          &NOOFMBRS &ADDLFM)
+ 
+/** If a command string is not returned this means that no relevant */
+/** records were found so further processing is ended.              */
+ 
+             IF         COND(&ADDLFM *EQ ' ') THEN(DO)
+                GOTO       CMDLBL(ADDMBREND)
+             ENDDO
+ 
+/** Execute the ADDLFM. */
+ 
+             CHGVAR     VAR(&LOOPCOUNT) VALUE(1)
+             CHGVAR     VAR(&ERRFOUND) VALUE(' ')                                       /*MD036885*/
+                                                                                        /*MD036885*/
+ ADDMBR:
+             IF         COND(&LOOPCOUNT *LT 4) THEN(DO)
+                CALL       PGM(QCMDEXC) PARM(&ADDLFM &CMDLEN)
+                MONMSG     MSGID(CPF7306) EXEC(DO)
+                   RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)
+ 
+/** If the member already exists then ignore. */
+ 
+                   IF         COND(&MSGID *EQ 'CPF5812') THEN(DO)
+                      GOTO       CMDLBL(ADDMBREND)
+                   ENDDO
+ 
+/** If there is an allocation problem. */
+ 
+                   IF         COND(&MSGID *EQ 'CPF3218') THEN(DO)
+                      CHGVAR     VAR(&LOOPCOUNT) VALUE(&LOOPCOUNT + 1)
+                      GOTO       CMDLBL(ADDMBR)
+                   ENDDO
+ 
+                                                                                        /*MD036885*/
+/** Error in adding memeber */                                                          /*MD036885*/
+                                                                                        /*MD036885*/
+                   ELSE       CMD(DO)                                                   /*MD036885*/
+                      CHGVAR     VAR(&ERRFOUND) VALUE('Y')                              /*MD036885*/
+                      CHGJOB     SWS(XXXXXX11)                                          /*MD036885*/
+                      SNDPGMMSG  MSG('Program CBC022001 failed to add member +
+                                     ' *CAT &MEMBER *TCAT ' to file ' *CAT +
+                                     &FILE *TCAT '.') TOMSGQ(MOPERQ)                    /*MD036885*/
+                   ENDDO                                                                /*MD036885*/
+                                                                                        /*MD036885*/
+ 
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&ADDMBRRTN) VALUE(1)
+                GOTO       CMDLBL(ADDMBREND)
+             ENDDO
+ 
+/** If the member was added successfully then remove record(s) */
+/** from SCFMBRTD. */
+ 
+             IF         COND(&ERRFOUND *EQ ' ') THEN(DO)                                /*MD036885*/
+                                                                                        /*MD036885*/
+             CALL       PGM(CB022001) PARM('*DEL' &FILE &MEMBER 0 ' ')
+             IF         COND(&MBRCOUNT *LT &NOOFMBRS) THEN(DO)
+                CHGVAR     VAR(&MBRCOUNT) VALUE(&MBRCOUNT + 1)
+                GOTO       CMDLBL(ADDLOOP)
+             ENDDO
+                                                                                        /*MD036885*/
+             ENDDO                                                                      /*MD036885*/
+ 
+ ADDMBREND:
+             ENDSUBR    RTNVAL(&ADDMBRRTN)
+ 
+ ENDPGM:
+             ENDPGM

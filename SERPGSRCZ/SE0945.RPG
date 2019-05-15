@@ -1,0 +1,1274 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Customer trading statement extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas SECURITIES TRADING RELEASE 2 MODULE                    *
+     F*                                                               *
+     F*  SE0945 - CUSTOMER TRADING EXTRACT                            *
+     F*                                                               *
+     F*  Function: To produce an extract for use in the Customer      *
+     F*   (COB)    Trading Statement showing Trades and Depot         *
+     F*            Movements for the Customers requested in the       *
+     F*            Transaction File, or for all Customers if at a     *
+     F*            Month-end.                                         *
+     F*                                                               *
+     F*  Called by: SEC0905 - Customer Trading Statement              *
+     F*                                                               *
+     F*            Frequency:                                         *
+     F*            - Daily during COB for mis-matches                 *
+     F*            - Full list  on request at COB                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR877101           Date 11May16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12901           Date 14Dec06               *
+      *                 BUG11627           Date 28Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CPK024             Date 13Feb06               *
+      *                 CSE071             Date 19Jul05               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201304             Date 19Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK008             Date 10Jun97               *
+      *                 071675             Date 30Aug96               *
+     F*                 063731             DATE 02MAY96               *
+     F*                 094843             DATE 18APR96               *
+     F*                 S01502             DATE 08JUL94               *
+     F*                 S01445             DATE 04NOV93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E38010             DATE 06APR92               *
+     F*                 E32674             DATE 03DEC91               *
+     F*                 E31701             DATE 11NOV91               *
+     F*                 E29170             DATE 31OCT91               *
+     F*                 E25009             DATE 25OCT91               *
+     F*                 S01117             DATE 20MAY91               *
+     F*                 S01269             DATE 17JUL90               *
+     F*                 S01271             DATE 20JUN90               *
+     F*                 E21660             DATE 12APR90               *
+     F*                 E21128             DATE 14FEB90               *
+     F*                 E16191             DATE 04DEC89               *
+     F*                 E20125             DATE 15/11/89              *
+     F*                 E18130             DATE 15/11/89              *
+     F*                 E18009             DATE 21/04/89              *
+     F*                 E16089             DATE 14/03/89              *
+     F*                 E15997             DATE 14/03/89              *
+     F*                 E13614             DATE 31/10/88              *
+     F*                 E15845             DATE 27/10/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR877101 - SE0940P1 failed in EOM. First record of TRDEXD    *
+      *             contained *blank as Branch indicator for a RP     *
+      *             (Child: AR877102)                                 *
+      *           - Applied for MD-38058.                             *
+      *  BUG12901 - Deleted customer causes database error. Fix       *
+      *             is to suppress the database error when the        *
+      *             customer is attached to a deleted or settled      *
+      *             trades.                                           *
+      *  BUG11627 - CGC2260 10001 failed. Database error occurred.    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK024 - Packaging for MPLUS 1.2.1. EUTX from data structure *
+      *           SESTAT was renamed to EUTXB                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  201304 - Deletion of customer causes database error. Fix is  *
+      *           to suppress the database error when the customer is *
+      *           attached to a deleted or matured depot movement.    *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  CPK008 - DBA R2 packaging:                                   *
+     F*           - CAC002 added field TPRC to TRADSD. TPRC is        *
+     F*             already used in this program and will not         *
+     F*             compile over the extended file. The new TPRC      *
+     F*             field in TRADCU (TRADSD) has now been renamed     *
+     F*             to TPRCX within the program.                      *
+     F*  071675 - Calculate Amt_value & Same CCY as per Nominal_CCy   *
+     F*  063731 - PRICE NOT PRINTED FOR WALK IN/WALK OUT              *
+     F*  094843 - TCVC NOT LADED WHEN DEPOT MOVEMENT ONLY.            *
+     F*           DBE IN SE0940 DUE TO *BLANK VALUE CURRENCY.         *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  S01445 - DEPOT MOVEMENT CHARGES ENHANCEMENT.                 *
+     F*           Recompiled due to changes in PF/DPTMVD.             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E38010 - Price should be price/discount/yield not % price    *
+     F*  E32674 - Recompiled due to error in DPTMVD                   *
+     F*  E31701 - Audit printer file should have file controls on it  *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E25009 - Depot transfers should not be reported              *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - Trades Authorisation - Check if record is already   *
+     F*           Authorised                                          *
+     F*  S01271 - Recompiled for Pay/Receive in Input Cycle changes   *
+     F*           to TRADSD and/or DPTMVD                             *
+     F*  E21660 - Trades input and deleted on the same day should not *   E21660
+     F*           be reported.                                        *   E21660
+     F*  E21128 - Incorrect RECI being passed to the Extract File     *   E21128
+     F*  E16191 - TRDEXD extract file should contain the Countervalue *   E16191
+     F*           in the Settlement Currency of the Trade, not the    *   E16191
+     F*           Nominal Currency of the Security.                   *   E16191
+     F*  E20125 - For Bond Borrow/Lend, distinguish between In/Out by *   E20125
+     F*           making the Nominal Amount Positive or Negative.     *   E20125
+     F*           Further, applied to ALL Movement Types.             *   E20125
+     F*  E18130 - DB Error on Deleted Security, even though all       *   E18130
+     F*           related transactions were previously Cancelled.     *   E18130
+     F*  E18009 - RECOMPILE OVER CORRECT SESTAT, 128 LONG.            *   E18009
+     F*  E16089 - NO INCOMPLETE TRADES SHOULD BE OUTPUT TO TRDEXD.    *   E16089
+     F*  E15997 - STATEMENTS SHOULD BE PRINTED ACCORDING TO           *   E15997
+     F*           VALUATION FREQUENCY RATHER THAN AT END OF MONTH.    *   E15997
+     F*  E13614 - PROGRAM AMENDED TO DIFFERENTIATE BETWEEN ACTIVE     *   E13614
+     F*           AND DELETED RECORDS ON TRADES EXTRACT FILE.         *   E13614
+     F*  E15845 - D/B ERROR INCORRECTLY GENERATED FOR BOND BORROWING  *   E15845
+     F*           & LENDING RECORDS.                                  *   E15845
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE0945AUO   E                    PRINTER                        UC
+     FTRDEXD  O   E                    DISK         KINFDS TRDEDS
+     F                                              KINFSR TRDESR
+     FSECTY   IF  E           K        DISK
+     FDEPMVC  IF  E           K        DISK
+     FTRADCU  IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCBF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE               E15997
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F*********** TABTG10F                          KIGNORE               E16191
+     F            TABTG10F                          KIGNORE               S01117
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   31  - END OF SEQUENCE OR FILE FOR TRADES RECORDS PF/TRADCU  *
+     F*   32  - END OF SEQUENCE OR FILE FOR DEPOT  RECORDS PF/DEPMVC  *
+     F*   41  - RECORD NOT FOUND WHEN CHAINING                        *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*   U8  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - OBTAINS ICD INFO                                    *
+     F*  TRDESR - PERFORMS DB ERROR IF ERROR WHEN WRITING RECORDS TO  *
+     F*           THE EXTRACT FILE                                    *
+     F***NOTMTH*-*WRITES*RECORDS*TO*THE*EXTRACT*FILE*WHEN*NOT*MONTH*EN*   E15997
+     F***MTHEND*-*WRITES*RECORDS*TO*THE*EXTRACT*FILE*WHEN**MONTH*END***   E15997
+     F*  ONREQ  - WRITES RECORDS TO THE EXTRACT FILE WHEN ON REQUEST  *   E15997
+     F*  COB    - WRITES RECORDS TO THE EXTRACT FILE WHEN IN COB      *   E15997
+     F*  AUDIT  - OUTPUTS CONTROL REPORT                              *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZCONV  - CONVERT AMOUNT FROM ONE CURRENCY TO ANOTHER         *   E16191
+     F*  ZEVCD  - DETERMINE EVENT CONTROL DATE                        *   E15997
+     F*  ZICD2  - ACCESS ICD RECORD 2                                 *   E15997
+     F*  ZICDSE - CHAINS TO ICD TABTB10                               *
+     F*  ZSYSTM - ACCESS ICD1 RECORD                                  *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZPOWER8Z1                                              071675
+     E/COPY ZSRSRC,ZPOWERZ1                                               E16191
+      /EJECT
+     I*
+     I* FOR EACH OF THE  FORMATS FROM WHICH DATA IS TAKEN TO MAKE UP
+     I* THE EXTRACT RECORDS, RENAME SOME FIELDS TO THOSE OF THE EXTRACT
+     I* RECORD, INORDER TO SAVE ON MOVE OPERATIONS BEFORE WRITING AN EXTRACT
+     I* RECORD.
+     I*
+     ICLINTSEF
+     I              RECI                            SERECI
+     I              C1VF                            TCVF
+     I*
+     ISECTYDF
+     I              RECI                            SRECI
+     I************* VLCY                            TCVC                  E16191
+     I              SRPN                            TSRN
+     I              CPNR                            TCCR
+     I              MATY                            TMDT
+     I              LCD                             SLCD
+     I*
+     IDPTMVDF
+     I              RECI                            DRECI
+     I              DPBN                            TCSN
+     I              DPSS                            TCSS
+     I              DPRN                            TTMR
+     I              DPMV                            TTMT
+     I              DPNA                            TNOM
+     I              LCD                             TLCD
+     I              MKTP                            TPRC                  063731
+     I*
+     ITRADSDF
+     I              RECI                            TRECI
+     I              TCNR                            TCSN
+     I              TDSS                            TCSS
+     I              TDDT                            TTMD
+     I              TDVD                            TCVD
+     I              TDRF                            TTMR
+     I              TDTP                            TTMT
+     I              NOML                            TNOM
+     I              TNMC                            TCNC
+     I              TNMD                            TNDP
+     I**************PRIC                            TPRC                  E38010
+     I              TPDY                            TPRC                  E38010
+     I              SETC                            TCVC                  E16191
+     I              TCTR                            TCCV
+     I              LCD                             TLCD
+     I              TPRC                            TPRCX                 CPK008
+     I*
+     I            DS
+     I*
+     I* DATA STRUCTURE USED AFTER THE TRADES PROCESSING TO
+     I* INITIALISE FIELDS WHICH ARE NOT ON THE DEPOT FILE
+     I*
+     I                                        1   50TCVD
+     I                                        6   60TNDP
+     I                                        7  218TPRC
+     I                                       22  360TCCV
+     I                                        1  36 TALL1
+     I*
+     I            DS
+     I*
+     I* DATA STRUCTURE USED TO OUTPUT THE KEY FOR A RECORD
+     I* IF AN ERROR OCCURS WHILST WRITING RECORD TO EXTRACT FILE.
+     I*
+     I**********                              1   60TCSN                                      CSD027
+     I                                        1   6 TCSN                                      CSD027
+     I                                        7  12 TTMR
+     I                                       13  22 TCSS
+     I                                       23  270TTMD
+     I                                        1  27 TRDEXK
+     I*
+     ISESTAT    E DS
+     I              EUTX                            EUTXB                                     CPK024
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ITRDEDS      DS
+     I                                     *STATUS  TRDSTS
+     ISDCURR    E DSSDCURRPD                                              S01117
+     I*                                                                   S01117
+     I** Currency details                                                 S01117
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01117
+     I*                                                                   S01117
+     I** DS for access programs, long data structure                      S01117
+     I*                                                                   S01117
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C* MOVE CUSTOMER NUMBER THAT IS PASSED TO PGM, INTO A NUMERIC FIELD
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           CUSTNO  6
+     C*
+     C           *LIKE     DEFN TCSN      SAVCUS
+     C           *LIKE     DEFN TCSS      SAVSEC
+     C*
+     C**********           MOVE CUSTNO    CUST    60                                          CSD027
+     C                     MOVE CUSTNO    CUST    6                                           CSD027
+     C*
+     C* CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE0945  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* INITIALISE THE RECORD ID FIELD OF OUTPUT FILE TO 'D'
+     C*
+     C                     MOVE 'D'       RECI
+     C                     Z-ADD0         NOREC                           E31701
+     C*
+     C**DETERMINE*IF*THIS*IS*A*MONTH*END*RUN*OR*NOT.*IF*YES*EXECUTE*THE   E15997
+     C**SUBROUTINE*FOR*MONTH*END,*ELSE*EXECUTE*THE*NOT-MONTH-END*SUBROUTINE15997
+     C*
+     C***********EOM       IFEQ 'Y'                                       E15997
+     C***********          EXSR MTHEND                                    E15997
+     C*
+     C* DETERMINE WHETHER THIS IS ON-REQUEST REPORTING OR THE TEST        E15997
+     C* FOR STATEMENT FREQUENCY                                           E15997
+     C*
+     C********** CUSTNO    IFEQ '000000'                                               E15997 CSD027
+     C           CUSTNO    IFEQ *BLANKS                                                       CSD027
+     C           CUSTNO    OREQ '000000'                                                    BUG11627
+     C                     EXSR COB                                       E15997
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C                     ELSE
+     C***********          EXSR NOTMTH                                    E15997
+     C                     EXSR ONREQ                                     E15997
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C                     END
+     C*                                                                   E31701
+     C                     OPEN SE0945AU                                  E31701
+     C                     WRITEHEADAU                                    E31701
+     C                     WRITECONTROLS                                  E31701
+     C***********                                                         E31701
+     C**IF*THERE*HAVE*BEEN*NO*RECORDS*OUTPUT*TO*TRDEXD*THEN*OPEN*THE*AUDITE31701
+     C**PRINT*FILE*AND*WRITE*AN*APPROPRIATE*MESSAGE***********************E31701
+     C***********                                                         E31701
+     C************IN60     IFEQ '0'                                       E31701
+     C***********          OPEN SE0945AU                                  E31701
+     C***********          WRITEHEADAU                                    E31701
+     C***********          WRITENONE                                      E31701
+     C***********          END                                            E31701
+     C*
+     C                     GOTO ENDPGM
+     C*
+     C* EXECUTE THE AUDIT SR AND THEN END PGM.
+     C*
+     C           EAUDIT    TAG                             *** EAUDIT ***
+     C                     EXSR AUDIT
+     C           ENDPGM    TAG                             *** ENDPGM ***
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST - SUBROUTINE TO ACCESS ICD INFORMATION                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C* ACCESS ICDS FROM TABTB10 AND TABTB36. IF ERROR OCCURS PERFORM DB
+     C* ERROR ROUTINE.
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     ELSE
+     C                     EXSR ZICDSE
+     C*
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*                                                                   E15997
+     C* GET INSTALLATION CONTROL DATA RECORD 2                            E15997
+     C*                                                                   E15997
+     C                     EXSR ZICD2                                     E15997
+     C*                                                                   E15997
+     C* ERROR IN ZICD2                                                    E15997
+     C*                                                                   E15997
+     C           *IN99     IFEQ '1'                                       E15997
+     C                     MOVE '1'       *INU7                           E15997
+     C                     MOVE '1'       *INU8                           E15997
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************E15997
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 05 *E15997
+     C                     Z-ADD5         DBASE            ***************E15997
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE                                           E15997
+     C*
+     C* RETRIEVE INFORMATION FROM THE DATAAREA SESTAT IF NO DB ERRORS HAVE
+     C* OCCURRED
+     C*
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C*
+     C                     END
+     C                     END                                            E15997
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **NOTMTH*-*SUBROUTINE*TO*EXTRACT*TRADES*AND*DEPOT*RECORDA*ONLY*FOR  E15997
+      *  ONREQ - SUBROUTINE TO EXTRACT TRADES AND DEPOT RECORDS ONLY  *   E15997
+      *          FOR THE CUSTOMER PASSED TO THE PROGRAM BY THE PARM   *
+      *                                                               *
+      *****************************************************************
+      *
+     C***********NOTMTH    BEGSR                           ** NOTMTH **   E15997
+     C           ONREQ     BEGSR                            ** ONREQ **   E15997
+     C*
+     C* GET THE VALUATION FREQUENCY FIELD FOR OUTPUT , FROM THE CLIENT
+     C* FILE CLINTSE, IF RECORD NOT FOUND OR DELETED PERFORM STD DB ERROR
+     C*
+     C           CUST      CHAINCLINTSEF             41
+     C*
+     C* IF RECORD ON CUSTOMER FILE NOT FOUND OR DELETED, PERFORM DB ERROR
+     C*
+     C           *IN41     IFEQ '1'
+     C           SERECI    OREQ '*'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE           ***************
+     C                     MOVELCUST      DBKEY            * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENOTM
+     C                     END
+     C*
+     C* SET FILE POINTER TO FIRST RECORD IN SEQUENCE FOR CUSTOMER
+     C*
+     C           CUST      SETLLTRADCU
+     C*
+     C* READ FIRST CUSTOMER TRADES RECORD, IF END OF SEQUENCE FOR THIS
+     C* CUSTOMER DO NOT ENTER LOOP, GO ON TO DEPOT MOVEMENT PROCESSING
+     C*
+     C           CUST      READETRADSDF                  31
+     C           *IN31     DOWEQ'0'
+     C*                                                                   E16089
+     C**CHECK*THAT*TRADE*IS*COMPLETE*AND*IGNORE*IF*INCOMPLETE******E16089 S01269
+     C* IGNORE IF INCOMPLETE OR RECORD I.D. IS L OR P                     S01269
+     C*                                                                   E16089
+     C           TINC      IFEQ 'C'                                       E16089
+     C           RECI      OREQ 'L'                                       S01269
+     C           RECI      OREQ 'P'                                       S01269
+     C*
+     C**CHECK*THAT*TRADE*HAS*NOT*BEEN*DELETED.IF*SO,*CHANGE*RECI*TO*'*'614E21128
+     C***********                                                  E13614 E21128
+     C***********TRECI     COMP '*'                      42        E13614 E21128
+     C************IN42     IFEQ '1'                                E13614 E21128
+     C***********          MOVE '*'       RECI                     E13614 E21128
+     C***********          SETOF                         42        E13614 E21128
+     C***********          ELSE                                    E13614 E21128
+     C***********          MOVE 'D'       RECI                     E13614 E21128
+     C***********          END                                     E13614 E21128
+     C*
+     C* FOR THE CURRENT TRADES RECORD, OBTAIN THE RELEVANT SECURITY RECORD
+     C* FROM THE SECURITIES FILE. IF SECURITY RECORD NOT FOUND OR DELETED
+     C* PERFORM STANDARD DB ERROR
+     C*
+     C           TCSS      CHAINSECTYDF              41
+     C           *IN41     IFEQ '1'
+     C           SRECI     OREQ '*'
+     C*                                                                   E18130
+     C* DELETED SECURITY OKAY FOR DELETED TRADE                           E18130
+     C*                                                                   E18130
+     C           TRECI     ANDNE'*'                                       E18130
+     C*                                                                   E18130
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELTCSS      DBKEY            * DB ERROR 04 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENOTM
+     C*
+     C* IF SECURITY RECORD FOUND, WRITE EXTRACT RECORD TO FILE TRDEXD
+     C*
+     C                     ELSE
+     C***********          MOVE TDBR      TBRN    3                       S01117
+     C                     MOVE TDBA      TBRN    3                       S01117
+     C*
+     C**   Format countervalue  -                                         E16191
+     C**       convert from nominal to settlement currency using ZCONV    E16191
+     C**       report error if no currency table record found             E16191
+     C*
+     C                     MOVE TCNC      ZCCYI                           E16191
+     C**                                                                  S01117
+     C**  Get nominal currency decimal places.                            S01117
+     C**                                                                  S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM '*MSG    '@RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM TCNC      @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     U7U8                 S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************S01117
+     C                     MOVEL@AJCD     DBKEY            * DB ERROR 06  S01117
+     C                     Z-ADD6         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENOTM                                     S01117
+     C                     ELSE                                           S01117
+     C                     Z-ADDA6NBDP    ZCDPI                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     MOVE TCVC      ZCCYO                           E16191
+     C**                                                                  S01117
+     C**  Get settlement currency decimal places                          S01117
+     C**                                                                  S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM '*MSG    '@RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM TCVC      @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     U7U8                 S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************S01117
+     C                     MOVEL@AJCD     DBKEY            * DB ERROR 16 *S01117
+     C                     Z-ADD16        DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENOTM                                     S01117
+     C                     ELSE                                           S01117
+     C                     Z-ADDA6NBDP    ZCDPO                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     MOVE TMDI      ZMD                             E16191
+     C                     Z-ADDTDER      ZEXCH                           E16191
+     C                     Z-ADDTCCV      ZAMTCI                          E16191
+     C                     EXSR ZCONV                                     E16191
+     C************INU8     IFEQ '1'                                E16191 S01117
+     C***********          MOVE '1'       *INU7                    E16191 S01117
+     C***********          MOVE 'TABLE'   DBFILE           ********E16191 S01117
+     C***********          MOVELTKEY      DBKEY            * DB 6 *E16191 S01117
+     C***********          Z-ADD6         DBASE            ********E16191 S01117
+     C***********          GOTO ENOTM                              E16191 S01117
+     C***********          ELSE                                    E16191 S01117
+     C                     MOVE ZAMTCO    TCCV                            E16191
+     C***********          END                                     E16191 S01117
+     C*
+     C* CHECK THAT TRADE HAS NOT BEEN DELETED.IF SO, CHANGE RECI TO '*'   E21128
+     C*                                                                   E21128
+     C           TRECI     IFEQ '*'                                       E21128
+     C                     MOVE '*'       RECI                            E21128
+     C                     ELSE                                           E21128
+     C                     MOVE 'D'       RECI                            E21128
+     C                     END                                            E21128
+     C*
+      ***  Only write a record if the Trade was not Deleted on the same   E21660
+      ***  day that it was entered.                                       E21660
+      *                                                                   E21660
+     C           TRECI     IFNE '*'                                       E21660
+     C           TOED      ORNE TLCD                                      E21660
+     C                     WRITETRDEXDF
+     C***********          SETON                         60               E31701
+     C                     ADD  1         NOREC   50                      E31701
+     C                     END                                            E21660
+     C*
+     C                     END                                            E16089
+     C                     END
+     C*
+     C* READ NEXT CUSTOMER RECORD IN SEQUENCE
+     C*
+     C           CUST      READETRADSDF                  31
+     C                     END
+     C*
+     C                     MOVE *ZEROS    TALL1
+     C*
+     C* DEPOT PROCESSING:
+     C* SET FILE POINTER TO FIRST DEPOT RECORD IN SEQUENCE
+     C* FOR CUSTOMER. READ RECORD FROM DEPOT FILE. IF END OF CUSTOMER
+     C* SEQUENCE, STOP PROCESSING
+     C*
+     C           CUST      SETLLDPTMVDF
+     C           CUST      READEDPTMVDF                  32
+     C*
+     C* LOOP UNTIL ALL DEPOT RECORDS FOR THIS CUSTOMER PROCESSED, WRITE
+     C* EACH RECORD TO THE EXTRACT FILE.
+     C*
+     C           *IN32     DOWEQ'0'
+     C*                                                                   E25009
+     C* Ignore if depot transfer                                          E25009
+     C*                                                                   E25009
+     C           TTMT      IFNE 'DT'                                      E25009
+     C*
+     C* IF DEPOT MOVEMENT HAS BEEN CANCELLED, EXTRACT RECORD SHOULD HAVE  E18130
+     C* RECI = '*'                                                        E18130
+     C*
+     C           DRECI     IFEQ '*'                                       E18130
+     C                     MOVE '*'       RECI                            E18130
+     C                     ELSE                                           E18130
+     C                     MOVE 'D'       RECI                            E18130
+     C                     END                                            E18130
+     C*
+     C* FOR THE CURRENT RECORD, OBTAIN THE RELEVANT SECURITY RECORD
+     C* FROM THE SECURITIES FILE. IF SECTY REC'D NOT FOUND OR DELETED
+     C* PERFORM STANDARD DB ERROR
+     C*
+     C           TCSS      CHAINSECTYDF              41
+     C           *IN41     IFEQ '1'
+     C           SRECI     OREQ '*'
+     C*                                                                   E18130
+     C* DELETED SECURITY OKAY FOR DELETED DEPOT MOVEMENT                  E18130
+     C*                                                                   E18130
+     C           DRECI     ANDNE'*'                                       E18130
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELTCSS      DBKEY            * DB ERROR 07 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENOTM
+     C*
+     C                     ELSE
+     C                     MOVE NMCY      TCNC
+     C                     MOVE VLCY      TCVC                            094843
+     C                     END
+     C*
+     C* OUTPUT A RECORD TO THE EXTRACT FILE FOR ALL CUSTOMERS.            E15845
+     C* IF THE DEAL IS BOND BORROW OR LEND, REPURCHASE, REVERSE           E15845
+     C* REPURCHASE, PLEDGED DEPOSIT OR LOAN, WRITE TWO RECORDS            E15845
+     C* TO THE EXTRACT FILE - ONE FOR THE IN DATE AND ONE FOR THE         E15845
+     C* OUT DATE.                                                         E15845
+     C*                                                                   E15845
+     C           TTMT      IFEQ 'BB'                                      E15845
+     C           TTMT      OREQ 'BL'                                      E15845
+     C           TTMT      OREQ 'RP'                                      E15845
+     C           TTMT      OREQ 'RR'                                      E15845
+     C           TTMT      OREQ 'PD'                                      E15845
+     C           TTMT      OREQ 'PL'                                      E15845
+     C                     Z-ADDDPMD      TTMD                            E15845
+      *                                                                   E20125
+      ** For 'In' movement (out from customer's viewpoint), reverse sign. E20125
+      *                                                                   E20125
+     C                     Z-SUBTNOM      TNOM                            E20125
+      *                                                                   E20125
+     C                     MOVE DPBA      TBRN                                              AR877101
+      *                                                                                     AR877101
+      *... Setup Countervalue & Currency for Printing.                    071675
+     C                     EXSR Z1TCCV                     *              071675
+     C                     WRITETRDEXDF                                   E15845
+     C                     ADD  1         NOREC                           E31701
+      *                                                                   E20125
+      ** Reverse sign back to positive for 'Out' movement.                E20125
+      *                                                                   E20125
+     C                     Z-SUBTNOM      TNOM                            E20125
+      *                                                                   E20125
+     C                     END                                            E15845
+     C*
+     C* DETERMINE WHICH MOVEMENT DATE TO OUPUT TO THE EXTRACT FILE FROM THE
+     C* DEPOT MOVEMENTS FILE. TAKE WHICHEVER FIELD  HAS SOMETHING IN IT. IF
+     C* IF BOTH FIELDS ARE DEFINED THEN USE 'OUT' DATE (COUNTER-PARTYS)
+     C* IF NEITHER FIELD IS DEFINED , THEN PERFORM DB ERROR
+     C*
+     C           DPMD      IFNE *ZEROS
+     C           DPDO      ANDEQ*ZEROS
+     C                     Z-ADDDPMD      TTMD
+     C*
+      ** For 'In' movement (out from customer's viewpoint), reverse sign. E20125
+     C*
+     C                     Z-SUBTNOM      TNOM                            E20125
+     C*
+     C                     ELSE
+     C           DPMD      IFEQ *ZEROS
+     C           DPDO      ANDNE*ZEROS
+     C                     Z-ADDDPDO      TTMD
+     C*
+     C                     ELSE
+     C           DPDO      IFNE *ZEROS
+     C                     Z-ADDDPDO      TTMD
+     C*
+     C* PERFORM DB ERROR
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE *BLANKS   TTMD
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'DEPMV'   DBFILE           ***************
+     C                     MOVELTRDEXK    DBKEY            * DB ERROR 08 *
+     C                     Z-ADD8         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENOTM
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C***********          MOVE DPBC      TBRN    3                       S01117
+     C                     MOVE DPBA      TBRN    3                       S01117
+     C*
+      *... Setup Countervalue & Currency for Printing.                    071675
+     C                     EXSR Z1TCCV                     *              071675
+     C                     WRITETRDEXDF
+     C***********          SETON                         60               E31701
+     C                     ADD  1         NOREC                           E31701
+     C                     END                                            E25009
+     C*
+     C* READ NEXT DEPOT RECORD.
+     C*
+     C           CUST      READEDPTMVDF                  32
+     C                     END
+     C*
+     C           ENOTM     TAG
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **MTHEND*-*SUBROUTINE*TO*EXTRACT*ALL*TRADES*AND*DEPOT*RECORDS*FOR ALE15997
+      ***********CUSTOMERS*AT*MONTH*END.*******************************   E15997
+      *                                                               *   E15997
+      *  COB   - SUBROUTINE TO EXTRACT ALL TRADES AND DEPOT RECORDS   *   E15997
+      *          FOR ALL CUSTOMERS BASED ON THEIR VALUATION DATE      *   E15997
+      *          VALUATION FREQUENCY DATE.                            *   E15997
+      *                                                               *
+      *****************************************************************
+      *
+     C***********MTHEND    BEGSR                           ** MTHEND **   E15997
+     C           COB       BEGSR                            **  COB  **   E15997
+     C*                                                                   E15997
+     C* EXECUTE SUB-ROUTINE TO RETRIEVE EVENT CONTROL DATE                E15997
+     C* FOR COMPARISON WITH FREQUENCY DATE.                               E15997
+     C*                                                                   E15997
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD                                     E15997
+     C*
+     C* READ FIRST CUSTOMER TRADES RECORD, IF END OF FILE HAS BEEN REACHED
+     C* CONTINUE WITH THE PROCESSING OF DEPOT RECORDS.
+     C*
+     C                     READ TRADSDF                  31
+     C           *IN31     DOWEQ'0'
+     C*                                                                   E16089
+     C* CHECK THAT TRADE IS COMPLETE AND IGNORE IF INCOMPLETE             E16089
+     C*                                                                   E16089
+     C           TINC      IFEQ 'C'                                       E16089
+      *                                                                   E21660
+     C***********                                                         E21660
+     C**CHECK*THAT*TRADE*HAS*NOT*BEEN*DELETED.IF*SO,*CHANGE*RECI*TO*'*' 4 E21660
+     C***********                                                  E13614 E21660
+     C***********TRECI     COMP '*'                      42        E13614 E21660
+     C************IN42     IFEQ '1'                                E13614 E21660
+     C***********          MOVE '*'       RECI                     E13614 E21660
+     C***********          SETOF                         42        E13614 E21660
+     C***********          ELSE                                    E13614 E21660
+     C***********          MOVE 'D'       RECI                     E13614 E21660
+     C***********          END                                     E13614 E21660
+     C*
+     C* GET THE VALUATION FREQUENCY FIELD FOR OUTPUT , FROM THE CLIENT
+     C* FILE CLINTSE, IF RECORD NOT FOUND OR DELETED PERFORM STD DB ERROR
+     C*
+     C           TCSN      IFNE SAVCUS
+     C**********           Z-ADDTCSN      SAVCUS                                              CSD027
+     C                     MOVE TCSN      SAVCUS                                              CSD027
+     C           TCSN      CHAINCLINTSEF             41
+     C*
+     C* IF RECORD ON CUSTOMER FILE NOT FOUND OR DELETED, PERFORM DB ERROR
+     C*
+     C           *IN41     IFEQ '1'
+     C           SERECI    OREQ '*'
+     C           TRECI     ANDNE'*'                                                         BUG12901
+     C           TRECI     ANDNE'S'                                                         BUG12901
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE           ***************
+     C                     MOVELTCSN      DBKEY            * DB ERROR 09 *
+     C                     Z-ADD9         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EMTH
+     C                     END
+     C                     END
+     C*                                                                   E15997
+     C* IF FREQUENCY DATE IS LESS THAN OR EQUAL TO EVENT CONTROL DATE     E15997
+     C* PROCEED WITH PROCESSING.                                          E15997
+     C*                                                                   E15997
+     C           C1NV      IFLE ECD                                       E15997
+     C           TRECI     ANDNE'*'                                                         BUG12901
+     C           TRECI     ANDNE'S'                                                         BUG12901
+     C           SERECI    ANDNE'*'                                                         BUG12901
+     C*
+     C* FOR THE CURRENT TRADES RECORD, OBTAIN THE RELEVANT SECURITY RECORD
+     C* FROM THE SECURITIES FILE. IF SECURITY RECORD NOT FOUND OR DELETED
+     C* PERFORM STANDARD DB ERROR.
+     C*
+     C           TCSS      IFNE SAVSEC
+     C                     MOVE TCSS      SAVSEC
+     C           TCSS      CHAINSECTYDF              41
+     C           *IN41     IFEQ '1'
+     C           SRECI     OREQ '*'
+      *                                                                   E18130
+      ***  A Deleted Security is allowed if the Trade is also Deleted.    E18130
+      *                                                                   E18130
+     C           TRECI     IFNE '*'                                       E18130
+     C*                                                                   E18130
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELTCSS      DBKEY            * DB ERROR 10 *
+     C                     Z-ADD10        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EMTH
+     C                     END                                            E18130
+     C                     END
+     C                     END
+     C*
+     C* IF SECURITY RECORD FOUND, WRITE EXTRACT RECORD TO FILE TRDEXD
+     C*
+     C***********          MOVE TDBR      TBRN    3                       S01117
+     C                     MOVE TDBA      TBRN    3                       S01117
+     C*
+     C**   Format countervalue  -                                         E16191
+     C**       convert from nominal to settlement currency using ZCONV    E16191
+     C*********report*error*if*no*currency*table*record*found******E16191 S01117
+     C*                                                                   E16191
+     C                     MOVE TCNC      ZCCYI                           E16191
+     C                     MOVE TCVC      ZCCYO                           E16191
+     C                     MOVE TMDI      ZMD                             E16191
+     C                     Z-ADDTDER      ZEXCH                           E16191
+     C                     Z-ADDTCCV      ZAMTCI                          E16191
+     C                     EXSR ZCONV                                     E16191
+     C************INU8     IFEQ '1'                                E16191 S01117
+     C***********          MOVE '1'       *INU7                    E16191 S01117
+     C***********          MOVE 'TABLE'   DBFILE           ********E16191 S01117
+     C***********          MOVELTKEY      DBKEY            * DB 1 *E16191 S01117
+     C***********          Z-ADD11        DBASE            ********E16191 S01117
+     C***********          GOTO EMTH                               E16191 S01117
+     C***********          ELSE                                    E16191 S01117
+     C                     MOVE ZAMTCO    TCCV                            E16191
+     C***********          END                                     E16191 S01117
+     C*
+      ***  Check if the Trade is Deleted - if it is, change RECI to '*'   E21660
+      *                                                                   E21660
+     C           TRECI     IFEQ '*'                                       E21660
+     C                     MOVE '*'       RECI                            E21660
+     C                     ELSE                                           E21660
+     C                     MOVE 'D'       RECI                            E21660
+     C                     END                                            E21660
+      *                                                                   E21660
+      ***  Only write the record if the Trade was not Deleted on the      E21660
+      ***  same day that it was entered.                                  E21660
+      *                                                                   E21660
+     C           TRECI     IFNE '*'                                       E21660
+     C           TOED      ORNE TLCD                                      E21660
+     C                     WRITETRDEXDF
+     C***********          SETON                         60               E31701
+     C                     ADD  1         NOREC                           E31701
+     C                     END                                            E21660
+      *                                                                   E21660
+     C                     END                                            E15997
+     C                     END                                            E16089
+     C*
+     C* READ NEXT CUSTOMER RECORD
+     C*
+     C                     READ TRADSDF                  31
+     C                     END
+     C*
+     C                     MOVE *ZEROS    TALL1
+     C                     MOVE *LOVAL    SAVSEC
+     C                     MOVE *LOVAL    SAVCUS
+     C*
+     C* DEPOT PROCESSING:
+     C* READ RECORD FROM DEPOT FILE. IF END OF FILE STOP
+     C* PROCESSING
+     C*
+     C                     READ DPTMVDF                  32
+     C           *IN32     DOWEQ'0'
+     C*                                                                   E25009
+     C* Ignore if depot transfer                                          E25009
+     C*                                                                   E25009
+     C           TTMT      IFNE 'DT'                                      E25009
+     C*                                                                   E18130
+     C* IF DEPOT MOVEMENT HAS BEEN CANCELLED, EXTRACT RECORD SHOULD HAVE  E18130
+     C* RECI = '*' (E13614 DOES THIS FOR CANCELLED TRADES).               E18130
+     C*                                                                   E18130
+     C           DRECI     IFEQ '*'                                       E18130
+     C                     MOVE '*'       RECI                            E18130
+     C                     ELSE                                           E18130
+     C                     MOVE 'D'       RECI                            E18130
+     C                     END                                            E18130
+     C*
+     C* GET THE VALUATION FREQUENCY FIELD FOR OUTPUT , FROM THE CLIENT
+     C* FILE CLINTSE, IF RECORD NOT FOUND OR DELETED PERFORM STD DB ERROR
+     C*
+     C           TCSN      IFNE SAVCUS
+     C**********           Z-ADDTCSN      SAVCUS                                              CSD027
+     C                     MOVE TCSN      SAVCUS                                              CSD027
+     C           TCSN      CHAINCLINTSEF             41
+     C*
+     C* IF RECORD ON CUSTOMER FILE NOT FOUND OR DELETED, PERFORM DB ERROR
+     C*
+     C           *IN41     IFEQ '1'
+     C           SERECI    OREQ '*'
+     C           DRECI     ANDNE'*'                                                           201304
+     C           DRECI     ANDNE'S'                                                           201304
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE           ***************
+     C                     MOVELTCSN      DBKEY            * DB ERROR 13 *
+     C                     Z-ADD13        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EMTH
+     C                     END
+     C                     END
+     C*                                                                   E15997
+     C* IF FREQUENCY DATE IS LESS THAN OR EQUAL TO EVENT CONTROL DATE     E15997
+     C* PROCEED WITH PROCESSING.                                          E15997
+     C*                                                                   E15997
+     C           C1NV      IFLE ECD                                       E15997
+     C           DRECI     ANDNE'*'                                                           201304
+     C           DRECI     ANDNE'S'                                                           201304
+     C           SERECI    ANDNE'*'                                                           201304
+     C*
+     C* FOR THE CURRENT RECORD, OBTAIN THE RELEVANT SECURITY RECORD
+     C* FROM THE SECURITIES FILE. IF SECURITY RECORD NOT FOUND OR DELETED
+     C* PERFORM STANDARD DB ERROR
+     C*
+     C           TCSS      IFNE SAVSEC
+     C                     MOVE TCSS      SAVSEC
+     C           TCSS      CHAINSECTYDF              41
+     C           *IN41     IFEQ '1'
+     C           SRECI     OREQ '*'
+     C*                                                                   E18130
+     C* DELETED SECURITY OKAY FOR DELETED DEPOT MOVEMENT                  E18130
+     C*                                                                   E18130
+     C           DRECI     ANDNE'*'                                       E18130
+     C*                                                                   E18130
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELTCSS      DBKEY            * DB ERROR 14 *
+     C                     Z-ADD14        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EMTH
+     C                     END
+     C                     END
+     C*
+     C*                                                                   E15845
+     C* OUTPUT A RECORD TO THE EXTRACT FILE FOR ALL CUSTOMERS.            E15845
+     C* IF THE DEAL IS BOND BORROW OR LEND, REPURCHASE, REVERSE           E15845
+     C* REPURCHASE, PLEDGED DEPOSIT OR LOAN, WRITE TWO RECORDS            E15845
+     C* TO THE EXTRACT FILE - ONE FOR THE IN DATE AND ONE FOR THE         E15845
+     C* OUT DATE.                                                         E15845
+     C*                                                                   E15845
+     C           TTMT      IFEQ 'BB'                                      E15845
+     C           TTMT      OREQ 'BL'                                      E15845
+     C           TTMT      OREQ 'RP'                                      E15845
+     C           TTMT      OREQ 'RR'                                      E15845
+     C           TTMT      OREQ 'PD'                                      E15845
+     C           TTMT      OREQ 'PL'                                      E15845
+     C                     Z-ADDDPMD      TTMD                            E15845
+      *                                                                   E20125
+      ** For 'In' movement (out from customer's viewpoint), reverse sign. E20125
+      *                                                                   E20125
+     C                     Z-SUBTNOM      TNOM                            E20125
+      *                                                                   E20125
+     C                     MOVE DPBA      TBRN                                              AR877101
+      *                                                                                     AR877101
+      *... Setup Countervalue & Currency for Printing.                    071675
+     C                     EXSR Z1TCCV                     *              071675
+     C                     WRITETRDEXDF                                   E15845
+     C                     ADD  1         NOREC                           E31701
+      *                                                                   E20125
+      ** Reverse sign back to positive for 'Out' movement.                E20125
+      *                                                                   E20125
+     C                     Z-SUBTNOM      TNOM                            E20125
+      *                                                                   E20125
+     C                     END                                            E15845
+     C*
+     C* DETERMINE WHICH MOVEMENT DATE TO OUPUT TO THE EXTRACT FILE FROM THE
+     C* DEPOT MOVEMENTS FILE. TAKE WHICHEVER FIELD  HAS SOMETHING IN IT. IF
+     C* NEITHER FIELD HAS ANYTHING IN OR BOTH FULL, PERFORM DB ERROR
+     C*
+     C           DPMD      IFNE *ZEROS
+     C           DPDO      ANDEQ*ZEROS
+     C                     Z-ADDDPMD      TTMD
+     C*
+      ** For 'In' movement (out from customer's viewpoint), reverse sign. E20125
+     C*
+     C                     Z-SUBTNOM      TNOM                            E20125
+     C*
+     C                     ELSE
+     C           DPMD      IFEQ *ZEROS
+     C           DPDO      ANDNE*ZEROS
+     C                     Z-ADDDPDO      TTMD
+     C*                                                                   E15845
+     C                     ELSE                                           E15845
+     C           DPDO      IFNE *ZEROS                                    E15845
+     C                     Z-ADDDPDO      TTMD                            E15845
+     C*
+     C* PERFORM DB ERROR
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   TTMD
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'DEPMV'   DBFILE           ***************
+     C                     MOVELTRDEXK    DBKEY            * DB ERROR 12 *
+     C                     Z-ADD12        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EMTH
+     C                     END
+     C                     END
+     C                     END                                            E15845
+     C                     MOVE NMCY      TCNC
+     C                     MOVE VLCY      TCVC                            094843
+     C***********          MOVE DPBC      TBRN    3                       S01117
+     C                     MOVE DPBA      TBRN    3                       S01117
+     C*
+     C* WRITE RECORD TO THE EXTRACT FILE.
+     C*
+      *... Setup Countervalue & Currency for Printing.                    071675
+     C                     EXSR Z1TCCV                     *              071675
+     C                     WRITETRDEXDF
+     C***********          SETON                         60               E31701
+     C                     ADD  1         NOREC                           E31701
+     C                     END                                            E15997
+     C                     END                                            E25009
+     C*
+     C* READ NEXT DEPOT RECORD.
+     C*
+     C                     READ DPTMVDF                  32
+     C                     END
+     C*
+     C           EMTH      TAG
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  TRDESR - SUBROUTINE FOR ERROR HANDLING OF TRADES WRITTEN TO  *
+      *           THE EXTRACT FILE                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TRDESR    BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TRDEX'   DBFILE           ***************
+     C                     MOVELTRDEXK    DBKEY            * DB ERROR 15 *
+     C                     Z-ADD15        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE TRDSTS    DBSTAT  5
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT - THIS SUBROUTINE WRITES OUT THE AUDIT DETAILS         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C                     OPEN SE0945AU
+     C*
+     C* WRITE THE AUDIT HEADER TO PRINTER FILE
+     C*
+     C                     WRITEHEADAU
+     C*
+     C* WRITE THE ERROR DETAILS
+     C*
+     C                     WRITEERROR
+     C*
+     C* WRITE THE END OF REPORT TRAILER
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+     C           Z1TCCV    BEGSR                                          071675
+     C**                                                                  071675
+     C**  Get nominal currency decimal places.                            071675
+     C**                                                                  071675
+     C                     MOVE TCNC      ZCCYI                           071675
+     C                     CALL 'AOCURRR0'                                071675
+     C                     PARM '*MSG    '@RTCD   7                       071675
+     C                     PARM '*KEY   ' @OPTN   7                       071675
+     C                     PARM TCNC      @AJCD   3                       071675
+     C           SDCURR    PARM SDCURR    DSSDY                           071675
+     C           @RTCD     IFNE *BLANKS                                   071675
+     C                     SETON                     U7U8                 071675
+     C           *LOCK     IN   LDA                                       071675
+     C                     MOVE 'TABLE'   DBFILE           ***************071675
+     C                     MOVEL@AJCD     DBKEY            * DB ERROR 06  071675
+     C                     Z-ADD6         DBASE            ***************071675
+     C                     OUT  LDA                                       071675
+     C                     EXSR *PSSR                                     071675
+     C                     GOTO Z9TCCV                                    071675
+     C                     ELSE                                           071675
+     C                     Z-ADDA6NBDP    ZCDP             * No_Dec_Places071675
+     C                     END                                            071675
+     C**                                                                  071675
+     C** Calculate COUNTERVALUE                                           071675
+     C**                                                                  071675
+      ** For 'In' movement (out from customer's viewpoint), reverse sign. 071675
+     C           TNOM      MULT -1        ZNOML            * Nominal_Pric 071675
+      *                                                                   071675
+     C                     Z-ADDTPRC      ZPRC             * Market_Pric  071675
+     C                     EXSR ZCNSD                                     071675
+      *                                                                   071675
+     C                     Z-ADDZCONS     TCCV             * VALUE_AMT    071675
+     C                     MOVE TCNC      TCVC             * VALUE_CCY    071675
+     C           Z9TCCV    ENDSR                                          071675
+     C**                                                                  071675
+     C*                                                                   071675
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT                                                              E16191
+     C/COPY ZSRSRC,ZCNSDZ1                                                071675
+      /EJECT                                                              071675
+     C/COPY ZSRSRC,ZCONVZ1                                                E16191
+      /EJECT                                                              E15997
+     C/COPY ZSRSRC,ZEVCDZ1                                                E15997
+      /EJECT                                                              E15997
+     C/COPY ZSRSRC,ZICD2Z1                                                E15997
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION                      071675
+00000001                                                                  071675
+00000010                                                                  071675
+00000100                                                                  071675
+00001000                                                                  071675
+00010000                                                                  071675
+00100000                                                                  071675
+01000000                                                                  071675
+10000000                                                                  071675
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION                       E16191
+0000001                                                                   E16191
+0000010                                                                   E16191
+0000100                                                                   E16191
+0001000                                                                   E16191
+0010000                                                                   E16191
+0100000                                                                   E16191
+1000000                                                                   E16191

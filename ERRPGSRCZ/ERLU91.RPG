@@ -1,0 +1,1861 @@
+     H        1
+     F********************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Er Luxembourg I.C.D. - maintenance')
+     F********************************************************************
+     F*                                                                  *
+     F*    MIDAS/ABS - EUROPEAN REPORTING                                *
+     F*                                                                  *
+     F*    ERLU91 - EUROPEAN LUXEMBOURG I.C.D. MAINTENANCE               *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                           *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 UPG402             Date 05Oct04               *
+      *                 UPGCSW             Date 27Sep02               *
+      *                 210004             Date 26Sep02               *
+      *                 189998             Date 18Mar01           *
+      *                 ULX008             Date 19Jul00           *
+      *                 ULX008             Date 16Mar00           *
+      *                 ULX008             Date 22Feb00           *
+      *                 ULX012             Date 20Jul98           *
+      *                 CAD004  PT         Date 20Jul98           *
+      *                 CAD003  PT         Date 20Jul98           *
+      *                 ULX004             Date 27Oct97           *
+      *                 ERL446  TLI        Date 14Nov94           *
+     F*                   ERL422  LV              Date 29Aug93           *
+     F*                   ERL371  TLI             Date 11Nov93           *
+     F*                   ERL328  TLI             DATE 22MAR93           *
+     F*                                                                  *
+     F*****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to change in ZALIGNZ2                 *
+      *  UPGCSW - Due to an upgrade of swift changes 2002 rename      *
+      *           variable V to W (confict with hook ZSRSRC/ZCOTRZ1   *
+      *           Amend ZSRSRC,ZALIGNZ2
+      *  210004 - Mismatch between ',' and '.' in Amend mode.         *
+      *           Link with fix 206456 in ZEDIT. So, apply same fix   *
+      *           in SR/ZALIGN and SR/ZFRPED.                         *
+      *  189998 - Credir Risk Measurement validation changes          *
+      *  ULX008 - "Commissariat aux Bourses" - Change Control C       *
+      *  ULX008 - "Commissariat aux Bourses" - Change Control A       *
+      *  ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses *
+      *  ULX012 - Guarantees and Collateral Management enhancements   *
+      *  CAD004 - Method of credit risk measurement not linked to the *
+      *           integrated CAD only                                 *
+      *  CAD003 - 'CAD to be produced? narrative changed              *
+     F*    ULX004 - Capital Adequacy                                     *
+      *         - IML Circular 97/138                                 *
+     F*    ERL446 - NEW IML 2.3 DEVELOPMENT                              *
+     F*    ERL422 - REPAYMENT MANAGEMENT DEVELOPMENT                     *
+     F*    ERL371 - IML 1.4 DEVELOPMENT                                  *
+     F*    ERL328 - IML 2.4 DEVELOPMENT                                  *
+     F*****************************************************************
+     F*
+     FERLUCCV1IF  E           K        DISK                               ULX008
+      ** Investment Company Codes Retrieval Index                         ULX008
+      *                                                                   ULX008
+     FERLUICL1IF  E           K        DISK
+     F            ERLUICD0                          KRENAMEERLUICD1
+     F*
+     FERLUICL0UF  E           K        DISK
+     F                                              KCOMIT
+      *                                European reporting I.C.D For Luxembourg
+     FERICDRL1IF  E           K        DISK
+      *                                European reporting I.C.D
+     FSDBANKL1IF  E           K        DISK
+     F*
+     FSDMMODL0IF  E           K        DISK                               ERL422
+     F*                                                                   ERL422
+     FERLU91DFCF  E                    WORKSTN
+     E*****************************************************************
+     E                    INTR   13  13  2 0                              ULX004
+     E/COPY ZSRSRC,ZALIGNZ1                                               ULX004
+     E                    @F         16  1               ZA0840 array     ERL328
+      * input array for SR/ZA0840                                         ERL328
+     E                    @G         16  1               ZA0840 array     ERL328
+      * output array for SR/ZA0840                                        ERL328
+     E                    @H      1  15 15 0             ZA0840 array     ERL328
+     E                    ZS1        15  1 0             ZSEDIT ARRAY     ERL328
+     E                    ZS2        21  1               ZSEDIT ARRAY     ERL328
+      *                                                                   ERL328
+     E                    CPY@    1   1 80
+     I*****************************************************************
+     I**  DATA STRUCTURE FOR SR/ZSEDIT
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I**  DATA STRUCTURE FOR SR/ZSEDIT                                    ULX004
+     I            DS                                                      ULX004
+     I                                        1   20WINTR                 ULX004
+     I                                        1   10WIRCS                 ULX004
+     I                                        2   20WIRCG                 ULX004
+     I* PROGRAM DATA STRUCTURE
+     IPGMDS     ESDSY2PGDSP
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I***
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      ** Data Area giving Installation Control Details                    ULX004
+     IRUNDAT    E DSRUNDAT                                                ULX004
+     I*                                                                   ULX004
+     C**************************************************************************
+     C* MAIN PROCESSING                                                        *
+     C**************************************************************************
+     C* CALL INIT SUBROUTINE
+     C**************************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           #RETRN  2
+     C*
+     C                     EXSR INIT                       INITIATION
+     C*
+     C                     EXSR MAIN
+     C*
+     C** END OF PGM
+     C                     MOVE '1'       *INLR
+     C                     ROLBK
+     C*
+     C                     RETRN
+     C**************************************************************************
+     C** MAIN - MAIN SUBROUTINE
+     C**************************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C* DO WHILE NOT F3 OR F12 PRESSED
+     C           *INKC     DOWEQ'0'                        - B1
+     C           *IN12     ANDEQ'0'
+     C*
+     C           *IN40     IFEQ '0'                        - B2
+     C           *LOVAL    SETLLERLUICL1
+     C                     READ ERLUICL1                 80
+     C*
+     C           *IN80     IFEQ '1'                        - B3
+     C                     MOVEL'ERLUICL1'DBFILE
+     C                     MOVE VPICCD    DBKEY
+     C                     MOVEL'002'     DBASE
+     C                     MOVE 'ER'      #RETRN
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C**
+     C** Access I.C.D. file to retireve the user country code for print
+     C**
+     C           VPICCD    CHAINERICDRL1             87
+     C           *IN87     IFEQ '1'                        - B3
+     C                     MOVEL'ERICDRL1'DBFILE
+     C                     MOVE VPICCD    DBKEY
+     C                     MOVEL'004'     DBASE
+     C                     MOVE 'ER'      #RETRN
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C                     MOVE VDUCCD    DDUCCD
+     C**********           Z-ADDVPCSL1    DDCSL1                          ULX004
+     C**********           Z-ADDVPCSL2    DDCSL2                          ULX004
+     C**********           Z-ADDVPCSL3    DDCSL3                          ULX004
+     C**********           Z-ADDVPCSL4    DDCSL4                          ULX004
+     C**********                                                          ULX004
+     C**********           Z-ADDVPCSL1    DDCSLA                          ULX004
+     C**********           Z-ADDVPCSL2    DDCSLB                          ULX004
+     C**********           Z-ADDVPCSL3    DDCSLC                          ULX004
+     C**********           Z-ADDVPCSL4    DDCSLD                          ULX004
+     C**********           Z-ADD*ZEROS    ZFLD15                   ERL328 ULX004
+     C**********           MOVE VPOWFA    ZFLD15                   ERL328 ULX004
+     C**********           Z-ADD0         ZDECS                    ERL328 ULX004
+     C**********           EXSR ZSEDIT                             ERL328 ULX004
+     C**********           MOVELZOUT21    ZOUT20 20                ERL328 ULX004
+     C**********           MOVE ZOUT20    DDOWFA                   ERL328 ULX004
+     C*
+     C                     MOVE VPIM14    DDIM14                          ERL371
+     C**********           Z-ADDVPCRMT    DDCRMT                                       ERL371 CER001
+     C                     MOVE VPCRMT    DDCRMT                                              CER001
+     C                     MOVE VPCYPR    DDCYPR                          ERL371
+     C                     MOVE VPLERP    DDLERP                          ERL422
+     C                     MOVE VPCLRP    DDCLRP                          ERL422
+     C                     MOVE VPMMPD    DDMMPD                          ERL422
+     C                     MOVE VPCORD    DDCORD                          ULX004
+     C                     MOVE VPPRRD    DDPRRD                          ULX004
+     C                     MOVE VPOPCM    DDOPCM                          ULX004
+     C                     MOVE VPIRCS    DDIRCS                          ULX004
+     C                     MOVE VPIRCG    DDIRCG                          ULX004
+     C                     MOVE VPEPRM    DDEPRM                          ULX004
+      *                                                                   ULX012
+      **  If feature UlX012 is installed                                  ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+      *                                                                   ULX012
+      **  If Start sequence for Guarantees & Collateral generated         ULX012
+      **  automatically and Number of days Forward for end date           ULX012
+      **  are equal to 0, default Start sequence for guarantees &         ULX012
+      **  Collateral generated automatically to 500 . And default         ULX012
+      **  Number of days forward to end date to 99 if Collateral          ULX012
+      **  reviewal days in advance is equal to 99. But if Collateral      ULX012
+      **  reviewal days in advance is not equal to 99, Number of days     ULX012
+      **  forward to end date is defaulted to Collateral reviewal         ULX012
+      **  days in advance plus 1.                                         ULX012
+      *                                                                   ULX012
+     C           VPSTSQ    IFEQ 0                                         ULX012
+     C           VPDAYF    ANDEQ0                                         ULX012
+     C                     MOVE '500'     DDSTSQ                          ULX012
+     C           VPCORD    IFEQ 99                                        ULX012
+     C                     MOVE '99'      DDDAYF                          ULX012
+     C                     ELSE                                           ULX012
+     C                     MOVE DDCORD    WWCORD  20                      ULX012
+     C           WWCORD    ADD  1         WWDAYF  20                      ULX012
+     C                     MOVE WWDAYF    DDDAYF                          ULX012
+     C                     ENDIF                                          ULX012
+     C                     ELSE                                           ULX012
+      *                                                                   ULX012
+      **  If Start sequence for guarantees & Collateral generated         ULX012
+      **  automatically and/or Number of days forward for end date        ULX012
+      **  are not equal to zero.                                          ULX012
+      *                                                                   ULX012
+     C                     MOVE VPSTSQ    DDSTSQ                          ULX012
+     C                     MOVE VPDAYF    DDDAYF                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      **  If Feature ULX08 is installed                                   ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C                     MOVELVPINCC    DDINCC                          ULX008
+     C                     MOVE VPDMOV    DDDMOV                          ULX008
+     C                     MOVE VPMKSE    DDMKSE                          ULX008
+     C                     MOVE VPEXTT    DDEXTT                          ULX008
+     C                     MOVE VPCTLN    DDCTLN                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C                     END                             - E2
+     C*
+     C                     WRITEERLU91C0
+     C                     EXFMTERLU91FM
+     C*
+     C** CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C**************************************************************************
+     C** ENTER HAS BEEN PRESSED
+     C**************************************************************************
+     C           *IN45     IFEQ '0'                        - B2
+     C                     MOVE '1'       *IN40
+     C**********                                                          ULX004
+     C***CHECK*IF CREDIT SIZE CODE 1 IN .000 NOT EQUAL ZEROS              ULX004
+     C**********                                                          ULX004
+     C********** DDCSL1    IFEQ *ZEROS                      - B3          ULX004
+     C**********           MOVE '1'       *IN60                           ULX004
+     C**********           MOVE 'ERL9100' ZAMSID                          ULX004
+     C**********           EXSR ZASNMS                                    ULX004
+     C**********           Z-ADD*ZEROS    DDCSLA                          ULX004
+     C**********           ELSE                             - X3          ULX004
+     C**********           Z-ADDDDCSL1    DDCSLA                          ULX004
+     C**********           MOVE '0'       *IN60                           ULX004
+     C**********           END                              - E3          ULX004
+     C**********                                                          ULX004
+     C***CHECK*IF CREDIT SIZE CODE 2 IN .000 NOT EQUAL ZEROS              ULX004
+     C**********                                                          ULX004
+     C********** DDCSL2    IFEQ *ZEROS                      - B3          ULX004
+     C**********           MOVE '1'       *IN61                           ULX004
+     C**********           MOVE 'ERL9101' ZAMSID                          ULX004
+     C**********           EXSR ZASNMS                                    ULX004
+     C**********           Z-ADD*ZEROS    DDCSLB                          ULX004
+     C**********           ELSE                             - X3          ULX004
+     C**********                                                          ULX004
+     C***CHECK*IF CREDIT SIZE CODE 2 GREATER THAN CREDIT SIZE CODE 1      ULX004
+     C**********                                                          ULX004
+     C********** DDCSL2    IFGE DDCSL1                      - B4          ULX004
+     C**********           MOVE '1'       *IN61                           ULX004
+     C**********           MOVE 'ERL9104' ZAMSID                          ULX004
+     C**********           EXSR ZASNMS                                    ULX004
+     C**********           Z-ADD*ZEROS    DDCSLB                          ULX004
+     C**********           ELSE                             - X4          ULX004
+     C**********           MOVE '0'       *IN61                           ULX004
+     C**********           Z-ADDDDCSL2    DDCSLB                          ULX004
+     C**********           END                              - E4          ULX004
+     C**********           END                              - E3          ULX004
+     C**********                                                          ULX004
+     C***CHECK*IF CREDIT SIZE CODE 3 IN .000 NOT EQUAL ZEROS              ULX004
+     C**********                                                          ULX004
+     C********** DDCSL3    IFEQ *ZEROS                      - B3          ULX004
+     C**********           MOVE '1'       *IN62                           ULX004
+     C**********           MOVE 'ERL9102' ZAMSID                          ULX004
+     C**********           EXSR ZASNMS                                    ULX004
+     C**********           Z-ADD*ZEROS    DDCSLC                          ULX004
+     C**********           ELSE                             - X3          ULX004
+     C**********                                                          ULX004
+     C***CHECK*IF CREDIT SIZE CODE 3 GREATER THAN CREDIT SIZE CODE 2      ULX004
+     C**********                                                          ULX004
+     C********** DDCSL3    IFGE DDCSL2                      - B4          ULX004
+     C**********           MOVE '1'       *IN62                           ULX004
+     C**********           MOVE 'ERL9105' ZAMSID                          ULX004
+     C**********           EXSR ZASNMS                                    ULX004
+     C**********           Z-ADD*ZEROS    DDCSLC                          ULX004
+     C**********           ELSE                             - X4          ULX004
+     C**********           MOVE '0'       *IN62                           ULX004
+     C**********           Z-ADDDDCSL3    DDCSLC                          ULX004
+     C**********           END                              - E4          ULX004
+     C**********           END                              - E3          ULX004
+     C**********                                                          ULX004
+     C***CHECK*IF CREDIT SIZE CODE 4 IN .000 NOT EQUAL ZEROS              ULX004
+     C**********                                                          ULX004
+     C********** DDCSL4    IFEQ *ZEROS                      - B3          ULX004
+     C**********           MOVE '1'       *IN63                           ULX004
+     C**********           MOVE 'ERL9103' ZAMSID                          ULX004
+     C**********           EXSR ZASNMS                                    ULX004
+     C**********           Z-ADD*ZEROS    DDCSLD                          ULX004
+     C**********           ELSE                             - X3          ULX004
+     C**********                                                          ULX004
+     C***CHECK*IF CREDIT SIZE CODE 4 GREATER THAN CREDIT SIZE CODE 3      ULX004
+     C**********                                                          ULX004
+     C********** DDCSL4    IFGE DDCSL3                      - B4          ULX004
+     C*********************MOVE '1'       *IN63                           ERL446
+     C*********************MOVE 'ERL9106' ZAMSID                          ERL446
+     C*********************EXSR ZASNMS                                    ERL446
+     C*********************Z-ADD*ZEROS    DDCSLD                          ERL446
+     C**********           ELSE                             - X4          ULX004
+     C**********           MOVE '0'       *IN63                           ULX004
+     C**********           Z-ADDDDCSL4    DDCSLD                          ULX004
+     C**********           END                              - E4          ULX004
+     C**********           END                              - E3          ULX004
+     C**********                                                   ERL328 ULX004
+     C***CHECK IF 'OWN FUNDS AMOUNT' INPUT                         ERL328 ULX004
+     C**********                                                   ERL328 ULX004
+     C**********           MOVE '0'       *IN64                    ERL328 ULX004
+     C**********                                                   ERL328 ULX004
+     C********** DDOWFA    IFEQ *BLANKS                     - B3   ERL328 ULX004
+     C**********           MOVE '1'       *IN64                    ERL328 ULX004
+     C**********           MOVE 'ER00004' ZAMSID                   ERL328 ULX004
+     C**********           EXSR ZASNMS                             ERL328 ULX004
+     C**********           ELSE                             - X3   ERL328 ULX004
+      **********                                                   ERL328 ULX004
+      *****Using SR/ZA0840 subroutine to validate and align amount ERL328 ULX004
+     C**********           MOVE DDOWFA    @@ALPH                   ERL328 ULX004
+     C**********           Z-ADD0         @@IDP                    ERL328 ULX004
+     C**********           Z-ADD15        @@IINT                   ERL328 ULX004
+     C**********           MOVE *BLANK    @@ERCD                   ERL328 ULX004
+     C**********           EXSR ZA0840                             ERL328 ULX004
+     C********** @@ERCD    IFEQ 1                          - B4    ERL328 ULX004
+     C********** @@ERCD    OREQ 2                                  ERL328 ULX004
+     C**********           MOVE '1'       *IN64                    ERL328 ULX004
+     C**********           MOVEL'ERD8004' ZAMSID                   ERL328 ULX004
+     C**********           EXSR ZASNMS                             ERL328 ULX004
+     C**********           END                             - E4    ERL328 ULX004
+      **********                                                   ERL328 ULX004
+      *****If*the amount returned by the subroutine is negative    ERL328 ULX004
+      *****sending a mesage                                        ERL328 ULX004
+     C********** @@AMT     IFLT *ZEROS                     - B4    ERL328 ULX004
+     C**********           MOVE '1'       *IN64                    ERL328 ULX004
+     C**********           MOVEL'ERD8005' ZAMSID                   ERL328 ULX004
+     C**********           EXSR ZASNMS                             ERL328 ULX004
+     C**********           END                             - E4    ERL328 ULX004
+      **********                                                   ERL328 ULX004
+      *****If*the amount returned by the subroutine is valid       ERL328 ULX004
+      *****moving the amount in a work field                       ERL328 ULX004
+     C********** DDOWFA    IFNE *BLANKS                    - B4    ERL328 ULX004
+     C********** *IN64     ANDEQ'0'                                ERL328 ULX004
+     C**********           MOVE @@ALPH    DDOWFA                   ERL328 ULX004
+     C**********           END                             - E4    ERL328 ULX004
+      **********                                                   ERL328 ULX004
+     C**********           END                             - E3    ERL328 ULX004
+     C*
+     C** VALIDATION FOR IML 1.4                                           ERL371
+     C***REPORT*IML*1.4*PRODUCED*****                              ERL371 ULX004
+     C**  IML 1.4 and CAD Reports produced.                               ULX004
+     C                     MOVE '0'       *IN60                           ULX004
+     C                     MOVE '0'       *IN61                           ULX004
+     C                     MOVE '0'       *IN62                           ULX004
+     C                     MOVE '0'       *IN63                           ULX004
+     C                     MOVE '0'       *IN64                           ULX004
+     C                     MOVE '0'       *IN65                           ERL371
+     C                     MOVE '0'       *IN66                           ERL371
+     C                     MOVE '0'       *IN67                           ERL371
+     C                     MOVE '0'       *IN68                           ERL422
+     C                     MOVE '0'       *IN69                           ERL422
+     C                     MOVE '0'       *IN70                           ERL422
+     C                     MOVE '0'       *IN74                           ULX004
+      **  If feature UlX012 is installed                                  ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+     C                     MOVE '0'       *IN76                           ULX012
+     C                     MOVE '0'       *IN78                           ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX008
+      **  If Feature ULX08 is installed                                   ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C                     MOVE '0'       *IN35                           ULX008
+     C                     MOVE '0'       *IN79                           ULX008
+     C                     MOVE '0'       *IN75                           ULX008
+     C                     MOVE '0'       *IN41                           ULX008
+     C                     MOVE '0'       *IN42                           ULX008
+     C                     MOVE '0'       *IN43                           ULX008
+     C                     ENDIF                                          ULX008
+     C*                                                                   ERL371
+     C********** DDIM14    IFEQ *BLANKS                    - B3     ERL371ULX004
+     C**********           MOVE 'Y'       DDIM14                    ERL371ULX004
+     C**********           END                             - E3     ERL371ULX004
+     C*                                                             ERL371ULX004
+     C***********DDIM14    IFNE 'Y'                        - B3     ERL371ULX004
+     C***********DDIM14    ANDNE'N'                                 ERL371ULX004
+     C***********          MOVE '1'       *IN65                     ERL371ULX004
+     C***********          MOVE 'ERL9107' ZAMSID                    ERL371ULX004
+     C***********          EXSR ZASNMS                              ERL371ULX004
+     C***********          END                             - E3     ERL371ULX004
+     C*                                                                   ERL371
+     C** DEGREE OF CREDIT RISK MEASUREMENT METHOD                         ERL371
+     C***********DDCRMT    IFNE 0                          - B3    ERL371 189998
+     C***********DDCRMT    ANDNE1                                  ERL371 189998
+     C********** DDCRMT    IFNE 1                                                      189998 CER001
+     C********** DDCRMT    ANDNE2                                                      ERL371 CER001
+     C********** DDCRMT    ANDNE3                                                      189998 CER001
+     C********** DDCRMT    ANDNE4                                                      189998 CER001
+     C           DDCRMT    IFNE '1'                                                           CER001
+     C           DDCRMT    ANDNE'2'                                                           CER001
+     C           DDCRMT    ANDNE'3'                                                           CER001
+     C           DDCRMT    ANDNE'4'                                                           CER001
+     C                     MOVE '1'       *IN66                           ERL371
+     C**********           MOVE 'ERL9108' ZAMSID                                       ERL371 CER001
+     C                     MOVE 'ER00005' ZAMSID                                              CER001
+     C                     EXSR ZASNMS                                    ERL371
+     C                     END                             - E3           ERL371
+     C*                                                                   ERL371
+     C***********DDIM14    IFEQ 'N'                        - B3    ERL371 CAD004
+     C***********DDCRMT    ANDNE0                                  ERL371 CAD004
+     C***********          MOVE '1'       *IN66                    ERL371 CAD004
+     C*********************MOVE 'ERL9109' ZAMSID                   ERL371 ULX004
+     C***********          MOVE 'ERL9113' ZAMSID                   ULX004 CAD004
+     C***********          EXSR ZASNMS                             ERL371 CAD004
+     C***********          END                             - E3    ERL371 CAD004
+     C*                                                                   ERL371
+     C           DDIM14    IFEQ 'Y'                                       ERL371
+     C********** DDCRMT    ANDNE1                                                      ERL371 CER001
+     C           DDCRMT    ANDNE'1'                                                           CER001
+     C***********DDCRMT    ANDNE2                                  ERL371 189998
+     C                     MOVE '1'       *IN66                           ERL371
+     C*********************MOVE 'ERL9110' ZAMSID                   ERL371 ULX004
+     C**********           MOVE 'ERL9114' ZAMSID                                       ULX004 CER001
+     C                     MOVE 'ERL9139' ZAMSID                                              CER001
+     C                     EXSR ZASNMS                                    ERL371
+     C                     END                             - E3           ERL371
+     C*                                                                   ERL371
+     C** CURRENT YEAR PROFIT TO BE REPORTED                               ERL371
+     C           DDCYPR    IFEQ *BLANKS                    - B3           ERL371
+     C                     MOVE 'N'       DDCYPR                          ERL371
+     C                     END                             - E3           ERL371
+     C*                                                                   ERL371
+     C           DDCYPR    IFNE 'Y'                        - B3           ERL371
+     C           DDCYPR    ANDNE'N'                                       ERL371
+     C                     MOVE '1'       *IN67                           ERL371
+     C                     MOVE 'ERL9111' ZAMSID                          ERL371
+     C                     EXSR ZASNMS                                    ERL371
+     C                     END                             - E3           ERL371
+     C*                                                                   ERL422
+     C** TEST DDLERP,DDCLRP,DDMMPD FOR Y/N, DEFAULT N                     ERL422
+     C*                                                                   ERL422
+     C           *IN71     IFEQ *ON                        - B3           ERL422
+     C           DDLERP    IFEQ *BLANKS                    - B4           ERL422
+     C                     MOVE 'N'       DDLERP                          ERL422
+     C                     ENDIF                           - E4           ERL422
+     C           DDLERP    IFNE 'Y'                        - B4           ERL422
+     C           DDLERP    ANDNE'N'                                       ERL422
+     C                     MOVE '1'       *IN68                           ERL422
+     C                     MOVE 'ERL9107' ZAMSID                          ERL422
+     C                     EXSR ZASNMS                                    ERL422
+     C                     ENDIF                           - E4           ERL422
+     C                     ENDIF                           - E3           ERL422
+     C*                                                                   ERL422
+     C           *IN72     IFEQ *ON                        - B3           ERL422
+     C           DDCLRP    IFEQ *BLANKS                    - B4           ERL422
+     C                     MOVE 'N'       DDCLRP                          ERL422
+     C                     ENDIF                           - E4           ERL422
+     C           DDCLRP    IFNE 'Y'                        - B4           ERL422
+     C           DDCLRP    ANDNE'N'                                       ERL422
+     C                     MOVE '1'       *IN69                           ERL422
+     C                     MOVE 'ERL9107' ZAMSID                          ERL422
+     C                     EXSR ZASNMS                                    ERL422
+     C                     ENDIF                           - E4           ERL422
+     C                     ENDIF                           - E3           ERL422
+     C*                                                                   ERL422
+     C           *IN73     IFEQ *ON                        - B3           ERL422
+     C           DDMMPD    IFEQ *BLANKS                    - B4           ERL422
+     C                     MOVE 'N'       DDMMPD                          ERL422
+     C                     ENDIF                           - E4           ERL422
+     C           DDMMPD    IFNE 'Y'                        - B4           ERL422
+     C           DDMMPD    ANDNE'N'                                       ERL422
+     C                     MOVE '1'       *IN70                           ERL422
+     C                     MOVE 'ERL9107' ZAMSID                          ERL422
+     C                     EXSR ZASNMS                                    ERL422
+     C                     ENDIF                           - E4           ERL422
+     C                     ENDIF                           - E3           ERL422
+     C*                                                                   ERL422
+     C*                                                                   ULX004
+     C** Collateral reviewal days in advance.                             ULX004
+     C*                                                                   ULX004
+      * Setup working field                                               ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         WCORD   20                      ULX004
+      *                                                                   ULX004
+      * Collateral Reviewal days in advance mandatory                     ULX004
+      *                                                                   ULX004
+     C           DDCORD    IFEQ *BLANKS                    - B1           ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN60                           ULX004
+     C                     MOVE 'ERL9123' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+      * Collateral Reviewal days in advance different from blank, so      ULX004
+      * Validate it                                                       ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X1           ULX004
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   ZFIELD                          ULX004
+     C                     MOVE DDCORD    ZFIELD                          ULX004
+     C                     Z-ADD2         ZADIG                           ULX004
+     C                     Z-ADD0         ZADEC                           ULX004
+      *                                                                   ULX004
+     C                     EXSR ZALIGN                                    ULX004
+      *                                                                   ULX004
+      * If not numeric - report error - must be numeric                   ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ *ON                        - B2           ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN60                           ULX004
+     C                     MOVE 'ERL9124' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+      * If numeric - must be between 01 and 31                            ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X2           ULX004
+      *                                                                   ULX004
+     C                     MOVE ZFIELD    WCORD                           ULX004
+      *                                                                   ULX004
+     C           WCORD     IFEQ 0                          - B3           ULX004
+     C**********           MOVE *BLANKS   DDCORD                                       ULX004 CER001
+     C                     ELSE                            - X3           ULX004
+     C                     MOVE ZFIELD    DDCORD                          ULX004
+     C                     ENDIF                           - E3           ULX004
+      *                                                                   ULX004
+      * Must be between 01 and 99                                         ULX004
+      *                                                                   ULX004
+     C           WCORD     IFLT 01                         - B3           ULX004
+     C           WCORD     ORGT 99                                        ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN60                           ULX004
+     C                     MOVE 'ERL9121' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+     C                     ENDIF                           - E3           ULX004
+      *                                                                   ULX004
+     C                     ENDIF                           - E2           ULX004
+      *                                                                   ULX004
+     C                     ENDIF                           - E1           ULX004
+     C*                                                                   ULX004
+     C** PROVISIONS REVIEWAL DAYS IN ADVANCE                              ULX004
+     C*                                                                   ULX004
+      * Setup working field                                               ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         WPRRD   20                      ULX004
+      *                                                                   ULX004
+      * Provisions Reviewal days in advance mandatory                     ULX004
+      *                                                                   ULX004
+     C           DDPRRD    IFEQ *BLANKS                    - B1           ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN61                           ULX004
+     C                     MOVE 'ERL9125' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+      * Provisions Reviewal days in advance different from blank, so      ULX004
+      * Validate it                                                       ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X1           ULX004
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   ZFIELD                          ULX004
+     C                     MOVE DDPRRD    ZFIELD                          ULX004
+     C                     Z-ADD2         ZADIG                           ULX004
+     C                     Z-ADD0         ZADEC                           ULX004
+      *                                                                   ULX004
+     C                     EXSR ZALIGN                                    ULX004
+      *                                                                   ULX004
+      * If not numeric - report error - must be numeric                   ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ *ON                        - B2           ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN61                           ULX004
+     C                     MOVE 'ERL9126' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+      * If numeric - must be between 01 and 31                            ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X2           ULX004
+      *                                                                   ULX004
+     C                     MOVE ZFIELD    WPRRD                           ULX004
+      *                                                                   ULX004
+     C           WPRRD     IFEQ 0                          - B3           ULX004
+     C**********           MOVE *BLANKS   DDPRRD                                       ULX004 CER001
+     C                     ELSE                            - X3           ULX004
+     C                     MOVE ZFIELD    DDPRRD                          ULX004
+     C                     ENDIF                           - E3           ULX004
+      *                                                                   ULX004
+      * Must be between 01 and 99                                         ULX004
+      *                                                                   ULX004
+     C           WPRRD     IFLT 01                         - B3           ULX004
+     C           WPRRD     ORGT 99                                        ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN61                           ULX004
+     C                     MOVE 'ERL9122' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+     C                     ENDIF                           - E3           ULX004
+      *                                                                   ULX004
+     C                     ENDIF                           - E2           ULX004
+      *                                                                   ULX004
+     C                     ENDIF                           - E1           ULX004
+      *                                                                   ULX004
+      ***  CAD Reports to be produced                                     ULX004
+      *                                                                   ULX004
+     C           AGSUC     IFEQ 'N'                        - B1           ULX004
+     C           DDIM14    IFNE 'Y'                        - B2           ULX004
+     C           DDIM14    ANDNE'N'                                       ULX004
+     C                     MOVE *ON       *IN65                           ULX004
+     C                     MOVE 'ERL9107' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     ENDIF                           - E4           ULX004
+     C                     ENDIF                           - E3           ULX004
+     C*                                                                   ULX004
+     C** OPTION CALCULATION METHOD                                        ULX004
+     C*                                                                   ULX004
+      * Setup working field                                               ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         WOPCM   10                      ULX004
+     C*                                                                   ULX004
+     C           DDOPCM    IFEQ *BLANKS                    - B1           ULX004
+      *                                                                   ULX004
+     C                     MOVE '0'       DDOPCM                          ULX004
+      *                                                                   ULX004
+      * Provisions Reviewal days in advance different from blank, so      ULX004
+      * Validate it                                                       ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X1           ULX004
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   ZFIELD                          ULX004
+     C                     MOVE DDOPCM    ZFIELD                          ULX004
+     C                     Z-ADD1         ZADIG                           ULX004
+     C                     Z-ADD0         ZADEC                           ULX004
+      *                                                                   ULX004
+     C                     EXSR ZALIGN                                    ULX004
+      *                                                                   ULX004
+      * If not numeric - report error - must be numeric                   ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ *ON                        - B2           ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN62                           ULX004
+     C                     MOVE 'ERL9129' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+      * If numeric                                                        ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X2           ULX004
+      *                                                                   ULX004
+     C                     MOVE ZFIELD    WOPCM                           ULX004
+      *                                                                   ULX004
+     C           DDIM14    IFEQ 'N'                        - B3           ULX004
+     C*                                                                   ULX004
+     C           WOPCM     IFNE 0                          - B4           ULX004
+     C                     MOVE '1'       *IN62                           ULX004
+     C                     MOVE 'ERL9113' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E4           ULX004
+     C*                                                                   ULX004
+     C                     ELSE                            - X3           ULX004
+     C*                                                                   ULX004
+     C           WOPCM     IFNE 0                          - B4           ULX004
+     C           WOPCM     ANDNE1                                         ULX004
+     C           WOPCM     ANDNE2                                         ULX004
+     C           WOPCM     ANDNE3                                         ULX004
+     C                     MOVE '1'       *IN62                           ULX004
+     C                     MOVE 'ERL9116' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E4           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E3           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+     C*                                                                   ULX004
+     C** INTEREST RATE RISK CALCULATION METHOD (SPECIFIC)                 ULX004
+     C*                                                                   ULX004
+      * Setup working field                                               ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         WIRCS   10                      ULX004
+     C*                                                                   ULX004
+     C           DDIRCS    IFEQ *BLANKS                    - B1           ULX004
+      *                                                                   ULX004
+     C                     MOVE '0'       DDIRCS                          ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X1           ULX004
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   ZFIELD                          ULX004
+     C                     MOVE DDIRCS    ZFIELD                          ULX004
+     C                     Z-ADD1         ZADIG                           ULX004
+     C                     Z-ADD0         ZADEC                           ULX004
+      *                                                                   ULX004
+     C                     EXSR ZALIGN                                    ULX004
+      *                                                                   ULX004
+      * If not numeric - report error - must be numeric                   ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ *ON                        - B2           ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C**********           MOVE 'ERL9130' ZAMSID                                       ULX004 CER001
+     C                     MOVE 'ERL9137' ZAMSID                                              CER001
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+      * If numeric                                                        ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X2           ULX004
+      *                                                                   ULX004
+     C                     MOVE ZFIELD    WIRCS                           ULX004
+      *                                                                   ULX004
+     C           DDIM14    IFEQ 'N'                        - B3           ULX004
+     C*                                                                   ULX004
+     C           WIRCS     IFNE 0                          - B4           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVE 'ERL9113' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E4           ULX004
+     C*                                                                   ULX004
+     C                     ELSE                            - X3           ULX004
+     C*                                                                   ULX004
+     C           WIRCS     IFNE 0                          - B4           ULX004
+     C           WIRCS     ANDNE1                                         ULX004
+     C           WIRCS     ANDNE2                                         ULX004
+     C           WIRCS     ANDNE3                                         ULX004
+     C           WIRCS     ANDNE4                                         ULX004
+     C           WIRCS     ANDNE5                                         ULX004
+     C***********WIRCS     ANDNE6                                  ULX004 ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVE 'ERL9118' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E4           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E3           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+     C*                                                                   ULX004
+     C*                                                                   ULX004
+     C*                                                                   ULX004
+     C** INTEREST RATE RISK CALCULATION METHOD (GENERAL)                  ULX004
+     C*                                                                   ULX004
+      * Setup working field                                               ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         WIRCG   10                      ULX004
+     C*                                                                   ULX004
+     C           DDIRCG    IFEQ *BLANKS                    - B1           ULX004
+      *                                                                   ULX004
+     C                     MOVE '0'       DDIRCG                          ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X1           ULX004
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   ZFIELD                          ULX004
+     C                     MOVE DDIRCG    ZFIELD                          ULX004
+     C                     Z-ADD1         ZADIG                           ULX004
+     C                     Z-ADD0         ZADEC                           ULX004
+      *                                                                   ULX004
+     C                     EXSR ZALIGN                                    ULX004
+      *                                                                   ULX004
+      * If not numeric - report error - must be numeric                   ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ *ON                        - B2           ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN64                           ULX004
+     C**********           MOVE 'ERL9130' ZAMSID                                       ULX004 CER001
+     C                     MOVE 'ERL9138' ZAMSID                                              CER001
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+      * If numeric                                                        ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X2           ULX004
+      *                                                                   ULX004
+     C                     MOVE ZFIELD    WIRCG                           ULX004
+      *                                                                   ULX004
+     C           DDIM14    IFEQ 'N'                        - B3           ULX004
+     C*                                                                   ULX004
+     C           WIRCG     IFNE 0                          - B4           ULX004
+     C                     MOVE '1'       *IN64                           ULX004
+     C                     MOVE 'ERL9113' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E4           ULX004
+     C*                                                                   ULX004
+     C                     ELSE                            - X3           ULX004
+     C*                                                                   ULX004
+     C           WIRCG     IFNE 0                          - B4           ULX004
+     C           WIRCG     ANDNE1                                         ULX004
+     C           WIRCG     ANDNE2                                         ULX004
+     C           WIRCG     ANDNE3                                         ULX004
+     C           WIRCG     ANDNE4                                         ULX004
+     C           WIRCG     ANDNE5                                         ULX004
+     C***********WIRCG     ANDNE6                                  ULX004 ULX004
+     C                     MOVE '1'       *IN64                           ULX004
+     C                     MOVE 'ERL9118' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E4           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E3           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+     C*                                                                   ULX004
+     C*                                                                   ULX004
+     C** INTEREST RATE RISK CALCULATION METHOD (SPECIFIC & GENERAL)       ULX004
+     C*  ONLY SOME COMBINATIONS ARE ALLOWED                               ULX004
+     C*                                                                   ULX004
+     C           *IN63     IFEQ '0'                        - B1           ULX004
+     C           *IN64     ANDEQ'0'                                       ULX004
+     C*                                                                   ULX004
+     C           WINTR     LOKUPINTR                     84               ULX004
+     C*                                                                   ULX004
+     C** Combination doesn't exist on table                               ULX004
+     C*                                                                   ULX004
+     C           *IN84     IFEQ '0'                        - B2           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVE '1'       *IN64                           ULX004
+     C                     MOVEL'ERL9127' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E2           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E1           ULX004
+     C*                                                                   ULX004
+     C** EQUITY POSITION RISK CALCULATION METHOD                          ULX004
+     C*                                                                   ULX004
+      * Setup working field                                               ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         WEPRM   10                      ULX004
+     C*                                                                   ULX004
+     C           DDEPRM    IFEQ *BLANKS                    - B1           ULX004
+      *                                                                   ULX004
+     C                     MOVE '0'       DDEPRM                          ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X1           ULX004
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   ZFIELD                          ULX004
+     C                     MOVE DDEPRM    ZFIELD                          ULX004
+     C                     Z-ADD1         ZADIG                           ULX004
+     C                     Z-ADD0         ZADEC                           ULX004
+      *                                                                   ULX004
+     C                     EXSR ZALIGN                                    ULX004
+      *                                                                   ULX004
+      * If not numeric - report error - must be numeric                   ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ *ON                        - B2           ULX004
+      *                                                                   ULX004
+     C                     MOVE '1'       *IN74                           ULX004
+     C                     MOVE 'ERL9131' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+      *                                                                   ULX004
+      * If numeric                                                        ULX004
+      *                                                                   ULX004
+     C                     ELSE                            - X2           ULX004
+      *                                                                   ULX004
+     C                     MOVE ZFIELD    WEPRM                           ULX004
+      *                                                                   ULX004
+     C           DDIM14    IFEQ 'N'                        - B3           ULX004
+     C*                                                                   ULX004
+     C           WEPRM     IFNE 0                          - B4           ULX004
+     C                     MOVE '1'       *IN74                           ULX004
+     C                     MOVE 'ERL9113' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E4           ULX004
+     C*                                                                   ULX004
+     C                     ELSE                            - X3           ULX004
+     C*                                                                   ULX004
+     C           WEPRM     IFNE 0                          - B4           ULX004
+     C           WEPRM     ANDNE1                                         ULX004
+     C           WEPRM     ANDNE2                                         ULX004
+     C           WEPRM     ANDNE3                                         ULX004
+     C***********WEPRM     ANDNE4                                  ULX004 ULX004
+     C                     MOVE '1'       *IN74                           ULX004
+     C**********           MOVE 'ERL9120' ZAMSID                                       ULX004 CER001
+     C                     MOVE 'ERL9140' ZAMSID                                              CER001
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E4           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E3           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+      *                                                                   ULX012
+      **  If feature UlX012 is installed                                  ULX012
+      **  default field Start sequence for Guarantees &                   ULX012
+      **  Collateral generated automatically and field Number             ULX012
+      **  of days Forward for end date.                                   ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+      *                                                                   ULX012
+      ** START SEQUENCE FOR GUARANTEES & COLLATERAL                       ULX012
+      ** GENERATED AUTOMATICALLY                                          ULX012
+      *                                                                   ULX012
+      * Setup working field                                               ULX012
+      *                                                                   ULX012
+     C                     Z-ADD0         WSTSQ   30                      ULX012
+      *                                                                   ULX012
+     C           DDSTSQ    IFEQ *BLANKS                                   ULX012
+      *  Field is mandatory                                               ULX012
+     C                     MOVE '1'       *IN76                           ULX012
+     C                     MOVE 'ERL9132' ZAMSID                          ULX012
+     C                     EXSR ZASNMS                                    ULX012
+      *                                                                   ULX012
+     C                     ELSE                                           ULX012
+      *                                                                   ULX012
+     C                     MOVE *BLANKS   ZFIELD                          ULX012
+     C                     MOVE DDSTSQ    ZFIELD                          ULX012
+     C                     Z-ADD3         ZADIG                           ULX012
+     C                     Z-ADD0         ZADEC                           ULX012
+      *                                                                   ULX012
+     C                     EXSR ZALIGN                                    ULX012
+      *                                                                   ULX012
+      * If not numeric - report error - must be numeric                   ULX012
+      *                                                                   ULX012
+     C           *IN99     IFEQ *ON                                       ULX012
+      *                                                                   ULX012
+     C                     MOVE '1'       *IN76                           ULX012
+     C                     MOVE 'ERL9133' ZAMSID                          ULX012
+     C                     EXSR ZASNMS                                    ULX012
+      *                                                                   ULX012
+      * If numeric                                                        ULX012
+      *                                                                   ULX012
+     C                     ELSE                                           ULX012
+      *                                                                   ULX012
+     C                     MOVE ZFIELD    WSTSQ                           ULX012
+      *                                                                   ULX012
+     C           WSTSQ     IFNE 0                                         ULX012
+     C                     MOVE ZFIELD    DDSTSQ                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      * Must be between 500 and 800                                       ULX012
+      *                                                                   ULX012
+     C           WSTSQ     IFLT 500                                       ULX012
+     C           WSTSQ     ORGT 800                                       ULX012
+      *                                                                   ULX012
+     C                     MOVE '1'       *IN76                           ULX012
+     C                     MOVE 'ERL9134' ZAMSID                          ULX012
+     C                     EXSR ZASNMS                                    ULX012
+      *                                                                   ULX012
+     C                     ENDIF                                          ULX012
+     C                     ENDIF                                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      ** NUMBER OF DAYS FORWARD FOR END DATE                              ULX012
+      *                                                                   ULX012
+      * Setup working field                                               ULX012
+      *                                                                   ULX012
+     C                     Z-ADD0         WDAYF   20                      ULX012
+      *                                                                   ULX012
+     C           DDDAYF    IFEQ *BLANKS                                   ULX012
+      *                                                                   ULX012
+     C           DDCORD    IFEQ '99'                                      ULX012
+     C                     MOVE '99'      DDDAYF                          ULX012
+     C                     ELSE                                           ULX012
+     C                     MOVE DDCORD    WWCORD  20                      ULX012
+     C           WWCORD    ADD  1         WWDAYF                          ULX012
+     C                     MOVE WWDAYF    DDDAYF                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+     C                     ELSE                                           ULX012
+      *                                                                   ULX012
+     C                     MOVE *BLANKS   ZFIELD                          ULX012
+     C                     MOVE DDDAYF    ZFIELD                          ULX012
+     C                     Z-ADD2         ZADIG                           ULX012
+     C                     Z-ADD0         ZADEC                           ULX012
+      *                                                                   ULX012
+     C                     EXSR ZALIGN                                    ULX012
+      *                                                                   ULX012
+      * If not numeric - report error - must be numeric                   ULX012
+      *                                                                   ULX012
+     C           *IN99     IFEQ *ON                                       ULX012
+      *                                                                   ULX012
+     C                     MOVE '1'       *IN78                           ULX012
+     C                     MOVE 'ERL9135' ZAMSID                          ULX012
+     C                     EXSR ZASNMS                                    ULX012
+      *                                                                   ULX012
+      * If numeric                                                        ULX012
+      *                                                                   ULX012
+     C                     ELSE                                           ULX012
+      *                                                                   ULX012
+     C                     MOVE ZFIELD    WDAYF                           ULX012
+      *                                                                   ULX012
+     C           WDAYF     IFNE 0                                         ULX012
+     C                     MOVE ZFIELD    DDDAYF                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      * Must be between 01 and 99                                         ULX012
+      *                                                                   ULX012
+     C           WDAYF     IFLT 01                                        ULX012
+     C           WDAYF     ORGT 99                                        ULX012
+      *                                                                   ULX012
+     C                     MOVE '1'       *IN78                           ULX012
+     C                     MOVE 'ERL9136' ZAMSID                          ULX012
+     C                     EXSR ZASNMS                                    ULX012
+      *                                                                   ULX012
+     C                     ENDIF                                          ULX012
+     C                     ENDIF                                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX008
+      **  If Feature ULX08 is installed                                   ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C           ACTION    ANDNE'E'                                       ULX008
+     C           '?'       SCAN DDINCC    WRESUL  20     86               ULX008
+     C           *IN86     IFEQ *ON                                       ULX008
+     C                     MOVEL*BLANKS   @CODE   4                       ULX008
+     C                     CALL 'ERLU55'                                  ULX008
+     C                     PARM 'REQS'    @PATH   4                       ULX008
+     C                     PARM *BLANKS   @CODE                           ULX008
+     C                     MOVEL@CODE     DDINCC                          ULX008
+     C                     MOVE '1'       *IN35                           ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+      ***  Check If Value For '"EEE" Indicator from Market Centre or      ULX008
+      ***  from Security' Is Allowed                                      ULX008
+      *                                                                   ULX008
+     C           DDMKSE    IFEQ *BLANKS                                   ULX008
+     C                     MOVE '1'       *IN41                           ULX008
+     C                     MOVEL'ERL0812' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ELSE                                           ULX008
+     C           DDMKSE    IFNE 'M'                                       ULX008
+     C           DDMKSE    ANDNE'S'                                       ULX008
+     C                     MOVE '1'       *IN41                           ULX008
+     C                     MOVEL'ERL0844' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+      ***  Check If Value For 'Extract Trades at Trade Date or at         ULX008
+      ***  Date Made Complete' Is Allowed                                 ULX008
+      *                                                                   ULX008
+     C           DDEXTT    IFEQ *BLANKS                                   ULX008
+     C                     MOVE '1'       *IN42                           ULX008
+     C                     MOVEL'ERL0812' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ELSE                                           ULX008
+     C           DDEXTT    IFNE 'T'                                       ULX008
+     C           DDEXTT    ANDNE'C'                                       ULX008
+     C                     MOVE '1'       *IN42                           ULX008
+     C                     MOVEL'ERL0845' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+      ***  Check If Value For 'Counterpart Not Luxembourg Name'           ULX008
+      *                                                                   ULX008
+     C           DDCTLN    IFEQ *BLANKS                                   ULX008
+     C                     MOVE '1'       *IN43                           ULX008
+     C                     MOVEL'ERL0812' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ELSE                                           ULX008
+     C           DDCTLN    IFNE 'Y'                                       ULX008
+     C           DDCTLN    ANDNE'N'                                       ULX008
+     C                     MOVE '1'       *IN43                           ULX008
+     C                     MOVEL'ERL0829' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+      **  Check if code entered exists                                    ULX008
+     C           DDINCC    IFNE *BLANKS                                   ULX008
+     C           DDINCC    CHAINERLUCCV1             87                   ULX008
+     C           *IN87     IFEQ *ON                                       ULX008
+     C                     MOVE '1'       *IN79                           ULX008
+     C                     MOVEL'ERL0815' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C                     ELSE                                           ULX008
+     C                     MOVE '1'       *IN79                           ULX008
+     C                     MOVEL'ERL0812' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+      **  Depot Movement is a mandatory field                             ULX008
+     C           DDDMOV    IFEQ *BLANKS                                   ULX008
+     C                     MOVE '1'       *IN75                           ULX008
+     C                     MOVEL'ERL0812' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ELSE                                           ULX008
+     C           DDDMOV    IFNE 'Y'                                       ULX008
+     C           DDDMOV    ANDNE'N'                                       ULX008
+     C                     MOVE '1'       *IN75                           ULX008
+     C                     MOVEL'ERL0829' ZAMSID                          ULX008
+     C                     EXSR ZASNMS                                    ULX008
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX008
+      *
+     C                     ENDIF                                          ULX008
+     C*
+     C           *IN60     IFEQ '0'                         - B3
+     C           *IN61     ANDEQ'0'
+     C           *IN62     ANDEQ'0'
+     C           *IN63     ANDEQ'0'
+     C           *IN64     ANDEQ'0'                                       ERL328
+     C           *IN65     ANDEQ'0'                                       ERL371
+     C           *IN66     ANDEQ'0'                                       ERL371
+     C           *IN67     ANDEQ'0'                                       ERL371
+     C           *IN68     ANDEQ'0'                                       ERL422
+     C           *IN69     ANDEQ'0'                                       ERL422
+     C           *IN70     ANDEQ'0'                                       ERL422
+     C           *IN74     ANDEQ'0'                                       ULX004
+      *                                                                   ULX012
+      **  If feature UlX012 is installed                                  ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+     C           *IN76     ANDEQ'0'                                       ULX012
+     C           *IN78     ANDEQ'0'                                       ULX012
+     C           ULX012    ORNE 'Y'                                       ULX012
+      *                                                                   ULX012
+      **  If feature UlX008 is installed                                  ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C           *IN35     ANDEQ'0'                                       ULX008
+     C           *IN79     ANDEQ'0'                                       ULX008
+     C           *IN75     ANDEQ'0'                                       ULX008
+     C           *IN41     ANDEQ'0'                                       ULX008
+     C           *IN42     ANDEQ'0'                                       ULX008
+     C           *IN43     ANDEQ'0'                                       ULX008
+     C           ULX008    ORNE 'Y'                                       ULX008
+      *                                                                   ULX008
+     C           VPICCD    CHAINERLUICL0             80
+     C*
+     C           *IN80     IFEQ '1'                         - B4
+     C                     MOVEL'ERLUICL0'DBFILE
+     C                     MOVE VPICCD    DBKEY
+     C                     MOVEL'003'     DBASE
+     C                     MOVE 'ER'      #RETRN
+     C                     EXSR *PSSR
+     C                     END                              - E4
+     C*
+     C**********           Z-ADDDDCSL1    VPCSL1                          ULX004
+     C**********           Z-ADDDDCSL2    VPCSL2                          ULX004
+     C**********           Z-ADDDDCSL3    VPCSL3                          ULX004
+     C**********           Z-ADDDDCSL4    VPCSL4                          ULX004
+     C**********           Z-ADD@@AMT     VPOWFA                   ERL328 ULX004
+     C                     MOVE DDIM14    VPIM14                          ERL371
+     C**********           Z-ADDDDCRMT    VPCRMT                                       ERL371 CER001
+     C                     MOVE DDCRMT    VPCRMT                                              CER001
+     C                     MOVE DDCYPR    VPCYPR                          ERL371
+     C                     MOVE DDLERP    VPLERP                          ERL422
+     C                     MOVE DDCLRP    VPCLRP                          ERL422
+     C                     MOVE DDMMPD    VPMMPD                          ERL422
+     C                     MOVE DDCORD    VPCORD                          ULX004
+     C                     MOVE DDPRRD    VPPRRD                          ULX004
+     C                     Z-ADDWOPCM     VPOPCM                          ULX004
+     C                     Z-ADDWIRCS     VPIRCS                          ULX004
+     C                     Z-ADDWIRCG     VPIRCG                          ULX004
+     C                     Z-ADDWEPRM     VPEPRM                          ULX004
+     C                     Z-ADDBJRDNB    VPLCD
+      *                                                                   ULX012
+      **  If feature UlX012 is installed                                  ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+     C                     MOVE DDSTSQ    VPSTSQ                          ULX012
+     C                     MOVE DDDAYF    VPDAYF                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      **  If feature UlX008 is installed                                  ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C                     MOVE DDINCC    VPINCC                          ULX008
+     C                     MOVE DDDMOV    VPDMOV                          ULX008
+     C                     MOVE DDMKSE    VPMKSE                          ULX008
+     C                     MOVE DDEXTT    VPEXTT                          ULX008
+     C                     MOVE DDCTLN    VPCTLN                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C                     MOVE 'A'       VPTYLC
+     C                     UPDATERLUICD0
+     C                     COMIT
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX012
+     C                     END                                - E3
+     C*
+     C                     END                                - E2
+     C*
+     C** SETUP RETURN CODE
+     C           *INKC     IFEQ '1'                           - B2
+     C                     MOVE '03'      #RETRN
+     C                     ITER
+     C                     END                                - E2
+     C*
+     C** SETUP RETURN CODE
+     C           *IN12     IFEQ '1'                           - B2
+     C                     MOVE '12'      #RETRN
+     C                     ITER
+     C                     END                                - E2
+     C*
+     C** SETUP RETURN CODE
+     C           *IN45     IFEQ '0'                           - B2
+     C           *IN60     ANDEQ'0'
+     C           *IN61     ANDEQ'0'
+     C           *IN62     ANDEQ'0'
+     C           *IN63     ANDEQ'0'
+     C           *IN64     ANDEQ'0'                                       ERL328
+     C           *IN65     ANDEQ'0'                                       ERL371
+     C           *IN66     ANDEQ'0'                                       ERL371
+     C           *IN67     ANDEQ'0'                                       ERL371
+     C           *IN68     ANDEQ'0'                                       ERL422
+     C           *IN69     ANDEQ'0'                                       ERL422
+     C           *IN70     ANDEQ'0'                                       ERL422
+     C           *IN74     ANDEQ'0'                                       ULX004
+      *                                                                   ULX012
+      **  If feature UlX012 is installed                                  ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+     C           *IN76     ANDEQ'0'                                       ULX012
+     C           *IN78     ANDEQ'0'                                       ULX012
+     C           ULX012    ORNE 'Y'                                       ULX012
+      *                                                                   ULX008
+      **  If feature ULX008 is installed                                  ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C           *IN35     ANDEQ'0'                                       ULX008
+     C           *IN79     ANDEQ'0'                                       ULX008
+     C           *IN75     ANDEQ'0'                                       ULX008
+     C           *IN41     ANDEQ'0'                                       ULX008
+     C           *IN42     ANDEQ'0'                                       ULX008
+     C           *IN43     ANDEQ'0'                                       ULX008
+     C           ULX008    ORNE 'Y'                                       ULX008
+     C                     MOVE '  '      #RETRN
+     C                     MOVE '1'       *IN12
+     C                     ITER
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX012
+     C                     END                                - E2
+     C*
+     C**************************************************************************
+     C** F5 HAS BEEN PRESSED : REFRESH PROCESSING
+     C**************************************************************************
+     C           *IN05     IFEQ '1'                           - B2
+     C*
+     C**********           Z-ADDVPCSL1    DDCSL1                          ULX004
+     C**********           Z-ADDVPCSL1    DDCSLA                          ULX004
+     C**********           Z-ADDVPCSL2    DDCSL2                          ULX004
+     C**********           Z-ADDVPCSL2    DDCSLB                          ULX004
+     C**********           Z-ADDVPCSL3    DDCSL3                          ULX004
+     C**********           Z-ADDVPCSL3    DDCSLC                          ULX004
+     C**********           Z-ADDVPCSL4    DDCSL4                          ULX004
+     C**********           Z-ADDVPCSL4    DDCSLD                          ULX004
+     C**********           Z-ADD*ZEROS    ZFLD15                   ERL328 ULX004
+     C**********           MOVE VPOWFA    ZFLD15                   ERL328 ULX004
+     C**********           Z-ADD0         ZDECS                    ERL328 ULX004
+     C**********           EXSR ZSEDIT                             ERL328 ULX004
+     C**********           MOVELZOUT21    ZOUT20                   ERL328 ULX004
+     C**********           MOVE ZOUT20    DDOWFA                   ERL328 ULX004
+     C                     MOVE VPIM14    DDIM14                          ERL371
+     C**********           Z-ADDVPCRMT    DDCRMT                                       ERL371 CER001
+     C                     MOVE VPCRMT    DDCRMT                                              CER001
+     C                     MOVE VPCYPR    DDCYPR                          ERL371
+     C                     MOVE VPLERP    DDLERP                          ERL422
+     C                     MOVE VPCLRP    DDCLRP                          ERL422
+     C                     MOVE VPMMPD    DDMMPD                          ERL422
+     C                     MOVE VPCORD    DDCORD                          ULX004
+     C                     MOVE VPPRRD    DDPRRD                          ULX004
+     C                     MOVE VPOPCM    DDOPCM                          ULX004
+     C                     MOVE VPIRCS    DDIRCS                          ULX004
+     C                     MOVE VPIRCG    DDIRCG                          ULX004
+     C                     MOVE VPEPRM    DDEPRM                          ULX004
+      **  If feature UlX012 is installed                                  ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+      *                                                                   ULX012
+      **  If Start sequence for Guarantees & Collateral generated         ULX012
+      **  automatically and Number of days Forward for end date           ULX012
+      **  are equal to 0, default Start sequence for guarantees &         ULX012
+      **  Collateral generated automatically to 500 . And default         ULX012
+      **  Number of days forward to end date to 99 if Collateral          ULX012
+      **  reviewal days in advance is equal to 99. But if Collateral      ULX012
+      **  reviewal days in advance is not equal to 99, Number of days     ULX012
+      **  forward to end date is defaulted to Collateral reviewal         ULX012
+      **  days in advance plus 1.                                         ULX012
+      *                                                                   ULX012
+     C           VPSTSQ    IFEQ 0                                         ULX012
+     C           VPDAYF    ANDEQ0                                         ULX012
+     C                     MOVE '500'     DDSTSQ                          ULX012
+     C           VPCORD    IFEQ 99                                        ULX012
+     C                     MOVE '99'      DDDAYF                          ULX012
+     C                     ELSE                                           ULX012
+     C                     MOVE DDCORD    WWCORD  20                      ULX012
+     C           WWCORD    ADD  1         WWDAYF                          ULX012
+     C                     MOVE WWDAYF    DDDAYF                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      **  If Start sequence for guarantees & Collateral generated         ULX012
+      **  automatically and/or Number of days forward for end date        ULX012
+      **  are not equal to zero.                                          ULX012
+      *                                                                   ULX012
+     C                     ELSE                                           ULX012
+     C                     MOVE VPSTSQ    DDSTSQ                          ULX012
+     C                     MOVE VPDAYF    DDDAYF                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX008
+      **  If feature UlX012 is installed                                  ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C                     MOVE VPINCC    DDINCC                          ULX008
+     C                     MOVE VPDMOV    DDDMOV                          ULX008
+     C                     MOVE VPMKSE    DDMKSE                          ULX008
+     C                     MOVE VPEXTT    DDEXTT                          ULX008
+     C                     MOVE VPCTLN    DDCTLN                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN62
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN64                           ERL328
+     C                     MOVE '0'       *IN65                           ERL371
+     C                     MOVE '0'       *IN66                           ERL371
+     C                     MOVE '0'       *IN67                           ERL371
+     C                     MOVE '0'       *IN68                           ERL422
+     C                     MOVE '0'       *IN69                           ERL422
+     C                     MOVE '0'       *IN70                           ERL422
+     C                     MOVE '0'       *IN74                           ULX004
+      **  If feature UlX012 is installed                                  ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+     C                     MOVE '0'       *IN76                           ULX012
+     C                     MOVE '0'       *IN78                           ULX012
+     C                     ENDIF                                          ULX012
+      **  If feature ULX008 is installed                                  ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C                     MOVE '0'       *IN35                           ULX008
+     C                     MOVE '0'       *IN79                           ULX008
+     C                     MOVE '0'       *IN75                           ULX008
+     C                     MOVE '0'       *IN41                           ULX008
+     C                     MOVE '0'       *IN42                           ULX008
+     C                     MOVE '0'       *IN43                           ULX008
+     C                     ENDIF                                          ULX008
+     C*
+     C*
+     C                     END                                - E2
+     C*
+     C                     END                                - E1
+     C                     ENDSR
+     C*
+     C**************************************************************************
+     C* INITIAL ROUTINE                                                        *
+     C**************************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVE '0'       *IN
+     C*
+      *                                                                   ULX012
+      **  Determine if feature ULX012                                     ULX012
+      **  is installed                                                    ULX012
+     C                     MOVE 'N'       ULX012  1                       ULX012
+     C                     CALL 'AOSARDR0'                                ULX012
+     C                     PARM '       ' @RTCD   7                       ULX012
+     C                     PARM '*VERIFY' @OPTN   7                       ULX012
+     C                     PARM 'ULX012'  @SARD   6                       ULX012
+      *                                                                   ULX012
+      **  If feature ULX012 is installed.                                 ULX012
+     C           @RTCD     IFEQ *BLANKS                                   ULX012
+     C                     MOVE 'Y'       ULX012                          ULX012
+     C                     MOVE '1'       *IN55                           ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+      **  Determine if feature ULX008                                     ULX008
+      **  is installed                                                    ULX008
+     C                     MOVE 'N'       ULX008  1                       ULX008
+     C                     CALL 'AOSARDR0'                                ULX008
+     C                     PARM '       ' @RTCD   7                       ULX008
+     C                     PARM '*VERIFY' @OPTN   7                       ULX008
+     C                     PARM 'ULX008'  @SARD   6                       ULX008
+      *                                                                   ULX008
+      **  If feature ULX012 is installed.                                 ULX008
+     C           @RTCD     IFEQ *BLANKS                                   ULX008
+     C                     MOVE 'Y'       ULX008                          ULX008
+     C                     MOVE '1'       *IN56                           ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C           ACTION    IFEQ 'E'                           - B1
+     C                     MOVE '1'       *IN50
+     C                     MOVE *ON       *IN51                     ULX004
+     C                     END                                - E1
+     C*
+     C*   Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'*'       DDPGMQ
+     C**********           MOVEL'ERUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+     C*
+     C*   Fill in fields for subroutine ZASNMS
+     C                     MOVEL'ERLU91'  ZAPGM  10        Message queue
+     C**********           MOVEL'ERUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C           *LOVAL    SETLLSDBANKL1
+     C                     READ SDBANKL1                 88
+     C*
+     C           *IN88     IFEQ '1'                        - B1
+     C                     MOVEL'SDBANKL1'DBFILE
+     C                     MOVEL'ERLU91'  DBPGM
+     C                     MOVE ' NONE '  DBKEY            *********************
+     C                     MOVEL'001'     DBASE            ** DB ERROR 001    **
+     C                     MOVE 'ER'      #RETRN           *********************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*                                                                   ERL422
+     C           *LOVAL    SETLLSDMMODL0                                  ERL422
+     C                     READ SDMMODL0                 89               ERL422
+     C*                                                                   ERL422
+     C           *IN89     IFEQ '1'                        - B1           ERL422
+     C                     MOVEL'SDMMODL0'DBFILE                          ERL422
+     C                     MOVEL'ERLU91'  DBPGM                           ERL422
+     C                     MOVE ' NONE '  DBKEY            ***************ERL422
+     C                     MOVEL'006'     DBASE            ** DB ERROR 006ERL422
+     C                     MOVE 'ER'      #RETRN           ***************ERL422
+     C                     EXSR *PSSR                                     ERL422
+     C                     END                             - E1           ERL422
+     C*
+     C           BGCSLN    IFEQ 'Y'                                       ERL422
+     C                     MOVE *ON       *IN71                           ERL422
+     C                     ENDIF                                          ERL422
+     C           BGSYLN    IFEQ 'Y'                                       ERL422
+     C                     MOVE *ON       *IN72                           ERL422
+     C                     ENDIF                                          ERL422
+     C           BGDLMM    IFEQ 'Y'                                       ERL422
+     C* NOT USED CURRENTLY !!!!!!                                         ERL422
+     C*********************MOVE *ON       *IN73                           ERL422
+     C                     ENDIF                                          ERL422
+     C*                                                                   ERL422
+      *                                                                   ULX004
+      ** Access RUNDAT for multibranching indicator                       ULX004
+     C           *NAMVAR   DEFN           RUNDAT                          ULX004
+     C           *NAMVAR   DEFN           LDA                             ULX004
+     C                     IN   RUNDAT                                    ULX004
+      *                                                                   ULX004
+     C           ACTION    IFNE 'E'                                       ULX004
+     C           AGSUC     IFEQ 'Y'                                       ULX004
+     C                     MOVE *ON       *IN51                           ULX004
+     C                     ELSE                                           ULX004
+     C                     MOVE *OFF      *IN51                           ULX004
+     C                     ENDIF                                          ULX004
+     C                     ENDIF                                          ULX004
+     C                     ENDSR
+     C****************************************************************
+     C*  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE            *
+     C****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C**   message file specified use PMSGF
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C**
+     C**   Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - PROGRAM ERROR HANDLING ROUTINE                 *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY -                                                *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR0    ENDSR
+      **************************************************************************
+      *
+     C           ZA0840    BEGSR
+      *
+      **   initialize the fields and the arrays
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN82
+     C                     Z-ADD0         @@ERCD  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+      *
+      **   define the input fields
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+      *
+      ** first check that the number input will not produce a number
+      ** output with more than 15 figures.
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15                         B1
+     C                     Z-ADD2         @@ERCD           *1
+     C                     GOTO ZA0849                     *1
+     C                     END                             E1
+      *
+      ** work through input array, ignoring leading zeros and blanks,
+      ** also blanking the leading zeros in the input array.
+     C                     MOVE '0'       *IN83
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16                         B1
+     C           *IN83     ANDEQ'0'                        *1
+     C           @F,@@C    IFNE ' '                        B*2
+     C           @F,@@C    ANDNE'0'                        **2
+     C                     MOVE '1'       *IN83            **2
+     C                     SUB  1         @@C              **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              **2
+     C                     END                             E1
+      *
+      ** check the integer part of the number for valid characters.
+     C           @@C       DOWLE16                         B1
+     C           @F,@@C    ANDNE'.'                        *1
+     C           @F,@@C    ANDNE' '                        *1
+      *
+      ** check for non numeric characters
+     C           @F,@@C    IFGT '9'                        B*2
+     C           @F,@@C    ORLT '0'                        **2
+     C                     Z-ADD0         @@AMT            **2
+     C                     Z-ADD1         @@ERCD           **2
+     C                     GOTO ZA0849                     **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     ADD  1         @@CINT           **2
+      *
+      ** check number of integers is not greater than that required
+     C           @@CINT    IFGT @@IINT                     B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** multiply the output amount by 10 then add the number in
+      ** the input array element being processed.
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C           @@AMT     ADD  @@WK7     @@AMT            **2
+     C                     END                             E*2
+      *
+      ** increase array index
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+      *
+      ** set up position of decimal point in input array
+     C                     Z-ADD@@C       @@PIDP
+      *
+      ** if the character pointed to is a decimal point add 1 to the
+      ** index
+     C           @@C       IFLE 16                         B1
+     C           @F,@@C    ANDEQ'.'                        *1
+     C                     ADD  1         @@C              *1
+     C                     MOVE '1'       *IN82            *1
+     C                     END                             E1
+      *
+      ** now validate the decimal part of the number
+     C           @@C       DOWLE16                         B1
+      *
+      ** if a blank is found set on the blank input indicator
+     C           @F,@@C    IFEQ ' '                        B*2
+     C                     MOVE '1'       *IN81            **2
+     C                     END                             E*2
+      *
+      ** if the figure is numeric, check that the number of decimal
+      ** places does not exceed that specified, and that no blanks
+      ** have been entered.
+     C           @F,@@C    IFGE '0'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     ADD  1         @@CADP           **2
+      *
+     C           @@CADP    IFGT @@IDP                      B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C           *IN81     IFEQ '1'                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** update output amount
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C                     ADD  @@WK7     @@AMT            **2
+      *
+     C                     ELSE                            X*2
+      *
+      ** if the character is not numeric and not a blank then it is
+      ** invalid
+     C           @F,@@C    IFNE ' '                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+      ** increase index
+     C                     ADD  1         @@C              *1
+      *
+     C                     END                             E1
+      *
+      ** correct the output number for any decimal places not input
+      ** in the alpha field.
+     C           @@IDP     SUB  @@CADP    @@E
+      *
+      ** increase the index by one to get correct array entry
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+      *
+      ** now format the output alpha field, first calculate where
+      ** the decimal point goes
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+      *
+      ** if there are no decimal points set the position to 17
+     C           @@IDP     IFEQ 0                          B1
+     C                     Z-ADD17        @@PODP           *1
+     C                     END                             E1
+      *
+      ** move the output number into the input array
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+      *
+      ** set up indexes
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN80
+      *
+      ** now fill up the output array
+     C           @@D       DOWLE16                         B1
+      *
+      ** insert decimal point if the position is found
+     C           @@D       IFEQ @@PODP                     B*2
+     C                     MOVE '.'       @G,@@D           **2
+     C                     ADD  1         @@D              **2
+     C                     END                             E*2
+      *
+      ** insert the zero before the decimal point
+     C           *IN80     IFEQ '0'                        B*2
+     C           @@D       ANDEQ@@PIDP                     **2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE '1'       *IN80            **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** blank leading zeros
+     C           *IN80     IFEQ '0'                        B*2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** move a normal character
+     C           @F,@@C    IFGE '1'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     MOVE @F,@@C    @G,@@D           **2
+     C                     MOVE '1'       *IN80            **2
+     C                     END                             E*2
+      *
+      ** non blanked zero
+     C           @F,@@C    IFEQ '0'                        B*2
+     C           *IN80     ANDEQ'1'                        **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         @@C              *1
+     C                     ADD  1         @@D              *1
+     C                     END                             E1
+      *
+      *
+      ** put output array into output amount
+     C                     MOVEA@G        @@ALPH
+      *
+      ** align figure with zero decimal places.
+     C           @@IDP     IFEQ 0                          B1
+     C                     MOVE *BLANKS   @@ALP1 17        *1
+     C                     MOVE @@ALPH    @@ALP1           *1
+     C                     MOVEL@@ALP1    @@ALPH           *1
+     C                     END                             E1
+      *
+     C           ZA0849    ENDSR                           ZA0849 TAG
+      *
+     C********************************************************************
+     C**                                                                 *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a     *
+     C** numeric field and to blank out leading zeros (optionaly         *
+     C** inserting commas).                                              *
+     C**     Input fields:   ZFLD15 15/0                                 *
+     C**                     ZDECS  1/0                                  *
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *
+     C**                                                                 *
+     C**     Arrays:         ZS1    15/1/0                               *
+     C**                     ZS2    21/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT21 21                                   *
+     C**                                                                 *
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+     C********************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2                                               ULX004
+      /EJECT
+**  INTR                                                                  ULX004
+00111213212223313233445566                                                ULX004
+** array of powers of 10 from 0 to 8
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000
+**  CPY@
+(c) Finastra International Limited 2005

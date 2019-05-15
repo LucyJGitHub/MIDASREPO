@@ -1,0 +1,1173 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT CHEQUE CLEARING MAINTENANCE')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   FUNDS TRANSFER MODULE
+     F*                                                               *
+     F*  FT0620 - CHEQUE CLEARING MAINTENANCE                         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E37514             Date 24Mar92               *
+      *                 E30043             Date 6AUg91                *
+     F*                 E30037        DATE    2AUG91                  *   E30037
+     F*                 S01117        DATE    7JUN90                  *   S01117
+     F*                 S01194        DATE    7JUN90                  *   S01194
+     F*                 S01199        DATE  17/08/89                  *   S01199
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  E37514 - UNABLE TO PROCESS DUPLICATE CHEQUE NUMBERS          *   E37514
+     F*  E30043 - INCORRECT VALIDATILON FOR ERROR CODE '324'          *   E30043
+     F*  E30037 - INCORRECT COMMAND KEYS USED IN PGM                  *   E30037
+     F*  S01117 - RELEASE 10 MULTIBRANCHING CHANGES                   *   S01117
+     F*  S01194 - STANDING DATA CHANGES                               *   S01194
+     F*  S01199 -  HELP SYSTEM.                                    *   S01199
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFT0620DFCF  E                    WORKSTN
+     FCQREG   UF  E           K        DISK
+     F                                              KCOMIT
+     F*ABFP***IF**E           K        DISK                               S01194
+     F************TABTB11F                          KIGNORE               S01194
+     F************TABTB20F                          KIGNORE               S01194
+     F************TABTG20F                          KIGNORE               S01194
+     F************TABLETHF                          KIGNORE               S01194
+     F************TABLETJF                          KIGNORE               S01194
+     F************TABLETLF                          KIGNORE               S01194
+     F************TABLETPF                          KIGNORE               S01194
+     F************TABLET5F                          KIGNORE               S01194
+     F*
+     F/EJECT
+     F*
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F****************************************************************
+     F********01********068*-*REC*UPD*BY*ANOTHER*USER.*   )          *    S01117
+     F********02********243*-*CHQ*AMT*MANDATORY.*         )          *    S01117
+     F********03********244*-*CHQ*AMT*CONTAINS*INV.*D.P.* )          *    S01117
+     F********04********315*-*CHQ*NO.*NOT*VALID*NUM* NO.* )          *    S01117
+     F********05********319*-*CHQ*NO.*MANDATORY.*         ) SET      *    S01117
+     F********06********320*-*CHQ*CCY*MANDATORY.*         ) ERROR    *    S01117
+     F********07********321*-*RECORD*NOT*IN*LF/CQREG.*    ) CODES    *    S01117
+     F********08********322*-*CHQ*ALREADY*CLEARED.*       )          *    S01117
+     F********09********323*-*CHQ*AMT*<>*AMT*ON*RECORD.*  )          *    S01117
+     F********10********324*-*CHQ*AMT*MUST*BE*+VE*NO.}*   )          *    E30043
+     F********11********325*-*CHQ*CCY*NOT*IN*I.C.R.*      )          *    S01117
+     F********12********326*-*CHQ*NUM*MUST*BE*+VE*NO.*    )          *    S01117
+     F*       01        001 - REC UPD BY ANOTHER USER.    )          *    S01117
+     F*       02        009 - CHQ AMT MANDATORY.          )          *    S01117
+     F*       03        010 - CHQ AMT CONTAINS INV. D.P.  )          *    S01117
+     F*       04        002 - CHQ NO. NOT VALID NUM. NO.  )          *    S01117
+     F*       05        003 - CHQ NO. MANDATORY.          ) SET      *    S01117
+     F*       06        007 - CHQ CCY MANDATORY.          ) ERROR    *    S01117
+     F*       07        004 - RECORD NOT IN LF/CQREG.     ) CODES    *    S01117
+     F*       08        005 - CHQ ALREADY CLEARED.        )          *    S01117
+     F*       09        011 - CHQ AMT <> AMT ON RECORD.   )          *    S01117
+     F*       11        008 - CHQ CCY NOT IN I.C.R.       )          *    S01117
+     F*       12        006 - CHQ NUM MUST BE +VE NO.     )          *    S01117
+     F*       13        BRANCH/ACTION CODE AUTHORITY CHECK           *    S01117
+     F*       15        MULTIBRANCHING INDICATOR                     *    S01117
+     F*       16        ORIGINATING BRANCH USED                      *    S01117
+     F*                                                              *
+     F*       20        ERROR CODES SET ON.                          *
+     F*       25        FLDQRY - ON THEN REDISPLAY SCREEN            *    S01194
+     F*       26        FLDQRY - USED IN LOKUP, ON IF '?' FOUND      *    S01194
+     F*                                                              *
+     F*      N30        INITIAL SCREEN READ.                         *
+     F*       30        DETAIL  SCREEN READ.                         *
+     F*       35        UNSUCCESSFUL CHAIN TO LF/CQREG.              *
+     F*                                                              *
+     F*       40        FIRST CYCLE COMPLETED.                       *
+     F*                                                              *
+     F*       50        CHEQUE AMOUNT HAS 0 D.P.                     *
+     F*       51        CHEQUE AMOUNT HAS 1 D.P.                     *
+     F*       52        CHEQUE AMOUNT HAS 2 D.P.                     *
+     F*       53        CHEQUE AMOUNT HAS 3 D.P.                     *
+     F*                                                              *
+     F*       60        CHQ NUM OR CHQ AMT NOT POSITIVE.             *
+     F*       70        CHQ NUM NOT VALID NUMERIC NUMBER.            *
+     F*                                                              *
+     F*    80         ( SET ON IF ERROR DURING WORK STN READ OR      *
+     F*               (           HELP INDICATOR.                    *
+     F*                                                              *
+     F*    KC           DISPLAY - F3 - TERMINATE PROGRAM.         *
+     F*    KL                   - F12- RETURN TO INITIAL SCREEN.  *
+     F*    KI                   - F9 - FLAG CHEQUE AS CLEARED.    *
+     F*                                                              *
+     F*       U7        ) DATA BASE                                  *
+     F*       U8        ) ERROR 01.                                  *
+     F*             LR  LAST RECORD (TERMINATE PROGRAM).             *
+     F*                                                              *
+     F*  N.B:- 90-99    STANDARD SUBROUTINE INDICATORS.              *
+     F****************************************************************
+     F*
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E                    ERR        19  4               ERROR CODES
+     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    ZA1        16  1               ZALIGN INPUT
+     E                    ZA2        16  1               ZALIGN OUTPUT
+     E                    CHK        13  1               CHECK LIMITS
+     E*
+     E** ARRAY USED FOR ? PROCESSING                                      S01194
+     E                    FLDQ       10  1                                S01194
+     E/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*
+     IPSDS       SDS
+     I*
+     I**********************************************
+     I*       DATA STRUCTURE TO RETRIEVE WSID.     *
+     I**********************************************
+     I*
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I*
+     IDLDA        DS                            256
+     I*
+     I**********************************************
+     I*       DATA STRUCTURE USED IN THE EVENT     *
+     I*                    OF DATABASE ERRORS.     *
+     I**********************************************
+     I*
+     I**************************************134 138 DBFILE                S01194
+     I**************************************139 167 DBKEY                 S01194
+     I**************************************168 175 DBPGM                 S01194
+     I**************************************176 177 DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*
+     ICMTTXT      DS                            160
+     I*
+     I*********************************************
+     I*       DATA STRUCTURE TO PROVIDE TEXT      *
+     I*            ON COMIT ENTRY IN JOURNAL.     *
+     I*********************************************
+     I*
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTION
+     I                                       26  35 USRIDX
+     I                                       51 160 OUTPUT
+     I*
+     I* Data structure to retrieve multi branch indicator                 S01117
+     I*                                                                   S01117
+     IRUNDAT      DS                                                      S01117
+     I                                       13  13 @MBIN                 S01117
+     I*                                                                   S01194
+     ISDGELR    E DSSDGELRPD                                              S01194
+     I*External data structure for General Ledger Details                 S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I*External data structure for Currency Details                       S01194
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I*External data structure for Bank Details                           S01194
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*1st DS for access program , short data structure                   S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I*2nd DS for access program , long data structure                    S01194
+     I*                                                                   S01194
+     I/EJECT
+     C*
+     C*************************
+     C*    SET INDICATORS.    *
+     C*************************
+     C*
+     C                     SETOF                     80     HELP IND
+     C                     SETOF                     LR     LR IND
+     C*
+     C*************************
+     C*    SET UP KEY LIST.   *
+     C*************************
+     C*
+     C           KEYFLD    KLIST
+     C                     KFLD           KEYCHQ  90
+     C                     KFLD           KEYCCY  3
+     C                     KFLD           KEYVAL 130                      E37514
+     C*
+     C***********************
+     C*    FIRST CYCLE.     *
+     C***********************
+     C*
+     C           *IN40     IFEQ '0'                         N*IN40
+     C*********************EXSR ZSYSTM                                    S01194
+     C***99****************EXSR DBERR                                     S01194
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           RUNDAT                          S01117
+     C                     IN   RUNDAT                                    S01117
+     C*                                                                   S01194
+     C* Call to access pgm for bank details                               S01194
+     C*                                                                   S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSSDY                           S01194
+     C*                                                                   S01194
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  S01194
+     C                     MOVE BJMRDT    SRUNA                           S01194
+     C*                                                                   S01117
+     C           @MBIN     IFEQ 'Y'                                       S01117
+     C                     MOVE '1'       *IN15                           S01117
+     C*                                                                   S01194
+     C* Call to General Ledger access pgm                                 S01194
+     C*                                                                   S01194
+     C**********           CALL 'AOGELRR0'                                S01194              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD                           S01194
+     C                     PARM '*FIRST ' @OPTN                           S01194
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01194              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01194
+     C           BKOBRU    IFEQ 'Y'                                       S01117
+     C                     MOVE '1'       *IN16                           S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     SETON                     40     1ST CYCLE DONE
+     C                     END                              END N*IN40
+     C*
+     C****************************************
+     C*    CALL INITIAL DATA ENTRY SCREEN    *
+     C*    (NOT FIRST CYCLE).                *
+     C****************************************
+     C*
+     C           INITL     TAG                              TAG: INITL
+     C*                                                                   S01117
+     C* DO LOOP UNTIL NO ERRORS IN VALIDATION FOR INITIAL DATA ENTRY      S01117
+     C* SCREEN                                                            S01117
+     C           *IN20     DOUEQ'0'                                       S01117
+     C*                                                                   S01117
+     C*********************SETOF                     KEKH30               E30037
+     C                     SETOF                     KLKI30               E30037
+     C*
+     C           *IN20     IFEQ '0'                         N*IN20
+     C                     SETOF                     0508                 E30037
+     C                     MOVE *BLANKS   CHQNUM
+     C                     MOVE *BLANKS   CHQCCY
+     C                     MOVE *BLANKS   CHQAMT
+     C                     END                              END N*IN20
+     C*
+     C   01                EXCPT                            RELEASE RECORD
+     C                     MOVEAERR       ERCD
+     C*                                                                   S01194
+     C* DO LOOP TO REDISPLAY INITIAL DATA ENTRY SCREEN IF FIELD QUERY     S01194
+     C* IS USED  BEFORE VALIDATION                                        S01194
+     C*                                                                   S01194
+     C           *IN25     DOUEQ'0'                                       S01194
+     C*                                                                   S01194
+     C                     EXSR TIMESR
+     C                     WRITEFT0620DS               80   WRITE INIT SCR
+     C*
+     C**         READIN    TAG                              TAG: READIN   S01199
+     C                     READ FT0620DS                 80 READ  INIT SCR
+     C** 80                EXSR HELPSR                      HELP          S01199
+     C** 80                GOTO READIN                                    S01199
+     C*
+     C*********************************
+     C*    RESET SCREEN INDICATORS    *
+     C*             AND VARIABLES.    *
+     C*********************************
+     C*
+     C                     SETOF                     010203
+     C                     SETOF                     040506
+     C                     SETOF                     070809
+     C*********************SETOF                     101112               E30043
+     C                     SETOF                     1112                 E30043
+     C*********************SETOF                     20                   S01117
+     C                     SETOF                     1320                 S01117
+     C                     MOVEA*BLANKS   ERR
+     C                     MOVE *BLANKS   ERCD
+     C                     Z-ADD1         A       20
+     C*
+     C           *INKC     CABEQ'1'       END            LR F3
+     C           *INKL     CABEQ'1'       INITL             F12
+     C*                                                                   S01194
+     C****************************************                            S01194
+     C*    RESOLVE ?'S BEFORE VALIDATION     *                            S01194
+     C****************************************                            S01194
+     C*                                                                   S01194
+     C                     EXSR FLDQRY                                    S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C*********************************
+     C*    VALIDATE CHEQUE NUMBER.    *
+     C*********************************
+     C***
+     C           CHQNUM    IFEQ *BLANKS                    )))))))))))))))
+     C*********************MOVE ' 319'    ERR,A            ))           ))S01117
+     C                     MOVE ' 003'    ERR,A            ))  ERR 003  ))S01117
+     C                     ADD  1         A                )) MANDATORY ))
+     C                     SETON                     0520  ))   ENTRY   ))
+     C                     ELSE                            )))))))))))))))
+     C**
+     C                     Z-ADD9         ZADIG            )))))))))))))))
+     C                     MOVEACHQNUM    CHK              )))))))))))))))
+     C                     EXSR NUMCHK                     ))  ERR 006  ))
+     C           *IN60     IFEQ '1'                        ))  CHQ NUM  ))
+     C*********************MOVE ' 326'    ERR,A            ))  MUST BE  ))S01117
+     C                     MOVE ' 006'    ERR,A            ))           ))S01117
+     C                     ADD  1         A                ))  POSITIVE ))
+     C                     SETON                     1220  )))))))))))))))
+     C                     ELSE                            )))))))))))))))
+     C*
+     C                     MOVELCHQNUM    CHQ10  100
+     C*
+     C                     MOVELCHQ10     CHQOUT  9        )))))))))))))))
+     C           CHQNUM    COMP CHQOUT               7070  ))  ERR 002  ))
+     C           *IN70     IFEQ '1'                        ))  INVALID  ))
+     C*********************MOVE ' 315'    ERR,A            ))  NUMERIC  ))S01117
+     C                     MOVE ' 002'    ERR,A            ))           ))S01117
+     C                     ADD  1         A                ))   NUMBER  ))
+     C                     SETON                     0420  )))))))))))))))
+     C*
+     C                     END                             END ERR 002
+     C*
+     C                     END                             END ERR 006
+     C**
+     C                     END                             END ERR 003
+     C***
+     C                     MOVE CHQNUM    KEYCHQ
+     C*
+     C***********************************
+     C*    VALIDATE CHEQUE CURRENCY.    *
+     C***********************************
+     C**
+     C           CHQCCY    IFEQ '   '                      )))))))))))))))
+     C*********************MOVE ' 320'    ERR,A            ))           ))
+     C                     MOVE ' 007'    ERR,A            ))  ERR 007  ))S01117
+     C                     ADD  1         A                )) MANDATORY ))S01117
+     C                     SETON                     0620  ))   ENTRY   ))
+     C                     ELSE                            )))))))))))))))
+     C*
+     C                     EXSR TABCHN                     )))))))))))))))
+     C           *IN11     IFEQ '1'                        ))  ERR 008  ))
+     C*********************MOVE ' 325'    ERR,A            ))           ))S01117
+     C                     MOVE ' 008'    ERR,A            ))  CHQ CCY  ))S01117
+     C                     ADD  1         A                )) NOT FOUND ))
+     C                     SETON                       20  )) IN I.C.R. ))
+     C                     END                             )))))))))))))))
+     C*
+     C                     END                             END ERR 007
+     C**
+     C                     MOVE CHQCCY    KEYCCY
+     C*
+     C*********************************
+     C*    VALIDATE CHEQUE AMOUNT.    *
+     C*********************************
+     C***
+     C           CHQAMT    IFEQ *BLANKS                    )))))))))))))))
+     C*********************MOVE ' 243'    ERR,A            ))           ))S01117
+     C                     MOVE ' 009'    ERR,A            ))  ERR 009  ))S01117
+     C                     ADD  1         A                )) MANDATORY ))
+     C                     SETON                     0220  ))   ENTRY   ))
+     C                     ELSE                            )))))))))))))))
+     C**
+     C*********************MOVELCHQAMT    CHQ14  140   6060)))))))))))))))E30043
+     C************IN60*****IFEQ '1'                        ))  ERR 324  ))E30043
+     C*********************MOVE ' 324'    ERR,A            ))  CHQ AMT  ))E30043
+     C*********************ADD  1         A                ))  MUST BE  ))E30043
+     C*********************SETON                     1020  ))  POSITIVE ))E30043
+     C*********************ELSE                            )))))))))))))))E30043
+     C*
+     C***********13********SUB  CDP       ZADIG                           S01194
+     C*********************Z-ADDCDP       ZADEC                           S01194
+     C           13        SUB  A6NBDP    ZADIG            )))))))))))))))S01194
+     C                     Z-ADDA6NBDP    ZADEC            )))))))))))))))S01194
+     C                     MOVELCHQAMT    ZFIELD           )))))))))))))))
+     C                     MOVEA*BLANKS   ZA1              ))  ERR 010  ))
+     C                     EXSR ZALIGN                     ))  CHQ AMT  ))
+     C           *IN99     IFEQ '1'                        ))  CONTAINS ))
+     C*********************MOVE ' 244'    ERR,A            )) INV. D.P. ))S01117
+     C                     MOVE ' 010'    ERR,A            ))           ))S01117
+     C                     ADD  1         A                )))))))))))))))
+     C                     SETON                     0320  )))))))))))))))
+     C                     ELSE                            )))))))))))))))
+     C*
+     C                     MOVE ZFIELD    CQAMAL 13
+     C                     MOVE *BLANKS   ZFIELD
+     C                     END                             END ERR 010
+     C*
+     C*********************END                             END ERR 324    E30043
+     C**
+     C                     END                             END ERR 009
+     C***
+     C   20                GOTO INITL
+     C*
+     C**********************************
+     C*    VALIDATE CHEQUE NUMBER &    *
+     C*    CURRENCY COMBINATION.       *
+     C**********************************
+     C*
+     C                     MOVE CQAMAL    CHQVAL 130
+     C                     MOVE CHQVAL    KEYVAL                          E37514
+     C***********KEYFLD****CHAINCQREG                35                   E37514
+     C*********************                                               E37514
+     C************IN35*****IFEQ '1'                        )))))))))))))))E37514
+     C*********************MOVE ' 321'    ERR,A            ))     ))S01117E37514
+     C*********************MOVE ' 004'    ERR,A            ))     ))S01117E37514
+     C*********************ADD  1         A                ))  RECORD   ))E37514
+     C*********************SETON                     0720  )) NOT FOUND ))E37514
+     C*********************GOTO INITL                      ))  IN CQREG ))E37514
+     C*********************END                             )))))))))))))))E37514
+     C*********************                                               E37514
+     C***********CLER******IFEQ 'Y'                        )))))))))))))))E37514
+     C*********************MOVE ' 322'    ERR,A            ))     ))S01117E37514
+     C*********************MOVE ' 005'    ERR,A            ))  ERR 005))17E37514
+     C*********************ADD  1         A                ))  CHEQUE   ))E37514
+     C*********************SETON                     0820  ))  ALREADY  ))E37514
+     C*********************GOTO INITL                      ))  CLEARED  ))E37514
+     C*********************END                             )))))))))))))))E37514
+     C*********************                                               E37514
+     C*****************************************                           E37514
+     C*****ENSURE*CHEQUE*AMOUNT ENTERED       *                           E37514
+     C*****EQUALS*CHEQUE*AMOUNT ON RECORD.    *                           E37514
+     C*****************************************                           E37514
+     C*********************                                               E37514
+     C***********CHQVAL****IFNE CQAM                       )))))))))))))))E37514
+     C*********************MOVE ' 323'    ERR,A            ))     ))S01117E37514
+     C*********************MOVE ' 011'    ERR,A            ))  ERR 011))17E37514
+     C*********************ADD  1         A                ))  CHQ AMT  ))E37514
+     C*********************SETON                     0920  ))   <> AMT  ))E37514
+     C*********************GOTO INITL                      )) ON RECORD ))E37514
+     C*********************END                             )))))))))))))))E37514
+      *                                                                   E37514
+     C                     SETOF                     212223               E37514
+     C                     SETOF                     2419                 E37514
+     C           KEYCHQ    SETLLCQREG                35                   E37514
+      *                                                                   E37514
+      ** DO UNTIL RECORD FOUND ON FILE                                    E37514
+     C           *IN35     DOUEQ'1'                                       E37514
+     C           *IN19     OREQ '1'                                       E37514
+      *                                                                   E37514
+     C           KEYCHQ    READECQREG                    35               E37514
+      *                                                                   E37514
+     C           *IN35     IFEQ '0'                                       E37514
+      *                                                                   E37514
+      ** SETON 19 IF VALID RECORD FOUND                                   E37514
+     C           CHQCCY    IFEQ CQCY                                      E37514
+     C           CHQVAL    ANDEQCQAM                                      E37514
+     C           CLER      ANDNE'Y'                                       E37514
+     C                     SETON                     19                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+      ** SETON 21 IF ENTERD CURRENCY EQUAL TO CURRENCY OF THE CHEQUE      E37514
+     C           CHQCCY    IFEQ CQCY                                      E37514
+     C                     SETON                     21                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+      ** SETON 22 IF ENTERD AMOUNT EQUAL TO AMOUNT OF THE CHEQUE          E37514
+     C           CHQVAL    IFEQ CQAM                                      E37514
+     C                     SETON                     22                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+      ** SETON 23 IF CLEARD CHEQUE FOUND                                  E37514
+     C           CHQCCY    IFEQ CQCY                                      E37514
+     C           CHQVAL    ANDEQCQAM                                      E37514
+     C           CLER      ANDEQ'Y'                                       E37514
+     C                     SETON                     23                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+      ** SETON 24 IF ENTERED NUMBER REFER TO A CHEQUE ON FILE             E37514
+     C           CQNM      IFEQ KEYCHQ                                    E37514
+     C                     SETON                     24                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+     C                     END                                    DOU     E37514
+      *                                                                   E37514
+      ** 19 ON => RECORD FOUND OK: 19 OFF => ERROR                        E37514
+     C           *IN19     IFEQ '0'                                       E37514
+      *                                                                   E37514
+      ** NO VALID RECORD: SET ERROR CODE                                  E37514
+     C                     SETON                     20                   E37514
+      *                                                                   E37514
+     C           *IN24     IFEQ '0'                                       E37514
+      *                                                                   E37514
+      ** NO CHEQUE FOUND FOR THIS NUMBER                                  E37514
+     C                     MOVE ' 004'    ERR,A                           E37514
+     C                     ADD  1         A                               E37514
+     C                     SETON                     04                   E37514
+      *                                                                   E37514
+      ** CONTINUE TO TAG - NO POINT CHECKING FURTHER                      E37514
+     C                     GOTO INITL                                     E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+      ** ENTRY NOT EQUAL TO THE CURRENCY OF THE CHEQUE                    E37514
+     C           *IN21     IFEQ '0'                                       E37514
+     C                     MOVE ' 008'    ERR,A                           E37514
+     C                     ADD  1         A                               E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+      ** ENTRY NOT EQUAL TO THE AMOUNT OF THE CHEQUE                      E37514
+     C           *IN22     IFEQ '0'                                       E37514
+     C                     MOVE ' 011'    ERR,A                           E37514
+     C                     ADD  1         A                               E37514
+     C                     SETON                     09                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+      ** COMBINATION OF CURRENCY AND AMOUNT NOT VALID                     E37514
+     C           *IN21     IFEQ '1'                                       E37514
+     C           *IN22     ANDEQ'1'                                       E37514
+     C           *IN23     ANDEQ'0'                                       E37514
+     C                     MOVE ' 012'    ERR,A                           E37514
+     C                     ADD  1         A                               E37514
+     C                     SETON                     0911                 E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+      ** THE CHEQUE HAS BEEN ALREADY CLEARED                              E37514
+     C           *IN23     IFEQ '1'                                       E37514
+     C                     MOVE ' 005'    ERR,A                           E37514
+     C                     ADD  1         A                               E37514
+     C                     SETON                     08                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+     C                     END                                            E37514
+      *                                                                   E37514
+     C*                                                                   S01117
+     C* IF MULTI-BRANCHED PERFORM BRANCH/ACTION CODE AUTHORITY CHECK      S01117
+     C*                                                                   S01117
+     C           @MBIN     IFEQ 'Y'                                       S01117
+     C                     EXSR BBAUTH                                    S01117
+     C*                                                                   S01117
+     C** IF ORIG BRANCH USER VALIDATION 'ON' PERFORM ORIG BR CHECK        S01117
+     C*                                                                   S01117
+     C           BKOBUV    IFEQ 'Y'                                       S01117
+     C                     EXSR OBAUTH                                    S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*
+     C*****************************************
+     C*    CALL DETAILS DATA ENTRY SCREEN.    *
+     C*****************************************
+     C*
+     C                     MOVE LCD       CHGDAT  50
+     C                     MOVE CHTP      CHGTYP  1
+     C                     MOVE LCHT      CHGTIM  60
+     C                     Z-ADDCQDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    CQDATE
+     C                     EXCPT
+     C                     SETON                     30
+     C                     EXSR BLNKFL
+     C                     EXSR TIMESR
+     C                     WRITEFT0620DS               80   WRITE DETL SCR
+     C*
+     C**         READDT    TAG                              TAG: READDT   S01199
+     C                     READ FT0620DS                 80 READ  DETL SCR
+     C** 80                EXSR HELPSR                      HELP          S01199
+     C** 80                GOTO READDT                                    S01199
+     C*
+     C           *INKC     CABEQ'1'       END            LR F3
+     C           *INKL     CABEQ'1'       INITL             F12
+     C*
+     C           *INKI     IFEQ '1'                         F9
+     C***********KEYFLD****CHAINCQREG                35                   E37514
+     C                     SETOF                     18                   E37514
+     C           KEYFLD    SETLLCQREG                35                   E37514
+     C           *IN35     DOUEQ'1'                                       E37514
+     C           *IN18     OREQ '1'                                       E37514
+     C           KEYFLD    READECQREG                    35               E37514
+     C           *IN35     IFEQ '0'                                       E37514
+     C           CLER      IFNE 'Y'                                       E37514
+     C                     SETON                     18                   E37514
+     C                     END                                            E37514
+     C                     END                                            E37514
+     C                     END                                            E37514
+     C***35****************EXSR DBERR                                     E37514
+     C           *IN35     IFEQ '1'                                       E37514
+     C                     SETON                     01                   E37514
+     C                     END                                            E37514
+     C***********LCD*******COMP CHGDAT               0101                 E37514
+     C  N01      LCD       COMP CHGDAT               0101                 E37514
+     C  N01      CHTP      COMP CHGTYP               0101
+     C  N01      LCHT      COMP CHGTIM               0101
+     C*
+     C           *IN01     IFEQ '1'                        )))))))))))))))
+     C*********************MOVE ' 068'    ERR,A            ))           ))S01117
+     C                     MOVE ' 001'    ERR,A            ))  ERR 001  ))S01117
+     C                     ADD  1         A                ))  REC UPD  ))
+     C                     SETON                     20    ))  BY OTHER ))
+     C                     GOTO INITL                      ))   USER    ))
+     C                     END                             )))))))))))))))
+     C*
+     C                     MOVE 'Y'       CLER
+     C*********************MOVE RUND      LCD                             S01194
+     C                     MOVE BJRDNB    LCD                             S01194
+     C                     MOVE 'A'       CHTP
+     C                     EXSR TIMESR
+     C                     MOVE TIME      LCHT
+     C                     UPDATCQREGDDF
+     C           CMTTXT    COMIT
+     C                     END                              END F9
+     C*
+     C                     GOTO INITL
+     C*
+     C           END       TAG                              TAG: END
+     C*
+     C/EJECT
+     C*
+     C********************************************************************
+     C***********SUBROUTINE*TO*ACCESS*INSTALLATION*         *** ZSYSTM ***S01194
+     C**********************CONTROL*DATA*RECORD.*           *** ZSYSTM ***S01194
+     C********************************************************* ZSYSTM ***S01194
+     C***********ZSYSTM****BEGSR                            *** ZSYSTM ***S01194
+     C*********************                                 **************S01194
+1492 C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.*                   S01194
+1493 C*********************MOVEL'01      'ZTABKY 12                       S01194
+1494 C*********************MOVE '  10'    ZTABKY                          S01194
+1495 C*********************                                               S01194
+1496 C***********ZTABKY****CHAINTABFP                99    ON NOT THERE   S01194
+1497 C**N99******RECI******COMP 'D'                  9999  ON, IS DELETED S01194
+1498 C*********************                                               S01194
+1499 C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.*                   S01194
+1500 C***********DATF******COMP 'M'                      98MMDDYY, 98 ON  S01194
+     C*********************                                 **************S01194
+     C*********************ENDSR                            *** ZSYSTM ***S01194
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C*    *    SUBROUTINE TO CALL 'MHELP' PACKAGE     *    *** HELPSR ***
+     C********************************************************* HELPSR ***
+     C**         HELPSR    BEGSR                            *** HELPSR ***S01199
+     C*                                                     **************
+     C**                   MOVEAERR       HERCD 160                       S01199
+     C**                   MOVEL'FT0000'  HBPGM   8                       S01199
+     C**                   CALL 'MHELP'                                   S01199
+     C**                   PARM           HBPGM                           S01199
+     C**                   PARM           HERCD                           S01199
+     C*                                                     **************
+     C**                   ENDSR                            *** HELPSR ***S01199
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C***********SUBROUTINE TO SET UP DATA STRUCTURE   *     *** DBERR ***E37514
+     C********************* FOR DATABASE ERRORS.       *     *** DBERR ***E37514
+     C********************************************************** DBERR ***E37514
+     C***********DBERR*****BEGSR                             *** DBERR ***E37514
+     C*********************                                  *************E37514
+     C************NAMVAR***DEFN LDA       DLDA                            E37514
+     C************LOCK*****IN   DLDA                                      E37514
+     C*********************MOVEL'FT0620'  DBPGM            ) DATA         E37514
+     C*********************MOVE 'TABFP'   DBFILE           ) BASE   S01194E37514
+     C*********************MOVELZTABKY    DBKEY            ) ERROR  S01194E37514
+     C*********************MOVEL'CQREG'   DBFILE           )        S01194E37514
+     C*********************MOVELKEYCHQ    DBKEY            )        S01194E37514
+     C*********************MOVE KEYCCY    DBKEY            )        S01194E37514
+     C*********************MOVE '01'      DBASE            ) 01     S01194E37514
+     C*********************Z-ADD1         DBASE            ) 01     S01194E37514
+     C*********************OUT  DLDA                                      E37514
+     C*********************SETON                     U7U8LR               E37514
+     C*********************DUMP                                           E37514
+     C*********************RETRN                                          E37514
+     C*********************                                  *************E37514
+     C*********************ENDSR                             *** DBERR ***E37514
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C*        *    SUBROUTINE TO REPLACE LEADING ZEROS     *** BLNKFL ***
+     C*        *         IN CHEQUE AMOUNTS WITH BLANKS.     *** BLNKFL ***
+     C********************************************************* BLNKFL ***
+     C           BLNKFL    BEGSR                            *** BLNKFL ***
+     C*                                                     **************
+     C           CQAMAL    CABEQ*BLANKS   BLEND
+     C           CQAMAL    CABEQ*ZEROS    BLEND
+     C                     MOVEACQAMAL    CHK
+     C*
+     C***********13********SUB  CDP       ZZ                              S01194
+     C           13        SUB  A6NBDP    ZZ                              S01194
+     C***
+     C                     DO   ZZ        I       20
+     C           CHK,I     IFNE '0'
+     C**
+     C           I         SUB  2         J       20
+     C   50                ADD  1         J
+     C*
+     C                     DO   J         K       20
+     C                     MOVE ' '       CHK,K
+     C                     END                             END DO K
+     C*
+     C                     GOTO ENDDOI
+     C                     END                             END CHK,I
+     C**
+     C                     END                             END DO I
+     C***
+     C           ENDDOI    TAG                             TAG: ENDDOI
+     C**
+     C           *IN50     IFEQ '0'
+     C*
+     C           I         DO   ZZ        K
+     C           K         SUB  1         J
+     C                     MOVE CHK,K     CHK,J
+     C                     END                             END DO L
+     C*
+     C                     MOVE '.'       CHK,ZZ
+     C                     END                             END N*IN50
+     C**
+     C                     MOVEACHK       CHQAMT
+     C*                                                     **************
+     C           BLEND     ENDSR                            *** BLNKFL ***
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C*        *    SUBROUTINE TO ENSURE NUMERIC INPUT      *** NUMCHK ***
+     C*        *               DATA IS POSITIVE.            *** NUMCHK ***
+     C********************************************************* NUMCHK ***
+     C           NUMCHK    BEGSR                            *** NUMCHK ***
+     C*                                                     **************
+     C                     SETOF                     60
+     C                     Z-ADD0         ZCOUNT  20
+     C**
+     C                     DO   ZADIG     I
+     C           CHK,I     CABEQ'-'       CHKEND         60
+     C*
+     C           CHK,I     IFEQ '0'
+     C           CHK,I     OREQ ' '
+     C                     ADD  1         ZCOUNT
+     C                     END                              END '0' OR ' '
+     C*
+     C                     END                              END DO I
+     C**
+     C           ZADIG     IFEQ 9
+     C           ZCOUNT    COMP ZADIG                    60
+     C                     END                              END ZADIG
+     C*                                                     **************
+     C           CHKEND    ENDSR                            *** NUMCHK ***
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C*          *    SUBROUTINE TO VALIDATE AND RIGHT      *** ZALIGN ***
+     C*          *               ALIGN NUMERIC FIELDS.      *** ZALIGN ***
+     C********************************************************* ZALIGN ***
+     C           ZALIGN    BEGSR                            *** ZALIGN ***
+     C*                                                     **************
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C   97      ZZ        ADD  3         ZZ
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C*                                                     **************
+     C           ZAEND     ENDSR                            *** ZALIGN ***
+     C********************************************************************
+     C/EJECT                                                              S01194
+     C********************************************************************S01194
+     C********************************************************************S01194
+     C********************************************************************S01194
+     C*     *         SUBROUTINE TO CHECK FOR '?' IN        *** FLDQRY ***S01194
+     C*     *                A FIELD                        *** FLDQRY ***S01194
+     C********************************************************* FLDQRY ***S01194
+     C           FLDQRY    BEGSR                            **************S01194
+     C*                                                                   S01194
+     C                     SETOF                     2526                 S01194
+     C*                                                                   S01194
+     C* CHECK CURRENCY FOR ENTRY OF ?                                     S01194
+     C                     MOVEA*BLANKS   FLDQ                            S01194
+     C                     MOVEACHQCCY    FLDQ                            S01194
+     C           '?'       LOKUPFLDQ                     26               S01194
+     C*                                                                   S01194
+     C* IF ? FOUND SETON REDISPLAY INDICATOR AND CALL ACCESS PROGRAM      S01194
+     C           *IN26     IFEQ '1'                                       S01194
+     C                     SETON                     25                   S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM '?'       @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C*                                                                   S01194
+     C* IF SELECTION MADE MOVE VALUE TO CHQCCY FLD                        S01194
+     C           @RTCD     IFEQ *BLANKS                                   S01194
+     C                     MOVELA6CYCD    CHQCCY                          S01194
+     C                     ELSE                                           S01194
+     C                     MOVEL*BLANKS   CHQCCY                          S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     SETOF                     26                   S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                            *** FLDQRY ***S01194
+     C********************************************************************S01194
+     C/EJECT                                                              S01194
+     C********************************************************************S01194
+     C********************************************************************S01194
+     C********************************************************************S01194
+     C*     *         SUBROUTINE TO VALIDATE                *** BBAUTH ***S01194
+     C*     *         USER/BRANCH/ACTION CODE               *** BBAUTH ***S01194
+     C********************************************************* BBAUTH ***S01194
+     C           BBAUTH    BEGSR                            **************S01194
+     C                     CALL 'ZVACTBU'                                 S01194
+     C                     PARM 'C'       ZACTN   1                       S01194
+     C                     PARM BRCA      ZBRCA   3                       S01194
+     C                     PARM 0         ZRETC   10                      S01194
+     C*                                                                   S01194
+     C           ZRETC     IFEQ 1                                         S01194
+     C                     MOVE ' 303'    ERR,A                           S01194
+     C                     ADD  1         A                               S01194
+     C                     SETON                     1320                 S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                            *** BBAUTH ***S01194
+     C********************************************************************S01194
+     C/EJECT                                                              S01194
+     C********************************************************************S01194
+     C********************************************************************S01194
+     C********************************************************************S01194
+     C*     *         SUBROUTINE TO VALIDATE                *** OBAUTH ***S01194
+     C*     *         USER/ORIGINATING BRANCH               *** OBAUTH ***S01194
+     C********************************************************* OBAUTH ***S01194
+     C           OBAUTH    BEGSR                            **************S01194
+     C                     CALL 'ZVOBU'                                   S01194
+     C                     PARM ORBR      ZORBR   3                       S01194
+     C                     PARM 0         ZRETC2  10                      S01194
+     C*                                                                   S01194
+     C           ZRETC2    IFEQ 1                                         S01194
+     C                     MOVE ' 305'    ERR,A                           S01194
+     C                     ADD  1         A                               S01194
+     C                     SETON                     1320                 S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C           ZRETC2    IFEQ 2                                         S01194
+     C                     MOVE ' 306'    ERR,A                           S01194
+     C                     ADD  1         A                               S01194
+     C                     SETON                     1320                 S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                            *** OBAUTH ***S01194
+     C********************************************************************S01194
+     C/EJECT                                                              S01194
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C*     *         SUBROUTINE TO CONVERT A DAY           *** ZDATE2 ***
+     C*     *              NUMBER TO DATE FORMATS.          *** ZDATE2 ***
+     C*     *                                               *** ZDATE2 ***
+     C*     *   N.B.:- 2000, BEING DIVISIBLE BY 400         *** ZDATE2 ***
+     C*     *          IS A LEAP YEAR.                      *** ZDATE2 ***
+     C********************************************************* ZDATE2 ***
+     C           ZDATE2    BEGSR                            *** ZDATE2 ***
+     C*                                                     **************
+3813 C**
+3814 C**   CLEAR DATE FIELDS.
+3815 C                     Z-ADD0         ZDATE   60
+3816 C                     MOVEL'       ' ZADATE  7
+3817 C**
+3818 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+3819 C                     Z-ADDZDAYNO    ZDAYNO  50
+3820 C**
+3821 C**   DETERMINE YEAR NUMBER.
+3822 C**
+3823 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+3824 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+3825 C   99                GOTO ZDEND2
+3826 C**
+3827 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+3828 C           ZDAYN1    DIV  1461      ZLYR    20
+3829 C                     MVR            ZDAYN1           SAVE REMAINING
+3830 C**                                                   DAYS
+3831 C**   CALCULATE NUMBER OF REMAINING YEARS.
+3832 C                     Z-ADD1         ZWRK2   20
+3833 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+3834 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+3835 C  N90      ZWRK2     ADD  1         ZWRK2
+3836 C  N90                GOTO ZDTAG1
+3837 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+3838 C**
+3839 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+3840 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+3841 C**
+3842 C**   CALCULATE ACTUAL YEAR NUMBER.
+3843 C           ZLYR      MULT 4         ZWRK3   30
+3844 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+3845 C                     Z-ADDZWRK3     ZYEAR   20
+3846 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+3847 C**
+3848 C**   DETERMINE MONTH NUMBER.
+3849 C**
+3850 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+3851 C                     SETOF                     9293
+3852 C   91      ZDAYN1    COMP 59                     9293
+3853 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+3854 C**
+3855 C**   CALCULATE MONTH NUMBER.
+3856 C                     Z-ADD2         ZWRK2
+3857 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+3858 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+3859 C  N94      ZWRK2     ADD  1         ZWRK2
+3860 C  N94                GOTO ZDTAG2
+3861 C           ZWRK2     SUB  1         ZWRK2
+3862 C**
+3863 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+3864 C**
+3865 C**   DETERMINE DAY OF MONTH.
+3866 C**
+3867 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+3868 C           ZDAYN1    ADD  1         ZDAYN1
+3869 C**
+3870 C**   CALCULATE DAY OF MONTH.
+3871 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+3872 C**
+3873 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+3874 C   93      ZDAY      ADD  1         ZDAY
+3875 C**
+3876 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+3877 C  N98                MOVELZDAY      ZWRK4   40
+3878 C   98                MOVE ZDAY      ZWRK4
+3879 C  N98                MOVE ZMTH      ZWRK4
+3880 C   98                MOVELZMTH      ZWRK4
+3881 C                     MOVELZWRK4     ZDATE
+3882 C                     MOVE ZYEAR     ZDATE
+3883 C**
+3884 C**   FORMAT ALPHA DATE, DDMMMYY.
+3885 C           ZDAY      COMP 10                     95
+3886 C                     MOVELZDAY      ZWRK5   5
+3887 C   95                MOVEL' '       ZWRK5
+3888 C                     MOVE ZMNM,ZMTH ZWRK5
+3889 C                     MOVELZWRK5     ZADATE
+3890 C                     MOVE ZYEAR     ZADATE
+     C*                                                     **************
+     C           ZDEND2    ENDSR                            *** ZDATE2 ***
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C*          *    SUBROUTINE TO ACCESS TIME OF DAY.     *** TIMESR ***
+     C********************************************************* TIMESR ***
+     C           TIMESR    BEGSR                            *** TIMESR ***
+     C*                                                     **************
+     C                     TIME           TIME    60
+     C*                                                     **************
+     C                     ENDSR                            *** TIMESR ***
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C********************************************************************
+     C**************SUBROUTINE*TO*ACCESS*CURRENCY*TABLE.*   *** TABCHN ***S01194
+     C*        *    SUBROUTINE TO ACCESS CURRENCY.          *** TABCHN ***S01194
+     C********************************************************* TABCHN ***
+     C           TABCHN    BEGSR                            *** TABCHN ***
+     C*                                                     **************
+     C                     SETOF                     505152
+     C                     SETOF                     53
+     C*********************MOVEL'20'      KEY1   11                       S01194
+     C*********************MOVE CHQCCY    KEY1                            S01194
+     C*********************MOVELKEY1      ZTABKY 12                       S01194
+     C*********************MOVE '1'       ZTABKY                          S01194
+     C***********ZTABKY****CHAINTABFP                11                   S01194
+     C**N11******RECI******COMP 'D'                  1111                 S01194
+     C*                                                                   S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM *BLANKS   @RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C                     PARM CHQCCY    @AJCD                           S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVE '1'       *IN11                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C**N11******50********ADD  CDP       X       20                      S01194
+     C           *IN11     IFEQ '0'                                       S01194
+     C           50        ADD  A6NBDP    X       20                      S01194
+     C                     END                                            S01194
+     C  N11                MOVE '1'       *IN,X
+     C*                                                     **************
+     C                     ENDSR                            *** TABCHN ***
+     C********************************************************************
+     C*
+     C/EJECT
+     O*
+     OCQREGDDFE
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

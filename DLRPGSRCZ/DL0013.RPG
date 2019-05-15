@@ -1,0 +1,649 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Citydealer tfr f/c i/e extr. in EVTS fmt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0013 - Midas/Citydealer transfer F/C Income and expense    *
+      *                                                               *
+      *  Function:  This program will create FX spot deals based on   *
+      *  ( COB )    postings generated during the transfer F/C Income *
+      *             and Expense.(GEXFPD)                              *
+      *                                                               *
+      *  Called By: GLC39 - Transfer F/C Income and Expense (F)       *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CCM003  *CREATE    Date 31Jan01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CCM003 - Lending/City Dealer interface.                      *
+      *                                                               *
+      *****************************************************************
+     FGEXFPD  IF  E                    DISK
+      *
+     FDLETPLPDO   E                    DISK                           UC
+     FDL0013AUO   E                    PRINTER                        UC
+      *
+      /EJECT
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N  C T I O N    O F    I N D I C A T O R S               *
+      *                                                               *
+      *  98         Date Format Indicator                             *
+      *  U7         Database Error                                    *
+      *  U8         Database Error                                    *
+      *  LR         Exit program                                      *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E    I N D E X                             *
+      *                                                               *
+      *  Main routine                                                 *
+      *  INIT    -  Initial Screen Processing                         *
+      *  OUTPUT  -  Access Branch Details file (Internal Customer)    *
+      *  #AMNT    -  Format Amount                                     *
+      *  #DATE   -  Convert date DDMMYY to YYYYMMDD format            *
+      *  #CURR   -  Access Currency details (No. of Decimal pos.)     *
+      *  #ADDR   -  Access Customer Details file (Report Name/Town)   *
+      *  ZCCYXR  -  to convert posting amount in base currency        *
+      *  *PSSR   -  Error Subroutine                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    AAMT       16  1
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZPOWERZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZEDITZ1
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+      ** Data Structures to convert to Date format (YYYYMMDD)
+     I            DS
+     I                                        1   8 DATF2
+     I                                        1   40YEAR
+     I                                        5   6 MONTH
+     I                                        7   8 DAY
+      *
+     I            DS
+     I                                        1   6 DATF1
+     I                                        1   2 DY
+     I                                        3   4 MTH
+     I                                        5   60YR
+      *
+      ** Data Structures to hold data to be output to files
+     IPFLD        DS                            512
+     ITEMP        DS                            512
+      *
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDTRAD    E DSSDTRADPD
+      ** Trading Data Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+     I* Second DS ofr Access Programs, Long Data Structure
+     I*
+      *****************************************************************
+      *                    MAIN CYCLE PROCESSING                      *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Initial Processing
+      *
+     C                     EXSR INIT
+      *
+      ** Read all records of input file
+      *
+     C                     READ GEXFPD                   LR
+      *
+     C                     MOVELBRCA      SBRCA   3
+     C**********           Z-ADDCNUM      SCNUM   60                                          CSD027
+     C                     MOVE CNUM      SCNUM   6                                           CSD027
+     C                     MOVELCCY       SCCY    3
+      *
+B1   C           *INLR     DOWEQ'0'
+      *
+      ** Save keys and output if rupture
+      *
+B2   C           BRCA      IFNE SBRCA
+     C           CNUM      ORNE SCNUM
+     C           CCY       ORNE SCCY
+      *
+      ** Extract data's of previous combination BRCA/CNUM/CCY/BLSPTA
+      *
+B3   C           SPSTA     IFNE 0
+     C                     EXSR OUTPUT
+     C                     Z-ADD0         SPSTA  130
+E3   C                     ENDIF
+      *
+     C                     MOVELBRCA      SBRCA   3
+     C**********           Z-ADDCNUM      SCNUM   60                                          CSD027
+     C                     MOVE CNUM      SCNUM   6                                           CSD027
+     C                     MOVELCCY       SCCY    3
+E2   C                     ENDIF
+      *
+      ** Consider only postings in non base currency and for the spot trade account
+      *
+     C**********           MOVELACOD      ACODA   4                                           CGL029
+     C                     MOVELACOD      ACODA  10                                           CGL029
+B2   C           CCY       IFNE BJCYCD
+     C           ACODA     ANDEQBLSPTA
+      *
+      ** Consolidate all postings for same BRCA/CNUM/CCY/BLSPTA
+      *
+B3   C           DRCR      IFEQ 0
+     C                     ADD  PSTA      SPSTA
+X3   C                     ELSE
+     C                     SUB  PSTA      SPSTA
+E3   C                     ENDIF
+E2   C                     ENDIF
+      *
+      ** Read all records of input file
+      *
+     C                     READ GEXFPD                   LR
+E1   C                     ENDDO
+      *
+      ** Extract data's for last combination
+      *
+B1   C           SPSTA     IFNE 0
+     C                     EXSR OUTPUT
+E1   C                     ENDIF
+      *
+      ** Set on the LR indicator
+      *
+     C                     MOVE '1'       *INLR
+      *
+      ** Copy details to document DLETVS for transfer to CITYDEALER
+      *
+     C                     CLOSEDLETPLPD
+      *
+     C                     RETRN
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  #AMNT - Format Amount                                        *
+      *                                                               *
+      *  Called by  : OUTPUT                                          *
+      *****************************************************************
+     C           #AMNT     BEGSR
+      *
+     C                     MOVEA*BLANKS   AAMT
+     C                     MOVE *BLANKS   PAMT   16
+      *
+     C                     EXSR ZEDIT
+     C                     MOVEAZFIELD    AAMT
+     C           ' '       CHECKZFIELD    N       20
+     C                     MOVEAAAMT,N    PAMT
+      *
+     C           PFLD      CAT  PAMT:0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+B1   C           WINSRT    IFEQ 'Y'
+     C           PFLD      CAT  '+,':0    TEMP
+X1   C                     ELSE
+     C           PFLD      CAT  '-,':0    TEMP
+E1   C                     ENDIF
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  #DATE - Convert date DDMMYY to YYYYMMDD format               *
+      *                                                               *
+      *  Called by  : OUTPUT                                          *
+      *****************************************************************
+     C           #DATE     BEGSR
+      *
+      ** Convert Day number to date format DDMMYY
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DATF1
+      *
+      ** Convert Date DDMMYY to format YYYMMDD
+B1   C           ZDAYNO    IFGE 10228
+     C           2000      ADD  YR        YEAR
+X1   C                     ELSE
+     C           1900      ADD  YR        YEAR
+E1   C                     ENDIF
+      *
+     C                     MOVE MTH       MONTH
+     C                     MOVE DY        DAY
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  #CURR - Access Currency details (No. of Decimal positions)   *
+      *                                                               *
+      *  Called by  : INIT,OUTPUT                                     *
+      *****************************************************************
+     C           #CURR     BEGSR
+      *
+      ** Access Currency details
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Customer record not found - Error
+B1   C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD7         DBASE            *************
+     C                     MOVEL@AJCD     DBKEY            *DB ERROR 07*
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     EXSR *PSSR
+E1   C                     ENDIF
+      *
+      ** Save No. of Decimal positions to work field
+     C                     Z-ADDA6NBDP    @NBDP   10
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  #ADDR - Access Customer Details file (Report Name and Town)  *
+      *                                                               *
+      *  Called by  : OUTPUT                                          *
+      *****************************************************************
+     C           #ADDR     BEGSR
+      *
+      ** Initialise workfields
+     C                     MOVE *BLANKS   @CRTN  10
+     C                     MOVE *BLANKS   @CRNM  15
+      *
+      ** Access SDCUSTPD using customer.
+     C                     MOVELSCNUM     @KEY1
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Customer record not found - Error
+B1   C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD8         DBASE            *************
+     C                     MOVEL@KEY1     DBKEY            *DB ERROR 08*
+     C                     MOVEL'SDCUSTPD'DBFILE           *************
+     C                     EXSR *PSSR
+E1   C                     ENDIF
+      *
+      ** Save Customer Report Name and Customer Town to work fields
+     C                     MOVELBBCRTN    @CRTN
+     C                     MOVELBBCRNM    @CRNM
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  OUTPUT - Geneartion of FXSPOT deals                          *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *****************************************************************
+     C           OUTPUT    BEGSR
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Check Sign of total amount
+      *
+B1   C           SPSTA     IFLT 0
+     C                     Z-SUBSPSTA     SPSTA
+     C                     Z-ADD1         SDRCR   10
+X1   C                     ELSE
+     C                     Z-ADD0         SDRCR
+E1   C                     END
+      *
+      ** 1. Record ID.
+     C                     MOVEL'FXSPOT,' PFLD
+      *
+      ** 2. Currency 1
+     C           PFLD      CAT  SCCY:0    TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 3. Currency 2
+     C           PFLD      CAT  BJCYCD:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 4. Counterparty Name (Customer Report Name)
+      *
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 5. Counterparty City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 6. Amount 1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SCCY      @AJCD
+     C                     EXSR #CURR
+      *
+     C                     Z-ADD@NBDP     ZADEC
+     C                     MOVE SPSTA     ZFIELD
+     C           SPSTA     IFNE *ZEROS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDSPSTA     ZAMTF
+     C                     Z-ADDA6SPRT    ZCRSRT
+     C                     MOVELA6MDIN    ZCRSMD
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     Z-ADDBNBDP     ZCDPT
+     C                     EXSR ZCCYXR
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE ZAMTT     ZAMTF
+     C                     Z-ADDOSPRT     ZRATEF
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELBJCYCD    ZCCYF
+     C                     MOVELSCCY      ZCCYT
+     C                     MOVELOMDIN     ZMDINF
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDBNBDP     ZCDPF
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C                     MOVE ZAMTT     ZFIELD
+     C                     ENDIF
+      *  Sign + for purchase amount
+B1   C           SDRCR     IFEQ 1
+     C                     MOVE 'Y'       WINSRT  1
+X1   C                     ELSE
+     C                     MOVE 'N'       WINSRT
+E1   C                     ENDIF
+      *
+     C                     EXSR #AMNT
+      *
+      ** 7. Amount 2 (Amount 1 converted in base ccy with the spot)
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADDSPSTA     ZAMTF
+     C                     Z-ADDA6SPRT    ZCRSRT
+     C                     MOVELA6MDIN    ZCRSMD
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     Z-ADDBNBDP     ZCDPT
+     C                     EXSR ZCCYXR
+      *
+     C                     Z-ADDBNBDP     ZADEC
+     C                     MOVE ZAMTT     ZFIELD
+      *  Invert sign for amount 2
+B1   C           SDRCR     IFEQ 1
+     C                     MOVE 'N'       WINSRT
+X1   C                     ELSE
+     C                     MOVE 'Y'       WINSRT
+E1   C                     ENDIF
+      *
+     C                     EXSR #AMNT
+      *
+      ** 8. Value Date converted to YYYYMMDD (Default to Run Date)
+     C                     Z-ADDBJRDNB    ZDAYNO
+      *
+     C                     EXSR #DATE
+      *
+     C           PFLD      CAT  DATF2:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 9. Spot Rate
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVEA*BLANKS   AAMT
+     C                     MOVE *BLANKS   SRATE  16
+     C                     Z-ADD5         ZADEC
+     C                     Z-ADDA6SPRT    @SPRT  135
+     C                     MOVE @SPRT     ZFIELD
+      *
+     C                     EXSR ZEDIT
+     C                     MOVEAZFIELD    AAMT
+     C           ' '       CHECKZFIELD    N
+     C                     MOVEAAAMT,N    SRATE
+      *
+     C           PFLD      CAT  SRATE:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 10. Broker
+     C           PFLD      CAT  'PHON,':0 TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 11. to 13.  Portfolio, Receive to Name and Receive
+      **             to City are all blank.
+     C           PFLD      CAT  ',,,':0   TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 14. to 15.  Pay from Name, Pay From City are all blank.
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 16. to 17.  Pay to Name, Pay to City are all blank.
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 18. to 21.  Via Name, Via Name, In Favour of Name and In Favour of
+      **             City are all blank.
+     C           PFLD      CAT  ',,,,':0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 22.  Back Office Flag (B to prevent sent from Citydealer to Midas)
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 23.  Back Office Reference Number (No reference)
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 24.  Dealer ID. (No ref.)
+     C           PFLD      CAT  'EXTERN':0TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 25. to 27.  Update X Position Flag, USD/Cur1 Rate, USD Equiv
+      **             Flag are all blank.
+     C           PFLD      CAT  'X,,,':0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 28. to 33.  Deal Number, Cross Reference, Cancel Reference, Flags, Other PCW,
+      **             Third Currency are all blank.
+     C           PFLD      CAT  ',,,,,,':0TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** 34.  Arbitrage Flag (N)
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     MOVELPFLD      EDATA
+     C           ZAMTT     IFNE *ZEROS
+     C                     WRITEDLETPLD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  INIT - Initial Processing                                    *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0013'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Initialise work fields
+      *
+     C                     MOVEL*BLANKS   WFCYL   1
+     C                     Z-ADD0         SPSTA  130
+      *
+      ** If First Cycle
+      *
+B1   C           WFCYL     IFEQ *BLANKS
+      *
+      ** Access the Bank Details. (BJCYCD)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+B2   C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 01*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+E2   C                     END
+      *
+      ** Access the Currencies'table for the base currency (BNBDP)
+      *
+     C                     MOVELBJCYCD    @AJCD
+     C                     EXSR #CURR
+     C                     Z-ADD@NBDP     BNBDP   10
+     C                     Z-ADDA6SPRT    OSPRT  138
+     C                     MOVE A6MDIN    OMDIN   1
+      *
+      ** Access the Trading Data Details (BLSPTA)
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+B2   C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDTRADPD'DBFILE            *************
+     C                     MOVEL'02'      DBASE             *DBERROR 004*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+E2   C                     END
+      *
+      **  Check System Date Format, DDMMYY (*IN98 off)
+      **                            MMDDYY (*IN98 on).
+      *
+B2   C           BJDFIN    IFEQ 'M'
+     C                     MOVEL'1'       *IN98
+E2   C                     END
+      *
+     C                     OPEN DLETPLPD
+      *
+     C                     MOVEL'Y'       WFCYL
+      *
+E1   C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     OPEN DL0013AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEDL0013AU
+      *
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCCYXR
+     C/COPY ZSRSRC,ZCCYCN
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

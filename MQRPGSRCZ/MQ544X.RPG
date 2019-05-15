@@ -1,0 +1,307 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RTEVENTS generic select')
+      *****************************************************************
+     F*                                                               *
+     F*  Midas - Midas/Q Module                                       *
+     F*                                                               *
+     F*    MQ542X    -  Select Event Codes for subset RTEVENTS        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CMQ001             Date 04Nov97               *
+      *                                    Date DDMmmYY               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CMQ001 - MidasQ rationalisation.                             *
+     F*                                                               *
+      *****************************************************************
+      **
+      ** Screen Display File
+      **
+     FMQ544XDFCF  E                    WORKSTN
+     F                                        RRN   KSFILE ##SRCD
+      **
+      ** File to Store Selected records
+      **
+     FMQ544XLFUF  E           K        DISK                      A
+      **
+      ** Event Code Data Structure
+      **
+     IECODDS      DS
+     I                                        1   1 E1
+     I                                        2   2 E2
+     I                                        3   3 E3
+     I                                        4   4 E4
+      **
+      ** Title Data Structure
+      **
+     I#RNAME      DS                             13
+     I                                        1   2 A
+     I                                        3  12 CPY#NM
+     I                                       13  13 B
+      **
+      ** System definition data area - O#XA01
+      **
+     IO#XA01      DS                           1000
+      **
+      ** Bring in the system definition block
+      **
+     I/COPY O#XP04,O#SDBLOCKP
+      **
+     C           *ENTRY    PLIST
+     C                     PARM           MQID3   8
+     C                     PARM           #RNAME
+     C                     PARM           MODE    1
+     C                     PARM           USED    3
+     C                     PARM           RTN     1
+      **
+      ** Initialise
+      **
+     C                     EXSR INIT
+      **
+      ** Load Subfile
+      **
+     C                     EXSR LOAD
+      **
+      ** Exit Pressed?
+      **
+     C           *IN03     IFEQ '1'
+     C                     ELSE
+      **
+      ** Save Data Input if in Change Mode
+      **
+     C           MODE      IFEQ 'C'
+     C                     MOVE 'C'       RTN
+     C                     EXSR SAVE
+     C                     END
+     C                     END
+      **
+      ** Set up USED Flag depending on whether or not any
+      ** Event Codes are selected
+      **
+     C           MQID3     CHAINOPT3                 99
+     C           *IN99     IFEQ '0'
+     C                     MOVE 'YES'     USED
+     C                     ELSE
+     C                     MOVE 'NO '     USED
+     C                     END
+      **
+     C                     SETON                     LR
+     C                     RETRN
+      **
+      ** Load Subfile
+      **
+     C           LOAD      BEGSR
+      **
+      ** Initialise
+      **
+     C                     Z-ADD1         RRN     40
+     C                     Z-ADD0         X       30
+     C                     MOVEA'1110'    *IN,49
+      **
+      ** Get First Record
+      **
+     C           MQID3     SETLLOPT3
+     C                     READ OPT3                     99
+     C           *IN99     IFEQ '0'
+     C                     MOVE ECOD3     ECODDS
+      **
+      ** If in Change Mode Replace _ with a space
+      **
+     C           MODE      IFEQ 'C'
+      **
+     C           E1        IFEQ '_'
+     C                     MOVE ' '       E1
+     C                     END
+      **
+     C           E2        IFEQ '_'
+     C                     MOVE ' '       E2
+     C                     END
+      **
+     C           E3        IFEQ '_'
+     C                     MOVE ' '       E3
+     C                     END
+      **
+     C           E4        IFEQ '_'
+     C                     MOVE ' '       E4
+     C                     END
+      **
+     C                     END
+      **
+     C                     MOVE ECODDS    ##CODE
+      **
+     C                     END
+      **
+      ** Do While Rolldown Requested
+      **
+     C           *IN25     DOUEQ'0'
+      **
+      ** Ensure First record is at RRN
+      **
+     C                     Z-ADDRRN       DSPREC
+      **
+      ** Load Next 10 Records
+      **
+     C                     DO   10
+     C                     WRITE##SRCD
+     C                     ADD  1         RRN
+     C                     EXSR GETREC
+     C  N52                END
+      **
+     C                     WRITE##FOOT
+      **
+     C                     EXFMT##SCTL
+      **
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Get Data for Subfile
+      **
+     C           GETREC    BEGSR
+      **
+      ** Load Selection Field With File Values
+      **
+     C           *IN99     IFEQ '0'
+     C           MQID3     READEOPT3                     99
+     C           *IN99     IFEQ '0'
+     C                     MOVE ECOD3     ECODDS
+      **
+      ** If in Change Mode Replace _ with a space
+      **
+     C           MODE      IFEQ 'C'
+      **
+     C           E1        IFEQ '_'
+     C                     MOVE ' '       E1
+     C                     END
+      **
+     C           E2        IFEQ '_'
+     C                     MOVE ' '       E2
+     C                     END
+      **
+     C           E3        IFEQ '_'
+     C                     MOVE ' '       E3
+     C                     END
+      **
+     C           E4        IFEQ '_'
+     C                     MOVE ' '       E4
+     C                     END
+      **
+     C                     END
+      **
+     C                     MOVE ECODDS    ##CODE
+      **
+     C                     ELSE
+     C           MODE      IFEQ 'C'
+     C                     MOVE *BLANKS   ##CODE
+     C                     ELSE
+     C                     SETON                     52
+     C                     END
+     C                     END
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Save Data Input back to File
+      **
+     C           SAVE      BEGSR
+      **
+      ** First Delete All existing records
+      **
+     C           MQID3     SETLLOPT3
+     C                     READ OPT3                     98
+      **
+     C           *IN98     DOWEQ'0'
+     C                     DELETOPT3
+     C                     READ OPT3                     98
+     C                     END
+      **
+      ** Then Add Non Blank Subfile Records
+      **
+     C                     READC##SRCD                 9898
+      **
+     C           *IN98     DOWEQ'0'
+      **
+     C           ##CODE    IFNE *BLANK
+     C                     MOVE ##CODE    ECODDS
+      **
+      ** For output to file, replace spaces with _
+      **
+     C           E1        IFEQ ' '
+     C                     MOVE '_'       E1
+     C                     END
+      **
+     C           E2        IFEQ ' '
+     C                     MOVE '_'       E2
+     C                     END
+      **
+     C           E3        IFEQ ' '
+     C                     MOVE '_'       E3
+     C                     END
+      **
+     C           E4        IFEQ ' '
+     C                     MOVE '_'       E4
+     C                     END
+      **
+     C                     MOVE ECODDS    ECOD3
+     C                     WRITEOPT3
+     C                     END
+      **
+     C                     READC##SRCD                 9898
+     C                     END
+      **
+     C                     ENDSR
+      **
+      **
+      ** Initialise
+      **
+     C           INIT      BEGSR
+      **
+      ** Set Up Return Code
+      **
+     C                     MOVE *BLANKS   RTN
+      **
+      ** Set Up Mode
+      **
+     C           MODE      IFEQ 'C'
+     C                     SETON                     30
+     C                     ELSE
+     C                     SETOF                     30
+     C                     END
+      **
+      ** Set Up Action Bar Header Text
+      **
+     C                     EXSR SACT
+     C                     MOVE '-'       #BOX1
+     C                     MOVE '-('      A
+     C                     MOVE ')'       B
+      **
+     C                     ENDSR
+     **
+     **  Subroutine to Set up Action Bar Header Text
+     **
+     C           SACT      BEGSR
+     C                     MOVEL'Report'  #BOX2
+     C                     MOVEL'Options' #BOX3
+     C                     MOVE *BLANKS   #BOX4
+     C                     MOVEL'Refine'  #BOX5
+     C                     MOVEL'Subsets' #BOX6
+     C                     MOVEL'House'   #BOX7
+     C                     MOVE 'keep '   #BOX7
+     C                     MOVEL'AS/400'  #BOX8
+     C                     MOVEL' Help'   #BOX9
+     C                     ENDSR
+      **

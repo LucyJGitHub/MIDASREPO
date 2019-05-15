@@ -1,0 +1,854 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Country of Tax Codes Maintenance')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD0780DF - Country of Tax Codes Maintenance             *
+      *                                                               *
+      *  (c) Finastra International Limited 2004                      *
+      *                                                               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR808125           Date 03Aug11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26841           Date 10Dec09               *
+      *                 BUG25206           Date 28Jul09               *
+      *                 CER054             Date 17Apr09               *
+      *                 BUG23639           Date 01Apr09               *
+      *                 BUG23587           Date 25Mar09               *
+      *                 BUG22517           Date 02Feb09               *
+      *                 CER048             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 236137             Date 20Sep05               *
+      *                 CGL035             Date 01Mar05               *
+      *                 CGL032  *CREATE    Date 05Jul04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL157 - CRS Reporting                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR808125 - Allow '?' in third tax account code               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26841 - Third tax fields, though without fieldnames,      *
+      *             are appearing in Country of Tax Codes             *
+      *  BUG25206 - Country of Tax Codes missing field?               *
+      *  CER054 - German Features - Church Tax                        *
+      *  BUG23639 - Country of Tax Codes 3 issues                     *
+      *  BUG23587 - Saving Account Threshold no more required         *
+      *  BUG22517- Re-order display fields to fit correct logic       *
+      *  CER048 - German Features - Taxes                             *
+      *  236137 - Change Control 1 for CGL031 & CGL032 - Part 4       *
+      *           Changes to Premium and Discount Accrual Processing. *
+      *           to maintain SDCTTXPD 6 new fields.                  *
+      *  CGL035 - EUSD Upgrade to MidasPlus                           *
+      *  CGL032 - Automatic Exchange of Information                   *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      REF(MFRFL)
+     A                                      CA03(03 'Exit.')
+     A                                      CA05(05 'Reset.')
+     A                                      CA12(12 'Previous.')
+      **Start of change BUG25206
+     A**********                            DSPSIZ(24 80 *DS3)                              BUG25206
+     A                                      DSPSIZ(27 132 *DS4)                             BUG25206
+      **End of change BUG25206
+     A                                      CHGINPDFT
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+      **Start of change CGL157
+     A**********                            MSGLOC(24)
+     A                                      MSGLOC(27)
+      **End of change CGL157
+      *
+      *--------------------------*
+      ***  Subfile Record Format *
+      *--------------------------*
+      *
+     A          R SD000780S1                TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2004')
+     A                                      SFL
+     A                                      SETOF(83 'Force input format')
+     A  84                                  SFLNXTCHG
+     A            #1ACTN         1A  B  8  5TEXT('Action Code')
+     A  79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A  79N32                               DSPATR(ND)
+     A N79N32                               DSPATR(HI UL)
+     A            #1CNRT         2A  B  8 14TEXT('Country of Tax')
+     A  78                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N78N33                               DSPATR(HI UL)
+     A            #1CNNM        30A  B  8 22TEXT('Country Name')
+     A  78                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N78N34                               DSPATR(HI UL)
+     A            #1CNRR         2A  B  8 60TEXT('Country of Residence')
+     A  78                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A N78N35                               DSPATR(HI UL)
+      *
+      *--------------------*
+      ***  Subfile Control *
+      *--------------------*
+      *
+     A          R SD000780C1                TEXT('Subfile control.')
+     A                                      SFLCTL(SD000780S1)
+     A                                      SFLSIZ(0015)
+     A                                      SFLPAG(0014)
+     A                                      SETOF(83 'Force input format')
+     A                                      OVERLAY
+     A  86                                  PUTOVR
+     A  80                                  SFLCLR
+     A N80                                  SFLDSPCTL
+     A N80 81                               SFLDSP
+     A N80 81 82                            SFLEND
+     A N82                                  ROLLUP(27 'Next page.')
+     A N31                                  CF09(09 'Change mode.')
+     A                                      SETOF(40 'Global error flag')
+     A            SRLRN          4  0H      SFLRCDNBR
+     A            #1USER    R        O  1  2REFFLD(USER)
+     A                                  1 13'SD000780'
+     A                                  1 67'DATE '
+     A            #1RUNA    R        O  1 73REFFLD(RUNA)
+     A            #1WSID    R        O  2  2REFFLD(JOJOB)
+     A  31                              2 27'Country of Tax Codes Enquiry '
+     A N31                              2 24'Country of Tax Codes Maintenance '
+     A                                      DSPATR(HI)
+     A                                  2 67'TIME '
+     A            #1TIME    R        O  2 73REFFLD(JOTIME)
+     A                                      EDTWRD('  :  :  ')
+     A                                      OVRATR
+     A                                      OVRDTA
+     A                                  4 12'Country'
+     A                                  4 22'Country Name'
+     A                                  4 57'Country Of'
+     A                                  5 12'of Tax'
+     A                                  5 57'Residence'
+     A N89        #1POS1         2A  B  6 14TEXT('Country of Tax')
+     A                                      DSPATR(HI UL PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+     A N89        #1POS2        30A  B  6 22TEXT('Country Name')
+     A                                      DSPATR(HI UL PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+     A N89        #1POS3         2A  B  6 60TEXT('Country of Residence')
+     A                                      DSPATR(HI UL PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+      *
+      *-----------------------------------------*
+      ***  New Country of Tax Code Input Screen *
+      *-----------------------------------------*
+      *
+     A          R SD000780D1                TEXT('New Country of Tax Input')
+     A                                      OVERLAY
+     A            #1USER    R        O  1  2REFFLD(USER)
+     A                                  1 13'SD000780'
+     A                                  1 67'DATE '
+     A            #1RUNA    R        O  1 73REFFLD(RUNA)
+     A            #1WSID    R        O  2  2REFFLD(JOJOB)
+     A                                  2 24'     New Country of Tax Code      '
+     A                                  2 67'TIME '
+     A            #1TIME    R        O  2 73REFFLD(JOTIME)
+     A                                      EDTWRD('  :  :  ')
+     A                                  8  6'Country of Tax..........:'
+     A            #1CTRT         2   B  8 32TEXT('Country of Tax Code')
+     A  41                                  DSPATR(RI PC)
+     A N41                                  DSPATR(HI)
+     A  70N71N73                            DSPATR(UL)
+     A N70
+     AO 71
+     AO 73                                  DSPATR(PR)
+     A                                  9  6'Country of Residence....:'
+     A            #1CTRR         2   B  9 32TEXT('Country of Residence')
+     A  42                                  DSPATR(RI PC)
+     A N42                                  DSPATR(HI)
+     A  70N71N73                            DSPATR(UL)
+     A N70
+     AO 71
+     AO 73                                  DSPATR(PR)
+      *
+      *------------------------*
+      ***  Insert/Amend Screen *
+      *------------------------*
+      *
+     A          R SD000780D2                TEXT('Country of Tax Details')
+     A                                      OVERLAY
+     A            #1USER    R        O  1  2REFFLD(USER)
+     A                                  1 13'SD000780'
+     A                                  1 67'DATE '
+     A            #1RUNA    R        O  1 73REFFLD(RUNA)
+     A            #1WSID    R        O  2  2REFFLD(JOJOB)
+     A N31                              2 24'Country of Tax Codes Maintenance '
+     A  31                              2 27'Country of Tax Codes Enquiry '
+     A                                  2 67'TIME '
+     A            #1TIME    R        O  2 73REFFLD(JOTIME)
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  2'Country of Tax.........:'
+     A            #2CTRT         2   B  4 27TEXT('Country of Tax Code')
+     A  43                                  DSPATR(RI PC)
+     A N43                                  DSPATR(HI)
+     A  74N75N76                            DSPATR(UL)
+     A N74
+     AO 75
+     AO 76                                  DSPATR(PR)
+     A                                  4 31'Name...:'
+     A            #2CTNM        30   B  4 40TEXT('Country of Tax Name')
+     A  44                                  DSPATR(RI PC)
+     A N44                                  DSPATR(HI)
+     A  74N75N76                            DSPATR(UL)
+     A N74
+     AO 75
+     AO 76                                  DSPATR(PR)
+     A                                  5  2'Country of Residence...:'
+     A            #2CTRR         2   B  5 27TEXT('Country of Residence')
+     A  45                                  DSPATR(RI PC)
+     A N45                                  DSPATR(HI)
+     A  74N75N76                            DSPATR(UL)
+     A N74
+     AO 75
+     AO 76                                  DSPATR(PR)
+     A                                  5 31'Name...:'
+     A            #2CTRN        30   B  5 40TEXT('Country of Residence Name')
+     A  46                                  DSPATR(RI PC)
+     A N46                                  DSPATR(HI)
+     A  74N75N76                            DSPATR(UL)
+     A N74
+     AO 75
+     AO 76                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                        8  3'Default Tax Status 1.:'
+     A**********  #2TXS1         1   B  8 26TEXT('Default Tax Status 1')
+     A                                  7  3'Default Tax Status 1.:'
+     A            #2TXS1         1A  B  7 26TEXT('Default Tax Status 1')
+      **End of change CER048
+     A  47                                  DSPATR(RI PC)
+     A N47                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                        8 29'Effective Date 1.:'
+     A**********  #2EDT1         6   B  8 48TEXT('Effective Date 1')
+     A                                  7 29'Effective Date 1.:'
+     A            #2EDT1         6A  B  7 48TEXT('Effective Date 1')
+      **End of change CER048
+     A  48                                  DSPATR(RI PC)
+     A N48                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                        8 56'Transition Type 1.:'
+     A**********  #2TRT1         1   B  8 76TEXT('Transition Type 1')
+     A                                  7 56'Transition Type 1.:'
+     A            #2TRT1         1A  B  7 76TEXT('Transition Type 1')
+      **End of change CER048
+     A  49                                  DSPATR(RI PC)
+     A N49                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       10  3'Default Tax Status 2.:'
+     A**********  #2TXS2         1   B 10 26TEXT('Default Tax Status 2')
+     A                                  8  3'Default Tax Status 2.:'
+     A            #2TXS2         1A  B  8 26TEXT('Default Tax Status 2')
+      **End of change CER048
+     A  50                                  DSPATR(RI PC)
+     A N50                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       10 29'Effective Date 2.:'
+     A**********  #2EDT2         6   B 10 48TEXT('Effective Date 2')
+     A                                  8 29'Effective Date 2.:'
+     A            #2EDT2         6A  B  8 48TEXT('Effective Date 2')
+      **End of change CER048
+     A  51                                  DSPATR(RI PC)
+     A N51                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       10 56'Transition Type 2.:'
+     A**********  #2TRT2         1   B 10 76TEXT('Transition Type 2')
+     A                                  8 56'Transition Type 2.:'
+     A            #2TRT2         1A  B  8 76TEXT('Transition Type 2')
+      **End of change CER048
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       13  3'Tax Basket...:'
+     A**********  #2TXBS         2   B 13 18TEXT('Tax Basket')
+     A                                 10  3'Main Tax Basket........:'
+     A            #2TXBS         2A  B 10 28TEXT('Main Tax Basket')
+      **End of change CER048
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       13 23'Withholding Tax Account Code...:'
+      **Start of change BUG23639
+     A**********                       10 31'Main Tax Account Code...:'                     BUG23639
+     A                                 10 36'Main Tax Account Code...:'
+      **End of change BUG23639
+      **End of change CER048
+      **Start of change CGL035
+     A**********  #2WTAC         4   B 13 56TEXT('Withholding Tax Account Code')              CGL035
+      **Start of change CER048
+     A**********  #2WTAC        10   B 13 56TEXT('Withholding Tax Account Code')
+      **Start of change BUG23639
+     A**********  #2WTAC        10A  B 10 57TEXT('Main Tax Account Code')                   BUG23639
+     A            #2WTAC        10A  B 10 62TEXT('Main Tax Account Code')
+      **End of change BUG23639
+      **End of change CER048
+      **End of change CGL035
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change BUG23639
+     A                                 11  3'Secondary Tax Basket...:'
+     A N13                                  DSPATR(ND)
+     A            #2STXB         2A  B 11 28TEXT('Secondary Tax Basket')
+     A N13                                  DSPATR(ND)
+     A  14                                  DSPATR(RI)
+     A  14                                  DSPATR(PC)
+     A N14                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+     A                                 11 36'Secondary Tax A/c Code..:'
+     A N13                                  DSPATR(ND)
+     A            #2STAC        10A  B 11 62TEXT('Secondary Tax Account Code')
+     A N13                                  DSPATR(ND)
+     A  15                                  DSPATR(RI)
+     A  15                                  DSPATR(PC)
+     A N15                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+     A                                 12  3'Secondary Effect. Date.:'
+     A N13                                  DSPATR(ND)
+     A            #2SEDT         6A  B 12 28TEXT('Secondary Effective Date')
+     A N13                                  DSPATR(ND)
+     A  16                                  DSPATR(RI)
+     A  16                                  DSPATR(PC)
+     A N16                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+      **End of change BUG23639
+     A**Start of Change 236137
+      **Start of change CER048
+     A**********                       16  3'De Minimis Rule (Y/N)..:'
+     A**********  #2DMAP         1   B 16 28TEXT('De Minimis Rule Applicable')
+      **Start of change BUG23639
+     A**********                       12  3'De Minimis Rule (Y/N)..:'                      BUG23639
+     A**********  #2DMAP         1A  B 12 28TEXT('De Minimis Rule Applicable')              BUG23639
+     A                                 14  3'De Minimis Rule (Y/N)..:'
+     A            #2DMAP         1A  B 14 28TEXT('De Minimis Rule Applicable')
+      **End of change BUG23639
+      **End of change CER048
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       16 31'Discount %:'
+     A**********                       16 44'Total.:'
+     A**********  #2TTDP         7   B 16 52TEXT('Total Discount Percentage')
+      **Start of change BUG23639
+     A**********                       12 31'Discount %:'                                   BUG23639
+     A**********                       12 44'Total.:'                                       BUG23639
+     A**********  #2TTDP         7A  B 12 52TEXT('Total Discount Percentage')               BUG23639
+     A                                 14 31'Discount %:'
+     A                                 14 44'Total.:'
+     A            #2TTDP         7A  B 14 52TEXT('Total Discount Percentage')
+      **End of change BUG23639
+      **End of change CER048
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       16 61'Yearly.:'
+     A**********  #2YRDP         7   B 16 70TEXT('Yearly Discount Percentage')
+      **Start of change BUG23639
+     A**********                       12 61'Yearly.:'                                      BUG23639
+     A**********  #2YRDP         7A  B 12 70TEXT('Yearly Discount Percentage')              BUG23639
+     A                                 14 61'Yearly.:'
+     A            #2YRDP         7A  B 14 70TEXT('Yearly Discount Percentage')
+      **End of change BUG23639
+      **End of change CER048
+     A  58                                  DSPATR(RI PC)
+     A N58                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       17  3'Tax Calculation Basis..:'
+     A**********  #2TXCB         1   B 17 28TEXT('Tax Calculation Basis')
+      **Start of change BUG23639
+     A**********                       13  3'Tax Calculation Basis..:'                      BUG23639
+     A**********  #2TXCB         1A  B 13 28TEXT('Tax Calculation Basis')                   BUG23639
+     A                                 15  3'Tax Calculation Basis..:'
+     A            #2TXCB         1A  B 15 28TEXT('Tax Calculation Basis')
+      **End of change BUG23639
+      **End of change CER048
+     A  59                                  DSPATR(RI PC)
+     A N59                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       17 31'Premium Amortized to be +
+      **Start of change BUG23639
+     A**********                       13 31'Premium Amortized to be +                      BUG23639
+     A                                 15 31'Premium Amortized to be +
+      **End of change BUG23639
+      **End of change CER048
+     A                                       Deducted.....:'
+      **Start of change CER048
+     A**********  #2PADD         1   B 17 70TEXT('Premium Amortized to be +
+      **Start of change BUG23639
+     A**********  #2PADD         1A  B 13 70TEXT('Premium Amortized to be +                 BUG23639
+     A            #2PADD         1A  B 15 70TEXT('Premium Amortized to be +
+      **End of change BUG23639
+      **End of change CER048
+     A                                      Deducted')
+     A  64                                  DSPATR(RI PC)
+     A N64                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+      **Start of change CER048
+     A**********                       18  3'TIS Delta Taxable Only.:'
+     A**********  #2TIST         1   B 18 28TEXT('Delta of TIS Taxable Only')
+      **Start of change BUG23639
+     A**********                       14  3'TIS Delta Taxable Only.:'                      BUG23639
+     A**********  #2TIST         1A  B 14 28TEXT('Delta of TIS Taxable Only')               BUG23639
+     A                                 16  3'TIS Delta Taxable Only.:'
+     A            #2TIST         1A  B 16 28TEXT('Delta of TIS Taxable Only')
+      **End of change BUG23639
+      **End of change CER048
+     A  65                                  DSPATR(RI PC)
+     A N65                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A N55                                  DSPATR(PR)
+     A**End of Change 236137
+      **Start of change CER048
+      **Start of change BUG23639
+     A**********                       16  3'Secondary Tax Basket............:'             BUG23639
+     A*N13******                            DSPATR(ND)                                      BUG23639
+     A**********  #2STXB         2A  B 16 37TEXT('Secondary Tax Basket')                    BUG23639
+     A*N13******                            DSPATR(ND)                                      BUG23639
+     A**14******                            DSPATR(RI)                                      BUG23639
+     A**14******                            DSPATR(PC)                                      BUG23639
+     A*N14******                            DSPATR(HI)                                      BUG23639
+     A**55******                            DSPATR(UL)                                      BUG23639
+     A*N55******                            DSPATR(PR)                                      BUG23639
+      **End of change BUG23639
+      **Start of change BUG22517
+     A**********                       16 47'Second.Tax Accnt.Code.:'                       BUG22517
+      **Start of change BUG23639
+     A**********                       16 47'Secondary Tax A/c Code:'                       BUG23639
+      **End of change   BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG23639
+     A**********  #2STAC        10A  B 16 71TEXT('Secondary Tax Account Code')              BUG23639
+     A*N13******                            DSPATR(ND)                                      BUG23639
+     A**15******                            DSPATR(RI)                                      BUG23639
+     A**15******                            DSPATR(PC)                                      BUG23639
+     A*N15******                            DSPATR(HI)                                      BUG23639
+     A**55******                            DSPATR(UL)                                      BUG23639
+     A*N55******                            DSPATR(PR)                                      BUG23639
+     A**********                       17  3'Secondary Effect. Date..........:'             BUG23639
+     A*N13******                            DSPATR(ND)                                      BUG23639
+     A**********  #2SEDT         6A  B 17 37TEXT('Secondary Effective Date')                BUG23639
+     A*N13******                            DSPATR(ND)                                      BUG23639
+     A**16******                            DSPATR(RI)                                      BUG23639
+     A**16******                            DSPATR(PC)                                      BUG23639
+     A*N16******                            DSPATR(HI)                                      BUG23639
+     A**55******                            DSPATR(UL)                                      BUG23639
+     A*N55******                            DSPATR(PR)                                      BUG23639
+      **End of change BUG23639
+      **Start of change BUG22517
+      **Start of change BUG23639
+     A**********                       17 47'Threshold Method......:'                       BUG23639
+     A*N13******                            DSPATR(ND)                                      BUG23639
+     A**********  #2THMD         1A  B 17 71TEXT('Threshold Method')                        BUG23639
+     A*N13******                            DSPATR(ND)                                      BUG23639
+     A**24******                            DSPATR(RI PC)                                   BUG23639
+     A*N24******                            DSPATR(HI)                                      BUG23639
+     A**55******                            DSPATR(UL)                                      BUG23639
+     A*N55******                            DSPATR(PR)                                      BUG23639
+     A                                 18  3'Threshold Method................:'             BUG23639
+     A N13                                  DSPATR(ND)                                      BUG23639
+     A            #2THMD         1A  B 18 37TEXT('Threshold Method')                        BUG23639
+     A N13                                  DSPATR(ND)                                      BUG23639
+     A  24                                  DSPATR(RI PC)                                   BUG23639
+     A N24                                  DSPATR(HI)                                      BUG23639
+     A  55                                  DSPATR(UL)                                      BUG23639
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG23639
+      **End of change BUG26841
+      **End of change BUG23639
+      **Start of change BUG23587
+     A**********                       18  3'Savings Account Threshold.......:'             BUG23587
+     A*N13******                            DSPATR(ND)                                      BUG23587
+     A**********  #2SATH         6A  B 18 37TEXT('Savings Accounts Threshold')              BUG23587
+     A*N13******                            DSPATR(ND)                                      BUG23587
+     A**22******                            DSPATR(RI PC)                                   BUG23587
+     A*N22******                            DSPATR(HI)                                      BUG23587
+     A**55******                            DSPATR(UL)                                      BUG23587
+     A*N55******                            DSPATR(PR)                                      BUG23587
+      **End of change BUG23587
+     A                                 18 47'Individual Threshold..:'
+     A N13                                  DSPATR(ND)
+     A            #2INTH         6A  B 18 71TEXT('Individual Threshold')
+     A N13                                  DSPATR(ND)
+     A  17                                  DSPATR(RI PC)
+     A N17                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+     A                                 19  3'Exemption Certificate Threshold.:'
+     A N13                                  DSPATR(ND)
+     A            #2ECTH         6A  B 19 37TEXT('Exemption Certificate Thresho-
+     A                                      ld')
+     A N13                                  DSPATR(ND)
+     A  21                                  DSPATR(RI PC)
+     A N21                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+     A                                 19 47'Joint Threshold.......:'
+     A N13                                  DSPATR(ND)
+     A            #2JTTH         6A  B 19 71TEXT('Joint Threshold')
+     A N13                                  DSPATR(ND)
+     A  19                                  DSPATR(RI PC)
+     A N19                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+     A                                 20  3'RE A/c Average Rate Effect. Date:'
+     A N13                                  DSPATR(ND)
+     A            #2RAED         6A  B 20 37TEXT('Retails Accounts Average Rate-
+     A                                       Effective Date')
+     A N13                                  DSPATR(ND)
+     A  18                                  DSPATR(RI PC)
+     A N18                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+     A                                 21  3'RE A/c Average Rate Limit.......:'
+     A N13                                  DSPATR(ND)
+     A            #2RARL         8A  B 21 37TEXT('Retail Accounts Average Rate -
+     A                                      Limit')
+     A N13                                  DSPATR(ND)
+     A  23                                  DSPATR(RI PC)
+     A N23                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+     A                                 22  3'Previous RE A/c Rate Limit......:'
+     A N13                                  DSPATR(ND)
+     A            #2PARL         8A  O 22 37TEXT('Previous Retail Accounts Rate-
+     A                                       Limit')
+     A N13                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      **Start of change BUG23639
+     A**********                       22 47'Margin Point Convertion Rate:'                 BUG23639
+      **Start of change BUG25206
+     A**********                       22 47'Margin Points Conversion Rate:'                BUG25206
+     A                                 23  3'Margin Points Conversion Rate:'
+      **End of change BUG25206
+      **End of change BUG23639
+     A N13                                  DSPATR(ND)
+      **Start of change BUG23639
+     A**********  #2MPCR         1A  B 22 77TEXT('Margin Points for Conversion -            BUG23639
+      **Start of change BUG25206
+     A**********  #2MPCR         1A  B 22 78TEXT('Margin Points for Conversion -            BUG25206
+     A            #2MPCR         1A  B 23 34TEXT('Margin Points for Conversion -
+      **End of change BUG25206
+      **End of change BUG23639
+     A                                      Rate')
+     A N13                                  DSPATR(ND)
+     A  20                                  DSPATR(RI PC)
+     A N20                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N13
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+      **Start of change CER054
+      **Start of change BUG25206
+     A**********                       21 46'Does Third Tax Affect Main Tax?:'              BUG25206
+     A                                 21 47'Does Third Tax Affect Main Tax?:'
+      **End of change BUG25206
+     A N66                                  DSPATR(ND)
+      **Start of change BUG25206
+     A**********  #2TTAM         1A  B 21 79TEXT('Does Third Tax Affect Main Ta-            BUG25206
+     A            #2TTAM         1A  B 21 80TEXT('Does Third Tax Affect Main Ta-
+      **End of change BUG25206
+     A                                      x?:')
+     A N66                                  DSPATR(ND)
+     A  90                                  DSPATR(RI PC)
+     A N90                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N66
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+      **Start of change BUG25206
+     A**********                       22 46'Third Tax Account Code:'                       BUG25206
+     A                                 23 47'Third Tax Account Code:'
+      **End of change BUG25206
+     A N66                                  DSPATR(ND)
+      **Start of change BUG25206
+     A**********  #2TTAC        10D  B 22 70TEXT('Third Tax Account Code:')                 BUG25206
+      ** Start of change AR808125
+     A**********  #2TTAC        10D  B 23 71TEXT('Third Tax Account Code:')                 AR808125
+     A            #2TTAC        10A  B 23 71TEXT('Third Tax Account Code:')
+      ** End of change AR808125
+      **End of change BUG25206
+     A N66                                  DSPATR(ND)
+     A  91                                  DSPATR(RI PC)
+     A N91                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N66
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+      **Start of change BUG25206
+     A**********                       23 46'Third Tax Effect. Date:'                       BUG25206
+     A                                 22 47'Third Tax Effect. Date:'
+      **End of change BUG25206
+     A N66                                  DSPATR(ND)
+      **Start of change BUG25206
+     A**********  #2TEDT         6A  B 23 70TEXT('Third Tax Effect. Date:')                 BUG25206
+     A            #2TEDT         6A  B 22 71TEXT('Third Tax Effect. Date:')
+      **End of change BUG25206
+     A N66                                  DSPATR(ND)
+     A  92                                  DSPATR(RI PC)
+     A N92                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+      **Start of change BUG26841
+     A N66
+     AON55                                  DSPATR(PR)
+     A*N55******                            DSPATR(PR)                                      BUG26841
+      **End of change BUG26841
+      **End of change CER054
+      **********                                                                            BUG22517
+     A**********                       17 47'Individual Threshold..:'                       BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2INTH         6A  B 17 71TEXT('Individual Threshold')                    BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**17******                            DSPATR(RI)                                      BUG22517
+     A**17******                            DSPATR(PC)                                      BUG22517
+     A*N17******                            DSPATR(HI)                                      BUG22517
+     A**55******                            DSPATR(UL)                                      BUG22517
+     A*N55******                            DSPATR(PR)                                      BUG22517
+     A**********                       18  3'Retl.Accnt.Ave.Rate Effect.Date.:'             BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2RAED         6A  B 18 37TEXT('Retails Accounts Average Rate-            BUG22517
+     A**********                             Effective Date')                               BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**18******                            DSPATR(RI)                                      BUG22517
+     A**18******                            DSPATR(PC)                                      BUG22517
+     A*N18******                            DSPATR(HI)                                      BUG22517
+     A**55******                            DSPATR(UL)                                      BUG22517
+     A*N55******                            DSPATR(PR)                                      BUG22517
+     A**********                       18 47'Joint Threshold.......:'                       BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2JTTH         6A  B 18 71TEXT('Joint Threshold')                         BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**19******                            DSPATR(RI)                                      BUG22517
+     A**19******                            DSPATR(PC)                                      BUG22517
+     A*N19******                            DSPATR(HI)                                      BUG22517
+     A**55******                            DSPATR(UL)                                      BUG22517
+     A*N55******                            DSPATR(PR)                                      BUG22517
+     A**********                       19  3'Margin Pnts for Conversion Rate.:'             BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2MPCR         1A  B 19 37TEXT('Margin Points for Conversion -            BUG22517
+     A**********                            Rate')                                          BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**20******                            DSPATR(RI)                                      BUG22517
+     A**20******                            DSPATR(PC)                                      BUG22517
+     A*N20******                            DSPATR(HI)                                      BUG22517
+     A**55******                            DSPATR(UL)                                      BUG22517
+     A*N55******                            DSPATR(PR)                                      BUG22517
+     A**********                       19 47'Exemp.Certi.Threshold.:'                       BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2ECTH         6A  B 19 71TEXT('Exemption Certificate Thresho-            BUG22517
+     A**********                            ld')                                            BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**21******                            DSPATR(RI)                                      BUG22517
+     A**21******                            DSPATR(PC)                                      BUG22517
+     A*N21******                            DSPATR(HI)                                      BUG22517
+     A**55******                            DSPATR(UL)                                      BUG22517
+     A*N55******                            DSPATR(PR)                                      BUG22517
+     A**********                       20  3'Prev.Retl.Accnt. Rate Limit.:'                 BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2PARL         8A  O 20 37TEXT('Previous Retail Accounts Rate-            BUG22517
+     A**********                             Limit')                                        BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********                            DSPATR(HI)                                      BUG22517
+     A**********                       20 47'Savings Accnt. Thres..:'                       BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2SATH         6A  B 20 71TEXT('Savings Accounts Threshold')              BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**22******                            DSPATR(RI)                                      BUG22517
+     A**22******                            DSPATR(PC)                                      BUG22517
+     A*N22******                            DSPATR(HI)                                      BUG22517
+     A**55******                            DSPATR(UL)                                      BUG22517
+     A*N55******                            DSPATR(PR)                                      BUG22517
+     A**********                       21  3'Retl.Accnt.Ave.Rate Limit...:'                 BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2RARL         8A  B 21 37TEXT('Retail Accounts Average Rate -            BUG22517
+     A**********                            Limit')                                         BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**23******                            DSPATR(RI)                                      BUG22517
+     A**23******                            DSPATR(PC)                                      BUG22517
+     A*N23******                            DSPATR(HI)                                      BUG22517
+     A**55******                            DSPATR(UL)                                      BUG22517
+     A*N55******                            DSPATR(PR)                                      BUG22517
+     A**********                       21 47'Threshold Method......:'                       BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**********  #2THMD         1A  B 21 71TEXT('Threshold Method')                        BUG22517
+     A*N13******                            DSPATR(ND)                                      BUG22517
+     A**24******                            DSPATR(RI)                                      BUG22517
+     A**24******                            DSPATR(PC)                                      BUG22517
+     A*N24******                            DSPATR(HI)                                      BUG22517
+     A**55******                            DSPATR(UL)                                      BUG22517
+     A*N55******                            DSPATR(PR)                                      BUG22517
+      **End of change CER048
+      **End of change BG22517
+      ** Start of change CGL157
+     A                                 24  3'CRS Agreement..........:'
+     A  39                                  DSPATR(ND)
+     A            #2CRSA         1   B 24 28TEXT('CRS Agreement')
+     A  67                                  DSPATR(RI PC)
+     A N67                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A  39
+     AON55                                  DSPATR(PR)
+     A  39                                  DSPATR(ND)
+     A                                 24 39'Effective Date.........:'
+     A  39                                  DSPATR(ND)
+     A            #2EFDT         6   B 24 64TEXT('Effective Date')
+     A  68                                  DSPATR(RI PC)
+     A N68                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A  39
+     AON55                                  DSPATR(PR)
+     A  39                                  DSPATR(ND)
+     A                                 25  3'First Reporting Year...:'
+     A  39                                  DSPATR(ND)
+     A            #2FRYR         4   B 25 28TEXT('First Reporting Year')
+     A  69                                  DSPATR(RI PC)
+     A N69                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A  39
+     AON55                                  DSPATR(PR)
+     A  39                                  DSPATR(ND)
+     A                                 25 39'Reporting Date.........:'
+     A  39                                  DSPATR(ND)
+     A            #2RPDT         4   B 25 64TEXT('Reporting Date')
+     A  72                                  DSPATR(RI PC)
+     A N72                                  DSPATR(HI)
+     A  55                                  DSPATR(UL)
+     A  39
+     AON55                                  DSPATR(PR)
+     A  39                                  DSPATR(ND)
+      ** End of change CGL157
+      *
+      *-----------------*
+      ***  Command Line *
+      *-----------------*
+      *
+     A          R SD000780F1                TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+      **Start of change BUG25206
+     A**38******                       23  3 'F3=Main menu  F5=Refresh   -                  BUG25206
+     A  38                             26  3 'F3=Main menu  F5=Refresh   -
+      **End of change BUG25206
+     A                                        F12=Previous               -
+     A                                                            '
+      **Start of change BUG25206
+     A*N31******                       23  3 'A=Amend  D=Delete  E=Enquire'                 BUG25206
+     A**89N31***                       23 32'F3=Main menu  F5=Refresh  F9=Go-               BUG25206
+     A N31                             26  3 'A=Amend  D=Delete  E=Enquire'
+     A  89N31                          26 32'F3=Main menu  F5=Refresh  F9=Go-
+      **End of change BUG25206
+     A                                       to ''CHANGE'' mode'
+      **Start of change BUG25206
+     A*N89N31***                       23 32'F3=Main menu  F5=Refresh -                     BUG25206
+     A N89N31                          26 32'F3=Main menu  F5=Refresh -
+      **End of change BUG25206
+     A                                       F9=Go to ''ADD'' mode'
+      **Start of change BUG25206
+     A**31******                       23  3 'E-Enquire  F3=Main menu -                     BUG25206
+     A  31                             26  3 'E-Enquire  F3=Main menu -
+      **End of change BUG25206
+     A                                       F5=Refresh'
+      *
+      *--------------------------*
+      ***  Message Record Format *
+      *--------------------------*
+      *
+     A          R SD000780S2                TEXT('Program messages')
+      **Start of Change CGL157
+     A**********                            SFL SFLMSGRCD(24)                                 CGL157
+     A                                      SFL SFLMSGRCD(27)
+      **End of change CGL157
+     A            MSGKEY                    SFLMSGKEY
+     A            #1PGMQ                    SFLPGMQ
+      *
+      *--------------------*
+      ***  Message Control *
+      *--------------------*
+      *
+     A          R SD000780C2                TEXT('Program messages')
+     A                                      SFLCTL(SD000780S2)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            #1PGMQ                    SFLPGMQ
+      *

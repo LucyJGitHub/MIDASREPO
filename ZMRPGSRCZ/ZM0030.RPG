@@ -1,0 +1,225 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Convert exchange rate to SWIFT format.')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - MESSAGE MANAGEMENT UTILITIES.
+     F*                                                              *
+     F*  ZM0030 - EXCHANGE RATE CONVERSION.                          *
+     F*                                                              *
+     F* (c) Finastra International Limited 2001                      *
+     F*        COMPANY CONFIDENTIAL.                                 *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  PREV AMEND NO.000000         DATE.00/00/00                  *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+     F*  MD046248 - Finastra Rebranding                              *
+     F****************************************************************
+     F*  C R E A T I O N  P A R A M E T E R S.                       *
+     F*                                                              *
+     F*                                                              *
+     F****************************************************************
+     F* PURPOSE.                                                     *
+     F*                                                              *
+     F*  To convert the exchange rate (ZEXRT) (13,8) to SWIFT        *
+     F*  input format (ZSEXRT) (12A).                                *
+     F*                                                              *
+     F*  1.As a decimal comma is to be inserted 2 digits must be     *
+     F*  dropped.                                                    *
+     F*  2.Leading and trailing zeros must be blanked.               *
+     F*  3.The decimal comma must have at least one leading digit.   *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+     F* FUNCTION OF INDICATORS.                                      *
+     F*                                                              *
+     F* 90  GENERAL WORK - a).For two leading zeros.                 *
+     F*                    b).Deleting further leading zeros.        *
+     F* 91  GENERAL WORK - a).For one leading zero.                  *
+     F*                    b).Leading character is a ','.            *
+     F* 92  GENERAL WORK -    Blanking out of trailing zeros.        *
+     F*                                                              *
+     F****************************************************************
+     E*
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY USED IN CONVERSION.
+     E*
+     E                    ZEA        12  1
+      /EJECT
+     E****************************************************************
+     I*
+     I** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I****************************************************************
+     C*
+     C**  Entry of exchange rate.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ZEXRT  138
+     C                     PARM           ZSEXRT 12
+     C*
+     C                     SETOF                     909192
+     C                     MOVE *BLANKS   ZSEXRT
+     C*
+     C** To delete 2 or less leading zeros.
+     C**    -As the Midas exchange rate is 2 digits longer than the
+     C**     SWIFT rate,2 digits must be dropped.If there are 2 or
+     C**     less leading zeros these are dropped in preference to
+     C**     any non zero digits.
+     C**     If there is one leading zero,indicator 91 is set on.
+     C**     If there are two leading zeros,indicator 90 is set on.
+     C*
+     C                     MOVELZEXRT     ZX1     1
+     C                     MOVELZEXRT     ZX2     2
+     C*
+     C           ZX2       IFEQ '  '
+     C           ZX2       OREQ '00'
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C           *IN90     IFEQ '0'
+     C           ZX1       IFEQ ' '
+     C           ZX1       OREQ '0'
+     C                     MOVE '1'       *IN91
+     C                     END
+     C                     END
+     C*
+     C** For 2 leading zeros  (*in90 = 1 )
+     C**   The midas field is formated to SWIFT after the removal of
+     C**   the leading zeros. The field is now the correct length.
+     C**   A decimal comma is inserted.
+     C**   H11 is a holding field of the rate before the ',' insertion.
+     C**   Fields ZED ZE3 ZE4 and ZED are used to split the rate
+     C**   in order to add the decimal comma.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVE ZEXRT     H11    11
+     C                     MOVE H11       ZED     8
+     C                     MOVELH11       ZE3     3
+     C                     MOVELZE3       ZE4     4
+     C                     MOVE ','       ZE4
+     C                     MOVELZE4       ZEAL   12
+     C                     MOVE ZED       ZEAL
+     C                     END
+     C*
+     C** For one leading zero (*in91 = 1 ).
+     C**   The field is formatted by dropping the single leading
+     C**   zero and one digit of the trailing side.
+     C**   A decimal comma is inserted.
+     C**   H12 is a holding field of the rate after the leading zero
+     C**   has been dropped.The trailing digit is then dropped (H11).
+     C**   Fields ZE4 ZE5  and ZE7 are used to split the rate
+     C**   in order to add the decimal comma.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVE ZEXRT     H12    12
+     C                     MOVELH12       H11
+     C                     MOVE H11       ZE7     7
+     C                     MOVELH11       ZE4
+     C                     MOVELZE4       ZE5     5
+     C                     MOVE ','       ZE5
+     C                     MOVELZE5       ZEAL   12
+     C                     MOVE ZE7       ZEAL
+     C                     END
+     C*
+     C** For no leading zero (*in90 = 0 and *in91 = 0 ).
+     C**   No digits are dropped from the leading edge,hence 2 are
+     C**   dropped from the trailing side.
+     C**   A decimal comma is inserted.
+     C**   H11 is a holding field of the rate after the trailing
+     C**   digits have been dropped.
+     C**   Fields ZE5 ZE6  and ZX6 are used to split the rate
+     C**   in order to add the decimal comma.
+     C*
+     C           *IN90     IFEQ '0'
+     C           *IN91     ANDEQ'0'
+     C                     MOVELZEXRT     H11
+     C                     MOVE H11       ZE6     6
+     C                     MOVELH11       ZE5
+     C                     MOVELZE5       ZX6     6
+     C                     MOVE ','       ZX6
+     C                     MOVELZX6       ZEAL
+     C                     MOVE ZE6       ZEAL
+     C                     END
+     C*
+     C** Blank out of trailing zeros.
+     C** Any zeros after the decimal comma are removed.Indicator 92
+     C** is set on for a trailing zero. If any other digit is found
+     C** the processing of trailing zeros terminates.
+     C*
+     C                     MOVEAZEAL      ZEA
+     C                     Z-ADD12        ZE      20
+     C*
+     C           ZEA,ZE    IFEQ '0'
+     C                     MOVE '1'       *IN92
+     C                     END
+     C*
+     C           *IN92     DOWEQ'1'
+     C                     MOVE '0'       *IN92
+     C                     MOVE ' '       ZEA,ZE
+     C                     SUB  1         ZE
+     C           ZEA,ZE    IFEQ '0'
+     C                     MOVE '1'       *IN92
+     C                     END
+     C                     END
+     C*
+     C** Blank out all leading zeros leaving at least one leading
+     C** integer.  Any remaining leading zeros are dropped,except
+     C** if there is one directly proceeding the decimal comma.
+     C** This is retained.
+     C*
+     C                     Z-ADD1         ZE
+     C                     SETOF                     9091
+     C*
+     C           *IN90     DOUEQ'0'
+     C*
+     C           ZEA,ZE    IFEQ '0'
+     C           ZEA,ZE    OREQ ' '
+     C                     MOVE '1'       *IN90
+     C                     ELSE
+     C                     MOVE '0'       *IN90
+     C                     END
+     C*
+     C           *IN90     IFEQ '0'
+     C           ZEA,ZE    ANDEQ','
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVE ' '       ZEA,ZE
+     C                     ADD  1         ZE
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN91     IFEQ '1'
+     C           ZE        SUB  1         ZE
+     C                     MOVE '0'       ZEA,ZE
+     C                     END
+     C*
+     C** Move to a 12A SWIFT format field for output.
+     C*
+     C                     MOVEAZEA,ZE    ZSEXRT 12
+     C*
+     C** Termination Processing.
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+** CPY@
+(c) Finastra International Limited 2001

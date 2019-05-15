@@ -1,0 +1,366 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Audit Letter Reminder Driver')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7130 - CG Audit Letter Reminder Driver                     *
+      *                                                               *
+      *  Function:  This program reads the Audit Letter History file  *
+      *             and calls the extract program for each reminder   *
+      *             required.                                         *
+      *                                                               *
+      *  Called By: CGC7130 - CG Audit Letter Reminder                *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26472           Date 19Oct09               *
+      *                 BUG23253           Date 13Mar09               *
+      *                 BUG22889           Date 12Feb09               *
+      *                 CER041  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26472 - Audit Letter Reminder Not Processed               *
+      *  BUG23253 - Add 'Acknowledgement Reception' and 'Date of      *
+      *             Reception' (Recompile)                            *
+      *  BUG22889 - Message description for XUDC001 in message        *
+      *             XXUSRMSG not found                                *
+      *  CER041 - Audit Letters Correspondence                        *
+      *           (Upgrade of FGE132 and FGE171)                      *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *                                                               *
+      *  99   -    Read fail.                                         *
+      *                                                               *
+      *****************************************************************
+     FCGAUHSL1UF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      ** CG Audit Letters History file
+      *
+     E/SPACE 5
+      *
+      ** Copyright array.
+      *
+     E                    ##CPY   1   1 80
+     E/COPY CGCPYSRC,SRERRE
+      *
+     I/SPACE 5
+     IDSPARM    E DSCGAUHSL1
+      *
+      ** External DS for parameter passed to CG7140
+      *
+     ICPYR        DS
+      *
+      ** Data Structure for Compilation - Copyright Insertion
+      *
+     I                                        1  80 ##CPY
+      *
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Bank details
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Second DS for access programs, long data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, short data structure
+      *
+     IW0FMT     E DSCGUDTAPD
+      *
+      ** Record format of PF/CGUDTAPD for use as a parameter
+      *
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     C/SPACE 5
+      *****************************************************************
+      *  Process     -  MAINLINE                                      *
+      *  Function    -  Mainline processing                           *
+      *                                                               *
+      *  Called by   -  None                                          *
+      *  Calls       -  SRINZ  - Initialise Fields on Each Invocation *
+      *                 SRMAIN - Main Processing                      *
+      *                 SRAUDT - Audit Report Processing              *
+      *****************************************************************
+      *
+      ** Parameter list for current program invocation.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      ** Initialisation processing
+      *
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Audit processing
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      ** Terminate program
+      *
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *  Subroutine  -  SRMAIN                                        *
+      *  Function    -  Main processing                               *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  CG7140 - Saldenbest. Reminder                 *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      ** Read from the Saldenbest. Reminder history file
+      *
+     C           *LOVAL    SETLLCGAUHSL1
+     C                     READ CGAUHSL1                 99*
+      *
+      ** Read until End of File
+      *
+     C           *IN99     DOWEQ'0'
+      *
+      ***Select/process*records*only*if*FZFLAG*=*'N'*******************                     BUG26472
+      ***(No*zero*confirmation)****************************************                     BUG26472
+      *
+     C********** FZFLAG    IFEQ 'N'                                                         BUG26472
+      *
+      ** Increment the count of CGAUHSL1 records read.
+      *
+     C                     ADD  1         ##DREC  50
+      *
+      ** Produce Statement
+      *
+     C                     CALL 'CG7140'
+     C                     PARM *BLANKS   W0RTCD  7
+     C                     PARM W0CMT     W0CMT   3
+     C                     PARM *BLANK    W0COPD  1
+     C                     PARM           DSPARM
+      *
+      ** Error in called program.
+      *
+     C           W0RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+      *
+     C                     MOVEL'CG7140  'W0FILE           ***************
+     C                     MOVELW0RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** Update CGAUHSL1
+      *
+     C                     MOVEL'R'       FFLAG
+     C                     MOVEL*BLANK    FREMI
+     C                     MOVE BJRDNB    FRDAT
+      *
+     C                     UPDATCGAUHSD0
+      *
+      ** Read next record from CGAUHSL1
+      *
+     C**********           ENDIF                                                            BUG26472
+      *
+     C                     READ CGAUHSL1                 99*
+     C                     ENDDO                           * *IN99 DOWEQ '0'
+      *
+     C           EXMAIN    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *  Subroutine  -  SRINZ                                         *
+      *  Function    -  Initialise Fields on Program Invocation       *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  CGZAUDIT - Audit Processing                   *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      ** Call access program for Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Open the Audit Print File.
+      *
+     C                     CLEARI#DTA
+     C**********           MOVEL'CGF260AU'I#SPLN                                            BUG22889
+     C                     MOVEL'CG7140AU'I#SPLN                                            BUG22889
+     C                     MOVEL'CG7140  'I#REF
+     C**********           MOVE 'AUD0001' I#TITL                                            BUG22889
+     C**********           MOVE 'AUD0002' I#TUL                                             BUG22889
+     C                     MOVE 'CGD3001' I#TITL                                            BUG22889
+     C                     MOVE 'CGD3002' I#TUL                                             BUG22889
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+     C           EXINZ     TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *  Subroutine  -  SRAUDT                                        *
+      *  Function    -  Audit Report Processing                       *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  CGZAUDIT - Audit Processing                   *
+      *                 CG9020   - Write Data to UDC Data             *
+      *                            Files - Audit                      *
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      ** Output the Count of records read
+      *
+     C                     CLEARI#DTA
+     C                     MOVEL'CG7140  'I#REF
+     C**********           MOVE 'AUD0001' I#TITL                                            BUG22889
+     C**********           MOVE 'AUD0002' I#TUL                                             BUG22889
+     C                     MOVE 'CGD3001' I#TITL                                            BUG22889
+     C                     MOVE 'CGD3002' I#TUL                                             BUG22889
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'CGAUHSL1'I#SUB
+     C**********           MOVEL'XUDC003' I#TEXT                                            BUG22889
+     C                     MOVEL'CGD3003' I#TEXT                                            BUG22889
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      ** Skip a line.
+      *
+     C                     MOVE '*SKIP   'W1ACT
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      ** Produce the Audit Report.
+      *
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD  7
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C**********           PARM 'AUD0001' W0TITL  7                                         BUG22889
+     C**********           PARM 'AUD0002' W0ULIN  7                                         BUG22889
+     C                     PARM 'CGD3001' I#TITL                                            BUG22889
+     C                     PARM 'CGD3002' I#TUL                                             BUG22889
+     C                     PARM           W0CMT
+      *
+      ** Close the Audit Print File.
+      *
+     C                     CLEARI#DTA
+     C                     MOVEL'CG7140  'I#REF
+     C**********           MOVE 'AUD0001' I#TITL                                            BUG22889
+     C**********           MOVE 'AUD0002' I#TUL                                             BUG22889
+     C                     MOVE 'CGD3001' I#TITL                                            BUG22889
+     C                     MOVE 'CGD3002' I#TUL                                             BUG22889
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+     C           EXAUDT    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2008

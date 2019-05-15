@@ -1,0 +1,705 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas N/A Purchased Revaluation maintenance')          *
+     F********************************************************************
+     F*                                                                  *
+     F*    MIDAS/ABS - EUROPEAN REPORTING                                *
+     F*                                                                  *
+     F*    ER0010 - N/A PURCHASED REVALUATION MAINTENANCE                *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 06May06               *
+      *                 CER001             Date 25Aug05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ER_R10             Date 25Oct94               *
+     F*                 ER0200 ADs             DATE 11JAN93           *
+     F*                    ER0127                 DATE 18DEC92           *
+     F*                                                                  *
+     F********************************************************************
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
+      *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+     F*    ER_R10 - EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10       *
+     F*           - FDINSTPP DOESN'T EXIST ANYMORE                       *
+     F*    ER0200 - Revaluate every N/A Purch when Trading/Investment    *
+     F*             indicator is equal to 'T' or 'F' (F is for Fixed     *
+     F*             Assets)                                              *
+     F*    ER0127 - ERROR IF INPUT FILE EMPTY AND ENTER PRESSED          *
+     F********************************************************************
+     F*
+     F*
+     F*****************************************************************
+     F*
+     F*DINSTLLIF* E                    DISK                               ER_R10
+     F*
+     FSDCURRL1IF  E           K        DISK
+     F*
+     F***MMDENBX4UF  E           K        DISK                                                CER001
+     FMMDBX1PDUF  E           K        DISK                                                   CER001
+     F                                              KCOMIT
+     FSDBANKPDIF  E           K        DISK
+     F*
+     FMMDEAULLIF  E           K        DISK
+     F            MMDELDP0                          KIGNORE
+     F            MMDENSP0                          KIGNORE
+     FER0010DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE ER0010S1
+     F                                              KINFDS INF01
+     E*****************************************************************
+     E                    ZS1        15  1 0             ZSEDIT ARRAY
+     E                    ZS2        21  1               ZSEDIT ARRAY
+     E                    ARR        20  1               ARRAY FOR LENGHT
+     E** ARRAY USED IN CURRENCY AMOUNT CONVERSION
+     E                    POWER   1   7  7 3
+     E*
+     E                    CPY@    1   1 80
+     I*****************************************************************
+     I** EXTERNAL DS FOR DEALING DETAILS                                  ER_R10
+     ISDDEAL    E DSSDDEALPD                                              ER_R10
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                ER_R10
+     IDSFDY     E DSDSFDY                                                 ER_R10
+     I* PROGRAM DATA STRUCTURE
+     IPGMDS     ESDSY2PGDSP
+     I*
+     I** ER0010DF INFORMATION DATA STRUCTURE
+     IINF01       DS
+     I                                    B 365 3660REL
+     I                                    B 367 3680CUR
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     C**************************************************************************
+     C* MAIN PROCESSING                                                        *
+     C**************************************************************************
+     C* CALL INIT SUBROUTINE
+     C**************************************************************************
+     C                     EXSR INIT                       INITIATION
+     C*
+     C                     EXSR MAIN
+     C* END OF PGM
+     C                     ROLBK
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C**************************************************************************
+     C** SRENQ - SUBROUTINE FOR ENQUIRY
+     C**************************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C                     EXSR INISFL                     INIT. SUBFILE
+     C                     EXSR LOASFE                     LOAD SUBFILE ENQUIRY
+     C                     Z-ADD1         RRN
+     C*
+     C* DO WHILE NOT F3 PRESSED
+     C           *INKC     DOWEQ'0'                        - B1
+     C*
+     C* SELECTION CHANGED ==> REBUILD SUBFILE
+     C           DHDLNO    IFNE XXDLNO                     - B2
+     C           DHNARA    ORNE XXNARA
+     C           *IN31     OREQ '1'
+     C                     MOVE '0'       *IN31
+     C                     EXSR INISFL                     INIT. SUBFILE
+     C                     EXSR LOASFE                     LOAD SUBFILE ENQUIRY
+     C                     Z-ADD1         RRN
+     C                     END                             - E2
+     C*
+     C                     Z-ADDDHDLNO    XXDLNO  60
+     C                     MOVE DHNARA    XXNARA 20
+     C*
+     C* WRITE SUBFILE
+     C                     WRITEER0010C0                   BOTTOM
+     C                     EXFMTER0010C1                   SUBFILE
+     C*
+     C** CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C** ENTER HAS BEEN PRESSED
+     C           *IN45     IFEQ '0'                        - B2
+     C*                                                                   ER0127
+     C** INPUT FILE IS EMPTY                                              ER0127
+     C           EMPTY     IFEQ 'Y'                        - B3           ER0127
+     C                     MOVE '1'       *INKC                           ER0127
+     C                     ITER                                           ER0127
+     C                     END                             - E3           ER0127
+     C*
+     C** Retrive all changed records
+     C                     READCER0010S1                 32
+     C*
+     C           *IN32     DOWEQ'0'                        - B3
+     C*
+     C** POST REVAL MUST BE 'Y' OR 'N'
+     C           DSPORE    IFNE 'Y'                        - B4
+     C           DSPORE    ANDNE'N'
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ER00002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     UPDATER0010S1
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN63
+     C                     ELSE                            - X4
+     C*
+     C********** DSDLNO    CHAINMMDENBX4             88                                       CER001
+     C           DSDLNO    CHAINMMDBX1PD             88                                       CER001
+     C                     Z-ADDDSCLPR    VACLPR
+     C                     MOVE DSPORE    VAPORE
+     C*
+     C** SETUP REVALUATION AMOUNT
+     C                     Z-ADDDSAMTO    YY     130
+     C           DSPUPR    IFLT 0                          - B5
+     C                     Z-SUBDSPUPR    DSPUPR
+     C                     END                             - E5
+     C           DSCLPR    SUB  DSPUPR    XX     117
+     C           YY        MULT XX        ZZ     130
+     C           ZZ        DIV  100       XXREAM 130
+     C                     UPDATMMDENBF4
+     C                     COMIT
+     C*
+     C** UPDATE SUBFILE
+     C                     MOVE XXREAM    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   ZECODE
+     C                     MOVE ZOUT21    DSREAM
+     C                     UPDATER0010S1
+     C*
+     C                     END                             - E4
+     C*
+     C                     READCER0010S1                 32
+     C                     ENDDO                           - E3
+     C*
+     C                     END                             - E2
+     C*
+     C** REFRESH PROCESSING ==> REBUILD SUBFILE
+     C           *IN05     IFEQ '1'                        - B2
+     C                     Z-ADD*ZEROS    DHDLNO
+     C                     MOVE *BLANKS   DHNARA
+     C                     EXSR INISFL                     INIT. SUBFILE
+     C                     EXSR LOASFE                     LOAD SUBFILE ENQUIRY
+     C                     Z-ADD1         RRN
+     C                     END                             - E2
+     C*
+     C** F3 HAS BEEN PRESSED FOR FIRST TIME...SEND WARNING MESAGE IF NEEDED
+     C           *IN03     IFEQ '1'                        - B2
+     C*
+     C                     MOVE '0'       ERR     1
+     C********** *LOVAL    SETLLMMDENBX4                                                      CER001
+     C           *LOVAL    SETLLMMDBX1PD                                                      CER001
+     C**********           READ MMDENBX4            N    30                                   CER001
+     C                     READ MMDBX1PD            N    30                                   CER001
+     C           *IN30     DOWEQ'0'                        - B3
+     C           ERR       ANDEQ'0'
+     C*
+     C** CHECK IF CLOTURE PRICE IN % EQUAL 0
+     C           VACLPR    IFEQ 0                          - B4
+     C           VATRIN    ANDEQ'T'
+     C           VACLPR    OREQ 0                          - B4           ER0200
+     C           VATRIN    ANDEQ'F'                                       ER0200
+     C                     MOVE '1'       ERR
+     C                     END                             - E4
+     C**********           READ MMDENBX4            N    30                                   CER001
+     C                     READ MMDBX1PD            N    30                                   CER001
+     C                     END                             - E3
+     C*
+     C* SEND WARNING
+     C           ERR       IFEQ '1'                        - B3
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'ER00001' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C**REBUILD SUBFILE TO SETUP FIELD IN PROTECT
+     C                     EXSR INISFL                     INIT. SUBFILE
+     C                     EXSR LOASFE                     LOAD SUBFILE ENQUIRY
+     C                     Z-ADD1         RRN
+     C* WRITE SUBFILE
+     C                     WRITEER0010C0                   BOTTOM
+     C                     EXFMTER0010C1                   SUBFILE
+     C*
+     C** CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C*
+     C**************************************************************************
+     C* INITIALIZE SUBFILE
+     C**************************************************************************
+     C*
+     C           INISFL    BEGSR
+     C*
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     WRITEER0010C1
+     C                     MOVE '1'       *IN80
+     C                     Z-ADD0         RRN     30
+     C*
+     C                     ENDSR
+     C*
+     C**************************************************************************
+     C* LOAD SUBFILE
+     C**************************************************************************
+     C*
+     C           LOASFE    BEGSR
+     C*
+     C* INIT SCREEN LINE NUMBER
+     C                     Z-ADD0         WWCPT   20
+     C*
+     C** IF NARRATIVE INPUT, CALCULATE LENGHT
+     C           DHNARA    IFNE *BLANKS
+     C                     EXSR CALLEN
+     C                     END
+     C*
+     C* SELECTION HAS BEEN ENTERRED
+     C           DHDLNO    IFNE *ZEROS                     - B1
+     C********** DHDLNO    SETLLMMDENBX4                                                      CER001
+     C           DHDLNO    SETLLMMDBX1PD                                                      CER001
+     C                     ELSE                            - X1
+     C********** *LOVAL    SETLLMMDENBX4                                                      CER001
+     C           *LOVAL    SETLLMMDBX1PD                                                      CER001
+     C                     END                             - E1
+     C*
+     C* READ RECORD
+     C**********           READ MMDENBX4            N    30                                   CER001
+     C                     READ MMDBX1PD            N    30                                   CER001
+     C*                                                                   ER0127
+     C** INPUT FILE IS EMPTY                                              ER0127
+     C           *IN30     IFEQ '1'                        - B1           ER0127
+     C                     MOVE 'Y'       EMPTY   1                       ER0127
+     C                     ELSE                            - X1           ER0127
+     C                     MOVE 'N'       EMPTY                           ER0127
+     C                     END                             - E1           ER0127
+     C*
+     C* LOAD SUBFILE
+     C           *IN30     DOWEQ'0'                        - B1
+     C*
+     C** IF TRADING / INVESTMENT = 'T'
+     C           VATRIN    IFEQ 'T'                        - B2
+     C           VATRIN    OREQ 'F'                                       ER0200
+     C*
+     C* CHAIN TO SETUP OTHER FIELDS
+     C           VADN38    CHAINMMDEAULL             88
+     C*
+     C** SCAN SELECTION INPUT
+     C           DHNARA    IFNE *BLANKS
+     C                     MOVE '0'       *IN90
+     C           DHNARA:I  SCAN HLCDRF                   90
+     C                     END
+     C*
+     C           DHNARA    IFNE *BLANKS                    - B3
+     C           *IN90     ANDEQ'1'
+     C           DHNARA    OREQ *BLANKS
+     C*
+     C* LOAD FIELDS
+     C                     ADD  1         RRN        81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+     C*
+     C* SET UP SUBFILE FIELDS
+     C*
+     C           HLCCY     CHAINSDCURRL1             88
+     C                     Z-ADDA6SPRT    WWSRI
+     C                     Z-ADDA6NBDP    WWDPI
+     C                     MOVELA6MDIN    WWMDI
+     C*
+     C** CONVERT IN BASE CURRENCY
+     C                     Z-ADDHLFVAL    WWAMTI
+     C                     EXSR SCONV
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE WWAMTO    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DSFAVA
+     C                     Z-ADDWWAMTO    DSAMTO
+     C*
+     C                     MOVE HLCDRF    DSNARA
+     C                     Z-ADDVADN38    DSDLNO
+     C                     Z-ADDVACLPR    DSCLPR
+     C                     MOVE VAPORE    DSPORE
+     C*
+     C** SETUP PURCHASE PRICE IN %
+     C           HLAMNP    DIV  HLFVAL    DSPUPR
+     C           DSPUPR    MULT 100       DSPUPR
+     C*
+     C** SETUP REVALUATION AMOUNT
+     C                     Z-ADDDSAMTO    YY     130
+     C           DSPUPR    IFLT 0                          - B5
+     C                     Z-SUBDSPUPR    XXPUPR 117
+     C                     ELSE                            - X5
+     C                     Z-ADDDSPUPR    XXPUPR
+     C                     END                             - E5
+     C*
+     C           DSCLPR    SUB  XXPUPR    XX     117
+     C           YY        MULT XX        ZZ     130
+     C           ZZ        DIV  100       XXREAM
+     C*
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE XXREAM    ZFLD15
+     C                     Z-ADDWWDPO     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   ZECODE
+     C                     MOVE ZOUT21    DSREAM
+     C*
+     C* WRITE IN SUBFILE
+     C                     WRITEER0010S1
+     C*
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C* READ NEXT RECORD
+     C**********           READ MMDENBX4            N    30                                   CER001
+     C                     READ MMDBX1PD            N    30                                   CER001
+     C*
+     C                     MOVE VADN38    WWDLNO  60
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C* CALLEN - SUBROUTINE TO CALCULATE THE LENGHT OF NARRATIVE INPUT
+     C**************************************************************************
+     C           CALLEN    BEGSR
+     C*
+     C                     MOVEADHNARA    ARR
+     C                     Z-ADD20        I       20
+     C*
+     C           ARR,I     DOWEQ*BLANKS
+     C                     SUB  1         I
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C* INITIAL ROUTINE                                                        *
+     C**************************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C*   Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'*'       DDPGMQ
+     C**********           MOVEL'ERUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+     C*
+     C*   Fill in fields for subroutine ZASNMS
+     C                     MOVEL'ER0010'  ZAPGM  10        Message queue
+     C**********           MOVEL'ERUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C                     READ SDBANKPD                 88
+     C*
+      ***********                                                         ER_R10
+     C***READ*FIRST RECORD ON FILE LF/FDINSTPP                            ER_R10
+     C***********          Z-ADD1         SS0170  10                      ER_R10
+     C***********SS0170    CHAINFDINSTLL             88                   ER_R10
+     C***********                                                         ER_R10
+     C***CHECK*LOGICAL DELETE FLAG BANK                                   ER_R10
+     C***********IDDLTF    IFNE ' '                                       ER_R10
+     C***********          MOVE '1'       *IN82                           ER_R10
+     C***********          END                                            ER_R10
+     C***********                                                         ER_R10
+     C***DEAL*WITH DATA BASE ERROR                                        ER_R10
+     C************IN82     IFEQ '1'                                       ER_R10
+     C***********          MOVEL'FDINSTLL'DBFILE                          ER_R10
+     C***********          MOVE *BLANKS   DBKEY                           ER_R10
+     C***********          MOVEL'902'     DBASE                           ER_R10
+     C***********          EXSR *PSSR                                     ER_R10
+     C***********          END                                            ER_R10
+     C                     CALL 'AODEALR0'                                ER_R10
+     C                     PARM '       ' @RTCD   7                       ER_R10
+     C                     PARM '*FIRST ' @OPTN   7                       ER_R10
+     C           SDDEAL    PARM SDDEAL    DSFDY                           ER_R10
+     C*  DEAL WITH DATA BASE ERROR                                        ER_R10
+     C           @RTCD     IFNE *BLANKS                                   ER_R10
+     C                     MOVEL'SDDEALPD'DBFILE                          ER_R10
+     C                     MOVE *BLANKS   DBKEY                           ER_R10
+     C                     MOVEL'902'     DBASE                           ER_R10
+     C                     EXSR *PSSR                                     ER_R10
+     C                     END                                            ER_R10
+     C*
+     C** CHAIN IN CURRENCY FILE TO SETUP OUTPUT FIELDS
+     C***********IDCYDL    CHAINSDCURRL1             88                   ER_R10
+     C           BNCYDL    CHAINSDCURRL1             88                   ER_R10
+     C                     Z-ADDA6SPRT    WWSRO
+     C                     Z-ADDA6NBDP    WWDPO
+     C                     MOVE A6MDIN    WWMDO
+     C*
+     C                     ENDSR
+     C****************************************************************
+     C*  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE            *
+     C****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C**   message file specified use PMSGF
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C**
+     C**   Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - PROGRAM ERROR HANDLING ROUTINE                 *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY -                                                *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR0    ENDSR
+     C********************************************************************
+     C**                                                                 *
+     C**  SCONV - Converts an amount from one currency to another.       *
+     C**                                                                 *
+     C**  Input Fields - WWAMTI 15/0 amount in input currency            *
+     C**                 WWSRI  13/8 spot rate for input currency        *
+     C**                 WWSRO  13/8 spot rate for output currency       *
+     C**                 WWDPI  1/0  no. of decimals for input currency  *
+     C**                 WWDPO  1/0  no. of decimals for output currency *
+     C**                 WWMDI  1    mult/div indicator for input curr.  *
+     C**                 WWMDO  1    mult/div indicator for output curr. *
+     C**                                                                 *
+     C**  Arrays       - POWER  powers of 10                             *
+     C**                                                                 *
+     C**  Output Fields- WWAMTO 15/0 output amount converted to new curr *
+     C**                                                                 *
+     C**  CALLS    - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           SCONV     BEGSR                           **  SCONV    **
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDWWAMTI    WWAMTI 150
+     C                     Z-ADD0         WWAMTO 150
+     C           *LIKE     DEFN A6SPRT    WWSRI
+     C           *LIKE     DEFN A6SPRT    WWSRO
+     C           *LIKE     DEFN A6NBDP    WWDPI
+     C           *LIKE     DEFN A6NBDP    WWDPO
+     C           *LIKE     DEFN A6MDIN    WWMDI
+     C           *LIKE     DEFN A6MDIN    WWMDO
+     C*
+     C           WWDPO     SUB  WWDPI     Z       10
+     C           Z         ADD  4         Z
+     C*
+     C           WWMDI     IFNE WWMDO
+     C*
+     C** MULT/DIV INDICATORS DIFFERENT
+     C           WWSRI     MULT WWSRO     WWRATE 159H
+     C                     ELSE
+     C*
+     C** MULT/DIV INDICATORS THE SAME
+     C           WWSRO     IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           WWSRI     DIV  WWSRO     WWRATE    H
+     C                     END
+     C*
+     C           WWMDI     IFEQ 'D'
+     C           WWRATE    IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           POWER,Z   DIV  WWRATE    WWRATE    H
+     C                     ELSE
+     C           POWER,Z   MULT WWRATE    WWRATE    H
+     C                     END
+     C*
+     C           WWAMTI    MULT WWRATE    WWAMTO    H
+     C*
+     C           SC0       ENDSR                           **  SC0      **
+     C********************************************************************
+     C**                                                                 *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a     *
+     C** numeric field and to blank out leading zeros (optionaly         *
+     C** inserting commas).                                              *
+     C**     Input fields:   ZFLD15 15/0                                 *
+     C**                     ZDECS  1/0                                  *
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *
+     C**                                                                 *
+     C**     Arrays:         ZS1    15/1/0                               *
+     C**                     ZS2    21/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT21 21                                   *
+     C**                                                                 *
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+      /EJECT
+     C********************************************************************
+**   POWER - POWERS OF 10 FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Finastra International Limited 2005

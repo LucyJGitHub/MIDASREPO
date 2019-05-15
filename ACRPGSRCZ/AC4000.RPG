@@ -1,0 +1,171 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AC Start ECS at ACT from client site')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - System Control Module                            *
+     F*                                                               *
+     F*  AC4000  - Start ECS at office from client site               *
+     F*                                                               *
+     F*  Function: This program start ECS at office from client site  *
+     F*    (COB)   submitted at remote.                               *
+     F*                                                               *
+     F*  Called By: ACC0150 - Initiate ECS link                       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 101930             Date 08Jul96               *
+      *                 S01491 *C *CREATE  Date 01Oct94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  101930 - Recompile over changed AC4000CM - ICFF file now     *
+     F*           uses Autocall library AUTOLIB as evoked library     *
+     F*           on office machine.                                  *
+     F*  S01491 - Autocall.                                           *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FACELOGPDO   E           K        DISK
+     FAC4000CMCF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS
+     F                                              KINFSR *PSSR
+     FQPRINT  O   F     132            PRINTER                        UC
+     F*
+      /EJECT
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - End with report if error at remote                    *
+     F*   20  - Detach                                                *
+     F*   30  - Error detected                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+     E***  Array for Object Copyright Statement.
+     E*
+      /EJECT
+     IINFDS       DS
+     I                                     *STATUS  ERR
+     I                                      273 282 PGMDEV
+     I                                      401 402 MAJCOD
+     I                                      403 404 MINCOD
+      /EJECT
+     C/TITLE Main Processing
+     C           *ENTRY    PLIST
+     C                     PARM           RMTUSR 10
+     C                     PARM           RMTPWD 10
+     C                     PARM           LIN     1
+     C                     PARM           FAIL    4
+     C*
+     C***  Copyright Statement.
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C***  Try to open, if fail, end, with fail = OPEN
+     C*
+     C                     OPEN AC4000CM               80
+     C           *IN80     IFEQ '1'
+     C                     MOVE 'OPEN'    FAIL
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C***  Evoke the target program
+     C*
+     C                     WRITESTRRMT
+     C*
+     C***  Receive verification that ECS flag at office was set OK or not
+     C*
+     C                     READ VERIF                    30
+     C*
+     C***  If a failure, then drop to end
+     C*
+     C           FAIL      IFEQ 'FAIL'
+     C                     OPEN QPRINT
+     C                     MOVE '1'       *IN10
+     C                     EXCPTERROR
+     C                     CLOSEQPRINT
+     C                     EXSR DETACH
+     C                     END
+     C*
+     C***  It must be ok if got to here.
+     C***  Wait until ECS has finished, by waiting for log file entry
+     C*
+     C                     READ LOGF                     30
+     C*
+     C***  Write log file
+     C*
+     C                     WRITEACELOGF
+     C*
+     C***  Set OK, because other end may have already detached
+     C*
+     C                     MOVE 'OKOK'    FAIL
+     C*
+     C***  Detach
+     C*
+     C                     EXSR DETACH
+      /EJECT
+     C/TITLE SR/DETACH
+     C*****************************************************************
+     C*                                                               *
+     C*  DETACH  - Subroutine to perform detach from remote site      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DETACH    BEGSR
+     C*
+     C                     OPEN QPRINT
+     C                     EXCPTERROR
+     C                     CLOSEQPRINT
+     C                     WRITESTPRMT
+     C                     CLOSEAC4000CM
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      /EJECT
+     C/TITLE SR/*PSSR
+     C******************************************************************
+     C*                                                                *
+     C*  *PSSR  - Error handling for communications                    *
+     C*                                                                *
+     C******************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     OPEN QPRINT
+     C                     EXCPTERROR
+     C                     CLOSEQPRINT
+     C                     CLOSEAC4000CM
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     OQPRINT  E 2              ERROR
+     O                                   10 'STATUS'
+     O                N10      ERR       20
+     O                N10                30 'MAJOR'
+     O                N10      MAJCOD    40
+     O                N10                50 'MINOR'
+     O                N10      MINCOD    60
+     O                 10                25 'AT REMOTE  ='
+     O                 10      FAIL      40
+      /EJECT
+** CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

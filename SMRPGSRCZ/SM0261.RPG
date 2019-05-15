@@ -1,0 +1,299 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SM Copy data from one library to another')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Implementation module                                *
+      *                                                               *
+      *  SM0261   - Display objects in DTALIB for possible move.      *
+      *             This program is based on UP0261.                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP016 *CREATE     Date 01Apr03               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CUP016 - Add implementation software to core.                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FUP0261DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE FMT1
+     FUPNOTFPDUF  E           K        DISK
+      *
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+      * DS to convert fields to display sizes
+     I            DS
+     I                                        1  50 ODOBTX
+     I                                        1  47 XXTEXT
+     I                                       51  60 ODOBAT
+     I                                       51  56 XXTYPE
+      *
+      * DS to check for duplicated entries
+     I            DS
+     I                                        1  10 ODOBNM
+     I                                       11  18 ODOBTP
+     I                                        1  18 DUPNAM
+     C           *ENTRY    PLIST
+     C                     PARM           TOLIB  10
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Clear spurious and duplicate entries from UPNOTFPD
+     C                     EXSR INIT
+     C           *IN03     DOWEQ*OFF
+      *
+      * Build subfile
+     C                     CLEARCOMPNM
+     C                     MOVE 'N'       NOREC   1
+     C                     EXSR BUILD
+     C                     MOVE *DATE     CURDAT 60
+      *
+      * If no records, send blank format, otherwise send subfile
+     C           NOREC     IFEQ 'N'
+     C                     EXFMTNORCD
+     C                     ELSE
+      *
+     C                     WRITEFMT0
+     C                     EXFMTFMT2
+     C                     ENDIF
+      *
+      * If F3 pressed, exit program
+     C           *IN03     IFEQ *ON
+     C                     ELSE
+      *
+      * If F5 pressed, rebuild subfile
+     C           *IN05     IFEQ *ON
+     C           *LOVAL    SETLLUPNOTFPD
+      *
+     C                     ELSE
+      *
+      * If subset and/or reposition selected, rebuild from requested
+      * position/with requested subset.  Indicator 01 is set on if
+      * any field in the format has changed, so it caters for the user
+      * changing the selection details and pressing enter again.
+      *   if... (
+     C           XXPOS     IFNE *BLANK
+     C           *IN01     ANDEQ*ON
+      *         )
+      *   or... (
+     C           XXSUB     ORNE *BLANK
+     C           *IN01     ANDEQ*ON
+      *         )
+      *
+     C           XXPOS     SETLLUPNOTFPD
+      *
+     C                     ELSE
+     C           NOREC     IFEQ 'Y'
+     C                     READCFMT1                     21
+      *
+      * If *IN21 is on, no selection has been made - rebuild
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOVAL    SETLLUPNOTFPD
+     C                     ELSE
+      *
+      * Retrieve selected line from array and process selection
+      *       D = Delete object from file
+      *       O = Display object description
+      *       V = View contents
+      *       X = Perform action
+      *
+     C           *IN21     DOWEQ*OFF
+      *
+      * Selection D - Remove object from DSPOBJD outfile
+     C           XXOPT     IFEQ 'D'
+     C           FKEY      KLIST
+     C                     KFLD           ODOBNM
+     C                     KFLD           ODOBTP
+     C           FKEY      SETLLUPNOTFPD
+     C           FKEY      DELETUPNOTFPD             70
+      *
+     C                     ENDIF
+      *
+      *  All other commands are handled by CL
+     C           XXOPT     IFEQ 'O'
+     C           XXOPT     OREQ 'V'
+     C           XXOPT     OREQ 'X'
+     C                     CALL 'UPC0261'
+     C                     PARM           XXOPT
+     C                     PARM           ODOBNM
+     C                     PARM           ODLBNM
+     C                     PARM           TOLIB
+     C                     PARM           ODOBAT
+     C                     PARM           ODOBTP
+     C                     PARM           ODSRCL
+     C                     PARM           ODSRCF
+     C                     PARM           RTNCOD 10
+      *
+      * Selection X - Process request
+     C           XXOPT     IFEQ 'X'
+      *
+      * If object has been created, remove entry from UPNOTFPD
+     C           RTNCOD    IFEQ 'Exist'
+     C           FKEY      SETLLUPNOTFPD
+     C           FKEY      DELETUPNOTFPD             70
+     C                     CLEARRTNCOD
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READCFMT1                     21
+      *
+      * If previous option ended in error, force rebuild of subfile
+     C           RTNCOD    IFEQ 'Error'
+     C                     MOVE *ON       *IN21
+     C                     CLEARRTNCOD
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *  Reset file
+     C           XXPOS     SETLLUPNOTFPD
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      ********************************************************************
+      *   INIT Subroutine - remove duplicate & spurious entries from     *
+      *                     UPNOTFPD                                     *
+      ********************************************************************
+      *
+      * The INCREL parameter in CPYF can only be used on one field; this
+      * means that the file UPNOTFPD may contain duplicate records where
+      * objects of the same name but different types have been copied in.
+     C           INIT      BEGSR
+      *
+     C                     READ UPNOTFPD                 50
+      *
+     C           *IN50     DOWEQ*OFF
+      *
+      * Check whether object name has been duplicated
+     C           DUPNAM    IFEQ COMPNM
+     C                     DELETUPNOTFPD
+     C                     ENDIF
+      *
+      * Save name and type for duplicate checking
+     C                     MOVELDUPNAM    COMPNM 20
+     C                     READ UPNOTFPD                 50
+     C                     ENDDO
+      *
+      * Reset file
+     C           *LOVAL    SETLLUPNOTFPD
+     C                     MOVE *OFF      *IN50
+      *
+     C                     ENDSR
+      ********************************************************************
+      *   BUILD Subroutine - Build subfile                               *
+      ********************************************************************
+      *
+      * IBM CPYF when used with INCREL parameter treats the comparand as a
+      * wild card; thus if trying to copy records including a string of
+      * 'CB', all records with a string beginning with CB are copied.
+      * This leads to spurious entries and duplicated entries.
+     C           BUILD     BEGSR
+      *
+      * Initialise
+     C           *IN50     DOUEQ*ON
+     C                     MOVE *BLANKS   XXOPT
+     C                     Z-ADD0         J       30
+     C                     Z-ADD1         RRN     30
+      *
+     C                     MOVE *ON       *IN30
+     C                     WRITEFMT2
+     C                     MOVE *OFF      *IN30
+      *
+     C                     READ UPNOTFPD                 50
+      *
+      * Build subfile
+     C           *IN50     DOWEQ*OFF
+     C                     MOVE 'Y'       NOREC
+      *
+      * Create meaningful 'type' descriptions for those instances where
+      * ODOBAT is blank
+     C           ODOBTP    IFEQ '*CMD'
+     C           ODOBTP    OREQ '*PNLGRP'
+     C           ODOBTP    OREQ '*DTAARA'
+     C           ODOBTP    OREQ '*SRVPGM'
+     C           ODOBTP    OREQ '*BNDDIR'
+     C           ODOBTP    OREQ '*TBL'
+     C           ODOBTP    OREQ '*USRSPC'
+     C           ODOBTP    OREQ '*DTAQ'
+     C           ODOBTP    OREQ '*MSGF'
+     C           7         SUBSTODOBTP:2  ODOBAT
+     C                     ENDIF
+      *
+      * A program and a module with the same name both have an attribute
+      * of RPGLE or CLLE; change the program's attribute to PGM for clarity.
+     C           ODOBTP    IFEQ '*PGM'
+     C           ODOBAT    ANDEQ'RPGLE'
+     C           ODOBTP    OREQ '*PGM'
+     C           ODOBAT    ANDEQ'CLLE'
+     C                     MOVEL'PGM  '   XXTYPE
+     C                     ENDIF
+      *
+      * If subset requested only select matching records, otherwise
+      * select all.
+     C           XXSUB     IFEQ *BLANK
+     C           XXSUB     OREQ ODOBAT
+     C                     ADD  1         J
+      *
+     C                     WRITEFMT1
+     C                     MOVE *OFF      *IN91
+     C                     ADD  1         RRN
+     C                     ENDIF
+     C                     READ UPNOTFPD                 50
+     C                     ENDDO
+      *
+      * If subset requested and no matches found, rebuild
+     C           XXSUB     IFNE *BLANK
+     C           J         ANDEQ0
+     C           *LOVAL    SETLLUPNOTFPD
+     C                     MOVE *BLANK    XXSUB
+     C                     MOVE *OFF      *IN50
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      * If all records in subset found, reset subset parameter
+     C           *IN50     IFEQ *ON
+     C                     MOVE *BLANK    XXSUB
+     C                     MOVE *BLANK    XXPOS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+**  CPY@
+(c) Finastra International Limited 2003

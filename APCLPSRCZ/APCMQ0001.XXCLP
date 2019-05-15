@@ -1,0 +1,51 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                 /*MD019854*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       APCMQ0001 - T_APIMSG Purging Program Driver                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. MD019854 *REDUNDANTDate 03Apr13              */
+/*       Prev Amend No. AR574027 *CREATE   Date 09Jul10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD019854 - APCMQ0001 and APMQ0001 should be made redundant  */
+/*       AR574027 - T_APIMSG Purging Program Driver CL.              */
+/*                  (Child: AR574028)                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN( 7)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+             CHGJOB     SWS(00000000)
+ 
+/** UDF purging program */
+ 
+             CALL       PGM(APMQ0001)
+              IF         COND(&RTCD ¬= '       ') THEN(GOTO CMDLBL(ABNOR))
+ 
+              GOTO CMDLBL(END)
+ 
+ /** Abnormal Error Processing */
+  ABNOR:      SNDPGMMSG  MSG('PROGRAM APCMQ0001 ENDED ABNORMALLY') +
+                           TOMSGQ(MOPERQ)
+              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+              CHGJOB     SWS(XXXXXX11)
+ 
+ END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Misys International Banking Systems Ltd. 2010')
+              ENDPGM

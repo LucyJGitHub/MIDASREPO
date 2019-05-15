@@ -1,0 +1,1097 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Printer file for compare message files')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UT0027 - Print file for compare message file program         *
+      *                                                               *
+      *  Called By: UTC0026                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK018             Date 25Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK009             Date 26Aug99               *
+      *                 CUP002 *CREATE     Date 08Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPK018 - MidasPlus packaging.  Moved to global layer.        *
+      *  CPK009 - DBA R3 packaging:                                   *
+      *         - if last files compared are identical, but have over-*
+      *           flow messages,  program loops                       *
+      *  CUP002 - Message files utilities                             *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file indicator
+      *       40-47   Print Base file output, lines 1-8
+      *       49      Print deleted message
+      *       50-57   Print Compare file output, lines 1-8
+      *       59      Print inserted message
+      *       60      Print 'Compare file not found'
+      *       61      Print 'Base file not found'
+      *       62      Print 'Files cross-checked & agree'
+      *       69      Read or write errors
+      *       70      Base file output overflow
+      *       71      Compare file output overflow
+      *       72      Unknown substitution variable format in base file
+      *       73      Unknown substitution variable format in compare
+      *               file
+      *       74      Suppress printing of MSGID where multiple diffences
+      *       80      Base file overflow message
+      *       81      Compare file overflow message
+      *       82      Message text overflow indicator
+      *       83      Help text overflow indicator
+      *       84      Substitution variables overflow indicator
+      *       85      Default reply overflow indicator
+      *       86      Overflow help indicator
+      *       90      Single file comparison, with different filenames
+      *
+      *****************************************************************
+      *
+     FUTCMPMPDIF  E           K        DISK         KINFSR *PSSR
+     FUT0027P1O   E             37     PRINTER      KINFDS SPOOL      UC
+      *
+      /EJECT
+      *
+      * Array containing file summaries
+     E                    ARR1      999116
+      *
+      /SPACE 3
+      * File information data structure for P1 file; used for page end
+      * handling
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+     **
+      * Temporary storage for base file data
+     ICMMSG1      DS                            150
+     ICMHLP1      DS                            540
+     ICMDFT1      DS                             60
+      *
+      * Enable block moves/comparisons of variable format definitions
+      * subfields
+     ICMSUBT      DS
+     I                                        1  24 CMSUB1
+     I                                       25  48 CMSUB2
+     I                                       49  72 CMSUB3
+     I                                       73  96 CMSUB4
+     I                                       97 120 CMSUB5
+      *
+      * Temporary storage for Base file substitution variables
+     ICMSUBZ      DS
+     I                                        1  24 CMSUB6
+     I                                       25  48 CMSUB7
+     I                                       49  72 CMSUB8
+     I                                       73  96 CMSUB9
+     I                                       97 120 CMSUB0
+      *
+      * Output - base file
+     IOUTDTA      DS
+     I                                        1  90 #VAL1A
+     I                                       91 180 #VAL1B
+     I                                      181 270 #VAL1C
+     I                                      271 360 #VAL1D
+     I                                      361 450 #VAL1E
+     I                                      451 540 #VAL1F
+     I                                      541 630 #VAL1G
+     I                                      631 720 #VAL1H
+      *
+      * Output - compare file
+     IOUTDT1      DS
+     I                                        1  90 #VAL2A
+     I                                       91 180 #VAL2B
+     I                                      181 270 #VAL2C
+     I                                      271 360 #VAL2D
+     I                                      361 450 #VAL2E
+     I                                      451 540 #VAL2F
+     I                                      541 630 #VAL2G
+     I                                      631 720 #VAL2H
+      *
+      * Enable duplicate filenames for printing & overprinting
+     INAMES       DS
+     I                                        1  10 CMFILE
+     I                                        1  10 CMFIL1
+     I                                       11  20 #LIB1
+     I                                       11  20 #LIB1O
+     I                                       21  30 #LIB2
+     I                                       21  30 #LIB2O
+      *
+      * Breakdown input parameters for printing & overprinting
+     ICRIT1       DS
+     I                                        1  10 #MSGFB
+     I                                        1  10 #MSFBO
+     I                                       11  20 #MSGLB
+      *
+     ICRIT2       DS
+     I                                        1  10 #MSGFC
+     I                                        1  10 #MSFCO
+     I                                       11  20 #MSGLC
+      *
+      * File summary for saving/restoring to/from array
+     IFILSUM      DS
+     I                                        1  10 #NAME1
+     I                                       11  20 #NAME2
+     I                                       21  30 #LIBR1
+     I                                       31  40 #LIBR2
+     I                                       41  450#TOTL1
+     I                                       46  500#AMEND
+     I                                       51  550#INSER
+     I                                       56  600#DELET
+     I                                       61  650#TOTL2
+     I                                       66  66 #TYPE
+     I                                       67  710#MSGOF
+     I                                       72  760#HLPOF
+     I                                       77  810#DFTOF
+     I                                       82  860#SUBOF
+     I                                       87  910#MSGO2
+     I                                       92  960#HLPO2
+     I                                       97 1010#DFTO2
+     I                                      102 1060#SUBO2
+     I                                      107 1110#TOTOF
+     I                                      112 1160#TOTO2
+      **************************************************************************
+     I              'First level text'    C         TEXT1
+     I              'Second level text'   C         TEXT2
+     I              'Substitution variabl-C         TEXT3
+     I              'e &'
+     I              'Substitution variabl-C         TEXT3A
+     I              'es'
+     I              'Default reply'       C         TEXT4
+      **************************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           CRIT1
+     C                     PARM           CRIT2
+      *
+     C                     OPEN UT0027P1               69
+      *
+     C                     READ UTCMPMPD               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * If there are no message files at all write 'no messages'
+     C           *IN20     IFEQ *ON
+      *
+     C                     WRITEHEADH
+     C                     WRITEHEAD2
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     WRITENORECS
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     WRITETRAILP
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     GOTO ENDPGM
+      *
+     C                     ENDIF
+      *
+      * If filenames are different, use Criteria for filenames.
+     C           #MSGFB    IFNE #MSGFC
+     C                     MOVE *ON       *IN90
+     C                     ENDIF
+      *
+      * Loop to end of file listings
+     C                     Z-ADD0         F       50       File counter
+     C           *IN20     DOWEQ*OFF                       D01
+     C                     ADD  1         F
+      *
+      * Ignore any overflow messages for first run through
+     C           CMTYPE    DOWEQ'O'                        D02
+     C           *IN20     ANDEQ*OFF                                                          CPK009
+     C                     READ UTCMPMPD               6920
+     C                     ENDDO                           E02
+      *
+      * If end of file reached, need to adjust file counter, and go to                        CPK009
+      * file summaries.  Otherwise process messages.                                          CPK009
+     C           *IN20     IFEQ *ON                                                           CPK009
+     C                     SUB  1         F                                                   CPK009
+     C                     ELSE                                                               CPK009
+      *
+      * If message file not found in either library list, or if cross-
+      * checked and found ok, move details to array to print at end
+      * of listings.  Otherwise print detailed file.
+     C           CMTYPE    IFEQ 'B'
+     C           CMTYPE    OREQ 'C'
+     C           CMTYPE    OREQ 'X'
+     C                     EXSR FILES
+     C                     ELSE
+     C                     EXSR GETDTA
+     C                     ENDIF
+      *
+      * Get next file name (if any)
+     C                     READ UTCMPMPD               6920
+      *
+      * If files with different filenames are being compared, force end
+      * of loop - reset end-of-message-file indicator
+     C           *IN90     IFEQ *ON
+     C                     MOVE *ON       *IN20
+     C                     ENDIF
+     C                     ENDIF                                                              CPK009
+      *
+     C                     ENDDO                           ED02
+      *
+      * Write summaries and footer
+     C                     EXSR FILEND
+     C                     EXSR FOFLOW
+      *
+      * If no overflows, write 'No overflows' and skip overflow summary
+     C           OVF       IFEQ 0                          B02
+     C                     WRITEDTLOX
+      *
+     C           *IN69     IFEQ *ON                        B02
+     C                     EXSR *PSSR
+     C                     ENDIF                           E02
+      *
+      * If there are overflows, write overflow summary
+     C                     ELSE
+     C                     EXSR OFSUM
+     C                     ENDIF                           E02
+      *
+     C           ENDPGM    TAG
+     C                     CLOSEUTCMPMPD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *
+      *   GETDTA  - List changes found in message files
+      *
+      *****************************************************************
+      *
+     C           GETDTA    BEGSR
+      *
+      * Get library names for page headers from base file summary
+      * (use criteria if filenames are different)
+     C                     CLEAR#LIB1
+     C                     CLEAR#LIB2
+     C           *IN90     IFEQ *ON
+     C                     CLEARCMFILE
+     C                     MOVEL#MSGFB    CMFILE
+     C                     ENDIF
+      *
+     C           CMFILE    SETGTUTCMPMPD
+     C                     READPUTCMPMPD               6920
+     C                     MOVELCMLIB1    #LIB1
+     C                     MOVELCMLIB2    #LIB2
+      *
+      * Reset counters
+     C                     CLEARADDS
+     C                     CLEARINSS
+     C                     CLEARDELS
+      *
+      * Reset to top of base file
+     C           CMFILE    SETLLUTCMPMPD
+     C           CMFILE    READEUTCMPMPD               6920
+      *
+      * Write page header
+     C                     WRITEHEADH
+     C                     WRITEHEAD1
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Write section header for amended messages
+     C                     WRITEDTLA
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Loop through file until file summary reached & write amended
+      * messages
+     C           CMTYPE    DOWNE'S'                        D02
+      *
+     C           CMTYPE    IFEQ 'A'
+     C                     EXSR AMEND
+     C                     ADD  1         ADDS    50
+     C                     ENDIF
+      *
+      * Get next message from base file
+     C           CMFILE    READEUTCMPMPD               6920
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO                           ED02
+      *
+      * If no amended records write
+     C           ADDS      IFEQ 0
+     C                     WRITEDTLAX
+     C                     ENDIF
+      *
+      * Reset to top of base file listing before search for deletions.
+     C           CMFILE    SETLLUTCMPMPD
+     C           CMFILE    READEUTCMPMPD               6920
+      *
+      * Write page header
+     C                     WRITEHEADH
+     C                     WRITEHEAD1
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Write section header for deleted messages, and set on
+      * indicator for details
+     C                     WRITEDTLD
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE *ON       *IN49
+      *
+      * Loop through file until file summary reached & write deleted
+      * messages
+     C           CMTYPE    DOWNE'S'                        D02
+      *
+     C           CMTYPE    IFEQ 'D'
+     C                     EXSR DELETE
+     C                     MOVE *OFF      *IN49
+     C                     ADD  1         DELS    50
+     C                     ENDIF
+      *
+      * Get next message from same file
+     C           CMFILE    READEUTCMPMPD               6920
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO                           ED02
+      *
+      * If no deleted messages write
+     C           DELS      IFEQ 0
+     C                     WRITEDTLDX
+     C                     ENDIF
+      *
+      * Reset to top of file listing before search for insertions.
+      * If filenames are different, use compare filename to reset.
+     C           *IN90     IFEQ *ON
+     C                     CLEARCMFILE
+     C                     MOVEL#MSGFC    CMFILE
+     C                     ENDIF
+     C           CMFILE    SETLLUTCMPMPD
+     C           CMFILE    READEUTCMPMPD               6920
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Write page header
+     C                     WRITEHEADH
+     C                     WRITEHEAD1
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Write section header for inserted messages, and set on
+      * indicator for details
+     C                     WRITEDTLI
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE *ON       *IN59
+      *
+      * Loop through file until file summary reached & write inserted
+      * messages - if message file names are different, there is no
+      * file summary after compare file listing, so *IN20 is needed
+     C           CMTYPE    DOWNE'S'                        D02
+     C           *IN20     ANDEQ*OFF
+      *
+     C           CMTYPE    IFEQ 'I'
+     C                     EXSR INSERT
+     C                     MOVE *OFF      *IN59
+     C                     ADD  1         INSS    50
+     C                     ENDIF
+      *
+      * Get next message from same file
+     C           CMFILE    READEUTCMPMPD               6920
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO                           ED02
+      *
+      * If no inserted messages write
+     C           INSS      IFEQ 0
+     C                     WRITEDTLIX
+     C                     ENDIF
+      *
+      * If *IN20 is on, EOF has been reached before file summary - so
+      * file names are different.  Reset to base file end to get file
+      * summary.
+     C           *IN20     IFEQ *ON
+     C                     CLEARCMFILE
+     C                     MOVEL#MSGFB    CMFILE
+     C           CMFILE    SETGTUTCMPMPD
+     C                     READPUTCMPMPD               6920
+     C                     MOVE *OFF      *IN20
+     C                     ENDIF
+      *
+      * Write file summary to array
+     C                     EXSR FILES
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * AMEND subroutine - process amended messages
+      *
+      *****************************************************************
+     C           AMEND     BEGSR
+      *
+      * Save values for first messages of pair
+     C                     CLEARCMMSG1
+     C                     CLEARCMHLP1
+     C                     CLEARCMSUBZ
+     C                     CLEARCMDFT1
+     C                     MOVELCMMSGT    CMMSG1
+     C                     MOVELCMHLPT    CMHLP1
+     C                     MOVELCMSUBT    CMSUBZ
+     C                     MOVELCMDFTT    CMDFT1
+     C                     CLEARCMMSGT
+     C                     CLEARCMHLPT
+     C                     CLEARCMSUBT
+     C                     CLEARCMDFTT
+     C                     Z-ADDCMMSGL    CMMSL1  50
+     C                     Z-ADDCMHLPL    CMHLL1  50
+     C                     Z-ADDCMDFTL    CMDFL1  50
+     C                     Z-ADDCMFMTL    CMFML1  50
+      *
+      * Set up control to test whether difference has been printed.
+     C                     Z-ADD0         DIFF    10
+     C                     MOVE *OFF      *IN74
+      *
+      * If filenames are different use CHAIN to get matching message
+      * from compare file - otherwise simply read the next message -
+      * so that values can be compared
+     C           *IN90     IFEQ *ON
+     C           KEYC      KLIST
+     C                     KFLD           #MSGFC
+     C                     KFLD           CMMIDR
+     C           KEYC      CHAINUTCMPMPD             69
+     C                     ELSE
+     C                     READ UTCMPMPD               6920
+      *
+      * Ignore any overlow messages for first run through
+     C           CMTYPE    IFEQ 'O'
+     C                     READ UTCMPMPD               6920
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Compare values and write messages to report if amended
+     C           CMMSGT    IFNE CMMSG1                     B01
+     C                     ADD  1         DIFF
+     C                     MOVE *BLANKS   #TEXT  25
+     C                     MOVELTEXT1     #TEXT
+     C                     CLEAROUTDTA
+     C                     CLEAROUTDT1
+     C                     MOVELCMMSG1    OUTDTA
+     C                     MOVELCMMSGT    OUTDT1
+      *
+      * Calculate message length, no of lines & overflow space
+     C                     Z-ADD4         LINES   30
+     C           CMMSL1    DIV  90        LEN     30
+     C                     SELEC
+     C           LEN       WHEQ 0
+     C                     MOVEA'1000000' *IN,40
+     C           LEN       WHEQ 1
+     C                     MOVEA'1100000' *IN,40
+     C                     ADD  1         LINES
+     C           LEN       WHGT 1
+     C                     MOVE *ON       *IN70
+     C                     MOVEA'1100000' *IN,40
+     C                     ADD  1         LINES
+     C                     ENDSL
+     C           CMMSGL    DIV  90        LEN     30
+     C                     SELEC
+     C           LEN       WHEQ 0
+     C                     MOVEA'1000000' *IN,50
+     C           LEN       WHEQ 1
+     C                     MOVEA'1100000' *IN,50
+     C                     ADD  1         LINES
+     C           LEN       WHGT 1
+     C                     MOVE *ON       *IN71
+     C                     MOVEA'1100000' *IN,50
+     C                     ADD  1         LINES
+     C                     ENDSL
+      *
+      * Check overflow before writing
+     C                     EXSR OFLOW
+     C                     WRITEDTLA1
+     C                     MOVE *OFF      *IN70
+     C                     MOVE *OFF      *IN71
+     C                     MOVE *ON       *IN74
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Secondary text
+      * Compare values and write messages to report if amended
+     C           CMHLPT    IFNE CMHLP1
+     C                     ADD  1         DIFF
+     C                     MOVE *BLANKS   #TEXT
+     C                     MOVELTEXT2     #TEXT
+     C                     CLEAROUTDTA
+     C                     CLEAROUTDT1
+     C                     MOVELCMHLP1    OUTDTA
+     C                     MOVELCMHLPT    OUTDT1
+      *
+      * Calculate message length, no of lines & overflow space
+     C                     Z-ADD4         LINES   30
+     C           CMHLL1    DIV  90        LEN     30
+     C                     SELEC
+     C           LEN       WHEQ 0
+     C                     MOVEA'1000000' *IN,40
+     C           LEN       WHEQ 1
+     C                     MOVEA'1100000' *IN,40
+     C                     ADD  1         LINES
+     C           LEN       WHEQ 2
+     C                     MOVEA'1110000' *IN,40
+     C                     ADD  2         LINES
+     C           LEN       WHEQ 3
+     C                     MOVEA'1111000' *IN,40
+     C                     ADD  3         LINES
+     C           LEN       WHEQ 4
+     C                     MOVEA'1111100' *IN,40
+     C                     ADD  4         LINES
+     C           LEN       WHEQ 5
+     C                     MOVEA'1111110' *IN,40
+     C                     ADD  5         LINES
+     C           LEN       WHGT 5
+     C                     MOVE *ON       *IN70
+     C                     MOVEA'1111110' *IN,40
+     C                     ADD  5         LINES
+     C                     ENDSL
+     C           CMHLPL    DIV  90        LEN     30
+     C                     SELEC
+     C           LEN       WHEQ 0
+     C                     MOVEA'1000000' *IN,50
+     C           LEN       WHEQ 1
+     C                     MOVEA'1100000' *IN,50
+     C                     ADD  1         LINES
+     C           LEN       WHEQ 2
+     C                     MOVEA'1110000' *IN,50
+     C                     ADD  2         LINES
+     C           LEN       WHEQ 3
+     C                     MOVEA'1111000' *IN,50
+     C                     ADD  3         LINES
+     C           LEN       WHEQ 4
+     C                     MOVEA'1111100' *IN,50
+     C                     ADD  4         LINES
+     C           LEN       WHEQ 5
+     C                     MOVEA'1111110' *IN,50
+     C                     ADD  5         LINES
+     C           LEN       WHGT 5
+     C                     MOVE *ON       *IN71
+     C                     MOVEA'1111110' *IN,50
+     C                     ADD  5         LINES
+     C                     ENDSL
+      *
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     WRITEDTLA1
+     C                     MOVE *OFF      *IN70
+     C                     MOVE *OFF      *IN71
+     C                     MOVE *ON       *IN74
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Default reply
+      * Compare values and write messages to report if amended
+     C           CMDFTT    IFNE CMDFT1
+     C                     ADD  1         DIFF
+     C                     MOVE *BLANKS   #TEXT
+     C                     MOVELTEXT4     #TEXT
+     C                     CLEAROUTDTA
+     C                     CLEAROUTDT1
+     C                     MOVELCMDFT1    OUTDTA
+     C                     MOVELCMDFTT    OUTDT1
+      *
+      * Calculate message length, no of lines & overflow space
+     C                     Z-ADD4         LINES   30
+     C           CMDFL1    DIV  90        LEN     30
+     C                     SELEC
+     C           LEN       WHEQ 0
+     C                     MOVEA'1000000' *IN,40
+     C           LEN       WHGT 0
+     C                     MOVE *ON       *IN70
+     C                     MOVEA'1000000' *IN,40
+     C                     ADD  0         LINES
+     C                     ENDSL
+     C           CMDFTL    DIV  90        LEN     30
+     C                     SELEC
+     C           LEN       WHEQ 0
+     C                     MOVEA'1000000' *IN,50
+     C           LEN       WHGT 0
+     C                     MOVE *ON       *IN71
+     C                     MOVEA'1000000' *IN,50
+     C                     ADD  1         LINES
+     C                     ENDSL
+      *
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     WRITEDTLA1
+     C                     MOVE *OFF      *IN70
+     C                     MOVE *OFF      *IN71
+     C                     MOVE *ON       *IN74
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * If substitution variables format is non-standard, write message
+     C           CMFMTL    IFNE 20
+     C                     MOVE *ON       *IN72
+     C                     ENDIF
+     C           CMFML1    IFNE 20
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+      *
+      * Substitution variables - first 5 only - compare values and
+      * write to report if amended.
+     C                     Z-ADD1         SUBNO   10
+     C                     MOVEA'1000000' *IN,40
+     C                     MOVEA'1000000' *IN,50
+     C                     DO   5
+     C                     SELEC
+     C           SUBNO     WHEQ 1
+     C                     CLEAROUTDTA
+     C                     CLEAROUTDT1
+     C                     MOVELCMSUB6    OUTDTA
+     C                     MOVELCMSUB1    OUTDT1
+     C           SUBNO     WHEQ 2
+     C                     CLEAROUTDTA
+     C                     CLEAROUTDT1
+     C                     MOVELCMSUB7    OUTDTA
+     C                     MOVELCMSUB2    OUTDT1
+     C           SUBNO     WHEQ 3
+     C                     CLEAROUTDTA
+     C                     CLEAROUTDT1
+     C                     MOVELCMSUB8    OUTDTA
+     C                     MOVELCMSUB3    OUTDT1
+     C           SUBNO     WHEQ 4
+     C                     CLEAROUTDTA
+     C                     CLEAROUTDT1
+     C                     MOVELCMSUB9    OUTDTA
+     C                     MOVELCMSUB4    OUTDT1
+     C           SUBNO     WHEQ 5
+     C                     CLEAROUTDTA
+     C                     CLEAROUTDT1
+     C                     MOVELCMSUB0    OUTDTA
+     C                     MOVELCMSUB5    OUTDT1
+     C                     ENDSL
+      *
+     C           OUTDTA    IFNE OUTDT1
+     C                     ADD  1         DIFF
+      *
+     C                     MOVE *BLANKS   #TEXT
+     C                     MOVE SUBNO     SUBNOT  1
+     C           TEXT3     CAT  SUBNOT    #TEXT
+      *
+      * Check overflow before writing next lines
+     C                     Z-ADD4         LINES
+     C                     EXSR OFLOW
+     C                     WRITEDTLA1
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ADD  1         SUBNO
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN72
+     C                     MOVE *OFF      *IN73
+      *
+      * If no differences yet written write generic message
+     C           DIFF      IFEQ 0
+      *
+      * Check overflow before writing
+     C                     Z-ADD2         LINES
+     C                     EXSR OFLOW
+     C                     WRITEDTLAU
+     C                     ENDIF
+      *
+      * If filenames are different, use CHAIN to reset to base message
+     C           *IN90     IFEQ *ON
+     C           KEYB      KLIST
+     C                     KFLD           #MSGFB
+     C                     KFLD           CMMIDR
+     C           *LOVAL    SETLLUTCMPMPD
+     C           KEYB      CHAINUTCMPMPD             69
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * DELETE subroutine - process deleted messages
+      *
+      *****************************************************************
+     C           DELETE    BEGSR
+      *
+      * Calculate message length, no of lines & overflow space
+     C                     Z-ADD2         LINES   30
+     C           CMMSGL    DIV  90        LEN     30
+     C                     SELEC
+     C           LEN       WHEQ 0
+     C                     MOVEA'1000000' *IN,50
+     C           LEN       WHEQ 1
+     C                     MOVEA'1100000' *IN,50
+     C                     ADD  1         LINES
+     C                     ENDSL
+      *
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     CLEAROUTDTA
+     C                     MOVELCMMSGT    OUTDTA
+     C                     WRITEDTLD1
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * INSERT subroutine - process inserted messages
+      *
+      *****************************************************************
+     C           INSERT    BEGSR
+      *
+      * Calculate message length, no of lines & overflow space
+     C                     Z-ADD2         LINES   30
+     C           CMMSGL    DIV  90        LEN     30
+     C                     SELEC
+     C           LEN       WHEQ 0
+     C                     MOVEA'1000000' *IN,50
+     C           LEN       WHEQ 1
+     C                     MOVEA'1100000' *IN,50
+     C                     ADD  1         LINES
+     C                     ENDSL
+      *
+      * Check overflow before writing next lines
+     C                     EXSR OFLOW
+     C                     CLEAROUTDTA
+     C                     MOVELCMMSGT    OUTDTA
+     C                     WRITEDTLI1
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * OFLOW subroutine - handle overflow for print of field details
+      *
+      *****************************************************************
+     C           OFLOW     BEGSR
+      *
+     C           OFLLN     SUB  PRTLN     RMLN    20
+     C           LINES     IFGE RMLN
+      *
+     C                     WRITEHEADH
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Write appropriate subheading
+     C                     SELEC
+     C           CMTYPE    WHEQ 'A'
+     C                     MOVE *OFF      *IN74
+     C                     WRITEHEAD1
+     C                     WRITEDTLA
+     C           CMTYPE    WHEQ 'D'
+     C                     MOVE *ON       *IN49
+     C                     WRITEHEAD1
+     C                     WRITEDTLD
+     C           CMTYPE    WHEQ 'I'
+     C                     MOVE *ON       *IN59
+     C                     WRITEHEAD1
+     C                     WRITEDTLI
+     C           CMTYPE    WHEQ 'O'
+     C                     WRITEHEAD1
+     C                     WRITEDTLOFM
+     C           CMTYPE    WHEQ 'F'
+     C                     WRITEHEAD2
+     C                     WRITEDTLSUM
+     C           CMTYPE    WHEQ 'G'
+     C                     WRITEHEAD2
+     C                     WRITEDTLOFF
+     C                     ENDSL
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * FILES subroutine - writes summary details to array
+      *
+      *****************************************************************
+      *
+     C           FILES     BEGSR
+      *
+      * If filenames are different, use Criteria for filenames.
+     C           *IN90     IFEQ *ON
+     C                     MOVEL#MSGFB    #NAME1
+     C                     MOVEL#MSGFC    #NAME2
+     C                     ELSE
+      *
+     C                     MOVELCMFILE    #NAME1
+     C                     MOVELCMFILE    #NAME2
+     C                     ENDIF
+      *
+      * Move file summary details to array
+     C                     MOVELCMLIB1    #LIBR1
+     C                     MOVELCMLIB2    #LIBR2
+     C                     MOVE CMMNO1    #TOTL1
+     C                     MOVE CMMNO2    #TOTL2
+     C                     Z-ADDCMMOF1    #MSGOF
+     C                     Z-ADDCMHOF1    #HLPOF
+     C                     Z-ADDCMSOF1    #SUBOF
+     C                     Z-ADDCMDOF1    #DFTOF
+     C                     Z-ADDCMMOF2    #MSGO2
+     C                     Z-ADDCMHOF2    #HLPO2
+     C                     Z-ADDCMSOF2    #SUBO2
+     C                     Z-ADDCMDOF2    #DFTO2
+     C                     Z-ADDCMTOT1    #TOTOF
+     C                     Z-ADDCMTOT2    #TOTO2
+     C                     Z-ADDADDS      #AMEND
+     C                     Z-ADDINSS      #INSER
+     C                     Z-ADDDELS      #DELET
+     C                     MOVE CMTYPE    #TYPE
+     C                     MOVELFILSUM    ARR1,F
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * FILEND subroutine - extracts summary details from array, prints
+      *
+      *****************************************************************
+     C           FILEND    BEGSR
+     C                     Z-ADD2         LINES
+     C                     Z-ADD0         P       50
+     C                     WRITEHEADH
+     C                     WRITEHEAD2
+     C                     WRITEDTLSUM
+     C                     DO   F
+     C                     ADD  1         P
+     C                     CLEARFILSUM
+     C                     MOVE ARR1,P    FILSUM
+     C                     SELEC
+     C           #TYPE     WHEQ 'B'
+     C                     MOVE *ON       *IN60
+     C           #TYPE     WHEQ 'C'
+     C                     MOVE *ON       *IN61
+     C           #TYPE     WHEQ 'X'
+     C                     MOVE *ON       *IN62
+     C                     ENDSL
+     C                     MOVE 'F'       CMTYPE
+     C                     EXSR OFLOW
+     C                     WRITEDTLS
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVEA'000'     *IN,60
+     C                     ENDDO
+      *
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *     FOFLOW    subroutine - print overflow messages
+      *
+      *****************************************************************
+      *
+     C           FOFLOW    BEGSR
+      *
+      *****************************************************************
+      *
+      *  Write headers and reset to top of file
+     C                     MOVE *ON       *IN86
+     C                     WRITEHEADH
+     C                     WRITEHEAD2
+     C                     WRITEDTLOFM
+     C                     MOVE *OFF      *IN86
+     C           *LOVAL    SETLLUTCMPMD0
+     C                     READ UTCMPMPD               6920
+     C                     MOVELTEXT1     #TEXT1 80
+     C                     MOVELTEXT2     #TEXT2 80
+     C                     MOVELTEXT3A    #TEXT3 80
+     C                     MOVELTEXT4     #TEXT4 80
+     C                     Z-ADD0         OVF     50
+      *
+      * Loop through entire file
+     C           *IN20     DOWEQ*OFF
+     C                     MOVEA'0000'    *IN,82
+     C                     READ UTCMPMPD               6920
+      *
+      * If Overflow message exists, find out whether it is in base or
+      * compare files and print
+     C           CMTYPE    IFEQ 'O'                        B01
+      *
+     C                     Z-ADD1         OVF
+     C           CMLIB1    COMP *BLANKS              80
+     C           CMLIB2    COMP *BLANKS              81
+      *
+      * Find out where overflow is, calculate page overflow, and print
+     C                     CLEAR#CMMSG
+     C                     MOVELCMMSGT    #CMMSG 80
+     C                     Z-ADD2         LINES
+     C           CMMSGL    IFGT 150                        B02
+     C                     ADD  1         LINES
+     C                     MOVE *ON       *IN82
+     C                     ENDIF                           E02
+     C           CMHLPL    IFGT 540                        B02
+     C                     MOVE *ON       *IN83
+     C                     ADD  1         LINES
+     C                     ENDIF                           E02
+     C           CMSUBL    IFGT 100                        B02
+     C                     MOVE *ON       *IN84
+     C                     ADD  1         LINES
+     C                     ENDIF                           E02
+     C           CMDFTL    IFGT 60                         B02
+     C                     MOVE *ON       *IN85
+     C                     ADD  1         LINES
+     C                     ENDIF                           E02
+      *
+     C                     EXSR OFLOW
+     C                     WRITEDTLOM
+     C           *IN69     IFEQ *ON                        B02
+     C                     EXSR *PSSR
+     C                     ENDIF                           E02
+      *
+     C                     ENDIF                           E01
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * OFSUM subroutine - extracts overflow summary details from array
+      *
+      *****************************************************************
+      *
+     C           OFSUM     BEGSR
+      *
+     C                     Z-ADD0         P       50
+     C                     WRITEHEADH
+     C                     WRITEHEAD2
+     C                     WRITEDTLOFF
+      *
+      * Loop through array
+     C                     DO   F
+     C                     ADD  1         P
+     C                     MOVEA'000'     *IN,60
+     C                     CLEARFILSUM
+     C                     MOVE ARR1,P    FILSUM
+      *
+      * If single file summary only, select either Base or Compare
+      * file total (#TOTOF or #TOTO2), otherwise print both
+      * (separately)
+     C                     SELEC
+     C           #TYPE     WHEQ 'B'
+     C                     MOVE *ON       *IN60
+     C           #TYPE     WHEQ 'C'
+     C                     MOVE *ON       *IN61
+     C                     OTHER
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN62
+     C                     ENDSL
+      *
+      * If any overflows, check print overflow then print
+     C           #TOTOF    IFGT 0                          B01
+     C           #TOTO2    ORGT 0
+     C                     MOVE 'G'       CMTYPE
+     C                     EXSR OFLOW
+     C                     WRITEDTLO
+      *
+     C           *IN69     IFEQ *ON                        B02
+     C                     EXSR *PSSR
+     C                     ENDIF                           E02
+      *
+      * If double file summary, print second file details
+     C           *IN62     IFEQ *ON                        B02
+     C                     MOVE *OFF      *IN60
+     C                     MOVE *ON       *IN61
+     C                     WRITEDTLO
+     C                     ENDIF                           E02
+     C                     ENDIF                           E01
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADD3         LINES   30
+     C                     EXSR OFLOW
+     C                     WRITETRAILP
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *

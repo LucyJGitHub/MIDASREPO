@@ -1,0 +1,466 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas UT Update GENFLDNOS driving file VCP')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC9005 - Update GENFLDNOS driving file                     */
+/*                 validity checker for UPDGENFLD command and        */
+/*                 GENFLDNOS CPP (UTC9004)                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01.03 --------------------------------------------*/
+/*       Prev Amend No. CUP021 *RE-WRITE   Date 12Jan03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP021 - Re-write of GENFLDNOS, to make it file driven.     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&APINAME &DETAIL &HEADER)
+ 
+/*/COPY WNCPYSRC,UTC9005M01                                          */
+ 
+/* API name  */
+             DCL        VAR(&APINAME) TYPE(*CHAR) LEN(4)
+ 
+/* Header file and library */
+             DCL        VAR(&HEADER) TYPE(*CHAR) LEN(20)
+ 
+/* Detail files (up to 20), with a 2-byte binary count first */
+             DCL        VAR(&DETAIL) TYPE(*CHAR) LEN(402)
+ 
+/* The first two characters of the Detail parameter, containing the +
+   binary number of entries in the list */
+             DCL        VAR(&DETBIN) TYPE(*CHAR) LEN(2)
+ 
+/* Number of Detail files (up to 20)   */
+             DCL        VAR(&DETAILNBR) TYPE(*DEC) LEN(2 0)
+ 
+/* Header file/library names */
+             DCL        VAR(&HEADFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&HEADLIB) TYPE(*CHAR) LEN(10)
+ 
+/* Detail file/library names */
+             DCL        VAR(&DETFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DETLIB) TYPE(*CHAR) LEN(10)
+ 
+ /* Return code */
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+/* Count of entries in the detail parameter */
+             DCL        VAR(&DETCOUNT) TYPE(*DEC) LEN(2 0)
+ 
+/* Start position of file names in detail parameter */
+             DCL        VAR(&DETSTART) TYPE(*DEC) LEN(3 0) VALUE(3)
+ 
+ /* Message data for errors */
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(27)
+ 
+/* Flag to indicate that an error has been found in one of the +
+   validity checks */
+             DCL        VAR(&ERRORFOUND) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+/* Object type for existence and authority checking */
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(7)
+ 
+/* Authority type to check */
+             DCL        VAR(&AUT) TYPE(*CHAR) LEN(9)
+ 
+/* Message files */
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10) VALUE('QCPFMSG')
+             DCL        VAR(&UTMSGF) TYPE(*CHAR) LEN(10) VALUE('UTMSGF')
+ 
+/** +
+    The following variables act as named constants.  These are used +
+    instead of literals to minimise problems with passed parameters. +
+**/
+             DCL        VAR(&LIBL) TYPE(*CHAR) LEN(10) VALUE('*LIBL')
+             DCL        VAR(&NOTEXIST) TYPE(*CHAR) LEN(10) VALUE('NotExist')
+             DCL        VAR(&NOTAUT) TYPE(*CHAR) LEN(10) VALUE('NotAut')
+             DCL        VAR(&QSYS) TYPE(*CHAR) LEN(10) VALUE('QSYS')
+             DCL        VAR(&FIELDFILE) TYPE(*CHAR) LEN(10) VALUE('ZAFLDNPD')
+             DCL        VAR(&EXTEND) TYPE(*CHAR) LEN(10) VALUE('*EXTEND')
+ 
+/** +
+    These three fields define the call stack entry to which the error +
+    messages are to be sent. +
+**/
+             DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10) VALUE('UTC9005')
+             DCL        VAR(&MODULE) TYPE(*CHAR) LEN(10) VALUE('UTC9005')
+             DCL        VAR(&PROCEDURE) TYPE(*CHAR) LEN(10) VALUE('UTC9005')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+             DCLF       FILE(UTGENFL0)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*/COPY WNCPYSRC,UTC9005M02                                          */
+/** +
+   Extract the number of entries from the detail files parameter. +
+**/
+             CHGVAR     VAR(&DETBIN) VALUE(%SST(&DETAIL 1 2))
+             CHGVAR     VAR(&DETAILNBR) VALUE(%BIN(&DETBIN))
+/** +
+    Break the parameters down into file and library names +
+**/
+             CHGVAR     VAR(&HEADFILE) VALUE(%SST(&HEADER 1 10))
+             CHGVAR     VAR(&HEADLIB) VALUE(%SST(&HEADER 11 10))
+/** +
+    If this is an extension list, check that the API does exist +
+    in UTGENFPD and bypass file checking on the header file     +
+**/
+             IF         COND(&HEADFILE *EQ &EXTEND) THEN(DO)
+                OPNQRYF    FILE((UTGENFL0)) QRYSLT('HFAPIN *EQ "' *TCAT +
+                          &APINAME *TCAT '"')
+                   MONMSG     MSGID(CPF4174) EXEC(DO)
+                      CLOF       OPNID(UTGENFL0)
+                      OPNQRYF    FILE((UTGENFL0)) QRYSLT('HFAPIN *EQ "' *TCAT +
+                                &APINAME *TCAT '"')
+                   ENDDO
+                RCVF
+                MONMSG     MSGID(CPF0864) EXEC(DO)
+ 
+                   CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+                   CHGVAR     VAR(&MSGDTA) VALUE(' ')
+                   CHGVAR     VAR(&MSGDTA) VALUE(&APINAME)
+                   CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                   CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'UPM0029' +
+                                &UTMSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+                ENDDO
+                GOTO       CMDLBL(CheckDet)
+             ENDDO
+ 
+/** +
+    +--- Parameters' existence and authority -----------------------+ +
+    |                                                               | +
+    | Check that the files specified in the command parameters      | +
+    | exist, and if they do, that the user has sufficient authority | +
+    | to them.                                                      | +
+    |                                                               | +
+    +---------------------------------------------------------------+ +
+**/
+/** +
+    (1) Existence of the header file library +
+    ======================================== +
+**/
+             CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+             CHGVAR     VAR(&OBJTYPE) VALUE('*LIB')
+             IF         COND(&HEADLIB *NE &LIBL) THEN(CALLPRC +
+                          PRC(UTCHOBJEX) PARM(&RETURNCODE &HEADLIB +
+                          &QSYS &OBJTYPE ' '))
+             IF         COND(&RETURNCODE = &NOTEXIST) THEN(DO)
+ 
+                CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+                CHGVAR     VAR(&MSGDTA) VALUE(' ')
+                CHGVAR     VAR(&MSGDTA) VALUE(&HEADLIB *CAT &QSYS *CAT +
+                             &OBJTYPE)
+                CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2105' +
+                             &MSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/** +
+    (2) Authority to the header file library +
+    ======================================== +
+**/
+                CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                CHGVAR     VAR(&OBJTYPE) VALUE('*LIB')
+                CHGVAR     VAR(&AUT) VALUE('*USE')
+                IF         COND(&HEADLIB *NE &LIBL) THEN(CALLPRC +
+                             PRC(UTCHOBJAUT) PARM(&RETURNCODE &HEADLIB +
+                             &QSYS &OBJTYPE &AUT))
+ 
+                IF         COND(&RETURNCODE = &NOTAUT) THEN(DO)
+ 
+                   CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+                   CHGVAR     VAR(&MSGDTA) VALUE(&HEADLIB *CAT &OBJTYPE +
+                                *CAT &QSYS)
+                   CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                   CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2207' +
+                                &MSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+                ENDDO
+             ENDDO
+ 
+/** +
+    (3) Existence of the header file (only check if its library exists) +
+    =================================================================== +
+**/
+             IF         COND(&ERRORFOUND = 'N') THEN(DO)
+ 
+                CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                CHGVAR     VAR(&OBJTYPE) VALUE('*FILE')
+                CALLPRC    PRC(UTCHOBJEX) PARM(&RETURNCODE &HEADFILE +
+                             &HEADLIB &OBJTYPE ' ')
+                IF         COND(&RETURNCODE = &NOTEXIST) THEN(DO)
+ 
+                   CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+/** If file not found call a routine which takes a message ID, +
+    retrieves its text, and sends it as CPD0006, as required by +
+    validity checkers. **/
+                   CHGVAR     VAR(&MSGDTA) VALUE(&HEADFILE *CAT &HEADLIB +
+                                *CAT &OBJTYPE)
+                   CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                   CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2105' +
+                                &MSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+                ENDDO
+ 
+                ELSE       CMD(DO)
+ 
+/** +
+    (4) Authority to the header file +
+    ================================ +
+**/
+                   CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*FILE')
+                   CHGVAR     VAR(&AUT) VALUE('*USE')
+                   CALLPRC    PRC(UTCHOBJAUT) PARM(&RETURNCODE &HEADFILE +
+                                &HEADLIB &OBJTYPE &AUT)
+ 
+                   IF         COND(&RETURNCODE = &NOTAUT) THEN(DO)
+ 
+                      CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+/** If not authorised, call a routine which takes a message ID, +
+    retrieves its text, and sends it as CPD0006, as required by +
+    validity checkers. **/
+                      CHGVAR     VAR(&MSGDTA) VALUE(&HEADFILE *CAT &OBJTYPE +
+                                   *CAT &HEADLIB)
+                      CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                      CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2207' +
+                                   &MSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/*  +--- Detail files ----------------------------------------------+  */
+/*  |                                                               |  */
+/*  | Loop through all of the detail files checking their existence |  */
+/*  | and authority.                                                |  */
+/*  |                                                               |  */
+/*  +---------------------------------------------------------------+  */
+ 
+/* Extract the number of entries from the parameter.  If it is +
+   zero, nothing more to do.*/
+CheckDet:
+             IF         COND(&DETAILNBR *NE 0) THEN(DO)
+ 
+                CHGVAR     VAR(&DETCOUNT) VALUE(1)
+ 
+/* Validate each entry and loop around                            */
+NextDetail:
+                IF         COND(&DETCOUNT *GT &DETAILNBR) THEN(GOTO +
+                             CMDLBL(LastDetail))
+ 
+/* Extract the detail file and library from this list entry */
+                CHGVAR     VAR(&DETFILE) VALUE(%SST(&Detail +
+                             &DETSTART 10))
+                CHGVAR     VAR(&DETSTART) VALUE(&DETSTART + 10)
+                CHGVAR     VAR(&DETLIB) VALUE(%SST(&Detail +
+                             &DETSTART 10))
+                CHGVAR     VAR(&DETSTART) VALUE(&DETSTART + 10)
+ 
+/*  (5) Existence of the detail file library +
+/*  ========================================= */
+ 
+                CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                CHGVAR     VAR(&OBJTYPE) VALUE('*LIB')
+                IF         COND(&DETLIB *NE &LIBL) THEN(CALLPRC +
+                             PRC(UTCHOBJEX) PARM(&RETURNCODE &DETLIB +
+                             &QSYS &OBJTYPE ' '))
+                IF         COND(&RETURNCODE = &NOTEXIST) THEN(DO)
+ 
+                   CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+                   CHGVAR     VAR(&MSGDTA) VALUE(&DETLIB *CAT &QSYS      +
+                                *CAT &OBJTYPE)
+                   CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                   CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2105' +
+                                &MSGF &MSGDTA &PROGRAM &MODULE +
+                                &PROCEDURE)
+                ENDDO
+ 
+                ELSE       CMD(DO)
+ 
+/*  (6) Authority to the detail file library +
+/*  ========================================= */
+ 
+                   CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*LIB')
+                   CHGVAR     VAR(&AUT) VALUE('*USE')
+                   IF         COND(&DETLIB *NE &LIBL) THEN(CALLPRC +
+                                PRC(UTCHOBJAUT) PARM(&RETURNCODE &DETLIB +
+                                &QSYS &OBJTYPE &AUT))
+ 
+                   IF         COND(&RETURNCODE = &NOTAUT) THEN(DO)
+ 
+                      CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+                      CHGVAR     VAR(&MSGDTA) VALUE(&HEADLIB *CAT &OBJTYPE +
+                                   *CAT &QSYS)
+                      CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                      CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2207' +
+                                   &MSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+                   ENDDO
+ 
+                   ELSE       CMD(DO)
+ 
+/** +
+    (7) Existence of the detail file (only do this if the library exists) +
+    ====================================================================== +
+**/
+                      CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                      CHGVAR     VAR(&OBJTYPE) VALUE('*FILE')
+ 
+                      CALLPRC    PRC(UTCHOBJEX) PARM(&RETURNCODE &DETFILE +
+                                   &DETLIB &OBJTYPE ' ')
+                      IF         COND(&RETURNCODE = &NOTEXIST) THEN(DO)
+ 
+                         CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+/** If file not found call a routine which takes a message ID, +
+    retrieves its text, and sends it as CPD0006, as required by +
+    validity checkers. **/
+                         CHGVAR     VAR(&MSGDTA) VALUE(&DETFILE *CAT &DETLIB +
+                                   *CAT &OBJTYPE)
+                         CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                         CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2105' +
+                                      &MSGF &MSGDTA &PROGRAM &MODULE +
+                                      &PROCEDURE)
+                      ENDDO
+ 
+                      ELSE       CMD(DO)
+ 
+/** +
+    (8) Authority to the detail file +
+    ================================= +
+**/
+                         CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                         CHGVAR     VAR(&OBJTYPE) VALUE('*FILE')
+                         CHGVAR     VAR(&AUT) VALUE('*USE')
+                         CALLPRC    PRC(UTCHOBJAUT) PARM(&RETURNCODE &DETFILE +
+                                      &DETLIB &OBJTYPE &AUT)
+ 
+                         IF         COND(&RETURNCODE = &NOTAUT) THEN(DO)
+ 
+                            CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+/** If not authorised, call a routine which takes a message ID, +
+    retrieves its text, and sends it as CPD0006, as required by +
+    validity checkers. **/
+                            CHGVAR     VAR(&MSGDTA) VALUE(&DETFILE *CAT &OBJTYPE +
+                                         *CAT &DETLIB)
+                            CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                            CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2207' +
+                                         &MSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+                         ENDDO
+                      ENDDO
+                   ENDDO
+                ENDDO
+ 
+                CHGVAR     VAR(&DETCOUNT) VALUE(&DETCOUNT + 1)
+                GOTO       CMDLBL(NextDetail)
+ 
+             ENDDO
+ 
+/*/COPY WNCPYSRC,UTC9005M03                                          */
+ 
+/** +
+    +--- Field numbers file ----------------------------------------+ +
+    |                                                               | +
+    | After the parameters have been checked, check that the field  | +
+    | names/numbers file exists in the library list, and that the   | +
+    | user has sufficient authority to it.                          | +
+    |                                                               | +
+    +---------------------------------------------------------------+ +
+**/
+LastDetail:
+/** +
+    (9) Existence of the field numbers file +
+    ======================================= +
+**/
+             CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+             CHGVAR     VAR(&OBJTYPE) VALUE('*FILE')
+             CALLPRC    PRC(UTCHOBJEX) PARM(&RETURNCODE &FIELDFILE +
+                          &LIBL &OBJTYPE ' ')
+             IF         COND(&RETURNCODE = &NOTEXIST) THEN(DO)
+ 
+                CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+                CHGVAR     VAR(&MSGDTA) VALUE(&FIELDFILE *CAT +
+                             &LIBL *CAT &OBJTYPE)
+                CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2105' +
+                             &MSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/** +
+    (10) Authority to the field numbers file +
+    ======================================== +
+**/
+                CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                CHGVAR     VAR(&OBJTYPE) VALUE('*FILE')
+                CHGVAR     VAR(&AUT) VALUE('*CHANGE')
+                CALLPRC    PRC(UTCHOBJAUT) PARM(&RETURNCODE &FIELDFILE +
+                             &LIBL &OBJTYPE &AUT)
+ 
+                IF         COND(&RETURNCODE = &NOTAUT) THEN(DO)
+ 
+                   CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+                   CHGVAR     VAR(&MSGDTA) VALUE(&FIELDFILE *CAT &OBJTYPE +
+                                *CAT &LIBL)
+                   CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+                   CALLPRC    PRC(UTSNDVCMSG) PARM(&RETURNCODE 'CPF2207' +
+                                &MSGF &MSGDTA &PROGRAM &MODULE &PROCEDURE)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,UTC9005M04                                          */
+ 
+/* Change job switches to alert UTC9004 to the error */
+             CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&ERRORFOUND) VALUE('Y')
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,UTC9005M05                                          */
+ 
+/** +
+    +--- Send overall message if errors were found -----------------+ +
+    |                                                               | +
+    | If any field-level error was found, send the general message  | +
+    | which will cause the command to fail.                         | +
+    |                                                               | +
+    +---------------------------------------------------------------+ +
+**/
+             IF         COND(&ERRORFOUND *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+             CLOF       OPNID(UTGENFL0)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

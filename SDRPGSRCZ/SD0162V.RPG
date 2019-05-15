@@ -1,0 +1,1396 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Confirm deletion of year')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0162V - Midas SD Holidays                                  *
+      *                                                               *
+      *  Function:  This program allows the user to confirm deletion  *
+      *             of the year                                       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      *                 CSC043             Date 18Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      *                 S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 LN0662                   DATE 24JAN91         *
+      *                 S01212                   DATE 14SEP89         *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSC043 - MidasPlus IASP Enablement                           *
+      *  CSD031 - Enhanced Centralised Static data                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  LN0662 - REGENERATE DUE TO CHANGE IN SDCURRPD                *
+      *  S01212 - /COPIES                                             *
+      *                                                               *
+      *****************************************************************
+     F*00/Copy Member SD0162V   Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD0162VFPG
+     FSD0162V#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Confirm Deletion of Year
+      *
+     FSDHOLL9 IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RSQ : Midas SD Holidays by year only
+      *
+     FSDCURRL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Currency codes retrieval
+      *
+     FSDLOCNL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Location codes retrieval index
+      *
+     FSDHOLL0 UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0004
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Holidays update index
+      *
+     FSDFCTLL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0005
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Standing data controls update
+      *
+     FGPHOLIL6IF  E           K        DISK                           UC                      CSD031
+     F                                              KINFDS ID0006                             CSD031
+     F                                              KINFSR *PSSR                              CSD031
+     FGPHOLIL0UF  E           K        DISK                           UC                      CSD031
+     F                                              KCOMIT                                    CSD031
+     F                                              KINFDS ID0007                             CSD031
+     F                                              KINFSR *PSSR                              CSD031
+     FGPZONEL0IF  E           K        DISK                                                   CSD031
+      *                                                                                       CSD031
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*00/Copy Member SD0162V   Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD0162VEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I*00/Copy Member SD0162V   Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD0162VIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IQSDFC1    E DSSDFCTLL0
+      * UPD : Midas SD Standing data controls update
+     IYARDCS      DS                             22
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     IID0004      DS                            528
+      * File information data structure
+      *
+     IID0005      DS                            528
+      * File information data structure
+      *
+     IID0006      DS                            528                                           CSD031
+      * File information data structure                                                       CSD031
+      *                                                                                       CSD031
+     IID0007      DS                            528                                           CSD031
+      * File information data structure                                                       CSD031
+      *                                                                                       CSD031
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I :  Year Number
+     I                                        1   4 P1YRNB
+      ** Local data area for DTAQ msg                                                         CSD031
+     IWDTQ        DS                                                                          CSD031
+     I                                        1  10 WPFNAM                                    CSD031
+     I                                       11  40 WKEYS                                     CSD031
+     I                                       41 296 WDATA                                     CSD031
+      * Data Structure for SDHOLPD                                                            CSD031
+     I@SDHOL    E DSSDHOLPD                                                                   CSD031
+     I              DGCYCD                          WGCYCD                                    CSD031
+     I              DGLCCD                          WGLCCD                                    CSD031
+     I              DGYRNB                          WGYRNB                                    CSD031
+     I              DGJDNB                          WGJDNB                                    CSD031
+     I              DGDDNB                          WGDDNB                                    CSD031
+     I              DGJA01                          WGJA01                                    CSD031
+     I              DGJA02                          WGJA02                                    CSD031
+     I              DGJA03                          WGJA03                                    CSD031
+     I              DGJA04                          WGJA04                                    CSD031
+     I              DGJA05                          WGJA05                                    CSD031
+     I              DGJA06                          WGJA06                                    CSD031
+     I              DGJA07                          WGJA07                                    CSD031
+     I              DGJA08                          WGJA08                                    CSD031
+     I              DGJA09                          WGJA09                                    CSD031
+     I              DGJA10                          WGJA10                                    CSD031
+     I              DGJA11                          WGJA11                                    CSD031
+     I              DGJA12                          WGJA12                                    CSD031
+     I              DGJA13                          WGJA13                                    CSD031
+     I              DGJA14                          WGJA14                                    CSD031
+     I              DGJA15                          WGJA15                                    CSD031
+     I              DGJA16                          WGJA16                                    CSD031
+     I              DGJA17                          WGJA17                                    CSD031
+     I              DGJA18                          WGJA18                                    CSD031
+     I              DGJA19                          WGJA19                                    CSD031
+     I              DGJA20                          WGJA20                                    CSD031
+     I              DGJA21                          WGJA21                                    CSD031
+     I              DGJA22                          WGJA22                                    CSD031
+     I              DGJA23                          WGJA23                                    CSD031
+     I              DGJA24                          WGJA24                                    CSD031
+     I              DGJA25                          WGJA25                                    CSD031
+     I              DGJA26                          WGJA26                                    CSD031
+     I              DGJA27                          WGJA27                                    CSD031
+     I              DGJA28                          WGJA28                                    CSD031
+     I              DGJA29                          WGJA29                                    CSD031
+     I              DGJA30                          WGJA30                                    CSD031
+     I              DGJA31                          WGJA31                                    CSD031
+     I              DGFE01                          WGFE01                                    CSD031
+     I              DGFE02                          WGFE02                                    CSD031
+     I              DGFE03                          WGFE03                                    CSD031
+     I              DGFE04                          WGFE04                                    CSD031
+     I              DGFE05                          WGFE05                                    CSD031
+     I              DGFE06                          WGFE06                                    CSD031
+     I              DGFE07                          WGFE07                                    CSD031
+     I              DGFE08                          WGFE08                                    CSD031
+     I              DGFE09                          WGFE09                                    CSD031
+     I              DGFE10                          WGFE10                                    CSD031
+     I              DGFE11                          WGFE11                                    CSD031
+     I              DGFE12                          WGFE12                                    CSD031
+     I              DGFE13                          WGFE13                                    CSD031
+     I              DGFE14                          WGFE14                                    CSD031
+     I              DGFE15                          WGFE15                                    CSD031
+     I              DGFE16                          WGFE16                                    CSD031
+     I              DGFE17                          WGFE17                                    CSD031
+     I              DGFE18                          WGFE18                                    CSD031
+     I              DGFE19                          WGFE19                                    CSD031
+     I              DGFE20                          WGFE20                                    CSD031
+     I              DGFE21                          WGFE21                                    CSD031
+     I              DGFE22                          WGFE22                                    CSD031
+     I              DGFE23                          WGFE23                                    CSD031
+     I              DGFE24                          WGFE24                                    CSD031
+     I              DGFE25                          WGFE25                                    CSD031
+     I              DGFE26                          WGFE26                                    CSD031
+     I              DGFE27                          WGFE27                                    CSD031
+     I              DGFE28                          WGFE28                                    CSD031
+     I              DGFE29                          WGFE29                                    CSD031
+     I              DGMA01                          WGMA01                                    CSD031
+     I              DGMA02                          WGMA02                                    CSD031
+     I              DGMA03                          WGMA03                                    CSD031
+     I              DGMA04                          WGMA04                                    CSD031
+     I              DGMA05                          WGMA05                                    CSD031
+     I              DGMA06                          WGMA06                                    CSD031
+     I              DGMA07                          WGMA07                                    CSD031
+     I              DGMA08                          WGMA08                                    CSD031
+     I              DGMA09                          WGMA09                                    CSD031
+     I              DGMA10                          WGMA10                                    CSD031
+     I              DGMA11                          WGMA11                                    CSD031
+     I              DGMA12                          WGMA12                                    CSD031
+     I              DGMA13                          WGMA13                                    CSD031
+     I              DGMA14                          WGMA14                                    CSD031
+     I              DGMA15                          WGMA15                                    CSD031
+     I              DGMA16                          WGMA16                                    CSD031
+     I              DGMA17                          WGMA17                                    CSD031
+     I              DGMA18                          WGMA18                                    CSD031
+     I              DGMA19                          WGMA19                                    CSD031
+     I              DGMA20                          WGMA20                                    CSD031
+     I              DGMA21                          WGMA21                                    CSD031
+     I              DGMA22                          WGMA22                                    CSD031
+     I              DGMA23                          WGMA23                                    CSD031
+     I              DGMA24                          WGMA24                                    CSD031
+     I              DGMA25                          WGMA25                                    CSD031
+     I              DGMA26                          WGMA26                                    CSD031
+     I              DGMA27                          WGMA27                                    CSD031
+     I              DGMA28                          WGMA28                                    CSD031
+     I              DGMA29                          WGMA29                                    CSD031
+     I              DGMA30                          WGMA30                                    CSD031
+     I              DGMA31                          WGMA31                                    CSD031
+     I              DGAP01                          WGAP01                                    CSD031
+     I              DGAP02                          WGAP02                                    CSD031
+     I              DGAP03                          WGAP03                                    CSD031
+     I              DGAP04                          WGAP04                                    CSD031
+     I              DGAP05                          WGAP05                                    CSD031
+     I              DGAP06                          WGAP06                                    CSD031
+     I              DGAP07                          WGAP07                                    CSD031
+     I              DGAP08                          WGAP08                                    CSD031
+     I              DGAP09                          WGAP09                                    CSD031
+     I              DGAP10                          WGAP10                                    CSD031
+     I              DGAP11                          WGAP11                                    CSD031
+     I              DGAP12                          WGAP12                                    CSD031
+     I              DGAP13                          WGAP13                                    CSD031
+     I              DGAP14                          WGAP14                                    CSD031
+     I              DGAP15                          WGAP15                                    CSD031
+     I              DGAP16                          WGAP16                                    CSD031
+     I              DGAP17                          WGAP17                                    CSD031
+     I              DGAP18                          WGAP18                                    CSD031
+     I              DGAP19                          WGAP19                                    CSD031
+     I              DGAP20                          WGAP20                                    CSD031
+     I              DGAP21                          WGAP21                                    CSD031
+     I              DGAP22                          WGAP22                                    CSD031
+     I              DGAP23                          WGAP23                                    CSD031
+     I              DGAP24                          WGAP24                                    CSD031
+     I              DGAP25                          WGAP25                                    CSD031
+     I              DGAP26                          WGAP26                                    CSD031
+     I              DGAP27                          WGAP27                                    CSD031
+     I              DGAP28                          WGAP28                                    CSD031
+     I              DGAP29                          WGAP29                                    CSD031
+     I              DGAP30                          WGAP30                                    CSD031
+     I              DGMY01                          WGMY01                                    CSD031
+     I              DGMY02                          WGMY02                                    CSD031
+     I              DGMY03                          WGMY03                                    CSD031
+     I              DGMY04                          WGMY04                                    CSD031
+     I              DGMY05                          WGMY05                                    CSD031
+     I              DGMY06                          WGMY06                                    CSD031
+     I              DGMY07                          WGMY07                                    CSD031
+     I              DGMY08                          WGMY08                                    CSD031
+     I              DGMY09                          WGMY09                                    CSD031
+     I              DGMY10                          WGMY10                                    CSD031
+     I              DGMY11                          WGMY11                                    CSD031
+     I              DGMY12                          WGMY12                                    CSD031
+     I              DGMY13                          WGMY13                                    CSD031
+     I              DGMY14                          WGMY14                                    CSD031
+     I              DGMY15                          WGMY15                                    CSD031
+     I              DGMY16                          WGMY16                                    CSD031
+     I              DGMY17                          WGMY17                                    CSD031
+     I              DGMY18                          WGMY18                                    CSD031
+     I              DGMY19                          WGMY19                                    CSD031
+     I              DGMY20                          WGMY20                                    CSD031
+     I              DGMY21                          WGMY21                                    CSD031
+     I              DGMY22                          WGMY22                                    CSD031
+     I              DGMY23                          WGMY23                                    CSD031
+     I              DGMY24                          WGMY24                                    CSD031
+     I              DGMY25                          WGMY25                                    CSD031
+     I              DGMY26                          WGMY26                                    CSD031
+     I              DGMY27                          WGMY27                                    CSD031
+     I              DGMY28                          WGMY28                                    CSD031
+     I              DGMY29                          WGMY29                                    CSD031
+     I              DGMY30                          WGMY30                                    CSD031
+     I              DGMY31                          WGMY31                                    CSD031
+     I              DGJU01                          WGJU01                                    CSD031
+     I              DGJU02                          WGJU02                                    CSD031
+     I              DGJU03                          WGJU03                                    CSD031
+     I              DGJU04                          WGJU04                                    CSD031
+     I              DGJU05                          WGJU05                                    CSD031
+     I              DGJU06                          WGJU06                                    CSD031
+     I              DGJU07                          WGJU07                                    CSD031
+     I              DGJU08                          WGJU08                                    CSD031
+     I              DGJU09                          WGJU09                                    CSD031
+     I              DGJU10                          WGJU10                                    CSD031
+     I              DGJU11                          WGJU11                                    CSD031
+     I              DGJU12                          WGJU12                                    CSD031
+     I              DGJU13                          WGJU13                                    CSD031
+     I              DGJU14                          WGJU14                                    CSD031
+     I              DGJU15                          WGJU15                                    CSD031
+     I              DGJU16                          WGJU16                                    CSD031
+     I              DGJU17                          WGJU17                                    CSD031
+     I              DGJU18                          WGJU18                                    CSD031
+     I              DGJU19                          WGJU19                                    CSD031
+     I              DGJU20                          WGJU20                                    CSD031
+     I              DGJU21                          WGJU21                                    CSD031
+     I              DGJU22                          WGJU22                                    CSD031
+     I              DGJU23                          WGJU23                                    CSD031
+     I              DGJU24                          WGJU24                                    CSD031
+     I              DGJU25                          WGJU25                                    CSD031
+     I              DGJU26                          WGJU26                                    CSD031
+     I              DGJU27                          WGJU27                                    CSD031
+     I              DGJU28                          WGJU28                                    CSD031
+     I              DGJU29                          WGJU29                                    CSD031
+     I              DGJU30                          WGJU30                                    CSD031
+     I              DGJL01                          WGJL01                                    CSD031
+     I              DGJL02                          WGJL02                                    CSD031
+     I              DGJL03                          WGJL03                                    CSD031
+     I              DGJL04                          WGJL04                                    CSD031
+     I              DGJL05                          WGJL05                                    CSD031
+     I              DGJL06                          WGJL06                                    CSD031
+     I              DGJL07                          WGJL07                                    CSD031
+     I              DGJL08                          WGJL08                                    CSD031
+     I              DGJL09                          WGJL09                                    CSD031
+     I              DGJL10                          WGJL10                                    CSD031
+     I              DGJL11                          WGJL11                                    CSD031
+     I              DGJL12                          WGJL12                                    CSD031
+     I              DGJL13                          WGJL13                                    CSD031
+     I              DGJL14                          WGJL14                                    CSD031
+     I              DGJL15                          WGJL15                                    CSD031
+     I              DGJL16                          WGJL16                                    CSD031
+     I              DGJL17                          WGJL17                                    CSD031
+     I              DGJL18                          WGJL18                                    CSD031
+     I              DGJL19                          WGJL19                                    CSD031
+     I              DGJL20                          WGJL20                                    CSD031
+     I              DGJL21                          WGJL21                                    CSD031
+     I              DGJL22                          WGJL22                                    CSD031
+     I              DGJL23                          WGJL23                                    CSD031
+     I              DGJL24                          WGJL24                                    CSD031
+     I              DGJL25                          WGJL25                                    CSD031
+     I              DGJL26                          WGJL26                                    CSD031
+     I              DGJL27                          WGJL27                                    CSD031
+     I              DGJL28                          WGJL28                                    CSD031
+     I              DGJL29                          WGJL29                                    CSD031
+     I              DGJL30                          WGJL30                                    CSD031
+     I              DGJL31                          WGJL31                                    CSD031
+     I              DGAU01                          WGAU01                                    CSD031
+     I              DGAU02                          WGAU02                                    CSD031
+     I              DGAU03                          WGAU03                                    CSD031
+     I              DGAU04                          WGAU04                                    CSD031
+     I              DGAU05                          WGAU05                                    CSD031
+     I              DGAU06                          WGAU06                                    CSD031
+     I              DGAU07                          WGAU07                                    CSD031
+     I              DGAU08                          WGAU08                                    CSD031
+     I              DGAU09                          WGAU09                                    CSD031
+     I              DGAU10                          WGAU10                                    CSD031
+     I              DGAU11                          WGAU11                                    CSD031
+     I              DGAU12                          WGAU12                                    CSD031
+     I              DGAU13                          WGAU13                                    CSD031
+     I              DGAU14                          WGAU14                                    CSD031
+     I              DGAU15                          WGAU15                                    CSD031
+     I              DGAU16                          WGAU16                                    CSD031
+     I              DGAU17                          WGAU17                                    CSD031
+     I              DGAU18                          WGAU18                                    CSD031
+     I              DGAU19                          WGAU19                                    CSD031
+     I              DGAU20                          WGAU20                                    CSD031
+     I              DGAU21                          WGAU21                                    CSD031
+     I              DGAU22                          WGAU22                                    CSD031
+     I              DGAU23                          WGAU23                                    CSD031
+     I              DGAU24                          WGAU24                                    CSD031
+     I              DGAU25                          WGAU25                                    CSD031
+     I              DGAU26                          WGAU26                                    CSD031
+     I              DGAU27                          WGAU27                                    CSD031
+     I              DGAU28                          WGAU28                                    CSD031
+     I              DGAU29                          WGAU29                                    CSD031
+     I              DGAU30                          WGAU30                                    CSD031
+     I              DGAU31                          WGAU31                                    CSD031
+     I              DGSE01                          WGSE01                                    CSD031
+     I              DGSE02                          WGSE02                                    CSD031
+     I              DGSE03                          WGSE03                                    CSD031
+     I              DGSE04                          WGSE04                                    CSD031
+     I              DGSE05                          WGSE05                                    CSD031
+     I              DGSE06                          WGSE06                                    CSD031
+     I              DGSE07                          WGSE07                                    CSD031
+     I              DGSE08                          WGSE08                                    CSD031
+     I              DGSE09                          WGSE09                                    CSD031
+     I              DGSE10                          WGSE10                                    CSD031
+     I              DGSE11                          WGSE11                                    CSD031
+     I              DGSE12                          WGSE12                                    CSD031
+     I              DGSE13                          WGSE13                                    CSD031
+     I              DGSE14                          WGSE14                                    CSD031
+     I              DGSE15                          WGSE15                                    CSD031
+     I              DGSE16                          WGSE16                                    CSD031
+     I              DGSE17                          WGSE17                                    CSD031
+     I              DGSE18                          WGSE18                                    CSD031
+     I              DGSE19                          WGSE19                                    CSD031
+     I              DGSE20                          WGSE20                                    CSD031
+     I              DGSE21                          WGSE21                                    CSD031
+     I              DGSE22                          WGSE22                                    CSD031
+     I              DGSE23                          WGSE23                                    CSD031
+     I              DGSE24                          WGSE24                                    CSD031
+     I              DGSE25                          WGSE25                                    CSD031
+     I              DGSE26                          WGSE26                                    CSD031
+     I              DGSE27                          WGSE27                                    CSD031
+     I              DGSE28                          WGSE28                                    CSD031
+     I              DGSE29                          WGSE29                                    CSD031
+     I              DGSE30                          WGSE30                                    CSD031
+     I              DGOC01                          WGOC01                                    CSD031
+     I              DGOC02                          WGOC02                                    CSD031
+     I              DGOC03                          WGOC03                                    CSD031
+     I              DGOC04                          WGOC04                                    CSD031
+     I              DGOC05                          WGOC05                                    CSD031
+     I              DGOC06                          WGOC06                                    CSD031
+     I              DGOC07                          WGOC07                                    CSD031
+     I              DGOC08                          WGOC08                                    CSD031
+     I              DGOC09                          WGOC09                                    CSD031
+     I              DGOC10                          WGOC10                                    CSD031
+     I              DGOC11                          WGOC11                                    CSD031
+     I              DGOC12                          WGOC12                                    CSD031
+     I              DGOC13                          WGOC13                                    CSD031
+     I              DGOC14                          WGOC14                                    CSD031
+     I              DGOC15                          WGOC15                                    CSD031
+     I              DGOC16                          WGOC16                                    CSD031
+     I              DGOC17                          WGOC17                                    CSD031
+     I              DGOC18                          WGOC18                                    CSD031
+     I              DGOC19                          WGOC19                                    CSD031
+     I              DGOC20                          WGOC20                                    CSD031
+     I              DGOC21                          WGOC21                                    CSD031
+     I              DGOC22                          WGOC22                                    CSD031
+     I              DGOC23                          WGOC23                                    CSD031
+     I              DGOC24                          WGOC24                                    CSD031
+     I              DGOC25                          WGOC25                                    CSD031
+     I              DGOC26                          WGOC26                                    CSD031
+     I              DGOC27                          WGOC27                                    CSD031
+     I              DGOC28                          WGOC28                                    CSD031
+     I              DGOC29                          WGOC29                                    CSD031
+     I              DGOC30                          WGOC30                                    CSD031
+     I              DGOC31                          WGOC31                                    CSD031
+     I              DGNO01                          WGNO01                                    CSD031
+     I              DGNO02                          WGNO02                                    CSD031
+     I              DGNO03                          WGNO03                                    CSD031
+     I              DGNO04                          WGNO04                                    CSD031
+     I              DGNO05                          WGNO05                                    CSD031
+     I              DGNO06                          WGNO06                                    CSD031
+     I              DGNO07                          WGNO07                                    CSD031
+     I              DGNO08                          WGNO08                                    CSD031
+     I              DGNO09                          WGNO09                                    CSD031
+     I              DGNO10                          WGNO10                                    CSD031
+     I              DGNO11                          WGNO11                                    CSD031
+     I              DGNO12                          WGNO12                                    CSD031
+     I              DGNO13                          WGNO13                                    CSD031
+     I              DGNO14                          WGNO14                                    CSD031
+     I              DGNO15                          WGNO15                                    CSD031
+     I              DGNO16                          WGNO16                                    CSD031
+     I              DGNO17                          WGNO17                                    CSD031
+     I              DGNO18                          WGNO18                                    CSD031
+     I              DGNO19                          WGNO19                                    CSD031
+     I              DGNO20                          WGNO20                                    CSD031
+     I              DGNO21                          WGNO21                                    CSD031
+     I              DGNO22                          WGNO22                                    CSD031
+     I              DGNO23                          WGNO23                                    CSD031
+     I              DGNO24                          WGNO24                                    CSD031
+     I              DGNO25                          WGNO25                                    CSD031
+     I              DGNO26                          WGNO26                                    CSD031
+     I              DGNO27                          WGNO27                                    CSD031
+     I              DGNO28                          WGNO28                                    CSD031
+     I              DGNO29                          WGNO29                                    CSD031
+     I              DGNO30                          WGNO30                                    CSD031
+     I              DGDE01                          WGDE01                                    CSD031
+     I              DGDE02                          WGDE02                                    CSD031
+     I              DGDE03                          WGDE03                                    CSD031
+     I              DGDE04                          WGDE04                                    CSD031
+     I              DGDE05                          WGDE05                                    CSD031
+     I              DGDE06                          WGDE06                                    CSD031
+     I              DGDE07                          WGDE07                                    CSD031
+     I              DGDE08                          WGDE08                                    CSD031
+     I              DGDE09                          WGDE09                                    CSD031
+     I              DGDE10                          WGDE10                                    CSD031
+     I              DGDE11                          WGDE11                                    CSD031
+     I              DGDE12                          WGDE12                                    CSD031
+     I              DGDE13                          WGDE13                                    CSD031
+     I              DGDE14                          WGDE14                                    CSD031
+     I              DGDE15                          WGDE15                                    CSD031
+     I              DGDE16                          WGDE16                                    CSD031
+     I              DGDE17                          WGDE17                                    CSD031
+     I              DGDE18                          WGDE18                                    CSD031
+     I              DGDE19                          WGDE19                                    CSD031
+     I              DGDE20                          WGDE20                                    CSD031
+     I              DGDE21                          WGDE21                                    CSD031
+     I              DGDE22                          WGDE22                                    CSD031
+     I              DGDE23                          WGDE23                                    CSD031
+     I              DGDE24                          WGDE24                                    CSD031
+     I              DGDE25                          WGDE25                                    CSD031
+     I              DGDE26                          WGDE26                                    CSD031
+     I              DGDE27                          WGDE27                                    CSD031
+     I              DGDE28                          WGDE28                                    CSD031
+     I              DGDE29                          WGDE29                                    CSD031
+     I              DGDE30                          WGDE30                                    CSD031
+     I              DGDE31                          WGDE31                                    CSD031
+     I              DGLCD                           WGLCD                                     CSD031
+     I              DGTYLC                          WGTYLC                                    CSD031
+     I              DGZONE                          WGZONE                                    CSD031
+     I              DGIUSR                          WGIUSR                                    CSD031
+     I              DGAUSR                          WGAUSR                                    CSD031
+     I              DGXUSR                          WGXUSR                                    CSD031
+     I              DGAACC                          WGAACC                                    CSD031
+     I              DGEACC                          WGEACC                                    CSD031
+     I              DGGPDT                          WGGPDT                                    CSD031
+      *                                                                                       CSD031
+     IPDQMSG      DS                           4040                                           CSD031
+      *                                                                                       CSD031
+     I**********    'XLIB/SDCSNDDTQ'      C         PGMB                               CSD031 CSC043
+     I              'XPLIB/SDCSNDDTQ'     C         PGMB                                      CSC043
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1YRNB    PARM           WP0001  4        Year Number
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Conduct screen conversation
+     C                     DO   *HIVAL
+      * Start new transaction
+     C                     MOVEL'Y'       W0TRN   1
+      * Process current transaction
+     C           W0TRN     DOWEQ'Y'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            MALDSC
+      * Process screen input
+     C                     CAS            DAPRSC
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *****************************************************************
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPRSC    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * USER: Process command keys
+      * CASE: DTL.*CMD key is CF10
+     C           *IN10     IFEQ '1'                        *IF
+      * Get all Hols for deletion - Holidays  *
+     C                     EXSR SARVGN
+      * If the deletion/s have been successful then the return code will
+      * and all the changes can be commited, if the return code is not bl
+      * errors have occurred and all changes will be rolled back at the e
+      * program.
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     EXSR SRSDTQ                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C                     COMIT
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: DTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Send message 'F3/F10/F12 only valid opt'
+     C                     MOVEL'USR0536' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VPCK - Holidays  *
+     C*00/Copy Member SD0162V   Process Command Keys
+     C/COPY WNCPYSRC,SD0162VPCK
+     C                     END                             *FI
+      * Validate screen input
+     C                     EXSR DBVLSC
+      * If error, exit
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: User defined action
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VVDA - Holidays  *
+     C*00/Copy Member SD0162V   User Defined Action
+     C/COPY WNCPYSRC,SD0162VUDA
+     C                     END                             *FI
+      * Exit program
+     C                     EXSR ZXEXPG
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBVLSC    BEGSR
+      *================================================================
+      * Validate screen input
+      *================================================================
+      * USER: Validate fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VVFI - Holidays  *
+     C*00/Copy Member SD0162V   Validate Fields
+     C/COPY WNCPYSRC,SD0162VVFI
+     C                     END                             *FI
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      * Select existing record
+     C                     EXSR VACKRL
+      * Check reference to Currency Codes
+     C                     EXSR VBCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * Check reference to Location Codes
+     C                     EXSR VCCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CALC: Screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VSFI - Holidays  *
+     C*00/Copy Member SD0162V   Calculate Function Flds
+     C/COPY WNCPYSRC,SD0162VSFI
+     C                     END                             *FI
+      * USER: Validate relations
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VVRE - Holidays  *
+     C*00/Copy Member SD0162V   Validate Screen Relations
+     C/COPY WNCPYSRC,SD0162VVRE
+     C                     END                             *FI
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         MALDSC    BEGSR
+      *================================================================
+      * Load screen from passed parameters
+      *================================================================
+     C                     MOVEL*BLANK    #1CYCD           Currency Code
+     C                     MOVEL*BLANK    #1LCCD           Location Code
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1YRNB           Year Number
+      * CALC: Screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VSFI - Holidays  *
+     C*00/Copy Member SD0162V   Calculate Function Flds
+     C/COPY WNCPYSRC,SD0162VSFI
+     C                     END                             *FI
+      * USER: Load screen
+     C                     MOVELP1YRNB    #1YRNB           Year Number
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VLSR - Holidays  *
+     C*00/Copy Member SD0162V   Load Screen
+     C/COPY WNCPYSRC,SD0162VLSR
+     C                     END                             *FI
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get all Hols for deletion - Holidays  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN DGYRNB    WQSA01           Year Number
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           WQSA01           Year Number
+      * Move fields to key list
+     C                     MOVELP1YRNB    WQSA01           Year Number
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           KRSSA     SETLLGPHOLID0                   *                                  CSD031
+     C           KRSSA     READEGPHOLID0                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSA     SETLL@HOLPIF                    *
+     C           KRSSA     READE@HOLPIF                  90*
+     C                     ENDIF                                                              CSD031
+      * Data record not found
+     C   90                MOVEL'USR0657' W0RTN   7
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+      * Delete all Holidays - Holidays  *
+     C                     EXSR SBDLRC
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           KRSSA     READEGPHOLID0                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSA     READE@HOLPIF                  90*
+     C                     ENDIF                                                              CSD031
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBDLRC    BEGSR
+      *================================================================
+      * Delete all Holidays - Holidays  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @HOLPHG
+     C                     MOVELP1YRNB    DGYRNB           Year Number
+      *
+     C           KLDLSB    KLIST
+     C                     KFLD           DGCYCD           Currency Code
+     C                     KFLD           DGLCCD           Location Code
+     C                     KFLD           DGYRNB           Year Number
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           KLDLSB    CHAINSDHOLD0              9091  *                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KLDLSB    CHAIN@HOLPHG              9091  *
+     C                     ENDIF                                                              CSD031
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      *................................................................
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     DELETSDHOLD0                91  *                                  CSD031
+     C                     ELSE                                                               CSD031
+     C                     DELET@HOLPHG                91  *
+     C                     ENDIF                                                              CSD031
+     C           *IN91     IFEQ '1'
+      * Delete error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF delete successful
+      * USER: Processing after Data update
+     C                     Z-ADD-1        WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     WUNOAM           No. of Amends
+     C                     Z-ADD1         WUNODL           No. of Deletes
+     C           CSD041    IFEQ 'N'                                                           CSD031
+     C                     EXSR SCCHRC                                                        CSD031
+     C                     ELSE                                                               CSD031
+     C           *INU1     IFEQ *OFF                                                          CSD031
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SCCHRC
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YARDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDHOLPD' AHFLNM           Filename
+      *
+     C           KLCHSC    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSC    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SCEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YARDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YARDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1CYCD    WK1X01  1
+     C                     MOVEL#1LCCD    WK1X02  1
+     C                     MOVEL#1YRNB    WK1X03  1
+     C           WK1X01    IFEQ '?'                        Currency Code
+     C           WK1X02    OREQ '?'                        Location Code
+     C           WK1X03    OREQ '?'                        Year Number
+     C                     CALL 'SD0160S'              90  Select Holidays
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CYCD    PARM #1CYCD    WQ0001  3        Currency Code
+     C           #1LCCD    PARM #1LCCD    WQ0002  3        Location Code
+     C           #1YRNB    PARM #1YRNB    WQ0003  4        Year Number
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0160S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         VBCKRL    BEGSR
+      *================================================================
+      * Check reference to Currency Codes
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Name search required?
+     C                     MOVEL#1CYCD    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Currency Code
+     C                     CALL 'SD0020S'              90  Select Currency
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CYCD    PARM #1CYCD    WQ0004  3        Currency Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0020S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     IFNE *BLANK
+     C                     GOTO VBEXIT
+     C                     END
+     C                     END
+      *................................................................
+      * If all low order keys not entered, exit
+     C           #1CYCD    IFEQ *BLANK                     Currency Code
+     C                     GOTO VBEXIT
+     C                     END
+      *
+     C           KLVBA6    KLIST
+     C                     KFLD           A6CYCD           Currency Code
+      * Setup key
+     C                     MOVEL#1CYCD    A6CYCD           Currency Code
+     C           KLVBA6    CHAIN@A6REA3              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     GOTO VBEXIT
+     C                     END
+      * Send message 'Currency Codes         NF'
+     C                     MOVEL'USR0071' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'USR0071' W0RTN
+      *================================================================
+     CSR         VBEXIT    ENDSR
+      /EJECT
+     CSR         VCCKRL    BEGSR
+      *================================================================
+      * Check reference to Location Codes
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Name search required?
+     C                     MOVEL#1LCCD    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Location Code
+     C                     CALL 'SD0550S'              90  Select Location
+     C                     PARM *BLANK    W0RTN   7
+     C           #1LCCD    PARM #1LCCD    WQ0005  3        Location Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0550S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     IFNE *BLANK
+     C                     GOTO VCEXIT
+     C                     END
+     C                     END
+      *................................................................
+      * If all low order keys not entered, exit
+     C           #1LCCD    IFEQ *BLANK                     Location Code
+     C                     GOTO VCEXIT
+     C                     END
+      *
+     C           KLVCDV    KLIST
+     C                     KFLD           DVLCCD           Location Code
+      * Setup key
+     C                     MOVEL#1LCCD    DVLCCD           Location Code
+     C           KLVCDV    CHAIN@DVREHH              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     GOTO VCEXIT
+     C                     END
+      * Send message 'Location Codes         NF'
+     C                     MOVEL'USR0653' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'USR0653' W0RTN
+      *================================================================
+     CSR         VCEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VEPP - Holidays  *
+     C*00/Copy Member SD0162V   Exit Program Processing
+     C/COPY WNCPYSRC,SD0162VEPP
+     C                     END                             *FI
+      * CASE: DTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C                     OPEN SD0162V#
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     OPEN GPHOLIL6                                                      CSD031
+     C                     ELSE                                                               CSD031
+     C                     OPEN SDHOLL9
+     C                     ENDIF                                                              CSD031
+     C                     OPEN SDCURRL1
+     C                     OPEN SDLOCNL1
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     OPEN GPHOLIL0                                                      CSD031
+     C                     ELSE                                                               CSD031
+     C                     OPEN SDHOLL0
+     C                     ENDIF                                                              CSD031
+     C                     OPEN SDFCTLL0
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0162V PRECOMPILER - Holidays  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0162VFPG - Holidays  *
+      * 00/Copy Member SD0162VEPG - Holidays  *
+      * 00/Copy Member SD0162VIPG - Holidays  *
+      * 00/Copy Member SD0162VCPG - Holidays  *
+     C*00/Copy Member SD0162V   Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD0162VCPG
+      * 00/Copy Member SD0162VOPG - Holidays  *
+     C                     END                             *FI
+      *                                                                                       CSD031
+      ** Check if CSD041 is switched on                                                       CSD031
+      *                                                                                       CSD031
+     C                     CALL 'AOSARDR0'                                                    CSD031
+     C                     PARM           PRTCD   7                                           CSD031
+     C                     PARM '*VERIFY' POPTN   7                                           CSD031
+     C                     PARM 'CSD041'  PSARD   6                                           CSD031
+      *                                                                                       CSD031
+     C           PRTCD     IFEQ *BLANKS                                                       CSD031
+     C                     MOVE 'Y'       CSD041  1                                           CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE 'N'       CSD041                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      * Load screen
+     C                     EXSR MALDSC
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0162VPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0162VPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0162VPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     CSR         SRSDTQ    BEGSR                                                              CSD031
+      *================================================================                       CSD031
+      * Setup details and send message to data queue                                          CSD031
+      *================================================================                       CSD031
+     C                     MOVEL'GPHOLIPD'WPFNAM                                              CSD031
+     C                     MOVELWQSA01    WKEYS                                               CSD031
+     C                     MOVEL@SDHOL    WDATA                                               CSD031
+     C                     MOVELWDTQ      PDQMSG                                              CSD031
+     C           'SD'      CAT  'ACCPDTQ' PDQNAM 10                                           CSD031
+      *                                                                                       CSD031
+     C           *LOVAL    SETLLGPZONEL0                                                      CSD031
+     C                     READ GPZONEL0                 90                                   CSD031
+     C           *IN90     DOWEQ*OFF                                                          CSD031
+     C           ZOMSYS    CAT  'DPLIB'   PDQLIB                                              CSD031
+     C********** ZOMSYS    CAT  PGMB      PGMNAM 16                                    CSD031 CSC043
+     C           ZOMSYS    CAT  PGMB      PGMNAM 17                                           CSC043
+     C                     CALL PGMNAM                                                        CSD031
+     C                     PARM           PDQNAM                                              CSD031
+     C                     PARM           PDQLIB 10                                           CSD031
+     C                     PARM           PDQMSG                                              CSD031
+     C                     READ GPZONEL0                 90                                   CSD031
+     C                     ENDDO                                                              CSD031
+      *================================================================                       CSD031
+     CSR                   ENDSR                                                              CSD031
+      *================================================================                       CSD031
+     O*00/Copy Member SD0162V   Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD0162VOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

@@ -1,0 +1,52 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Synchronize Global AMAD Extension')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       GOC0090 - Midas GO Synchronize Global AMAD Extension        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD024928           Date 05Mar14              */
+/*                      CER059             Date 19Jul10              */
+/*                      BUG25565A *CREATE  Date 26Aug09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD024928 - GOC0090 00001 failed during COB                  */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG25565A - Can't authorise a re-used Retail Account No     */
+/*                   Midas GO Global update T_GZAMADEX               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2009')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             OVRDBF     FILE(T_GZAMADEX) LVLCHK(*NO)                                    /*MD024928*/
+                                                                                        /*MD024928*/
+             CALL       PGM(GPT_AMADEX)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+ ABNOR:            CHGJOB     SWS(XXXXXX11)
+                   DMPCLPGM
+                   SNDPGMMSG  MSG('GOC0090 - Program ended abnormally - +
+                              see job log') TOMSGQ(MOPERQ MRUNQ)
+                   MONMSG     MSGID(CPF0000)
+                   GOTO       CMDLBL(END)
+                   ENDDO
+ 
+ END:        CHGVAR   VAR(&CPYFLD) VALUE('(c) +
+                       Finastra International Limited')
+ 
+             ENDPGM

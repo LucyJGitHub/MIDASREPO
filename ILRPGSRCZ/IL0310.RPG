@@ -1,0 +1,476 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Operation Codes Lists')
+      ****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/ILC0310    - IBLC OPERATION CODES LIST                    *
+      *                                                               *
+      *  Function: This program list IBLC operation.                  *
+      *            Two reports can be product :                       *
+      *            - Full list = All routing keys                     *
+      *            - Audit list = Operation codes amended, inserted   *
+      *                           during the day                      *
+      *                                                               *
+      *  Phase(s): Input cycle                                        *
+      *            Close of business                                  *
+      *                                                               *
+      *  Called By: CLP/ILC0310 - IBLC OPERATION CODES LIST           *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX043             Date 04Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FILCODEPDIF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC Operation codes                            Prefix CO
+      *
+     FIL0310AUO   E                    PRINTER      KINFDS SPOOLU
+      ***  Audit printer file
+      *
+     FIL0310P1O   E             70     PRINTER      KINFDS SPOOL1
+      ***  Detail printer file
+      *
+      /EJECT
+      *****************************************************************
+      ***  Compile Time Arrays
+      *****************************************************************
+      *
+      ***  Standard Subroutine Arrays
+      *
+      /COPY ZSRSRC,ZDATE2Z1                                Std ZDATE1-2
+      /COPY ZSRSRC,ZEDITZ1                                 Std ZEDIT
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     IDSDATE      DS                              8
+     I                                        1   2 DSDAY
+     I                                        4   5 DSMTH
+     I                                        7   8 DSYEAR
+      *
+      ***  Data Structure to received details through Access Object programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Standing Data - Bank Details
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+      *
+      ***  Data Structure for RCF
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL1      DS
+      **  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  Define input parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTYPE   1
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+      *
+      ***  Process list
+      *
+     C           PTYPE     IFEQ 'F'
+     C           PTYPE     OREQ 'A'
+     C                     EXSR #LIST
+     C                     ELSE
+      *
+      *** If type of report not equal to 'F' or 'A' process database error
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 001 *
+     C                     MOVEL'PTYPE '  DBFILE           ****************
+     C                     MOVELPTYPE     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Process audit
+      *
+     C                     EXSR #AUDIT
+      *
+      ***  Program end
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  #LIST  - Subroutine to print list.                           *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     : #TYPE, #MFLD                                     *
+      *****************************************************************
+      *
+     C           #LIST     BEGSR
+      *
+      ***  Print list header
+      *
+     C           PTYPE     IFEQ 'F'
+     C                     MOVEL*ON       *IN41
+     C                     MOVEL*OFF      *IN42
+     C                     ELSE
+     C                     MOVEL*OFF      *IN41
+     C                     MOVEL*ON       *IN42
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+      *
+      ***  Access to file
+      *
+     C                     MOVEL*LOVAL    COOPCO
+      *
+     C           COOPCO    SETLLILCODEPD
+      *
+     C                     READ ILCODEPD                 81
+      *
+      ***  So long as EOF not reached or other module reached
+      *
+     C           *IN81     DOWEQ*OFF
+      *
+      ***  Execute page overflow
+      *
+     C           *IN70     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVEL*OFF      *IN70
+     C                     ENDIF
+      *
+      ***  Consider record depending type of list
+      *
+     C           PTYPE     IFEQ 'A'                        Audit and
+     C           BJRDNB    ANDEQCOLCD                       changed today
+     C           PTYPE     OREQ 'F'                        Full
+      *
+      ***  Add 1 to number of record read
+      *
+     C                     ADD  1         WWNORE  50
+      *
+      ***  Determine change type and compute record
+      *
+     C                     EXSR #TYPE
+      *
+      ***  Transfer file and work fields to printer fields
+      *
+     C                     EXSR #MFLD
+      *
+      ***  Print detail lines
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDIF
+      *
+      ***  Access to file again
+      *
+     C                     READ ILCODEPD                 81
+      *
+     C                     ENDDO
+      *
+      ***  Print list trailer
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #TYPE  - Subroutine to determine change type and compute     *
+      *  -----    record.                                             *
+      *  Called by : #LIST                                            *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #TYPE     BEGSR
+      *
+     C                     SELEC
+     C           COCHTP    WHEQ 'I'
+      *
+      ***  If the last change type is 'I', add 1 to number of inserts:
+      *
+     C                     ADD  1         WWNOIN  50
+     C                     MOVEL'INSERT'  WWCHTP  6
+      *
+     C           COCHTP    WHEQ 'A'
+      *
+      ***  If the last change type is 'A', add 1 to number of amends:
+      *
+     C                     ADD  1         WWNOAM  50
+     C                     MOVEL'AMEND '  WWCHTP
+      *
+     C           COCHTP    WHEQ 'D'
+      *
+      ***  If the last change type is 'D', add 1 to number of deletes:
+      *
+     C                     ADD  1         WWNODE  50
+     C                     MOVEL'DELETE'  WWCHTP
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #MFLD -  Subroutine to move file and work fields to printer  *
+      *  -----    fields.                                             *
+      *  Called by : #LIST                                            *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #MFLD     BEGSR
+      *
+      ***  Reset *IN43
+      *
+     C                     MOVE *OFF      *IN43
+      *
+      ***  Fill in Report Fields
+      *
+     C                     MOVELCOOPCO    ROPCO            OP. code
+     C                     MOVELCONARF    RNARF            OP. narrative
+      *
+     C                     MOVE COLCBK    ZFIELD           Lim. for Country BANK
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RCLBK
+      *
+     C                     MOVE COLCNB    ZFIELD           Lim. for Country
+     C                     Z-ADD2         ZADEC            NON BANK
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RCLNB
+      *
+     C                     MOVE COLIBK    ZFIELD           Lim. for Identif.
+     C                     Z-ADD2         ZADEC               BANK
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RILBK
+      *
+     C                     MOVE COLINB    ZFIELD           Lim. for Identif.
+     C                     Z-ADD2         ZADEC               NON BANK
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RILNB
+      *
+     C           COLCD     IFNE 0                          Last chg date
+     C                     Z-ADDCOLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDATE
+     C                     ENDIF
+      *
+     C                     MOVE WWCHTP    RCHTP            Last chg type
+     C                     MOVE COLUID    RULUP            Last chg user
+      *
+      ***  Print validity period if fields aren't default value.
+      *
+     C                     MOVE *BLANKS   RVFRM
+     C                     MOVE *BLANKS   RVLTO
+      *
+     C           COVFRM    IFNE 0                          not default (from)
+     C                     Z-ADDCOVFRM    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDAY      DSDAY
+     C                     MOVE ZMTH      DSMTH
+     C                     MOVE ZDATE     DSYEAR
+     C                     MOVELDSDATE    RVFRM
+     C                     MOVE *ON       *IN43
+     C                     ENDIF
+      *
+     C           COVLTO    IFNE 99999                      not default (to)
+     C                     Z-ADDCOVLTO    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDAY      DSDAY
+     C                     MOVE ZMTH      DSMTH
+     C                     MOVE ZDATE     DSYEAR
+     C                     MOVELDSDATE    RVLTO
+     C                     MOVE *ON       *IN43
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #AUDIT - Subroutine to print Audit report.                   *
+      *  ------                                                       *
+      *  Called by :  Mainlines                                       *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #AUDIT    BEGSR
+      *
+     C                     Z-ADDWWNOIN    RNOIN            INSERTED
+     C                     Z-ADDWWNOAM    RNOAM            AMENDED
+     C                     Z-ADDWWNODE    RNODE            DELETED
+     C                     Z-ADDWWNORE    RNORE            NB of Records
+      *
+      ***  Print audit report
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Subroutine to initialize static fields and access   *
+      *  -----    standing data.                                      *
+      *  Called by : Automatically at pgm start                       *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Copyright Statement.
+      *
+     C                     MOVEACPY@      CPY@2  80
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELPGM       DBPGM
+      *
+      ***  Initialize indicators
+      *
+     C                     MOVEL*OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 002 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Set dec. positions for ZEDIT
+      *
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD15        ZADIG
+      *
+      ***  Start RCF for Printer files
+      *
+     C                     Z-ADDSFNUMU    ZSNUM            IL0310AU
+     C                     MOVELSFILEU    SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     Z-ADDSFNUM1    ZSNUM            IL0310P1
+     C                     MOVELSFIL1     SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     MOVEL'  /  /  'DSDATE           output format
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRZSFL - Subroutine to call ZSFILE (Record in RCF)            *
+      * ------                                                        *
+      * Called by : *INZSR                                            *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           SRZSFL    BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Subroutine to handle Abnormal Errors.               *
+      *  ------                                                       *
+      *  Called by : In case of error                                 *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANKS
+     C                     MOVEL'Y'       WRUN    1
+      *
+     C           DBASE     IFNE 0
+     C                     MOVE *ON       *IN41
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ELSE
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /TITLE Copy Standard Subroutines
+      /COPY ZSRSRC,ZEDITZ2                                 Std ZEDIT
+      /COPY ZSRSRC,ZDATE2Z2                                Std ZDATE2
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Finastra International Limited 2005

@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Rate Changes Back-up and Restore')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC3661A - Midas RE Rate Changes Back-up and Restore        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE095  *CREATE    Date 25Apr14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE095 - Rate Fixing on Retail Accounts                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAME &CSEQ)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&DNWD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&APDA) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CTLDAT) TYPE(*CHAR) LEN(5)
+             DCLF       FILE(SDRETLPD) OPNID(RETL)
+             DCLF       FILE(SDGELRPD) OPNID(GELR)
+             DCLF       FILE(SDBANKPD) OPNID(BANK)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('REC3661A - Midas RE Rate Changes Back-up +
+                          and Restore') TOMSGQ(MRUNQ)
+ 
+             RCVF       OPNID(RETL)
+             IF         COND(&RETL_BMCBAI *NE 'Y') THEN(GOTO ENDPGM)
+ 
+             IF         COND(&CSEQ *EQ 00001) THEN(DO)
+ 
+             RCVF       OPNID(GELR)
+             RCVF       OPNID(BANK)
+             CHGVAR     VAR(&DNWD) VALUE(&BANK_BJDNWD - 1)
+             CHGVAR     VAR(&APDA) VALUE(&GELR_BKAPDT)
+             IF         COND(&DNWD *LE &APDA) THEN(DO)
+             CHGVAR     VAR(&CTLDAT) VALUE(&DNWD)
+             ENDDO
+             ELSE       DO
+             CHGVAR     VAR(&CTLDAT) VALUE(&APDA)
+             ENDDO
+ 
+             CPYF       FROMFILE(RCHGR1) TOFILE(RCHGR1A) +
+                          MBROPT(*REPLACE) INCREL((*IF VALD *GT +
+                          &CTLDAT))
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(RCHGR2) TOFILE(RCHGR2A) +
+                          MBROPT(*REPLACE) INCREL((*IF VALD *GT +
+                          &CTLDAT))
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(RCHGR3) TOFILE(RCHGR3A) +
+                          MBROPT(*REPLACE) INCREL((*IF VALD *GT +
+                          &CTLDAT))
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ENDDO
+             ELSE       DO
+ 
+             CPYF       FROMFILE(RCHGR1A) TOFILE(RCHGR1) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(RCHGR2A) TOFILE(RCHGR2) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(RCHGR3A) TOFILE(RCHGR3) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ENDDO
+ 
+             IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(DO)
+             GOTO       ABNOR
+             ENDDO
+ 
+             GOTO       ENDPGM
+ 
+ABNOR:
+             SNDPGMMSG MSG('REC3661A FAILED') TOMSGQ(MOPERQ)
+ 
+ENDPGM:      ENDPGM

@@ -1,0 +1,75 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_CWACCT - Accounts Popup View                                        */
+/*                                                                             */
+/*       (c) Finastra International Limited 2006                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CRE073             Date 06Dec10                        */
+/*                      CRE075             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 30May08                        */
+/*                      BUG13896           Date 09May07                        */
+/*                      BG12194            Date 19Oct06                        */
+/*                      BG12077            Date 26Sep06                        */
+/*                      BUG12042           Date 21Sep06                        */
+/*                      CRE026  *CREATE    Date 24May06                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CRE075 - Effective Date for Retail Accounts (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi(Recompile)                   */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       BUG13896 - Issues related to Retail Account Number on display         */
+/*       BG12194 -  Issues related to Inter Account Transfer on display        */
+/*                  of DR & CR accounts and dropdown for trans codes and       */
+/*                  validation of exchange rate                                */
+/*       BG12077 - Field Account Suffix has been changed from 2 Numeric        */
+/*                 to 3 Numeric for all Consumer Accounts in all               */
+/*                 screen forms                                                */
+/*       BUG12042 - System falls over when searching for accounts              */
+/*       CRE026 - Consumer Banking                                             */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT * FROM (                                                               :           BG12194
+  SELECT                                                                        :
+**'W'*AS*SYS,*CNUM,*CCY,*ACSQ,*BRCA,*STYP,*ANAM*,ACNO,*ACOD*********************:           BG12077
+  'W' AS SYS, CNUM, CCY, CONCAT(DIGITS(ACSQ), ' ') ACSQ, BRCA,                  :           BG12077
+**STYP,*ANAM,*ACNO,*ACOD********************************************************:   BG12077 BG12194
+**STYP,*ANAM,*CAST(ACNO*AS*CHAR(10))*AS*ACNO,*ACOD******************************:  BG12194 BUG13896
+  STYP, ANAM, ACNO, ACOD                                                        :          BUG13896
+  ,'' AS  ZLAN,'' AS ZLABN  ,                                                   :
+  CONCAT(CONCAT(CONCAT(CONCAT(BRCA,CNUM),CCY),DIGITS(ACOD)),DIGITS(ACSQ))       :
+  AS ACTDET                                                                     :
+  FROM GZACCNTAB                                                                :
+   UNION                                                                        :
+  SELECT 'C'AS SYS, ZLCUS AS CNUM , ZLCCY AS CCY ,ZLAS AS ACSQ ,                :
+**ZBRCH*AS*BRCA,*ZLACT*AS*STYP,*ZLSHN*AS*ANAM,*ZLEAN*AS*ACNO********************:           BUG12042
+  ZBRCH AS BRCA, ZLACT AS STYP, ZLSHN AS ANAM,                                  :           BUG12042
+**CASE*WHEN*ZLEAN*='*'*THEN*0000000000*ELSE*ZLEAN*END*AS*ACNO*******************:  BUG12042 BG12077
+**ZLEAN*AS*ACNO*****************************************************************:  BG12077  BG12194
+  CASE WHEN TRIM(ZLEAN)='' THEN 0                                               :          BUG13896
+**CAST(ZLEAN AS CHAR(10))*AS ACNO***********************************************: BG12194  BUG13896
+  ELSE CAST(ZLEAN AS NUMERIC(10)) END AS ACNO                                   :          BUG13896
+  ,0000000000 AS   ACOD ,ZLAN , ZLABN ,                                         :
+**CONCAT(CONCAT(CONCAT(CONCAT(ZLABN,ZLAN),'0'),ZLAS),ZLCCY)**AS*****************:           BG12077
+  CONCAT(CONCAT(CONCAT(ZLABN,ZLAN),ZLAS),ZLCCY) AS                              :           BG12077
+  ACTDET                                                                        :
+  FROM T_GZCBACCT                                                               :
+  ) X                                                                           :           BG12194
+**WHERE*X.ACNO*NOT*IN(' ', '0')*************************************************:  BG12194 BUG13896
+**WHERE ACNO**= 0***************************************************************:  BUG13896 BG18886
+  WHERE ACNO <> 0                                                               :  BUG13896 BG18886
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Account Popup                            ';                     :
+                                                                                :

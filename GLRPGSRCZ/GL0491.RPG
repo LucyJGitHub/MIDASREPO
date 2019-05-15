@@ -1,0 +1,850 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Generated Entries Rept(Consolidated)')        *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - General Ledger Module
+     F*                                                                  *
+     F*     GL0491  -  LIST GENERATED ENTRIES (CONSOLIDATED)             *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP204             Date 17Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 186369             Date 15Nov00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 07Aug96               *  *
+      *                 CAC001             Date 01Feb96               *
+     F*                 S10736             DATE 03SEP92               *
+     F*                 E34525             DATE 05JUN92               *
+0009 F*                    E29870             DATE 30OCT91               *
+0009 F*                    E26333             DATE 21OCT91               *
+0009 F*                    BHF433             DATE 22AUG90               *
+0011 F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompiled)                                        *
+      *  CAP204 - Retail Account Transfer                             *
+      *  CRE026 - Consumer Banking                                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  186369 - Move the PRFC onto the same detail line.            *
+      *           Chg size of DR/CR totals to avoid truncation        *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*     S01408  -  Core Hook GL0491FFP2 Added                        *
+     F*             -  Core Hook GL0491FFP1 Added                        *
+     F*  CAC001 - Profit Centre Accounting Development:               *
+     F*           Add Profit Centre to the report on each posting.    *
+     F*     S10736  -  MANAGEMENT ACCOUNTING                             *
+     F*             -  RECOMPILED OVER NEW LF/SGEL1.                     *
+     F*     E34525  -  I/O OPERATION WAS APPLIED TO CLOSED FILE,         *
+     F*                PROBLEM OCCURS WHEN NO GENERATED ENTRIES IN       *
+     F*                END OF DAY.  PUT OPEN INDICATOR ON LR AND TOTAL   *
+     F*                OUTPUT PRINT OPERATION.                           *
+0010 F*     E29870  -  ZSFILE SHOULD ONLY BE CALLED ONCE PER BRANCH      *
+0010 F*     E26333  -  TOTAL NUMBER OF POSTINGS IS INCORRECT             *
+0010 F*     BHF433  -  PROBLEMS WITH NEW LAYOUT OF REPORT                *S5214
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,GL0491FFP1                                           S01408
+     F*                                                                   S01408
+     FSGEL1   IP  E           K        DISK
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,GL0491FFP2                                           S01408
+     F*                                                                   S01408
+     FSDCURRL0IF  E           K        DISK
+     F*
+     FGL0491P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC
+     FGL0491AUO   F     132     OV     PRINTER      KINFDS SPOOLU
+     F*                                                               *
+     F*****************************************************************
+     F*                 FUNCTION OF INDICATORS
+     F*  ID  I  C  F
+     F*
+     F*  01           GENERATED ENTRY DETAIL RECORD
+     F*  02           GENERATED ENTRY TRAILER RECORD
+     F*     20        DEBIT INDICATOR
+     F*     21        RETAIL ACCOUNT
+     F*        22     NEGATIVE HASH TOTAL
+     F*        22     NEGATIVE PART HASH TOTAL
+     F*     23        ASOC IS ZEROES
+     F*     24        TRAT IS ZEROES
+     F*        25     HASH TOTALS OUT OF BALANCE
+     F*        26     NEGATIVE OVERALL HASH TOTAL
+     F*        27     NEGATIVE FILE CONTROL TOTAL
+     F*        30     CURRENCY HAS 0 DECIMAL PLACES
+     F*        31     CURRENCY HAS 1 DECIMAL PLACE
+     F*        32     CURRENCY HAS 2 DECIMAL PLACES
+     F*        33     CURRENCY HAS 3 DECIMAL PLACES
+     F*        35         NO GENERATED ENTRIES
+     F*        40     FIRST CYCLE INDICATOR
+     F*        41     RESULT OF GENERATED ENTRY TABLE LOOKUP
+     F*        49     MULTIBRANCHING INDICATOR
+     F*        50     PRINTER FILE OPENED
+     F*        60     INCLUDE PROFIT CENTRE                               CAC001
+     F*        75     WORK IND. FOR CHECKING ARRAY IN CCYDEP.
+     F*        76     WORK IND. FOR LOADING ARRAY IN CCYARR.
+     F*        79     LAST RECORD ON FILE SDCURRPD.
+     F*           OV  OVERFLOW INDICATOR FOR FC0491AU
+     F*           OF  OVERFLOW INDICATOR FOR FC0491P1
+     F*        90-99  STANDARD SUBROUTINES
+     F*
+     F*     L1        CONTROL BREAK ON CHANGE OF CUSTOMER
+     F*     L2        CONTROL BREAK ON CHANGE OF CCY
+     F*         LR    LAST RECORD INDICATOR
+     F*         U7-U8 DATABASE ERROR
+     E*
+     E*       TABLE OF GENERATED ENTRY TYPES AND NARRATIVES
+     E*
+     E**********          TABGE   1  16  1   TABNAR 15                                        CRE026
+     E**********          TABGE   1  17  1   TABNAR 15                                 CRE026 CAP204
+     E                    TABGE   1  18  1   TABNAR 15                                        CAP204
+     E                    CPY@    1   1 80
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E                    CCYA      150  3
+     E                    DPA       150  1 0
+     I*       SORTED GENERATED ENTRY RECORD
+     I*
+     IAPOSTPDF    01
+     I                                              ACNO        2121
+     I                                              TRAT            24
+     I                                              DRCR            20
+     I                                              ASOC            23
+     I                                              CNUM  L1
+     I                                              CCY   L2
+     I*
+     I*     TRAILER
+     I*
+     IAPOSTZZF    02
+     I*
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      134 180 DBERR
+     I                                      181 1830DBASE
+     IRUNDT       DS
+     I** DATA AREA RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I/COPY WNCPYSRC,GL0491I001
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**   BANK DETAILS
+     I*                                                                   CAC001
+     ISDMMOD    E DSSDMMODPD                                              CAC001
+     I**   MODULE DETAILS                                                 CAC001
+     I*
+     I**
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     ISPOOL       DS
+     I                                       83  90 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  90 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     I/EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C**
+     C*    DEFINE DATAAREA LDA
+     C           *NAMVAR   DEFN           LDA
+     C/COPY WNCPYSRC,GL0491C002
+     C**
+     C* SKIP TITLE INFO AFTER FIRST CYCLE
+     C*
+     C   40                GOTO START
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* SET INDICATOR ON FIRST CYCLE & OBTAIN TITLE INFO
+     C*
+     C                     SETON                     40
+     C*
+     C                     MOVEL'GL0491'  DBPGM  10
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     ELSE
+     C                     SETOF                     98
+     C                     END
+     C*
+     C**   CHECK MULTIBRANCHING INDICATOR
+     C                     SETOF                     49
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     49
+     C                     END
+     C*
+     C**  OBTAIN BANK TITLE VIA BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'001'     DBASE            ** DBERR 001 **
+     C                     MOVEL@OPTN     DBOPTN  7        ***************
+     C                     MOVEL@OPTN     DBKEY  29
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     GOTO FINISH
+     C                     END
+     C*                                                                   CAC001
+     C**  Obtain Analytical Accounting Indicator via Module Details.      CAC001
+     C                     CALL 'AOMMODR0'                                CAC001
+     C                     PARM '*MSG   ' @RTCD   7                       CAC001
+     C                     PARM '*FIRST ' @OPTN   7                       CAC001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CAC001
+     C           @RTCD     IFNE *BLANKS                                   CAC001
+     C                     MOVEL'SDMMODPD'DBFILE           ***************CAC001
+     C                     MOVEL'002'     DBASE            ** DBERR 002 **CAC001
+     C                     MOVEL@OPTN     DBOPTN  7        ***************CAC001
+     C                     MOVEL@OPTN     DBKEY  29                       CAC001
+     C                     EXSR *PSSR                                     CAC001
+     C                     SETON                     U7U8LR               CAC001
+     C                     GOTO FINISH                                    CAC001
+     C                     END                                            CAC001
+     C*                                                                   CAC001
+     C**  Check if Analytical Accounting Module is switched on.           CAC001
+     C**  If switched on, display Profit Centre in the report.            CAC001
+     C           BGN0ST    IFEQ 'Y'                                       CAC001
+     C                     SETON                     60                   CAC001
+     C                     ELSE                                           CAC001
+     C                     SETOF                     60                   CAC001
+     C                     ENDIF                                          CAC001
+     C**
+     C*
+     C*    SETUP CURRENCY DECIMAL PLACE ARRAY
+     C                     EXSR CCYARR
+     C**   ZERO HASH TOTAL & PART TOTAL FIELDS
+     C                     Z-ADD0         HASHIT
+     C                     Z-ADD0         HASHDT
+     C                     Z-ADD0         HASHIP
+     C                     Z-ADD0         HASHDP
+     C*
+     C* LOOK UP GENERATED ENTRY TABLE FOR NARRATIVE
+     C*
+     C           START     TAG                             * START TAG ***
+     C  N01                GOTO FINISH
+     C*
+     C*  IF DETAIL RECORD READ OPEN PRINTER FILE, BUT ONLY ONCE
+     C*
+     C           *IN50     IFEQ '0'
+     C                     OPEN GL0491P1
+     C                     SETON                       50
+     C*********************END                                            E29870
+     C*
+     C*  CALL 'ZSFILE' SO REPORTS RECORDED BY RCF
+     C*
+     C                     MOVE SFNUM     SFNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END                                            E29870
+     C**
+     C*    IF NEW CURRENCY DETERMINE DECIMAL
+     C**
+     C           *INL2     IFEQ '1'
+     C***********          Z-ADD0         CDEBS  130                S01244186369
+     C***********          Z-ADD0         CCRED  130                S01244186369
+     C                     Z-ADD0         CDEBS  160                      186369
+     C                     Z-ADD0         CCRED  160                      186369
+     C                     MOVE CCY       XCCY    3
+     C                     EXSR CCYDEP
+     C           XDECP     COMP 1                      3031
+     C           XDECP     COMP 2                    33  32
+     C                     END
+     C**
+     C           GETP      LOKUPTABGE     TABNAR         41
+     C/COPY WNCPYSRC,GL0491C001
+     C                     Z-ADDVALD      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C**   PRINT BLANKS INSTEAD OF ZERO
+     C   23                MOVE '      '  ASOC
+     C                     MOVE TRAT      TRATO   5
+     C   24                MOVE '     '   TRATO
+     C/COPY WNCPYSRC,GL0491C003
+     C*
+     C* ADD TO NUMBER OF POSTINGS & CALL S/R FOR HASH TOTALLING
+     C*
+     C           PNUM      ADD  1         PNUM    40
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      CDEBS
+     C                     ELSE
+     C                     ADD  PSTA      CCRED
+     C                     END
+     C                     Z-ADD0         ZZAMT
+     C                     MOVE PSTA      ZZAMT
+     C                     EXSR GLZADD
+     C           FINISH    TAG                             ** FINISH TAG *
+     C/SPACE 3
+     CL1                   Z-ADDZZTOTI    HASHIP 150
+     CL1                   Z-ADDZZTOTD    HASHDP  30
+     CL1         ZZTOTD    MULT 10        DEC     40
+     CL1         BNUM      ADD  PNUM      BNUM    50
+     CL1         TNUM      ADD  PNUM      TNUM    50
+     CL1                   Z-ADD0         PNUM                            E26333
+     CL1                   Z-ADDHASHIT    ZZAMTI
+     CL1                   Z-ADDHASHDT    ZZAMTD
+     CL1                   EXSR GLZSUM
+     CL1                   Z-ADDZZTOTI    HASHIT 150
+     CL1                   Z-ADDZZTOTD    HASHDT  30
+     CL1                   Z-ADD0         ZZTOTD
+     CL1         DEC       COMP 0                      22
+     CL1N22      HASHIP    COMP 0                      22
+     CL1                   Z-ADD0         ZZTOTI
+     CL1                   Z-ADD0         ZZTOTD
+     C/SPACE 3
+      *
+      ** ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+     CLR                   Z-ADDSFNUMU    SFNUM2  60
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ
+     CLR                   PARM *BLANKS   SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           SFNUM2
+     CLR                   PARM           ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C*
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C*
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     CLR         *INU7     IFNE '1'                        B1
+     CLR         *INU8     ANDNE'1'
+     CLRN30N31N32
+     CANN33                SETON                     35    NO ENTRIES
+     CLR         NORE1     COMP TNUM                 2525
+     CLRN25      HRWN      COMP HASHIT               2525
+     CLRN25      HRDC      COMP HASHDT               2525
+     C*
+     CLR         HASHDT    COMP 0                      26
+     CLRN26      HASHIT    COMP 0                      26
+     CLR         HRDC      COMP 0                      27
+     CLRN27      HRWN      COMP 0                      27
+     CLR                   END
+     C/EJECT
+     C********************************************************************
+     C*
+     C*           T A B L E   O F   S U B R O U T I N E S
+     C*
+     C**   *PSSR  -  SR TO DUMP PROGRAM WHEN DATABASE ERROR OCCURS
+     C**   CCYARR -  SR. TO SET UP ANARRAY OF CURRENCIES AND AN ARRAY
+     C**             OF DECIMAL PLACES FOR THOSE CURRENCIES.
+     C**   CCYDEP -  SR. TO OBTAIN NO. OF DECIMAL PLACES FOR A CURRENCY
+     C*    GLZADD -  SR. TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,)
+     C*              ZZTOTD) IND '99' IS SET BY AN OVERFLOW ERROR
+     C*    GLZSUM -  SR. TO CARRY OUT THE ADDITION FOR SUBROUTINES.
+     C*    ZDATE2 -  SR. TO CONVERT A DAY NUMBER TO DATE FORMAT.
+     C********************************************************************
+     C**
+     C**   *PSSR  SR TO DUMP PROGRAM WHEN DATABASE ERROR OCCURS
+     C**
+     C**          SR CALLED BY: MAIN PROCESSING
+     C**          SR CALLS: NONE
+     C**
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C**
+     C**   SR. TO SET UP ANARRAY OF CURRENCIES AND AN ARRAY OF
+     C**   DECIMAL PLACES FOR THOSE CURRENCIES.
+     C**
+     C**          SR CALLED BY: MAIN PROCESSING
+     C**          SR CALLS: NONE
+     C**
+     C           CCYARR    BEGSR                           *** CCYARR  ***
+     C**
+     C**   SET ARRAY INDEX TO ZERO.
+     C                     Z-ADD0         X       30
+     C**
+     C**   SET UP KEY FOR CURRENCY TABLE.
+     C                     MOVE *BLANKS   W@CKEY  3
+     C**
+     C**   SET LOWER LIMIT AND READ CURRENCY TABLE HEADER.
+     C           W@CKEY    SETLLSDCURRL0
+     C**
+     C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+     C           XLOOP     TAG                             ** XLOOP TAG **
+     C                     READ SDCURRL0                 79
+     C**
+     C**   END IF ALL CURRENCY RECORDS PROCESSED
+     C   79                GOTO XEND
+     C**
+     C**   IGNOR DELETED RECORDS AND NON-SUB-RECORD ONE.
+     C**
+     C**   INCREMENT ARRAY INDEX.
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS.
+     C                     MOVE A6CYCD    CCYA,X
+     C                     MOVE A6NBDP    DPA,X
+     C**
+     C**   CHECK FOR FULL ARRAY.76 ON IF FULL.
+     C           X         COMP 150                      76
+     C**
+     C**   GO TO READ NEXT RECORD.
+     C  N76                GOTO XLOOP
+     C**
+     C           XEND      TAG                             ** XEND TAG  **
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C**
+     C**   SR. TO OBTAIN NO. OF DECIMAL PLACES FOR A CURRENCY.
+     C**
+     C**          SR CALLED BY: MAIN PROCESSING
+     C**          SR CALLS: NONE
+     C**
+     C           CCYDEP    BEGSR                           *** CCYDEP  ***
+     C**
+     C**   SET ARRAY INDEX TO ONE AND RESET ERROR INDICATOR.
+     C                     Z-ADD1         X            79
+     C**
+     C**   INITIALIZE INPUT-OUTPUT FIELDS.
+     C                     Z-ADD0         XDECP   10
+     C                     MOVE XCCY      XCCY    3
+     C**
+     C**   LOOK UP NO. OF DECIMAL PLACES FOR CURRENCY.
+     C**   79 SETON FOR INVALID CURRENCY.
+     C           XCCY      LOKUPCCYA,X                   75
+     C   75                MOVE DPA,X     XDECP
+     C  N75                SETON                     79
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/SPACE 3
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   Z-ADDZZAMT     ZZWK1   33
+     CSR                   MOVE ZZWK1     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C********************************************************************
+     OGL0491P1H  203   L2
+     O*******OR        OFNL1NL2                                           BHF433
+     O       OR        OFNL2                                              BHF433
+     O                                   24 'REFERENCE GL0491P1'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE     127
+     O        H  1     L2
+     O*******OR        OFNL1NL2                                           BHF433
+     O       OR        OFNL2                                              BHF433
+     O                         CCY       68
+     O                                   62 'GENERATED ENTRIES'
+     O                                   64 '-'
+     O                                   89 'CONSOLIDATED'
+     O*
+     O        H  2     L2
+     O*******OR        OFNL1NL2                                           BHF433
+     O       OR        OFNL2                                              BHF433
+     O                                   68 '-----------------------'
+     O********H 22     L1                                                 BHF433
+     O*******OR        OFNL1NL2                                           BHF433
+     O********                           18 'CUSTOMER NUMBER : '          BHF433
+     O********                 CNUM      25                               BHF433
+     O*
+     O        H  1     L2
+     O*******OR        L1                                                 BHF433
+     O*******OR        OFNL1NL2                                           BHF433
+     O       OR        OFNL2                                              BHF433
+     O********                            8 'A/C  SEQ'                    BHF433
+     O********         49                13 'BRCH'                        BHF433
+     O********                           28 'GEN.ENTRY TYPE'              BHF433
+     O********                           50 'RETAIL     NARRATIVE'        BHF433
+     O***********                         8 'CUSTOMER'              BHF433186369
+     O***********                        17 'A/C SEQ'               BHF433186369
+     O***********      49                23 'BRCH'                  BHF433186369
+     O***********                        30 'RETAIL'                BHF433186369
+     O***********                        42 'GEN.ENTRY'             BHF433186369
+     O**********                         15 'CUST. A/C  SQ'                            186369 CGL029
+     O**********       49                20 'BRCH'                                     186369 CGL029
+     O**********                         28 'RETAIL'                                   186369 CGL029
+     O**********                         38 'GEN.'                                     186369 CGL029
+     O**********       60                43 'PRFC'                                     186369 CGL029
+     O**********                         55 'NARRATIVE'                                BHF433 CGL029
+     O                                   20 'CUST.      A/C    SQ'                            CGL029
+     O                 49                25 'BRCH'                                            CGL029
+     O                                   33 'RETAIL'                                          CGL029
+     O                                   42 'GEN.'                                            CGL029
+     O                 60                48 'PRFC'                                            CGL029
+     O                                   57 'NARRATIVE'                                       CGL029
+     O/COPY WNCPYSRC,GL0491O001
+     O***********                        92 'TRANS  ASSOC   VALUE'        186369
+     O**********                         94 'TRANS ASSOC   VALUE'                      186369 CGL029
+     O                                  100 'TRANS ASSOC   VALUE'                             CGL029
+     O/COPY WNCPYSRC,GL0491O002
+     O**********                        113 'DEBITS'                                          CGL029
+     O**********                        131 'CREDITS'                                         CGL029
+     O                                  114 'DEBITS'                                          CGL029
+     O                                  132 'CREDITS'                                         CGL029
+     O        H  2     L2
+     O*******OR        L1                                                 BHF433
+     O*******OR        OFNL1NL2                                           BHF433
+     O       OR        OFNL2                                              BHF433
+     O*******                             4 'CODE'                        BHF433
+     O*******                            37 'A/C NO.'                     BHF433
+     O***********                         6 'NUMBER'                BHF433186369
+     O***********                        13 'CODE'                  BHF433186369
+     O***********                        32 'A/C NO.'               BHF433186369
+     O***********                        40 'TYPE'                  BHF433186369
+     O***********                        92 ' TYPE   CUST.   DATE'  BHF433186369
+     O**********                         12 'NUMBER CODE'                              186369 CGL029
+     O**********                         28 'A/C NO.'                                  186369 CGL029
+     O**********                         38 'TYPE'                                     186369 CGL029
+     O                                   14 'NUMBER    CODE'                                  CGL029
+     O                                   34 'A/C NO.'                                         CGL029
+     O                                   42 'TYPE'                                            CGL029
+     O/COPY WNCPYSRC,GL0491O003
+     O**********                         94 ' TYPE  CUST.   DATE'                      186369 CGL029
+     O                                  100 ' TYPE CUST.   DATE'                              CGL029
+     O/COPY WNCPYSRC,GL0491O004
+     O        D  1     01
+     O*******                  ACSQ       7                               BHF433
+     O*******          41      TABNAR    29                               BHF433
+     O*******                21ACNO      40                               BHF433
+     O*******          49      BRCA      12                               BHF433
+     O*******                  ACOD       4                               BHF433
+     O***********              CNUM       6                         BHF433186369
+     O***********              ACSQ      17                         BHF433186369
+     O***********              SPOS      40                         BHF433186369
+     O***********            21ACNO      33                         BHF433186369
+     O***********      49      BRCA      22                         BHF433186369
+     O***********              ACOD      13                         BHF433186369
+     O***********              PNAR      71                               186369
+     O***********              TRATO     77                               186369
+     O***********           N23ASOC      85                               186369
+     O***********              ZADATE    93                               186369
+     O**********               CNUM       7                                            186369 CGL029
+     O**********               ACOD      12                                            186369 CGL029
+     O**********               ACSQ      15                                            186369 CGL029
+     O**********       49      BRCA      19                                            186369 CGL029
+     O**********             21ACNO      30                                            186369 CGL029
+     O**********               SPOS      38                                            186369 CGL029
+     O**********       60      PRFC      43                                            186369 CGL029
+     O**********               PNAR      74                                            186369 CGL029
+     O                         CNUM       6                                                   CGL029
+     O                         ACOD      17                                                   CGL029
+     O                         ACSQ      20                                                   CGL029
+     O                 49      BRCA      24                                                   CGL029
+     O                       21ACNO      35                                                   CGL029
+     O                         SPOS      43                                                   CGL029
+     O                 60      PRFC      48                                                   CGL029
+     O                         PNAR      79                                                   CGL029
+     O/COPY WNCPYSRC,GL0491O005
+     O**********               TRATO     80                                            186369 CGL029
+     O**********            N23ASOC      87                                            186369 CGL029
+     O**********               ZADATE    95                                            186369 CGL029
+     O                         TRATO     85                                                   CGL029
+     O                      N23ASOC      92                                                   CGL029
+     O                         ZADATE   100                                                   CGL029
+     O/COPY WNCPYSRC,GL0491O006
+     O**********       20    30PSTA  1  113                                                   CGL029
+     O**********          20 31PSTA     113 '   ,   ,   , 0 . '                               CGL029
+     O**********          20 32PSTA     113 '  ,   ,   , 0 .  '                               CGL029
+     O**********          20 33PSTA     113 ' ,   ,   , 0 .   '                               CGL029
+     O**********      N20    30PSTA  1  131                                                   CGL029
+     O**********         N20 31PSTA     131 '   ,   ,   , 0 . '                               CGL029
+     O**********         N20 32PSTA     131 '  ,   ,   , 0 .  '                               CGL029
+     O**********         N20 33PSTA     131 ' ,   ,   , 0 .   '                               CGL029
+     O        D  1     01                                                                     CGL029
+     O                 20    30PSTA  1  114                                                   CGL029
+     O                    20 31PSTA     114 '   ,   ,   , 0 . '                               CGL029
+     O                    20 32PSTA     114 '  ,   ,   , 0 .  '                               CGL029
+     O                    20 33PSTA     114 ' ,   ,   , 0 .   '                               CGL029
+     O                N20    30PSTA  1  132                                                   CGL029
+     O                   N20 31PSTA     132 '   ,   ,   , 0 . '                               CGL029
+     O                   N20 32PSTA     132 '  ,   ,   , 0 .  '                               CGL029
+     O                   N20 33PSTA     132 ' ,   ,   , 0 .   '                               CGL029
+     O/COPY WNCPYSRC,GL0491O007
+     O********D**1     01 60                                        CAC001186369
+     O***********                        19 'PROFIT CENTRE:'        CAC001186369
+     O***********              PRFC      25                         CAC001186369
+     O********T*21**** L2                                                 E34525
+     O        T 21     L2 50                                              E34525
+     O                                  100 'CURRENCY TOTALS'
+     O********T**1**** L2                                                 E34525
+     O        T  1     L2 50                                              E34525
+     O                                  100 '---------------'
+     O********T******* L2                                                 E34525
+     O        T        L2 50                                              E34525
+     O                                   92 'DEBITS'                      186369
+     O***********            30CDEBS 1  113                               186369
+     O***********            31CDEBS    113 '   ,   ,   , 0 . '           186369
+     O***********            32CDEBS    113 '  ,   ,   , 0 .  '           186369
+     O***********            33CDEBS    113 ' ,   ,   , 0 .   '           186369
+     O**********             30CDEBS 1  113                                            186369 CGL029
+     O**********             31CDEBS    113 '   ,   ,   ,   , 0 . '                    186369 CGL029
+     O**********             32CDEBS    113 '  ,   ,   ,   , 0 .  '                    186369 CGL029
+     O**********             33CDEBS    113 ' ,   ,   ,   , 0 .   '                    186369 CGL029
+     O                       30CDEBS 1  114                                                   CGL029
+     O                       31CDEBS    114 '   ,   ,   ,   , 0 . '                           CGL029
+     O                       32CDEBS    114 '  ,   ,   ,   , 0 .  '                           CGL029
+     O                       33CDEBS    114 ' ,   ,   ,   , 0 .   '                           CGL029
+     O        T        L2 50                                              186369
+     O                                   93 'CREDITS'                     186369
+     O***********            30CCRED 1  131                               186369
+     O***********            31CCRED    131 '   ,   ,   , 0 . '           186369
+     O***********            32CCRED    131 '  ,   ,   , 0 .  '           186369
+     O***********            33CCRED    131 ' ,   ,   , 0 .   '           186369
+     O**********             30CCRED 1  131                                            186369 CGL029
+     O**********             31CCRED    131 '   ,   ,   ,   , 0 . '                    186369 CGL029
+     O**********             32CCRED    131 '  ,   ,   ,   , 0 .  '                    186369 CGL029
+     O**********             33CCRED    131 ' ,   ,   ,   , 0 .   '                    186369 CGL029
+     O                       30CCRED 1  132                                                   CGL029
+     O                       31CCRED    132 '   ,   ,   ,   , 0 . '                           CGL029
+     O                       32CCRED    132 '  ,   ,   ,   , 0 .  '                           CGL029
+     O                       33CCRED    132 ' ,   ,   ,   , 0 .   '                           CGL029
+     O*
+     O********T*3***** LR                                                 E34525
+     O        T 3      LR 50                                              E34525
+     O                                   76 '*** END OF REPORT ***'
+     OGL0491AUT  203   LR
+     O                                   24 'REFERENCE GL0491AU'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE1    127
+     O        T  1     LR
+     O                                   72 'GENERATED ENTRIES'
+     O                                   87 'RUN CONTROLS'
+     O        T  2     LR
+     O                                   72 '-----------------'
+     O        T  218   LR
+     O                                   43 'TOTAL NUMBER OF POSTINGS'
+     O                         TNUM  3   49
+     O                                   65 'HASH TOTAL OF'
+     O                                   81 'POSTING AMOUNTS'
+     O                         HASHITZ  102
+     O                         HASHDT   105
+     O                       26         106 '-'
+     O        T 21     LR 35
+     O                                   76 '*** NO DETAILS TO REPORT'
+     O                                   80 '***'
+     O        T 21     U8 U7 LR
+     O                                   42 '*** REFERENCE'
+     O                         DBPGM     53
+     O                                   71 '-DATABASE ERROR AT'
+     O                         DBASE     75
+     O        T  1     U8 U7 LR
+     O                                   37 'FILE NAME'
+     O                         DBFILE    48
+     O                                   52 'KEY'
+     O                         DBKEY     82
+**  TABLE OF GENERATED ENTRY TYPES AND THEIR RELATED NARRATIVES
+RSPOT REVAL
+XTFR F/CCY I&E
+IPOST TO I&E
+FFWD REVAL
+DDEALS
+ECUST EXCHANGES
+OSTANDING ORDER
+CINT. CAPITAL'N
+LLOANS
+NCONSOLIDATIONS
+UCUST. LENDING
+SSEC.TRADING
+MAMOUNT ACCRUAL
+YTFR B/CCY I&E
+GFUNDS TFR
+TFUTURES & OPT
+0CONSUMER BANK                                                                                CRE026
+LACCT TRANSFER                                                                                CAP204
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

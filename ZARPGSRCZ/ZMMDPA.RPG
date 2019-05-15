@@ -1,0 +1,729 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER MM Discount/Premium Amortisation')
+     H********************************************************************
+     H*                                                                  *
+     H* MIDAS/ABS  EUROPEAN REPORTING                                    *
+     H*                                                                  *
+     H* RPG/ZMMDPA - MM DISCOUNT/PREMIUM AMORTISATION                    *
+     H*                                                                  *
+      *  (c) Finastra International Limited 2005                      *
+     H*                                                                  *
+      *+++LUX++++++BEGIN+++++++++++++++++++++++++++++++++++++++++++++++++++++++*
+      *                                                                        *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas DBA 3.01 ---------------- Luxemburg -----------------------------*
+      *  Prev Amend No. CER001             Date 25Aug05               *
+      *                 ER0203 AF          Date 13Jan93               *
+      *                                                               *
+      *                                                                        *
+      *------------------------------------------------------------------------*
+      *                                                                        *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
+     H*  ER0203 - Change lenght of amounts fields from 15,8 to 21,8            *
+      *                                                                        *
+      *+++LUX++++++END+++++++++++++++++++++++++++++++++++++++++++++++++++++++++*
+      *                                                                        *
+     H* PARAMETERS : RETURN I   1A   - RETURN CODE                       *
+     H*              PARM1  I   6,0  - DEAL NUMBER                       *
+     H*              PARM2  I   5,0  - N/A PURCHASED ACCRUAL DATE (NPADAT)
+     H*              PARM3  I   5,0  - VALUE DATE                        *
+     H*              PARM4  I   5,0  - MATURITY DATE                     *
+     H*              PARM5  I   5,0  - SALE DATE                         *
+     H*              PARM6  I   1A   - INTEREST PAYMENT FREQUENCY        *
+     H*              PARM7  I   5,0  - NEXT INTEREST PAYMENT DATE        *
+     H***************PARM8  I  15,8  - DISCOUNT/PREMIUM AMOUNT/PERCENTAGE*ER0203
+     H*              PARM8  I  21,8  - DISCOUNT/PREMIUM AMOUNT/PERCENTAGE*ER0203
+     H*              PARM9  I  15,8  - YIELD TO MATURITY (= YRAT 11,7)   *
+     H*              PARM10 O  13,0  - DISCOUNT/PREMIUM AMORTIZATION     *
+     H*                                AMOUNT                            *
+     H*                                                                  *
+     H********************************************************************
+      /EJECT
+      *           FUNCTION OF INDICATORS
+      *
+      *   01      SDBANKPD - Bank Details
+      *   40      Full Year Indicator
+      *
+      *   SUB-ROUTINE DEFINITIONS
+      *   -----------------------
+      *
+      *   SRFCDT  Retreive the first coupon date
+      *   SRALCD  Calculate all Coupon Dates
+      *   SRFULY  Calculate if N/A Purchased Accrual Date is in a full year
+      *   SRAMRT  Calculate the Discount/Premium amortization amount
+      *   ZDATE1  Validate dates and convert to day numbers
+      *   ZDATE2  Validate day numbers and convert to dates
+     F*****************************************************************
+     F***MMDENBY4IF**E           K        DISK                                                CER001
+     FMMDBX1L0IF  E           K        DISK                                                   CER001
+     FSDBANKL1IF  E                    DISK
+      /EJECT
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    TBCD       99  5 0             TABLE OF COUPON DATE
+     E                    CPY@    1   1 80
+      /EJECT
+      **  Data Structure for compilation  - Copyright Insertion:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I            DS
+     I                                        1   60WWDAY
+     I                                        1   20FLD1
+     I                                        3   40FLD2
+     I                                        5   60YY1
+     I            DS
+     I                                        1   60W6FIPD
+     I                                        1   20FLD3
+     I                                        3   40FLD4
+     I                                        5   60YY2
+     I            DS
+     I                                        1   60W6COUP
+     I                                        1   20FLD5
+     I                                        3   40FLD6
+     I                                        5   60YY3
+      /EJECT
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           RETURN  1        Return Code
+     C                     PARM           PARM1   6        Deal Number
+     C                     PARM           PARM2   5        N/A Purchased Accrual
+      *                                                    Date (NPADAT)
+     C                     PARM           PARM3   5        Value Date
+     C                     PARM           PARM4   5        Maturity Date
+     C                     PARM           PARM5   5        Sale Date
+     C                     PARM           PARM6   1        Interest payment freq
+     C                     PARM           PARM7   5        Next int. paym. date
+     C*******              PARM           PARM8  15        Disc./Prem. amtER0203
+     C                     PARM           PARM8  21        Disc./Prem. amtER0203
+     C                     PARM           PARM9  15        Yield to maturity
+     C                     PARM           PARM10 13        D/P Amortiz. Amt.
+     C                     PARM           PARM11  1        Accrual date(*in17)
+     C                     PARM           PARM12  1        Last Accr date(*in29)
+     C                     PARM           PARM13  1        Geometrical Progess.
+      *===================================================================
+      * Initial Processing                                               *
+      *===================================================================
+      *
+     C           1         SETLLSDBANKL1
+     C                     READ SDBANKL1                 01
+      *
+      **   Determine Date Format.
+     C           BJDFIN    IFEQ 'M'                        MMDDYY, 98 ON
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      *===================================================================
+      * Main Processing                                                  *
+      *===================================================================
+      *
+      ** Reset Return Code, Geometrical Progression Y/N, and two work fields
+      ** setup received parameters
+     C                     MOVE PARM1     DNUM    60
+     C                     MOVE PARM2     NPADAT  50
+     C                     MOVE PARM3     VDAT    50
+     C                     MOVE PARM4     MDAT    50
+     C                     MOVE PARM5     SDAT    50
+     C                     MOVE PARM6     INPFR   1
+     C                     MOVE PARM7     NIPDAT  50
+     C******               MOVE PARM8     DPAMTP 158                      ER0203
+     C                     MOVE PARM8     DPAMTP 218                      ER0203
+     C                     MOVE PARM9     YIELD  158
+     C                     MOVE PARM11    *IN17
+     C                     MOVE PARM12    *IN29
+      *
+     C                     MOVE *BLANK    RETURN
+     C                     MOVE 'Y'       GEOP    1
+      *
+      ** Check if the Amortization should be calculated as follow Geometrical
+      ** Progression or not.
+     C           INPFR     IFNE 'Y'                        - B1
+     C           NIPDAT    OREQ *ZEROS
+     C           NIPDAT    ORLT VDAT
+      *
+     C                     MOVE 'N'       GEOP
+     C                     MOVE GEOP      PARM13
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     END                             - E1
+      *
+      ** Access MM N/A Bougth extended file LF/MMDENBY4 to retreive the Trade
+      ** or Investment indicator.
+      *
+     C********** DNUM      CHAINMMDENBY4             10                                       CER001
+     C           DNUM      CHAINMMDBX1L0             10                                       CER001
+      *
+     C           *IN10     IFEQ '1'                        - B1
+     C                     MOVE 'N'       GEOP
+     C                     MOVE GEOP      PARM13
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END                             - E1
+      *
+      ** If Trade/Investment Indicator is equal to 'I' (Investment) or if
+      ** Linear Amortization is not equal to 'N'.
+      *
+     C           VATRIN    IFNE 'I'                        - B1
+     C           VALINA    ORNE 'N'
+     C                     MOVE 'N'       GEOP
+     C                     MOVE GEOP      PARM13
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END                             - E1
+      *
+      ** Retreive the first Coupon Date
+      *
+     C                     EXSR SRFCDT
+      *
+      ** Calculate all coupon Date between Value Date and Maturity/Sale Date
+      *
+     C                     EXSR SRALCD
+      *
+      ** Calculate if the N/A Purchased Accrual Date is in a full Year
+      *
+     C                     EXSR SRFULY
+      *
+      ** If the N/A Purchased Accrual Date is in a full Year
+      *
+     C           *IN40     IFEQ '1'                        - B1
+      *
+     C                     EXSR SRAMRT
+      *
+     C                     ELSE                            - X1
+      *
+     C                     MOVE 'N'       GEOP
+     C                     MOVE GEOP      PARM13
+      *
+     C                     END                             - E1
+      *
+      ** Termination Processing
+     C                     MOVE GEOP      PARM13
+     C                     MOVE DPAAMT    PARM10
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *===================================================================
+      * SRFCDT - Retrieve the first Coupon Date                          *
+      *===================================================================
+     C           SRFCDT    BEGSR
+      *
+     C                     Z-ADDNIPDAT    W5FIPD  50
+      *
+     C                     Z-ADDNIPDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     W6FIPD  60
+      *
+      ** Save the day of the Next Interest payment date (WWDAY)
+      *
+     C                     MOVELZDATE     WWDAY
+      *
+      ** Do while the First Interest Payment Date (W5FIPD) is > then Value Date.
+      *
+     C           W5FIPD    DOWGTVDAT                       - B1
+      *
+      ** Save the return dates by the work field dates (W5FIPD/W6FIPD)
+      *
+     C                     Z-ADDW5FIPD    S5FIPD  50
+     C                     Z-ADDW6FIPD    S6FIPD  60
+      *
+     C                     SUB  1         W6FIPD
+      *
+     C           *IN98     IFEQ '0'                        - B2
+      *
+     C           FLD2      IFEQ 2                          - B3
+     C           FLD1      ANDEQ29
+      *
+     C           YY2       DIV  4         WKYY2   22
+      *
+      **  Check if the rest is equal to determinate if 28 or 29 Day in Feb
+      *
+     C                     Z-ADDWKYY2     WWYY2   20
+     C           WKYY2     IFEQ WWYY2                      - B4
+     C                     Z-ADD28        FLD3
+     C                     ELSE                            - X4
+     C                     Z-ADD29        FLD3
+     C                     END                             - E4
+      *
+     C                     END                             - E3
+      *
+     C                     ELSE                            - X2
+      *
+     C           FLD1      IFEQ 2                          - B3
+     C           FLD2      ANDEQ29
+      *
+     C           YY2       DIV  4         WKYY2   22
+      *
+      **  Check if the rest is equal to determinate if 28 or 29 Day in Feb
+      *
+     C                     Z-ADDWKYY2     WWYY2   20
+     C           WKYY2     IFEQ WWYY2                      - B4
+     C                     Z-ADD28        FLD4
+     C                     ELSE                            - X4
+     C                     Z-ADD29        FLD4
+     C                     END                             - E4
+      *
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+      *
+     C                     Z-ADDW6FIPD    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    W5FIPD
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *===================================================================
+      *===================================================================
+      * SRALCD - Calculate all Coupon Dates                              *
+      *===================================================================
+     C           SRALCD    BEGSR
+      *
+      **  Initialize table of all coupon dates
+      *
+     C                     Z-ADD0         TBCD
+      *
+      **  Initialize  year counter
+      *
+     C                     Z-ADD0         WWYR    20
+     C                     Z-ADD0         X       20
+      *
+      **  Initialize two coupon date (W5COUP 5,0 and W6COUP 6,0) with first
+      **  Interest Payment Date calculated in SRFCDT (S5FIPD and S6FIPD)
+      *
+     C                     Z-ADDS5FIPD    W5COUP  50
+     C                     Z-ADDS6FIPD    W6COUP  60
+      *
+      **  Initialize  the End date with the lower date between MDAT and SDAT
+      *
+     C           SDAT      IFNE 0                          - B1
+      *
+     C           SDAT      IFLE MDAT                       - B2
+     C                     Z-ADDSDAT      EDAT    50
+     C                     ELSE                            - X2
+     C                     Z-ADDMDAT      EDAT
+     C                     END                             - E2
+      *
+     C                     ELSE                            - X1
+      *
+     C                     Z-ADDMDAT      EDAT
+      *
+     C                     END                             - E1
+      *
+      **  Do while W5COUP  is > or = to the VDAT and < than EDAT
+      *
+     C           W5COUP    DOWGEVDAT                       - B1
+     C           W5COUP    ANDLTEDAT
+      *
+     C                     ADD  1         WWYR
+     C                     ADD  1         X
+     C                     MOVE W5COUP    TBCD,X
+     C                     ADD  1         W6COUP
+     C           *IN98     IFEQ '0'                        - B2
+      *
+     C           FLD2      IFEQ 2                          - B3
+     C           FLD1      ANDEQ29
+      *
+     C           YY3       DIV  4         WKYY3   22
+      *
+      **  Check if the rest is equal to determinate if 28 or 29 Day in Feb
+      *
+     C                     Z-ADDWKYY3     WWYY3   20
+     C           WKYY3     IFEQ WWYY3                      - B4
+     C                     Z-ADD28        FLD5
+     C                     ELSE                            - X4
+     C                     Z-ADD29        FLD5
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C                     ELSE                            - X2
+      *
+     C           FLD1      IFEQ 2                          - B3
+     C           FLD2      ANDEQ29
+      *
+     C           YY3       DIV  4         WKYY3   22
+      *
+      **  Check if the rest is equal to determinate if 28 or 29 Day in Feb
+      *
+     C                     Z-ADDWKYY3     WWYY3   20
+     C           WKYY3     IFEQ WWYY3                      - B4
+     C                     Z-ADD28        FLD6
+     C                     ELSE                            - X4
+     C                     Z-ADD29        FLD6
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+      *
+     C                     Z-ADDW6COUP    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    W5COUP
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *===================================================================
+      *===================================================================
+      * SRFULY - If N/A Purchased Accrual Date is in a fully Year        *
+      *===================================================================
+      *
+     C           SRFULY    BEGSR
+      *
+      **  Initialize I,J and a indicator to determinate that N/A Purchased
+      **  Accrual Date is (OR not) in a full year.
+      *
+     C                     Z-ADD1         I       20
+     C                     Z-ADD2         J       20
+     C                     MOVE '0'       *IN40
+      *
+     C           *IN40     DOWEQ'0'                        - B1
+     C           TBCD,J    ANDNE0
+      *
+     C           NPADAT    IFGE TBCD,I                     - B2
+     C           NPADAT    ANDLTTBCD,J
+     C                     MOVE '1'       *IN40
+     C                     END                             - E2
+      *
+     C                     ADD  1         I
+     C                     ADD  1         J
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *===================================================================
+      * SRAMRT - Calculate the Discount/Premium Amortization Amount      *
+      *===================================================================
+      *
+     C           SRAMRT    BEGSR
+      *
+      **  Reset the Discount/Premium amortization amount to zero.
+      *
+     C                     Z-ADD0         DPAAMT 130
+      *
+      **  Calculate Amortization Amount from VDAT to First Coupon Date using
+      **  linear method
+      *
+     C           EDAT      SUB  VDAT      DLDAYS  50        Deal Period
+     C           S5FIPD    SUB  VDAT      DYSTD   50        Period to accrued
+      ********************************************************************ER0203
+      ****If*the*Event*Control*Date*is*an*Accrual*Date*(*in17 is on)*and*tER0203
+      ****Event*Control*Date*is*not*the*last*Day*Accrual*(*in29 is off)***ER0203
+      ********************************************************************ER0203
+     C******     *IN29     IFEQ '0'                        - B1           ER0203
+     C******     *IN17     ANDEQ'1'                                       ER0203
+     C******     DYSTD     ADD  1         DYSTD                           ER0203
+     C******               END                             - E1           ER0203
+      *
+     C******     DPAMTP    MULT DYSTD     WORK15 158                      ER0203
+     C           DPAMTP    MULT DYSTD     WORK15 218                      ER0203
+     C           WORK15    DIV  DLDAYS    WORK15
+      *
+      **  Calculate Amortization Amount, year by year, from First Coupon Date
+      **  to Last Coupon Date in a full year, use new geometrical progression
+      **  method. For "last/current" year, amortizate the Discount/Premium
+      **  amortization amount linearly during the year.
+      *
+     C                     Z-ADD1         I
+     C                     Z-ADD2         J
+      *
+     C           NPADAT    DOWGETBCD,I                     - B1
+     C           TBCD,I    ANDNE0
+     C           TBCD,J    ANDNE0
+      *
+     C                     Z-ADD0         RESULT
+     C                     MOVE I         PAR1
+     C                     MOVE DPAMTP    PAR2
+     C                     MOVE WWYR      PAR3
+     C                     MOVE YIELD     PAR4
+     C                     MOVE *BLANK    PAR5
+      *
+     C                     CALL 'ZAMORT'               01
+     C                     PARM           RETURN  1
+     C                     PARM           PAR1    3
+     C******               PARM           PAR2   15                       ER0203
+     C                     PARM           PAR2   21                       ER0203
+     C                     PARM           PAR3    3
+     C                     PARM           PAR4   15
+     C                     PARM           PAR5   15
+      *
+     C******               MOVE PAR5      PAR15N 158                      ER0203
+     C******               Z-ADDPAR15N    RESULT 158                      ER0203
+     C                     MOVE PAR5      PAR15N 218                      ER0203
+     C                     Z-ADDPAR15N    RESULT 218                      ER0203
+      *
+     C           RETURN    IFNE *BLANK                     - B2
+     C                     MOVE 'E'       RETURN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END                             - E2
+      *
+     C           NPADAT    IFGE TBCD,I                     - B2
+     C           TBCD,I    ANDNE0
+     C           NPADAT    ANDLTTBCD,J
+      *
+     C           TBCD,J    SUB  TBCD,I    DLDAY   50        Deal Period
+     C           NPADAT    SUB  TBCD,I    PERAC   50        Period to accrued
+      *
+      **  If the Event Control Date is an Accrual Date (*in17 is on) and the
+      **  Event Control Date is not the last Day Accrual (*in29 is off)
+      *
+     C           *IN29     IFEQ '0'                        - B3
+     C           *IN17     ANDEQ'1'
+     C           PERAC     ADD  1         PERAC
+     C                     END                             - E3
+      *
+     C******               Z-ADD0         WK15   158                      ER0203
+     C                     Z-ADD0         WK15   218                      ER0203
+     C           RESULT    MULT PERAC     WK15
+     C           WK15      DIV  DLDAY     WK15
+     C                     ADD  WK15      WORK15
+      *
+     C                     ELSE                            - X2
+      *
+     C                     ADD  RESULT    WORK15
+      *
+     C                     END                             - E2
+      *
+     C                     ADD  1         I
+     C                     ADD  1         J
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ADD  WORK15    DPAAMT    H
+      *
+     C                     ENDSR
+     C********************************************************************
+     C**
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+     C**              CONVERT TO A NUMBER OF DAYS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER. RESET ERROR INDICATOR
+     C                     Z-ADD0         ZDAYNO  50
+     C                     SETOF                     99
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID. BYPASS IF ERROR
+     C           ZMTH      IFLE 0
+     C           ZMTH      ORGT 12
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   ENSURE DAY IS VALID. BYPASS IF ERROR
+     C           ZDAY      IFLE 0
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   CHECK FOR 30 DAY MONTHS. BYPASS IF ERROR
+     C           ZMTH      IFEQ 4
+     C           ZMTH      OREQ 6
+     C           ZMTH      OREQ 9
+     C           ZMTH      OREQ 11
+     C**
+     C           ZDAY      IFGT 30
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C**   CHECK FOR 31 DAY MONTHS (ALL OTHERS BUT FEB). BYPASS IF ERROR
+     C           ZDAY      IFGT 31
+     C           ZMTH      ANDNE2
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   CHECK FOR LEAP YEAR: REMAINDER WILL BE ZERO IF IT IS A LEAP YR
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+     C**
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C           ZMTH      IFEQ 2
+     C**
+     C**   INVALID IF GREATER THAN 28 AND NOT A LEAP YEAR
+     C           ZLY       IFGT 0
+     C           ZDAY      ANDGT28
+     C                     SETON                     99
+     C                     GOTO ZDEND1                     BYPASS IF ERROR
+     C                     END
+     C**
+     C**   INVALID IF GREATER THAN 29 AND A LEAP YEAR - BYPASS IF ERROR
+     C           ZLY       IFEQ 0
+     C           ZDAY      ANDGT29
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.
+     C**
+     C**   MULTIPLY NO. OF FOUR-YEAR SPANS, BY NO. OF DAYS IN SPAN
+     C           ZLYR      MULT 1461      ZDAYNO
+     C**
+     C**   IF NOT A LEAP YEAR, ADD APPROPRIATE NO. OF DAYS FOR EXTRA
+     C**   YEARS USING REMAINDER FIELD (IE. 1, 2 OR 3 X 356)
+     C           ZLY       IFGT 0
+     C           ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO
+     C                     END
+     C**
+     C**   IF IT IS A LEAP YEAR, AND LATER THAN FEBRUARY, ADD ONE FOR
+     C**   29TH OF FEB
+     C           ZLY       IFEQ 0
+     C           ZMTH      ANDGT2
+     C           ZDAYNO    ADD  1         ZDAYNO
+     C                     END
+     C**
+     C**   ADD APPROPRIATE NUMBER OF DAYS FOR THE MONTH NUMBER
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO
+     C**
+     C**   ADD NUMBER OF DAYS IN MONTH
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+     C**
+     C**
+     C********************************************************************
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2005

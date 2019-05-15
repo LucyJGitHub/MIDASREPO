@@ -1,0 +1,335 @@
+     C*****************************************************************
+     C*                                                               *
+     C*  ZAISCH - CALCULATE SE ACCRUED INTEREST - SCHULDSCHEIN        *
+     C*                                                               *
+     C*  PURPOSE : TO CALCULATE SE ACCRUED INTEREST FOR               *
+     C*            SCHULDSCHEIN SECURITIES                            *
+     C*                                                               *
+     C*  FILE USED                                                    *
+     C*       LF/SEEVNT: SECURITY EVENTS FILE OVERRIDEN IN CALLING PGM*
+     C*       FIELDS TO BE RENAMED IN I SPECS:                        *
+     C*         SNDT (SNDEVD) TO SDED                                 *
+     C*         SNET (SNDEVD) TO SDET                                 *
+     C*       LF/PMAPOSLL:ALL PORTFOLIO POSITIONS                     *
+     C*                                                               *
+     C*  FILES NEEDED (THESE FILES AND DATA AREA MUST HAVE BEEN       *
+     C*                ACCESSED BEFORE THIS SUBROUTINE IS EXECUTED)   *
+     C*       LF/SECTY: SECURITIES                                    *
+     C*       LF/INVTP: INVESTMENT TYPES                              *
+     C*       LF/SDCURRL0: CURRENCIES, FOR NOMINAL CURRENCY D.P.      *
+     C*       DTAARA/PMSTAT: FOR EVENT CONTROL DATE                   *
+     C*                                                               *
+     C*  SUBROUTINES NEEDED                                           *
+     C*       ZNCD MUST HAVE BEEN CALLED BEFORE CALLING THIS SUBR.    *
+     C*                                                               *
+     C*  INPUT  FIELDS                                                *
+     C*       ZFMDAT  5 0     FROM DATE                               *
+     C*       ZTODAT  5 0     TO DATE                                 *
+     C********ZCUST***6*0*****CUSTOMER*********************************                       CSD027
+     C*       ZCUST   6       CUSTOMER                                *                       CSD027
+     C*       ZPTRF   4       PORTFOLIO REFERENCE                     *
+     C*       ZSSNM  10       SECURITY SHORTNAME                      *
+     C*       ZTVBS   1       TRADE/VALUE BASIS                       *
+     C*                                                               *
+     C*  OUTPUT  FIELDS                                               *
+     C*       ZTOAI  15 0     TOTAL ACCRUED INTEREST                  *
+     C*       ZTOND   5 0     TOTAL NUMBER OF INTEREST DAYS           *
+     C*                                                               *
+     C*  WORK FIELDS:                                                 *
+     C*                                                               *
+     C*  CALLS:  ZRATE, ZACCR                                         *
+     C*                                                               *
+     C*  CALLED FROM:                                                 *
+     C*                                                               *
+     C*  N.B. THE DEFINITION OF KEY LIST KSEE IS IN SUBROUTINE ZAINSH *
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 10Mar06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  Prev Amend No. S01946             Date 11Aug94               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  CSD027 - Change Customer Number to alpha.                    *
+     C*  S01946 - Portfolio Management Upgrade to Release 10.         *
+     C*                                                               *
+     C*****************************************************************
+     C           ZAISCH    BEGSR                           *** ZAISCH ***
+     C*
+     C** DEFINE FIELDS
+     C                     Z-ADDZFMDAT    ZFMDAT  50
+     C                     Z-ADDZTODAT    ZTODAT  50
+     C**********           Z-ADDZCUST     ZCUST   60                                          CSD027
+     C                     MOVELZCUST     ZCUST   6                                           CSD027
+     C                     MOVE ZPTRF     ZPTRF   4
+     C                     MOVE ZSSNM     ZSSNM  10
+     C                     MOVE ZTVBS     ZTVBS   1
+     C*
+     C** SET THE TOTAL ACCRUED INTEREST ZTOAI AND TOTAL NUMBER OF
+     C** INTEREST DAYS ZTOND EQUAL TO ZERO
+     C                     Z-ADD0         ZTOAI  150
+     C                     Z-ADD0         ZTOND   50
+     C                     Z-ADD0         ZSINP  150
+     C*
+     C           KSEE1     KLIST
+     C                     KFLD           ZSSNM
+     C                     KFLD           ZFMDAT
+     C                     KFLD           ZTYP
+     C*
+     C** SET GREATER THAN LIMITS ON LF/PMAPOSLL WITH A KEY OF CUSTOMER
+     C** ZCUST, PORTFOLIO ZPTRF, SECURITY ZSSNM AND TRADE/VALUE DATE
+     C** BASIS ZTVBS AND A DATE EQUAL TO THE FROM DATE ZFMDAT
+     C           KPMA1     KLIST
+     C                     KFLD           ZCUST
+     C                     KFLD           ZPTRF
+     C                     KFLD           ZSSNM
+     C                     KFLD           ZTVBS
+     C                     KFLD           ZFMDAT
+     C           KPMA1     SETGTPMAPOSLL
+     C*
+     C** READ PREVIOUS FROM LF/PMAPOSLL
+     C                     READPPMAPOSLL                 91
+     C*
+     C** IF THE CUSTOMER, PORTFOLIO, SECURITY AND TRADE/VALUE DATE
+     C** BASIS ON LF/PMAPOSLL ARE THE SAME AS IN THE KEY ABOVE
+     C           ZCUST     IFEQ QACNUM
+     C           ZPTRF     ANDEQQAPTFR
+     C           ZSSNM     ANDEQQATDSS
+     C           ZTVBS     ANDEQQATVDA
+     C*
+     C** SUBTRACT THE EX-COUPON NOMINAL FROM THE NOMINAL (BOTH FROM
+     C** LF/PMAPOSLL) AND PUT THE RESULT IN PRINCIPAL AMOUNT ZAMT
+     C           QANOML    SUB  QACSEX    ZAMT
+     C                     ELSE
+     C*
+     C** IF THEY ARE DIFFERENT OR EOF IS REACHED, SET THE PRINCIPAL
+     C** AMOUNT ZAMT EQUAL TO ZERO
+     C                     Z-ADD0         ZAMT
+     C                     END
+     C*
+     C** SET THE FOLLOWING FIELDS FOR STANDARD SUBROUTINE ZRATE
+     C** SET ZPPCP EQUAL TO CPDP FROM LF/SECTY
+     C                     Z-ADDCPDP      ZPPCP
+     C** SET ZSFPP EQUAL TO SFPP FROM LF/SECTY
+     C                     Z-ADDSFPP      ZSFPP
+     C** SET ZSINP EQUAL TO SINP FROM LF/SECTY
+     C                     Z-ADDSINP      ZSINP
+     C** SET ZPPDI EQUAL TO PPDI FROM LF/SECTY
+     C                     MOVE PPDI      ZPPDI
+     C** SET ZCPNR EQUAL TO CPNR FROM LF/SECTY
+     C                     Z-ADDCPNR      ZCPNR
+     C** SET ZCFCT EQUAL TO CFCT FROM LF/SECTY
+     C                     Z-ADDCFCT      ZCFCT
+     C** SET ZPROT EQUAL TO PROT FROM LF/INVTP
+     C                     MOVE PROT      ZPROT
+     C*
+     C** SET THE FOLLOWING FIELDS FOR STANDARD SUBROUTINE ZACCR
+     C***********          Z-ADDA6NBDP    CDP                             S01946
+     C                     Z-ADDA6NBDP    ZCDP                            S01946
+     C*
+     C** ACCESS LF/SEEVNT USING A KEY OF SECURITY ZSSNM, FROM DATE
+     C** ZFMDAT AND EVENT TYPE EQUAL TO 'CP'
+     C                     MOVEL'CP'      ZTYP    2
+     C           KSEE1     CHAINSEEVNT               91
+     C           *IN91     IFEQ '0'
+     C*
+     C** IF A LAST COUPON DATE EVENT IS READ ABOVE, (NOTE THAT ZFMDAT
+     C** WILL BE A COUPON DATE) THEN SET THE FIELDS USED BY ZRATE
+     C** AS FOLLOWS:
+     C** SET ZCPNR EQUAL TO SNCR FROM LF/SEEVNT
+     C                     Z-ADDSNCR      ZCPNR
+     C** SET ZCFCT EQUAL TO SNCF FROM LF/SEEVNT
+     C                     Z-ADDSNCF      ZCFCT
+     C** SET ZPPCP EQUAL TO SNCP FROM LF/SEEVNT
+     C                     Z-ADDSNCP      ZPPCP
+     C                     END
+     C*
+     C** SET START OF INTEREST PERIOD DATE ZSDATE EQUAL TO THE FROM
+     C** DATE ZFMDAT
+     C                     Z-ADDZFMDAT    ZSDATE
+     C*
+     C** SET GREATER THAN LIMITS ON LF/SEEVNT USING A KEY OF SECURITY
+     C** ZSSNM, FROM DATE ZFMDAT AND EVENT TYPE EQUAL TO 'CP'
+     C           KSEE1     SETGTSEEVNT
+     C*
+     C** READ EQUAL FROM LF/SEEVNT WITH A KEY EQUAL TO THE SECURITY
+     C** SHORTNAME ZSSNM
+     C           ZSSNM     READESEEVNT                   91
+     C*
+     C** READ UNTIL THE EVENT HAS AN EVENT TYPE SDET EQUAL TO 'PP' 'MP' OR 'IR'
+     C*
+     C           *IN91     DOWEQ'0'
+     C           SDET      ANDNE'PP'
+     C           SDET      ANDNE'MP'
+     C           SDET      ANDNE'IR'
+     C           ZSSNM     READESEEVNT                   91
+     C                     END
+     C*
+     C** SET GREATER THAN LIMITS ON LF/PMAPOSLL WITH A KEY OF CUSTOMER
+     C** ZCUST, PORTFOLIO ZPTRF, SECURITY ZSSNM AND TRADE/VALUE DATE
+     C** BASIS ZTVBS AND A DATE EQUAL TO THE FROM DATE ZFMDAT
+     C           KPMA1     SETGTPMAPOSLL
+     C*
+     C** READ EQUAL FROM LF/PMAPOSLL WITH THE CUSTOMER ZCUST, PORTFOLIO
+     C** ZPTRF, SECURITY ZSSNM AND TRADE/VALUE DATE BASIS ZTVBS
+     C           KPMA2     KLIST
+     C                     KFLD           ZCUST
+     C                     KFLD           ZPTRF
+     C                     KFLD           ZSSNM
+     C                     KFLD           ZTVBS
+     C           KPMA2     READEPMAPOSLL                 92
+     C*
+     C** DO WHILE NOT END OF FILE (IE. SAME SECURITY) ON LF/SEEVNT
+     C** AND NOT END OF FILE (IE. SAME CUSTOMER, PORTFOLIO, SECURITY,
+     C** TRADE/VALUE BASIS) ON LF/PMAPOSLL
+     C           *IN91     DOWEQ'0'
+     C           *IN92     OREQ '0'
+     C*
+     C** IF NOT END OF FILE ON LF/SEEVNT
+     C           *IN91     IFEQ '0'
+     C*
+     C** IF NOT END OF FILE ON LF/PMAPOSLL AND THE EVENT DATE SDED
+     C** FROM LF/SEEVNT IS LESS THAN OR EQUAL TO THE POSITION DATE
+     C** FROM LF/PMAPOSLL OR END OF FILE ON LF/PMAPOSLL
+     C           *IN92     IFEQ '0'
+     C           SDED      ANDLEQAPDAT
+     C           SDED      ANDLTZTODAT
+     C           *IN92     OREQ '1'
+     C           SDED      ANDLTZTODAT
+     C*
+     C** SET THE END OF INTEREST PERIOD DATE ZEDATE EQUAL TO THE EVENT
+     C** DATE SDED FROM LF/SEEVNT
+     C                     Z-ADDSDED      ZEDATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZRATE TO GET THE EFFECTIVE
+     C** INTEREST RATE FOR THE PERIOD
+     C                     EXSR ZRATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZACCR TO CALCULATE THE INTEREST
+     C** FOR THE PERIOD
+     C                     EXSR ZACCR
+     C*
+     C** ADD THE ACCRUED INTEREST ZACCRD FROM ZACCR TO THE TOTAL
+     C** ACCRUED INTEREST ZTOAI
+     C                     ADD  ZACCRD    ZTOAI
+     C*
+     C** ADD THE NUMBER OF DAYS ZDDAYS FROM ZACCR TO THE TOTAL NUMBER
+     C** OF INTEREST DAYS ZTOND
+     C                     ADD  ZDDAYS    ZTOND
+     C*
+     C** SET THE START OF INTEREST PERIOD DATE ZSDATE EQUAL TO THE
+     C** EVENT DATE SDED FROM LF/SEEVNT
+     C                     Z-ADDSDED      ZSDATE
+     C*
+     C** SET THE FOLLOWING FIELDS USED BY ZRATE AS FOLLOWS:
+     C** SET ZCPNR EQUAL TO SDNC FROM LF/SEEVNT
+     C** SET ZCFCT EQUAL TO SDCP FROM LF/SEEVNT
+     C** SET ZPPCP EQUAL TO SDTP FROM LF/SEEVNT
+     C                     Z-ADDSDNC      ZCPNR
+     C                     Z-ADDSDCP      ZCFCT
+     C                     MOVE SDTP      ZPPCP
+     C*
+     C** READ EQUAL FROM LF/SEEVNT WITH THE SECURITY SHORTNAME ZSSNM
+     C           ZSSNM     READESEEVNT                   91
+     C*
+     C** READ UNTIL THE EVENT HAS AN EVENT TYPE SDET EQUAL TO 'PP' 'MP' OR 'IR'
+     C*
+     C           *IN91     DOWEQ'0'
+     C           SDET      ANDNE'PP'
+     C           SDET      ANDNE'MP'
+     C           SDET      ANDNE'IR'
+     C           ZSSNM     READESEEVNT                   91
+     C                     END
+     C*
+     C** ELSE, IF EVENT DATE SDED FROM LF/SEEVNT IS GREATER THAN OR
+     C** EQUAL TO TO DATE PARAMETER, TREAT AS END OF FILE ON LF/SEEVNT
+     C                     ELSE
+     C           SDED      IFGE ZTODAT
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C** IF NOT END OF FILE ON LF/PMAPOSLL
+     C           *IN92     IFEQ '0'
+     C*
+     C** IF NOT END OF FILE ON LF/SEEVNT AND THE POSITION DATE FROM
+     C** LF/PMAPOSLL IS LESS THAN THE EVENT DATE SDED FROM
+     C** LF/SEEVNT OR END OF FILE ON LF/SEEVNT
+     C           *IN91     IFEQ '0'
+     C           QAPDAT    ANDLTSDED
+     C           QAPDAT    ANDLTZTODAT
+     C           *IN91     OREQ '1'
+     C           QAPDAT    ANDLTZTODAT
+     C*
+     C** SET THE END OF INTEREST PERIOD DATE ZEDATE EQUAL TO THE
+     C** POSITION DATE QAPDAT FROM LF/PMAPOSLL
+     C                     Z-ADDQAPDAT    ZEDATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZRATE TO GET THE EFFECTIVE
+     C** INTEREST RATE FOR THE PERIOD
+     C                     EXSR ZRATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZACCR TO CALCULATE THE INTEREST
+     C** FOR THE PERIOD
+     C                     EXSR ZACCR
+     C*
+     C** ADD THE ACCRUED INTEREST ZACCRD FROM ZACCR TO THE TOTAL
+     C** ACCRUED INTEREST ZTOAI
+     C                     ADD  ZACCRD    ZTOAI
+     C*
+     C** ADD THE NUMBER OF DAYS ZDDAYS FROM ZACCR TO THE TOTAL NUMBER
+     C** OF INTEREST DAYS ZTOND
+     C                     ADD  ZDDAYS    ZTOND
+     C*
+     C** SET THE START OF INTEREST PERIOD DATE ZSDATE EQUAL TO THE
+     C** POSITION DATE QAPDAT FROM LF/PMAPOSLL
+     C                     Z-ADDQAPDAT    ZSDATE
+     C*
+     C** SUBTRACT THE EX-COUPON NOMINAL FROM THE NOMINAL (BOTH FROM
+     C** LF/PMAPOSLL) AND PUT THE RESULT IN PRINCIPAL AMOUNT ZAMT
+     C           QANOML    SUB  QACSEX    ZAMT
+     C*
+     C** READ EQUAL FROM LF/PMAPOSLL WITH THE CUSTOMER ZCUST, PORTFOLIO
+     C** ZPTRF, SECURITY ZSSNM AND TRADE/VALUE BASIS ZTVBS
+     C           KPMA2     READEPMAPOSLL                 92
+     C*
+     C** ELSE, IF POSITION DATE QAPDAT FROM LF/PMAPOSLL IS GREATER THAN
+     C** OR EQUAL TO TO DATE PARAMETER, TREAT AS END OF FILE ON
+     C** LF/PMAPOSLL
+     C                     ELSE
+     C           QAPDAT    IFGE ZTODAT
+     C                     MOVE '1'       *IN92
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** SET THE END OF INTEREST PERIOD DATE ZEDATE EQUAL TO THE TO
+     C** DATE ZTODAT
+     C                     Z-ADDZTODAT    ZEDATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZRATE TO GET THE EFFECTIVE
+     C** INTEREST RATE FOR THE PERIOD
+     C                     EXSR ZRATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZACCR TO CALCULATE THE INTEREST
+     C** FOR THE PERIOD
+     C                     EXSR ZACCR
+     C*
+     C** ADD THE ACCRUED INTEREST ZACCRD FROM ZACCR TO THE TOTAL
+     C** ACCRUED INTEREST ZTOAI
+     C                     ADD  ZACCRD    ZTOAI
+     C*
+     C** ADD THE NUMBER OF DAYS ZDDAYS FROM ZACCR TO THE TOTAL NUMBER
+     C** OF INTEREST DAYS ZTOND
+     C                     ADD  ZDDAYS    ZTOND
+     C*
+     C           EAISCH    ENDSR
+     C*****************************************************************

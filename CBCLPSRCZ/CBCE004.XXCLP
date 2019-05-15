@@ -1,0 +1,72 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CCB016A*/
+/*********************************************************************/
+/*                                                                   */
+/*        Midas - Close of Business Processing                       */
+/*                                                                   */
+/*       CBCE004 - CB Change APOSTPD LF access paths to *DLY         */
+/*                                                                   */
+/*      (c) Misys International Banking Systems Ltd. 2008            */
+/*                                                                   */
+/*       Last Amend No. CCB016A *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CCB016  *CREATE    Date 28May08              */
+/*      Midas Plus 1.4 Base -----------------------------------------*/
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*       CCB016 - Delay LF Access paths over APOSTPD during GLC42.   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          COPYRIGHT MISYS INTERNATIONAL BANKING +
+                          SYSTEMS 2008')
+ 
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+             DCLF       FILE(QAFDLGL)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ                                                                          */
+             SNDPGMMSG  MSG('CBCE004 - CB Update APOSTPD Logical +
+                          File access paths') TOMSGQ(MRUNQ)
+ 
+/* Retrieve system prefix and set program variables                                               */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+ 
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+/* For each logical based over APOSTPD, check the access path maintenance and                     */
+/* change to *DLY if I(mmediate).                                                                 */
+ 
+             OVRDBF     FILE(QAFDLGL) TOFILE(&DPLIB/CBLATRPA)
+ READ:       RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
+ 
+             IF         COND(&LGMANT *EQ 'I') THEN(DO)
+                 CHGLF      FILE(&LGLIB/&LGFILE) MAINT(*DLY)
+                 MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+             GOTO       CMDLBL(READ)
+ 
+ EOF:        DLTOVR     FILE(*ALL)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Error processing - Change the job switches and send messages to MRUNQ and MOPERQ               */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     &MSG VALUE('Program CBCE004 terminated abnormally')
+             SNDMSG     TOMSGQ(MRUNQ MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CHGVAR     VAR(&MIBSCPY) VALUE('(C) COPYRIGHT MISYS +
+                          INTERNATIONAL BANKING SYSTEMS 2008')
+ ENDPGM

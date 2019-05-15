@@ -1,0 +1,761 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FT, RE and NT exposure extract')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0007 - Citydealer FT, RE & NT Exposure Extract             *
+      *                                                               *
+      *  Function:  This program will be called by DLC0007 during     *
+      *  (C.O.B.)   Close of Business.  It will use a subset of the   *
+      *             Generated Entries files to extract all those      *
+      *             movements across Retail and Nostro accounts which *
+      *             have arisen as a result of Non Front Office Deal- *
+      *             ing Room Transactions.                            *
+      *                                                               *
+      *  Called By: DLC0007                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 096395             Date 24Nov95               *
+      *                 095751             Date 09Nov95               *
+      *                 095724             DATE 09NOV95               *
+      *                 CCM002 *CREATE     DATE 04SEP95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAP204 - Teller Related APIs - Account Transfer (Recompile)  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL007 - Account Postings Enquiry                            *
+      *  096395 - Process items in clearing separately to avoid       *
+      *           extracting the same posting more than once.         *
+      *  095751 - Process account postings from Customer Lending      *
+      *           generated entries files to avoid reversing          *
+      *           Citydealer amounts in error.                        *
+      *  095724 - Process account movements from RSACMTPD to avoid    *
+      *           reversing Citydealer amounts in error.              *
+      *  CCM002 - Midas/Citydealer Interface (Phases V and VI)        *
+      *                                                               *
+      *****************************************************************
+     F***GECDL0**IF  F     316 10AI     8 DISK         KINFSR *PSSR       CGL007
+     F***GECDL0* IF  F     331 10AI     8 DISK         KINFSR *PSSR                    CGL007 CGL029
+     FGECDL0  IF  F     620 10AI     8 DISK         KINFSR *PSSR                              CGL029
+     FRSACMTL3IF  E           K        DISK         KINFSR *PSSR          095724
+     FCLEAR   IF  E           K        DISK         KINFSR *PSSR          096395
+     F            APOSTHHF                          KIGNORE               096395
+     F            APOSTZZF                          KIGNORE               096395
+     FDLCDNCL0UF  E           K        DISK         KINFSR *PSSR A
+     FDL0007AUO   E                    PRINTER                        UC  096395
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  10         EOF read for LF/GECDL0                            *
+     F*  11         EOF read for LF/RSACMTL3                          *   095724
+     F*  12         EOF read for LF/CLEAR                             *   096395
+     F*  20         Chain Fails for LF/DLCDNCL0                       *
+     F*  U7-U8      Database Error                                    *
+     F*  LR         Exit program                                      *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  #LINIT  -  Initial Processing                                *
+     F*  #LPOST  -  Process all Postings                              *
+     F*  #LMTYP  -  Determine the Module/Type of the Posting          *
+     F*  #LNOST  -  Determine if Movement is across a Nostro Account  *
+     F*  #LRSMT  -  Process all Shadow Account Movements              *   095724
+     F*  #LCLAR  -  Process all Items in Clearing                     *   096395
+     F*  *PSSR   -  Program exception error routine                   *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      /SPACE 3
+     IGECDL0  NS
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8  10 CCY
+     I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ACSQ
+     I                                    P  36  380VALD
+     I                                    P  74  800PSTA
+     I                                       81  810DRCR
+     I                                      103 105 BRCA
+     I                                      124 124 ATYP
+     I                                      129 129 GETP
+     I                                      241 250 OTTP
+     I                                      590 5990ACOD                                      CGL029
+     I*
+     IDLCDNCD0
+     I              CCY                             CCYNC
+     I              BRCA                            BRCANC
+     I*
+     I** Rename fields which are the same with GECDL0 file.
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     I** Temporary Data Structure for file DLCDNCL0.
+     I*
+     I            DS
+     I                                        1   2 ULMTYP
+     I                                        3   5 ULBRCA
+     I                                        6   8 ULCCY
+     I                                        9  130ULVDAT
+     I                                       14  150ULNOSN
+     I                                       16  300ULAMT
+     I                                        1  30 ULCDNC
+     I*
+     I** Data structure for file DLCDNCL0.
+     I*
+     I            DS
+     I                                        1   2 MOTYP
+     I                                        3   5 BRCANC
+     I                                        6   8 CCYNC
+     I                                        9  130VDAT0
+     I                                       14  150NOSN
+     I                                       16  300AMT
+     I                                        1  30 WCDNC
+     I*
+     I*
+     ISDBANK    E DSSDBANKPD                                              096395
+      ** Bank Details                                                     096395
+      *                                                                   096395
+     ISDNOST    E DSSDNOSTPD
+      ** Nostro Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+      /EJECT
+     C*
+     C** Initialisation.
+     C*
+     C                     EXSR #LINIT
+     C*                                                                   095724
+     C** Process all shadow account movements                             095724
+     C*                                                                   095724
+     C                     EXSR #LRSMT                                    095724
+     C*                                                                   096395
+     C** Process all items in clearing                                    096395
+     C*                                                                   096395
+     C                     EXSR #LCLAR                                    096395
+     C*
+     C** Process all postings.
+     C*
+     C                     EXSR #LPOST
+     C*
+     C                     MOVE '1'       *INLR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT  - Initial Processing.                                 *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Set Key for file DLCDNCL0.
+     C*
+     C           KCDNC     KLIST
+     C                     KFLD           ULMTYP
+     C                     KFLD           ULBRCA
+     C                     KFLD           ULCCY
+     C                     KFLD           ULVDAT
+     C                     KFLD           ULNOSN
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*                                                                   096395
+     C** Access the Bank Details.                                         096395
+     C*                                                                   096395
+     C                     CALL 'AOBANKR0'                                096395
+     C                     PARM *BLANKS   @RTCD   7                       096395
+     C                     PARM '*FIRST ' @OPTN   7                       096395
+     C           SDBANK    PARM SDBANK    DSFDY                           096395
+     C*                                                                   096395
+     C           @RTCD     IFNE *BLANKS                                   096395
+     C           *LOCK     IN   LDA                                       096395
+     C                     MOVEL'DL0007'  DBPGM                           096395
+     C                     Z-ADD1         DBASE            ***************096395
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *096395
+     C                     MOVEL'*FIRST'  DBKEY            ***************096395
+     C                     OUT  LDA                                       096395
+     C                     EXSR *PSSR                                     096395
+     C                     ENDIF                                          096395
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************   095724
+     C*                                                               *   095724
+     C* #LRSMT  - Process all Shadow Account Movements                *   095724
+     C*                                                               *   095724
+     C* Called by :  Main - Main Processing.                          *   095724
+     C*                                                               *   095724
+     C* Calls :  #LMTYP - Determine the Module/Type of the Posting    *   095724
+     C*          #LNOST - Determine if Movement is across a Nostro    *   095724
+     C*                   Account                                     *   095724
+     C*                                                               *   095724
+     C*****************************************************************   095724
+     C*                                                                   095724
+     C           #LRSMT    BEGSR                                          095724
+     C*                                                                   095724
+     C** Read a record from the Account Movements file                    095724
+     C*                                                                   095724
+     C                     READ RSACMTL3                 11               095724
+     C*                                                                   095724
+     C                     MOVE '1'       WFIRST  1                       095724
+     C                     MOVE '0'       WRECRD  1                       095724
+     C                     MOVE 'Y'       WRSMT   1                       095724
+     C*                                                                   095724
+     C** Process every record in the file.                                095724
+     C*                                                                   095724
+     C           *IN11     DOWEQ*OFF                                      095724
+     C*                                                                   095724
+     C                     MOVE 'Y'       WPOST   1                       095724
+     C*                                                                   095724
+     C** Determine the Module/Type of the posting.                        095724
+     C*                                                                   095724
+     C                     EXSR #LMTYP                                    095724
+     C*                                                                   095724
+     C** Process Posting if Generated Entry Type is valid.                095724
+     C*                                                                   095724
+     C           WPOST     IFEQ 'Y'                                       095724
+     C                     EXSR #LNOST                                    095724
+     C                     ENDIF                                          095724
+     C*                                                                   095724
+     C** Process Posting.                                                 095724
+     C*                                                                   095724
+     C           WPOST     IFEQ 'Y'                                       095724
+     C*                                                                   095724
+     C           WFIRST    IFEQ '1'                                       095724
+     C           ULMTYP    ORNE WMTYP                                     095724
+     C           ULBRCA    ORNE BRCA                                      095724
+     C           ULCCY     ORNE CCYD                                      095724
+     C           ULVDAT    ORNE VUDT                                      095724
+     C           ULNOSN    ORNE WNOSN                                     095724
+     C*                                                                   095724
+     C** If this is NOT the first posting processed.                      095724
+     C*                                                                   095724
+     C           WFIRST    IFNE '1'                                       095724
+     C*                                                                   095724
+     C** Access the Citydealer New Transmission Values file.              095724
+     C*                                                                   095724
+     C           KCDNC     CHAINDLCDNCL0             20                   095724
+     C*                                                                   095724
+     C** If record is found, update the file.                             095724
+     C*                                                                   095724
+     C           *IN20     IFEQ *OFF                                      095724
+     C                     ADD  ULAMT     AMT                             095724
+     C                     UPDATDLCDNCD0                                  095724
+     C                     ELSE                                           095724
+     C*                                                                   095724
+     C** Write the new record to the file.                                095724
+     C*                                                                   095724
+     C                     MOVELULCDNC    WCDNC                           095724
+     C                     WRITEDLCDNCD0                                  095724
+     C                     ENDIF                                          095724
+     C                     ENDIF                                          095724
+     C*                                                                   095724
+     C** Setup the fields.                                                095724
+     C*                                                                   095724
+     C                     MOVE WMTYP     ULMTYP                          095724
+     C                     MOVE BRCA      ULBRCA                          095724
+     C                     MOVE CCYD      ULCCY                           095724
+     C                     Z-ADDVUDT      ULVDAT                          095724
+     C                     Z-ADDWNOSN     ULNOSN                          095724
+     C                     Z-ADD0         ULAMT                           095724
+     C*                                                                   095724
+     C                     ENDIF                                          095724
+     C*                                                                   095724
+     C** Process the amount according to Debit/Credit indicator.          095724
+     C*                                                                   095724
+     C           DORC      IFEQ 0                                         095724
+     C                     ADD  MVAM      ULAMT                           095724
+     C                     ENDIF                                          095724
+     C           DORC      IFEQ 1                                         095724
+     C                     SUB  MVAM      ULAMT                           095724
+     C                     ENDIF                                          095724
+     C*                                                                   095724
+     C                     MOVE '0'       WFIRST                          095724
+     C                     MOVE '1'       WRECRD                          095724
+     C*                                                                   095724
+     C                     ENDIF                                          095724
+     C*                                                                   095724
+     C** Read the next record from the Account Movements File             095724
+     C*                                                                   095724
+     C                     READ RSACMTL3                 11               095724
+     C*                                                                   095724
+     C                     ENDDO                                          095724
+     C*                                                                   095724
+     C                     ENDSR                                          095724
+      /EJECT                                                              095724
+     C*                                                                   095724
+     C*****************************************************************
+     C*                                                               *   096395
+     C* #LCLAR  - Process all Items in Clearing                       *   096395
+     C*                                                               *   096395
+     C* Called by :  Main - Main Processing.                          *   096395
+     C*                                                               *   096395
+     C* Calls :  #LMTYP - Determine the Module/Type of the Posting    *   096395
+     C*          #LNOST - Determine if Movement is across a Nostro    *   096395
+     C*                   Account                                     *   096395
+     C*                                                               *   096395
+     C*****************************************************************   096395
+     C*                                                                   096395
+     C           #LCLAR    BEGSR                                          096395
+     C*                                                                   096395
+     C** Read a record from the Items in Clearing file                    096395
+     C*                                                                   096395
+     C                     READ CLEAR                    12               096395
+     C*                                                                   096395
+     C                     MOVE 'N'       WRSMT                           096395
+     C*                                                                   096395
+     C** Process every record in the file.                                096395
+     C*                                                                   096395
+     C           *IN12     DOWEQ*OFF                                      096395
+     C*                                                                   096395
+     C** If Posting Date is Today, then ignore posting as this will       096395
+     C** be processed from the Generated Entries files instead.           096395
+     C*                                                                   096395
+     C           PSTD      IFEQ BJRDNB                                    096395
+     C                     MOVE *BLANKS   WPOST                           096395
+     C                     ELSE                                           096395
+     C                     MOVE 'Y'       WPOST                           096395
+     C                     ENDIF                                          096395
+     C*                                                                   096395
+     C** Determine the Module/Type of the posting.                        096395
+     C*                                                                   096395
+     C           WPOST     IFEQ 'Y'                                       096395
+     C                     EXSR #LMTYP                                    096395
+     C                     ENDIF                                          096395
+     C*                                                                   096395
+     C** Process Posting if Generated Entry Type is valid.                096395
+     C*                                                                   096395
+     C           WPOST     IFEQ 'Y'                                       096395
+     C                     EXSR #LNOST                                    096395
+     C                     ENDIF                                          096395
+     C*                                                                   096395
+     C** Process Posting.                                                 096395
+     C*                                                                   096395
+     C           WPOST     IFEQ 'Y'                                       096395
+     C*                                                                   096395
+     C           WFIRST    IFEQ '1'                                       096395
+     C           ULMTYP    ORNE WMTYP                                     096395
+     C           ULBRCA    ORNE BRCA                                      096395
+     C           ULCCY     ORNE CCY                                       096395
+     C           ULVDAT    ORNE VALD                                      096395
+     C           ULNOSN    ORNE WNOSN                                     096395
+     C*                                                                   096395
+     C** If this is NOT the first posting processed.                      096395
+     C*                                                                   096395
+     C           WFIRST    IFNE '1'                                       096395
+     C*                                                                   096395
+     C** Access the Citydealer New Transmission Values file.              096395
+     C*                                                                   096395
+     C           KCDNC     CHAINDLCDNCL0             20                   096395
+     C*                                                                   096395
+     C** If record is found, update the file.                             096395
+     C*                                                                   096395
+     C           *IN20     IFEQ *OFF                                      096395
+     C                     ADD  ULAMT     AMT                             096395
+     C                     UPDATDLCDNCD0                                  096395
+     C                     ELSE                                           096395
+     C*                                                                   096395
+     C** Write the new record to the file.                                096395
+     C*                                                                   096395
+     C                     MOVELULCDNC    WCDNC                           096395
+     C                     WRITEDLCDNCD0                                  096395
+     C                     ENDIF                                          096395
+     C                     ENDIF                                          096395
+     C*                                                                   096395
+     C** Setup the fields.                                                096395
+     C*                                                                   096395
+     C                     MOVE WMTYP     ULMTYP                          096395
+     C                     MOVE BRCA      ULBRCA                          096359
+     C                     MOVE CCY       ULCCY                           096395
+     C                     Z-ADDVALD      ULVDAT                          096395
+     C                     Z-ADDWNOSN     ULNOSN                          096395
+     C                     Z-ADD0         ULAMT                           096395
+     C*                                                                   096395
+     C                     ENDIF                                          096395
+     C*                                                                   096395
+     C** Process the amount according to Debit/Credit indicator.          096395
+     C*                                                                   096395
+     C           DRCR      IFEQ 0                                         096395
+     C                     ADD  PSTA      ULAMT                           096395
+     C                     ENDIF                                          096395
+     C           DRCR      IFEQ 1                                         096395
+     C                     SUB  PSTA      ULAMT                           096395
+     C                     ENDIF                                          096395
+     C*                                                                   096395
+     C                     MOVE '0'       WFIRST                          096395
+     C                     MOVE '1'       WRECRD                          096395
+     C*                                                                   096395
+     C                     ENDIF                                          096395
+     C*                                                                   096395
+     C** Read the next record from the Items in Clearing File             096395
+     C*                                                                   096395
+     C                     READ CLEAR                    12               096395
+     C*                                                                   096395
+     C                     ENDDO                                          096395
+     C*                                                                   096395
+     C                     ENDSR                                          096395
+      /EJECT                                                              096395
+     C*                                                                   096395
+     C*****************************************************************   096395
+     C*                                                               *
+     C* #LPOST  - Process all Postings.                               *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  #LMTYP - Determine the Module/Type of the Posting    *
+     C*          #LNOST - Determine if Movement is across a Nostro    *
+     C*                   Account                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LPOST    BEGSR
+     C*
+     C** Read a record from the Citydealer Generated Entries File.
+     C*
+     C                     READ GECDL0                   10
+     C*
+     C***********          MOVE '1'       WFIRST  1                       095724
+     C***********          MOVE '0'       WRECRD  1                       095724
+     C                     MOVE 'N'       WRSMT                           095724
+     C*
+     C** Process every record in the file.
+     C*
+     C           *IN10     DOWEQ*OFF
+     C*
+     C                     MOVE 'Y'       WPOST   1
+     C*
+     C** Determine the Module/Type of the posting.
+     C*
+     C                     EXSR #LMTYP
+     C*
+     C** Process Posting if Generated Entry Type is valid.
+     C*
+     C           WPOST     IFEQ 'Y'
+     C                     EXSR #LNOST
+     C                     ENDIF
+     C*
+     C** Process Posting.
+     C*
+     C           WPOST     IFEQ 'Y'
+     C*
+     C           WFIRST    IFEQ '1'
+     C           ULMTYP    ORNE WMTYP
+     C           ULBRCA    ORNE BRCA
+     C           ULCCY     ORNE CCY
+     C           ULVDAT    ORNE VALD
+     C           ULNOSN    ORNE WNOSN
+     C*
+     C** If this is NOT the first posting processed.
+     C*
+     C           WFIRST    IFNE '1'
+     C*
+     C** Access the Citydealer New Transmission Values file.
+     C*
+     C           KCDNC     CHAINDLCDNCL0             20
+     C*
+     C** If record is found, update the file.
+     C*
+     C           *IN20     IFEQ *OFF
+     C                     ADD  ULAMT     AMT
+     C                     UPDATDLCDNCD0
+     C                     ELSE
+     C*
+     C** Write the new record to the file.
+     C*
+     C                     MOVELULCDNC    WCDNC
+     C                     WRITEDLCDNCD0
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Setup the fields.
+     C*
+     C                     MOVE WMTYP     ULMTYP
+     C                     MOVE BRCA      ULBRCA
+     C                     MOVE CCY       ULCCY
+     C                     Z-ADDVALD      ULVDAT
+     C                     Z-ADDWNOSN     ULNOSN
+     C                     Z-ADD0         ULAMT
+     C*
+     C                     ENDIF
+     C*
+     C** Process the amount according to Debit/Credit indicator.
+     C*
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      ULAMT
+     C                     ENDIF
+     C           DRCR      IFEQ 1
+     C                     SUB  PSTA      ULAMT
+     C                     ENDIF
+     C*
+     C                     MOVE '0'       WFIRST
+     C                     MOVE '1'       WRECRD
+     C*
+     C                     ENDIF
+     C*
+     C** Read the next record from the Citydealer Generated Entries
+     C** file.
+     C*
+     C                     READ GECDL0                   10
+     C*
+     C                     ENDDO
+     C*
+     C** If at least one record is processed.
+     C*
+     C           WRECRD    IFEQ '1'
+     C*
+     C** Access the Citydealer New Transmission Values file.
+     C*
+     C           KCDNC     CHAINDLCDNCL0             20
+     C*
+     C** If record is found, update the file.
+     C*
+     C           *IN20     IFEQ *OFF
+     C                     ADD  ULAMT     AMT
+     C                     UPDATDLCDNCD0
+     C                     ELSE
+     C*
+     C** Write the new record to the file.
+     C*
+     C                     MOVELULCDNC    WCDNC
+     C                     WRITEDLCDNCD0
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LMTYP - Determine the Module/Type of the Posting             *
+     C*                                                               *
+     C* Called by : #LPOST  - Process all Postings.                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LMTYP    BEGSR
+     C*                                                                   095724
+     C** If Shadow Account Movement is processed.                         095724
+     C*                                                                   095724
+     C           WRSMT     IFEQ 'Y'                                       095724
+     C*                                                                   095724
+     C** If NOT a Funds Transfer movement.                                095724
+     C*                                                                   095724
+     C           FUND      IFEQ *BLANKS                                   095724
+     C*                                                                   095724
+     C** Only process if a Nostro Transfer from Dealing.                  095724
+     C*                                                                   095724
+     C           TRYP      IFNE 'NX'                                      095724
+     C                     MOVE *BLANKS   WPOST                           095724
+     C                     ELSE                                           095724
+     C                     MOVE 'NT'      WMTYP                           095724
+     C                     ENDIF                                          095724
+     C*                                                                   095724
+     C** If Funds Transfer movement.                                      095724
+     C*                                                                   095724
+     C                     ELSE                                           095724
+     C*                                                                   095724
+     C** Process and set Module/Type according to whether a Nostro        095724
+     C** Transfer or not.                                                 095724
+     C*                                                                   095724
+     C           TRYP      IFEQ 'NT'                                      095724
+     C                     MOVE 'NT'      WMTYP                           095724
+     C                     ELSE                                           095724
+     C                     MOVEL'FT'      WMTYP                           095724
+     C                     ENDIF                                          095724
+      *                                                                   095724
+     C                     ENDIF                                          095724
+     C*                                                                   095724
+     C** If Account Posting is processed.                                 095724
+     C*                                                                   095724
+     C                     ELSE                                           095724
+     C*
+     C** If the Generated Entry Type is from Dealing.
+     C*
+     C           GETP      IFEQ 'D'
+     C                     MOVELOTTP      WOTTP   2
+     C           WOTTP     IFEQ 'NX'
+     C                     MOVE 'NT'      WMTYP   2
+     C                     ELSE
+     C                     MOVE *BLANKS   WPOST
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** If the Generated Entry Type is from Funds Transfer.
+     C*
+     C           GETP      IFEQ 'G'
+     C                     MOVELOTTP      WOTTP
+     C           WOTTP     IFEQ 'NT'
+     C                     MOVE 'NT'      WMTYP
+     C                     ELSE
+     C                     MOVE 'FT'      WMTYP
+     C                     ENDIF
+     C                     ENDIF
+     C*                                                                   095751
+     C** If the Generated Entry Type is from Customer Lending             095751
+     C*                                                                   095751
+     C           GETP      IFEQ 'U'                                       095751
+     C                     MOVE 'LE'      WMTYP                           095751
+     C                     ENDIF                                          095751
+     C*
+     C** If the Generated Entry Type is not from Dealing nor from
+     C***Funds*Transfer.***                                               095751
+     C** Funds Transfer nor from Customer Lending.                        095751
+     C*
+     C           GETP      IFNE 'D'
+     C           GETP      ANDNE'G'
+     C           GETP      ANDNE'U'                                       095751
+     C                     MOVE 'RE'      WMTYP
+     C                     ENDIF
+     C*
+     C                     ENDIF                                          095724
+     C*                                                                   095724
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LNOST - Determine if Movement is across a Nostro Account     *
+     C*                                                               *
+     C* Called by : #LPOST  - Process all Postings.                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LNOST    BEGSR                                       **
+     C*
+     C** Access the Nostro Details.
+     C*
+     C           WRSMT     IFEQ 'Y'                                       095724
+     C                     MOVE CUSN      @CUST                           095724
+     C                     MOVE CCYD      @CCY                            095724
+     C                     MOVE ACDE      @ACCD                           095724
+     C                     MOVE ASNC      @ACSN                           095724
+     C                     ELSE                                           095724
+     C                     MOVE CNUM      @CUST   6
+     C                     MOVE CCY       @CCY    3                       095724
+     C**********           MOVE ACOD      @ACCD   4                                           CGL029
+     C                     MOVE ACOD      @ACCD  10                                           CGL029
+     C                     MOVE ACSQ      @ACSN   2
+     C                     ENDIF                                          095724
+     C*
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CUST
+     C***********          PARM CCY       @CCY    3                       095724
+     C                     PARM           @CCY                            095724
+     C                     PARM           @ACCD
+     C                     PARM           @ACSN
+     C                     PARM *BLANKS   @NOST   2
+     C                     PARM BRCA      @BRCA   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+     C*
+     C** If record is found, set the Posting Nostro from the file.
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELA7NONB    WNOSN   20
+     C                     ELSE
+     C*
+     C** Set the Posting Nostro to zero.
+     C*
+     C                     Z-ADD0         WNOSN
+     C                     ENDIF
+     C*
+     C** If the Posting Account Type is Retail or the Posting Nostro
+     C** is not equal to zero, set WPOST.
+     C*
+     C           ATYP      IFEQ 'R'
+     C           WNOSN     ORNE 0
+     C                     MOVE 'Y'       WPOST
+     C                     ELSE
+     C                     MOVE *BLANKS   WPOST
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: Anywhere                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     OPEN DL0007AU                                  096395
+     C                     WRITEHEADAU                                    096395
+     C                     WRITEDBERROR                                   096395
+     C                     CLOSEDL0007AU                                  096395
+     C*                                                                   096395
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

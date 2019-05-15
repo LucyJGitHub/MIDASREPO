@@ -1,0 +1,503 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Facility history report i/c prompt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER600 - FACILITY HISTORY REPORT PROMPT PROGRAM              *
+     F*                                                               *
+     F*  Function: Prompt program for Input Cycle On Request          *
+     F*            Facility History report. The program prompts       *
+     F*            for Customer number, Facility type and sequence    *
+     F*            number and a Facility History start date.          *
+     F*                                                               *
+     F*  Called By: LERC60  - Prompt program as specified on RCF      *
+     F*                                                               *
+     F*  Calls: GPCLRM   - Clear Program Subfile Message Queue        *
+     F*         GPADDM   - Add Message to Subfile Message Queue       *
+     F*         DBERRCTL - Program to handle database errors          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 BH3533             Date 18Sep92               *
+     F*                 BH3393             DATE 09JUL92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  176443 - Avoid MCH3601 to be sent.                           *
+     F*           Pass correct parameter to AOCUSTR0.                 *
+     F*  BH3533 - History start date initialised to zeroes            *
+     F*  BH3393 - Screen ID incorrect length                     5f wsi
+     F*           AND REPORT (LER610) FOR RCF STANDARDS.              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FLER600DFCF  E                    WORKSTN
+     F                                        XRRN  KSFILE LER600F5
+     FFACHISH IF  E           K        DISK
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SUB001  - Subroutine for initial processing.                 *
+     F*  SUB002  - Initialise screen fields.                          *
+     F*  SUB003  - Screen validation.                                 *
+     F*                                                               *
+     F*  *PSSR   - Error processing routine - DUMPs and ends          *
+     F*             (This is called automatically if an unexpected    *
+     F*             error occurs).                                    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    01  - EOF indicator on LER600F1.                           *
+     F*                                                               *
+     F*    10  - '?' processing used for customer.                    *
+     F*                                                               *
+     F*    11  - Facility type entered is numeric.                    *
+     F*    12  - Facility sequence number entered is numeric.         *
+     F*                                                               *
+     F*    20  - Customer input error.                                *
+     F*    21  - Facility reference input error.                      *
+     F*    22  - Facility History start date input error.             *
+     F*                                                               *
+     F*    59  - SFLEND on message subfile.                           *
+     F*                                                               *
+     F*    98  - Date format indicator.                               *
+     F*                                                               *
+     F*    KC  - F3 pressed - exit.                                   *
+     F*    KL  - F12 pressed - previous screen.                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+     E/COPY ZSRSRC,ZDATE2Z1
+     I/EJECT
+     ILERSTS      DS                            128
+      * LER Status Data area
+     I                                       12  160XHISST
+      *
+     ILDA        UDS                            256
+      * Database error DS
+      *
+     I                                      171 180 DBPGM
+      *
+     IPSDS       SDS
+      *
+      ** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I************                          244 249 WSID                 BH3393
+     I                                      244 253 WSID                  BH3393
+     I            DS
+      * To combine facility type and sequence.
+      * Also, split up entry parameter RPARM for action code 'A'.
+     I                                        1  16 PARMDS
+     I                                        1   30FHFTYP
+     I                                        4   50FHFSEQ
+     I                                        1   50FHFACL
+     I                                        1   3 XFTYP
+     I                                        1   3 SFACT
+     I                                        4   5 SFCNO
+     I                                        6  11 TCUST
+     I                                       12  160HDAYN
+     I            DS
+      * To Set up correct decimal places
+     I                                    P   1   70OFAM0
+     I                                    P   1   71OFAM1
+     I                                    P   1   72OFAM2
+     I                                    P   1   73OFAM3
+     I                                    P   8  140AAMT0
+     I                                    P   8  141AAMT1
+     I                                    P   8  142AAMT2
+     I                                    P   8  143AAMT3
+     I                                    P  22  280CFAM0
+     I                                    P  22  281CFAM1
+     I                                    P  22  282CFAM2
+     I                                    P  22  283CFAM3
+     I                                    P  29  350DRAM0
+     I                                    P  29  351DRAM1
+     I                                    P  29  352DRAM2
+     I                                    P  29  353DRAM3
+     I                                    P  36  420UNDR0
+     I                                    P  36  421UNDR1
+     I                                    P  36  422UNDR2
+     I                                    P  36  423UNDR3
+     I            DS
+     I                                       11  16 SSDAT
+     I                                       11  160XDATE
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+     I              AGMRDT                          MRDT
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Main Processing.                                             *
+      *                                                               *
+      *****************************************************************
+     C*
+     C** Receive entry parameters.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           RPARM  16
+     C                     PARM           RACT    1
+     C                     PARM           CMD     1
+      *
+      ** Split entry parameters using data structure.
+     C                     MOVELRPARM     PARMDS
+     C                     MOVELTCUST     SCUST
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Execute initial processing.
+      *
+     C                     EXSR SUB001
+     C                     EXSR SUB002
+      *
+      *  Detail processing
+     C           MSGID     DOUEQ*BLANKS
+      *
+     C                     WRITELER600F5
+     C                     WRITELER600F1
+      *
+     C                     READ LER600F1                 01
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       CMD
+     C                     GOTO EXIT
+     C                     END
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'F'       CMD
+     C                     GOTO EXIT
+     C                     END
+      *
+      ** Blank out error message field and reverse image indicators.
+      *
+     C                     MOVEA'000'     *IN,20
+     C                     MOVE *BLANKS   MSGID
+      *
+     C                     CALL 'GPCLRM'
+      *
+     C                     EXSR SUB003
+      *
+     C                     END
+      *
+     C           EXIT      TAG
+      *
+     C                     MOVE PARMDS    RPARM
+     C/COPY WNCPYSRC,LER600C001
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUB001 --- Subroutine for initial processing                 *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SUB001    BEGSR
+      *
+     C           *LOCK     IN   LDA
+      *
+      ** SET UP WORK FIELDS
+     C                     MOVEL'LER600  'DBPGM
+     C                     MOVEL'*'       DDPGMQ
+     C                     Z-ADD1         XRRN    50
+     C                     CALL 'GPCLRM'
+     C/COPY WNCPYSRC,LER600C002
+      *
+     C           *NAMVAR   DEFN           LERSTS
+     C                     IN   LERSTS
+      *
+      * KEY LIST FOR FACHISH
+     C           FHKEY     KLIST
+     C                     KFLD           FHCNUM
+     C                     KFLD           FHFTYP
+     C                     KFLD           FHFSEQ
+      *
+      ** Set On SFLEND indicator.
+      *
+     C                     MOVE '1'       *IN59
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUB002 --- Subroutine for initialising screeen fields        *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SUB002    BEGSR
+     C***********                                                         BH3533
+     C***********                                                         BH3533
+     C***If*Action is insertion then initialise screen fields.            BH3533
+     C***(For*Action of amend input fields will be filled from RPARM).    BH3533
+     C***********                                                         BH3533
+     C***********RACT      IFEQ 'I'                                       BH3533
+     C                     MOVE *BLANKS   SCUST
+     C                     MOVE *BLANKS   SFACT
+     C                     MOVE *BLANKS   SFCNO
+     C                     MOVE *BLANKS   SSDAT
+     C***********                                                         BH3533
+     C***If*Action is amendment then convert facility history start       BH3533
+     C***day*no.*passed as entry parameter into DDMMYY or MMDDYY form.    BH3533
+     C***********                                                         BH3533
+     C***********          ELSE                                           BH3533
+     C***********          Z-ADDHDAYN     ZDAYNO                          BH3533
+     C***********          EXSR ZDATE2                                    BH3533
+     C***********          MOVELZDATE     SSDAT                           BH3533
+     C***********          END                                            BH3533
+      *
+     C                     MOVE *BLANKS   MSGID
+     C                     MOVEA'000'     *IN,20
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUB003 --- Subroutine for Screen validation                  *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SUB003    BEGSR
+     C*
+     C** Validate Facility History start date entered.
+     C*
+     C           SSDAT     IFEQ *BLANK
+     C                     Z-ADDXHISST    HDAYN
+     C                     ELSE
+     C                     Z-ADD0         ZDATE
+     C                     Z-ADDXDATE     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    HDAYN   50
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'LER0135' MSGID   8
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN22
+     C                     END
+     C                     END
+      *
+      ** Customer reference must be entered...
+      *
+     C           SCUST     IFEQ *BLANKS
+     C                     MOVEL'LER0006' MSGID   8
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN20
+     C                     ELSE
+     C*
+     C** ...Else Check whether '?' processing is to be used.
+     C*
+     C                     MOVE '0'       *IN10
+     C                     MOVELSCUST     CNUMQ   1
+     C           CNUMQ     IFEQ '?'
+     C                     MOVE '1'       *IN10
+     C                     END
+     C*
+     C** Access Customer Details.
+     C*
+     C/COPY WNCPYSRC,LER600C003
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY'    POPTN   7
+     C                     PARM SCUST     PCUST  10
+     C                     PARM           PKYST   7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+     C/COPY WNCPYSRC,LER600C004
+     C*
+     C** Output error message if Customer not on file.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'LER0102' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN20
+     C*
+     C** Otherwise, put customer number into customer input key list
+     C** Facility History header, in case a shortname was input.
+     C*
+     C                     ELSE
+     C/COPY WNCPYSRC,LER600C005
+     C                     MOVE BBCUST    FHCNUM
+     C*
+     C** Update Customer number on exit parameter data structure PARMDS
+     C*
+     C                     MOVE BBCUST    TCUST
+     C*
+     C** If '?' processing was used then fill input field with customer
+     C** number from the selected customer record.
+     C*
+     C           *IN10     IFEQ '1'
+     C                     MOVE *BLANKS   SCUST
+     C                     MOVELBBCUST    SCUST
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+     C/COPY WNCPYSRC,LER600C006
+     C*
+     C** A Facility reference must be entered.
+     C*
+     C           SFACT     IFEQ *BLANKS
+     C           SFCNO     OREQ *BLANKS
+     C                     MOVEL'LER0136' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN21
+     C                     END
+     C*
+     C** Facility type & sequence number must be numeric
+     C*
+     C                     MOVEA'11'      *IN,11
+     C           SFACT     IFNE *BLANKS
+     C                     MOVE SFACT     TEST3   3
+     C                     TESTN          TEST3      1111
+     C                     END
+     C           SFCNO     IFNE *BLANKS
+     C                     MOVE SFCNO     TEST2   2
+     C                     TESTN          TEST2      1212
+     C                     END
+      *
+     C           *IN11     IFEQ '0'
+     C           *IN12     OREQ '0'
+     C                     MOVEL'LER0008' MSGID
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN21
+     C                     END
+     C*
+     C** Check that active Facility entered.
+     C*
+     C           MSGID     IFEQ *BLANKS
+     C           FHKEY     SETLLFACHISH                  19
+      *
+     C           *IN19     IFEQ '0'
+     C                     MOVEA'11'      *IN,20
+     C                     MOVEL'LER0009' MSGID   8
+     C                     CALL 'GPADDM'
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN20
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS     *
+      *                                                               *
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                 *
+      *  CALLS: NOTHING                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C** Call database error program
+     C*
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      ****************************************************************
+     C/TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      ****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,115 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Check EXSIs for customer closure')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD000803 - Midas SD Check EXSIs for Customer Closure         *
+      *                                                               *
+      *  (c) Finastra International Limited 2004                      *
+      *                                                               *
+      *  Function: This module is used to check if there is any live  *
+      *            EXSI attached to the customer.                     *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD095             Date 08Apr14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD023  *CREATE    Date 18Nov04               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  CSD023 - Automatic Customer Account Closure                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDEXSTLAIF  E           K        DISK
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * Sar Text details
+     ISDSARD    E DSSCSARDPD
+      *
+      * Bank detaisl
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Short Data Structure for Access Objects
+     IDSFDY     E DSDSFDY
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Indicators:                                                   *
+      * 99 - EOF or error ll of program                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RTCD
+     C                     PARM           W0CUST
+      *
+      *** Key lists to access GL movements
+      *
+     C           *LIKE     DEFN BYCUST    W0CUST
+      *
+     C           W0KEY1    KLIST
+     C                     KFLD           W0CUST
+      *
+      *** Call to the Switchable features file to check if CSD023
+      *** is switched on.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CSD023'  @SARD   6
+     C           SDSARD    PARM SDSARD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      *** Retrieve the Bank's details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      *** Check for live EXSIs
+      *
+     C           W0KEY1    SETLLSDEXSTLA                 99
+     C   99      W0KEY1    READESDEXSTLA               9898
+      *
+     C           *IN99     DOWEQ*ON
+     C           *IN98     ANDEQ*OFF
+      *
+     C           BYRECI    IFEQ 'D'
+     C                     MOVE '*EXSI '  @RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C           W0KEY1    READESDEXSTLA               9898
+     C                     ENDDO
+      *
+      *****************************************************************
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************

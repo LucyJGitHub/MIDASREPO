@@ -1,0 +1,101 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC PEA Monitor Submission')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000113 - PEA Monitor Submission Program                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR993055           Date 26Jun12              */
+/*                      CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR993055 - Status of Period End Adjustments system does not */
+/*                  change to 'Restore Started' during restore       */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FCHK) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SHTC) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RDNB) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&DNWD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CCY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&NJOB) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)                                 /*AR993055*/
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)                                /*AR993055*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*AR993055*/
+/*/COPY SDCPYSRC,SDSVALDCL  */                                                          /*AR993055*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             ALCOBJ     OBJ((SCPEAMON *DTAARA *EXCL)) WAIT(0)
+ 
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FCHK &ZONE +
+                          &SHTC &RDNB &DNWD &CCY &NJOB)
+ 
+             DLCOBJ     OBJ((SCPEAMON *DTAARA *EXCL))
+ 
+             CHGVAR     VAR(&JOBN) VALUE('GPPEAM' *CAT &SHTC)
+             CHGVAR     VAR(&SVALK1) VALUE('PEAHandShakingQM')                          /*AR993055*/
+             CHGVAR     VAR(&SVALK2) VALUE('PEAHandShakingIQ')                          /*AR993055*/
+                                                                                        /*AR993055*/
+/** Get MQ Details from the system values */                                            /*AR993055*/
+                                                                                        /*AR993055*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                        &SVALK1 &SVAL1 &SVALK2 +
+                        &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                        &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                        &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                        &SVALK10 &SVAL10)                                               /*AR993055*/
+                                                                                        /*AR993055*/
+             CHGVAR VAR(&MQMGR) VALUE(&SVAL1)                                           /*AR993055*/
+             CHGVAR VAR(&MQUEUE) VALUE(&SVAL2)                                          /*AR993055*/
+                                                                                        /*AR993055*/
+/** Clear incoming handshaking queue */                                                 /*AR993055*/
+                                                                                        /*AR993055*/
+             CLRMQMQ    QNAME(&MQUEUE) MQMNAME(&MQMGR)                                  /*AR993055*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*AR993055*/
+ 
+             SBMJOB     CMD(CALL PGM(SC000113)) JOB(&JOBN) +
+                          JOBD(MBATCH) JOBQ(GPNOMAX) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD) +
+                          MSGQ(MOPERQ)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+/** Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+             RCVMSG     RMV(*NO) MSG(&MSG)
+             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) MSGDTA(&MSG) +
+                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000113 ended abnormally - see job +
+                          log') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

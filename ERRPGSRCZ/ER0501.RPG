@@ -1,0 +1,752 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Securities Reval.- Reset P/L Accounts')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module.                           *
+      *                                                               *
+      *  ER0501 - Securities Revaluation - Reset P/L Accounts.        *
+      *                                                               *
+      *  Function:  This program will generate Accounts for           *
+      *  (COB)      Securities Revaluation - Reset.                   *
+      *             This program replace ER0500.                      *
+      *             THIS PROGRAM REPLACE ER0500.                      *
+      *                                                               *
+      *  Called By: ERC0510 - Securities Revaluation.                 *
+      *                                                               *
+      *  Calls    : AOBANKR0 - Access Program to access Bank Details. *
+      *             AOBRCHR0 - Access Program to access Branch        *
+      *                        Details.                               *
+      *             AOCURRR0 - Access Program to access Currency      *
+      *                        Details.                               *
+      *             ZSFILE   - Midas FC Set-up spool file numbers     *
+      *                        file.                                  *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 12May06               *
+      *                 CER001             Date 25Aug05               *
+      *                 181921  *CREATE    Date 09Oct00               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
+      *  181921 - Securities Revaluation - Reset not posted during    *
+      *           following COBs.                                     *
+      *                                                               *
+      *****************************************************************
+      *
+      ***  N/A Purchased Revaluation - Reset generated entries, Itermediary File.
+      *
+     FGEBRIPD UF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Midas Securities Revaluation - Reset P/L Accounts - AUDIT.
+      *
+     FER0501AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      ***  Midas Securities Revaluation - Reset P/L Accounts.
+      *
+     FER0500P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      *
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   87  - Error when calling ZSFILE, AOBANKRO, AOCURRR0,        *
+      *         or AOBRCHR0.                                  (*ON)   *
+      *         Error while reading or updating file GEBRIPD. (*ON)   *
+      *                                                               *
+      *   89  - End of File GEBRIPD.                                  *
+      *                                                               *
+      * U7+U8 - Database Error.                                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation.                             *
+      *  PROCES - Detail Processing.                                  *
+      *  DETAIL - Process detail line.                                *
+      *  HBRCH  - Process header for Branch.                          *
+      *  TBRCH  - Process total for Branch.                           *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *  AUDIT  - Produce Audit Report and End Program.               *
+      *                                                               *
+      *  ZSEDIT - Standard subroutine to insert a decimal point and   *
+      *           sign into a numeric field and to blank out leading  *
+      *           zeros (optionaly inserting commas).                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ***  Array containing Copyright statement.
+      *
+     E                    CPY@    1   1 80
+      *
+      ***  Arrays ZS1 and ZS2, used in Standard SR ZSEDIT.
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      /SPACE 3
+      *
+      ***  Program Status Data Structure.
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ***  File Information Data Structure for ER0501AU.
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  File Information Data Structure for ER0500P1.
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+      ***  External data structure for Bank Details.
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ***  External data structure for Branch Details.
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ***  External data structure for Currency Details.
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ***  Short data structure for access objects.
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ***  Long data structure for access objects.
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ***  Work fields WORK15 and ZS1, used in Standard SR ZSEDIT.
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      /TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Program Initialisation.                             *
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      *                                                               *
+      *  Calls: AOBANKR0 - Access Program to access Bank Details.     *
+      *         RCFAU    - Subroutine to register the AU Printer File *
+      *                    via RCF.                                   *
+      *         *PSSR    - Program Error Processing Subroutine.       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ***  Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'             87
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *IN87     OREQ '1'
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DB ERROR 01 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Initialise Report Work fields.
+      *
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         DBASE
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+      ***  Initialise work fields.
+      *
+     C                     Z-ADD0         BCOUNT  50
+     C                     MOVE *BLANKS   WWBRCA  3
+      *
+      ***  Initialise Edit Code used in Standard SR ZSEDIT.
+      *
+     C                     MOVE 'J'       ZECODE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Detail Processing.                                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: DETAIL - Process detail line.                         *
+      *         TBRCH  - Process total for Branch.                    *
+      *         *PSSR  - Program Error Processing Subroutine.         *
+      *         AUDIT  - Produce Audit Report and End Program.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           ***  PROCES  ***
+      *
+      ***  Read first record from File.
+      *
+     C                     READ GEBRIPD                8789
+      *
+      ***  If error occurred during read, handle Database Error.
+      *
+     C           *IN87     IFEQ '1'
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'GEBRIPD' DBFILE    P      * DB ERROR 02 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C           '*READ'   CAT  'NEXT'    DBKEY     P
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  If End of Records, (*IN89), Perform: Audit Reporting (No Record).
+      *
+     C           *IN89     IFEQ '1'
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  Do while not End of File GEBRIPD.
+      *
+     C           *IN89     DOWEQ'0'
+      *
+      ***  Count records processed.
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process detail.
+      *
+     C                     EXSR DETAIL
+      *
+      ***  Read next record.
+      *
+     C                     READ GEBRIPD                8789
+      *
+      ***  If error occurred during read, handle Database Error.
+      *
+     C           *IN87     IFEQ '1'
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'GEBRIPD' DBFILE    P      * DB ERROR 03 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C           '*READ'   CAT  'NEXT'    DBKEY     P
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  End of Do while not End of File GEBRIPD.
+      *
+     C                     ENDDO
+      *
+      ***  If records processed, write totals for last Branch processed, and 'End of Report'.
+      *
+     C           RCOUNT    IFNE 0
+     C                     EXSR TBRCH
+     C                     WRITER004
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/DETAIL
+      *****************************************************************
+      *                                                               *
+      *  DETAIL - Process detail line.                                *
+      *                                                               *
+      *  Called by: PROCES - Detail Processing.                       *
+      *                                                               *
+      *  Calls: HBRCH    - Process header for Branch.                 *
+      *         TBRCH    - Process total for Branch.                  *
+      *         *PSSR    - Program Error Processing Subroutine.       *
+      *         ZSEDIT   - Standard subroutine to insert a decimal    *
+      *                    point and sign into a numeric field and to *
+      *                    blank out leading zeros (optionaly         *
+      *                    inserting commas).                         *
+      *         AOCURRR0 - Access Program to access Currency Details. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETAIL    BEGSR                           ***  DETAIL  ***
+      *
+      ***  If change of Branch.
+      *
+     C           BRCA      IFNE WWBRCA
+      *
+      ***  If not first record read, output total for previous Branch.
+      *
+     C           WWBRCA    IFNE *BLANKS
+     C                     EXSR TBRCH
+     C                     ENDIF
+      *
+      ***  Output header for new Branch.
+      *
+     C                     EXSR HBRCH
+     C                     ENDIF
+      *
+      ***  Count records processed for the Branch.
+      *
+     C                     ADD  1         BCOUNT
+      *
+      ***  Setup Debit/Credit indicator.
+      *
+     C           DRCR      IFEQ 0                          If Debit, set up it to Credit.
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C           DRCR      IFEQ 1                          If Credit, set it up to Debit.
+     C                     Z-ADD0         DRCR
+     C                     ELSE                            If neither Debit, nor Credit,
+     C                     Z-ADD004       DBASE            handle Database Error.
+     C                     MOVEL'GEBRIPD' DBFILE    P      ***************
+     C                     MOVELPGM       DBPGM     P      * DB ERROR 04 *
+     C                     MOVELDRCR      DBKEY     P      ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Setup Value Date and Posting Date to Run Date, comming from Bank Details.
+      *
+     C                     Z-ADDBJRDNB    PSTD             Posting Date
+     C                     Z-ADDBJRDNB    VALD             Value Date
+      *
+      ***  Setup Posting Time.
+      *
+     C                     TIME           PTIM
+      *
+      ***  Setup Posting Narrative = Posting Narrative following by '- Reset'.
+      *
+     C           PNAR      CAT  '- Reset' PNARW  30
+     C                     MOVE PNARW     PNAR
+      *
+      ***  Update file GEBRIPD.
+      *
+     C                     UPDATAPOSTPDF               87
+      *
+      ***  If error occurred during update, handle Database Error.
+      *
+     C           *IN87     IFEQ '1'
+     C                     Z-ADD005       DBASE            ***************
+     C                     MOVEL'GEBRIPD' DBFILE    P      * DB ERROR 05 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C                     MOVEL'*UPDATE' DBKEY     P
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Load report detail fields.
+      *
+     C                     MOVE CNUM      XRCNUM           Custmer Number
+     C                     MOVE CCY       XRCCY            Currency Code
+     C                     MOVE ACOD      XRACOD           Account Code
+     C                     MOVE ACSQ      XRACSQ           Account Sequence
+     C                     MOVE PNAR      XRNARA           Narrative
+     C                     MOVE BJMRDT    XRVDAT           Value Date = Run Date
+      *
+      ***  Access Currency details, by calling access object, to retrieve number of decimal places.
+      *
+     C                     CALL 'AOCURRR0'             87
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM CCY       WAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *IN87     OREQ '1'
+     C                     Z-ADD006       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DB ERROR 06 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C                     MOVELWAJCD     DBKEY     P
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Edit Debit or Credit.
+      *
+     C                     Z-ADD*ZEROS    ZFLD15
+     C                     MOVE PSTA      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C           DRCR      IFEQ 0                          Debit:
+     C                     MOVE ZOUT21    XRDEBI           Load Debit Report field,
+     C                     MOVE *BLANKS   XRCRED           Reset Credit Report field.
+     C                     ELSE                            Credit:
+     C                     MOVE *BLANKS   XRDEBI           Reset Debit Report field,
+     C                     MOVE ZOUT21    XRCRED           Load Credit Report field.
+     C                     ENDIF
+      *
+      ***  Write Detail:
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITER001
+     C                     WRITER005
+     C                     ENDIF
+      *
+      ***  Output Detail.
+      *
+     C                     WRITER002
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/HBRCH
+      *****************************************************************
+      *                                                               *
+      *  HBRCH  - Process header for Branch.                          *
+      *                                                               *
+      *  Called by: DETAIL - Process detail line.                     *
+      *                                                               *
+      *  Calls: RCFP1    - Subroutine to register the P1 Printer File *
+      *                    via RCF.                                   *
+      *         *PSSR    - Program Error Processing Subroutine.       *
+      *         AOBRCHR0 - Access Program to access Branch Details.   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           HBRCH     BEGSR                           ***  HBRCH  ***
+      *
+      ***  If first Branch processed, Proces RCF for P1 Report File and open
+      ***  printer file ER0500P1.
+      *
+     C           WWBRCA    IFEQ *BLANKS
+     C                     EXSR RCFP1
+     C                     OPEN ER0500P1
+     C                     ENDIF
+      *
+      ***  Retrieve Branch informations, by calling access object.
+      *
+     C                     CALL 'AOBRCHR0'             87
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM BRCA      WBRCH   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *IN87     OREQ '1'
+     C                     Z-ADD007       DBASE            ***************
+     C                     MOVEL'SDBRCHPD'DBFILE    P      * DB ERROR 07 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C                     MOVELWBRCH     DBKEY     P
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Save Branch code, and load Branch Code and Name for output.
+      *
+     C                     MOVE BRCA      WWBRCA           Branch Code save
+     C                     MOVE BRCA      XRBRCD           Branch Code to output
+     C                     MOVE A8BRNM    XRBRNM           Branch Name to output
+      *
+      ***  Reset Counter for Branch.
+      *
+     C                     Z-ADD0         BCOUNT           Counter
+      *
+      ***  Write Header and Sub-heading (Branch Header).
+      *
+     C                     WRITER001
+     C                     WRITER005
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/TBRCH
+      *****************************************************************
+      *                                                               *
+      *  TBRCH  - Process total for Branch.                           *
+      *                                                               *
+      *  Called y: PROCES - Detail Processing.                        *
+      *            DETAIL - Process detail line.                      *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TBRCH     BEGSR                           ***  TBRCH  ***
+      *
+      ***  If no record processed for the branch, output message:
+      ***  'No details to Report for this Branch'.
+      *
+     C           BCOUNT    IFEQ 0
+      *
+     C                     WRITER003
+      *
+     C                     ENDIF
+      *
+      ***  Reset Counter for Branch.
+      *
+     C                     Z-ADD0         BCOUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called by: Automatic, if error occurs when reading file      *
+      *             GEBRIPD.                                          *
+      *             INIT   - Program Initialisation.                  *
+      *             PROCES - Detail Processing.                       *
+      *             DETAIL - Process detail line.                     *
+      *             HBRCH  - Process header for Branch.               *
+      *             RCFP1  - Subroutine to register the P1 Printer    *
+      *                      File via RCF.                            *
+      *             RCFAU  - Subroutine to register the AU Printer    *
+      *                      File via RCF.                            *
+      *                                                               *
+      *  Calls: AUDIT  - Produce Audit Report and End Program.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ***  *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C           DBASE     IFEQ 0
+     C                     Z-ADD099       DBASE            ***************
+     C                     MOVEL'GEBRIPD' DBFILE    P      * DB ERROR 99 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C                     MOVEL'*READING'DBKEY     P
+     C                     EXSR AUDIT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *  Called by: INIT   - Program Initialisation.                  *
+      *                                                               *
+      *  Calls: *PSSR  - Program Error Processing Subroutine.         *
+      *         ZSFILE - Midas FC Set-up spool file numbers file.     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            ***  RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'               87
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *IN87     OREQ '1'
+     C           *INU7     OREQ '1'
+     C           *INU8     OREQ '1'
+     C                     Z-ADD008       DBASE            ***************
+     C           'CALL'    CAT  'ZSFILE'  DBFILE    P      * DB ERROR 08 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C           'ER0501 -'CAT  'ER0501AU'DBKEY     P
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *  Called by: HBRCH  - Process header for Branch.               *
+      *                                                               *
+      *  Calls: *PSSR  - Program Error Processing Subroutine.         *
+      *         ZSFILE - Midas FC Set-up spool file numbers file.     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            ***  RCFP1  ***
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM
+      *
+     C                     CALL 'ZSFILE'               87
+     C                     PARM PSEQ      SEQ
+     C                     PARM           SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *IN87     OREQ '1'
+     C           *INU7     OREQ '1'
+     C           *INU8     OREQ '1'
+     C                     Z-ADD009       DBASE            ***************
+     C           'CALL'    CAT  'ZSFILE'  DBFILE    P      * DB ERROR 09 *
+     C                     MOVELPGM       DBPGM     P      ***************
+     C           'ER0501 -'CAT  'ER0500P1'DBKEY     P
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program.               *
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      *             PROCES - Detail Processing.                       *
+      *             *PSSR  - Program Error Processing Subroutine.     *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ***  AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If there is a DB Error, output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no record reads, output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ***  Or, if records read, and Details processed, Output number of records processed.
+      *
+     C                     WRITECONTROL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/ZSEDIT
+      *****************************************************************
+      *                                                               *
+      *  ZSEDIT - Standard subroutine to insert a decimal point and   *
+      *           sign into a numeric field and to blank out leading  *
+      *           zeros (optionaly inserting commas).                 *
+      *                                                               *
+      *  Called by: DETAIL - Process detail line.                     *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZSEDITZ3
+      *
+**  CPY@
+(c) Finastra International Limited 2005

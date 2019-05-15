@@ -1,0 +1,195 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CALC OF TIME FOR RECOVERY REPORTING')
+     F********************************************************************
+     F*  Midas - Restart Recovery Module
+     F**                                                              * **
+     F**     SD1790 - CALCULATION OF TIME FOR RECOVERY REPORTING      * **
+     F**                                                              * **
+      *  (c) Finastra International Limited 2001                      *
+     F**                                                              * **
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E13205             Date 2/03/89               *
+     F*                 S01127             Date 10/06/88              *
+     F**                                                              * **
+     F*---------------------------------------------------------------* **
+     F*                                                               * **S01127
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*    E13205  -  Shut down program by setting on LR              * **E13205
+     F*            -  Work on a twenty four clock  as code            * **E13205
+     F*               will not cope with 99 mins from 1330            * **E13205
+     F*            -  Allow for the 29 of February on leap years      * **E13205
+     F*                                                               * **
+     F*    S01127  -  FUTURES AND OPTIONS INCORPORATION               *  *
+     F*                 CHANGE REFERENCE OF USER DEFINED JOURNAL ENTRY* **S01127
+     F*                 'SR' TO 'IR'. ( 'SR' = SYSTEM DEFINED ENTRY   * **S01127
+     F*                 'START RMVJRNCHG' - NOW USED BY FF )          * **S01127
+     F*                 (COMMENT LINE CHANGE ONLY)                    * **
+     F*                                                               * **S01127
+     F********************************************************************
+     F**
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       50         HOUR > 12
+     F*       51         FROMTIME WILL BE DURING PREVIOUS DAY
+     F*       52         FROMDATE WILL BE 31/12
+     F*       53         LOKUP IND. FOR TABMON
+     F**
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     E*
+     E                    TABMON 12  12  2 0             MONTHS TABLE
+     E                    TABDAY 12  12  2 0             DAYS TABLE
+     E                    CPY@    1   1 80
+     E*
+     E********************************************************************
+     I*
+     I**D*S**FOR*TIME*ON*'SR'*ENTRY                                       S01127
+     I* D.S. FOR TIME ON 'IR' ENTRY                                       S01127
+     ITOTIME      DS
+     I                                        1   6 TOTM
+     I                                        1   20HH
+     I                                        3   40MM
+     I                                        5   6 SS
+     I*
+     I* D.S. FOR TIME FROM WHICH TO START REPORTING
+     IFROMT      UDS
+     I                                        1   6 FROMTM
+     I                                        1   20H
+     I                                        3   40M
+     I                                        5   60S
+     I*
+     I**D*S**FOR*DATE*ON*'SR'*ENTRY                                       S01127
+     I* D.S. FOR DATE ON 'IR' ENTRY                                       S01127
+     ITODATE      DS
+     I                                        1   6 TODT
+     I                                        1   20TDAY
+     I                                        3   40TMONTH
+     I                                        5   60TYEAR
+     I*
+     I* D.S. FOR DATE FROM WHICH TO START REPORTING
+     IFROMD      UDS
+     I                                        1   6 FROMDT
+     I                                        1   20FDAY
+     I                                        3   40FMONTH
+     I                                        5   60FYEAR
+     C                     MOVEACPY@      BIS@   80
+     C*****************************************************************
+     C*
+     C* MAIN PROCESSING (ONE CYCLE ONLY)
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TOTMI   6
+     C                     PARM           PARM2   20
+     C                     PARM           FROMTI  6
+     C                     PARM           TODTI   6
+     C                     PARM           FROMDI  6
+     C*
+     C                     MOVE TOTMI     TOTM
+     C                     MOVE TODTI     TODT
+     C*
+     C* IF HOUR PART OF TIME > 12, SUB 12 AND SET ON IND.
+     C*
+     C*          HH        COMP 12                   50                   E13205
+     C*  50      HH        SUB  12        HH                              E13205
+     C*
+     C* CONVERT TIME PASSED INTO PGM INTO MINS
+     C*
+     C*          HH        MULT 60        HMIN    30                      E13205
+     C*          HMIN      ADD  MM        MINS    30                      E13205
+     C           HH        MULT 60        HMIN    60                      E13205
+     C           HMIN      ADD  MM        MINS    60                      E13205
+     C*
+     C* SUBTRACT REQUIRED NO. OF MINS. IF RESULT IS -VE, FROMTIME
+     C* WILL BE DURING PREVIOUS DAY SO ADD 720 MINS AND SET ON IND.
+     C*
+     C           MINS      SUB  PARM2     MINS         51
+     C*  51      MINS      ADD  720       MINS       50                   E13205
+     C   51      MINS      ADD  1440      MINS       50                   E13205
+     C*
+     C* IF FROMTIME DURING PREVIOUS DAY, CHANGE DATE
+     C*
+     C   51                EXSR CHGDAT
+     C*
+     C* CONVERT TIME BACK INTO HRS & MINS
+     C*
+     C           MINS      DIV  60        H
+     C                     MVR            M
+     C*
+     C* INITIALIZE SECONDS FIELD AND RESET HOURS IF NECESSARY
+     C*
+     C                     Z-ADD0         S
+     C*  50      H         ADD  12        H                               E13205
+     C*
+     C* SET UP PARAMETER FIELDS FOR PASSING OUT OF PROGRAM
+     C*
+     C                     MOVE FROMTM    FROMTI
+     C   51                MOVE FROMDT    FROMDI
+     C  N51                MOVE TODT      FROMDI
+     C*
+     C*      Set on LR indicator                                          E13205
+     C*                                                                   E13205
+     C                     MOVEL'1'       *INLR                           E13205
+     C                     RETRN
+     C*
+     C*******************************************************************
+     C*
+     C**CHGDAT*SUBROUTINE*:*TO*SUBTRACT*1*FROM*DATE*ON*'SR'*ENTRY*        S01127
+     C* CHGDAT SUBROUTINE : TO SUBTRACT 1 FROM DATE ON 'IR' ENTRY         S01127
+     C*
+     C           CHGDAT    BEGSR
+     C*
+     C* SUBTRACT 1 FROM DAY IF NOT FIRST DAY OF MONTH
+     C*
+     C           TDAY      IFGT 1
+     C           TDAY      SUB  1         FDAY
+     C                     MOVE TMONTH    FMONTH
+     C*
+     C* IF FIRST DAY OF MONTH, SUBTRACT 1 FROM MONTH
+     C* SETON IND. 52 IF FMONTH IS ZERO
+     C*
+     C                     ELSE
+     C           TMONTH    SUB  1         FMONTH         52
+     C*
+     C* LOOK UP RESULTING MONTH IN TABLE TO FIND NO. OF DAYS IT HAS
+     C*
+     C  N52      FMONTH    LOKUPTABMON    TABDAY         53
+     C  N52                MOVE TABDAY    FDAY
+     C           *IN52     IFEQ '0'                                       E13205
+     C           FMONTH    ANDEQ2                                         E13205
+     C           TYEAR     DIV  4         LYNO    40                      E13205
+     C                     MVR            LYADD   20                      E13205
+     C           LYADD     IFEQ 0                                         E13205
+     C                     Z-ADD29        FDAY                            E13205
+     C                     END                                            E13205
+     C                     END                                            E13205
+     C                     END
+     C*
+     C                     MOVE TYEAR     FYEAR
+     C*
+     C* IF IND. 52 IS ON, TODATE IS 1ST JAN. SO FROMDT WILL BE 31ST DEC
+     C*
+     C   52                DO
+     C                     Z-ADD31        FDAY
+     C                     Z-ADD12        FMONTH
+     C           TYEAR     SUB  1         FYEAR
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  TABMON - MONTHS OF YEAR
+010203040506070809101112
+**  TABDAY - NO. OF DAYS IN EACH MONTH
+312831303130313130313031
+**  CPY@
+(c) Finastra International Limited 2001

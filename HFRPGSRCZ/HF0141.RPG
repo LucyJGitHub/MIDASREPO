@@ -1,0 +1,1091 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Reporting groups maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0141 - Reporting Groups Maintenance 2                      *
+     F*                                                               *
+     F*  Function:  This program allows the user to maintain the      *
+     F*  (I/C INT)  reporting groups for HAF.                         *
+     F*                                                               *
+     F*  Called By: HFC0141 - Reporting Groups Maintenance            *
+     F*                                                               *
+     F*  Calls: HFC0320 - Check authority on outqueue                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01379             Date 29Sep92               *
+      *                                    Date DDMmmYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*  01       CMD KEY 3 - EXIT PROGRAM
+     F*  03       PREV
+     F*  19       SCR 1 PROCESS CONTROL
+     F*  20       SCR 2 PROCESS CONTROL
+     F*  30       SUBFILE READ
+     F*  31       SFLEND  HFRGRPPD
+     F*  40       SFLDSP
+     F*  41       SFLCLR
+     F*  45       TEXT, TOP OF SCREEN
+     F*  50       POSITION CURSOR
+     F*  60       NO. OF POOL
+     F*  61       USER NAME
+     F*  62       USER DATA
+     F*  63       OUTQ NAME
+     F*  64       OUTQ LIB
+     F*  65       NO OF COPIES
+     F*  66       HOLD
+     F*  67       SAVE
+     F*  68       OUTP PRIO
+     F*  70       PROTECT INPUT FIELDS, FORMAT HF0141F4
+     F*  71       PROTECT NO OF POOL, OPTION A OR D
+     F*  72       POSITION CURSOR  JRNINI1
+     F*  80       ERROR MSG
+     F*
+     F*  90 - 99  ACT-SUBROUTINES
+     F*
+     F*  U7,U8    STANDARD-MIDAS ERROR
+     F*----------------------------------------------------------------
+     FHF0141DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE HF0141F1
+     F** SCREEN
+     F*
+     F*
+     FHFRGRPPDUF  E           K        DISK                      A
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+     F** POOLS FOR AUDIT REPORT
+     F*
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    ZA1        16  1               ZALIGN SR. ARRAY
+     E                    ZA2        16  1               ZALIGN SR. ARRAY
+     E*
+     E*-----------------------------------------------------------------
+     IHFRGRPP0
+     I**---------------------------------------------------------------
+     I*
+     I* D.S. TO CLEAR SCREEN P2 INPUT-FIELDS
+     ISCR01       DS
+     I                                        1  63 SCRC1
+     I                                        1   1 SOPT
+     I                                        4  13 SUPO
+     I                                       14  23 SUSR
+     I                                       24  33 SOUQ
+     I                                       34  43 SQUL
+     I                                       44  450SCOP
+     I                                       46  49 SHOL
+     I                                       50  53 SSAV
+     I                                       54  540SOUP
+     I                                       61  630SNPO
+      *
+      *
+     IPARM1       DS                             30
+     I                                        1  10 DTNAM
+     I                                       11  20 DONAM
+     I                                       21  21 DACT
+     I                                       22  22 DIND
+     I                                       23  250DITEM
+     I                                       26  26 PREV
+     I                                       27  27 DEL
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I*
+     I*---------------------------------------------------------------
+     C/EJECT
+     C*****************************************************************
+     C** B E G I N N   O F    M A I N   P R O G R A M M
+     C*****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C           PARM1     PARM PARM1     PARM   30
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA            RUN DATE
+     C                     MOVE USER      SUSER
+     C                     MOVELWSID      SWSID
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+      *
+     C                     MOVEL'HF0141'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+     C*
+     C           DIND      IFEQ 'C'
+     C                     SETON                     45
+     C                     ELSE
+     C                     SETOF                     45
+     C                     END
+     C*
+     C           *IN01     DOWEQ'0'                        B1 DO
+     C                     WRITEHF0141F6
+     C                     WRITEHF0141C0
+     C                     CALL 'SCC0250'
+     C* TOP OF SCREEN
+     C                     MOVELDACT      SACT
+     C                     MOVELDTNAM     SITNA  10
+     C                     MOVE SITNA     SITEM
+     C                     WRITEHF0141F3
+     C                     WRITEHF0141C0
+     C                     CALL 'SCC0250'
+     C* WRITE SUBFILE
+     C                     EXSR SRSUB
+     C* SUBFILE INPUT
+     C                     EXSR FORM1
+     C           *IN01     IFEQ '0'
+     C           *IN03     ANDEQ'0'
+     C           *IN05     ANDEQ'0'
+     C                     EXSR FORM2
+     C           *IN01     IFEQ '0'
+     C           *IN03     ANDEQ'0'
+     C           *IN05     ANDEQ'0'
+     C                     EXSR SRFIL
+     C                     END
+     C                     END
+     C*
+     C                     END                             E1 DO
+     C*
+     C           ENDPGM    TAG                             * ENDPGM TAG
+     C*
+     C   U7 U8             DUMP
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+     C** E N D    O F    M A I N   P R O G R A M M
+     C*****************************************************************
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE SRINI2: INIT 2ND SCREEN-P ACTION INPUT
+     C*----------------------------------------------------------------
+     C           SRINI2    BEGSR
+     C                     SETOF                     606162
+     C                     SETOF                     636465
+     C                     SETOF                     666768
+     C                     SETOF                     8072
+     C                     MOVEL*BLANKS   SCRC1
+     C                     MOVEL*ZEROS    SNPO
+     C                     MOVEL*ZEROS    SCOP
+     C                     MOVEL*ZEROS    SOUP
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*****************************************************************
+     C*  SUBROUTINE SRLOA2: LOAD 2ND SCREEN-P   ACTION AMEND
+     C*----------------------------------------------------------------
+     C           SRLOA2    BEGSR
+     C*
+     C                     MOVELXOPT      SOPT
+     C                     Z-ADDXNPO      SNPO
+     C                     MOVELXUPO      SUPO
+     C                     MOVELXUSR      SUSR
+     C                     MOVELXOUQ      SOUQ
+     C                     MOVELXQUL      SQUL
+     C                     Z-ADDXCOP      SCOP
+     C                     MOVELXHOL      SHOL
+     C                     MOVELXSAV      SSAV
+     C                     Z-ADDXOUP      SOUP
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE FORM1 : SUBFILE PROCESSING
+     C*----------------------------------------------------------------
+     C           FORM1     BEGSR
+     C*
+     C* SUBFILE SCREEN  PROCESSING
+     C                     SETON                     40
+     C                     WRITEHF0141F5
+     C                     WRITEHF0141C0
+     C                     CALL 'SCC0250'
+     C           RECNO     IFEQ 0
+     C                     Z-ADD1         RECNO
+     C                     END
+     C                     EXFMTHF0141F2
+     C                     SETOF                     80
+     C* EXIT ?
+     C           *IN01     IFEQ '1'
+     C                     GOTO ENDPGM
+     C                     END
+     C* PREV ?
+     C           *IN03     IFEQ '1'
+     C                     MOVEL'1'       PREV
+     C                     GOTO ENDPGM
+     C                     END
+     C*  INIT ?
+     C           *IN05     IFEQ '1'
+     C                     GOTO FORM1E
+     C                     END
+     C*
+     C                     SETOF                     3071
+     C                     Z-ADD0         COUN    40
+     C           *IN30     DOWEQ'0'                        B1 DO
+     C                     READCHF0141F1                 30
+     C           XOPT      IFNE ' '
+     C                     ADD  1         COUN
+     C                     END
+     C                     Z-ADDRRN       RECNO   40
+     C           XOPT      IFNE ' '
+     C           XOPT      ANDNE'D'
+     C           XOPT      ANDNE'I'
+     C           XOPT      ANDNE'A'
+     C                     SETON                     058030
+      *
+     C                     MOVEL'HAF0021' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     GOTO FORM1A
+     C                     END
+     C*
+     C           XOPT      IFNE ' '                          B2
+     C                     EXSR SRINI2
+     C           XOPT      IFNE 'I'                            B3
+     C                     EXSR SRLOA2
+     C                     SETON                     71
+     C                     MOVELXOPT      ROPT    1
+     C                     Z-ADDXNPO      RNPO    30
+     C                     MOVELXUPO      RUPO   10
+     C                     EXSR SRCHK
+     C                     ELSE                                X3
+     C                     SETOF                     71
+     C                     MOVELXOPT      ROPT
+     C                     MOVELXOPT      SOPT
+     C                     Z-ADDXNPO      RNPO
+     C                     MOVELXUPO      RUPO
+     C                     END                                 E3
+     C                     END                               E2
+     C           FORM1A    TAG
+     C                     END                             E1 DO
+     C*
+     C           COUN      IFEQ 0
+     C                     Z-ADD1         RECNO   40
+     C                     SETON                     0580
+     C                     GOTO FORM1E
+     C                     END
+     C*
+     C           *IN80     IFNE '0'
+     C                     GOTO FORM1E
+     C                     END
+     C* ERROR ?
+     C           COUN      IFEQ 1
+     C                     SETON                     0580
+      *
+     C                     MOVEL'HAF0034' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     GOTO FORM1E
+     C                     END
+     C           COUN      IFGT 2
+     C                     SETON                     0580
+      *
+     C                     MOVEL'HAF0029' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     GOTO FORM1E
+     C                     END
+     C* DELETE POOL-NO 0 ?
+     C           ROPT      IFEQ 'D'
+     C           RNPO      ANDEQ0
+     C           RECS      IFGT 1
+     C                     SETON                     0580
+      *
+     C                     MOVEL'HAF0036' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     GOTO FORM1E
+     C                     ELSE
+     C                     SETON                     03
+     C                     MOVEL'1'       PREV
+     C                     MOVEL'Y'       DEL
+     C                     GOTO ENDPGM
+     C                     END
+     C                     END
+     C*
+     C           ROPT      IFEQ 'D'
+     C           *IN70     IFEQ '0'
+     C           CCOU      ANDGT1
+     C                     SETON                     0580
+      *
+     C                     MOVEL'HAF0035' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     GOTO FORM1E
+     C                     END
+     C                     END
+     C           FORM1E    TAG
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE FORM2  : FILL AND CHECK 2ND SCREEN-P.
+     C*----------------------------------------------------------------
+     C           FORM2     BEGSR
+     C*
+     C* INPUT SCREEN-P. 2
+     C                     Z-ADDRNPO      SNPO
+     C                     SETON                     50
+     C                     SETOF                     20
+     C           *IN20     DOWEQ'0'                        B1 START DO
+     C                     WRITEHF0141F5
+     C                     WRITEHF0141C0
+     C                     CALL 'SCC0250'
+     C                     EXFMTHF0141F4
+     C                     SETOF                     606162
+     C                     SETOF                     636465
+     C                     SETOF                     666768
+     C                     SETOF                     8072
+     C* EXIT ?
+     C           *IN01     IFEQ '1'
+     C                     GOTO ENDPGM
+     C                     END
+     C* PREV ?
+     C           *IN03     IFEQ '1'
+     C                     MOVEL'1'       PREV
+     C                     GOTO ENDPGM
+     C                     END
+     C*  INIT ?
+     C           *IN05     IFEQ '1'
+     C                     SETON                     20
+     C                     GOTO FORM2E
+     C                     END
+     C* DELETE, NO CHECKS
+     C           ROPT      IFEQ 'D'
+     C                     SETON                     20
+     C                     GOTO FORM2E
+     C                     END
+     C* INPUT, NOT ZERO
+     C           ROPT      IFEQ 'I'
+     C           SNPO      IFEQ 0
+     C                     SETON                     8060
+      *
+     C                     MOVEL'HAF0007' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     GOTO FORM2D
+     C                     END
+     C                     END
+     C* INPUT, CHECKS
+     C           ROPT      IFEQ 'I'
+     C                     SETOF                     31
+     C                     Z-ADDSNPO      KNPO
+     C           KNPO      SETLLHFRGRPP0
+     C                     READ HFRGRPP0                 31
+     C           *IN31     IFEQ '0'
+     C           NPOO      IFEQ SNPO
+     C                     SETON                     70
+     C                     ELSE
+     C                     SETOF                     70
+     C                     END
+     C                     END
+     C                     END
+     C* OUTP. PRIO
+     C           *IN70     IFEQ '0'
+     C           SOUP      IFEQ 0
+     C                     SETON                     688072
+      *
+     C                     MOVEL'HAF0007' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C                     ELSE
+     C                     Z-ADD0         SOUP
+     C                     END
+     C*
+     C** NUMERIC CHECK FOR PRIORITY ENTRY
+     C                     MOVEL*BLANK    ZFIELD 16
+     C                     MOVELSOUP      ZFIELD
+     C                     Z-ADD0         ZADEC   10
+     C                     Z-ADD1         ZADIG   20
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SOUP
+     C           *IN99     IFEQ '1'
+     C                     SETON                     688072
+      *
+     C                     MOVEL'HAF0117' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+      *
+     C* SAVE SPOOL-FILE
+     C           *IN70     IFEQ '0'
+     C           SSAV      IFNE '*YES'
+     C           SSAV      ANDNE'*NO'
+     C                     SETON                     678072
+      *
+     C                     MOVEL'HAF0030' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C                     ELSE
+     C                     MOVEL*BLANKS   SSAV
+     C                     END
+     C* HOLD SPOOL-FILE
+     C           *IN70     IFEQ '0'
+     C           SHOL      IFNE '*YES'
+     C           SHOL      ANDNE'*NO'
+     C                     SETON                     668072
+      *
+     C                     MOVEL'HAF0031' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C                     ELSE
+     C                     MOVEL*BLANKS   SHOL
+     C                     END
+     C* NO OF COPIES
+     C           *IN70     IFEQ '0'
+     C           SCOP      IFEQ 0
+     C                     SETON                     658072
+      *
+     C                     MOVEL'HAF0007' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C                     END
+     C*
+     C** NUMERIC CHECK FOR NUMBER OF COPIES ENTRY
+     C                     MOVEL*BLANK    ZFIELD 16
+     C                     MOVELSCOP      ZFIELD
+     C                     Z-ADD0         ZADEC   10
+     C                     Z-ADD2         ZADIG   20
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SCOP
+     C           *IN99     IFEQ '1'
+     C                     SETON                     658072
+      *
+     C                     MOVEL'HAF0117' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+      *
+     C* OUTQ
+     C           *IN70     IFEQ '0'
+     C                     MOVELSOUQ      OUTQN  10
+     C                     MOVELSQUL      OUTQL  10
+     C                     MOVEL'Y'       OK      1
+     C                     CALL 'HFC0320'
+     C                     PARM           OUTQN
+     C                     PARM           OUTQL
+     C                     PARM           OK
+     C           OK        IFEQ 'N'
+      *
+     C                     MOVEL'HAF0032' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     SETON                     636480
+     C                     SETON                     72
+     C                     END
+     C                     ELSE
+     C                     MOVEL*BLANKS   SOUQ
+     C                     MOVEL*BLANKS   SQUL
+     C                     END
+     C* USER DATA
+     C           *IN70     IFEQ '0'
+     C           SUSR      IFEQ *BLANKS
+     C                     SETON                     628072
+      *
+     C                     MOVEL'HAF0006' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C                     ELSE
+     C                     MOVEL*BLANKS   SUSR
+     C                     END
+     C* USER NAME
+     C           SNPO      IFNE 0
+     C           SUPO      IFEQ *BLANKS
+     C                     SETON                     6180
+      *
+     C                     MOVEL'HAF0006' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C                     END
+     C* NUMBER
+     C           ROPT      IFEQ 'I'
+     C           RRN       IFEQ 0
+     C           SNPO      ANDNE0
+     C                     SETON                     6080
+      *
+     C                     MOVEL'HAF0033' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C                     END
+     C           ROPT      IFEQ 'I'
+     C           RRN       IFGT 0
+     C           SNPO      ANDEQ0
+     C                     SETON                     6080
+      *
+     C                     MOVEL'HAF0007' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+     C                     END
+     C*
+     C** NUMERIC CHECK FOR NUMBER ENTRY
+     C                     MOVEL*BLANK    ZFIELD 16
+     C                     MOVELSNPO      ZFIELD
+     C                     Z-ADD0         ZADEC   10
+     C                     Z-ADD3         ZADIG   20
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SNPO
+     C           *IN99     IFEQ '1'
+     C                     SETON                     6080
+      *
+     C                     MOVEL'HAF0117' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+      *
+     C* END-CHECK
+     C           FORM2D    TAG
+     C*
+     C           *IN80     IFEQ '0'
+     C                     SETON                     20
+     C                     END
+     C*
+     C                     END                             E1 END DO
+     C*
+     C           FORM2E    TAG
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE  SRSUB : SUBFILE PROCESSING
+     C*----------------------------------------------------------------
+     C*
+     C           SRSUB     BEGSR                           * SRSUB
+     C*
+     C           SRSUBA    TAG
+     C                     SETOF                     40    * SFLDSP
+     C** CLEAR SUBFILE/SUBFILE-COUNTER
+     C                     SETON                     41    * SFLCLR
+     C                     WRITEHF0141F2
+     C                     WRITEHF0141C0
+     C                     CALL 'SCC0250'
+     C                     Z-ADD0         RRN     40
+     C                     Z-ADD0         RECS    40
+     C                     SETOF                     41    * SFLCLR
+     C*
+     C** READ ALL HFRGRPPXX  RECORDS
+     C** WRITE SUBFILE
+     C                     SETOF                     3150
+     C                     Z-ADD0         KNPO    30
+     C           KNPO      SETLLHFRGRPP0
+     C                     READ HFRGRPP0                 31
+     C           *IN31     DOWEQ'0'                        * START DO
+     C                     MOVEL*BLANKS   XOPT
+     C                     Z-ADDNPOO      XNPO
+     C                     MOVELUPOO      XUPO
+     C                     MOVELUSRD      XUSR
+     C                     MOVELOUQN      XOUQ
+     C                     MOVELOUQL      XQUL
+     C                     Z-ADDCOPI      XCOP
+     C                     MOVELHOLD      XHOL
+     C                     MOVELSAV       XSAV
+     C                     Z-ADDOUTP      XOUP
+     C                     ADD  1         RRN
+     C                     ADD  1         RECS
+     C                     WRITEHF0141F1
+     C                     WRITEHF0141C0
+     C                     CALL 'SCC0250'
+     C                     READ HFRGRPP0                 31
+     C                     END                             * END DO
+     C*
+     C                     SETOF                     40
+     C           RRN       IFEQ 0
+     C                     Z-ADD0         NPOO
+     C                     MOVEL*BLANKS   UPOO
+     C                     MOVEL'DUMMY'   USRD
+     C                     MOVEL'PRT01'   OUQN
+     C                     MOVEL'*LIBL'   OUQL
+     C                     Z-ADD1         COPI
+     C                     MOVEL'*NO'     HOLD
+     C                     MOVEL'*YES'    SAV
+     C                     Z-ADD5         OUTP
+     C                     WRITEHFRGRPP0               32
+     C*
+     C** If error occurred on write, perform check for update by
+     C** other w/s
+     C*
+     C           *IN32     IFEQ '1'
+     C                     EXSR INFSR
+     C                     END
+     C*
+     C                     GOTO SRSUBA
+     C                     END
+     C*
+     C           SRSUBE    TAG
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE  SRCHK : CHECK RECORD FOR INPUT PROCESSING
+     C*----------------------------------------------------------------
+     C           SRCHK     BEGSR
+     C*
+     C                     SETOF                     31
+     C                     SETON                     70
+     C                     Z-ADD0         CCOU    40
+     C                     Z-ADDRNPO      KNPO
+     C           KNPO      SETLLHFRGRPP0
+     C                     READ HFRGRPP0                 31
+     C           *IN31     DOWEQ'0'                        * B1 DO
+     C           NPOO      ANDEQRNPO                       * NO OF POOL
+     C                     ADD  1         CCOU
+     C           CCOU      IFEQ 1
+     C           RUPO      ANDEQUPOO                       * USER NAME
+     C                     SETOF                     70
+     C                     END
+     C                     READ HFRGRPP0                 31
+     C                     END                             * E1 DO
+     C*
+     C           SRCHKE    TAG
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE  SRFIL : ADD/AME/DEL RECORDS
+     C*----------------------------------------------------------------
+     C           SRFIL     BEGSR
+     C*
+     C* PREPARE HFRGRPPD RECORDS
+     C           ROPT      IFEQ 'I'
+     C                     Z-ADDSNPO      NPOO
+     C                     MOVELSUPO      UPOO
+     C                     MOVELSUSR      USRD
+     C                     MOVELSOUQ      OUQN
+     C                     MOVELSQUL      OUQL
+     C                     Z-ADDSCOP      COPI
+     C                     MOVELSHOL      HOLD
+     C                     MOVELSSAV      SAV
+     C                     Z-ADDSOUP      OUTP
+     C                     WRITEHFRGRPP0               32
+     C*
+     C** If error occurred on write, perform check for update by
+     C** other w/s
+     C*
+     C           *IN32     IFEQ '1'
+     C                     EXSR INFSR
+     C                     END
+     C*
+     C                     ADD  1         RECNO
+     C                     ADD  1         RRN
+     C                     GOTO SRFILE
+     C                     END
+     C*
+     C                     SETOF                     31
+     C                     Z-ADDRNPO      KNPO
+     C           KNPO      SETLLHFRGRPP0
+     C                     READ HFRGRPP0                 31
+     C           *IN31     DOWEQ'0'                        * B1 DO
+     C           NPOO      ANDEQRNPO
+     C           UPOO      IFEQ RUPO
+     C           ROPT      IFEQ 'A'
+     C                     Z-ADDSNPO      NPOO
+     C                     MOVELSUPO      UPOO
+     C                     MOVELSUSR      USRD
+     C                     MOVELSOUQ      OUQN
+     C                     MOVELSQUL      OUQL
+     C                     Z-ADDSCOP      COPI
+     C                     MOVELSHOL      HOLD
+     C                     MOVELSSAV      SAV
+     C                     Z-ADDSOUP      OUTP
+     C                     UPDATHFRGRPP0
+     C                     ELSE
+     C           ROPT      IFEQ 'D'
+     C                     DELETHFRGRPP0
+     C                     SUB  1         RECNO
+     C                     SUB  1         RRN
+     C                     END
+     C                     END
+     C                     END
+     C                     READ HFRGRPP0                 31
+     C                     END                             * E1 DO
+     C*
+     C           SRFILE    TAG
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine INFSR  : File error handling.
+     C*----------------------------------------------------------------
+     C           INFSR     BEGSR                           * INFSR
+      *
+      ** Compare status field to 'duplicate key' code
+      *
+     C           STATUS    IFEQ 01021
+      *
+      ** Attempt to retrieve record which gave error
+      *
+     C           KNPO      CHAINHFRGRPPD             70
+      *
+      ** If chain suceeds Update by other W/s
+      *
+     C           *IN70     IFEQ '0'
+     C                     EXSR UPDOWS
+     C                     ELSE
+      *
+      ** Otherwise Std error routine
+      *
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Any other error Std error routine
+      *
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine UPDOWS : Update by another Workstation
+     C*----------------------------------------------------------------
+     C           UPDOWS    BEGSR                           * UPDOWS
+      *
+      ** Remove previous chainges for this transaction
+      *
+     C                     ROLBK
+      *
+      ** Access record for display to user, from main transaction
+      ** file of current input function
+      *
+     C           KNPO      CHAINHFRGRPPD             70
+      *
+      ** If no record found perform database error processing
+      *
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA
+      *
+      ** Load standard fields
+      *
+     C                     MOVEL'HFRGRPPD'DBFILE
+     C                     MOVE KNPO      DBKEY
+     C                     MOVE 'HF0141'  DBPGM
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+      *
+      ** Set error switches and exit program via error routine
+      *
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Display screen to user with 'update by other w/s' message
+      *
+     C                     MOVEL'HAF0111' WUMSID           Message Identif
+      *
+      * Retrieve MSGF message - Standard Functions  *
+      *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+     C*
+     C                     WRITEHF0141C0
+     C                     CALL 'SCC0250'
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine *PSSR  : Program error handling subroutine
+     C*----------------------------------------------------------------
+     C           *PSSR     BEGSR                             *PSSR
+      *
+      ** Prevents multiple dumps in the event of possible recursive
+      ** calls
+      *
+     C           FLAG      IFEQ *BLANK
+     C                     MOVE 'Y'       FLAG    1
+     C                     DUMP
+     C                     END
+      *
+      ** Call error processing
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

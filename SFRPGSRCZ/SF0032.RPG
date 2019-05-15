@@ -1,0 +1,1485 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Account codes authorities maintenance')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility Module                     *
+      *                                                               *
+      *  SF0032 - Account Codes Authorities Maintenance               *
+      *                                                               *
+      *  Function:  This maintenace screen allows the entry of        *
+      *  (I/C)      authorised users by account code.                 *
+      *             The first screen is a selection screen and will   *
+      *             display all account codes in the system.  The user*
+      *             may select on Account Code, Account Code Name,    *
+      *             Account Type or User Profile.                     *
+      *             The second screen is the detail screen and is     *
+      *             displayed if the user has taken 'E' or 'A' from   *
+      *             screen 1.  This screen will display all the user  *
+      *             profiles authorised to the account code selected. *
+      *                                                               *
+      *  Called By: SFC0032 - Account Codes Authorities Maintenance   *
+      *             Control Program                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027362           Date 19Aug14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 226710             Date 27Apr04               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 181417             Date 13Dec00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 01Mar99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD027362 - BFTC Input cycle report not generated             *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  226710 - Action codes 'A' & 'E' appear but are not accepted. *
+      *           Corrected error messages. Bug01915.                 *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  181417 - Recompile over changed Display file                 *
+      *  CGL008 - Security on Journal Entry Input                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FSF0032DFCF  E                    WORKSTN
+     F                                        WRRN1 KSFILE SF0032S1
+     F                                        WRRN2 KSFILE SF0032S2
+     F                                              KINFDS INFDS
+      *
+     FSFACAUPDUF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+     FSFACAUL0IF  E           K        DISK         KINFSR *PSSR
+     F            SFACAUD0                          KRENAMESFACAUX1
+      *
+     FSFACAUL1IF  E           K        DISK         KINFSR *PSSR
+     F            SFACAUD0                          KRENAMESFACAUX2
+      *
+     FSDACODL1IF  E           K        DISK         KINFSR *PSSR
+     F            @A5REA6                           KRENAMESDACODX1
+      *
+     FSDACODL7IF  E           K        DISK         KINFSR *PSSR
+     F            SDACODD0                          KRENAMESDACODX3
+      *
+     FSDACODL8IF  E           K        DISK         KINFSR *PSSR
+     F            SDACODD0                          KRENAMESDACODX4
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  03 - Exit program                                            *
+      *  05 - Refresh                                                 *
+      *  12 - Previous screen                                         *
+      *  15 - End of changed records for SF0032S1                     *
+      *  21 - Print all                                               *
+      *  27 - Roll up                                                 *
+      *  28 - Subfile display control                                 *
+      *  29 - Subfile clear                                           *
+      *  31 - Subfile next change for first screen                    *
+      *  32 - Amend Mode                                              *
+      *  33 - Subfile end for message subfile                         *
+      *  34 - Subfile clear for message subfile                       *
+      *  35 - Enable roll up                                          *
+      *  36 - Subfile next change for second screen                   *
+      *  37 - Subfile End                                             *
+      *  38 - Subfile display for second screen                       *
+      *  39 - Protect R1SEL                                           *
+      *  50 - Display text for amend                                  *
+      *  51 - Display text for enquire                                *
+      *  52 - Enable F21                                              *
+      *  60 - Error in R1SEL                                          *
+      *  64 - Error in User Profile                                   *
+      *  65 - Enable for Enquire mode                                 *
+      *  77 - End of File for LF/SDACODL1                             *
+      *  81 - Not authorize to the action code                        *
+      *  87 - No record found for LF/SDACODL1                         *
+      *  88 - No find for SF0032S1                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *  SRP003 - Process Main Screen Details                         *
+      *  SRP004 - Write records to subfile on first screen            *
+      *  SRP005 - Display from Account code                           *
+      *  SRP006 - Display from Account code name                      *
+      *  SRP007 - Display from Account code type                      *
+      *  SRP008 - Display from User Profile                           *
+      *  SRP009 - Display all users in account code authorities file  *
+      *  SRP010 - Write record to subifle on first screen             *
+      *  SRP011 - Write record to subfile on second screen            *
+      *  SRP012 - Write a blank record to subfile on first screen     *
+      *  SRP013 - Validate selection entered                          *
+      *  SRP014 - Validate selection entered                          *
+      *  SRP015 - Validate selection entered on second screen         *
+      *  SRP016 - Print report                                        *
+      *  SRP017 - Display all user authorised from an account         *
+      *  SRP018 - Check if the user is authorised to the action code  *
+      *  SRP019 - Check user's authorise                              *
+      *                                                               *
+      *  ZASNMS - Send message to program's message queue             *
+      *  CLEAR - Clear program messages queue                         *
+      *  *PSSR  - Error control subroutine                            *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /EJECT
+     IZMUSER      DS                             17
+      *
+      ** Data area ZMUSER
+      *
+     I                                       11  13 USRBCH
+      *
+     ILDA       E DSLDA                         256
+      *
+      ***  Local data area for database error details
+      ***  *LOCK IN LDA immediately before and OUT LDA immediately
+      ***  after each database error handling.
+      ***
+      ***                                     134 141 DBFILE
+      ***        Defines:                     142 170 DBKEY
+      ***                                     171 180 DBPGM
+      ***                                     181 1830DBASE
+      *
+     IPSDS       SDS
+      ***  Program status data structure
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External DS for Bank details
+      *
+     ISDUSER    E DSMUSERDD
+      ** External DS for User details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** First DS for access programs, long data structure
+      *
+     IINFDS     E DSY2I#DSP
+      ** Data structure for Screen management @#SFRC : Subfile Record
+      *
+     ICPYR@#      DS
+      *
+      ** Data structure for compilation - Copyright Insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR SRP002
+     C                     EXSR SRP003
+      *
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   SRP002 - SR for initial processing                          *
+      *                                                               *
+      *   Called by: P001 - Main Processing                           *
+      *                                                               *
+      *   Calls:     AOBANKR0 - Accesss object for Bank Details       *
+      *              SRP0018  - Check if user is authorised to the    *
+      *                         action code                           *
+      *              CLEAR    - Clear Screen Message Subfile          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP002    BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ** Get Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PACT    1
+      *
+     C           PACT      IFEQ 'P'
+     C                     MOVE *ON       *IN52
+     C                     ELSE
+     C                     MOVE *OFF      *IN52
+     C                     ENDIF
+      *
+      ** Initialize working fields and key
+      *
+     C                     Z-ADD0         WRRN1   40
+     C                     Z-ADD0         WRRNS1  40
+     C                     Z-ADD0         WRRN2   40
+     C                     Z-ADD0         WRRNS2  40
+     C**********           MOVE *BLANKS   WSACOD  4                                           CGL029
+     C                     MOVE *BLANKS   WSACOD 10                                           CGL029
+     C                     MOVE *BLANKS   WSACCN 25
+     C                     MOVE *BLANKS   WSACTY  1
+     C                     MOVE *BLANKS   WSUSRP 10
+     C                     MOVEL'SF0031'  WRNAM
+     C                     MOVEL'SFC0031P'WCOTT
+      *
+     C           KACCD     KLIST
+     C**********           KFLD           KACOD   40                                          CGL029
+     C                     KFLD           KACOD  100                                          CGL029
+     C                     KFLD           KUSRP  10
+      *
+     C                     MOVE *OFF      *IN35
+     C                     MOVE *OFF      *IN40
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *ON       *IN86
+      *
+      ** Check if the user is authorised to the action code
+      *
+     C                     EXSR SRP018
+      *
+      ** Initialise header screen
+      *
+     C                     MOVELBJMRDT    SRUNA
+      *
+     C                     MOVEL'SFUSRMSG'ZAMSGF
+      *
+      ** Clear screen message file
+      *
+     C                     EXSR CLEAR
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Process Main Screen Details                         *
+      *                                                               *
+      *  Called by: P001 - Main Processing                            *
+      *                                                               *
+      *  Calls:     SRP004 - Write records to subfile on first screen *
+      *             SRP012 - Write blank record to subfile on first   *
+      *                      screen                                   *
+      *             SRP013 - Validate selection entered on 1st screen *
+      *             SRP014 - Validate selection entered on 1st screen *
+      *             SRP016 - Print report                             *
+      *             CLEAR  - Clear message subfile                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP003    BEGSR
+      *
+      ** Rewrite whole processing to cater for new subfile structure   and
+      ** processing
+      *
+     C           *IN03     DOWEQ*OFF
+      *
+     C                     MOVE *OFF      *IN80
+      *
+      ** Clear program message queue
+      *
+     C           *IN40     IFEQ *ON
+      *
+     C                     EXSR CLEAR
+      *
+     C                     MOVE *ON       *IN34
+     C                     WRITESF0032C3
+     C                     MOVE *OFF      *IN34
+     C                     MOVE *OFF      *IN40
+     C                     ENDIF
+      *
+      ** If F5 key is pressed on first screen
+      ** Clear the input fields
+      *
+     C           *IN05     IFEQ *ON
+     C                     MOVE *BLANKS   S1ACOD
+     C                     MOVE *BLANKS   S1ACCN
+     C                     MOVE *BLANKS   S1ACTY
+     C                     MOVE *BLANKS   S1USRP
+     C                     ENDIF
+      *
+      ** If F21 key is pressed on first screen
+      ** Print all account code authorities
+      *
+     C           *IN21     IFEQ *ON
+     C**********           MOVE '*ALL'    WACODC  4                                           CGL029
+     C**********           MOVE '*ALL'    WACODC 10                                  CGL029 MD027362
+     C                     MOVEL'*ALL'    WACODC 10                                         MD027362
+     C                     EXSR SRP016
+     C                     ENDIF
+      *
+      ** Validate the input fields and the key entered
+      *
+     C           *IN86     IFEQ *OFF
+     C           *IN21     ANDEQ*OFF
+     C                     EXSR SRP014
+     C                     ENDIF
+     C                     MOVE *OFF      *IN86
+      *
+      ** If no error found, select subroutine to write records to subfile
+      *
+     C           *IN80     IFEQ *OFF
+     C           *IN21     ANDEQ*OFF
+     C           *IN05     OREQ *ON
+     C                     EXSR SRP004
+     C                     ENDIF
+      *
+      ** Save the input fields
+      *
+     C                     MOVE S1ACOD    WSACOD
+     C                     MOVE S1ACCN    WSACCN
+     C                     MOVE S1ACTY    WSACTY
+     C                     MOVE S1USRP    WSUSRP
+      *
+      ** If subfile is empty, display no record display file
+      *
+     C           WRRN1     IFEQ 0
+     C                     MOVEL'SFM0401' ZAMSID
+     C                     EXSR ZASNMS
+     C                     EXSR SRP012
+     C                     ELSE
+     C                     MOVE *OFF      *IN28
+     C                     ENDIF
+      *
+      ** If no error in selection fields and roll-up key is not pressed,
+      ** check for changed select field and validate
+      *
+     C           *IN27     IFEQ *OFF
+     C           *IN21     ANDEQ*OFF
+     C                     MOVE '0'       WKIN03
+     C                     READCSF0032S1                 15
+      *
+      ** Do while changed records are found
+      *
+     C           *IN15     DOWEQ*OFF
+      *
+      ** Validate input and Access user authorities
+      *
+     C                     EXSR SRP013
+      *
+      ** If no error on validation
+      *
+     C           *IN81     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C                     READCSF0032S1                 15
+     C                     ELSE
+     C                     MOVE *ON       *IN15
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Display the subfile and read the input from the user
+      *
+     C           WKIN03    IFEQ '0'
+     C                     WRITESF0032F1
+     C                     WRITESF0032C3
+     C                     EXFMTSF0032C1
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ROLBK
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP004 - SR to select subroutine to select records to write  *
+      *           to subfile on first screen                          *
+      *                                                               *
+      *  Called by: Main processing                                   *
+      *                                                               *
+      *  Calls:     SRP005 - Display from Account code                *
+      *             SRP006 - Display from account code name           *
+      *             SRP007 - Display from account code type           *
+      *             SRP008 - Display from User Profile                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP004    BEGSR
+      *
+      ** If Roll-up key is not pressed, clear the subfile
+      *
+     C           *IN27     IFEQ *OFF
+     C                     MOVE *ON       *IN29
+     C                     MOVE *ON       *IN35
+     C                     MOVE *BLANKS   R1SEL
+     C                     WRITESF0032C1
+     C                     MOVEA'00'      *IN,29
+     C                     MOVE *ZEROS    WRRN1
+      *
+     C                     ELSE
+     C                     Z-ADDWRRNS1    WRRN1
+     C                     END
+      *
+     C                     SELEC
+      *
+      ** Account Code entered, display is done from account code
+      *
+     C           S1ACOD    WHNE *BLANKS
+     C                     EXSR SRP005
+      *
+      ** Account Name entered, display is done from account name
+      *
+     C           S1ACCN    WHNE *BLANKS
+     C                     EXSR SRP006
+      *
+      ** Account Type entered, display is done from account type
+      *
+     C           S1ACTY    WHNE *BLANKS
+     C                     EXSR SRP007
+      *
+      ** User profile entered, display is done from Account codes aut  horised b
+      *
+     C           S1USRP    WHNE *BLANKS
+     C                     EXSR SRP008
+      *
+     C                     OTHER
+      *
+     C                     EXSR SRP005
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP005 - Display from Account code                           *
+      *                                                               *
+      *  Called by: SRP004                                            *
+      *                                                               *
+      *  Calls:     SRP010 - Write record to subfile on 1st screen    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP005    BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN27     IFEQ *OFF
+      *
+      ** Position first Account Code equal to the Account Code entere  d
+      *
+     C           S1ACOD    SETLLSDACODL1             87
+     C                     ENDIF
+      *
+      ** Read the next Account Code
+      *
+     C                     READ SDACODL1                 87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ*OFF
+     C           WCTR      ANDLT14
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR SRP010
+      *
+      ** If subfile not full than read the next account code
+      *
+     C           WCTR      IFLT 14
+     C                     READ SDACODL1                 87
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+      *
+      ** If not, check if last record from SDACODL1 was already read
+      *
+     C                     ELSE
+     C                     READ SDACODL1                 87
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+     C                     ELSE
+     C                     READPSDACODL1                 77
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP006 - Display from Account code name                      *
+      *                                                               *
+      *  Called by: SRP004 -                                          *
+      *                                                               *
+      *  Calls:     SRP010 - Write record to subfile on first screen  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP006    BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN27     IFEQ *OFF
+      *
+      ** Position first Account code name equal to the Account code n  ame enter
+      *
+     C           S1ACCN    SETLLSDACODL7             87
+     C                     ENDIF
+      *
+      ** Read the next Account Code
+      *
+     C                     READ SDACODL7                 87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ*OFF
+     C           WCTR      ANDLT14
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR SRP010
+      *
+      ** If subfile not full than read the next account code
+      *
+     C           WCTR      IFLT 14
+     C                     READ SDACODL7                 87
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+      *
+      ** If not, check if last record from SDACODL7 was already read
+      *
+     C                     ELSE
+     C                     READ SDACODL7                 87
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+     C                     ELSE
+     C                     READPSDACODL7                 77
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP007 - Display from Account code type                      *
+      *                                                               *
+      *  Called by: SRP004                                            *
+      *                                                               *
+      *  Calls:     SRP010 - Write record to subfile on first screen  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP007    BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN27     IFEQ *OFF
+      *
+      ** Position first Account code type equal to the Account code t  ype enter
+      *
+     C           S1ACTY    SETLLSDACODL8             87
+     C                     ENDIF
+      *
+      ** Read the next Account Code
+      *
+     C                     READ SDACODL8                 87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ*OFF
+     C           WCTR      ANDLT14
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR SRP010
+      *
+      ** If subfile not full than read the next account code
+      *
+     C           WCTR      IFLT 14
+     C                     READ SDACODL8                 87
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+      *
+      ** If not, check if last record from SDACODL8 was already read
+      *
+     C                     ELSE
+     C                     READ SDACODL8                 87
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+     C                     ELSE
+     C                     READPSDACODL8                 77
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP008 - Display from User Profile                           *
+      *                                                               *
+      *  Called by: SRP004                                            *
+      *                                                               *
+      *  Calls:     SRP010 - Write record to subfile on first screen  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP008    BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN27     IFEQ *OFF
+      *
+      ** Position first Account code type equal to the Account code t  ype enter
+      *
+     C                     MOVE S1USRP    WKUSRP 10 P
+     C           WKUSRP    SETLLSFACAUL1             87
+     C                     ENDIF
+      *
+      ** Read the next Account Code
+      *
+     C           WKUSRP    READESFACAUL1                 87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ*OFF
+     C           WCTR      ANDLT14
+      *
+      ** Write record to subfile
+      *
+     C**********           MOVE SFACOD    WKACOD  4 P                                         CGL029
+     C                     MOVE SFACOD    WKACOD 10 P                                         CGL029
+     C           WKACOD    CHAINSDACODL1             88
+      *
+     C           *IN88     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ************
+     C                     MOVEL'SDACODPD'DBFILE           * DBERR  01*
+     C                     MOVELWKACOD    DBKEY            ************
+     C                     MOVEL'SF0032'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     EXSR SRP010
+      *
+      ***  If subfile not full than read the next account code
+      *
+     C           WCTR      IFLT 14
+     C           WKUSRP    READESFACAUL1                 87
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+      *
+      ** If not, check if last record from SFACAUL1 was already read
+      *
+     C                     ELSE
+     C           WKUSRP    READESFACAUL1                 87
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+     C                     ELSE
+     C                     READPSFACAUPD                 88
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP009 - Display all users in account code authorities file  *
+      *                                                               *
+      *  Called by: SRP017 - Display all user authorised from an      *
+      *                      account                                  *
+      *                                                               *
+      *  Calls:     SRP011 - Write record to subfile on second screen *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP009    BEGSR
+      *
+      ** If Roll-up key is not pressed, clear the subfile
+      *
+     C           *IN27     IFEQ *OFF
+     C                     MOVE *ON       *IN29
+     C                     MOVE *ON       *IN35
+     C                     MOVE *BLANKS   R2USRP
+     C                     WRITESF0032C2
+     C                     MOVEA'00'      *IN,29
+     C                     MOVE *ZEROS    WRRN2
+      *
+      ** Position first account code equal to the request
+      *
+     C                     MOVE R1ACOD    KACOD
+     C           KACOD     SETLLSFACAUL0             87
+      *
+     C                     ELSE
+     C                     Z-ADDWRRNS2    WRRN2
+     C                     ENDIF
+      *
+      ** Read the next account code
+      *
+     C           KACOD     READESFACAUL0                 87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           WCTR      DOWLT12
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR SRP011
+      *
+      ** If subfile not full than read the next account code
+      *
+     C           WCTR      IFLT 12
+     C           *IN87     ANDEQ*OFF
+     C**********           MOVE R1ACOD    W1ACOD  40                                          CGL029
+     C                     MOVE R1ACOD    W1ACOD 100                                          CGL029
+     C           W1ACOD    READESFACAUL0                 87
+     C                     ENDIF
+      *
+     C           R1SEL     IFEQ 'E'
+     C           *IN87     ANDEQ*ON
+     C                     Z-ADD12        WCTR
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** If EOF is reached set subfile to end
+      ** If enquiry mode
+      *
+     C           R1SEL     IFEQ 'E'
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+      *
+      ** If not, check if last record from SFACAUL0 was already read
+      *
+     C                     ELSE
+     C                     READ SDACODL1                 87
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+     C                     ELSE
+     C                     READPSDACODL1                 77
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** Mode is other than 'E', Rollup key is always disponible
+      *
+     C                     MOVE *OFF      *IN37
+     C                     MOVE *ON       *IN35
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP010 - Write record to subifle on first screen             *
+      *                                                               *
+      *  Called by: SRP005 - Display from account code                *
+      *             SRP006 - Display from account code name           *
+      *             SRP007 - Display from account code type           *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP010    BEGSR
+      *
+      ** Initialize the Account record fields in first subfile record   fields
+      *
+     C                     MOVE *BLANKS   R1SEL
+     C                     MOVELA5ACCD    R1ACOD
+     C                     MOVELA5ACCN    R1ACCN    P
+     C                     MOVELA5ACTY    R1ACTY
+      *
+     C                     ADD  1         WRRN1
+     C                     ADD  1         WCTR
+     C                     Z-ADDWRRN1     SFLRR1
+     C                     Z-ADDWRRN1     WRRNS1
+      *
+      ** Write record to subfile
+      *
+     C                     WRITESF0032S1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP011 - Write record to subfile on second screen            *
+      *                                                               *
+      *  Called by: SRP009 - Display all users in account code        *
+      *                      authorities file                         *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP011    BEGSR
+      *
+      ** Initialize the User record fields in second subfile
+      ** record fields
+      *
+     C                     MOVE R1ACOD    S2ACOD    P
+     C                     MOVE R1ACCN    S2ACCN    P
+     C                     MOVE SFUSRP    PUSRP     P
+     C                     MOVE *BLANKS   R2USRP
+     C                     MOVE *BLANKS   R2USR1
+      *
+     C           *IN87     IFEQ *OFF
+      *
+      ** Access to user details to retrieve the user name
+      *
+     C                     CALL 'AOUSERR0'
+     C                     PARM           PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM           PUSRP  10
+     C           SDUSER    PARM SDUSER    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ************
+     C                     MOVEL'MUSERDD' DBFILE           * DBERR  02*
+     C                     MOVELPUSRP     DBKEY            ************
+     C                     MOVEL'SF0032'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE SFUSRP    R2USRP    P
+     C                     MOVE USER1     R2USR1    P
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE R2USRP    R2USR2    P
+      *
+     C                     ADD  1         WRRN2
+     C                     ADD  1         WCTR
+     C                     Z-ADDWRRN2     SFLRR2
+     C                     Z-ADDWRRN2     WRRNS2
+      *
+      ** Write record to subfile on second screen
+      *
+     C                     WRITESF0032S2
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP012 - Write a blank record to subfile on first screen     *
+      *                                                               *
+      *  Called by: SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP012    BEGSR
+      *
+     C                     MOVE *OFF      *IN28
+     C                     MOVE *ON       *IN39
+     C                     MOVE *BLANKS   R1SEL
+     C                     MOVE *BLANKS   R1ACOD
+     C                     MOVE *BLANKS   R1ACCN
+     C                     MOVE *BLANKS   R1ACTY
+     C                     Z-ADD0         WCTR
+     C           WCTR      DOWLT14
+     C                     ADD  1         WRRN1
+     C                     ADD  1         WCTR
+     C                     Z-ADDWRRN1     SFLRR1
+     C                     Z-ADDWRRN1     WRRNS1
+      *
+      ** Write record to subfile
+      *
+     C                     WRITESF0032S1
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN39
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP013 - Validate selection entered                          *
+      *                                                               *
+      *  Called by: SRP003                                            *
+      *                                                               *
+      *  Calls: ZASNMS                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP013    BEGSR
+      *
+     C                     MOVE *OFF      *IN81
+      *
+     C           R1SEL     IFNE ' '
+      *
+      ** Check that action is valid
+      ** Action code must be equal to A,E, if maintenance mode
+      ** Action code must be equal to P, if print mode
+      *
+     C           R1SEL     IFEQ 'A'
+     C           PACT      ANDEQ' '
+     C           R1SEL     OREQ 'E'
+     C           PACT      ANDEQ' '
+     C           R1SEL     OREQ 'P'
+     C           PACT      ANDEQ'P'
+      *
+      ** Check if user is authorised to the action code
+      *
+     C                     MOVE R1SEL     ZACTN   1
+     C                     EXSR SRP019
+      *
+      ** The user is authorize to the action code
+      *
+     C           PERR      IFEQ *ZEROS
+      *
+      ** Display all the user authorised for this account code
+      *
+     C           R1SEL     IFEQ 'A'
+     C                     MOVE *ON       *IN32
+     C                     ELSE
+     C                     MOVE *OFF      *IN32
+     C                     ENDIF
+      *
+     C           R1SEL     IFEQ 'A'
+     C           R1SEL     OREQ 'E'
+     C                     EXSR SRP017
+     C                     ELSE
+     C**********           MOVE R1ACOD    WACODC  4                                           CGL029
+     C                     MOVE R1ACOD    WACODC                                              CGL029
+     C                     EXSR SRP016
+     C                     END
+      *
+     C                     MOVE *IN03     WKIN03  1
+     C                     MOVE *IN03     *IN81
+     C           WRRN1     CHAINSF0032S1             88
+     C                     MOVE ' '       R1SEL
+     C                     ELSE
+      *
+      ** Not authorize to the action code
+      *
+     C                     MOVEL'SFM0402' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Action code entered is not valid then send an error message
+      *
+     C           PACT      IFEQ 'P'
+     C                     MOVEL'SFM0404' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN81
+     C                     ELSE
+     C                     MOVEL'SFM0403' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDWRRN1     SFLRR1
+     C                     ENDIF
+      *
+     C                     UPDATSF0032S1
+      *
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN60
+     C                     MOVE WKIN03    *IN03
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP014 - Validate selection entered                          *
+      *                                                               *
+      *  Called by: SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP014    BEGSR
+      *
+      ** A new Selection is entered
+      *
+     C           S1ACOD    IFNE WSACOD
+     C           S1ACCN    ORNE WSACCN
+     C           S1ACTY    ORNE WSACTY
+     C           S1USRP    ORNE WSUSRP
+      *
+      ** Roll-up not allowed if new selection entered
+      *
+     C           *IN27     IFEQ *ON
+     C                     MOVE *OFF      *IN27
+     C                     MOVE *ON       *IN80
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** No new selection entered than show the first screen display   file
+      ** without clearing the subfile
+      *
+     C           S1ACOD    IFEQ WSACOD
+     C           S1ACCN    ANDEQWSACCN
+     C           S1ACTY    ANDEQWSACTY
+     C           S1USRP    ANDEQWSUSRP
+     C           *IN27     ANDEQ*OFF
+     C                     MOVE *ON       *IN80
+     C                     Z-ADD1         SFLRR1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP015 - Validate selection entered on second screen         *
+      *                                                               *
+      *  Called by: SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *  Calls:     ZASNMS - Send message to program's message queue  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP015    BEGSR
+      *
+     C                     MOVE *OFF      *IN81
+     C                     MOVE *OFF      *IN36
+     C                     MOVE *OFF      *IN64
+      *
+     C           R2USRP    IFNE ' '
+      *
+     C                     MOVE R2USRP    PUSRP
+      *
+      ** Check if user exist on user details file
+      *
+     C                     CALL 'AOUSERR0'
+     C                     PARM           PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM           PUSRP  10
+     C           SDUSER    PARM SDUSER    DSSDY
+      *
+      ** User not exist on user details file
+      ** Display error message
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           RECI      ORNE 'D'
+     C                     MOVEL'SFM0406' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN36
+     C                     MOVE *ON       *IN64
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'Y'       WWERR
+     C                     ELSE
+      *
+      ** User exist on user details file
+      *
+     C                     MOVE R2USRP    KUSRP
+     C                     MOVE S2ACOD    KACOD
+      *
+      ** Check if user exist on Account Codes Authorities file
+      *
+     C           KACCD     CHAINSFACAUPD             87
+      *
+     C           *IN87     IFEQ *OFF
+      *
+      ** User already exist on Account Code Authorities file
+      *
+     C                     MOVEL'SFM0405' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN36
+     C                     MOVE *ON       *IN64
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'Y'       WWERR
+     C                     ELSE
+      *
+      ** User must not have a reference user
+      *
+     C           REFUSR    IFNE R2USRP
+     C                     MOVEL'SFM0407' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN36
+     C                     MOVE *ON       *IN64
+     C                     MOVE *ON       *IN81
+     C                     MOVE 'Y'       WWERR
+     C                     ELSE
+      *
+      ** Write User details on Authorities file
+      *
+     C                     MOVE S2ACOD    SFACOD
+     C                     MOVE R2USRP    SFUSRP
+     C                     MOVE BJRDNB    SFLCD
+      *
+     C           R2USR2    IFEQ *BLANKS
+     C                     WRITESFACAUD0
+     C                     ELSE
+     C                     MOVE R2USR2    KUSRP
+     C                     MOVE S2ACOD    KACOD
+     C           KACCD     CHAINSFACAUD0             87
+     C                     MOVE R2USRP    SFUSRP
+     C                     MOVE BJRDNB    SFLCD
+     C                     UPDATSFACAUD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     Z-ADDWRRN2     SFLRR2
+      *
+     C                     ELSE
+      *
+      ** If user profile is blank than delete the last user profile
+      *
+     C           R2USR2    IFNE *BLANKS
+     C                     MOVE S2ACOD    KACOD
+     C                     MOVE R2USR2    KUSRP
+     C           KACCD     CHAINSFACAUPD             87
+      *
+     C           *IN87     IFEQ *OFF
+     C                     DELETSFACAUPD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     UPDATSF0032S2
+      *
+     C                     MOVE *OFF      *IN36
+     C                     MOVE *OFF      *IN64
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP016 - Print report                                        *
+      *                                                               *
+      *  Called by: SRP013 - Validate selection entered               *
+      *                                                               *
+      *  Calls:     FC0040X - Submit report using command key         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP016    BEGSR
+      *
+      ** Print report compenent
+      *
+     C                     CALL 'FC0040X'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM           WRNAM  10
+     C                     PARM           WCOTT  10
+     C                     PARM '10001'   WCSEQ   5
+     C                     PARM WACODC    WPARM 100
+     C                     PARM BJSBRC    WMBRC   1
+     C                     PARM 'S'       WLVL    1
+     C                     PARM *BLANKS   WETTY   3
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ************
+     C                     MOVEL*BLANKS   DBFILE           * DBERR  03*
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     MOVEL'SF0032'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP017 - Display all user authorised from an account         *
+      *                                                               *
+      *  Called by: SRP013 - Validate selection entered               *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP017    BEGSR
+      *
+     C                     MOVE 'Y'       WDISP   1
+     C                     MOVE 'Y'       WWERR   1
+     C                     MOVE *OFF      *IN12
+     C                     MOVE *ON       *IN05
+     C                     MOVE *ON       *IN38
+      *
+     C           R1SEL     IFEQ 'E'
+     C                     MOVE *ON       *IN65
+     C                     ELSE
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+      ** Rewrite whole processing to cater for new subfile structure   and
+      ** processing
+      *
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+     C           WWERR     ANDEQ'Y'
+      *
+     C                     MOVE *OFF      *IN80
+     C                     MOVE 'N'       WWERR
+      *
+      ** Clear program message queue
+      *
+     C           *IN40     IFEQ *ON
+     C                     EXSR CLEAR
+     C                     MOVE *ON       *IN34
+     C                     WRITESF0032C3
+     C                     MOVE *OFF      *IN34
+     C                     MOVE *OFF      *IN40
+     C                     ENDIF
+      *
+      ** Display the user already exist in the file PF/SFACAUPD
+      *
+     C           *IN05     IFEQ *ON
+     C           *IN27     OREQ *ON
+     C                     MOVE 'Y'       WWERR
+     C                     EXSR SRP009
+     C                     ENDIF
+      *
+      ** If no error in selection fields and roll-up key is not press  ed,
+      ** check for changed select field and validate
+      *
+     C           *IN27     IFEQ *OFF
+      *
+     C                     READCSF0032S2                 15
+      *
+      ** Do while changed records are found
+      *
+     C           *IN15     DOWEQ*OFF
+      *
+      ** Validate input and Access user authorities
+      *
+     C                     EXSR SRP015
+      *
+     C                     READCSF0032S2                 15
+     C                     ENDDO
+      *
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           WWERR     ANDEQ'N'
+     C                     COMIT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Display the subfile and read the input from the user in seco  nd screen
+      *
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           WWERR     ANDEQ'Y'
+     C           WDISP     OREQ 'Y'
+     C                     WRITESF0032F2
+     C                     WRITESF0032C3
+     C                     EXFMTSF0032C2
+     C                     EXSR CLEAR
+     C                     MOVE 'Y'       WWERR
+     C                     ENDIF
+     C                     MOVE 'N'       WDISP
+      *
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP018 - Check if the user is authorised to the action code  *
+      *                                                               *
+      *  Called by: SRP002                                            *
+      **************SRP013*                                           *                       226710
+      *                                                               *
+      *  Calls:     SRP019                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP018    BEGSR
+      *
+     C                     MOVEA'00'      *IN,50
+      *
+      ** If not called in Print Mode, check whether the                                       226710
+      ** user is authorised to the action code 'A' for 'amend'                                226710
+     C           *IN52     IFEQ '0'                                                           226710
+     C                     MOVE 'A'       ZACTN   1
+     C                     EXSR SRP019
+      *
+     C           PERR      IFEQ *ZEROS
+     C                     MOVE *ON       *IN50
+     C                     ENDIF
+      *
+      ***Check*if*the*user*is*authorised*to*the*action*code*'D'******                         226710
+      ** Check if the user is authorised to the action code 'E'                               226710
+      *
+     C                     MOVE 'E'       ZACTN   1
+     C                     EXSR SRP019
+      *
+     C           PERR      IFEQ *ZEROS
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+     C                     ENDIF                                                              226710
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP019 - Check user's authorise                              *
+      *                                                               *
+      *  Called by: SRP018 - Check if user is authorised to the action*
+      *                      code                                     *
+      *                                                               *
+      *  Calls:     ZVACTU  - Validate Action Code using user/pgm     *
+      *             ZVACTBU - Validate Action Code using user/pgm/brch*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP019    BEGSR
+      *
+     C           BJSBRC    IFNE *BLANKS
+     C                     CALL 'ZVACTU'
+     C                     PARM ZACTN     PZACTN  1
+     C                     PARM           PERR    10
+      *
+     C                     ELSE
+     C                     CALL 'ZVACTBU'
+     C                     PARM ZACTN     PZACTN
+     C                     PARM USRBCH    PZBR    3
+     C                     PARM           PERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send message to program's message queue             *
+      *                                                               *
+      *  Calls: Y2SNMGC                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     MOVE *ON       *IN40
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGM      ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA 30        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CLEAR - Clear program messages queue                         *
+      *                                                               *
+      *  Calls: Y2CLMSC                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLEAR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     MOVE *ON       *IN40
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *  Calls: DBERRCTL                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           PRUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       PRUN    1
+     C                     ROLBK
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

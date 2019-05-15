@@ -1,0 +1,1964 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Index Reference Maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3107  -  Extel Interface Index Reference Maintenance       *
+     F*                                                               *
+     F*  Function: To enable the identification of various index      *
+     F*   (I/C)    values supplied by EXTEL by a six character code.  *
+     F*            The header code and relative number of the index   *
+     F*            need be specified and an explanatory narrative may *
+     F*            be attached.                                       *
+     F*            Enquiries on the file may be made using the Midas  *
+     F*            reference, or the header code or the header code/  *
+     F*            index ref combination or by using all three input  *
+     F*            fields.                                            *
+     F*                                                               *
+     F*  Called by: SEC3107 - Extel Interface Index Ref Maint         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAAA03             Date 03May04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 11Jan94               *
+      *                 S01117             Date 29Jul91               *
+     F*                 S01199             DATE 03AUG89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes.                                  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01117 - Multibranching                                      *
+     F*           SPF access code validation added.                   *
+     F*  S01199 -  HELP SYSTEM                                     *   S01199
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSE3107DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SE3107F2
+     F                                              KINFDS PAGEN
+     F*
+     F**  EXTEL INDEX REFERENCES - KEYED BY HEADER, INDEX REF.
+     F*
+     FEXIND   IF  E           K        DISK
+     F*
+     F**  MIDAS INDEX REFERENCES - KEYED BY MIDAS REFERENCE
+     F*
+     FEXINDD  UF  E           K        DISK         KCOMIT       A
+     F            EXINDDF                           KRENAMEEXINDF
+     F                                              KINFSR INFSR
+     F                                              KINFDS INFDS
+     F*
+     F**  INDEX REFERENCES - FILE CONTROL
+     F*
+     FEXINDZ  UF  E                    DISK         KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+     F***TABTB10*IF  E                    DISK                            S01117
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01 - F3 ENTERED                                             *
+     F*   04 - F10 ENTERED                                            *
+     F*   05 - INITIAL SCREEN REQUESTED                               *
+     F****20*-*CHAIN*FAIL*TABTB10*                                    *   S01117
+     F****25*-*HELP*INDICATOR**************                           *   S01199
+     F*   30 - CHAIN FAIL AFTER SUCCESS EXINDD                        *
+     F*   33 - FILE UPDATED BY ANOTHER WORKSTATION                    *
+     F*   38 - SUBFILE LOOP INDICATOR                                 *
+     F*   39 - ALLOWS DISPLAY OF NO RECORD FOUND ON ENQUIRE           *
+     F*   40 - ERROR ON MIDAS REF.                                    *
+     F*   41 - ERROR ON HEADER                                        *
+     F*   42 - ERROR ON INDEX REF.                                    *
+     F*   43 - ERROR ON ACTION CODE                                   *
+     F*   46 - HEADER NOT A-L                                         *
+     F*   47 - EMPTY SUBFILE INDICATOR                                *
+     F*   49 - ON - READ EXIND OFF - READ EXINDD FOR SUBFILE          *
+     F*   50 - NARRATIVE PROTECTED                                    *
+     F*   51 - ENABLES F10 FOR DELETE                                 *
+     F*   52 - MIDAS REF. HEADER + EXTEL IND. PROTECTED               *
+     F*   53 - ACTION CODE PROTECTED                                  *
+     F*   54 - ROLLUP INDICATOR                                       *
+     F*   55 - ROLLDOWN INDICATOR                                     *
+     F*   56 - CHAIN FAIL EXINDD                                      *
+     F*   58 - VALIDATION CHAIN ERROR EXIND                           *
+     F*   60 - NARRATIVE FIELD SHOWN                                  *
+     F*   62 - SET LOWER LIMIT FOUND ON EXINDD                        *
+     F*   69 - CPF SUBFILE PAGE CHANGE                                *
+     F*   70 - SUBFILE CLEAR INDICATOR                                *
+     F*   73 - END OF FILE EXINDD                                     *
+     F*   75 - ERRORS IN INITIAL SCREEN VALIDATION                    *
+     F*   77 - NUMERIC TESTS                                          *
+     F*   80 - LOOP INDICATOR                                         *
+     F*   81 - ACTION FROM ENQUIRY SCREEN                             *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   #A    - PROCESS INITIAL SCREEN                              *
+     F*   #B    - PROCESS INSERTION                                   *
+     F*   #C    - PROCESS DELETION                                    *
+     F*   #D    - PROCESS AMENDMENT                                   *
+     F*   #E    - PROCESS ENQUIRY                                     *
+     F*   #AA   - RE-INITIALISE SCREEN                                *
+     F*   #AB   - VALIDATE INITIAL SCREEN                             *
+     F*   UPDAT - UPDATE FILES                                        *
+     F*   ERROR - DATABASE ERROR PROCESSING                           *
+     F*   HELP  - HELP PROCESSING                                     *
+     F*   *PSSR - FILE ERROR                                          *
+     F*   SPFCHK - SPF check that user authorised to action           *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    @HEAD   6   6  1
+     E**  ARRAY CONTAINING ALLOWABLE HEADER CODES
+     E*
+     E                    ERCD       14  5
+     E**  ERROR CODES ARRAY
+     E*
+     E                    XALPH       3  1
+     E                    XNUM        3  1
+     E                    XXXN        3  1
+     E                    XXIN        3  1
+     E**  ARRAYS FOR NON-NUMERIC AND NUMERIC INDEX CODE
+     E*
+      /EJECT
+     I*
+     ICMTTXT      DS
+     I*
+     I**  DATA AREA FOR COMMITMENT TEXT
+     I*
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I                                       51 250 DATAA
+     I*
+     IDNATN       DS                              5
+     I*
+     I**  DATA AREA FOR TRANSACTION NUMBER
+     I*
+     I                                        1   50FNATN
+     I*
+     IPAGEN       DS
+     I*
+     I**  DATA AREA FOR SCREEN RECORD
+     I*
+     I                                    B 378 3790LSSRN
+     I*
+     IPSDS       SDS
+     I*
+     I*   PROGRAM STATUS DATA STRUCTURE
+     I*
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I                                        1  10 EPPP
+     I                                       81  90 EPPPL
+     I                                        1 253 EPPDS1
+     I                                      254 429 EPPDS2
+     I*
+     I*  FILE INF DATA STRUCTURE FOR EXINDD
+     I*
+     IINFDS       DS                            366
+     I*
+     IEPFDS       DS
+     I*
+     I*  FILE INF DATA STRUCTURE USED BY ERROR PROCESSING
+     I*
+     I                                        1 256 EPFDS1
+     I                                      257 366 EPFDS2
+     I*
+     I***LDA*****   UDS                            256                    S01117
+     I*
+     I*  ERROR DATA STRUCTURE FOR LDA
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBERR                 S01117
+      *                                                                   S01117
+     ILDA         DS                            256                       S01117
+      *                                                                   S01117
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+      ** after each database error handling.                              S01117
+      *                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     IMRIF1       DS
+     I*
+     I*  MIDAS REF. DATA STRUCTURE
+     I*
+     I                                        1   6 DDMRIF
+     I                                        1   1 @MRIF
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     IRUNDT       DS                                                      S01117
+      *                                                                   S01117
+      ** RUNDAT data area                                                 S01117
+      *                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     IZMUSER      DS                             17                       S01117
+      *                                                                   S01117
+      ** Menu user data area                                              S01117
+      *                                                                   S01117
+     I                                       11  13 DFTBRC                S01117
+     I                                       17  17 BANKAU                S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      *                                                                   S01117
+      ** Bank Details                                                     S01117
+      *                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                   S01117
+      ** Short data structure for access programs (200 long)              S01117
+      *                                                                   S01117
+      /EJECT
+     C*
+     C**  MOVE FIELDS TO COMMITMENT TEXT
+     C*
+     C                     MOVE 'SE'      MDID
+     C                     MOVE 'SE3107'  PGMN
+     C                     MOVELWSID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE 'U'       ACTC    1
+     C                     MOVE USRID     USRIDX
+     C*
+     C**  SET UP KLIST FOR EXIND
+     C*
+     C           @EXT      KLIST
+     C                     KFLD           RECI
+     C                     KFLD           EXHD
+     C                     KFLD           XINO
+     C*
+     C**  SET UP KLIST FOR HEADER
+     C*
+     C           @HED      KLIST
+     C                     KFLD           RECI
+     C                     KFLD           EXHD
+     C*
+     C************NAMVAR   DEFN           LDA                             S01117
+     C*
+      **
+      ** ZEROISE FILE CONTROL FIELDS
+      **
+     C                     Z-ADD0         NINS
+     C                     Z-ADD0         NDEL
+     C*
+     C*  OBTAIN INSTALLATION DETAILS
+     C*
+     C***********1         CHAINTABTB10              20                   S01117
+     C***********                                                         S01117
+     C***DATABASE ERROR 01  - NOT FOUND                                   S01117
+     C***********                                                         S01117
+     C************IN20     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'SE3107'  DBPGM                           S01117
+     C***********          MOVEL'TABTB10' DBKEY            ************   S01117
+     C***********          Z-ADD1         DBERR            **DBERR*01**   S01117
+     C***********          MOVEL'TABLE'   DBFILE           ************   S01117
+     C***********          EXSR ERROR                                     S01117
+     C***********          END                                            S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+      ** Read in ZMUSER data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   ZMUSER                                    S01117
+      *                                                                   S01117
+      ** Access bank details                                              S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+      *                                                                   S01117
+      ** Prepare LDA                                                      S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT                           S01117
+     C                     MOVEL'SE3107'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+     C**  PERFORM MAIN PROCCESSING UNTIL END REQUESTED
+     C*
+     C           *INLR     DOWNE'1'
+     C*
+     C**  PROCESS INITIAL SCREEN
+     C**   EXCEPT IF ACTION FROM ENQUIRY SCREEN
+     C*
+     C           *IN81     IFEQ '0'
+     C                     EXSR #A
+     C                     ELSE
+     C                     EXSR #AA
+     C                     END
+     C*
+     C           *INLR     IFEQ '0'
+     C*
+     C**  PROCESS INSERTION OF NEW INDEX RECORD
+     C*
+     C           DDACTN    IFEQ 'I'
+     C                     EXSR #B
+     C                     END
+     C*
+     C**  PROCESS DELETION OF INDEX RECORD
+     C*
+     C           DDACTN    IFEQ 'D'
+     C                     EXSR #C
+     C                     END
+     C*
+     C**  PROCESS AMENDMENT TO AN INDEX RECORD
+     C*
+     C           DDACTN    IFEQ 'A'
+     C                     EXSR #D
+     C                     END
+     C*
+     C**  PROCESS AN ENQUIRY
+     C*
+     C           DDACTN    IFEQ 'E'
+     C                     EXSR #E
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #A   SUBROUTINE TO PROCESS INITIAL SCREEN                    *
+     C*                                                               *
+     C*  DISPLAYS INITIAL BLANK SCREEN AND CALLS ROUTINE TO VALIDATE  *
+     C*  SCREEN DISPLAYING RELEVANT ERROR CODES                       *
+     C*                                                               *
+     C*  CALLED FROM MAINLINE PROGRAM                                 *
+     C*                                                               *
+     C*  CALLS - #AA         INITIALISES SCREEN BLANKS FIELDS         *
+     C*********-*HELP********CALLS*HELP*TEXT*PROGRAM*********         *
+     C*        - #AB         VALIDATES INITIAL SCREEN                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR                           ** #A **
+     C*
+     C**  SET UP BLANK SCREEN
+     C*
+     C                     EXSR #AA
+     C*
+     C**  PROCESS INITIAL SCREEN UNTIL F3 OR VALID ENTRY
+     C*
+     C           *IN80     DOWEQ'0'
+     C                     MOVE '1'       *IN80
+     C                     WRITESE3107F1                                                      CAAA03
+     C                     WRITESE3107F5
+     C                     WRITESE3107F4
+     C***********          WRITESE3107F1                                                      CAAA03
+     C*
+     C****PROCESS*HELP*IF*REQUESTED***********
+     C*
+     C********** *IN25     DOUEQ'0'                                       S01199
+     C                     READ SE3107F1                 99
+     C********** *IN25     IFEQ '1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           END                                            S01199
+     C*
+     C**********           END                                            S01199
+     C*
+     C**  PROCESS FUNCTION KEYS AND VALIDATE SCREEN
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     GOTO ENDD1
+     C                     END
+     C*
+     C                     EXSR #AB
+     C*
+     C**  SET UP ERROR CODES
+     C*
+     C                     MOVEAERCD,1    DDERR1
+     C*
+     C**  IF ERRORS IN VALIDATION AND F3 NOT PRESSED LOOP AROUND
+     C*
+     C           *IN01     IFEQ '0'
+     C           *IN75     ANDEQ'1'
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDD1     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B SUBROUTINE TO PROCESS INSERTION OF INDEX RECORD           *
+     C*                                                               *
+     C*  OUTPUTS DETAIL SCREEN WITH BLANK NARRATIVE FIELD. DISPLAYS   *
+     C*  MESSAGE IF RECORD HAS BEEN UPDATED BY ANOTHER WORKSTATION.   *
+     C*  THERE IS NO SCREEN VALIDATION                                *
+     C*                                                               *
+     C*  CALLED FROM #A INITIAL SCREEN PROCESS                        *
+     C*                                                               *
+     C*  CALLS - UPDAT       INSERTS OR UPDATES RECORD ON EXINDD      *
+     C*********-*HELP********CALLS*PROGRAM*FOR*HELP*TEXT**********    *   S01199
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR                           ** #B **
+     C*
+     C**  OUTPUT BLANK INDEX NAME AND RESET LOOP INDICATOR
+     C**  PROTECT FIELDS
+     C*
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN52
+     C                     MOVE *BLANKS   NARR
+     C                     MOVE '0'       *IN80
+     C*
+     C**  PROCESS SCREEN UNTIL VALID ENTRY OR F3
+     C*
+     C           *IN80     DOWEQ'0'
+     C                     MOVE '1'       *IN80
+     C                     WRITESE3107F5
+     C                     WRITESE3107F4
+     C                     WRITESE3107F1
+     C*
+     C****PROCESS*HELP*IF*REQUESTED**********                             S01199
+     C*
+     C********** *IN25     DOUEQ'0'                                       S01199
+     C                     READ SE3107F4                 99
+     C********** *IN25     IFEQ '1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           END                                            S01199
+     C*
+     C**********           END                                            S01199
+     C*
+     C**  PROCESS FUNCTION KEYS OR VALIDATE SCREEN
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C***********          OUT  LDA                                       S01117
+     C                     GOTO ENDD2
+     C                     END
+     C*
+     C**  IF F3 OR F12 NOT SELECTED PERFORM UPDATING
+     C*
+     C           *IN05     IFEQ '0'
+     C           *IN01     ANDEQ'0'
+     C           *IN33     ANDEQ'0'
+     C                     EXSR UPDAT
+     C                     END
+     C*
+     C**  IF UPDATE FAILS RETURN WITH MESSAGE
+     C*
+     C           *IN33     IFEQ '1'
+     C           *IN05     ANDEQ'0'
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDD2     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #C  SUBROUTINE TO PERFORM DELETION OF AN INDEX RECORD        *
+     C*                                                               *
+     C*  DISPLAYS RECORD TO BE DELETED. ALLOWS F10. DISPLAYS MESSAGE  *
+     C*  IF UPDATED BY ANOTHER WORKSTATION.                           *
+     C*  THERE IS NO SCREEN VALIDATION                                *
+     C*                                                               *
+     C*  CALLED FROM MAINLINE PROGRAM                                 *
+     C*                                                               *
+     C*  CALLS - UPDAT       UPDATES RECORD AS DELETED                *
+     C*********-*HELP********CALLS*PROGRAM*FOR*HELP*TEXT*******       *   S01199
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR                           ** #C **
+     C*
+     C**  PROTECT FIELDS AND ENABLE F10 FOR DELETION
+     C**  RESET LOOP INDICATOR
+     C*
+     C                     SETON                     505152
+     C                     MOVE '1'       *IN60
+     C                     MOVE '0'       *IN80
+     C*
+     C** PROCESS DELETION OF A RECORD
+     C*
+     C           *IN80     DOWEQ'0'
+     C                     MOVE '1'       *IN80
+     C                     WRITESE3107F5
+     C                     WRITESE3107F4
+     C                     WRITESE3107F1
+     C*
+     C****PROCESS*HELP*IF*REQUESTED********                               S01199
+     C*
+     C********** *IN25     DOUEQ'0'                                       S01199
+     C                     READ SE3107F4                 99
+     C********** *IN25     IFEQ '1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           END                                            S01199
+     C*
+     C**********           END                                            S01199
+     C*
+     C**  PROCESS FUNCTION KEYS  AND UPDATE
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C***********          OUT  LDA                                       S01117
+     C                     GOTO ENDD3
+     C                     END
+     C*
+     C** F12 RETURNS PROGRAM TO INITIAL SCREEN.
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVE '1'       *IN80
+     C                     ELSE
+     C*
+     C** F10 INITIATES DELETION PROCESS.
+     C*
+     C           *IN04     IFEQ '1'
+     C           *IN33     ANDEQ'0'
+     C                     EXSR UPDAT
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  LOOP AROUND IF F10 & F12 NOT PRESSED OR IF RECORD UPDATED
+     C**  BY ANOTHER WORKSTATION.
+     C*
+     C           *IN05     IFNE '1'
+     C           *IN04     ANDNE'1'
+     C           *IN33     OREQ '1'
+     C           *IN05     ANDEQ'0'
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDD3     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #D  SUBROUTINE TO AMEND AN INDEX RECORD                      *
+     C*                                                               *
+     C*  ATTEMPTS TO UPDATE AN EXISTING RECORD. RETURNS WITH RECORD IF*
+     C*  UPDATED BY ANOTHER WORKSTATION. THIS PROCESSING REQUIRES NO  *
+     C*  SCREEN VALIDATION.                                           *
+     C*                                                               *
+     C*  CALLED FROM MAINLINE PROGRAM                                 *
+     C*                                                               *
+     C*  CALLS - UPDAT       PERFORMS UPDATE OF RECORD ON EXINDD      *
+     C*********-*HELP********CALLS*PROGRAM*FOR*HELP*TEXT*******       *   S01199
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #D        BEGSR                           ** #D **
+     C*
+     C**  RESET LOOP INDICATOR. PROTECT FIELDS.
+     C*
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN52
+     C                     MOVE '0'       *IN80
+     C*
+     C** PROCESS AMENDMENT TO AN INDEX RECORD
+     C*
+     C           *IN80     DOWEQ'0'
+     C                     MOVE '1'       *IN80
+     C                     WRITESE3107F5
+     C                     WRITESE3107F4
+     C                     WRITESE3107F1
+     C*
+     C****PROCESS*HELP*IF*REQUESTED**********                             S01199
+     C*
+     C********** *IN25     DOUEQ'0'                                       S01199
+     C                     READ SE3107F4                 99
+     C********** *IN25     IFEQ '1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           END                                            S01199
+     C*
+     C**********           END                                            S01199
+     C*
+     C**  PROCESS FUNCTION KEYS
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C***********          OUT  LDA                                       S01117
+     C                     GOTO ENDD4
+     C                     END
+     C*
+     C**  IF F3 OR F12 NOT SELECTED PERFORM UPDATING
+     C*
+     C           *IN05     IFEQ '0'
+     C           *IN01     ANDEQ'0'
+     C           *IN33     ANDEQ'0'
+     C                     EXSR UPDAT
+     C                     END
+     C*
+     C**  IF UPDATE FAILS RETURN WITH MESSAGE
+     C*
+     C           *IN33     IFEQ '1'
+     C           *IN05     ANDEQ'0'
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDD4     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #E  SUBROUTINE TO ENQUIRE UPON AN INDEX RECORD               *
+     C*                                                               *
+     C*  DISPLAYS SUBFILE. REMOVES LEADING ZEROS FROM NUMERIC FIELDS  *
+     C*  PERFORMS ROLLUP ROLLDOWN FUNCTIONS. DISPLAYS MESSAGE IF FULL *
+     C*  RECORD ENQUIRED UPON NOT FOUND. DISPLAYS ERROR MESSAGES.     *
+     C*                                                               *
+     C*  CALLED FROM MAINLINE PROGRAM                                 *
+     C*                                                               *
+     C***CALLS*-*HELP********CALLS*HELP*PROGRAM*FOR*SECOND*LEVEL*TEXT *   S01199
+     C*        - #AB         VALIDATES ENQUIRE ENTRIES                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #E        BEGSR                           ** #E **
+     C*
+     C****PROTECT*ACTION*CODE.RESET LOOP IND*********
+     C**  RESET LOOP IND
+     C*
+     C                     MOVE '1'       *IN53
+     C                     MOVE '1'       *IN39
+     C                     MOVE '0'       *IN80
+     C*
+     C** PROCESS ENQUIRY ON AN INDEX RECORD
+     C*
+     C           *IN80     DOWEQ'0'
+     C                     MOVE '1'       *IN80
+     C*
+     C** IF SUBFILE EMPTY AND ERROR IN VALIDATION DONT DISPLAY
+     C** SUBFILE
+     C*
+     C           *IN47     IFEQ '1'
+     C           *IN75     ANDEQ'1'
+     C                     ELSE
+     C                     MOVE '0'       *IN47
+     C                     END
+     C*
+     C**  READ FILE IF ROLLUP AND ROLLDOWN NOT REQUESTED AND NO ERROR
+     C**  IN A PREVIOUS VALIDATION
+     C*
+     C           *IN54     IFNE '1'
+     C           *IN55     ANDNE'1'
+     C           *IN75     ANDNE'1'
+     C*
+     C**  CLEAR SUBFILE
+     C*
+     C                     MOVE '1'       *IN70
+     C                     WRITESE3107F3
+     C                     Z-ADD0         RECR
+     C                     Z-ADD0         RRN
+     C                     MOVE '0'       *IN70
+     C                     MOVE '0'       *IN49
+     C*
+     C**  IF MIDAS REF NOT BLANK READ EXINDD
+     C*
+     C           DDMRIF    IFNE *BLANK
+     C           DDMRIF    SETLLEXINDF                   62
+     C*
+     C           *IN38     DOUEQ'1'
+     C                     READ EXINDF                   73
+     C*
+     C**  CHECK FOR DEAD RECORD
+     C*
+     C           COUNT     IFEQ 0
+     C           *IN62     ANDEQ'1'
+     C           RECI      ANDEQ'*'
+     C                     MOVE '0'       *IN62
+     C                     END
+     C*
+     C**  CHECK FOR EMPTY FILE
+     C*
+     C           *IN73     IFEQ '1'
+     C           COUNT     ANDEQ0
+     C                     MOVE '1'       *IN47
+     C                     END
+     C*
+     C           RECI      IFEQ 'D'
+     C           *IN73     ANDEQ'0'
+     C                     ADD  1         COUNT   20
+     C                     ADD  1         RECR    30
+     C                     ADD  1         RRN     30
+     C                     MOVE MRIF      DDMRIF
+     C                     MOVE EXHD      DDEXHD
+     C*
+     C**  REMOVE LEADING ZEROS FROM INDEX
+     C*
+     C                     MOVE XINO      @XINO1  3
+     C                     MOVEA@XINO1    XXXN
+     C           XXXN,1    IFEQ '0'
+     C                     MOVE *BLANK    XXXN,1
+     C                     END
+     C*
+     C           XXXN,1    IFEQ *BLANK
+     C           XXXN,2    ANDEQ'0'
+     C                     MOVE *BLANK    XXXN,2
+     C                     END
+     C                     MOVEAXXXN      DDXINO
+     C                     MOVE NARR      DDNARR
+     C                     WRITESE3107F2
+     C                     END
+     C*
+     C           COUNT     IFEQ 13
+     C           *IN73     OREQ '1'
+     C                     MOVE '1'       *IN38
+     C                     END
+     C*
+     C                     END
+     C                     Z-ADD0         COUNT
+     C                     MOVE '0'       *IN38
+     C*
+     C                     END
+     C*
+     C**  IF MIDAS REF  BLANK READ EXIND
+     C*
+     C           DDMRIF    IFEQ *BLANK
+     C           DDXINO    ANDEQ*BLANK
+     C                     MOVE '1'       *IN49
+     C                     MOVE 'D'       RECI
+     C                     MOVE DDEXHD    EXHD
+     C           @HED      SETLLEXIND                    62
+     C*
+     C           *IN38     DOUEQ'1'
+     C                     READ EXIND                    73
+     C*
+     C**  CHECK FOR EMPTY FILE
+     C*
+     C           *IN73     IFEQ '1'
+     C           COUNT     ANDEQ0
+     C                     MOVE '1'       *IN47
+     C                     END
+     C*
+     C           RECI      IFEQ 'D'
+     C           *IN73     ANDEQ'0'
+     C                     ADD  1         COUNT   20
+     C                     ADD  1         RECR    30
+     C                     ADD  1         RRN     30
+     C                     MOVE MRIF      DDMRIF
+     C                     MOVE EXHD      DDEXHD
+     C*
+     C**  REMOVE LEADING ZEROS FROM INDEX
+     C**  FIRST DIGIT CHECK FOR ZERO
+     C*
+     C                     MOVE XINO      @XINO1  3
+     C                     MOVEA@XINO1    XXXN
+     C           XXXN,1    IFEQ '0'
+     C                     MOVE *BLANK    XXXN,1
+     C                     END
+     C*
+     C**  IF 1ST DIGIT NOW BLANK AND 2ND IS '0' BLANK SECOND DIGIT
+     C*
+     C           XXXN,1    IFEQ *BLANK
+     C           XXXN,2    ANDEQ'0'
+     C                     MOVE *BLANK    XXXN,2
+     C                     END
+     C                     MOVEAXXXN      DDXINO
+     C                     MOVE NARR      DDNARR
+     C                     WRITESE3107F2
+     C                     END
+     C*
+     C           COUNT     IFEQ 13
+     C           *IN73     OREQ '1'
+     C                     MOVE '1'       *IN38
+     C                     END
+     C*
+     C                     END
+     C                     Z-ADD0         COUNT
+     C                     MOVE '0'       *IN38
+     C*
+     C                     END
+     C*
+     C**  IF MIDAS REF  BLANK READ EXIND
+     C*
+     C           DDMRIF    IFEQ *BLANK
+     C           DDXINO    ANDNE*BLANK
+     C                     MOVE '1'       *IN49
+     C                     MOVE 'D'       RECI
+     C                     MOVE DDXINO    XINO
+     C                     MOVE DDEXHD    EXHD
+     C           @EXT      SETLLEXIND                    62
+     C*
+     C           *IN38     DOUEQ'1'
+     C                     READ EXIND                    73
+     C*
+     C**  CHECK FOR EMPTY FILE
+     C*
+     C           *IN73     IFEQ '1'
+     C           COUNT     ANDEQ0
+     C                     MOVE '1'       *IN47
+     C                     END
+     C*
+     C           RECI      IFEQ 'D'
+     C           *IN73     ANDEQ'0'
+     C                     ADD  1         COUNT   20
+     C                     ADD  1         RECR    30
+     C                     ADD  1         RRN     30
+     C                     MOVE MRIF      DDMRIF
+     C                     MOVE EXHD      DDEXHD
+     C*
+     C**  REMOVE LEADING ZEROS FROM INDEX
+     C**  CHECK 1ST DIGIT
+     C*
+     C                     MOVE XINO      @XINO1  3
+     C                     MOVEA@XINO1    XXXN
+     C           XXXN,1    IFEQ '0'
+     C                     MOVE *BLANK    XXXN,1
+     C                     END
+     C*
+     C** IF 1ST BLANK AND 2ND '0' MOVE BLANKS TO 2ND
+     C*
+     C           XXXN,1    IFEQ *BLANK
+     C           XXXN,2    ANDEQ'0'
+     C                     MOVE *BLANK    XXXN,2
+     C                     END
+     C                     MOVEAXXXN      DDXINO
+     C                     MOVE NARR      DDNARR
+     C                     WRITESE3107F2
+     C                     END
+     C*
+     C           COUNT     IFEQ 13
+     C           *IN73     OREQ '1'
+     C                     MOVE '1'       *IN38
+     C                     END
+     C*
+     C                     END
+     C                     Z-ADD0         COUNT
+     C                     MOVE '0'       *IN38
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  WRITE SUBFILE CONTROL
+     C*
+     C                     WRITESE3107F3
+     C                     WRITESE3107F5
+     C*
+     C**  MOVE BLANKS TO HEADERS
+     C*
+     C                     MOVE *BLANK    DDACTN
+     C                     MOVE *BLANK    DDMRIF
+     C                     MOVE *BLANK    DDXINO
+     C                     MOVE *BLANK    DDEXHD
+     C*
+     C**  IF ERROR IN VALIDATION MOVE FIELDS TO SCREEN
+     C*
+     C           *IN75     IFEQ '1'
+     C                     MOVE @M        DDMRIF
+     C                     MOVE @X        DDXINO
+     C                     MOVE @E        DDEXHD
+     C                     MOVE @A        DDACTN
+     C                     END
+     C*
+     C**  WRITE HEADINGS
+     C*
+     C                     WRITESE3107F1
+     C*
+     C**  CHECK FOR CPF PAGE CHANGE
+     C*
+     C                     Z-ADDLSSRN     LSSR1   20
+     C                     MOVE '0'       *IN69
+     C*
+     C****PROCESS*HELP*IF*REQUESTED**********                             S01199
+     C*
+     C********** *IN25     DOUEQ'0'                                       S01199
+     C                     READ SE3107F1                 99
+     C********** *IN25     IFEQ '1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           END                                            S01199
+     C*
+     C**********           END                                            S01199
+     C*
+     C**  SET ON INDICATOR IF CPF PAGE CHANGE
+     C*
+     C           LSSRN     IFNE LSSR1
+     C                     MOVE '1'       *IN69
+     C                     END
+     C*
+     C**  IF F12 PRESSED RETURN TO INITIAL SCREEN
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C**  IF F3 PRESSED RETURN TO CALLING PROGRAM
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C***********          OUT  LDA                                       S01117
+     C                     GOTO ENDD5
+     C                     END
+     C*
+     C**  IF ROLLUP PRESSED REFILL PAGE
+     C*
+     C           *IN54     IFEQ '1'
+     C*
+     C**  IF CHANGE IN CPF PAGE NO INCREMENT RECR
+     C*
+     C           *IN69     IFEQ '1'
+     C           LSSRN     ADD  12        RECR
+     C                     END
+     C*
+     C**  ONLY BUILD FILE IF ON LAST SCREEN
+     C*
+     C           RRN       IFEQ RECR
+     C*
+     C                     MOVE '1'       *IN62
+     C           *IN38     DOUEQ'1'
+     C           *IN49     IFEQ '0'
+     C                     READ EXINDF                   73
+     C                     END
+     C*
+     C           *IN49     IFEQ '1'
+     C                     READ EXIND                    73
+     C                     END
+     C*
+     C           RECI      IFEQ 'D'
+     C           *IN73     ANDEQ'0'
+     C                     ADD  1         RRN
+     C                     ADD  1         COUNT   20
+     C                     ADD  1         RECR    30
+     C                     MOVE MRIF      DDMRIF
+     C                     MOVE EXHD      DDEXHD
+     C*
+     C**  REMOVE LEADING ZEROS FROM INDEX
+     C**  CHECK 1ST DIGIT
+     C*
+     C                     MOVE XINO      @XINO1  3
+     C                     MOVEA@XINO1    XXXN
+     C           XXXN,1    IFEQ '0'
+     C                     MOVE *BLANK    XXXN,1
+     C                     END
+     C*
+     C**  IF 1ST BLANK & 2ND '0' MOVE BLANK TO 2ND DIGIT
+     C*
+     C           XXXN,1    IFEQ *BLANK
+     C           XXXN,2    ANDEQ'0'
+     C                     MOVE *BLANK    XXXN,2
+     C                     END
+     C                     MOVEAXXXN      DDXINO
+     C*
+     C                     MOVE NARR      DDNARR
+     C                     WRITESE3107F2
+     C                     END
+     C*
+     C           COUNT     IFEQ 13
+     C           *IN73     OREQ '1'
+     C                     MOVE '1'       *IN38
+     C                     END
+     C*
+     C                     END
+     C                     Z-ADD0         COUNT
+     C                     MOVE '0'       *IN38
+     C                     ELSE
+     C                     ADD  13        RECR
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF NOT F3 OR 12 OR ROLLUP OR ROLLDOWN VALIDATE ENTRY
+     C*
+     C           *IN01     IFEQ '0'
+     C           *IN05     ANDEQ'0'
+     C           *IN54     ANDEQ'0'
+     C           *IN55     ANDEQ'0'
+     C*
+     C**  SAVE FIELDS INCASE OF ERROR
+     C*
+     C                     MOVE DDMRIF    @M      6
+     C                     MOVE DDXINO    @X      3
+     C                     MOVE DDEXHD    @E      1
+     C                     MOVE DDACTN    @A      1
+     C                     EXSR #AB
+     C                     MOVEAERCD,1    DDERR1
+     C                     END
+     C*
+     C**  IF ROLLDOWNS HAVE OCCURRED AND NEXT INPUT IS IN ERROR
+     C**  DISPLAY SAME SCREEN
+     C*
+     C           *IN75     IFEQ '1'
+     C           *IN69     ANDEQ'1'
+     C           LSSRN     ADD  12        RECR
+     C                     END
+     C*
+     C**  IF F3 OR F12 NOT PRESSED LOOP
+     C*
+     C           *IN01     IFEQ '0'
+     C           *IN05     ANDEQ'0'
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C**  IF ACTION CODE OTHER THAN ENQUIRE & NO ERRORS,
+     C**    SET INDICATOR 81 AND DROP OUT.
+     C*
+     C           DDACTN    IFNE 'E'
+     C           *IN75     ANDEQ'0'
+     C                     MOVEA'11'      *IN,80
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  CLEAR SUBFILE
+     C*
+     C                     MOVE '1'       *IN70
+     C                     WRITESE3107F3
+     C                     MOVE '0'       *IN70
+     C                     Z-ADD0         RECR
+     C                     Z-ADD0         RRN
+     C*
+     C           ENDD5     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #AB    SUBROUTINE TO VALIDATE INITIAL AND ENQUIRE SCREENS    *
+     C*                                                               *
+     C*  VALIDATES INDIVIDUAL FIELDS. THEN VALIDATES COMBINATIONS OF  *
+     C*  FIELDS. THEN SEES IF LIVE RECORD ALREADY ON FILE FOR INSERTS *
+     C*  OR IF NORECORD EXISTS FOR AMENDS DELETES AND FULL ENQUIRIES. *
+     C*                                                               *
+     C*  CALLED FROM #A AND #E                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AB       BEGSR                           ** #AB **
+     C*
+     C**  CLEAR ERROR CODES ARRAY, RESET POINTER, RESET ERROR
+     C**  INDICATORS
+     C*
+     C                     MOVE *BLANKS   ERCD
+     C                     MOVE *BLANKS   XALPH
+     C                     MOVE *BLANKS   XNUM
+     C                     MOVE *BLANKS   XXIN
+     C                     MOVE *BLANKS   @CHK
+     C                     Z-ADD0         S
+     C                     MOVE '0'       *IN75
+     C                     MOVE '0'       *IN46
+     C                     SETOF                     404142
+     C                     SETOF                     435657
+     C                     SETOF                     7778
+     C*
+     C**  ACTION MUST BE 'A','E','D', OR 'I'
+     C*
+     C           DDACTN    IFNE 'A'
+     C           DDACTN    ANDNE'D'
+     C           DDACTN    ANDNE'E'
+     C           DDACTN    ANDNE'I'
+     C                     ADD  1         S
+     C                     MOVE '  101'   ERCD,S
+     C                     MOVE '1'       *IN43
+     C                     END
+     C*
+     C                     EXSR SPFCHK                                    S01117
+      *                                                                   S01117
+     C**  HEADER, INDEX CODE, AND MIDAS REFERENCE CANNOT ALL BE BLANK
+     C*
+     C           DDMRIF    IFEQ *BLANK
+     C           DDXINO    ANDEQ*BLANK
+     C           DDEXHD    ANDEQ*BLANK
+     C                     ADD  1         S
+     C                     MOVE '  102'   ERCD,S
+     C                     SETON                     404142
+     C                     END
+     C*
+     C**  MIDAS REF NO LEADING BLANK
+     C*
+     C           DDMRIF    IFNE *BLANK
+     C           @MRIF     ANDEQ*BLANK
+     C                     ADD  1         S
+     C                     MOVE '  116'   ERCD,S
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C**  HEADER MUST BE E, F, G, H, I, OR L.
+     C*
+     C           DDEXHD    LOKUP@HEAD                    46
+     C           *IN46     IFNE '1'
+     C           DDEXHD    ANDNE*BLANK
+     C                     ADD  1         S
+     C                     MOVE '  103'   ERCD,S
+     C                     MOVE '1'       *IN41
+     C                     END
+     C*
+     C**  INDEX CODE MUST BE NUMERIC
+     C*
+     C                     MOVEADDXINO    XALPH
+     C*
+     C**  CHECK THIRD ELEMENT OF ARRAY FOR NON NUMERIC
+     C*
+     C           XALPH,3   IFGT '9'
+     C           XALPH,3   ORLT '0'
+     C           XALPH,3   IFNE *BLANK
+     C                     ADD  1         S
+     C                     MOVE '  104'   ERCD,S
+     C                     MOVE '1'       *IN42
+     C                     GOTO ENDAB
+     C                     END
+     C                     END
+     C*
+     C**  CHECK SECOND ELEMENT OF ARRAY FOR NON NUMERIC
+     C*
+     C           XALPH,2   IFGT '9'
+     C           XALPH,2   ORLT '0'
+     C           XALPH,2   IFNE *BLANK
+     C                     ADD  1         S
+     C                     MOVE '  104'   ERCD,S
+     C                     MOVE '1'       *IN42
+     C                     GOTO ENDAB
+     C                     END
+     C                     END
+     C*
+     C**  CHECK FIRST ELEMENT OF ARRAY FOR NON NUMERIC
+     C*
+     C           XALPH,1   IFGT '9'
+     C           XALPH,1   ORLT '0'
+     C           XALPH,1   IFNE *BLANK
+     C                     ADD  1         S
+     C                     MOVE '  104'   ERCD,S
+     C                     MOVE '1'       *IN42
+     C                     GOTO ENDAB
+     C                     END
+     C                     END
+     C*
+     C**  NUMBER WITH MIDDLE BLANK NOT ALLOWED
+     C*
+     C           XALPH,1   IFNE *BLANK
+     C           XALPH,2   ANDEQ*BLANK
+     C           XALPH,3   ANDNE*BLANK
+     C                     ADD  1         S
+     C                     MOVE '  104'   ERCD,S
+     C                     MOVE '1'       *IN42
+     C                     GOTO ENDAB
+     C                     END
+     C*
+     C**  MOVE ALPHAMERIC VERSION OF INDEX NUMBER INTO NUMERIC ARRAY
+     C**  REMOVING LEADING ZEROS AND RIGHT ALIGNING FIELD.
+     C**  MOVE THIRD ELEMENT OF ALPHA ARRAY TO NUMERIC ARRAY IF NOT
+     C**  BLANK ELSE SET FLAG TO SHOW BLANKS.
+     C*
+     C           XALPH,3   IFEQ *BLANK
+     C                     MOVE 'B'       FLAG3   1
+     C                     ELSE
+     C                     MOVE XALPH,3   XNUM,3
+     C                     MOVE 'N'       FLAG3
+     C                     END
+     C*
+     C**  IF SECOND ALPHA ELEMENT BLANK SET ON FLAG. IF 2ND ELEMENT NOT
+     C**  BLANK AND 3RD BLANK MOVE SECOND INTO 3RD. IF 2ND ELEMENT AND
+     C**  1ST NOT BLANK MOVE 2ND ALPH INTO 2ND NUM.
+     C*
+     C           XALPH,2   IFEQ *BLANK
+     C                     MOVE 'B'       FLAG2   1
+     C                     ELSE
+     C           FLAG3     IFEQ 'N'
+     C                     MOVE XALPH,2   XNUM,2
+     C                     MOVE 'N'       FLAG2
+     C                     ELSE
+     C                     MOVE XALPH,2   XNUM,3
+     C                     MOVE 'N'       FLAG3
+     C                     MOVE 'B'       FLAG2
+     C                     END
+     C                     END
+     C*
+     C**  MOVE 1ST ALPHA INTO RIGHTMOST EMPTY FIELD
+     C*
+     C           XALPH,1   IFNE *BLANK
+     C           FLAG3     IFEQ 'B'
+     C                     MOVE XALPH,1   XNUM,3
+     C                     ELSE
+     C           FLAG2     IFEQ 'B'
+     C                     MOVE XALPH,1   XNUM,2
+     C                     ELSE
+     C                     MOVE XALPH,1   XNUM,1
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  OBTAIN NUMERIC FIELD
+     C*
+     C                     MOVEAXNUM      @ALX    3
+     C                     MOVE @ALX      @ALXN   30
+     C*
+     C**  IF JUST ZEROS ENTERED ERROR OCCURS
+     C*
+     C           DDXINO    IFNE *BLANK
+     C           @ALXN     IFEQ *ZEROS
+     C                     ADD  1         S
+     C                     MOVE '  104'   ERCD,S
+     C                     MOVE '1'       *IN42
+     C                     GOTO ENDAB
+     C                     END
+     C                     END
+     C*
+     C**  BLANK OUT LEADING ZEROS
+     C*
+     C           @ALXN     IFNE *ZEROS
+     C           XNUM,1    IFEQ '0'
+     C                     MOVE *BLANK    XNUM,1
+     C                     END
+     C           XNUM,1    IFEQ *BLANK
+     C           XNUM,2    ANDEQ'0'
+     C                     MOVE *BLANK    XNUM,2
+     C                     END
+     C                     END
+     C*
+     C**  IF ERRORS GO TO END
+     C*
+     C           S         IFGE 1
+     C                     GOTO ENDAB
+     C                     END
+     C*
+     C**  INDEX AND HEADER MUST MATCH
+     C*
+     C           DDEXHD    IFEQ 'E'
+     C           @ALXN     ANDGT17
+     C                     ADD  1         S
+     C                     MOVE '  117'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C           DDEXHD    IFEQ 'F'
+     C           @ALXN     ANDGT17
+     C                     ADD  1         S
+     C                     MOVE '  117'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C           DDEXHD    IFEQ 'G'
+     C           @ALXN     ANDGT17
+     C                     ADD  1         S
+     C                     MOVE '  117'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C           DDEXHD    IFEQ 'H'
+     C           @ALXN     ANDGT14
+     C                     ADD  1         S
+     C                     MOVE '  117'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C           DDEXHD    IFEQ 'I'
+     C           @ALXN     ANDGT20
+     C                     ADD  1         S
+     C                     MOVE '  117'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C           DDEXHD    IFEQ 'L'
+     C           @ALXN     ANDGT164
+     C                     ADD  1         S
+     C                     MOVE '  117'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C**  WITH ACTION = 'I' HEADER AND INDEX MUST BE ENTERED
+     C*
+     C           DDACTN    IFEQ 'I'
+     C           DDEXHD    IFEQ *BLANK
+     C           DDXINO    OREQ *BLANK
+     C                     ADD  1         S
+     C                     MOVE '  114'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  WITH ACTION = 'I' 'A' 'D' MIDAS REF. MUST BE ENTERED
+     C*
+     C           DDACTN    IFEQ 'I'
+     C           DDACTN    OREQ 'A'
+     C           DDACTN    OREQ 'D'
+     C           DDMRIF    IFEQ *BLANK
+     C                     ADD  1         S
+     C                     MOVE '  105'   ERCD,S
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  WITH ACTION = 'A' 'D' IF HEADER ENTERED INDEX MUST BE ENTERED
+     C*
+     C           DDACTN    IFEQ 'A'
+     C           DDACTN    OREQ 'D'
+     C           DDEXHD    IFNE *BLANK
+     C           DDXINO    ANDEQ*BLANK
+     C                     ADD  1         S
+     C                     MOVE '  106'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF INDEX ENTERED HEADER MUST BE ENTERED
+     C*
+     C           DDEXHD    IFEQ *BLANK
+     C           DDXINO    ANDNE*BLANK
+     C                     ADD  1         S
+     C                     MOVE '  107'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C**  IF ERRORS GO TO END
+     C*
+     C           S         IFGE 1
+     C                     GOTO ENDAB
+     C                     END
+     C*
+     C**  IF MIDAS REF. ENTERED CHAIN TO EXINDD
+     C*
+     C           DDMRIF    IFNE *BLANK
+     C           DDMRIF    CHAINEXINDF               56
+     C*
+     C**  IF SUCCESSFUL CHAIN CHECK TRANNO
+     C*
+     C           *IN56     IFEQ '0'
+     C                     EXCPTEXIREL
+     C                     Z-ADDTNLU      TNLU1   50
+     C                     END
+     C*
+     C**  IF LIVE RECORD ON INSERT - ERROR
+     C*
+     C           *IN56     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C*
+     C           DDACTN    IFEQ 'I'
+     C                     ADD  1         S
+     C                     MOVE '  108'   ERCD,S
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C**  ERROR ON AMEND AND DELETE IF HEADER AND INDEX NOT CORRECT
+     C*
+     C           DDACTN    IFEQ 'A'
+     C           DDACTN    OREQ 'D'
+     C           DDEXHD    IFNE *BLANK
+     C*                    MOVE XINO      @XINO   3
+     C           DDEXHD    IFNE EXHD
+     C           @ALXN     ORNE XINO
+     C                     ADD  1         S
+     C                     MOVE '  109'   ERCD,S
+     C                     SETON                     4142
+     C                     ELSE
+     C                     MOVE NARR      DDNARR
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C**  REMOVE LEADING ZEROS FROM INDEX
+     C*
+     C                     MOVE 'B'       @CHK    1
+     C                     MOVE XINO      @XINO   3
+     C                     MOVEA@XINO     XXIN
+     C           XXIN,1    IFEQ '0'
+     C                     MOVE *BLANK    XXIN,1
+     C                     END
+     C*
+     C           XXIN,1    IFEQ *BLANK
+     C           XXIN,2    ANDEQ'0'
+     C                     MOVE *BLANK    XXIN,2
+     C                     END
+     C                     MOVEAXXIN      DDXINO
+     C                     MOVE EXHD      DDEXHD
+     C                     MOVE NARR      DDNARR
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF ACTION = E AND JUST MIDAS REF AND HEADER ENTERED THEY
+     C**  MUST MATCH
+     C*
+     C           DDACTN    IFEQ 'E'
+     C           DDMRIF    IFNE *BLANK
+     C           DDXINO    ANDEQ*BLANK
+     C           DDEXHD    ANDNE*BLANK
+     C           DDEXHD    IFNE EXHD
+     C                     ADD  1         S
+     C                     MOVE '  112'   ERCD,S
+     C                     SETON                     4041
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF E RECORDS MUST MATCH
+     C*
+     C           DDMRIF    IFNE *BLANK
+     C           DDXINO    ANDNE*BLANK
+     C           DDEXHD    ANDNE*BLANK
+     C           DDEXHD    IFNE EXHD
+     C           @ALXN     ORNE XINO
+     C                     ADD  1         S
+     C                     MOVE '  111'   ERCD,S
+     C                     SETON                     404142
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF NO LIVE RECORD ERROR ON A, D.
+     C*
+     C           *IN56     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C*
+     C           DDACTN    IFEQ 'A'
+     C           DDACTN    OREQ 'D'
+     C                     ADD  1         S
+     C                     MOVE '  110'   ERCD,S
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C**  ON ENQUIRE IF ALL FIELDS ENTERED RECORD MUST EXIST
+     C*
+     C           DDACTN    IFEQ 'E'
+     C           DDMRIF    IFNE *BLANK
+     C           DDXINO    ANDNE*BLANK
+     C           DDEXHD    ANDNE*BLANK
+     C                     ADD  1         S
+     C                     MOVE '  111'   ERCD,S
+     C                     SETON                     404142
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C**  ON ENQUIRE IF ALL MIDAS REF. + HEADER ENTERED RECORD
+     C**  MUST EXIST
+     C*
+     C           DDACTN    IFEQ 'E'
+     C           DDMRIF    IFNE *BLANK
+     C           DDXINO    ANDEQ*BLANK
+     C           DDEXHD    ANDNE*BLANK
+     C                     ADD  1         S
+     C                     MOVE '  112'   ERCD,S
+     C                     SETON                     4041
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF NO LIVE RECORD OR DELETED RECORD HEADER AND INDEX MUST NOT
+     C**  BE A PART OF A LIVE RECORD ON INSERT
+     C*
+     C           *IN56     IFEQ '0'
+     C           RECI      ANDNE'D'
+     C           *IN56     OREQ '1'
+     C           DDACTN    IFEQ 'I'
+     C                     MOVE 'D'       RECI
+     C                     MOVE @ALX      XINO
+     C                     MOVE DDEXHD    EXHD
+     C           @EXT      CHAINEXIND                58
+     C           *IN58     IFEQ '0'
+     C                     ADD  1         S
+     C                     MOVE '  113'   ERCD,S
+     C                     SETON                     4142
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDAB     TAG
+     C*
+     C**  IF INDEX NOT BLANK ON 'A' OR 'D' REFORMAT FIELD IF NO
+     C**  ERROR IN VALIDATION
+     C*
+     C           S         IFEQ 0
+     C*
+     C           @CHK      IFEQ 'B'
+     C           DDACTN    ANDEQ'A'
+     C           @CHK      OREQ 'B'
+     C           DDACTN    ANDEQ'D'
+     C                     ELSE
+     C                     MOVEAXNUM      DDXINO
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF VALIDATION FAILED SET ON IND 75
+     C*
+     C           S         IFGE 1
+     C                     MOVE '1'       *IN75
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #AA   SUBROUTINE TO PROCESS REQUEST FOR INITIAL SCREEN       *
+     C*                                                               *
+     C*  BLANKS INITIAL SCREEN FIELDS. REST ALL INDICATORS.           *
+     C*                                                               *
+     C*  CALLED FROM #A                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AA       BEGSR                           ** #AA **
+     C*
+     C**  DISABLE F10, RESET LOOP CONTROL AND ERROR INDICATORS
+     C*
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN75
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN70
+     C                     SETOF                     303139
+     C                     SETOF                     404142
+     C                     SETOF                     435051
+     C                     SETOF                     525354
+     C                     SETOF                     555657
+     C                     SETOF                     777862
+     C                     SETOF                     63
+     C*
+     C**  BLANK SCREEN FIELDS AND ERROR ARRAY RESET ARRAY POINTER
+     C**   EXCEPT IF ACTION FROM ENQUIRY SCREEN
+     C*
+     C           *IN81     IFEQ '0'
+     C                     MOVE *BLANK    DDACTN
+     C                     MOVE *BLANK    DDMRIF
+     C                     MOVE *BLANK    DDXINO
+     C                     MOVE *BLANK    DDEXHD
+     C                     MOVE *BLANK    DDNARR
+     C*
+     C                     ELSE
+     C           DDACTN    IFEQ 'I'
+     C                     MOVE *BLANK    DDNARR
+     C                     END
+     C*
+     C                     MOVE '0'       *IN81
+     C                     END
+     C*
+     C                     MOVE *BLANK    DDERR1
+     C                     Z-ADD0         S       20
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  UPDAT  UPDATES EXINDD WITH VALID ENTRY                       *
+     C*                                                               *
+     C*  CHECKS FOR RECORD UPDATED BY ANOTHER WORKSTATION. ON INSERT  *
+     C*  IF NO RECORD EXISTS INSERTS RECORD ON EXINDD. FOR INSERT OVER*
+     C*  DELETED RECORD AMENDMENTS OR DELETIONS RECORD IS UPDATED.    *
+     C*  UPDATES TRAILER FOR VALID RECORDS                            *
+     C*                                                               *
+     C*  CALLED FROM #B #C #D                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UPDAT     BEGSR                           UPDAT
+     C*
+     C**  ACCESS MNATN FOR NEXT AVAILABLE TRANSACTION NUMBER
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C**  CHAIN TO EXINDD FOR SECOND TIME
+     C*
+     C           DDMRIF    CHAINEXINDF               56
+     C*
+     C**  ON INSERT IF LIVE RECORD EXISTS - ERROR
+     C*
+     C           DDACTN    IFEQ 'I'
+     C*
+     C           *IN56     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C**  IF DELETED RECORD CHECK TRANS NO.
+     C*
+     C           *IN56     IFEQ '0'
+     C           RECI      ANDNE'D'
+     C           TNLU1     IFNE TNLU
+     C                     MOVE '1'       *IN33
+     C                     ELSE
+     C*
+     C**  IF DELETED RECORD CHECK HEADER AND INDEX NOT NOW LIVE
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE DDXINO    XINO
+     C                     MOVE DDEXHD    EXHD
+     C           @EXT      CHAINEXIND                58
+     C           *IN58     IFEQ '0'
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF NO ERROR UPDATE FILE
+     C*
+     C           *IN33     IFEQ '0'
+     C           *IN56     ANDEQ'0'
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVEAXNUM      @XX     3
+     C                     MOVE @XX       XINO
+     C                     MOVE DDEXHD    EXHD
+     C                     MOVE DDNARR    NARR
+     C                     Z-ADDNATN      TNLU
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'I'       CHTP
+     C*
+     C                     UPDATEXINDF
+     C*
+     C                     END
+     C*
+     C**  WRITE NEW RECORD IF NONE EXISTS
+     C*
+     C           *IN33     IFEQ '0'
+     C           *IN56     ANDEQ'1'
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVEAXNUM      @XX     3
+     C                     MOVE @XX       XINO
+     C                     MOVE DDMRIF    MRIF
+     C                     MOVE DDEXHD    EXHD
+     C                     MOVE DDNARR    NARR
+     C                     Z-ADDNATN      TNLU
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'I'       CHTP
+     C                     WRITEEXINDF
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  PROCESS AMENDMENT OF RECORD
+     C*
+     C           DDACTN    IFEQ 'A'
+     C*
+     C**  CHECK NOT UPDATED BY ANOTHER WORK STATION
+     C*
+     C           TNLU1     IFNE TNLU
+     C                     MOVE '1'       *IN33
+     C*
+     C                     ELSE
+     C                     MOVE 'D'       RECI
+     C                     MOVE DDNARR    NARR
+     C                     Z-ADDNATN      TNLU
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'A'       CHTP
+     C                     UPDATEXINDF
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  PROCESS DELETION OF RECORD
+     C*
+     C           DDACTN    IFEQ 'D'
+     C*
+     C**  CHECK NOT UPDATED BY ANOTHER WORK STATION
+     C*
+     C           TNLU1     IFNE TNLU
+     C                     MOVE '1'       *IN33
+     C*
+     C                     ELSE
+     C                     MOVE '*'       RECI
+     C                     MOVE DDNARR    NARR
+     C                     Z-ADDNATN      TNLU
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'D'       CHTP
+     C                     UPDATEXINDF
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  UPDATE TRAILER RECORD
+     C*
+     C           *IN33     IFEQ '0'
+     C           1         CHAINEXINDZF              30
+     C*
+     C**  IF NOT FOUND DATABASE ERROR - 02
+     C*
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'Z'
+     C           *LOCK     IN   LDA
+     C***********          MOVE 'SE3107'  DBPGM                           S01117
+     C                     MOVEL'DETAIL'  DBKEY
+     C***********          Z-ADD2         DBERR            ***************S01117
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *S01117
+     C                     MOVEL'EXINDZ'  DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR ERROR
+     C                     END
+     C*
+     C**  UPDATE FILE CONTROLS
+     C*
+     C           DDACTN    IFEQ 'I'
+     C                     ADD  1         NINS
+     C                     ADD  1         NORE
+     C                     ELSE
+     C           DDACTN    IFEQ 'D'
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  UPDATE FILE
+     C*
+     C                     UPDATEXINDZF
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***HELP*****************                                            S01199
+     C***SUB*ROUTINE*TO*CALL*HELP*PROGRAM*FOR*HELP*TEXT*****              S01199
+     C*
+     C***CALLED*FROM*SUBROUTINES*#B*#C*#D***********                      S01199
+     C*
+     C*****************************************************************
+     C*
+     C********** HELP      BEGSR                           ** HELP **     S01199
+     C**********           MOVEAERCD      HERCD 160                       S01199
+     C**********           MOVEL'SE3107'  HBPGM   6                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           ENDSR                                          S01199
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  ERROR   SR TO PROCESS ERRORS, DUMP & RETURN TO CALLER        *
+     C*                                                               *
+     C*  CALLED FROM ALL ERROR POINTS                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ERROR     BEGSR                           ERROR
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C***********          OUT  LDA                                       S01117
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  ZTNLU1  SUBROUTINE TO OBTAIN LAST TRANSACTION NUMBER         *
+     C*                                                               *
+     C*  ACCESSES LAST TRANSACTION NUMBER AND ADDS 1 TO IT            *
+     C*                                                               *
+     C*  CALLED FROM #A - INITIAL PROCESSING                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR                           ** ZTNLU1 **
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  INFSR  SUBROUTINE TO PROCESS FILE ERRORS ON PF/EXINDD        *
+     C*                                                               *
+     C*  CALLED WHEN ERROR OCCURS ON FILE                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR                           *INFSR*
+     C*
+     C**  SET UP DATA STRUCTURE WITH FILE INFORMATION
+     C*
+     C                     MOVE INFDS     EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR - SUBROUTINE TO PROCESS EXCEPTION ERRORS               *
+     C*                                                               *
+     C*  IF FILE ERROR CALLS SDC2500 IF OTHER ERROR CALLS SDC2505     *
+     C*                                                               *
+     C*  CALLED BY EXCEPTION ERROR OR FROM INFSR FILE ERROR HANDLING  *
+     C*                                                               *
+     C*  CALLS - CL PROG. SDC2505                                     *
+     C*        - CL PROG. SDC2500                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           *PSSR*
+     C*
+     C           EPSW      IFNE '1'
+     C                     MOVE '1'       EPSW    1
+     C*
+     C****IF*NOT*FILE*ERROR*CALL*SDC2505********************************* S01117
+     C***********                                                         S01117
+     C***********EPFLAG    IFNE 'F'                                       S01117
+     C***********                                                         S01117
+     C***********          CALL 'SDC2505'                                 S01117
+     C***********          PARM           EPPDS1                          S01117
+     C***********          PARM           EPPDS2                          S01117
+     C***********                                                         S01117
+     C***********          ELSE                                           S01117
+     C***********                                                         S01117
+     C****IF*FILE*ERROR*ON*EXINDD*CALL*SDC2500****************************S01117
+     C***********                                                         S01117
+     C***********          CALL 'SDC2500'                                 S01117
+     C***********          PARM           EPFDS1                          S01117
+     C***********          PARM           EPFDS2                          S01117
+     C***********          PARM           EPPP                            S01117
+     C***********          PARM           EPPPL                           S01117
+     C***********                                                         S01117
+     C***********          END                                            S01117
+     C                     ROLBK
+     C                     DUMP
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      * SPFCHK - Security Profile Facility check.                     *   S01117
+      *          Subroutine to check that the user is authorised to   *   S01117
+      *          the selected action.                                 *   S01117
+      *                                                               *   S01117
+      * Called by: #AB                                                *   S01117
+      *                                                               *   S01117
+      * Calls: None                                                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           SPFCHK    BEGSR                                          S01117
+      *                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+      *                                                                   S01117
+      ** If multibranching then check action code against dft branch      S01117
+      *                                                                   S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM DDACTN    @ZACTN  1                       S01117
+     C                     PARM DFTBRC    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+      *                                                                   S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         S                               S01117
+     C                     MOVE ' 304'    ERCD,S                          S01117
+     C                     MOVE '1'       *IN,43                          S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ELSE                                           S01117
+      *                                                                   S01117
+      ** If not multibranching then just check action code                S01117
+      *                                                                   S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM DDACTN    @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+      *                                                                   S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         S                               S01117
+     C                     MOVE ' 302'    ERCD,S                          S01117
+     C                     MOVE '1'       *IN43                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      ********************************************************************S01117
+     C/EJECT
+     0*
+     OEXINDF  E                EXIREL
+**  CPY@
+(c) Finastra International Limited 2001
+**  @HEAD -- HEADER CODES
+EFGHIL

@@ -1,0 +1,161 @@
+     C********************************************************************
+     C*                                                                  *
+     C*  ZCSCTP- SUBROUTINE TO CALCULATE CONTRACT PRICE FOR CLIENT       *
+     C*
+     C*  INPUT  - FROM TRADE FILE   NOML (11,0) NOMINAL
+     C*                             TCSR (15,0) CONSIDERATION
+     C*                             RALL (9,5)  REALLOWANCE
+     C*                             TCA1,TCA2,TCA3,TCA4,TCA5 +           *S01176
+     C*                             TCA6,TCA7 (13,0) CHARGES             *S01176
+     C*                             TBCA,TCCA (13,0) COMMISSIONS
+     C*                             TAXA (13,0) TAX                      *S01176
+     C*                             TNMD (1,0)  NOM.CCY DEC.PLACES
+     C*                             PRIC (15,8)  TRADE PRICE
+     C************FROM*TABTB36****-*COCP*(1)*COMMISSION*TO*BE*INCLUDED****S01117
+     C******************************CCAP*(1)*CHARGES*TO*BE*INCLUDED*******S01117
+     C******************************RCAP*(1)*REALLOWANCE*TO*BE*INCLUDED***S01117
+     C************FROM*TABTG10******CDP*(ZCDP)*(1,0)*NOM.CCY*DEC.PLS.*****S01117
+     C*           FROM SDSTRDPD   - BVCMCP (1) COMMISSION TO BE INCLUDED  S01117
+     C*                             BVCCAP (1) CHARGES TO BE INCLUDED     S01117
+     C*                             BVRCAP (1) REALLOWANCE TO BE INCLUDED S01117
+     C*           FROM CURRENCIES - ZCDP   (1,0) NOM.CCY DEC.PLS.         S01117
+     C*           FROM SDSECSPD   - BFCLAS (1) CLASSIFICATION.            S01117
+     C*           FROM SECTYD     - SPBS (1) PRICE BASIS
+     C*                             POWER8 ARRAY MUST BE INCLUDED IN
+     C*                             CALLING PROGRAM
+     C*
+     C*  OUTPUT - ZCONP  (15,8) CONTRACT PRICE FOR CLIENT
+     C*
+     C*  CALLS - ZPRCI ZCNSD
+     C**                                                                 *
+     C********************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. S01117             DATE 21JAN91                  *
+     C*  PREV AMEND NO. E21076             DATE 08FEB90                  *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  S01117 - SD new file changes (Release 10 multibranching).       *
+     C*  E21076 - SUBROUTINE FOR CLIENT CONTRACT PRICE                   *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZCSCTP    BEGSR                           **ZCSCTP BEGSR
+     C*
+     C* Define fields
+     C*
+     C                     Z-ADD0         ZCONP  158
+     C                     Z-ADD0         ZCPTOT 150
+     C                     Z-ADD0         ZWK158 158
+     C                     Z-ADD0         ZWK150 150
+     C                     Z-ADD0         ZNOML  150
+     C*
+     C***********C1DI      IFEQ 'S'                                       S01117
+     C***********C1DI      OREQ 'D'                                       S01117
+     C           BFCLAS    IFEQ 'S'                                       S01117
+     C           BFCLAS    OREQ 'D'                                       S01117
+     C*
+     C*    If nominal is zero - contract price is zero
+     C*
+     C           NOML      IFEQ 0
+     C                     Z-ADD0         ZCONP
+     C                     ELSE
+     C*
+     C                     Z-ADDNOML      ZNOML                           E20232
+     C*
+     C* Add consideration to contract price total
+     C*
+     C                     Z-ADDTCSR      ZCPTOT
+     C*
+     C* If commission is to be included -
+     C*    add the two commission amounts to the contract price total
+     C*
+     C***********COCP      IFEQ 'Y'                                       S01117
+     C           BVCMCP    IFEQ 'Y'                                       S01117
+     C                     ADD  TBCA      ZCPTOT
+     C                     ADD  TCCA      ZCPTOT
+     C                     END
+     C*
+     C* If charges are to be included -
+     C*    add the seven charge amounts to the contract price total       S01176
+     C*
+     C***********CCAP      IFEQ 'Y'                                       S01117
+     C           BVCCAP    IFEQ 'Y'                                       S01117
+     C                     ADD  TCA1      ZCPTOT
+     C                     ADD  TCA2      ZCPTOT
+     C                     ADD  TCA3      ZCPTOT
+     C                     ADD  TCA4      ZCPTOT                          S01176
+     C                     ADD  TCA5      ZCPTOT                          S01176
+     C                     ADD  TCA6      ZCPTOT                          S01176
+     C                     ADD  TCA7      ZCPTOT                          S01176
+     C                     ADD  TAXA      ZCPTOT                          S01176
+     C                     END
+     C*
+     C* FORMAT REALLOWANCE AMOUNT
+     C*
+     C***********RCAP      IFEQ 'Y'                                       S01117
+     C           BVRCAP    IFEQ 'Y'                                       S01117
+     C           RALL      ANDNE0
+     C                     Z-ADDRALL      ZPRCIN
+     C*
+     C           RALL      IFLT 0
+     C                     MULT -1        ZPRCIN
+     C                     END
+     C*
+     C                     Z-ADDTDVD      ZFDATE
+     C                     EXSR ZPRCI
+     C*
+     C* Calculate reallowance amount and add to contract price total
+     C*
+     C                     Z-ADDZPRCOT    ZPRC                            E20232
+     C                     EXSR ZCNSD                                     E20232
+     C                     Z-ADDZCONS     ZRALL  150                      E20232
+     C*
+     C           RALL      IFLT 0
+     C                     MULT -1        ZRALL
+     C                     END
+     C*
+     C                     ADD  ZRALL     ZCPTOT
+     C                     END
+     C*
+     C* Calculate the contract price -
+     C* If contract total *EQ Consideration, use price from Trade record
+     C* to avoid rounding errors.
+     C*
+     C           TCSR      IFEQ ZCPTOT
+     C                     Z-ADDPRIC      ZCONP
+     C                     ELSE
+     C*
+     C* Convert to ccy dec places
+     C*
+     C***********5         ADD  CDP       DC      10                E20149S01117
+     C           5         ADD  ZCDP      DC      10                      S01117
+     C                     SUB  TNMD      DC                              E20149
+     C           DC        IFLT 5                                         E20149
+     C           ZCPTOT    DIV  POWER8,DC ZCPTOT    H                     E20149
+     C                     END                                            E20149
+     C*                                                                   E20149
+     C* If price based .....
+     C*
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       ZCPTOT
+     C                     END
+     C*
+     C           ZCPTOT    DIV  ZNOML     ZCONP     H
+     C           DC        IFGE 5                                         E20149
+     C           ZCONP     DIV  POWER8,DC ZCONP     H                     E20149
+     C                     END                                            E20149
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR                           *** ENDSR    ***
+     C*****************************************************************

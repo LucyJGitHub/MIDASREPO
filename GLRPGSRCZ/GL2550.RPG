@@ -1,0 +1,1142 @@
+     H        1
+     F*****************************************************************
+/*XBIA*  OVRDBF FILE(GLAPSGL0) TOFILE(GLAPSGAL0)                      *                       CRE008
+/*XBIB*  OVRDBF FILE(GLAPSZL0) TOFILE(GLAPSZSL0)                      *                       CRE008
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Postings Drop')                       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - General Ledger Module                                *
+     F*                                                               *
+     F*  GL2550 - Account Postings Archive to Historic Posting File   *
+     F*                                                               *
+     F*  Function:  This program identifies the postings and rate     *
+     F*             changes on APOSTPD and APOSTRA which have         *
+     F*             appeared on a statement and are not required      *
+     F*             for a Retail Activity Report. These are written   *
+     F*             to GLACPHPD and purged from APOST.                *
+     F*                                                               *
+     F*  Called By: GLC4451                                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD036257           Date 12Nov15               *
+      *                 CGL001             Date 06Aug12               *
+      *                 259541             Date 22Jan13               *
+      *                 AR1073026          Date 20Dec12               *
+      *                 CGL127             Date 06Aug12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 CER030             Date 09Jul08               *
+      *                 BUG27914           Date 09Jul10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP203             Date 05Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 194300             Date 06Jun06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRE008             Date 03Apr02               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                 178251             DATE 26Apr00               *
+     F*                 121966             DATE 10Feb00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU013             Date 06Apr98               *
+      *                 095817             Date 08Nov95               *
+     F*                 114060             DATE 20FEB97               *
+     F*                 S01408             DATE 29AUG96               *
+     F*                 CRT001             DATE 29AUG96               *
+     F*                 057596 *REWRITE    Date 29AUG96               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD036257 - Very long run of GLC2550 before first NWD of a    *
+      *             month. Purge postings for current month (194300)  *
+      *             if system value 'PreservMonthsPosts' is N.        *
+      *  CGL001 - Introduction of New statement frequency 'N' (NEVER) *
+      *           Incorporate 259541                                  *
+      *  259541 - RZB feature on Drop postings for Z statement        *
+      *           frequency as if they have been printed in a stmt    *
+      *           already based on system value 'DropZStmtPosting'    *
+      *  AR1073026 - REIACD Database error                            *
+      *  CGL127 - COB Restructure - GL COB Optimisation Phase 1       *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  BUG27914 - RAME Design Changes                               *
+      *  CAP203 - Teller Related APIs - Account Movements             *
+      *  194300 - Do not drop postings for the current month as these *
+      *           are needed for Midas exports.                       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CRE008 - Cash Management                                     *
+     F*           When a posting is dropped, drop the corresponding   *
+     F*           record on the appropriate extension file.           *
+     F*  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+     F*           Information (Recompile)                             *
+     F*  178251 - Postings on the date the account closed are not     *
+     F*           dropped from APOSTPD to GLACPHPD until the a/c      *
+     F*           is dropped. Internal error.                         *
+     F*  121966 - When the account is missing from ACCNTAB, move the  *
+     F*           fields saved from APOSTPD before the access object  *
+     F*           AOACCTR0 is called back to APOSTPD otherwise the    *
+     F*           information would be modified and the written       *
+     F*           record to GLACPHPD would be corrupted .             *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*   CEU013  -  EMU Account Postings Narrative.                  *
+     F*              For each record deleted from APOST, matching     *
+     F*              record deleted from GLAPSTPD.                    *
+     F*   095817  -  Profit centre is missing for first posting       *
+     F*              of each account written to GLACPHPD.             *
+     F*              Fix taken from pre-rewritten version of pgm.     *
+     F*   114060 - Error in incorporation of CRT001, causing postings *
+     F*            for passbook accounts to be dropped too soon -     *
+     F*            condition check on Retail Teller postings on *IN10 *
+     F*            being on, not off.                                 *
+     F*          - Check ATYP/STYP on Account Master file rather than *
+     F*            on APOSTPD, as the account type/subtype may be set *
+     F*            up incorrectly on the posting file and may cause   *
+     F*            postings to be dropped before being recorded on    *
+     F*            the passbook. If Account Master record not found,  *
+     F*            drop the posting record anyway.                    *
+     F*   S01408 - Core hook GL2550CCP5 added.                        *
+     F*            Core hook GL2550CCP4 added.                        *
+     F*            Core hook GL2550CCP1 added.                        *
+     F*            Core hook GL2550CCP2 added.                        *
+     F*            Core hook GL2550CCP3 added.                        *
+     F*            Core hook GL2550FFP1 added.                        *
+     F*            Core hook GL2550FFP2 added.                        *
+     F*            Core hook GL2550FFPG added.                        *
+     F*            Core hook GL2550IIPG added.                        *
+     F*            Core hook GL2550CCPG added.                        *
+     F*            Core hook GL2550CADU added.                        *
+     F*            Core hook GL2550CBDU added.                        *
+     F*            Core hook GL2550OOP1 added.                        *
+     F*     Note - these hooks have been re-instated is the same      *
+     F*            functional position as before but, due to the      *
+     F*            program rewrite, the code within these hooks may   *
+     F*            need to be amneded for some clients.               *
+     F*   CRT001 - Retail Teller System                               *
+     F*     Note - This change was re-inserted into the re-written    *
+     F*            version of the program. The original code has had  *
+     F*            to be modified due to the rewrite.                 *
+     F*   057596 - GL2550 rewritten to speed up account postings      *
+     F*            archive. The main changes are:                     *
+     F*            1) Update APOST in situ                            *
+     F*            2) Remove hash total processing  os this is not    *
+     F*               used anywhere in the system                     *
+     F*            3) Use commitment control for recovery             *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F/COPY WNCPYSRC,GL2550F001
+     FAPOST   UF  E           K        DISK
+     F                                              KINFSR APOSR
+     F                                              KCOMIT
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,GL2550FFP1                                           S01408
+     F*                                                                   S01408
+     FREIAC   IF  E           K        DISK                               CRT001
+     F** Retail Interest and Charges File                                 CRT001
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,GL2550FFP2                                           S01408
+     F*                                                                   S01408
+     FGLACPHPDO   E                    DISK                      A
+     F                                              KINFSR GLASR
+     F            APOSTPDF                          KRENAMEGLACPHF
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,GL2550FFPG                                           S01408
+     F*                                                                   S01408
+     FGLAPSTPDUF  E           K        DISK                               CEU013
+     F                                              KINFSR GLAPS          CEU013
+     F                                              KCOMIT                CEU013
+     F*                                                                   CEU013
+     FGLAPSGL0UF  E           K        DISK                                                   CRE008
+     F                                              KINFSR GLAPG                              CRE008
+     F                                              KCOMIT                                    CRE008
+     F*                                                                                       CRE008
+     FGLAPSZL0UF  E           K        DISK                                                   CRE008
+     F                                              KINFSR GLAPZ                              CRE008
+     F                                              KCOMIT                                    CRE008
+     F*                                                                                       CRE008
+     FGL2550AUO   E                    PRINTER
+      /SPACE 3
+     E*                                                                   194300
+     E/COPY ZSRSRC,ZDATE2Z1                                               194300
+     E*
+     E                    CPY@    1   1 80
+     E*
+      /SPACE 3
+     IAPOSTPDF    10
+     I*
+     IAPOSTRAF    11
+     I/COPY WNCPYSRC,GL2550I002
+     I*
+     I***ACKEYA*     DS                       1  18                                    S01117 CGL029
+     IACKEYA      DS                          1  24                                           CGL029
+     I**********                              1   60SCNUM                                     CSD027
+     I                                        1   6 SCNUM                                     CSD027
+     I                                        7   9 SCCY
+     I**********                             10  130SACOD                                     CGL029
+     I**********                             14  150SACSQ                                     CGL029
+     I**********                             16  18 SBRCA                              S01117 CGL029
+     I                                       10  190SACOD                                     CGL029
+     I                                       20  210SACSQ                                     CGL029
+     I                                       22  24 SBRCA                                     CGL029
+      *                                                                   194300
+     IDAYTXT      DS                          1   6                       194300
+     I                                        1   2 DATP2                 194300
+     I                                        3   4 DATP4                 194300
+     I                                        5   6 DATP6                 194300
+      *                                                                   194300
+     I/COPY WNCPYSRC,GL2550I001
+     ISDBANK    E DSSDBANKPD
+      ** Data structure for AOBANKR0.
+      *
+     ISDGELR    E DSSDGELRPD
+      ** Data structure for AOGELRR0
+      *
+     ISDACCT    E DSACCNTAB
+      ***Data*structure*for*AOGELRR0***********************************   095817
+      ** Data structure for AOACCTR0                                      095817
+     I              PRFC                            PRFCA                 095817
+      **********                                                                     CAP203 BUG27914
+     I***WGLAC**   E DSGLACPHPD                                                      CAP203 BUG27914
+      **GLACPHPD*data*structure                                                      CAP203 BUG27914
+     I**********    RECI                            XRECI                            CAP203 BUG27914
+     I**********    CNUM                            XCNUM                            CAP203 BUG27914
+     I**********    CCY                             XCCY                             CAP203 BUG27914
+     I**********    ACODQQ                          XACODQ                           CAP203 BUG27914
+     I**********    ACSQ                            XACSQ                            CAP203 BUG27914
+     I**********    ACNO                            XACNO                            CAP203 BUG27914
+     I**********    BRCA                            XBRCA                            CAP203 BUG27914
+     I**********    RRNM                            XRRNM                            CAP203 BUG27914
+     I**********    ATYP                            XATYP                            CAP203 BUG27914
+     I**********    ZZ002                           XZZ002                           CAP203 BUG27914
+     I**********    STYP                            XSTYP                            CAP203 BUG27914
+     I**********    ACOD                            XACOD                            CAP203 BUG27914
+      *
+     ISCSARD    E DSSCSARDPD                                              CRT001
+     I** External data structure for SAR details                          CRT001
+     I              LCD                             LCDX                  S01194
+     I              TYLC                            TYLCX                 S01194
+     I*                                                                   CRT001
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSSDY     E DSDSSDY
+     I* FIRST DS FOR ACCESS PROGRAMS, FULL DATA STRUCTURE
+      *
+     ILDA         DS                            256
+      ** Local data area.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   194300
+     IRUNDAT    E DSRUNDAT                                                194300
+      ** Data Area giving Installation Control Details                    194300
+     I*
+     I/COPY WNCPYSRC,GL2550IIPG                                           S01408
+     I*                                                                   S01408
+     I              'DropZStmtPosting'    C         SVAL                                      259541
+     I              'PreservMonthsPosts'  C         SVAL2                                   MD036257
+      *                                                                                       CGL001
+      ** New system value constant.                                                           CGL001
+      *                                                                                       CGL001
+     I              'DropNStmtPosting'    C         NEWSVL                                    CGL001
+      /EJECT
+      *                                                               *
+      *             FUNCTION OF INDICATORS                            *
+      *                                                               *
+      *  01         End of file for LF/APOST.                         *
+      *  10         APOSTPDF Format read.                             *
+      *  11         GLACPHF Format read.                              *
+      *  12         Multiple Dump prevention indicator.               *
+      *  13         CHAIN fail indicator PF/APOSTX1                   *   CEU013
+      *  14         CHAIN fail indicator LF/REIAC                     *   CRT001
+      *  15         Posting has not been printed on Passbook          *   CRT001
+      *  16         CHAIN fail indicator LF/GLAPSGL0                  *                       CRE008
+      *  17         CHAIN fail indicator LF/GLAPSZL0                  *                       CRE008
+      *  U7         Along with U8, file out of balance.               *
+      *  U8         File out of balance.                              *
+      *  LR         Last record indicator.                            *
+      *                                                               *
+      *---------------------------------------------------------------*
+      /SPACE 3
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Initial process - defines local data area , outputs report  *
+      *                     heading and determines default control    *
+      *                     date.                                     *
+      *                                                               *
+      *   Calls programs    : AOBANKR0                                *
+      *                       AOGELRR0                                *
+      *                       AOSARDR0                                *
+      *                                                               *
+      *   Calls subroutines : ERROR                                   *
+      *                                                               *
+      *---------------------------------------------------------------*
+     C                     MOVEACPY@      BIS@   80
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL2550CCPG                                           S01408
+     C*                                                                   S01408
+      *
+      **  Define local data area.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'GL2550  'DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+     C           ACCKEY    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA                            S01117
+      *                                                                   CEU013
+     C           EXTKEY    KLIST                                          CEU013
+     C                     KFLD           XRFI                            CEU013
+     C                     KFLD           XRFN                            CEU013
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL2550CCP4                                           S01408
+     C*                                                                   S01408
+      **  Access run date and report title.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTNC  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Write report heading.
+      *
+     C                     WRITEHEADING
+      *
+     C           P@RTNC    IFNE *BLANKS
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD01        DBASE            * DB error 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR ERROR
+      *
+     C                     END
+      *
+      **  Access a/c postings retention period.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG    'P@RTNC
+     C                     PARM '*FIRST'  P@OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           P@RTNC    IFNE *BLANKS
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     Z-ADD02        DBASE            * DB error 02 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR ERROR
+      *
+     C                     END
+     C*                                                                   CRT001
+     C** Access SAR details file to determine if CRT001 is switched ON    CRT001
+     C*                                                                   CRT001
+     C                     CALL 'AOSARDR0'                                CRT001
+     C                     PARM *BLANKS   @RTCD   7                       CRT001
+     C                     PARM '*VERIFY' @OPTN   7                       CRT001
+     C                     PARM 'CRT001'  @SARD   6                       CRT001
+     C           SCSARD    PARM SCSARD    DSFDY                           CRT001
+     C*                                                                   CRT001
+     C           @RTCD     IFNE *BLANKS                                   CRT001
+     C           @RTCD     ANDNE'*NRF   '                                 CRT001
+     C           *LOCK     IN   LDA                                       CRT001
+     C                     Z-ADD06        DBASE                           CRT001
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CRT001
+     C                     MOVEL'CRT001'  DBKEY            DBASE ERROR 06 CRT001
+     C                     OUT  LDA                        ***************CRT001
+     C                     EXSR ERROR                                     CRT001
+     C                     END                                            CRT001
+     C*                                                                   CRT001
+     C           @RTCD     IFEQ *BLANK                                    CRT001
+     C                     MOVEL'Y'       CRT001  1                       CRT001
+     C                     ELSE                                           CRT001
+     C                     MOVEL'N'       CRT001                          CRT001
+     C                     END                                            CRT001
+     C*                                                                   CEU013
+     C/COPY WNCPYSRC,GL2550C002
+     C** Access SAR details file to determine if CEU013 is switched ON    CEU013
+     C*                                                                   CEU013
+     C                     CALL 'AOSARDR0'                                CEU013
+     C                     PARM *BLANKS   @RTCD   7                       CEU013
+     C                     PARM '*VERIFY' @OPTN   7                       CEU013
+     C                     PARM 'CEU013'  @SARD   6                       CEU013
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU013
+     C*                                                                   CEU013
+     C           @RTCD     IFNE *BLANKS                                   CEU013
+     C           @RTCD     ANDNE'*NRF   '                                 CEU013
+     C           *LOCK     IN   LDA                                       CEU013
+     C                     Z-ADD08        DBASE                           CEU013
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CEU013
+     C                     MOVEL'CEU013'  DBKEY            DBASE ERROR 08 CEU013
+     C                     OUT  LDA                        ***************CEU013
+     C                     EXSR ERROR                                     CEU013
+     C                     END                                            CEU013
+     C*                                                                   CEU013
+     C           @RTCD     IFEQ *BLANK                                    CEU013
+     C                     MOVEL'Y'       CEU013  1                       CEU013
+     C                     ELSE                                           CEU013
+     C                     MOVEL'N'       CEU013                          CEU013
+     C                     END                                            CEU013
+     C*                                                                                       CRE008
+     C** Access SAR details file to determine if CRE008 is switched ON                        CRE008
+     C*                                                                                       CRE008
+     C                     CALL 'AOSARDR0'                                                    CRE008
+     C                     PARM *BLANKS   @RTCD                                               CRE008
+     C                     PARM '*VERIFY' @OPTN                                               CRE008
+     C                     PARM 'CRE008'  @SARD                                               CRE008
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE008
+     C*                                                                                       CRE008
+     C           @RTCD     IFNE *BLANKS                                                       CRE008
+     C           @RTCD     ANDNE'*NRF   '                                                     CRE008
+     C           *LOCK     IN   LDA                                                           CRE008
+     C                     Z-ADD09        DBASE                                               CRE008
+     C                     MOVEL'SCSARDPD'DBFILE           ***************                    CRE008
+     C                     MOVEL'CRE008'  DBKEY            DBASE ERROR 09                     CRE008
+     C                     OUT  LDA                        ***************                    CRE008
+     C                     EXSR ERROR                                                         CRE008
+     C                     END                                                                CRE008
+     C*                                                                                       CRE008
+     C           @RTCD     IFEQ *BLANK                                                        CRE008
+     C                     MOVEL'Y'       CRE008  1                                           CRE008
+     C                     ELSE                                                               CRE008
+     C                     MOVEL'N'       CRE008                                              CRE008
+     C                     END                                                                CRE008
+      *                                                                   194300
+     C** Access SAR details file to determine if CMX001 is switched ON    194300
+     C*                                                                   194300
+     C                     CALL 'AOSARDR0'                                194300
+     C                     PARM *BLANKS   @RTCD   7                       194300
+     C                     PARM '*VERIFY' @OPTN   7                       194300
+     C                     PARM 'CMX001'  @SARD   6                       194300
+     C           SCSARD    PARM SCSARD    DSFDY                           194300
+     C*                                                                   194300
+     C           @RTCD     IFNE *BLANKS                                   194300
+     C           @RTCD     ANDNE'*NRF   '                                 194300
+     C           *LOCK     IN   LDA                                       194300
+     C                     Z-ADD78        DBASE                           194300
+     C                     MOVEL'SCSARDPD'DBFILE           ***************194300
+     C                     MOVEL'Cmx001'  DBKEY            DBASE ERROR 78 194300
+     C                     OUT  LDA                        ***************194300
+     C                     EXSR ERROR                                     194300
+     C                     END                                            194300
+     C*                                                                   194300
+     C           @RTCD     IFEQ *BLANK                                    194300
+     C                     MOVEL'Y'       CMX001  1                       194300
+     C                     ELSE                                           194300
+     C                     MOVEL'N'       CMX001                          194300
+     C                     END                                            194300
+     C           CMX001    IFEQ 'Y'                                       194300
+     C           BJDFIN    IFEQ 'M'                                       194300
+     C                     SETON                         98               194300
+     C                     ELSE                                           194300
+     C                     SETOF                         98               194300
+     C                     ENDIF                                          194300
+      *                                                                   194300
+      ** Read in Installation Data                                        194300
+     C           *NAMVAR   DEFN           RUNDAT                          194300
+     C                     IN   RUNDAT                                    194300
+     C                     Z-ADDBJRDNB    ZDAYNO                          194300
+     C                     EXSR ZDATE2                                    194300
+     C                     MOVE ZDATE     DAYTXT                          194300
+     C           *IN98     IFEQ *OFF                                      194300
+     C                     MOVEL'01'      DATP2                           194300
+     C                     ELSE                                           194300
+     C                     MOVEL'01'      DATP4                           194300
+     C                     ENDIF                                          194300
+     C                     MOVE DAYTXT    ZDATE                           194300
+     C                     EXSR ZDATE1                                    194300
+     C                     Z-ADDZDAYNO    SOMDAY  60                      194300
+     C                     ENDIF                                          194300
+      *                                                                                       259541
+     C                     CALL 'AOSVALR0'                                                    259541
+     C                     PARM *BLANKS   PRTCDE  7                                           259541
+     C                     PARM SVAL      PSV01  20                                           259541
+     C                     PARM           PCS01 200                                           259541
+     C                     PARM NEWSVL    PSV02  20                                    259541 CGL001
+     C                     PARM           PCS02 200                                           259541
+     C**********           PARM           PSV03  20                                  259541 MD036257
+     C                     PARM SVAL2     PSV03  20                                         MD036257
+     C                     PARM           PCS03 200                                           259541
+     C                     PARM           PSV04  20                                           259541
+     C                     PARM           PCS04 200                                           259541
+     C                     PARM           PSV05  20                                           259541
+     C                     PARM           PCS05 200                                           259541
+     C                     PARM           PSV06  20                                           259541
+     C                     PARM           PCS06 200                                           259541
+     C                     PARM           PSV07  20                                           259541
+     C                     PARM           PCS07 200                                           259541
+     C                     PARM           PSV08  20                                           259541
+     C                     PARM           PCS08 200                                           259541
+     C                     PARM           PSV09  20                                           259541
+     C                     PARM           PCS09 200                                           259541
+     C                     PARM           PSV10  20                                           259541
+     C                     PARM           PCS10 200                                           259541
+      *                                                                                       259541
+     C           PRTCDE    IFEQ *BLANKS                                                       259541
+     C                     MOVELPCS01     DROPZ   1                                           259541
+     C                     ELSE                                                               259541
+      *                    MOVE 'N'       DROPZ                                               259541
+     C                     ENDIF                                                              259541
+      **********                                                                     CAP203 BUG27914
+      ***Access*SAR*details*file*to*determine*if*CAP203*is*switched*ON               CAP203 BUG27914
+      **********                                                                     CAP203 BUG27914
+     C**********           CALL 'AOSARDR0'                                           CAP203 BUG27914
+     C**********           PARM *BLANKS   @RTCD                                      CAP203 BUG27914
+     C**********           PARM '*VERIFY' @OPTN                                      CAP203 BUG27914
+     C**********           PARM 'CAP203'  @SARD                                      CAP203 BUG27914
+     C********** SCSARD    PARM SCSARD    DSFDY                                      CAP203 BUG27914
+      **********                                                                     CAP203 BUG27914
+     C********** @RTCD     IFNE *BLANKS                                              CAP203 BUG27914
+     C********** @RTCD     ANDNE'*NRF   '                                            CAP203 BUG27914
+     C********** *LOCK     IN   LDA                                                  CAP203 BUG27914
+     C**********           Z-ADD12        DBASE                                      CAP203 BUG27914
+     C**********           MOVEL'SCSARDPD'DBFILE           ***************           CAP203 BUG27914
+     C**********           MOVEL'CAP203'  DBKEY            DBASE ERROR 12            CAP203 BUG27914
+     C**********           OUT  LDA                        ***************           CAP203 BUG27914
+     C**********           EXSR ERROR                                                CAP203 BUG27914
+     C**********           END                                                       CAP203 BUG27914
+     C**********                                                                     CAP203 BUG27914
+     C********** @RTCD     IFEQ *BLANK                                               CAP203 BUG27914
+     C**********           MOVEL'Y'       CAP203  1                                  CAP203 BUG27914
+     C**********           ELSE                                                      CAP203 BUG27914
+     C**********           MOVEL'N'       CAP203                                     CAP203 BUG27914
+     C**********           END                                                       CAP203 BUG27914
+     C/COPY WNCPYSRC,GLH00716
+      *
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Main process -  reads through the a/c postings history file *
+      *                   and deletes relevent records.               *
+      *                                                               *
+      *   Calls subroutine  : LVLBRK                                  *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN11
+     C                     READ APOST                    01
+      *
+      **  Execute level break subroutine for the first posting record.
+      *
+     C           *IN01     IFEQ '0'
+     C                     EXSR LVLBRK
+     C                     END
+      *
+     C           *IN01     DOWEQ'0'
+      *
+      **  Check for level break.
+      *
+     C           BRCA      IFNE SBRCA
+     C           CNUM      ORNE SCNUM
+     C           CCY       ORNE SCCY
+     C           ACOD      ORNE SACOD
+     C           ACSQ      ORNE SACSQ
+     C                     EXSR LVLBRK
+     C                     END
+      *
+      **  Count POSTING records read
+      *
+     C           *IN10     IFEQ '1'
+     C                     ADD  1         PINC
+     C                     END
+      *
+     C**  Count RATE CHANGE records read
+     C*
+     C           *IN11     IFEQ '1'
+     C                     ADD  1         RINC
+     C                     END
+      *
+      **  Only delete record if it has appeared on a statement.
+      *
+     C           PSTD      IFLT LSTD
+     C           VALD      ANDLTLSTD
+     C           STFQ      OREQ 'Z'                                                           259541
+     C           DROPZ     ANDEQ'Y'                                                           259541
+     C           PSTD      ANDLTBJRDNB                                                        259541
+     C           STFQ      OREQ 'N'                                                           CGL001
+     C           PCS02     ANDEQ'Y'                                                           CGL001
+     C           PSTD      ANDLTBJRDNB                                                        CGL001
+      *                                                                                       CGL001
+     C/COPY WNCPYSRC,GL2550C003
+     C                     MOVE 'Y'       ACHV    1
+     C                     ELSE
+     C                     MOVE 'N'       ACHV    1
+     C                     END
+      *                                                                   178251
+      **  If posting was on the last statement date, and the last         178251
+      **  statement date wasn't the a/c opening date, or the a/c          178251
+      **  has already closed then the posting should be archived.         178251
+      *                                                                   178251
+     C           PSTD      IFEQ LSTD                                      178251
+     C           VALD      ANDLELSTD                                      178251
+     C           LSTD      ANDNEDACO                                      178251
+     C           ACRECI    OREQ 'C'                                       178251
+     C                     MOVE 'Y'       ACHV                            178251
+     C                     END                                            178251
+      *                                                                   178251
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL2550CCP1                                           S01408
+     C*                                                                   S01408
+     C**  If the account has not been dropped from the system, check if   114060
+     C**  the posting is required for passbook processing or Retail       114060
+     C**  Activity reports.                                               114060
+     C*                                                                   114060
+     C           ACCDET    IFEQ 'Y'                                       114060
+     C*                                                                   114060
+     C** If Retail Teller System is present, and the record was read      CRT001
+     C** from APOSTPD, and it is a savings retail account, check if       CRT001
+     C** passbook is used on this account and see if it has been          CRT001
+     C** printed in passbook.                                             CRT001
+     C*                                                                   CRT001
+     C           ACHV      IFEQ 'Y'                                       CRT001
+     C           CRT001    ANDEQ'Y'                                       CRT001
+     C           ATYPAC    ANDEQ'R'                                       114060
+     C           STYPAC    ANDEQ'S'                                       114060
+     C           *IN10     ANDEQ'1'                                       114060
+     C***********ATYP      ANDEQ'R'                                 CRT001114060
+     C***********STYP      ANDEQ'S'                                 CRT001114060
+     C************IN10     ANDEQ'0'                                 CRT001114060
+     C*                                                                   CRT001
+     C********** ACCKEY    CHAINREIAC                14                                CRT001 CGL127
+      **********                                                                       CRT001 CGL127
+     C********** *IN14     IFEQ '1'                                                    CRT001 CGL127
+     C********** *LOCK     IN   LDA                                                    CRT001 CGL127
+     C**********           MOVEL'REIACD  'DBFILE           ***************             CRT001 CGL127
+     C**********           MOVELACKEYA    DBKEY            DBASE ERROR 05              CRT001 CGL127
+     C**********           Z-ADD05        DBASE            ***************             CRT001 CGL127
+     C**********           OUT  LDA                                                    CRT001 CGL127
+     C**********           EXSR ERROR                                                  CRT001 CGL127
+     C**********           ELSE                                                        CRT001 CGL127
+     C           PBKU      IFEQ 'Y'                                       CRT001
+     C                     TESTB'3'       PRIN       15                   CRT001
+     C           *IN15     IFEQ '1'                                       CRT001
+     C                     MOVE 'N'       ACHV                            CRT001
+     C                     END                                            CRT001
+     C                     END                                            CRT001
+     C**********           END                                                         CRT001 CGL127
+     C                     END                                            CRT001
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL2550CBDU                                           S01408
+     C*                                                                   S01408
+      *
+     C*  If it has appeared on a Statement check if it is needed
+     C*  for the RETAIL Activity Report.
+      *
+     C           ACHV      IFEQ 'Y'
+     C           ATYP      ANDEQ'R'
+     C           PSTD      IFGT BKELAP
+     C           VALD      ORGT BKELAP
+     C                     MOVE 'N'       ACHV
+     C                     END
+     C                     END
+      *
+     C                     END                                            114060
+      *                                                                   114060
+      * Do not drop if posting was generated in current month as it       194300
+      * is needed by Midas Export.                                        194300
+      * AND system value 'PreservMonthsPosts' is Y                                          MD036257
+     C           PCS03     IFEQ 'Y'                                                         MD036257
+     C           CMX001    IFEQ 'Y'                                       194300
+     C           PSTD      ANDGESOMDAY                                    194300
+     C                     MOVE 'N'       ACHV                            194300
+     C                     END                                            194300
+     C                     ENDIF                                                            MD036257
+      *                                                                   194300
+     C*  Archive this record if it is eligible
+     C           ACHV      IFEQ 'Y'
+     C                     EXSR DROP
+     C/COPY WNCPYSRC,GL2550C004
+     C                     END
+      *
+      **  Read ahead.
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN11
+     C                     READ APOST                    01
+      *
+     C                     END
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Final process - writes detail and end format of audit       *
+      *                   report.                                     *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+      *  Commit any uncommitted updates
+      *
+     C/COPY WNCPYSRC,GL2550C005
+     C                     COMIT
+      *
+     C                     WRITEDETAIL
+     C                     WRITEENDRPT
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL2550CCP5                                           S01408
+     C*                                                                   S01408
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *---------------------------------------------------------------*
+      *   Index to subroutines.                                       *
+      *                                                               *
+      *   LVLBRK - access last statement date.                        *
+      *   DROP   - Archive posting to GLACPHPD                        *
+      *   ERROR  - processing for data base errors.                   *
+      *   APOSR  - file exception/error subroutine.                   *
+      *   GLASR  - file exception/error subroutine.                   *
+      *   APOSR  - file exception/error subroutine.                   *
+      *   GLAPG  - file exception/error subroutine.                   *                       CRE008
+      *   GLAPZ  - file exception/error subroutine.                   *                       CRE008
+      *   *PSSR  - program exception/error subroutine.                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   LVLBRK subroutine - on the change of account, this          *
+      *                       subroutine will access the last         *
+      *                       statement date. If no valid record      *
+      *                       exists a 99999 Last statement date      *
+      *                       is used.                                *
+      *                                                               *
+      *   Called by main process.                                     *
+      *                                                               *
+      *   Calls program     : AOACCTR0                                *
+      *                                                               *
+      *   Input  - account number: CNUM/CCY/ACOD/ACSQ/BRCA            *
+      *   Output - Last Stmt Date: LSTD                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           LVLBRK    BEGSR
+      *
+     F/COPY WNCPYSRC,GL2550CCP2                                           S01408
+     C                     MOVE ACNO      P@ACNO 10
+     C                     MOVE CNUM      P@CNUM  6
+     C                     MOVE CCY       P@CCY   3
+     C**********           MOVE ACOD      P@ACOD  4                                           CGL029
+     C                     MOVE ACOD      P@ACOD 10                                           CGL029
+     C                     MOVE ACSQ      P@ACSQ  2
+     C                     MOVE BRCA      P@BRCA  3
+     C                     MOVE CNUM      SCNUM
+     C                     MOVE CCY       SCCY
+     C                     MOVE ACOD      SACOD
+     C                     MOVE ACSQ      SACSQ
+     C                     MOVE BRCA      SBRCA
+     C                     MOVE RECI      SRECI   1                       121966
+     C                     MOVE ACNO      SACNO  100                      121966
+     C                     MOVE RRNM      SRRNM   30                      121966
+     C                     MOVE ATYP      SATYP   1                       121966
+     C                     MOVE ZZ002     SZZ002  2                       121966
+     C                     MOVE PRFC      SPRFC   4                       121966
+     C                     MOVE STYP      SSTYP   1                       121966
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   P@RTNC
+     C                     PARM '*KEY'    P@OPTN
+     C                     PARM *BLANKS   P@ACNO 10
+     C                     PARM           P@CNUM  6
+     C                     PARM           P@CCY   3
+     C**********           PARM           P@ACOD  4                                           CGL029
+     C                     PARM           P@ACOD                                              CGL029
+     C                     PARM           P@ACSQ  2
+     C                     PARM           P@BRCA  3
+     C           SDACCT    PARM SDACCT    DSSDY
+     F/COPY WNCPYSRC,GL2550CCP3                                           S01408
+      *
+     C           P@RTNC    IFNE *BLANKS
+     C                     MOVE ' '       ACRECI  1                       178251
+     C                     Z-ADD99999     LSTD
+     C                     MOVE SCNUM     CNUM                            121966
+     C                     MOVE SCCY      CCY                             121966
+     C                     MOVE SACOD     ACOD                            121966
+     C                     MOVE SACSQ     ACSQ                            121966
+     C                     MOVE SBRCA     BRCA                            121966
+     C                     MOVE SRECI     RECI                            121966
+     C                     MOVE SACNO     ACNO                            121966
+     C                     MOVE SRRNM     RRNM                            121966
+     C                     MOVE SATYP     ATYP                            121966
+     C                     MOVE SZZ002    ZZ002                           121966
+     C                     MOVE SPRFC     PRFC                            121966
+     C                     MOVE SSTYP     STYP                            121966
+     C                     MOVE 'N'       ACCDET  1                       114060
+     C                     MOVE 'N'       PBKU                                                CGL127
+      *                                                                                       CGL127
+     C********** CRT001    IFEQ 'Y'                                                 CGL127 AR1073026
+     C********** ATYPAC    ANDEQ'R'                                                 CGL127 AR1073026
+     C********** STYPAC    ANDEQ'S'                                                 CGL127 AR1073026
+     C********** *IN10     ANDEQ'1'                                                 CGL127 AR1073026
+      *                                                                                       CGL127
+     C********** ACCKEY    CHAINREIAC                14                             CGL127 AR1073026
+      *                                                                                       CGL127
+     C********** *IN14     IFEQ '1'                                                 CGL127 AR1073026
+     C********** *LOCK     IN   LDA                                                 CGL127 AR1073026
+     C**********           MOVEL'REIACD  'DBFILE                                    CGL127 AR1073026
+     C**********           MOVELACKEYA    DBKEY                                     CGL127 AR1073026
+     C**********           Z-ADD05        DBASE                                     CGL127 AR1073026
+     C**********           OUT  LDA                                                 CGL127 AR1073026
+     C**********           EXSR ERROR                                               CGL127 AR1073026
+     C**********           END                                                      CGL127 AR1073026
+     C**********           END                                                      CGL127 AR1073026
+      *                                                                                       CGL127
+     C                     ELSE                                           114060
+     C                     MOVE 'Y'       ACCDET  1                       114060
+     C                     MOVE ATYP      ATYPAC  1                       114060
+     C                     MOVE STYP      STYPAC  1                       114060
+     C                     MOVE RECI      ACRECI                          178251
+      *                                                                                    AR1073026
+     C           CRT001    IFEQ 'Y'                                                        AR1073026
+     C           ATYPAC    ANDEQ'R'                                                        AR1073026
+     C           STYPAC    ANDEQ'S'                                                        AR1073026
+     C           *IN10     ANDEQ'1'                                                        AR1073026
+      *                                                                                    AR1073026
+     C           ACCKEY    CHAINREIAC                14                                    AR1073026
+      *                                                                                    AR1073026
+     C           *IN14     IFEQ '1'                                                        AR1073026
+     C           *LOCK     IN   LDA                                                        AR1073026
+     C                     MOVEL'REIACD  'DBFILE                                           AR1073026
+     C                     MOVELACKEYA    DBKEY                                            AR1073026
+     C                     Z-ADD05        DBASE                                            AR1073026
+     C                     OUT  LDA                                                        AR1073026
+     C                     EXSR ERROR                                                      AR1073026
+     C                     ENDIF                                                           AR1073026
+     C                     ENDIF                                                           AR1073026
+      *                                                                                    AR1073026
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   DROP subroutine - Archive the Account Posting records       *
+      *                     to GLACPHPD and REMOVE from APOSTPD.      *
+      *                     Rate Change records are Dropped from      *
+      *                     APOSTRA.                                  *
+      *                     Extension records are Dropped from        *                       CRE008
+      *                     GLAPSTGA and GLAPSTZS.                    *                       CRE008
+      *                                                               *
+      *   Called by main process.                                     *
+      *                                                               *
+      *   Calls program     :                                         *
+      *                                                               *
+      *   Input  - APOST record                                       *
+      *   Output - GLACPHF record                                     *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           DROP      BEGSR
+      *
+      **  Count and Hash total POSTINGS Archived
+      *
+     C           *IN10     IFEQ '1'
+     C                     ADD  1         NOPD
+     C/COPY WNCPYSRC,GL2550C001
+     C                     MOVE 'P'       RECI
+     C                     WRITEGLACPHF
+      **********                                                                     CAP203 BUG27914
+     C********** CAP203    IFEQ 'Y'                                                  CAP203 BUG27914
+     C**********           MOVE RECI      XRECI                                      CAP203 BUG27914
+     C**********           MOVE CNUM      XCNUM                                      CAP203 BUG27914
+     C**********           MOVE CCY       XCCY                                       CAP203 BUG27914
+     C**********           MOVE ACODQQ    XACODQ                                     CAP203 BUG27914
+     C**********           MOVE ACSQ      XACSQ                                      CAP203 BUG27914
+     C**********           MOVE ACNO      XACNO                                      CAP203 BUG27914
+     C**********           MOVE BRCA      XBRCA                                      CAP203 BUG27914
+     C**********           MOVE RRNM      XRRNM                                      CAP203 BUG27914
+     C**********           MOVE ATYP      XATYP                                      CAP203 BUG27914
+     C**********           MOVE ZZ002     XZZ002                                     CAP203 BUG27914
+     C**********           MOVE STYP      XSTYP                                      CAP203 BUG27914
+     C**********           MOVE ACOD      XACOD                                      CAP203 BUG27914
+     C**********           CALL 'GP003007'                                           CAP203 BUG27914
+     C**********           PARM 'I'       WMODE   1                                  CAP203 BUG27914
+     C**********           PARM *BLANKS   WBRCA   3                                  CAP203 BUG27914
+     C**********           PARM           WGLAC                                      CAP203 BUG27914
+     C**********           ENDIF                                                     CAP203 BUG27914
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL2550CADU                                           S01408
+     C*                                                                   S01408
+     C*                                                                   CEU013
+     C** Delete record from GLAPSTPD if EMU enhancement present.          CEU013
+     C*                                                                   CEU013
+     C           CEU013    IFEQ 'Y'                                       CEU013
+     C*                                                                   CEU013
+     C           XRFI      IFNE *BLANK                                    CEU013
+     C           XRFN      ANDNE*ZERO                                     CEU013
+     C           EXTKEY    CHAINGLAPSTPF             13                   CEU013
+     C           *IN13     IFEQ '0'                                       CEU013
+     C                     DELETGLAPSTPF                                  CEU013
+     C                     END                                            CEU013
+     C                     END                                            CEU013
+     C                     END                                            CEU013
+     C/COPY WNCPYSRC,GL2550C007
+     C*                                                                   CEU013
+     C** Delete record from GLAPSTGA and / or GLAPSTZS                                        CRE008
+     C** if Cash Management is present.                                                       CRE008
+     C*                                                                                       CRE008
+     C           CRE008    IFEQ 'Y'                                                           CRE008
+     C*                                                                                       CRE008
+     C           XRFI      IFEQ 'GA'                                                          CRE008
+     C           EXTKEY    CHAINGLAPGAD0             16                                       CRE008
+     C           *IN16     IFEQ '0'                                                           CRE008
+     C                     DELETGLAPGAD0                                                      CRE008
+     C                     END                                                                CRE008
+     C                     END                                                                CRE008
+     C*                                                                                       CRE008
+     C           XRFI      IFEQ 'ZS'                                                          CRE008
+     C           EXTKEY    CHAINGLAPZSD0             17                                       CRE008
+     C           *IN17     IFEQ '0'                                                           CRE008
+     C                     DELETGLAPZSD0                                                      CRE008
+     C                     END                                                                CRE008
+     C                     END                                                                CRE008
+     C                     END                                                                CRE008
+     C*                                                                                       CRE008
+     C                     DELETAPOSTPDF
+     C                     END
+      *
+      **  Count RATE CHANGES Purged
+      *
+     C           *IN11     IFEQ '1'
+     C                     ADD  1         NORD
+     C                     DELETAPOSTRAF
+     C                     END
+      *
+      *   Commit changes after every 1000 updates
+      *
+     C                     ADD  1         TOTUPD  40
+     C           TOTUPD    IFGE 1000
+     C/COPY WNCPYSRC,GL2550C006
+     C                     COMIT
+     C/COPY WNCPYSRC,GL2550C009
+     C                     Z-ADD0         TOTUPD
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   ERROR subroutine - in the event of a data base error this   *
+      *                      routine will write the error format to   *
+      *                      the audit report.                        *
+      *                                                               *
+      *   Called by initial process and GLASR.                        *
+      *                                                               *
+      *   Input  - db information: DBFILE, DBPGM, DBASE.              *
+      *                                                               *
+      *   Output - formats to GL2550AU: DBERROR, ENDRPT.              *
+      *            db information: DBFILE, DBPGM, DBASE.              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           ERROR     BEGSR
+      *
+     C                     WRITEDBERROR
+     C                     WRITEENDRPT
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   GLASR subroutine - in the event of a file exception/error , *
+      *                      for LF/GLACPHL , this subroutine will    *
+      *                      produce a dump.                          *
+      *   Called by RPG/400.                                          *
+      *                                                               *
+      *   Calls subroutine : ERROR                                    *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           GLASR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLACPHL' DBFILE           ***************
+     C                     Z-ADD03        DBASE            * DB error 03 *
+     C                     OUT  LDA                        ***************
+      *
+     C           *IN12     IFEQ '0'
+     C                     MOVE '1'       *IN12
+     C                     DUMP
+     C                     END
+      *
+     C                     EXSR ERROR
+      *
+     C                     ENDSR
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   APOSR subroutine - in the event of a file exception/error , *
+      *                      for LF/APOST, this subroutine will       *
+      *                      produce a dump.                          *
+      *   Called by RPG/400.                                          *
+      *                                                               *
+      *   Calls subroutine : ERROR                                    *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           APOSR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'APOST  ' DBFILE           ***************
+     C                     Z-ADD04        DBASE            * DB error 04 *
+     C                     OUT  LDA                        ***************
+      *
+     C           *IN12     IFEQ '0'
+     C                     MOVE '1'       *IN12
+     C                     DUMP
+     C                     END
+      *
+     C                     EXSR ERROR
+      *
+     C                     ENDSR
+      /EJECT                                                              CEU013
+      *---------------------------------------------------------------*   CEU013
+      *                                                               *   CEU013
+      *   APOSX subroutine - in the event of a file exception/error , *   CEU013
+      *                      for PF/GLAPSTPD this subroutine will     *   CEU013
+      *                      produce a dump.                          *   CEU013
+      *   Called by RPG/400.                                          *   CEU013
+      *                                                               *   CEU013
+      *   Calls subroutine : ERROR                                    *   CEU013
+      *                                                               *   CEU013
+      *---------------------------------------------------------------*   CEU013
+      *                                                                   CEU013
+     C           GLAPS     BEGSR                                          CEU013
+      *                                                                   CEU013
+     C           *LOCK     IN   LDA                                       CEU013
+     C                     MOVEL'GLAPSTPD'DBFILE           ***************CEU013
+     C                     Z-ADD07        DBASE            * DB error 07 *CEU013
+     C                     OUT  LDA                        ***************CEU013
+      *                                                                   CEU013
+     C           *IN12     IFEQ '0'                                       CEU013
+     C                     MOVE '1'       *IN12                           CEU013
+     C                     DUMP                                           CEU013
+     C                     END                                            CEU013
+      *                                                                   CEU013
+     C                     EXSR ERROR                                     CEU013
+      *                                                                   CEU013
+     C                     ENDSR                                          CEU013
+     C/COPY WNCPYSRC,GL2550C008
+      /EJECT                                                                                  CRE008
+      *---------------------------------------------------------------*                       CRE008
+      *                                                               *                       CRE008
+      *   GLAPG subroutine - in the event of a file exception/error , *                       CRE008
+      *                      for PF/GLAPSTGA this subroutine will     *                       CRE008
+      *                      produce a dump.                          *                       CRE008
+      *   Called by RPG/400.                                          *                       CRE008
+      *                                                               *                       CRE008
+      *   Calls subroutine : ERROR                                    *                       CRE008
+      *                                                               *                       CRE008
+      *---------------------------------------------------------------*                       CRE008
+      *                                                                                       CRE008
+     C           GLAPG     BEGSR                                                              CRE008
+      *                                                                                       CRE008
+     C           *LOCK     IN   LDA                                                           CRE008
+     C                     MOVEL'GLAPSGL0'DBFILE           ***************                    CRE008
+     C                     Z-ADD10        DBASE            * DB error 10 *                    CRE008
+     C                     OUT  LDA                        ***************                    CRE008
+      *                                                                                       CRE008
+     C           *IN12     IFEQ '0'                                                           CRE008
+     C                     MOVE '1'       *IN12                                               CRE008
+     C                     DUMP                                                               CRE008
+     C                     END                                                                CRE008
+      *                                                                                       CRE008
+     C                     EXSR ERROR                                                         CRE008
+      *                                                                                       CRE008
+     C                     ENDSR                                                              CRE008
+      /EJECT                                                                                  CRE008
+      *---------------------------------------------------------------*                       CRE008
+      *                                                               *                       CRE008
+      *   GLAPZ subroutine - in the event of a file exception/error , *                       CRE008
+      *                      for PF/GLAPSTZS this subroutine will     *                       CRE008
+      *                      produce a dump.                          *                       CRE008
+      *   Called by RPG/400.                                          *                       CRE008
+      *                                                               *                       CRE008
+      *   Calls subroutine : ERROR                                    *                       CRE008
+      *                                                               *                       CRE008
+      *---------------------------------------------------------------*                       CRE008
+      *                                                                                       CRE008
+     C           GLAPZ     BEGSR                                                              CRE008
+      *                                                                                       CRE008
+     C           *LOCK     IN   LDA                                                           CRE008
+     C                     MOVEL'GLAPSZL0'DBFILE           ***************                    CRE008
+     C                     Z-ADD11        DBASE            * DB error 11 *                    CRE008
+     C                     OUT  LDA                        ***************                    CRE008
+      *                                                                                       CRE008
+     C           *IN12     IFEQ '0'                                                           CRE008
+     C                     MOVE '1'       *IN12                                               CRE008
+     C                     DUMP                                                               CRE008
+     C                     END                                                                CRE008
+      *                                                                                       CRE008
+     C                     EXSR ERROR                                                         CRE008
+      *                                                                                       CRE008
+     C                     ENDSR                                                              CRE008
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   *PSSR subroutine - in the event of a program exception/     *
+      *                      error , this subroutine will produce a   *
+      *                      dump and return to caller.               *
+      *   Called by RPG/400.                                          *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           *PSSR     BEGSR
+      *
+     C           *IN12     IFEQ '0'
+     C                     MOVE '1'       *IN12
+     C                     DUMP
+     C                     END
+      *
+     C/COPY WNCPYSRC,GL2550C010
+     C                     ROLBK
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/COPY ZSRSRC,ZDATE1Z2                                               194300
+     C/COPY ZSRSRC,ZDATE2Z2                                               194300
+     O/COPY WNCPYSRC,GL2550OOP1                                           S01408
+     C/COPY ZSRSRC,ZDATE2Z3                                               194300
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

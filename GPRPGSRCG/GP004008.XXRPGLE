@@ -1,0 +1,127 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                    AR1089863
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing                                    *
+      *                                                               *
+      *  GP004008 - Midas GP Check for unauthorized manual            *
+      *             transaction                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. AR1089863*REDUNDANTDate 19Feb13               *
+      *  Prev Amend No. AR1009180 *CREATE  Date 25Nov12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1089863 - Merging issues of 2.0 and 2.1 releases           *
+      *  AR1009180 - Show unauthorized manual transaction in          *
+      *              Midas dashboard (Child:AR1009182)                *
+      *                                                               *
+      *****************************************************************
+ 
+     FGPMATRL0  IF   E           K DISK    INFSR(*PSSR)
+     F                                     USROPN
+     FGPZONEL2  IF   E           K DISK    INFSR(*PSSR)
+ 
+      **
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      **
+ 
+      ** Branch Details
+     D GZSDBRCH      E DS                  EXTNAME(GZSDBRCHPD)
+ 
+      ** Program Status Data Structure
+     D/COPY GPCPYSRCG,PSDS
+ 
+      ** Midas Local Data Area for database error reporting
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+      ** The following fields are defined in the external file:
+      **                                     134 141 DBFile
+      **                                     142 170 DBKey
+      **                                     171 180 DBPgm
+      **                                     181 1830DBase
+      **                                     184 193 DBMod
+      **                                     194 203 DBProc
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+     D @RUN            S              1
+     D Value           S             50
+     D I#RTCD          S              7
+     D I#ERMS          S             50
+     D I#BRCD          S              3
+     D Prtcd           S              7
+     D System_ID       S              2
+     D Wunauth         S              1
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    PRTCD
+     C                   PARM                    System_ID
+ 
+      ** Get Zone Name from system ID.
+ 
+     C     System_ID     CHAIN     GPZONED0                           90
+ 
+     C                   EVAL      WUnauth = 'N'
+     C                   EVAL      Prtcd = '       '
+ 
+     C                   OPEN      GPMATRL0
+     C     *LOVAL        SETLL     GPMATRL0
+     C                   READ      GPMATRL0                               01
+ 
+     C                   DOW       *IN01 = *OFF AND
+     C                             WUnauth = 'N'
+     C                   CALL      'GPACSBRCH'
+     C                   PARM                    I#RTCD
+     C                   PARM                    I#ERMS
+     C                   PARM      MTBRCHCODE    I#BRCD
+     C                   PARM                    GZSDBRCH
+ 
+     C                   IF        A8ZONE = ZOZONE
+     C                   EVAL      WUnauth = 'Y'
+     C                   EVAL      Prtcd = 'Unauth'
+     C                   ENDIF
+     C                   READ      GPMATRL0                               01
+     C                   ENDDO
+     C                   CLOSE     GPMATRL0
+ 
+     C                   SETON                                        LR
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *PSSR         BEGSR
+ 
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+ 
+      *****************************************************************

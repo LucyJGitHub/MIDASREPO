@@ -1,0 +1,199 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Update Global TRAP - Task Split Server')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC0040T2 - Midas GO Update Global TRAP - Task Split Server */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD034422           Date 26May15              */
+/*                      AR1097467 *CREATE  Date 11Apr13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD034422 - COB component GOC0040T2 00001 stuck on DEQW.     */
+/*                  Corrected the conditioning for No Record Found   */
+/*       AR1097467A - Expected 15% COB run optimization not met      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAME &CSEQ &COPY_RECS)
+ 
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOTAPDPD')
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOTAPIPD')
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOTRAPSVDQ')
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&COPY_RECS) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ. */
+ 
+             SNDPGMMSG  MSG('GOC0040T2 - Midas GO Update Global +
+                          TRAP - Task Split Server') TOMSGQ(MRUNQ)
+ 
+/* Start commitment control. */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             ALCOBJ     OBJ((&INDEXFL *FILE *EXCL))
+ 
+/* Read CoB components file to check the restart status. */
+ 
+             CALL       PGM(CB0160) PARM(&CNAME &CSEQ &STAT)
+ 
+/* Check if any problems with CoB components file.*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If restart status = 'F', only resend END message to sub-task. */
+ 
+             IF         COND(&STAT = 'F') THEN(DO)
+                GOTO       CMDLBL(SNDEND)
+             ENDDO
+ 
+/* Set restart status to 'Y'. */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+ 
+/* Wait for data queue entry.*/
+ 
+RECEIVE:
+             CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* Extract member name. */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
+ 
+/* Clear the driving file. */
+ 
+             CLRPFM     FILE(&DRIVER) MBR(&MEMBER)
+ 
+/* Override driving file. */
+ 
+             OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER)
+ 
+/* Call the program to copy records to specified member. */
+ 
+             CALL       PGM(GO0040T2) PARM(&COPY_RECS &RTN_CODE)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('PROMPT')
+ 
+/* Send message data to data queue only if data is written to driver file. */
+ 
+             IF         COND(&RTN_CODE *NE 'NRF') THEN(DO)
+                CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                             &MSGLENGTH &MSGDATA)
+             ENDDO
+ 
+/* If return code = 'EOF' set restart status to 'N' and terminate. */
+ 
+/**********  IF         COND(&RTN_CODE = 'EOF' *OR &RTN_CODE = ' + */                   /*MD034422*/
+/**********               NRF') THEN(DO)                           */                   /*MD034422*/
+             IF         COND(&RTN_CODE = 'EOF' *OR &RTN_CODE = +
+                          'NRF') THEN(DO)                                               /*MD034422*/
+                CHGVAR     VAR(&STAT) VALUE('F')
+                CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+                GOTO       CMDLBL(SNDEND)
+             ENDDO
+ 
+/* If return code <> 'EOF' wait for another data queue entry. */
+ 
+             GOTO       CMDLBL(RECEIVE)
+ 
+SNDEND:
+ 
+/* Retrieve first member description. */
+ 
+             RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
+ 
+/* Set up data queue and message data. */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('END')
+ 
+/* Send message data to data queue. */
+ 
+LOOP:
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+/* Retrieve next member description. */
+ 
+             RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&SNDDTAQ)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(RCVDTAQ))
+ 
+/* Loop for all members in driving file. */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)
+             GOTO       CMDLBL(LOOP)
+ 
+/* Wait for data queue entry. */
+ 
+RCVDTAQ:
+             CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If message = 'FINISH' terminate the program. */
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+                GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
+                CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+                CHGVAR     VAR(&MSGDATA) VALUE('END')
+                CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                             &MSGLENGTH &MSGDATA)
+                MONMSG     MSGID(CPF9801)
+                GOTO       CMDLBL(RCVDTAQ)
+             ENDDO
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program GOC0040T2 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

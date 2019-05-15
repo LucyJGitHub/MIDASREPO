@@ -1,0 +1,298 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GOC011301)                            */
+/*EXI    TEXT('Midas GO Bulk Sync glob layr GZREIACD - Task Split')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC011301 - Bulk Sync global layer GZREIACD Task Split      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD002850           Date 08Apr13              */
+/*                      CGP017  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD002850 - Correct the processing for restart of subtasks   */
+/*                  after failure.                                   */
+/*       CGP017 - Global Layer - GOC0100 Task Split                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOC011301')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSEQC) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(600)
+             DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC)  TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZODNWD)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZOBCCY)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB)  TYPE(*DEC)  LEN(1 0)
+ 
+             DCL        VAR(&GPF) TYPE(*CHAR) LEN(10) VALUE(GZREIACD)
+             DCL        VAR(&GLFU)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZLFOVR)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&GLFOVR)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&GLFCLO)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&ZLFDLO)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&GLFDLO)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&OPNQRY)  TYPE(*CHAR) LEN(32702)
+             DCL        VAR(&ZLF)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLFD)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BLSY)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&SNDMSG) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                        VALUE('REIADVPD')
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                        VALUE('REIAIXPD')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GOC011301 - Bulk Synchronisation of +
+                          Global Layer, task-split:' *CAT &GPF) +
+                          TOMSGQ(MRUNQ)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+             CHGJOB SWS(00000000)
+ 
+/* Check if normal run or restart */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Check if any problems with COB components file */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHGVAR     VAR(&RESTART) VALUE(&STAT)
+ 
+/* Set restart status to 'Y' */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Set up call to QSNDDTAQ and override files to their members */
+ 
+             CHGVAR     VAR(&CSEQC) VALUE(&CSEQ)
+             CHGVAR     VAR(&MEMBER) VALUE('REIAD' *CAT &CSEQC)
+             CHGVAR     VAR(&DTAQLIBL) VALUE('*LIBL')
+             CHGVAR     VAR(&SNDDTAQ) VALUE('GOREIASRV')
+             CHGVAR     VAR(&RCVDTAQ) VALUE(&MEMBER)
+ 
+             OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+/* If restart from component failed because of no respond */
+/* from server. So resend message to Server and wait. */
+ 
+             IF         COND(&RESTART = 'F') THEN(DO)
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+/* If restart, do not wait for the data queue entry */
+/* Clear any old data queue message from server but ensure that an */
+/* 'END' message, sent from the end proc job is not lost */
+ 
+             IF         COND(&RESTART = 'Y') THEN(DO)
+                CHGVAR     VAR(&RCVWAIT) VALUE(5)
+                CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+                CHGVAR     VAR(&RCVWAIT) VALUE(600)
+                CHGVAR     VAR(&MSGLENGTH) VALUE(50)
+                IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)
+                   CALL       PGM(QSNDDTAQ) PARM(&MEMBER &DTAQLIBL +
+                                &MSGLENGTH &MSGDATA)
+                ENDDO
+                GOTO       CMDLBL(RESTART)
+             ENDDO
+ 
+/* Check that Data Queue exists - if not retry 10 times */
+ 
+CHKDTAQ:
+             CHKOBJ     OBJ(&DTAQLIBL/&MEMBER) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                IF         COND(&COUNT *LT 11) THEN(DO)
+                   DLYJOB     DLY(1)
+                   GOTO       CMDLBL(CHKDTAQ)
+                ENDDO
+                ELSE (DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+LOOP:
+ 
+/* Request response from DTAQ whether to run job again or end */
+ 
+             CHGVAR     VAR(&MSGDATA) VALUE(&MEMBER)
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+/**********  CHGVAR     VAR(&STAT) VALUE('F')                      */                   /*MD002850*/
+/**********  CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)       */                   /*MD002850*/
+ 
+             CHGVAR     VAR(&RCVWAIT) VALUE(300)
+             CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If no reply, error message and terminate */
+ 
+             IF         COND(&MSGLENGTH = 0) THEN(DO)
+                ALCOBJ     OBJ((&INDEXFL *FILE *EXCL)) WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)
+                   IF         COND(&SNDMSG *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&STAT) VALUE('F')                                  /*MD002850*/
+                      CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)                   /*MD002850*/
+                      SNDPGMMSG  MSG('No response from server for GOC011301') +
+                                TOMSGQ(MOPERQ MRUNQ)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                   ELSE (DO)
+                      CHGVAR     VAR(&SNDMSG) VALUE('Y')
+                      GOTO       CMDLBL(LOOP)
+                   ENDDO
+                ENDDO
+                                                                                        /*MD002850*/
+                CHGVAR     VAR(&STAT) VALUE('F')                                        /*MD002850*/
+                CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)                         /*MD002850*/
+                SNDPGMMSG  MSG('Server for GOC011301 not active') +
+                          TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If reply = END, terminate */
+ 
+             IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+RESTART:
+ 
+/* Get zone */
+ 
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+ 
+/* Error */
+ 
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Get synchronisation executables*/
+ 
+             CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU +
+                          &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +
+                          &OPNQRY &ZLF &BLFD &BLSY)
+ 
+/* End if bulk synchronisation not done for this file*/
+ 
+             IF         COND(&BLSY *NE 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Bulk +
+                            synchronisation was not done for file ' +
+                            *CAT &GPF) TOPGMQ(*EXT)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Do bulk synchronisation */
+ 
+             CALL       PGM(QCMDEXC) PARM(&ZLFOVR 60)
+             CALL       PGM(QCMDEXC) PARM(&GLFOVR 60)
+             OVRDBF     FILE(&GPF) SEQONLY(*YES 4000)
+             OVRDBF     FILE(GPGDRPPD) SEQONLY(*YES 5000)
+ 
+/* Filter duplicates  */
+ 
+             IF         COND(&BLFD = 'Y') THEN(DO)
+                OPNQRYF    FILE((&ZLF)) OPTION(*INP) KEYFLD(*FILE) +
+                             UNIQUEKEY(*ALL) SEQONLY(*YES 5000)
+             ENDDO
+             CALL       PGM(GO011301) PARM(&ZOZONE)
+             CALL       PGM(QCMDEXC) PARM(&ZLFDLO 60)
+             CALL       PGM(QCMDEXC) PARM(&GLFDLO 60)
+ 
+/* Error */
+ 
+             IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&LDA)
+                CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(REUSRMSG) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+                ROLLBACK
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Successful completion */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                COMMIT
+             ENDDO
+ 
+             CHGVAR     VAR(&RESTART) VALUE('N')
+             CLRPFM     FILE(&DRIVER) MBR(&MEMBER)
+             GOTO       CMDLBL(LOOP)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GOC011301 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                             GOC011301 ended abnormally - see job +
+                             log') TOPGMQ(*EXT)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+ENDPGM:
+             RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDPGM

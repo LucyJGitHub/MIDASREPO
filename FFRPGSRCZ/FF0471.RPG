@@ -1,0 +1,801 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF End of centre monitor')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0471 - END OF CENTRE MONITOR                                 *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CAAA02             Date 16Jul03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 181456             Date 31Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01456             Date 08Nov93               *
+      *                 E20768             Date 11Apr90               *
+     F*                  S01199             DATE 27FEB90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
+      *           to process screens.                                 *
+      *           INVITE keyword is in DSPF but no WAITRCD time is    *
+      *           ever set so the INVITE will not take effect.        *
+      *           Once INVITE is gone, this program must read formats *
+      *           rather than the display file.                       *
+      *  181456 - CPF4737 I/O error was detected in FF0471DF when     *
+      *           pressing rapidly the ENTER key on the first screen  *
+      *           of the EOC monitor.                                 *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   E20768  -  RECOMPILED OVER CHANGED DISPLAY FILE                *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FTABTB10 IF  E           K        DISK
+     FMARKT   IF  E           K        DISK
+     FMKCTL1  IF  E           K        DISK
+     FEOCMG   IF  E           K        DISK
+     FEOCMG1  IF  E           K        DISK
+     F            EOCMGDF                           KRENAMEEOCMGDF1
+     FFF0471DFCF  E                    WORKSTN
+     F                                              KINFDS DSPDS
+     F                                              KNUM        1
+     F                                        RRN0  KSFILE FF0471S0
+     F                                        RRN1  KSFILE FF0471S1
+     F                                        RRN2  KSFILE FF0471S2
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       KC         F3
+     F*       KL         F12
+     F*
+     F*       01         There are Market-EoC processes running
+     F********10         Help key                                         S01199
+     F*
+     F*       30         S/FF0471C0,FF0471C1 SFLDSP
+     F*       31         S/FF0471C0,FF0471C1 SFLDSPCTL
+     F*       32         S/FF0471C0,FF0471C1 SFLCLR
+     F*       33         S/FF0471C0,FF0471C1 SFLEND
+     F*
+     F*       35         S/FF0471F0 Display information-message
+     F*       36         S/FF0471F0 Display error-codes
+     F*       37         S/FF0471F0 Error in Market field
+     F*
+     F*       50         S/FF0471C2 SFLDSP
+     F*       51         S/FF0471C2 SFLDSPCTL
+     F*       52         S/FF0471C2 SFLCLR
+     F*
+     F*       77         Failure to read display-file. (Timed out ?)
+     F*       80         General work-indicator
+     F*       88         Dummy indicator
+     F*
+     F*       90-98      Used in Standard Subroutines
+     F*
+     F*       98         Date format is MMDDYY
+     F*       99         Error conditioning Database Error
+     F*
+     F*       U7+U8      Database Error
+     F********************************************************************
+      /EJECT
+      ********************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+      ** Compile-time arrays for the standard subroutine ZDATE2
+      *
+     E                    TABCST  1   8  1   TABCS  10
+      ** Compile-time table of End of Centre Status texts
+      *
+     E                    INF     1   3 76
+      ** Compile-time array of information-messages
+      *
+     E                    KYS     1   2 76
+      ** Compile-time array of command-key texts
+      *
+     E                    ERR        19  4
+      ** Array for Error- and Warning-codes
+     E                    CPY@    1   1 80
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     ILDA        UDS                            256
+      ** Local data area for Database Error details
+     I                                      134 175 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     IEPPDS      SDS
+      ** Program status data structure :
+      **   Workstation Identifier.
+     I                                      244 246 WSID
+     IDSPDS       DS
+      ** File information data structure for Display File :
+      **   Status-code for Error Processing.
+      **   A record-number from subfile-page last displayed.
+     I                                     *STATUS  STSD
+     I                                    B 378 3790LSRRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C           *LIKE     DEFN SRECNO    RRN1
+     C           *LIKE     DEFN RRN1      RRN0
+     C           *LIKE     DEFN RRN1      RRN2
+     C           *LIKE     DEFN MRKT      WMRKT
+      ********************************************************************
+      **                   INITIAL PROCESSING
+      *                    ------------------
+      ** CALLS S/R  DBERR
+      ********************************************************************
+      *
+      ** Prepare Local Data Area to register any Database Error.
+      *
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE *ZERO     DBASE
+     C                     MOVEL'FF0471  'DBPGM
+      *
+      ** Get installation control data record from table-file TABTB10.
+      **   IF record not found,
+      **   OR record not live :
+      **     Process Database Error.
+      *
+     C                     READ TABTB10F                 99
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'                        *************
+     C                     Z-ADD1         DBASE            * DB-ERR 01 *
+     C                     MOVE 'TABFF'   DBFILE           *************
+     C                     MOVEL'01'      WKEY   12
+     C                     MOVE '10'      WKEY
+     C                     MOVELWKEY      DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C           DATF      COMP 'M'                      98
+     C                     MOVE RUNA      SRUNA
+      *
+      ** Workstation Identifier.
+      *
+     C                     MOVE WSID      SWSID
+      *
+      ** The record-number from last page displayed of Message subfile
+      ** is initialized because it is a binary field.
+      ** Message subfile is initially to show subfile-record 1.
+      *
+     C                     Z-ADD1         LSRRN
+     C                     Z-ADD1         SRECNO
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **                   MAIN PROCESSING
+      *                    ---------------
+      ** CALLS S/R  LOWFIL MKTSUB MSGSUB
+      ********************************************************************
+      *
+      ** DO WHILE  F3 key is not pressed,
+      **       OR  there are markets with EoC running :
+      *
+     C           *INKC     DOWEQ'0'
+     C           *IN01     OREQ '0'
+      *
+      **   Fill a one-page subfile of the latest Important EoC-messages
+      **   (for all markets) to be displayed beneath the main subfiles.
+      *
+     C                     EXSR LOWFIL
+      *
+      **   IF no EoC-market is currently selected :
+      **     Display EoC-markets and select one.
+      *
+     C           WMRKT     IFEQ *BLANK
+     C                     EXSR MKTSUB
+     C           ERR,1     IFEQ *BLANK
+     C                     MOVE SMRKT     WMRKT
+     C                     END
+      *
+      **   OTHERWISE :
+      **     Display EoC-messages for the selected market.
+      **     IF  F12 key is pressed :
+      **       Deselect market.
+      *
+     C                     ELSE
+     C                     EXSR MSGSUB
+     C           *INKL     IFEQ '1'
+     C                     MOVE *BLANK    WMRKT
+     C                     MOVE *BLANK    SMRKT
+     C                     END
+     C                     END
+      *
+      **   IF  F3 key is pressed :
+      **     Check that Market Control (EoC) file is empty.
+      **     IF  there are markets with EoC running,
+      **     AND no information-message yet awaits the next screen :
+      **       The information-message is to show "End not allowed".
+      *
+     C           *INKC     IFEQ '1'
+     C           *LOVAL    SETLLMKCTL1               01
+     C           *IN01     IFEQ '0'
+     C           *IN35     ANDEQ'0'
+     C                     SETON                     35
+     C                     MOVEAINF,3     SINFMG
+     C                     END
+     C                     END
+      *
+     C                     END
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **                   FINAL PROCESSING
+      *                    ----------------
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                INDEX TO SUBROUTINES
+      *
+      *  LOWFIL    FILL A SUBFILE WITH EOC-MESSAGES FOR ALL MARKETS
+      *
+      *  MKTSUB    LIST EOC-MARKETS; ACCEPT CHOICE OF MARKET.
+      *
+      *  MSGSUB    LIST EOC-MESSAGES FOR CHOSEN MARKET
+      *
+      *  MKTFIL    FILL A SUBFILE WITH MARKET-CONTROL DATA
+      *
+      *  MSGFIL    FILL A SUBFILE WITH EOC-MESSAGES FOR A MARKET
+      *
+      *  MKTVAL    VALIDATE CHOSEN MARKET; GET MARKET-NAME.
+      *
+      *  MKTFMT    FORMAT DATA FOR MARKET SUBFILE-RECORD
+      *
+      *  HELP      DISPLAY MESSAGE-TEXTS FOR ERROR-CODES
+      *
+      *  DSPTIM    CHECK THAT DISPLAY-FILE HAS TIMED OUT
+      *
+      *  *PSSR     PROGRAM-STATUS SUBROUTINE
+      *
+      *  DBERR     END PROGRAM WITH DATABASE-ERROR
+      *
+      *  ZDATE2    CONVERT A DAY-NUMBER TO A DATE
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  LOWFIL  Fill the Lower subfile (messages for all markets)
+      ** CALLED FROM  Main Processing
+      ** CALLS  no other subroutines
+      ********************************************************************
+      *
+     C           LOWFIL    BEGSR
+      *
+      ** IF there are records in the Lower subfile :
+      **   Clear the Lower subfile.
+      *
+     C           RRN2      IFGT *ZERO
+     C                     SETON                     52
+     C                     WRITEFF0471C2
+     C                     SETOF                     52
+     C                     END
+      *
+      ** Clear the subfile's relative record number.
+      *
+     C                     MOVE *ZERO     RRN2
+      *
+      ** Read first record on EoC Important Message file.
+      **   First record is latest Message because file's key-order is
+      **   Last-in first-out.
+      *
+     C           *LOVAL    SETLLEOCMGDF1
+     C                     READ EOCMGDF1                 53
+      *
+      ** DO WHILE not end of Message file (and subfile not full) :
+      *
+     C           *IN53     DOWEQ'0'
+      *
+      **   Format output-fields for subfile-record.
+      **     Market-code.
+      **     EoC Message.
+      **     Message-time (to the minute).
+      *
+     C                     MOVE MRKT      SMRKT2
+     C                     MOVE ECMG      SECMG
+     C                     MOVELECMT      SECMTM
+      *
+      **   Increment the Relative Record Number.
+      **   Write a record to the Lower subfile.
+      *
+     C                     ADD  1         RRN2
+     C                     WRITEFF0471S2                 53
+      *
+      **   IF subfile is not full :
+      **     Read next record on EoC Important Message file.
+      *
+     C           *IN53     IFEQ '0'
+     C                     READ EOCMGDF1                 53
+     C                     END
+      *
+     C                     END
+      *
+      ** IF records have been written to the Lower subfile :
+      **   Subfile-records are to be displayed.
+      ** Control-record is to be displayed (with or without subfile).
+      *
+     C                     SETOF                     50
+     C           RRN2      IFNE *ZERO
+     C                     SETON                     50
+     C                     END
+     C                     SETON                     51
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  MKTSUB  Display the Market subfile; choose a market.
+      ** CALLED FROM  Main Processing
+      ** CALLS S/R  MKTFIL MKTVAL HELP   DSPTIM
+      ********************************************************************
+      *
+     C           MKTSUB    BEGSR
+      *
+      ** Fill the Market subfile.
+      *
+     C                     EXSR MKTFIL
+      *
+      ** Display the Footing-format on screen.
+      *
+     C                     MOVEAKYS,1     SCKEYS
+     C                     WRITEFF0471F0
+     C                     MOVE *BLANK    SCKEYS
+      *
+      ** Display the Lower subfile.
+      *
+     C                     WRITEFF0471C2
+      *
+      ** Display the Market subfile, reading input from control-record.
+      ** Process Time-out and Help-key.
+      **   Screen is refreshed after Help-key. It must at least be
+      **   rewritten in order "Invite" terminal for next Time-out.
+      *
+     C                     WRITEFF0471C0
+     C***********          READ FF0471DF               7788               CAAA02
+     C                     READ FF0471C0                 88               CAAA02
+     C                     MOVE '0'       *IN31                           181456
+      *
+     C           *IN77     CASEQ'1'       DSPTIM
+     C************IN10     CASEQ'1'       HELP                            S01199
+     C                     END
+      *
+      ** Clear the Market subfile.
+      *
+     C                     SETON                     32
+     C                     WRITEFF0471C0
+     C                     SETOF                     32
+      *
+      ** Clear Information-message and Errors.
+      *
+     C                     SETOF                     353637
+     C                     MOVE *BLANK    SINFMG
+     C                     MOVE *BLANK    SERRMG
+     C                     MOVE *BLANK    ERR
+     C                     MOVE *ZERO     EC      20
+      *
+      ** IF a Market-code is input :
+      **   Validate the Market-code and get Market-name.
+      *
+     C           SMRKT     IFNE *BLANK
+     C                     EXSR MKTVAL
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  MSGSUB  Display the Message subfile.
+      ** CALLED FROM  Main Processing
+      ** CALLS S/R  MSGFIL HELP   DSPTIM
+      ********************************************************************
+      *
+     C           MSGSUB    BEGSR
+      *
+      ** Fill the Message subfile.
+      *
+     C                     EXSR MSGFIL
+      *
+      ** Display the Footing-format on screen.
+      *
+     C                     MOVEAKYS,2     SCKEYS
+     C                     WRITEFF0471F0
+     C                     MOVE *BLANK    SCKEYS
+      *
+      ** Display the Lower subfile.
+      *
+     C                     WRITEFF0471C2
+      *
+      ** Display the Message subfile.
+      ** Process Time-out and Help-key.
+      **   Screen is refreshed after Help-key. It must at least be
+      **   rewritten in order "Invite" terminal for next Time-out.
+      *
+     C                     WRITEFF0471C1
+     C***********          READ FF0471DF               7788               CAAA02
+     C                     READ FF0471C1                 88               CAAA02
+     C                     MOVE '0'       *IN31                           181456
+      *
+     C           *IN77     CASEQ'1'       DSPTIM
+     C************IN10     CASEQ'1'       HELP                            S01199
+     C                     END
+      *
+      ** IF  Message subfile has just been displayed,
+      ** AND same Market is still selected :
+      **   Next Message subfile is to show at the page last displayed.
+      *
+     C                     Z-ADD1         SRECNO
+     C           RRN1      IFGT *ZERO
+     C           *INKL     ANDEQ'0'
+     C                     Z-ADDLSRRN     SRECNO
+     C                     END
+      *
+      ** Clear the Message subfile.
+      *
+     C                     SETON                     32
+     C                     WRITEFF0471C1
+     C                     SETOF                     32
+      *
+      ** Clear Information-message and Errors.
+      *
+     C                     SETOF                     3536
+     C                     MOVE *BLANK    SINFMG
+     C                     MOVE *BLANK    SERRMG
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  MKTFIL  Fill the Market subfile
+      ** CALLED FROM S/R  MKTSUB
+      ** CALLS S/R  MKTFMT
+      ********************************************************************
+      *
+     C           MKTFIL    BEGSR
+      *
+      ** Clear the subfile's relative record number.
+      *
+     C                     MOVE *ZERO     RRN0
+      *
+      ** Read first record on Market Control (EoC) file.
+      *
+     C           *LOVAL    SETLLMKCTLDF
+     C                     READ MKCTLDF                  33
+      *
+      ** DO WHILE not end of Market Control (EoC) file :
+      **   IF record is live :
+      **     Format output-fields for Market subfile-record.
+      **     Increment the Relative Record Number.
+      **     Write a record to the Market subfile.
+      **   Read the next record on the Market Control (EoC) file.
+      *
+     C           *IN33     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+     C                     EXSR MKTFMT
+     C                     ADD  1         RRN0
+     C                     WRITEFF0471S0
+     C                     END
+      *
+     C                     READ MKCTLDF                  33
+     C                     END
+      *
+      ** IF no records have been written to the Market subfile :
+      **   IF no information-message yet awaits the next screen :
+      **     The information-message is to show "No EoC Markets".
+      ** OTHERWISE :
+      **   Subfile-records are to be displayed.
+      ** Control-record is to be displayed (with or without subfile).
+      *
+     C                     SETOF                     30
+     C           RRN0      IFEQ *ZERO
+      *
+     C           *IN35     IFEQ '0'
+     C                     SETON                     35
+     C                     MOVEAINF,1     SINFMG
+     C                     END
+      *
+     C                     ELSE
+     C                     SETON                     30
+     C                     END
+     C                     SETON                     31
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  MKTVAL  Validate Market-code; get Market-name.
+      ** CALLED FROM S/R  MKTSUB
+      ** CALLS S/R    DBERR
+      ********************************************************************
+      *
+     C           MKTVAL    BEGSR
+      *
+      ** IF  Market code is not on Market Control (EoC) file :
+      **   Error.
+      *
+     C           SMRKT     CHAINMKCTLDF              80
+     C           *IN80     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     37
+     C                     ADD  1         EC         36
+     C           EC        IFLE 19
+     C                     MOVE ' 001'    ERR,EC
+     C                     END
+      *
+      ** OTHERWISE :
+      **   Get  Market-name from Market file.
+      **     IF record not found,
+      **     OR record not live :
+      **       Process Database Error.
+      *
+     C                     ELSE
+     C           SMRKT     CHAINMARKTDF              99
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'                        *************
+     C                     Z-ADD2         DBASE            * DB-ERR 02 *
+     C                     MOVE 'MARKT'   DBFILE           *************
+     C                     MOVELSMRKT     DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     MOVE MKTN      SMKTN
+     C                     END
+      *
+      ** IF there are Errors :
+      **   Move Error-code array-data for display.
+      *
+     C           ERR,1     IFNE *BLANK
+     C                     MOVEAERR       SERRMG
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  MSGFIL  Fill the Message subfile
+      ** CALLED FROM S/R  MSGSUB
+      ** CALLS  no other subroutines
+      ********************************************************************
+      *
+     C           MSGFIL    BEGSR
+      *
+      ** Clear the subfile's relative record number.
+      *
+     C                     MOVE *ZERO     RRN1
+      *
+      ** Read first record for Market on file EoC Messages by Market.
+      *
+     C           SMRKT     SETLLEOCMGDF
+     C           SMRKT     READEEOCMGDF                  33
+      *
+      ** DO WHILE not end of Market :
+      *
+     C           *IN33     DOWEQ'0'
+      *
+      **   Format output-fields for subfile-record.
+      **     EoC Message.
+      **     Message-time.
+      *
+     C                     MOVE ECMG      SECMG
+     C                     Z-ADDECMT      SECMT
+      *
+      **   Increment the Relative Record Number.
+      **   Write a record to the Message subfile.
+      *
+     C                     ADD  1         RRN1
+     C                     WRITEFF0471S1
+      *
+      **   Read the next Message-record for Market.
+      *
+     C           SMRKT     READEEOCMGDF                  33
+     C                     END
+      *
+      ** IF no records have been written to the Message subfile :
+      **   IF no information-message yet awaits the next screen :
+      **     The information-message is to show "No EoC Messages".
+      ** OTHERWISE :
+      **   Subfile-records are to be displayed.
+      ** Control-record is to be displayed (with or without subfile).
+      *
+     C                     SETOF                     30
+     C           RRN1      IFEQ *ZERO
+     C           *IN35     IFEQ '0'
+     C                     SETON                     35
+     C                     MOVEAINF,2     SINFMG
+     C                     END
+     C                     ELSE
+     C                     SETON                     30
+     C                     END
+     C                     SETON                     31
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  MKTFMT  Format output-fields for Market subfile-record
+      ** CALLED FROM S/R  MKTFIL
+      ** CALLS S/R    DBERR  ZDATE2
+      ********************************************************************
+      *
+     C           MKTFMT    BEGSR
+      *
+      ** Format the Business-date.
+      *
+     C                     Z-ADDBUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SBUSA
+      *
+      ** Expand the EoC Status Indicator.
+      **   IF indicator-value is not in compile-time table :
+      **     Process Database Error.
+      *
+     C                     MOVE *BLANK    SECAIX
+     C                     MOVELECAI      SECAIX
+     C           ECAI      LOKUPTABCST    TABCS          80
+     C           *IN80     IFEQ '1'
+     C                     MOVELTABCS     SECAIX
+     C                     ELSE                            *************
+     C                     Z-ADD3         DBASE            * DB-ERR 03 *
+     C                     MOVE 'MKCTL'   DBFILE           *************
+     C                     MOVELMRKT      DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Expand the EoC Failure Indicator.
+      *
+     C                     MOVE *BLANK    SECFIX
+     C                     MOVELECFI      SECFIX
+     C           ECFI      IFEQ 'F'
+     C                     MOVEL'FAILED'  SECFIX
+     C                     END
+      *
+      ** Market-code.
+      *
+     C                     MOVE MRKT      SMRKT2
+      *
+      ** Get Market-name from Market file.
+      **   IF record not found;
+      **   OR record not live :
+      **     Process Database Error.
+      *
+     C           SMRKT2    CHAINMARKTDF              99
+      *
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'                        *************
+     C                     Z-ADD4         DBASE            * DB-ERR 04 *
+     C                     MOVE 'MARKT'   DBFILE           *************
+     C                     MOVELSMRKT2    DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     MOVE MKTN      SMKTN2
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  HELP  Call Help-program
+      ** CALLED FROM S/R  MKTSUB MSGSUB
+      ** CALLS  no other subroutines
+      ********************************************************************
+      *
+     C***********HELP      BEGSR                                          S01199
+      ***********
+     C***********          MOVE 'FF0471'  HBPGM   6                       S01199
+     C***********          MOVEAERR       HERCD 160                       S01199
+     C***********          CALL 'MHELP'                                   S01199
+     C***********          PARM           HBPGM                           S01199
+     C***********          PARM           HERCD                           S01199
+      ***********
+     C***********          ENDSR                                          S01199
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  DSPTIM  Check that Display-file error is Time-out
+      ** CALLED FROM S/R  MKTSUB MSGSUB
+      ** CALLS  S/R  *PSSR
+      ********************************************************************
+      *
+     C           DSPTIM    BEGSR
+      *
+      * IF  an Input/Output Error has been detected with an indicator,
+      * AND status-code signifies that display timed out :
+      *   Reset the I/O failure indicator.
+      * OTHERWISE :
+      *   Execute the Program Status Subroutine.
+      *
+     C           *IN77     IFEQ '1'
+     C           STSD      ANDEQ01331
+     C                     SETOF                     77
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  *PSSR  Program status subroutine
+      ** CALLED (EXPLICITLY) FROM S/R  DSPTIM
+      ** CALLS  no other subroutines
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           EPSW      IFNE '1'
+     C                     MOVE '1'       EPSW    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  DBERR  End program on Database Error
+      ** CALLED FROM  Initial Processing  S/R  MKTVAL MKTFMT
+      ** CALLS  no other subroutines
+      ********************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C                     SETON                     U7  U8
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      ********************************************************************
+      /COPY ZSRSRC,ZDATE2Z3
+** TABCST v TABCS - Expansion of EoC Status
+ 
+IACTIVE INT
+Q  QUEUED
+AACTIVE BCH
+M  MEMOS
+CRESTARTED
+O REOPENED
+H   HELD
+** INF - Information Messages to be displayed at bottom of screen
+NO MARKET CENTRES ARE IN EOC PROCESSING
+No messages have been sent by the chosen Market EOC process
+This program may not end while markets are in EOC processing
+** KYS - Text listing valid Command Keys
+Enter to refresh screen:Market Code:F3   :Rollup:Rolldown:Help
+Enter to refresh screen:Cmd/3:Cmd/12 for markets:Rollup:Rolldown:Help
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,330 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM  PM End of month drop')
+     F********************************************************************
+     F*                                                                  *
+     F*    Midas PORTFOLIO MANAGEMENT                                *
+     F*                                                                  *
+     F*    PM2510  - DROP MATURE / FLAT SECURITY POSITIONS               *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             Date 25Nov94               *
+      *                 72670              Date 30Jun94               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*    S01486 - Portfolio Management Upgrade to Release 10.          *
+     F*    72670  - DROP FLAT MATURE SECURITY POSITIONS                  *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F*************                                 KINFSR *PSSR          S01486
+     F***SDPORTPDIF**E           K        DISK                            S01486
+     F*************                                 KINFSR *PSSR          S01486
+     F** RECORD ID
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F** RECORD ID
+     FPMFLTMLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F** RECORD ID 'QA'
+     FPMAPOSLLUF  E           K        DISK
+     F            PMCPOSP0                          KRENAMEPMAPOSP0
+     F                                              KINFSR *PSSR
+     FPM2510AUO   E                    PRINTER
+     F** RECORD ID RR
+     F*************************************************************
+     E**
+     E** TABLES AND ARRAYS
+     E*********************************************************************
+      ** ARRAY FOR COPYRIGHT
+      *
+     E                    CPY@    1   1 80
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I                                      247 249 WSID
+     I                                      254 263 USID
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***LDA********UDS***********************     256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ICPYR@#      DS
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for Bank details                                 S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I**  Data structure for Bank details                                 S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - POSITIONS PROCESSING                                  *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C**
+     C** KEY LISTS
+     C**
+     C           PMFLAT    KLIST
+     C                     KFLD           SESN
+     C***********          KFLD           P9TVPS                          S01486
+     C                     KFLD           FCTVPS                          S01486
+     C*
+     C           PMPOSN    KLIST
+     C                     KFLD           QACNUM
+     C                     KFLD           QAPTFR
+     C                     KFLD           QATDSS
+     C** P R O G R A M    S T A R T
+     C*************************************************************
+     C**
+     C                     EXSR #INIT
+     C**
+     C                     EXSR #P01
+     C**
+     C                     EXSR #W01
+     C**
+     C                     MOVE '1'       *INLR
+     C*************************************************************
+     C** P R O G R A M    E N D
+     C*************************************************************
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C**
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     MOVEL'PM2510'  DBPGM
+     C                     Z-ADD0         DBASE                           S01486
+     C                     OUT  LDA                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*SDBANKL1*TO*GET*BANK*DETAILS******************************S01486
+     C***********                                                         S01486
+     C***********          READ SDBANKL1                 70               S01486
+     C***********                                                         S01486
+     C************IN70     IFEQ '1'                        ***************S01486
+     C*                                                                   S01486
+     C** Get bank details using access object                             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C** Check if an error occurred                                       S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                        ***************S01486
+     C                     Z-ADD1         DBASE            **DB ERROR 01**
+     C***********          MOVEL'SDBANKL1'DBFILE           ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE                          S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C***********          ELSE                                           S01486
+     C***********                                                         S01486
+     C***RECORD*FOUND*-**LOAD*RUN*DATE*********************************   S01486
+     C***********                                                         S01486
+     C***********          MOVELBJMRDT    RRRUNA                          S01486
+     C***********                                                         S01486
+     C                     END
+     C***********                                                         S01486
+     C***ACCESS*SDPORTPD*TO*GET*PORTFOLIO*ICD**************************   S01486
+     C***********                                                         S01486
+     C***********          READ SDPORTPD                 70               S01486
+     C***********                                                         S01486
+     C************IN70     IFEQ '1'                        ***************S01486
+     C*                                                                   S01486
+     C** Get Portfolio details using access object                        S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C*                                                                   S01486
+     C** Check if an error occurred                                       S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                        ***************S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C***********          MOVEL'SDPORTPD'DBFILE           ***************S01486
+     C                     MOVE 'SDPORTPD'DBFILE                          S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - POSITIONS PROCESSING                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR
+     C**
+     C** READ THROUGH ALL SECURITIES AND PROCESS ONLY MATURED SECURITIES
+     C                     READ SECTY                    71
+     C           *IN71     DOWEQ'0'                        B1
+     C*
+     C           RECI      IFEQ 'M'                        B2
+     C*
+     C** READ THROUGH ALL POSITIONS FOR WHICH THE FLAT EXTRACTED INDICATOR
+     C** IS SET TO 'Y'
+     C           PMFLAT    SETLLPMFLTMLL
+     C           PMFLAT    READEPMFLTMLL                 72
+     C**
+     C           *IN72     DOWEQ'0'                        B3
+     C**
+     C** READ THROUGH ALL RECORDS FOR SECURITY, CUSTOMER AND PORTFOLIO
+     C** SETTING INDICATOR TO 'I'
+     C           PMPOSN    SETLLPMAPOSLL
+     C           PMPOSN    READEPMAPOSLL                 73
+     C*
+     C           *IN73     DOWEQ'0'                        B4
+     C                     MOVE 'I'       QARECI
+     C                     UPDATPMAPOSP0
+     C                     ADD  1         WWRECD  50
+     C           PMPOSN    READEPMAPOSLL                 73
+     C                     END                             E4
+     C**
+     C           PMFLAT    READEPMFLTMLL                 72
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C                     READ SECTY                    71
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W01     - WRITE TO END OF MONTH DROP AUDIT REPORT               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRECD   - NUMBER OF RECORDS DELETED                             *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR
+     C**
+     C** BANK TITLE
+     C**
+     C***********          MOVELBJURPT    RRTITL                          S01486
+     C**
+     C** NUMBER OF RECORDS DELETED
+     C**
+     C                     Z-ADDWWRECD    RRRECD
+     C**
+     C** WRITE TO AUDIT
+     C**
+     C***********          WRITEPM2510P1                                  S01486
+     C                     WRITEHEADER                                    S01486
+     C                     WRITECONTROL                                   S01486
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P02     - ACCESS SECURITY DETAILS                               *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*                                                                   S01486
+     C                     WRITEHEADER                                    S01486
+     C                     WRITEDBERROR                                   S01486
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C**
+     C** ROLL BACK CHANGES, PRINT DUMP AND CANCEL PROGRAM
+     C**
+     C                     DUMP
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+     C                     RETRN
+     C**
+     C                     ENDSR
+**  CPY@
+(c) Finastra International Limited 2001

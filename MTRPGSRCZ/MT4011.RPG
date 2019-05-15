@@ -1,0 +1,614 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MT Telex message conversion')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas Telex Interface                                *
+      *                                                               *
+      *  MT4011 - Telex Message Conversion                            *
+      *                                                               *
+      *  Function:  This program converts Midas Outgoing telex        *
+      *             messages from MGOREFPD to interface file          *
+      *             MTJIMPF.                                          *
+      *                                                               *
+      *  Called By: MTC4010 - Midas MT Message Conversion             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMT001             Date 02Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *  CMT001 - Program created based on MT4010 for Midas Mailer/   *
+      *           Telex Version 3.3 which now uses Orion logical      *
+      *           file N$MO3 (previously N$MO). New telex status      *
+      *           codes were also introduced.                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FMGOREFL2UF  E           K        DISK
+     F                                              KCOMIT
+     FMTJIMPF O   E                    DISK
+     F                                              KCOMIT
+     FMGOMSGPDIF  E           K        DISK
+     FSDMTPYL0IF  E           K        DISK
+     FSDMTAGL0IF  E           K        DISK
+     FSDCUSTL7IF  E           K        DISK
+     FN$MO3   IF  E           K        DISK
+     FN$X1    IF  E           K        DISK
+     F            N#XQ01                            KIGNORE
+     F            N#XD01                            KIGNORE
+     FN$I1    IF  E           K        DISK
+     F            N#DA01                            KIGNORE
+     F            N#SH01                            KIGNORE
+     F            N#SI01                            KIGNORE
+      *
+      * ID C  F  H  L    Function of indicators
+      *    10            EOF MGOREFL2
+      *    11            EOF MFOMSGPD
+      *    31            TAB1/TAB2 LOKUP
+      *    50            MM/MMM LOKUP
+      *    53            Format field LOKUP
+      *    90            EOF SDCUSTPD
+      *    96            EOF SDMTPYPD
+      *    98            EOF SDMTAGPD
+      *    U7U8LR        DB error
+      *
+     E                    TXT     1   3 78               text
+     E                    TAB1    1  12  3   TAB2   77
+     E                    TAB3    1  10  1   TAB4    5
+     E                    TAB5    1  17  1   TAB6    5
+     E                    CPY@    1   1 80
+     E                    ARWK       80  1
+     E                    FLA        50  1               format field
+     E                    FLB        50  1               formatted field
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     I@OSTT       DS                              1
+     I                                        1   1 IDOSTT
+     I                                        1   1 XHOSTT
+      **  Orion status
+      *
+     IMSTAT       DS                              5
+     I                                        1   1 @MGSG
+     I                                        2   5 @MGST
+      **  Midas status and group
+      *
+     IRCD1        DS
+     I I            'T'                       1   1 @A
+     I I            ':   :'                   2   6 @B
+     I                                        3   5 MTPY
+     I                                        8  42 EEMTPD
+      **  Type line
+      *
+     IRCD2        DS
+     I I            'T'                       1   1 @C
+     I                                        2   6 MTAG
+     I                                        3   3 @WK1
+     I                                        5   5 @WL1
+     I                                        7  66 EFRPFD
+      **  Tag line
+      *
+     IRCD3        DS
+     I I            'T'                       1   1 @D
+     I                                        2  51 MFLD
+     I                                        2   2 @WM1
+     I                                        2  13 CSID
+      **  Field line
+      *
+     IRCD4        DS
+     I I            'T'                       1   1 @E
+     I                                        2  21 @CRNM
+     I                                       23  32 @CRTN
+      **  Name & address line
+      *
+     IRCD5        DS
+     I I            'TTESTKEY: '              1  10 @F
+     I                                       11  25 TSKY
+      **  Testkey line
+      *
+     ISYSDAT      DS                              6
+     I                                        1   20SYSYR
+     I                                        3   40SYSMT
+     I                                        5   60SYSDY
+      **  System date
+      *
+     I            DS                             12
+     I                                        1  120TIMDAY
+     I                                        7   80TDDD
+     I                                        9  100TDMM
+     I                                       11  120TDYY
+      **  Receive TIME as HHMMSSDDMMYY
+      *
+     C           MGTAGK    KLIST
+     C                     KFLD           MTAGK   5
+     C                     KFLD           MTPYK   3
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   CNVRT - convert header & destination                        *
+      *   TEXT  - write message text                                  *
+      *   FORM  - Format subfield                                     *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           CNVRT convert header & destination                  *
+      *           TEXT write message text                             *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Read first released telex message reference
+     C           *LOVAL    SETLLMGOREFL2
+     C                     READ MGOREFL2                 10
+      *
+     C           *IN10     IFEQ '0'                                   2
+      *
+      **  Do until EOF message reference file
+     C           *IN10     DOWEQ'0'                                   3
+      *
+      **  if message already sent, update status
+     C           MGST      IFNE 'RSND'
+     C                     EXSR STAT
+      *
+      **  Else perform release function
+     C                     ELSE
+      *
+      **  Convert Header & Destination
+     C                     EXSR CNVRT
+      *
+      **  Access message file using message reference
+     C           TRNO      SETLLMGOMSGPD
+     C           PTDL      DOUNE'D'                                   4
+     C           *IN11     OREQ '1'
+     C           TRNO      READEMGOMSGPD                 11
+     C                     END                                       E4
+      *
+     C           *IN11     IFEQ '1'                                   4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVELTRNO      DBKEY            * DB ERROR 01 *
+     C                     MOVE 'MGOMSGPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E4
+      *
+      **  Add testkey if required
+     C           TSKY      IFNE *BLANKS                               4
+     C                     MOVE *BLANKS   WDTA
+     C                     MOVELRCD5      WDTA
+     C                     WRITEMTJIMPFF
+     C                     END                                       E4
+      *
+      **  Process messages records with TRNO
+     C           *IN11     DOWEQ'0'                                   4
+      *
+      **  Write message text
+     C                     EXSR TEXT
+      *
+      **  Access next message file record with TRNO
+     C           PTDL      DOUNE'D'                                   5
+     C           *IN11     OREQ '1'
+     C           TRNO      READEMGOMSGPD                 11
+     C                     END                                       E5
+     C                     END                                       E4
+      *
+     C                     MOVE 'TWTG'    MGST
+     C                     EXCPT
+     C                     COMIT
+      *
+      **  Set return code to imply data extracted
+     C                     MOVEL'Y'       @RTCD
+      *
+     C                     ENDIF
+      *
+      **  Read next released telex message reference
+     C                     READ MGOREFL2                 10
+     C                     END                                       E3
+      *
+     C                     END                                       E2
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Return code parm: Y=> data extracted; N=> no data extracted
+     C           *ENTRY    PLIST
+     C                     PARM           @RTCD   1
+      *
+      **  Initialise parameter
+     C                     MOVEL'N'       @RTCD
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MT4011'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Define all work fields.
+     C                     TIME           TIMDAY
+     C                     MOVE TDYY      SYSYR
+     C                     MOVE TDMM      SYSMT
+     C                     MOVE TDDD      SYSDY
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   CNVRT - CONVERT HEADER & DESTINATION                        *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           CNVRT     BEGSR
+      *
+      **  Clear Work Array ARWK
+     C                     MOVEA*BLANKS   ARWK
+      *
+      **  Move RECORD-ID value to Work Array.
+     C                     MOVEA'H'       ARWK,1
+      *
+      **  Overwrite with deal no.
+     C                     MOVELMTRN      DEAL    6
+     C                     MOVEADEAL      ARWK,2
+      *
+      **  Use Message Type of record being processed to obtain the
+      **  correct text for Item Title.
+     C           MTPY      LOKUPTAB1      TAB2           31
+     C           *IN31     IFEQ '1'                                   1
+     C                     MOVEATAB2      ARWK,9
+     C                     ELSE                                      X1
+     C                     MOVEATXT,3     ARWK,9
+     C                     END                                       E1
+      *
+      **  Move Item Type value to Work Array.
+     C                     Z-ADD32        X       20
+     C                     MOVEA'TMSG'    ARWK,X
+      *
+      **  Move System Date value to Work Array.
+     C                     Z-ADD36        X
+     C                     MOVEASYSDAT    ARWK,X
+      *
+      **  Move System Time value to Work Array.
+     C                     Z-ADD42        X
+     C                     TIME           SYSTIM  60
+     C                     MOVELSYSTIM    SYSTM   4
+     C                     MOVEASYSTM     ARWK,X
+      *
+      **  Move Current Owner to Work Array.
+     C                     Z-ADD46        X
+     C                     MOVEA'MIDAS'   ARWK,X
+      *
+      **  Move Default Earliest Date to Work Array.
+     C                     Z-ADD66        X
+     C                     MOVE *ZEROS    ERLDT   6
+     C                     MOVEAERLDT     ARWK,X
+      *
+      **  Move Default Earliest Time to Work Array.
+     C                     Z-ADD72        X
+     C                     MOVE *ZEROS    ERLTM   4
+     C                     MOVEAERLTM     ARWK,X
+      *
+      **  Move Message Priority to Work Array.
+     C                     Z-ADD76        X
+     C                     MOVEA'2'       ARWK,X
+      *
+      **  Move Work Array to output field.
+     C                     MOVEAARWK      WDTA
+      *
+      **  Write MTJIMPF Header Record.
+     C                     WRITEMTJIMPFF
+      *
+      **  Clear Work Array ARWK.
+     C                     MOVEA*BLANKS   ARWK
+      *
+      **  Move RECORD-ID value to Work Array.
+     C                     MOVEA'D'       ARWK,1
+      *
+      **  Move Telex Destination Address Code to Work Array.
+     C                     MOVEANWDS      ARWK,2
+      *
+      **  Move To/Copy Option to Work Array.
+     C                     Z-ADD12        X
+     C                     MOVEA'T'       ARWK,X
+      *
+      **  Move Work Array to output field.
+     C                     MOVEAARWK      WDTA
+      *
+      **  Write MTJIMPF Destination Record.
+     C                     WRITEMTJIMPFF
+      *
+     C           MTPY      CHAINSDMTPYL0             96
+     C           *IN96     IFEQ '1'                                   1
+     C                     MOVELTXT,1     EEMTPD
+     C                     END                                       E1
+      *
+     C                     MOVE *BLANKS   WDTA
+     C                     MOVELRCD1      WDTA
+     C                     WRITEMTJIMPFF
+      *
+     C                     MOVE *BLANKS   WDTA
+     C                     MOVEL'T'       WDTA
+     C                     WRITEMTJIMPFF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   TEXT - write message text                                   *
+      *   Called by main process                                      *
+      *   Calls - FORM format subfield                                *
+      *****************************************************************
+      *
+     C           TEXT      BEGSR
+      *
+      **  Access field tag file using message tag & type then just tag
+     C                     MOVE *BLANKS   EFTAGF
+     C           MTAG      IFNE *BLANKS                               1
+     C/COPY WNCPYSRC,MT4010C001
+      *
+     C                     MOVELMTAG      MTAGK
+     C                     MOVELMTPY      MTPYK
+     C           MGTAGK    CHAINSDMTAGL0             98
+     C           *IN98     IFEQ '1'                                   2
+     C           MTAGK     CHAINSDMTAGL0             98
+      *
+     C           *IN98     IFEQ '1'                                   3
+     C                     MOVELTXT,2     EFRPFD
+     C                     END                                       E3
+     C                     END                                       E2
+     C/COPY WNCPYSRC,MT4010C002
+      *
+     C                     MOVE *BLANKS   WDTA
+     C                     MOVELRCD2      WDTA
+     C                     WRITEMTJIMPFF
+     C                     END                                       E1
+     C/COPY WNCPYSRC,MT4010C003
+      *
+      **  Call appropriate formatting subroutine
+     C           EFTAGF    IFNE *BLANKS                               1
+     C                     EXSR FORM
+     C                     END                                       E1
+      *
+     C                     MOVE *BLANKS   WDTA
+     C                     MOVELRCD3      WDTA
+     C                     WRITEMTJIMPFF
+      *
+      **  If SWIFT address obtain name/town
+     C           @WK1      IFEQ '5'                                   1
+     C           @WL1      ANDEQ'A'
+     C           @WM1      ANDNE'/'
+     C           CSID      CHAINSDCUSTL7             90
+      *
+     C           *IN90     IFEQ '0'                                   2
+     C                     MOVE BBCRNM    @CRNM
+     C                     MOVE BBCRTN    @CRTN
+     C                     MOVE *BLANKS   WDTA
+     C                     MOVELRCD4      WDTA
+     C                     WRITEMTJIMPFF
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   FORM  - Format subfield                                     *
+      *   Called by - TEXT write message text                         *
+      *****************************************************************
+      *
+     C           FORM      BEGSR
+      *
+     C                     MOVEAMFLD      FLA
+     C                     MOVE *BLANKS   FLB
+     C                     Z-ADD1         A       20
+     C           ','       LOKUPFLA,A                    53
+     C           *IN53     IFEQ '1'                                   1
+     C                     MOVE '.'       FLA,A
+     C                     END                                       E1
+      *
+     C           EFTAGF    IFEQ 'DCA'                                 1
+     C           EFTAGF    OREQ 'D'
+     C                     MOVEAFLA,1     @WK2    2
+     C                     MOVEA@WK2      FLB,1
+     C                     MOVE '/'       FLB,3
+     C                     MOVEAFLA,3     @WK2
+     C                     MOVEA@WK2      FLB,4
+     C                     MOVE '/'       FLB,6
+     C                     MOVEAFLA,5     @WK2
+     C                     MOVEA@WK2      FLB,7
+     C                     END                                       E1
+      *
+     C           EFTAGF    IFEQ 'DCA'                                 1
+     C                     MOVEAFLA,7     @WL3    3
+     C                     MOVEA@WL3      FLB,10
+     C                     MOVEAFLA,10    @WK15  15
+     C                     MOVEA@WK15     FLB,14
+     C                     END                                       E1
+      *
+     C           EFTAGF    IFEQ 'CA'                                  1
+     C                     MOVEAFLA,1     @WL3
+     C                     MOVEA@WL3      FLB,1
+     C                     MOVEAFLA,4     @WK15
+     C                     MOVEA@WK15     FLB,5
+     C                     END                                       E1
+      *
+     C           EFTAGF    IFEQ 'A'                                   1
+     C                     MOVEAFLA,1     FLB,1
+     C                     END                                       E1
+     C                     MOVEAFLB       MFLD
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   STAT  - Update Midas file status with information from      *
+      *           Orion files                                         *
+      *   Called by - Main process                                    *
+      *****************************************************************
+      *
+     C           STAT      BEGSR
+      *
+      **  Try to find reference record on Orion files:- N$MO3 record
+      **  contains our TRN and Orion's reference number. Get Orion's
+      **  reference number, and if found, get their status record.
+      **  If possible get their status from N#XH; if it's not there
+      **  try N#ID. If it's not on N#ID it must be either re-routed or
+      **  deleted. Access N#IH; if a record is found it's re-route,
+      **  else deleted.
+     C                     MOVELTRNO      @KEY   15
+     C           @KEY      CHAINN$MO3                40
+     C           *IN40     IFEQ '0'
+      *
+      **  If record found, access N#XH for status
+     C           MOITEM    CHAINN$X1                 40
+     C           *IN40     IFEQ '0'
+     C           XHOSTT    LOKUPTAB3      TAB4           45
+     C           *IN45     IFEQ '1'
+     C                     MOVELTAB4      MSTAT
+     C                     MOVEL@MGSG     MGSG
+     C                     MOVEL@MGST     MGST
+     C                     ELSE
+     C                     MOVEL'TUNK'    MGST
+     C                     ENDIF
+     C                     ELSE
+      *
+      **  if no N#XH record, try N#ID
+     C           MOITEM    CHAINN#ID01               40
+     C           *IN40     IFEQ '0'
+     C           IDOSTT    LOKUPTAB5      TAB6           45
+     C           *IN45     IFEQ '1'
+     C                     MOVELTAB6      MSTAT
+     C                     MOVEL@MGSG     MGSG
+     C                     MOVEL@MGST     MGST
+     C                     ELSE
+     C                     MOVEL'TUNK'    MGST
+     C                     ENDIF
+     C                     ELSE
+      *
+      **  if no record on N#ID, see if it is on N#IH - if it is the
+      **  message is in re-route; otherwise the message must have
+      **  been deleted
+     C           MOITEM    CHAINN#IH01               40
+     C           *IN40     IFEQ '0'
+     C                     MOVEL'TRRT'    MGST
+     C                     ELSE
+     C                     MOVEL'4'       MGSG
+     C                     MOVEL'TDLT'    MGST
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Update MGOREFPD with status from Orion
+     C                     EXCPT
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR                           STAT
+     C/EJECT                                                              066991
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      **  Update MGOREFL2
+     OMGOREFD0E
+     O                         MGSG
+     O                         MGST
+**  Text
+<MSG DESC NOT FOUND>
+<TAG DESC NOT FOUND>
+Midas Telex Message
+**  TAB1/TAB2 - message type/title
+100Customer Transfer
+200Bank Transfer Own A/C
+202Bank Transfer 3rd Bnk
+203Multi-Transfer 3rd Bnk
+210Advice to Receive
+300F.X. Confirmation
+320Confirm Fix Loan/Dep't
+324Liquidate Loan/Deposit
+330Confirm C/N Loan/Dep't
+350Advice Interest
+400Advice of Payment
+950Statement
+**  TAB3/TAB4 - N#XH status v. Midas status group and status code
+ 2TOUT
+02TCAN
+12TRTY
+32TACT
+53TSNT
+82THLE
+A2THLO
+B2TBOX
+D2TCNR
+R2TREL
+**  TAB5/TAB6 - N#ID status v. Midas status group and status code
+ 2TWTG
+02TCAN
+12TWTG
+22TRTS
+32TDES
+42TONQ
+53TSNT
+62TCMP
+S2TSPV
+72THOR
+82THLE
+92THTC
+A2THLO
+B2TCAR
+C2THOP
+D2TIRS
+Y2TCNA
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

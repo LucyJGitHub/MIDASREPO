@@ -1,0 +1,2322 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Decision Table - Transaction Types')             *
+     F********************************************************************
+     F*                                                                  *
+     F*    MIDAS/ABS - EUROPEAN REPORTING                                *
+     F*                                                                  *
+     F*    ERLU40 - DECISION TABLE - TRANSACTION TYPES                   *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2005                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 03May06               *
+      *                 BUG10452            Date 09Feb06              *
+      *                 CLE042              Date 06Sep05              *
+      *                 CER001              Date 25Apr05              *
+      *                 ULX047              Date 05Dec02              *
+      *                 UPG402              Date 03Oct04              *
+     F*                   ULX046              Date 22Oct02               *
+     F*                   ADIFIX              Date 03Sep99               *
+     F*                   ULX024              Date 03Sep99               *
+     F*                   ULX011              Date 22Apr98               *
+     F*                   ULX004              Date 10Jan95               *
+     F*                   ER0449 TLI          Date 10Jan95               *
+     F*                   ERL436 LV           Date 02Sep94               *
+     F*                   ERL415 PT           DATE 22JUL94               *
+     F*                   ERL386 PT           DATE 01FEB94               *
+     F*                   ERL354 TLI          DATE 21JUN93               *
+     F*                   ER0324 AF           DATE 02MAR93               *
+     F*                   ER0323 TLI          DATE 01MAR93               *
+     F*                   ER0314 TLI          DATE 29JAN93               *
+     F*                   ERL200 TLI          DATE 13JAN93               *
+     F*                   ER0101 ADs          DATE 24NOV92               *
+     F*                   ER0100 ADs          DATE 24NOV92               *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD027A - Conversion of customer number to alpha (post       *
+      *            build 103). Recompiled.                            *
+      *  BUG10452 - No item reported on CADREPORT job                 *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     F*    ULX047 - CSSF Market Values Calculation (not possible to      *
+     F*             maintain FRA, IRS, floors, caps and collars anymore) *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+     F*    ULX046 - Circulars 2002/170-174-175 Integration               *
+     F*    ADIFIX - Rename PLDPCD as different definition in INVTPD      *
+     F*             from FDDTSTPD and SDLOANPD                           *
+     F*    ULX024 - Trade Innovation/CSSF Reporting Interface            *
+     F*    ULX011 - IML Circular 97/138                                  *
+     F*    ULX004 - Capital Adequacy                                     *
+     F*             To run temporary IML and CAD together.               *
+     F*    ER0449 - INCLUDE FIDUCIARY LOANS AND FIDUCIARY DEPOSITS       *
+     F*    ERL436 - INCLUDE DISCRETIONARY CUSTOMER ASSETS PROCESSING     *
+     F*    ERL415 - IML CODES 1.1 VALIDATION                             *
+     F*    ERL386 - INCLUDE CUSTOMER POSITIONS PROCESSING                *
+     F*    ERL354 - INCLUDE DEPOT MOVEMENTS PROCESSING                   *
+     F*    ER0324 - Extract records if Deal Date reached                 *
+     F*    ER0323 - INCLUDE COMMERCIAL LOANS PROCESSING                  *
+     F*    ER0314 - SETUP NARRATIVE FIELD TO BLANK                       *
+     F*    ERL200 - NEW SUBFILE PROCESSING                               *
+     F*    ER0101 - Decision Key length from 6 to 8                      *
+     F*           - Instrument Type Key format is changed from 'INSTR '  *
+     F*             (inst-type) ) to 'BKINSTRP' (book/inst_type/put_call)*
+     F*             (add the new message ERB4011 in xxERUSRMSG)          *
+     F*    ER0100 - Missing Deal Types (completetion of fix ER1008)      *
+     F*****************************************************************
+     F*
+     FERPRDCPDIF  E           K        DISK                               ULX011
+      *                                                                   ULX011
+     FERLU11PDIF  E           K        DISK                               ERL415
+     F*                                                                   ERL415
+     FERLUTTL0UF  E           K        DISK         KCOMIT       A
+     F            ERLUTTD0                          KRENAMEUPERLUTT
+     FERLUTTL1IF  E           K        DISK
+     F*
+     F******SDBANKPDIF  E           K        DISK                         ULX004
+     F*
+     FSDBOOKL0IF  E           K        DISK
+     F*
+     F*DDLSTL1IF  E           K        DISK                               165675
+     FSDDLSTL1IF  E           K        DISK                               ULX047
+     F*
+     FFDDTSTL1IF  E           K        DISK                               165675
+     F*** 'DL' ***
+     F*
+     FSDLOANL1IF  E           K        DISK
+     F*** 'LE' ***
+     F*
+     FSDFACTL1IF  E           K        DISK
+     F*** 'FC' ***
+     F*
+     FINVTO   IF  E           K        DISK
+     F*** 'IV' ***
+     F*
+     F******INTYP   IF  E           K        DISK                         ULX004
+     F*** 'IT' ***
+     FERTIPTL0IF  E           K        DISK                               ULX024
+      ***  Midas TI Product Code/Type Combination Table                   ULX024
+      *                                                                   ULX024
+     FERTIPCPDIT  F      39           EDISK                               ULX024
+      *                                                                   ULX024
+     F*
+     FERLU40DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE ERLU40S1
+     E*****************************************************************
+     E******              PROD   18  52  4 0                       ULX004 ULX011
+     E                    PORT   10  10  1                                ULX004
+     E                    ARR        30  1               ARRAY FOR LENGHT
+     E* ARRAY FOR DEAL TYPES
+     E******              ARDL   22  22  2                                ER0100
+     E                    ARDL   36  36  2                                ER0100
+     E                    ARDP1   6   6  2                                ERL354
+     E                    ARDP2   2   6 17                                ERL354
+     E*
+     E********************ARCP    1   1 30                          ERL386ERL436
+     E                    ARCP    1   2 30                                ERL436
+     E                    TABIT1  1  22  8   TABIT2 30   * IT Narratives  ULX004
+     E                    AMTY   33  33  2                                ULX046
+     E                    AMTY2  33  33  2                                ULX046
+     E                    CPY@    1   1 80
+     E****ERTIPCPD        CODE    1  30  4   NARR   35                                        CER001
+     E    ERTIPCPD        CODE    1  70  4   NARR   35                                        CER001
+     I*****************************************************************
+     IINVTPDF                                                             ADIFIX
+      ** Rename PLDPCD waiting for a core correction                      ADIFIX
+      *                                                                   ADIFIX
+     I              PLDPCD                          IVDPCD                ADIFIX
+     I* PROGRAM DATA STRUCTURE
+     IPGMDS     ESDSY2PGDSP
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I***
+     I            DS
+     I                                        1  30 DHNARA
+     I                                       31  31 DHEXTT
+     I                                       32  39 DHDEBI
+     I                                       40  47 DHCRED
+     I***************************************48  48 DHAMTY                ULX004
+     I****************************************1  48 SELEC1                ULX004
+     I******                                 48  51 DHPRCD                ULX011
+     I******                                 52  52 DHPORT                ULX011
+     I******                                  1  52 SELEC1                ULX011
+     I*D***                                  48  48 DHAMTY        ULX011  ULX046
+     I*D***                                  49  52 DHPRCD        ULX011  ULX046
+     I*D***                                  53  53 DHPORT        ULX011  ULX046
+     I*D***                                   1  53 SELEC1        ULX011  ULX046
+     I                                       48  49 DHAMTY                ULX046
+     I                                       50  53 DHPRCD                ULX046
+     I                                       54  54 DHPORT                ULX046
+     I                                        1  54 SELEC1                ULX046
+     I***
+     I            DS
+     I                                        1  30 WWNARA
+     I                                       31  31 WWEXTT
+     I                                       32  39 WWDEBI
+     I                                       40  47 WWCRED
+     I***************************************48  48 WWAMTY                ULX004
+     I****************************************1  48 SELEC2                ULX004
+     I******                                 48  51 WWPRCD                ULX011
+     I******                                 52  52 WWPORT                ULX011
+     I******                                  1  52 SELEC2                ULX011
+     I*D***                                  48  48 WWAMTY         ULX011 ULX046
+     I*D***                                  49  52 WWPRCD         ULX011 ULX046
+     I*D***                                  53  53 WWPORT         ULX011 ULX046
+     I*D***                                   1  53 SELEC2         ULX011 ULX046
+     I                                       48  49 WWAMTY                ULX046
+     I                                       50  53 WWPRCD                ULX046
+     I                                       54  54 WWPORT                ULX046
+     I                                        1  54 SELEC2                ULX046
+     I***
+     I            DS
+     I                                        1   2 DSMOD
+     I******                                  3   8 DSTYPE                ER0102
+     I**********                              3  10 DSTYPE                             ER0102 CER001
+     I                                        3  16 DSTYPE                                    CER001
+     I                                        3   4 DSTYP1
+     I                                        5   6 DSTYP2
+     I                                        7   7 DSTYP3                ER0324
+     I                                        8   8 DSTYP4                ER0324
+     I                                        5   5 DSTYP5                ULX004
+     I                                        6   6 DSTYP6                ULX004
+     I                                        7  10 DSTYP7                ULX004
+     I                                        8  11 DSTYP8                                    CER001
+     I******                                  1   8 DSKEY                 ER0102
+     I**********                              1  10 DSKEY                              ER0102 CER001
+     I                                        1  16 DSKEY                                     CER001
+     I***
+     I            DS
+     I                                        1   2 DHMOD
+     I******                                  3   8 DHTYPE                ER0102
+     I**********                              3  10 DHTYPE                             ER0102 CER001
+     I                                        3  16 DHTYPE                                    CER001
+     I******                                  1   8 DHKEY                 ER0102
+     I**********                              1  10 DHKEY                              ER0102 CER001
+     I                                        1  16 DHKEY                                     CER001
+     I***
+     I            DS
+     I                                        1   2 WWMOD
+     I******                                  3   8 WWTYPE                ER0102
+     I**********                              3  10 WWTYPE                             ER0102 CER001
+     I                                        3  16 WWTYPE                                    CER001
+     I******                                  1   8 WWKEY                 ER0102
+     I**********                              1  10 WWKEY                              ER0102 CER001
+     I                                        1  16 WWKEY                                     CER001
+      *                                                                   ULX004
+      **  External DS for Bank Details                                    ULX004
+     ISDBANK    E DSSDBANKPD                                              ULX004
+      *                                                                                       CER001
+      ** External DS for SAR details                                                          CER001
+     ISCSARD    E DSSCSARDPD                                                                  CER001
+      *                                                                   ULX004
+      * First DS for access programs, SHORT DATA STRUCTURE                ULX004
+     IDSFDY     E DSDSFDY                                                 ULX004
+      *                                                                   ULX004
+      * Second DS dor access programs, LONG DATA STRUCTURE                ULX004
+     IDSSDY     E DSDSSDY                                                 ULX004
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     C**************************************************************************
+     C* MAIN PROCESSING                                                        *
+     C**************************************************************************
+     C* CALL INIT SUBROUTINE
+     C**************************************************************************
+     C           ERKEY1    KLIST
+     C                     KFLD           DSMOD
+     C                     KFLD           DSTYPE
+     C*
+     C           ERKEY2    KLIST
+     C                     KFLD           DHMOD
+     C                     KFLD           DHTYPE
+     C*
+     C           ERKUP     KLIST                                          ERL200
+     C                     KFLD           UPMOD   2                       ERL200
+     C**********           KFLD           UPTYP   8                                    ERL200 CER001
+     C                     KFLD           UPTYP  14                                           CER001
+     C*                                                                   ERL200
+     C           KEY4      KLIST
+     C                     KFLD           DSTYP1
+     C                     KFLD           DSTYP2
+     C                     KFLD           DSTYP8                                              CLE042
+      *                                                                                       CER001
+     C           KEY5      KLIST                                                              CER001
+     C                     KFLD           DSTYP1                                              CER001
+     C                     KFLD           DSTYP2                                              CER001
+     C                     KFLD           DSTYP8                                              CER001
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           #RETRN  1
+     C                     PARM           CTRY    2
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   @RTCD   7        * AO Parameter ULX004
+     C                     MOVE *BLANKS   @OPTN   7        * AO Paramrter ULX004
+     C*
+     C                     EXSR INIT                       INITIATION
+     C*
+     C                     EXSR MAIN
+     C*
+     C** SETUP RETURN CODE
+     C           *INKC     IFEQ '1'
+     C                     MOVE '3'       #RETRN
+     C                     END
+     C*
+     C** END OF PGM
+     C                     MOVE '1'       *INLR
+     C                     ROLBK
+     C*
+     C                     RETRN
+     C**************************************************************************
+     C** MAIN - MAIN SUBROUTINE
+     C**************************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C** ' ADD MODE ' ON FIRST CYCLE
+     C           *IN09     IFNE '1'                        - B1
+     C*
+     C                     EXSR INISFL                     INIT. SUBFILE
+     C                     EXSR LOASFE                     LOAD SUBFILE ENQUIRY
+     C                     Z-ADD1         RRN
+     C*
+     C                     END                             - E1
+     C*
+     C* DO WHILE NOT F3 OR F12 PRESSED
+     C           *INKC     DOWEQ'0'                        - B1
+     C           *IN12     ANDEQ'0'
+     C*
+     C                     MOVE SELEC1    SELEC2
+     C*
+     C** RESET F9 INDICATOR
+     C                     MOVE '0'       *IN16
+     C*
+     C* WRITE SUBFILE
+     C           *IN09     IFNE '1'                        - B2
+     C*
+     C                     WRITEERLU40C0                   BOTTOM
+     C                     EXFMTERLU40C1                   SUBFILE
+     C*
+     C** CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*                                                                   ERL200
+     C** WICH KEY HAS BEEN PRESSED                                        ERL200
+     C                     EXSR PRESS                                     ERL200
+     C*                                                                   ERL200
+     C           WWAID     IFEQ 'UP'                       - B3           ERL200
+     C                     Z-ADDWWRRN     RRN                             ERL200
+     C                     EXSR LOASFE                                    ERL200
+     C                     END                             - E3           ERL200
+     C*                                                                   ERL200
+     C                     END                             - E2
+     C*
+     C**************************************************************************
+     C** F9 HAS BEEN PRESSED
+     C**************************************************************************
+     C           *IN09     IFEQ '1'                        - B2
+     C                     EXSR SRF9
+     C                     MOVE SELEC1    SELEC2
+     C           *INKC     IFEQ '1'                        - B3
+     C                     MOVE '0'       *IN16
+     C                     END                             - E3
+     C                     END                             - E2
+     C**************************************************************************
+     C** ENTER HAS BEEN PRESSED
+     C**************************************************************************
+     C           *IN45     IFEQ '0'                        - B2
+     C           *IN16     ANDEQ'0'
+     C*
+     C           *IN45     IFEQ '0'                        - B3
+     C           DHKEY     ANDNEWWKEY
+     C           *IN45     OREQ '0'
+     C           SELEC1    ANDNESELEC2
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+     C                     Z-ADD1         RRN
+     C                     END                             - E3
+     C*
+     C** CHECK IF CHANGES IN SUBFILE
+     C                     EXSR SRCHCK
+     C*
+     C                     END                             - E2
+     C**************************************************************************
+     C** F5 HAS BEEN PRESSED : REFRESH PROCESSING ==> REBUILD SUBFILE
+     C** OR BACK FROM F9 SCREEN WITH F9 OR F12
+     C**************************************************************************
+     C                     MOVE *BLANKS   IN16
+     C           *IN05     IFEQ '1'                        - B2
+     C           *IN16     OREQ '1'
+     C                     MOVE 'Y'       IN16    1
+     C                     MOVE '0'       *IN16
+     C                     MOVE *BLANKS   DHKEY
+     C                     MOVE *BLANKS   DHNARA
+     C                     MOVE *BLANKS   DHEXTT
+     C                     MOVE *BLANKS   DHDEBI
+     C                     MOVE *BLANKS   DHCRED
+     C*********************MOVE *BLANKS   DHAMTY                          ULX004
+     C                     MOVE *BLANKS   DHAMTY                          ULX011
+     C                     MOVE *BLANKS   DHPRCD                          ULX004
+     C                     MOVE *BLANKS   DHPORT                          ULX004
+     C*
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+     C                     Z-ADD1         RRN
+     C                     MOVE *BLANKS   IN16
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C*
+     C**************************************************************************
+     C* SRF9 - SUBROUTINE EXECUTED IF F9 PRESSED
+     C**************************************************************************
+     C*
+     C           SRF9      BEGSR
+     C*
+     C                     MOVE '1'       *IN16
+     C*
+     C                     EXSR INISFL
+     C                     EXSR LOASF9
+     C                     Z-ADD1         RRN
+     C*
+     C           *INKC     DOWEQ'0'                        - B1
+     C           *IN12     ANDEQ'0'
+     C*
+     C* WRITE SUBFILE 'F9'
+     C                     WRITEERLU40C0                   BOTTOM
+     C                     EXFMTERLU40C1                   SUBFILE
+     C*
+     C** CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C** F9 PRESSED ONCE AGAIN = F12 IS SETON
+     C           *IN09     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN12
+     C                     MOVE '0'       *IN09
+     C                     END                             - E2
+     C*
+     C** ENTER HAS BEEN PRESSED ON 'F9' SCREEN
+     C           *IN45     IFEQ '0'                        - B2
+     C                     READCERLU40S1                 32
+     C*
+     C           *IN32     DOWEQ'0'                        - B3
+     C*
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28                           ULX004
+     C                     MOVE '0'       *IN29                           ULX011
+     C                     MOVE '0'       *IN63
+     C                     MOVE *BLANKS   DSNARA
+     C*
+     C** VALIDATION ON 'ADD' MODE
+     C*
+     C** ALREADY EXISTS ON FILE
+     C           ERKEY1    CHAINERLUTTL1             88
+     C           *IN88     IFEQ '0'                        - B4
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E4
+     C*
+     C** MODULE IDENTIFIER
+     C           DSMOD     IFNE 'DL'                       - B4
+     C           DSMOD     ANDNE'LE'
+     C           DSMOD     ANDNE'FC'
+     C           DSMOD     ANDNE'IV'
+     C           DSMOD     ANDNE'IT'
+     C           DSMOD     ANDNE'CL'                                      ER0323
+     C           DSMOD     ANDNE'DP'                                      ERL354
+     C           DSMOD     ANDNE'CP'                                      ERL386
+     C           DSMOD     ANDNE'DA'                                      ERL436
+     C           DSMOD     ANDNE'FD'                                      ER0449
+     C           DSMOD     ANDNE'FL'                                      ER0449
+     C           DSMOD     ANDNE'TI'                                      ULX024
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X4
+     C*
+     C           DSMOD     IFEQ 'DL'                       - B5
+     C           DSMOD     OREQ 'CL'                                      ER0323
+     C*
+     C** VALIDATION DEAL TYPE
+     C*
+     C           DSMOD     IFEQ 'DL'                       - B7           ER0323
+     C           DSTYP1    LOKUPARDL                     50
+     C           *IN50     IFEQ '0'                        - B6
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E6
+     C                     END                             - E7           ER0323
+     C*
+     C** TEST LOAN TYPE FOR COMMERCIAL LOANS                              ER0323
+     C           DSMOD     IFEQ 'CL'                       - B6           ER0323
+     C           DSTYP1    IFNE 'TE'                       - B7           ER0323
+     C           DSTYP1    ANDNE'RC'                                      ER0323
+     C           DSTYP1    ANDNE'DS'                                      ER0323
+     C                     MOVE '1'       *IN23                           ER0323
+     C                     MOVE '1'       *IN63                           ER0323
+     C                     MOVEL'ERB4006' ZAMSID                          ER0323
+     C                     EXSR ZASNMS                                    ER0323
+     C                     END                             - E7           ER0323
+     C                     END                             - E6           ER0323
+     C*
+     C** VALIDATION DEAL SUB-TYPE
+     C*
+     C***        DSTYP2    CHAINSDDLSTL1             88                   165675
+     C           DSTYP1    IFNE 'FR'                       - B61          ULX047
+     C           DSTYP1    ANDNE'RS'                                      ULX047
+     C           DSTYP1    ANDNE'RX'                                      ULX047
+     C           DSTYP1    ANDNE'RR'                                      ULX047
+     C           DSTYP1    ANDNE'RP'                                      ULX047
+     C           DSTYP1    ANDNE'RF'                                      ULX047
+     C********** KEY4      CHAINFDDTSTL1             88                                165675 CER001
+     C           KEY5      CHAINFDDTSTL1             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B6
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E6           ULX047
+     C                     ELSE                            - X61          ULX047
+     C           DSTYP2    CHAINSDDLSTL1             88                   ULX047
+     C           *IN88     IFEQ '1'                        - B6           ULX047
+     C                     MOVE '1'       *IN23                           ULX047
+     C                     MOVE '1'       *IN63                           ULX047
+     C                     MOVEL'ERB4003' ZAMSID                          ULX047
+     C                     EXSR ZASNMS                                    ULX047
+     C                     ENDIF                           - E6           ULX047
+     C                     ENDIF                           - E61          ULX047
+     C*********************ELSE                            - X6           ULX047
+     C*
+     C***FOUR*LAST*POSITIONS*MUST*BE*LEFT*BLANK                    ER0102 ER0324
+     C*
+     C******               MOVE DSTYPE    BLANK4  4                ER0102 ER0324
+     C******     BLANK4    IFNE *BLANKS                    - B7    ER0102 ER0324
+     C*                                                                   ER0324
+     C******               MOVE '1'       *IN23                           ER0324
+     C******               MOVE '1'       *IN63                           ER0324
+     C******               MOVEL'ERB4009' ZAMSID                          ER0324
+     C******               EXSR ZASNMS                                    ER0324
+     C******               ELSE                            - X7           ER0324
+     C******               MOVELASDSTN    DSNARA                          ER0324
+     C******               END                             - E7           ER0324
+     C*                                                                   ER0324
+     C** THREE OR FOUR LAST POSITIONS MUST BE LEFT BLANK                  ER0324
+     C*                                                                   ER0324
+     C           *IN88     IFEQ *OFF                                      ULX047
+     C*                                                                   ULX047
+     C           DSTYP3    IFEQ 'O'                        - B7           ER0324
+     C                     MOVE DSTYPE    BLANK3  3                       ER0324
+     C*                                                                   ER0324
+     C           BLANK3    IFNE *BLANKS                    - B8           ER0324
+     C                     MOVE '1'       *IN23                           ER0324
+     C                     END                             - E8           ER0324
+     C*                                                                   ER0324
+     C                     ELSE                            - X7           ER0324
+     C*                                                                   ER0324
+     C                     MOVE DSTYPE    BLANK4  4                       ER0324
+     C*                                                                   ER0324
+     C           BLANK4    IFNE *BLANKS                    - B8           ER0324
+     C                     MOVE '1'       *IN23                           ER0324
+     C                     END
+     C*                                                                   ER0324
+     C                     END                             - E7           ER0324
+     C*                                                                   ER0324
+     C           *IN23     IFEQ '1'                        - B7           ER0324
+     C                     MOVE '1'       *IN63                           ER0324
+     C                     MOVEL'ERB4009' ZAMSID                          ER0324
+     C                     EXSR ZASNMS                                    ER0324
+     C                     ELSE                            - X7           ER0324
+     C****                 MOVELASDSTN    DSNARA                          ER0324
+     C           DSTYP1    IFNE 'FR'                       - B8           ULX047
+     C           DSTYP1    ANDNE'RS'                                      ULX047
+     C           DSTYP1    ANDNE'RX'                                      ULX047
+     C           DSTYP1    ANDNE'RR'                                      ULX047
+     C           DSTYP1    ANDNE'RP'                                      ULX047
+     C           DSTYP1    ANDNE'RF'                                      ULX047
+     C                     MOVELNARR11    DSNARA                          165675
+     C                     ELSE                                           ULX047
+     C                     MOVELASDSTN    DSNARA                          ULX047
+     C                     END                             - E8           ULX047
+     C                     END                             - E7           ER0324
+     C*                                                                   ER0324
+     C*
+     C                     END                             - E6
+     C*
+     C                     END                             - E5
+      *                                                                                       CER001
+      ** Deal Class required                                                                  CER001
+      *                                                                                       CER001
+     C           CDL038    IFEQ 'Y'                                                           CER001
+     C           DSMOD     IFEQ 'DL'                                                          CER001
+     C           DSMOD     OREQ 'FD'                                                          CER001
+     C           DSMOD     OREQ 'FL'                                                          CER001
+     C           DSTYP8    IFEQ *BLANK                                                        CER001
+     C                     MOVE '1'       *IN23                                               CER001
+     C                     MOVE '1'       *IN63                                               CER001
+     C                     MOVEL'ERB4020' ZAMSID                                              CER001
+     C                     EXSR ZASNMS                                                        CER001
+     C                     ELSE                                                               CER001
+     C           KEY5      CHAINFDDTSTL1             88                                       CER001
+     C           *IN88     IFEQ '1'                                                           CER001
+     C                     MOVE '1'       *IN23                                               CER001
+     C                     MOVE '1'       *IN63                                               CER001
+     C**********           MOVEL'ERB4003' ZAMSID                                     CER001 BUG10452
+     C                     MOVEL'ERB4021' ZAMSID                                            BUG10452
+     C                     EXSR ZASNMS                                                        CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+     C*
+     C           DSMOD     IFEQ 'LE'                       - B5
+     C           CLE042    IFEQ 'Y'                        - B51                              CLE042
+     C           DSTYP8    ANDEQ*BLANK                                                        CLE042
+     C                     MOVE '1'       *IN23                                               CLE042
+     C                     MOVE '1'       *IN63                                               CLE042
+     C                     MOVEL'ERB4021' ZAMSID                                              CLE042
+     C                     EXSR ZASNMS                                                        CLE042
+     C                     ELSE                            - X51                              CLE042
+     C           KEY4      CHAINSDLOANL1             88
+     C           *IN88     IFEQ '1'                        - B6
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X6
+     C*
+     C***FOUR*LAST*POSITIONS*MUST*BE*LEFT*BLANK                    ER0102 ER0324
+     C*
+     C******               MOVE DSTYPE    BLANK4  4                ER0102 ER0324
+     C******     BLANK4    IFNE *BLANKS                    - B7    ER0102 ER0324
+     C*                                                                   ER0324
+     C******               MOVE '1'       *IN23                           ER0324
+     C******               MOVE '1'       *IN63                           ER0324
+     C******               MOVEL'ERB4009' ZAMSID                          ER0324
+     C******               EXSR ZASNMS                                    ER0324
+     C******               ELSE                            - X7           ER0324
+     C******               MOVELAYLNTD    DSNARA                          ER0324
+     C******               END                             - E7           ER0324
+     C*                                                                   ER0324
+     C** THREE OR FOUR LAST POSITIONS MUST BE LEFT BLANK                  ER0324
+     C*                                                                   ER0324
+     C           DSTYP3    IFEQ 'O'                        - B7           ER0324
+     C                     MOVE DSTYPE    BLANK3  3                       ER0324
+     C*                                                                   ER0324
+     C           BLANK3    IFNE *BLANKS                    - B8           ER0324
+     C                     MOVE '1'       *IN23                           ER0324
+     C                     END                             - E8           ER0324
+     C*                                                                   ER0324
+     C                     ELSE                            - X7           ER0324
+     C*                                                                   ER0324
+     C                     MOVE DSTYPE    BLANK4  4                       ER0324
+     C*                                                                   ER0324
+     C           BLANK4    IFNE *BLANKS                    - B8           ER0324
+     C                     MOVE '1'       *IN23                           ER0324
+     C                     END                             - E8           ER0324
+     C*                                                                   ER0324
+     C                     END                             - E7           ER0324
+     C*                                                                   ER0324
+     C           *IN23     IFEQ '1'                        - B7           ER0324
+     C                     MOVE '1'       *IN63                           ER0324
+     C                     MOVEL'ERB4009' ZAMSID                          ER0324
+     C                     EXSR ZASNMS                                    ER0324
+     C                     ELSE                            - X7           ER0324
+     C                     MOVELAYLNTD    DSNARA                          ER0324
+     C                     END                             - E7           ER0324
+     C*
+     C                     END                             - E6
+     C*
+     C                     END                             - E51                              CLE042
+     C                     END                             - E5
+     C*
+     C           DSMOD     IFEQ 'FC'                       - B5
+     C                     MOVELDSTYPE    KEY3
+     C           KEY3      CHAINSDFACTL1             88
+     C           *IN88     IFEQ '1'                        - B6
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X6
+     C*
+     C** FIVE LAST POSITIONS MUST BE LEFT BLANK                           ER0102
+     C*
+     C                     MOVE DSTYPE    BLANK5  5                       ER0102
+     C           BLANK5    IFNE *BLANKS                    - B7           ER0102
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X7
+     C                     MOVELAMFCNM    DSNARA
+     C                     END                             - E7
+     C*
+     C                     END                             - E6
+     C*
+     C                     END                             - E5
+     C*
+     C           DSMOD     IFEQ 'IV'                       - B5
+     C                     MOVELDSTYPE    IVKY12  5
+     C                     MOVELIVKY12    IVKY1   3
+     C                     MOVE IVKY12    KBOOK   2
+     C           IVKY1     CHAININVTO                88
+     C           *IN88     IFEQ '1'                        - B6
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X6
+     C                     MOVELINAM      DSNARA
+     C                     END                             - E6
+     C*
+     C           KBOOK     CHAINSDBOOKL0             88
+     C           *IN88     IFEQ '1'                        - B6
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB4010' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E6
+     C*
+     C***THREE*LAST*POSITION*MUST*BE*LEFT*BLANK                    ER0102 ER0324
+     C*
+     C******               MOVE DSTYPE    BLANK3  3                ER0102 ER0324
+     C******     BLANK3    IFNE *BLANKS                    - B6    ER0102 ER0324
+     C*                                                                   ER0324
+     C******               MOVE '1'       *IN23                           ER0324
+     C******               MOVE '1'       *IN63                           ER0324
+     C******               MOVEL'ERB4007' ZAMSID                          ER0324
+     C******               EXSR ZASNMS                                    ER0324
+     C******               END                             - E6           ER0324
+     C*                                                                   ER0324
+     C** TWO OR THREE LAST POSITIONS MUST BE LEFT BLANK                   ER0324
+     C*                                                                   ER0324
+     C           DSTYP4    IFEQ 'O'                        - B6           ER0324
+     C                     MOVE DSTYPE    BLANK2  2                       ER0324
+     C*                                                                   ER0324
+     C           BLANK2    IFNE *BLANKS                    - B7           ER0324
+     C                     MOVE '1'       *IN23                           ER0324
+     C                     END                             - E7           ER0324
+     C*                                                                   ER0324
+     C                     ELSE                            - X6           ER0324
+     C*                                                                   ER0324
+     C                     MOVE DSTYPE    BLANK3  3                       ER0324
+     C*                                                                   ER0324
+     C           BLANK3    IFNE *BLANKS                    - B7           ER0324
+     C                     MOVE '1'       *IN23                           ER0324
+     C                     END                             - E7           ER0324
+     C*                                                                   ER0324
+     C                     END                             - E6           ER0324
+     C*                                                                   ER0324
+     C           *IN23     IFEQ '1'                        - B6           ER0324
+     C                     MOVE '1'       *IN63                           ER0324
+     C                     MOVEL'ERB4007' ZAMSID                          ER0324
+     C                     EXSR ZASNMS                                    ER0324
+     C                     END                             - E6           ER0324
+     C*                                                                   ER0324
+     C*
+     C                     END                             - E5
+     C*                                                                   ER0102
+     C** For Instruments, the key must have the format:                   ER0102
+     C**  - 2A: Book Code                                                 ER0102
+     C**  - 1A: Instrument Processing Type (1-8)                          ULX004
+     C**  - 1A: OTC-Market Indicator (Y-OTC or N-Market Traded)           ULX004
+     C**  - 4A: *blanks                                                   ULX004
+     C**  - 5A: Instrument Type ********************************** ER0102 ULX004
+     C**  - 2A: Call or Put indicator equal to 'P', 'C', or leave bER0102 ULX004
+     C*                                                                   ER0102
+     C           DSMOD     IFEQ 'IT'                       - B5           ER0102
+     C                     MOVELDSTYPE    KBOOK                           ER0102
+     C**********           MOVELDSTYPE    ITKEY7  7                ER0102 ULX004
+     C**********           MOVE ITKEY7    ITKEY   5                ER0102 ULX004
+     C**********           MOVE DSTYPE    CALPUT  1                ER0102 ULX004
+     C********** ITKEY     CHAININTYP                88            ER0102 ULX004
+     C********** *IN88     IFEQ '1'                        - B6    ER0102 ULX004
+     C**********           MOVE '1'       *IN23                    ER0102 ULX004
+     C**********           MOVE '1'       *IN63                    ER0102 ULX004
+     C**********           MOVEL'ERB4008' ZAMSID                   ER0102 ULX004
+     C**********           EXSR ZASNMS                             ER0102 ULX004
+     C**********           ELSE                            - X6    ER0102 ULX004
+     C**********           MOVELISTN      DSNARA                   ER0102 ULX004
+     C**********           END                             - E6    ER0102 ULX004
+     C*                                                                   ER0102
+     C           KBOOK     CHAINSDBOOKL0             88                   ER0102
+     C           *IN88     IFEQ '1'                        - B6           ER0102
+     C                     MOVE '1'       *IN23                           ER0102
+     C                     MOVE '1'       *IN63                           ER0102
+     C                     MOVEL'ERB4010' ZAMSID                          ER0102
+     C                     EXSR ZASNMS                                    ER0102
+     C                     END                             - E6           ER0102
+     C*                                                                   ER0102
+     C********** CALPUT    IFNE 'P'                        - B6    ER0102 ULX004
+     C********** CALPUT    ANDNE'C'                        - B6    ER0102 ULX004
+     C********** CALPUT    ANDNE' '                        - B6    ER0102 ULX004
+     C**********           MOVE '1'       *IN23                    ER0102 ULX004
+     C**********           MOVE '1'       *IN63                    ER0102 ULX004
+     C**********           MOVEL'ERB4011' ZAMSID                   ER0102 ULX004
+     C**********           EXSR ZASNMS                             ER0102 ULX004
+     C**********           END                             - E6    ER0102 ULX004
+     C*                                                                   ER0102
+      ** Validate Instrument Processing Type within Transaction           ULX004
+      **   Type key                                                       ULX004
+      *                                                                   ULX004
+     C           DSTYP5    IFLT '1'                        *-----6        ULX004
+     C           DSTYP5    ORGT '8'                                       ULX004
+     C                     MOVE '1'       *IN23                           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVEL'ERL4031' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     ENDIF                           *-----6        ULX004
+      *                                                                   ULX004
+      ** Validate OTC-Market Indicator within Transaction Type key        ULX004
+      *                                                                   ULX004
+     C           DSTYP6    IFNE 'Y'                        *-----6        ULX004
+     C           DSTYP6    ANDNE'N'                                       ULX004
+     C                     MOVE '1'       *IN23                           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVEL'ERL4032' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     ENDIF                           *-----6        ULX004
+      *                                                                   ULX004
+      ** Validate remainder of Transaction Type key                       ULX004
+      *                                                                   ULX004
+     C           DSTYP7    IFNE *BLANKS                    *-----6        ULX004
+     C                     MOVE '1'       *IN23                           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVEL'ERL4030' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     ENDIF                           *-----6        ULX004
+      *                                                                   ULX004
+      ** Validate Instrument Processing Type & OTC-Market Indicator       ULX004
+      **   combination within Transaction Type key                        ULX004
+      *                                                                   ULX004
+     C           DSTYP6    IFEQ 'Y'                        *-----6        ULX004
+     C           DSTYP5    ANDNE'4'                                       ULX004
+     C           DSTYP5    ANDNE'5'                                       ULX004
+     C           DSTYP5    ANDNE'6'                                       ULX004
+     C                     MOVE '1'       *IN23                           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVEL'ERL4033' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     ENDIF                           *-----6        ULX004
+      *                                                                   ULX004
+      ** Build key to derive narrative for screen display                 ULX004
+      *                                                                   ULX004
+     C           *IN88     IFEQ '0'                        *-----6        ULX004
+     C           DSTYP2    CAT  BDHGIN    WW08A     P      *create TABIT1 ULX004
+     C           WW08A     LOKUPTABIT1    TABIT2         99               ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ '1'                        *----7         ULX004
+     C                     MOVE TABIT2    DSNARA           * IT Narrative ULX004
+     C                     ELSE                            X----7         ULX004
+     C                     MOVE *BLANKS   DSNARA                          ULX004
+     C                     ENDIF                           *----7         ULX004
+     C                     ELSE                            X-----6        ULX004
+     C                     MOVE *BLANKS   DSNARA                          ULX004
+     C                     ENDIF                           *-----6        ULX004
+      *                                                                   ULX004
+     C                     END                             - E5           ER0102
+     C*
+     C           DSMOD     IFEQ 'DP'                       - B5           ERL354
+     C                     MOVELDSTYPE    DPTYP   2                       ERL354
+     C           DPTYP     IFNE 'BL'                       - B6           ERL354
+     C           DPTYP     ANDNE'BB'                                      ERL354
+     C           DPTYP     ANDNE'RP'                                      ERL354
+     C           DPTYP     ANDNE'RR'                                      ERL354
+     C           DPTYP     ANDNE'PD'                                      ERL354
+     C           DPTYP     ANDNE'PL'                                      ERL354
+     C                     MOVE '1'       *IN23                           ERL354
+     C                     MOVE '1'       *IN63                           ERL354
+     C*********************MOVEL'ERB4005' ZAMSID                   ERL354 ERL386
+     C                     MOVEL'ERB4012' ZAMSID                          ERL386
+     C                     EXSR ZASNMS                                    ERL354
+     C                     ELSE                            - X6           ERL354
+     C*                                                                   ERL354
+     C** SIX LAST POSITIONS MUST BE LEFT BLANK                            ERL354
+     C*                                                                   ERL354
+     C                     MOVE DSTYPE    BLANK6  6                       ERL354
+     C           BLANK6    IFNE *BLANKS                    - B7           ERL354
+     C                     MOVE '1'       *IN23                           ERL354
+     C                     MOVE '1'       *IN63                           ERL354
+     C*********************MOVEL'ERB4005' ZAMSID                   ERL354 ERL386
+     C                     MOVEL'ERB4012' ZAMSID                          ERL386
+     C                     EXSR ZASNMS                                    ERL354
+     C                     ELSE                            - X7           ERL354
+     C*                                                                   ERL354
+     C** SETUP NARRATIVE FIELD                                            ERL354
+     C                     Z-ADD1         J       10                      ERL354
+     C           DPTYP     LOKUPARDP1,J                  99               ERL354
+     C                     MOVELARDP2,J   DSNARA                          ERL354
+     C                     END                             - E7           ERL354
+     C*                                                                   ERL354
+     C                     END                             - E6           ERL354
+     C*                                                                   ERL354
+     C                     END                             - E5           ERL354
+     C*                                                                   ER0XXX
+     C** PROCESSING FOR CUSTOMER POSITIONS                                ERL386
+     C           DSMOD     IFEQ 'CP'                       - B5           ERL386
+     C*                                                                   ERL386
+     C                     MOVELDSTYPE    CUSPOS  4                       ERL386
+     C           CUSPOS    IFNE 'CPOS'                     - B6           ERL386
+     C                     MOVE '1'       *IN23                           ERL386
+     C                     MOVE '1'       *IN63                           ERL386
+     C                     MOVEL'ERB4013' ZAMSID                          ERL386
+     C                     EXSR ZASNMS                                    ERL386
+     C                     ELSE                            - X6           ERL386
+     C*                                                                   ERL386
+     C** FOUR LAST POSITIONS MUST BE LEFT BLANK                           ERL386
+     C                     MOVE DSTYPE    BLANK4                          ERL386
+     C           BLANK4    IFNE *BLANKS                    - B7           ERL386
+     C                     MOVE '1'       *IN23                           ERL386
+     C                     MOVE '1'       *IN63                           ERL386
+     C                     MOVEL'ERB4013' ZAMSID                          ERL386
+     C                     EXSR ZASNMS                                    ERL386
+     C                     ELSE                            - X7           ERL386
+     C                     MOVELARCP,1    DSNARA                          ERL386
+     C                     END                             - E7           ERL386
+     C*                                                                   ERL386
+     C                     END                             - E6           ERL386
+     C*                                                                   ERL386
+     C                     END                             - E5           ERL386
+     C*                                                                   ERL386
+     C** PROCESSING FOR DISCRETIONARY CUSTOMER ASSETS                     ERL436
+     C           DSMOD     IFEQ 'DA'                       - B5           ERL436
+     C*                                                                   ERL436
+     C                     MOVELDSTYPE    CUSPOS  4                       ERL436
+     C           CUSPOS    IFNE 'DISC'                     - B6           ERL436
+     C                     MOVE '1'       *IN23                           ERL436
+     C                     MOVE '1'       *IN63                           ERL436
+     C                     MOVEL'ERB4014' ZAMSID                          ERL436
+     C                     EXSR ZASNMS                                    ERL436
+     C                     ELSE                            - X6           ERL436
+     C*                                                                   ERL436
+     C** FOUR LAST POSITIONS MUST BE LEFT BLANK                           ERL436
+     C                     MOVE DSTYPE    BLANK4                          ERL436
+     C           BLANK4    IFNE *BLANKS                    - B7           ERL436
+     C                     MOVE '1'       *IN23                           ERL436
+     C                     MOVE '1'       *IN63                           ERL436
+     C                     MOVEL'ERB4014' ZAMSID                          ERL436
+     C                     EXSR ZASNMS                                    ERL436
+     C                     ELSE                            - X7           ERL436
+     C                     MOVELARCP,2    DSNARA                          ERL436
+     C                     END                             - E7           ERL436
+     C*                                                                   ERL436
+     C                     END                             - E6           ERL436
+     C*                                                                   ERL436
+     C                     END                             - E5           ERL436
+     C*                                                                   ERL436
+     C** PROCESSING FOR FIDUCIARY LOANS AND DEPOSITS                      ER0449
+     C           DSMOD     IFEQ 'FD'                       - B5           ER0449
+     C           DSMOD     OREQ 'FL'                                      ER0449
+     C*                                                                   ER0449
+     C** FOR 'FD' TWO FIRST POSITIONS MUST BE 'FD' OR 'FL'                ER0449
+     C           DSMOD     IFEQ 'FD'                       - B6           ER0449
+     C*                                                                   ER0449
+     C           DSTYP1    IFNE 'FD'                       - B7           ER0449
+     C           DSTYP1    ANDNE'FL'                                      ER0449
+     C                     MOVE '1'       *IN23                           ER0449
+     C                     MOVE '1'       *IN63                           ER0449
+     C                     MOVEL'ERB4003' ZAMSID                          ER0449
+     C                     EXSR ZASNMS                                    ER0449
+     C                     ELSE                            - X7           ER0449
+     C*                                                                   ER0449
+     C** VALIDATION DEAL SUB-TYPE                                         ER0449
+     C*                                                                   ER0449
+     C*****      DSTYP2    CHAINSDDLSTL1             88             ER0449165675
+     C********** KEY4      CHAINFDDTSTL1             88                                165675 CER001
+     C           KEY5      CHAINFDDTSTL1             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B8           ER0449
+     C                     MOVE '1'       *IN23                           ER0449
+     C                     MOVE '1'       *IN63                           ER0449
+     C                     MOVEL'ERB4003' ZAMSID                          ER0449
+     C                     EXSR ZASNMS                                    ER0449
+     C                     ELSE                            - X8           ER0449
+     C*****                MOVELASDSTN    DSNARA                          ER0449
+     C                     MOVELNARR11    DSNARA                          165675
+     C                     END                             - E8           ER0449
+     C                     END                             - E7           ER0449
+     C*                                                                   ER0449
+     C                     ELSE                            - X6           ER0449
+     C*                                                                   ER0449
+     C** FOR 'FL' ONLY VALIDATE LOAN TYPE/SUB-TYPE                        ER0449
+     C           KEY4      CHAINSDLOANL1             88                   ER0449
+     C           *IN88     IFEQ '1'                        - B7           ER0449
+     C                     MOVE '1'       *IN23                           ER0449
+     C                     MOVE '1'       *IN63                           ER0449
+     C                     MOVEL'ERB4004' ZAMSID                          ER0449
+     C                     EXSR ZASNMS                                    ER0449
+     C                     ELSE                            - E7           ER0449
+     C                     MOVELAYLNTD    DSNARA                          ER0449
+     C                     END                             - E7           ER0449
+     C*                                                                   ER0449
+     C                     END                             - E6           ER0449
+     C*                                                                   ER0449
+     C** FOUR LAST POSITIONS MUST BE LEFT BLANK FOR 'FD' OR 'FL'          ER0449
+     C*                                                                   ER0449
+     C                     MOVE DSTYPE    BLANK4  4                       ER0449
+     C           BLANK4    IFNE *BLANKS                    - B6           ER0449
+     C*                                                                   ER0449
+     C                     MOVE '1'       *IN23                           ER0449
+     C                     MOVE '1'       *IN63                           ER0449
+     C                     MOVEL'ERB4009' ZAMSID                          ER0449
+     C                     EXSR ZASNMS                                    ER0449
+     C                     END                             - E6           ER0449
+     C*                                                                   ER0449
+     C                     END                             - E5           ER0449
+     C*
+     C*                                                                   ULX024
+     C** Processing for Trade Innovation                                  ULX024
+     C           DSMOD     IFEQ 'TI'                       - B5           ULX024
+      *                                                                   ULX024
+      ** Work fields setup                                                ULX024
+      *                                                                   ULX024
+     C           4         SUBSTDSTYPE:1  WF3     4                       ULX024
+     C           4         SUBSTDSTYPE:5  WF4     4                       ULX024
+     C*          1         SUBSTDSTYPE:8  WF1     1                       ULX024
+      *                                                                   ULX024
+      ** Validation of the Product Type in first 4 positions              ULX024
+      ** => Valid TI Product Type (Internal array)                        ULX024
+      *                                                                   ULX024
+     C                     Z-ADD1         X       20                      ULX024
+     C           WF3       LOKUPCODE,X                   99               ULX024
+      *                                                                   ULX024
+     C           *IN99     IFEQ '0'                        - B6           ULX024
+     C                     MOVE '1'       *IN23                           ULX024
+     C                     MOVE '1'       *IN63                           ULX024
+     C                     MOVEL'ERB4015' ZAMSID                          ULX024
+     C                     EXSR ZASNMS                                    ULX024
+      *                                                                   ULX024
+     C                     ELSE                            - X6           ULX024
+     C                     MOVEANARR,X    DSNARA           - X6           ULX024
+      *                                                                   ULX024
+      ** Validation of the Product Type / CSSF Type Combination           ULX024
+      **  (Positions 1-4+5-8)                                             ULX024
+      ** => Valid Record in ERTIPTL0                                      ULX024
+      *                                                                   ULX024
+     C           KWF       KLIST                                          ULX024
+     C                     KFLD           WF3                             ULX024
+     C                     KFLD           WF4                             ULX024
+      *                                                                   ULX024
+     C           WF4       IFNE *BLANKS                    - B7           ULX024
+     C           KWF       CHAINERTIPTL0             99                   ULX024
+     C           *IN99     IFEQ *ON                        - B8           ULX024
+     C                     MOVE '1'       *IN23                           ULX024
+     C                     MOVE '1'       *IN63                           ULX024
+     C                     MOVEL'ERB4016' ZAMSID                          ULX024
+     C                     EXSR ZASNMS                                    ULX024
+     C                     ELSE                            - X8           ULX024
+     C                     MOVELERTIPD    DSNARA                          ULX024
+     C                     END                             - E8           ULX024
+     C                     END                             - E7           ULX024
+      *                                                                   ULX024
+      ** Validation of last position                                      ULX024
+      ** => Blank                                                         ULX024
+      *                                                                   ULX024
+     C*          WF1       IFNE *BLANK                     - B7           ULX024
+     C*                    MOVE '1'       *IN23                           ULX024
+     C*                    MOVE '1'       *IN63                           ULX024
+     C*                    MOVEL'ERB4017' ZAMSID                          ULX024
+     C*                    EXSR ZASNMS                                    ULX024
+     C*                    ENDIF                           - E7           ULX024
+     C*                                                                   ULX024
+     C                     ENDIF                           - E6           ULX024
+     C*                                                                   ULX024
+     C                     ENDIF                           - E5           ULX024
+     C*                                                                   ULX024
+     C                     END                             - E4
+     C*
+     C           DSEXTT    IFEQ *BLANKS                    - B4
+     C                     MOVE 'N'       DSEXTT
+     C                     END                             - E4
+     C*
+     C                     EXSR SRVAL
+     C** NO ERRORS
+     C           *IN23     IFEQ '0'                        - B4
+     C           *IN22     ANDEQ'0'
+     C           *IN24     ANDEQ'0'
+     C           *IN25     ANDEQ'0'                                       ERL415
+     C           *IN26     ANDEQ'0'
+     C           *IN27     ANDEQ'0'
+     C           *IN28     ANDEQ'0'                                       ULX004
+     C           *IN29     ANDEQ'0'                                       ULX011
+     C           DSKEY     ANDNE*BLANKS
+     C                     MOVE DSMOD     VCMMOD
+     C                     MOVE DSTYPE    VCTTYP
+     C*********************MOVE DSAMTY    VCAMTY                          ULX004
+     C                     MOVE DSAMTY    VCAMTY                          ULX011
+     C                     MOVE DSPRCD    VCPRCD                          ULX004
+     C                     MOVE DSPORT    VCPORT                          ULX004
+     C                     MOVE DSEXTT    VCEXTT
+     C                     MOVE DSDEBI    VCRBND
+     C                     MOVE DSCRED    VCRBNC
+     C                     Z-ADDBJRDNB    VCLCD
+     C                     MOVE 'I'       VCTYLC
+     C                     WRITEUPERLUTT
+     C*
+     C** WRITE DONE THEN PROTECT RECORD
+     C*
+     C                     MOVE '1'       *IN15
+     C*
+     C                     COMIT
+     C                     END                             - E4
+     C*
+     C                     UPDATERLU40S1
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28                           ULX004
+     C                     MOVE '0'       *IN29                           ULX011
+     C                     MOVE '0'       *IN63
+     C*
+     C** READ NEXT CHANGED RECORD
+     C*
+     C                     READCERLU40S1                 32
+     C*
+     C                     ENDDO                           - E3
+     C                     END                             - E2
+     C*
+     C** REFRESH ON F9 SCREEN
+     C*
+     C           *IN05     IFEQ '1'                        - B2
+     C                     EXSR INISFL
+     C                     EXSR LOASF9
+     C                     Z-ADD1         RRN
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C           *IN12     IFEQ '1'
+     C                     MOVE '0'       *IN12
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C**************************************************************************
+     C* SRCHCK - SUBROUTINE TO CHECK IF CHANGES IN SUBFILE
+     C**************************************************************************
+     C*
+     C           SRCHCK    BEGSR
+     C*
+     C** Retrive all changed records
+     C*
+     C                     READCERLU40S1                 32
+     C*
+     C           *IN32     DOWEQ'0'                        - B1
+     C*
+     C** VALIDATION ON RECORD SUBFILE
+     C*
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28                           ULX004
+     C                     MOVE '0'       *IN29                           ULX011
+     C*
+     C           DSSELE    IFNE 'D'                        - B2
+     C           DSSELE    ANDNE*BLANKS
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB3001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C*
+     C                     EXSR SRVAL
+     C*
+     C** NO ERRORS
+     C*
+     C           *IN20     IFEQ '0'                        - B2
+     C           *IN24     ANDEQ'0'
+     C           *IN25     ANDEQ'0'
+     C           *IN26     ANDEQ'0'
+     C           *IN27     ANDEQ'0'
+     C           *IN28     ANDEQ'0'                                       ULX004
+     C           *IN29     ANDEQ'0'                                       ULX011
+     C*
+     C** IF NO ERROR AND 'D' SELECTED ==> DELETE IN FILE
+     C*
+     C           DSSELE    IFEQ 'D'                        - B3
+     C           ERKEY1    CHAINERLUTTL0             88
+     C           *IN88     IFEQ '0'                        - B4
+     C                     DELETUPERLUTT
+     C                     MOVE '1'       *IN15
+     C                     END                             - E4
+     C                     ELSE                            - X3
+     C*
+     C** UPDATE FILE AND SUBFILE
+     C*
+     C           ERKEY1    CHAINERLUTTL0             88
+     C           *IN88     IFEQ '0'                        - B4
+     C*********************MOVE DSAMTY    VCAMTY                          ULX004
+     C                     MOVE DSAMTY    VCAMTY                          ULX011
+     C                     MOVE DSPRCD    VCPRCD                          ULX004
+     C                     MOVE DSPORT    VCPORT                          ULX004
+     C                     MOVE DSEXTT    VCEXTT
+     C                     MOVE DSDEBI    VCRBND
+     C                     MOVE DSCRED    VCRBNC
+     C                     Z-ADDBJRDNB    VCLCD
+     C                     MOVE 'A'       VCTYLC
+     C                     UPDATUPERLUTT
+     C                     END                             - E4
+     C                     END                             - E3
+     C                     COMIT
+     C                     END                             - E2
+     C*
+     C                     UPDATERLU40S1
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28                           ULX004
+     C                     MOVE '0'       *IN29                           ULX011
+     C*
+     C** READ NEXT CHANGED RECORD
+     C*
+     C                     READCERLU40S1                 32
+     C*
+     C                     ENDDO                           - E1
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C* INITIALIZE SUBFILE
+     C**************************************************************************
+     C*
+     C           INISFL    BEGSR
+     C*
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     WRITEERLU40C1
+     C                     MOVE '1'       *IN80
+     C                     Z-ADD0         RRN     40
+     C*
+     C                     ENDSR
+     C*
+     C**************************************************************************
+     C* LOAD SUBFILE
+     C**************************************************************************
+     C*
+     C           LOASFE    BEGSR
+     C*
+     C** IF SELECTION FIELD RESET TO BLANK BY USER ==> SELECT ALL RECORDS
+     C*
+     C           SELEC1    IFNE SELEC2                     - B1
+     C           DHNARA    ANDEQ*BLANKS
+     C           DHEXTT    ANDEQ*BLANKS
+     C           DHDEBI    ANDEQ*BLANKS
+     C           DHCRED    ANDEQ*BLANKS
+     C***********DHAMTY    ANDEQ*BLANKS                                   ULX004
+     C           DHAMTY    ANDEQ*BLANKS                                   ULX011
+     C           DHPRCD    ANDEQ*BLANKS                                   ULX004
+     C           DHPORT    ANDEQ*BLANKS                                   ULX004
+     C                     MOVE SELEC1    SELEC2
+     C                     END                             - E1
+      *                                                                   ULX046
+      ** Format the selection field for amount type, to have correct      ULX046
+      ** comparisons in the SELEC subroutine                              ULX046
+      *                                                                   ULX046
+     C           DHAMTY    IFNE *BLANKS                                   ULX046
+     C                     Z-ADD1         Y                               ULX046
+     C           DHAMTY    LOKUPAMTY,Y                   83               ULX046
+     C   83                MOVELAMTY2,Y   DHAMTY                          ULX046
+     C                     ENDIF                                          ULX046
+     C*
+     C** RESETUP WORK FIELDS IF POSITION CHANGED AFTER SELECTION
+     C*
+     C           DHKEY     IFNE WWKEY                      - B1
+     C           DHNARA    IFNE *BLANKS                    - B2
+     C           DHEXTT    ORNE *BLANKS
+     C           DHCRED    ORNE *BLANKS
+     C           DHDEBI    ORNE *BLANKS
+     C***********DHAMTY    ORNE *BLANKS                                   ULX004
+     C           DHAMTY    ORNE *BLANKS                                   ULX011
+     C           DHPRCD    ORNE *BLANKS                                   ULX004
+     C           DHPORT    ORNE *BLANKS                                   ULX004
+     C                     MOVE *BLANKS   SELEC2
+     C                     END                             - E2
+     C                     END                             - E1
+     C*
+     C** INIT SCREEN LINE NUMBER
+     C*
+     C                     Z-ADD0         WWCPT   20
+     C*
+     C** TRANSACTION TYPE SELECTED
+     C*
+     C           DHKEY     IFNE *BLANKS                    - B1
+     C           ERKEY2    SETLLERLUTTL1
+     C                     ELSE                            - X1
+     C           *LOVAL    SETLLERLUTTL1
+     C                     END                             - E1
+     C*
+     C** NAME SELECTED
+     C*
+     C           DHNARA    IFNE *BLANKS                    - B1
+     C                     EXSR CALLEN
+     C                     END                             - E1
+     C*                                                                   ERL200
+     C* ROLLUP PRESSED                                                    ERL200
+     C           WWAID     IFEQ 'UP'                       - B1           ERL200
+     C                     MOVELWWSAV1    UPMOD                           ERL200
+     C                     MOVELWWSAV2    UPTYP                           ERL200
+     C           ERKUP     SETLLERLUTTL1                                  ERL200
+     C                     END                             - E1           ERL200
+     C*
+     C** READ RECORD
+     C*
+     C                     READ ERLUTTL1                 30
+     C*
+     C** LOAD SUBFILE
+     C*
+     C                     MOVE '0'       *IN63
+     C*
+     C           *IN30     DOWEQ'0'                        - B1
+     C           WWCPT     ANDLT14                                        ERL200
+     C*
+     C                     MOVE *BLANKS   DSNARA                          ER0314
+     C                     MOVE *BLANKS   DSSELE
+     C                     MOVE VCMMOD    DSMOD
+     C                     MOVE VCTTYP    DSTYPE
+     C*********************MOVE VCAMTY    DSAMTY                          ULX004
+     C                     MOVE VCAMTY    DSAMTY                          ULX011
+     C                     MOVE VCPRCD    DSPRCD                          ULX004
+     C                     MOVE VCPORT    DSPORT                          ULX004
+     C                     MOVE VCEXTT    DSEXTT
+     C                     MOVE VCRBND    DSDEBI
+     C                     MOVE VCRBNC    DSCRED
+     C*
+     C           DSMOD     IFEQ 'DL'                       - B2
+     C           DSMOD     OREQ 'CL'                                      ER0323
+     C           DSMOD     OREQ 'FD'                                      ER0449
+     C                     MOVELDSTYPE    WW4     4
+     C                     MOVE WW4       KEY2    2
+     C*****      KEY2      CHAINSDDLSTL1             88                   165675
+     C           DSTYP1    IFNE 'FR'                       - B21          ULX047
+     C           DSTYP1    ANDNE'RS'                                      ULX047
+     C           DSTYP1    ANDNE'RX'                                      ULX047
+     C           DSTYP1    ANDNE'RR'                                      ULX047
+     C           DSTYP1    ANDNE'RP'                                      ULX047
+     C           DSTYP1    ANDNE'RF'                                      ULX047
+     C********** KEY4      CHAINFDDTSTL1             88                                165675 CER001
+     C           KEY5      CHAINFDDTSTL1             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B3
+     C                     MOVE *BLANKS   DSNARA
+     C                     ELSE                            - X3
+     C****                 MOVELASDSTN    DSNARA                          165675
+     C                     MOVELNARR11    DSNARA                          165675
+     C                     END                             - E3
+     C                     END                             - E21          ULX047
+     C           DSTYP1    IFEQ 'FR'                       - B21          ULX047
+     C           DSTYP1    OREQ 'RS'                                      ULX047
+     C           DSTYP1    OREQ 'RX'                                      ULX047
+     C           DSTYP1    OREQ 'RR'                                      ULX047
+     C           DSTYP1    OREQ 'RP'                                      ULX047
+     C           DSTYP1    OREQ 'RF'                                      ULX047
+     C           DSTYP2    CHAINSDDLSTL1             88                   ULX047
+     C           *IN88     IFEQ '1'                        - B3           ULX047
+     C                     MOVE *BLANKS   DSNARA                          ULX047
+     C                     ELSE                            - X3           ULX047
+     C                     MOVELASDSTN    DSNARA                          ULX047
+     C                     END                             - E3           ULX047
+     C                     END                             - E21          ULX047
+     C                     END                             - E2
+     C*
+     C           DSMOD     IFEQ 'LE'                       - B2
+     C           DSMOD     OREQ 'FL'                                      ER0449
+     C           KEY4      CHAINSDLOANL1             88
+     C           *IN88     IFEQ '1'                        - B3
+     C                     MOVE *BLANKS   DSNARA
+     C                     ELSE                            - X3
+     C                     MOVELAYLNTD    DSNARA
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C           DSMOD     IFEQ 'FC'                       - B2
+     C                     MOVELDSTYPE    KEY3    3
+     C           KEY3      CHAINSDFACTL1             88
+     C           *IN88     IFEQ '1'                        - B3
+     C                     MOVE *BLANKS   DSNARA
+     C                     ELSE                            - X3
+     C                     MOVELAMFCNM    DSNARA
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C           DSMOD     IFEQ 'IV'                       - B2
+     C                     MOVELDSTYPE    IVKY1
+     C           IVKY1     CHAININVTO                88
+     C           *IN88     IFEQ '1'                        - B3
+     C                     MOVE *BLANKS   DSNARA
+     C                     ELSE                            - X3
+     C                     MOVELINAM      DSNARA
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C           DSMOD     IFEQ 'IT'                       - B2
+     C**********           MOVELDSTYPE    ITKEY7                   ER0102 ULX004
+     C**********           MOVE ITKEY7    ITKEY                    ER0102 ULX004
+     C********** ITKEY     CHAININTYP                88                   ULX004
+     C********** *IN88     IFEQ '1'                        - B3           ULX004
+     C**********           MOVE *BLANKS   DSNARA                          ULX004
+     C**********           ELSE                            - X3           ULX004
+     C**********           MOVELISTN      DSNARA                          ULX004
+     C**********           END                             - E3           ULX004
+      *                                                                   ULX004
+      ** Find Book Code to obtain Hedging Indicator (BDGGIN)              ULX004
+      *                                                                   ULX004
+     C                     MOVELDSTYPE    KBOOK                           ULX004
+     C           KBOOK     CHAINSDBOOKL0             88                   ULX004
+      *                                                                   ULX004
+      ** Build key to derive narrative for screen display                 ULX004
+      *                                                                   ULX004
+     C           *IN88     IFEQ '0'                        *--------3     ULX004
+     C           DSTYP2    CAT  BDHGIN    WW08A            *create TABIT1 ULX004
+     C           WW08A     LOKUPTABIT1    TABIT2         99               ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ '1'                        *-------4      ULX004
+     C                     MOVE TABIT2    DSNARA           * IT Narrative ULX004
+     C                     ELSE                            X-------4      ULX004
+     C                     MOVE *BLANKS   DSNARA                          ULX004
+     C                     ENDIF                           *-------4      ULX004
+     C                     ELSE                            X--------3     ULX004
+     C                     MOVE *BLANKS   DSNARA                          ULX004
+     C                     ENDIF                           *--------3     ULX004
+      *                                                                   ULX004
+     C                     END                             - E2
+     C*                                                                   ULX024
+     C** Setup Narrative Field for Trade Innovation                       ULX024
+     C*                                                                   ULX024
+     C           DSMOD     IFEQ 'TI'                       - B2           ULX024
+      *                                                                   ULX024
+      ** Work fields setup                                                ULX024
+      *                                                                   ULX024
+     C           4         SUBSTDSTYPE:1  WF3     4                       ULX024
+     C           4         SUBSTDSTYPE:5  WF4     4                       ULX024
+     C*          1         SUBSTDSTYPE:8  WF1     1                       ULX024
+      *                                                                   ULX024
+     C           KWF       CHAINERTIPTL0             99                   ULX024
+     C           *IN99     IFEQ *OFF                       - B3           ULX024
+     C                     MOVELERTIPD    DSNARA                          ULX024
+     C                     ELSE                            - X3           ULX024
+     C                     Z-ADD1         X       20                      ULX024
+     C           WF3       LOKUPCODE,X                   99               ULX024
+     C                     MOVEANARR,X    DSNARA                          ULX024
+     C                     END                             - E3           ULX024
+     C                     END                             - E2           ULX024
+     C*                                                                   ERL354
+     C** SETUP NARRATIVE FIELD FOR DEPOT MOVEMENTS                        ERL354
+     C           DSMOD     IFEQ 'DP'                       - B2           ERL354
+     C                     MOVELDSTYPE    DPTYP                           ERL354
+     C                     Z-ADD1         J                               ERL354
+     C           DPTYP     LOKUPARDP1,J                  99               ERL354
+     C                     MOVELARDP2,J   DSNARA                          ERL354
+     C                     END                             - E2           ERL354
+     C*
+     C** SETUP NARRATIVE FIELD FOR CUSTOMER POSITION                      ERL386
+     C           DSMOD     IFEQ 'CP'                       - B2           ERL386
+     C                     MOVELARCP,1    DSNARA                          ERL386
+     C                     END                             - E2           ERL386
+     C** SETUP NARRATIVE FIELD FOR DISCR. CUSTOMER'S ASSETS               ERL436
+     C           DSMOD     IFEQ 'DA'                       - B2           ERL436
+     C                     MOVELARCP,2    DSNARA                          ERL436
+     C                     END                             - E2           ERL436
+     C*
+     C** SELECTION HAS BEEN ENTERRED AND NOT COMING FROM F9
+     C*
+     C***********SELEC1    IFNE SELEC2                     - B2           ERL200
+     C           SELEC1    IFNE *BLANKS                    - B2           ERL200
+     C           IN16      ANDEQ*BLANKS
+     C*
+     C** RECORD READ SELECTED OR NOT ???
+     C*
+     C           DHNARA    IFNE *BLANKS                    - B3
+     C                     MOVE '0'       *IN90
+     C           DHNARA:I  SCAN DSNARA                   90
+     C                     END                             - E3
+     C*
+     C                     MOVE '0'       *IN10
+     C                     EXSR SELEC
+     C           *IN10     IFEQ '1'                        - B3
+     C*
+     C** LOAD FIELDS
+     C*
+     C                     ADD  1         RRN        81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+     C*
+     C** WRITE IN SUBFILE
+     C*
+     C                     WRITEERLU40S1
+     C*
+     C                     END                             - E3
+     C*
+     C                     ELSE                            - X2
+     C* LOAD FIELDS
+     C                     ADD  1         RRN        81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+     C*
+     C** WRITE IN SUBFILE
+     C*
+     C                     WRITEERLU40S1
+     C*
+     C                     END                             - E2
+     C*
+     C** READ NEXT RECORD
+     C*
+     C                     READ ERLUTTL1                 30
+     C                     MOVELVCMMOD    WWSAV1  2                       ERL200
+     C                     MOVELVCTTYP    WWSAV2  8                       ERL200
+     C*
+     C                     END                             - E1
+     C*
+     C                     MOVE DHKEY     WWKEY
+     C                     Z-ADDRRN       WWRRN   40                      ERL200
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C* LOAD SUBFILE WHEN F9 HAS BEEN PRESSED !
+     C**************************************************************************
+     C*
+     C           LOASF9    BEGSR
+     C*
+     C                     MOVE '0'       *IN63
+     C*
+     C** INIT SCREEN LINE NUMBER
+     C*
+     C                     Z-ADD1         CPT     20
+     C*
+     C** LOAD SUBFILE
+     C*
+     C           CPT       DOWLE30                         - B1
+     C*
+     C                     MOVE *BLANKS   DSMOD
+     C                     MOVE *BLANKS   DSTYPE
+     C                     MOVE *BLANKS   DSNARA
+     C                     MOVE *BLANKS   DSEXTT
+     C                     MOVE *BLANKS   DSDEBI
+     C                     MOVE *BLANKS   DSCRED
+     C***********          MOVE *BLANKS   DSAMTY                          ULX004
+     C                     MOVE *BLANKS   DSAMTY                          ULX011
+     C                     MOVE *BLANKS   DSPRCD                          ULX004
+     C                     MOVE *BLANKS   DSPORT                          ULX004
+     C*
+     C** LOAD FIELDS
+     C*
+     C                     ADD  1         RRN        81
+     C                     ADD  1         CPT              SCREEN LINE MBR
+     C*
+     C** WRITE IN SUBFILE
+     C*
+     C                     WRITEERLU40S1
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C* SELEC SUBROUTINE - SELECTION FOR THE RECORD READ                       *
+     C**************************************************************************
+     C*
+     C           SELEC     BEGSR
+     C*
+     C** NARRATIVE SELECTED
+     C*
+     C           DHNARA    IFNE *BLANKS                    - B1
+     C           *IN90     IFEQ '1'                        - B2
+     C*
+     C           DHDEBI    IFEQ *BLANKS
+     C           DHCRED    ANDEQ*BLANKS
+     C           DHEXTT    ANDEQ*BLANKS
+     C***********DHAMTY    ANDEQ*BLANKS                                   ULX004
+     C           DHAMTY    ANDEQ*BLANKS                                   ULX011
+     C           DHPRCD    ANDEQ*BLANKS                                   ULX004
+     C           DHPORT    ANDEQ*BLANKS                                   ULX004
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+     C*
+     C           DHEXTT    IFNE *BLANKS                    - B3
+     C           DHEXTT    IFEQ DSEXTT                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C           DHDEBI    IFNE *BLANKS                    - B3
+     C           DHDEBI    IFEQ DSDEBI                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C           DHCRED    IFNE *BLANKS                    - B3
+     C           DHCRED    IFEQ DSCRED                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C***********DHAMTY    IFNE *BLANKS                    - B3           ULX004
+     C***********DHAMTY    IFEQ DSAMTY                     - B4           ULX004
+     C           DHAMTY    IFNE *BLANKS                    - B3           ULX011
+     C           DHAMTY    IFEQ DSAMTY                     - B4           ULX011
+     C                     MOVE '1'       *IN10                           ULX011
+     C                     ELSE                            - X4           ULX011
+     C                     MOVE '0'       *IN10                           ULX011
+     C                     GOTO ENDSEL                                    ULX011
+     C                     END                             - E4           ULX011
+     C                     END                             - E3           ULX011
+     C*                                                                   ULX011
+     C           DHPRCD    IFNE *BLANKS                    - B3           ULX004
+     C           DHPRCD    IFEQ DSPRCD                     - B4           ULX004
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*                                                                   ULX004
+     C           DHPORT    IFNE *BLANKS                    - B3           ULX004
+     C           DHPORT    IFEQ DSPORT                     - B4           ULX004
+     C                     MOVE '1'       *IN10                           ULX004
+     C                     ELSE                            - X4           ULX004
+     C                     MOVE '0'       *IN10                           ULX004
+     C                     GOTO ENDSEL                                    ULX004
+     C                     END                             - E4           ULX004
+     C                     END                             - E3           ULX004
+     C*
+     C                     END                             - E2
+     C                     GOTO ENDSEL
+     C                     END                             - E1
+     C*
+     C** EXTRACT TYPE SELECTED
+     C           DHEXTT    IFNE *BLANKS                    - B1
+     C           DHEXTT    IFEQ DSEXTT                     - B2
+     C*
+     C           DHNARA    IFEQ *BLANKS                    - B3
+     C           DHDEBI    ANDEQ*BLANKS
+     C           DHCRED    ANDEQ*BLANKS
+     C***********DHAMTY    ANDEQ*BLANKS                                   ULX004
+     C           DHAMTY    ANDEQ*BLANKS                                   ULX011
+     C           DHPRCD    ANDEQ*BLANKS                                   ULX004
+     C           DHPORT    ANDEQ*BLANKS                                   ULX004
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+     C*
+     C           DHDEBI    IFNE *BLANKS                    - B3
+     C           DHDEBI    IFEQ DSDEBI                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C           DHCRED    IFNE *BLANKS                    - B3
+     C           DHCRED    IFEQ DSCRED                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C***********DHAMTY    IFNE *BLANKS                    - B3           ULX004
+     C***********DHAMTY    IFEQ DSAMTY                     - B4           ULX004
+     C           DHAMTY    IFNE *BLANKS                    - B3           ULX011
+     C           DHAMTY    IFEQ DSAMTY                     - B4           ULX011
+     C                     MOVE '1'       *IN10                           ULX011
+     C                     ELSE                            - X4           ULX011
+     C                     MOVE '0'       *IN10                           ULX011
+     C                     GOTO ENDSEL                                    ULX011
+     C                     END                             - E4           ULX011
+     C                     END                             - E3           ULX011
+     C*                                                                   ULX011
+     C           DHPRCD    IFNE *BLANKS                    - B3           ULX004
+     C           DHPRCD    IFEQ DSPRCD                     - B4           ULX004
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*                                                                   ULX004
+     C           DHPORT    IFNE *BLANKS                    - B3           ULX004
+     C           DHPORT    IFEQ DSPORT                     - B4           ULX004
+     C                     MOVE '1'       *IN10                           ULX004
+     C                     ELSE                            - X4           ULX004
+     C                     MOVE '0'       *IN10                           ULX004
+     C                     GOTO ENDSEL                                    ULX004
+     C                     END                             - E4           ULX004
+     C                     END                             - E3           ULX004
+     C*
+     C                     END                             - E2
+     C                     GOTO ENDSEL
+     C                     END                             - E1
+     C*
+     C** RUBRIC DEBIT SELECTED
+     C           DHDEBI    IFNE *BLANKS                    - B1
+     C           DHDEBI    IFEQ DSDEBI                     - B2
+     C*
+     C           DHNARA    IFEQ *BLANKS                    - B3
+     C           DHCRED    ANDEQ*BLANKS
+     C           DHEXTT    ANDEQ*BLANKS
+     C***********DHAMTY    ANDEQ*BLANKS                                   ULX004
+     C           DHAMTY    ANDEQ*BLANKS                                   ULX011
+     C           DHPRCD    ANDEQ*BLANKS                                   ULX004
+     C           DHPORT    ANDEQ*BLANKS                                   ULX004
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+     C*
+     C           DHCRED    IFNE *BLANKS                    - B3
+     C           DHCRED    IFEQ DSCRED                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C***********DHAMTY    IFNE *BLANKS                    - B3           ULX004
+     C***********DHAMTY    IFEQ DSAMTY                     - B4           ULX004
+     C           DHAMTY    IFNE *BLANKS                    - B3           ULX011
+     C           DHAMTY    IFEQ DSAMTY                     - B4           ULX011
+     C                     MOVE '1'       *IN10                           ULX011
+     C                     ELSE                            - X4           ULX011
+     C                     MOVE '0'       *IN10                           ULX011
+     C                     GOTO ENDSEL                                    ULX011
+     C                     END                             - E4           ULX011
+     C                     END                             - E3           ULX011
+     C*                                                                   ULX011
+     C           DHPRCD    IFNE *BLANKS                    - B3           ULX004
+     C           DHPRCD    IFEQ DSPRCD                     - B4           ULX004
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*                                                                   ULX004
+     C           DHPORT    IFNE *BLANKS                    - B3           ULX004
+     C           DHPORT    IFEQ DSPORT                     - B4           ULX004
+     C                     MOVE '1'       *IN10                           ULX004
+     C                     ELSE                            - X4           ULX004
+     C                     MOVE '0'       *IN10                           ULX004
+     C                     GOTO ENDSEL                                    ULX004
+     C                     END                             - E4           ULX004
+     C                     END                             - E3           ULX004
+     C*
+     C                     END                             - E2
+     C                     GOTO ENDSEL
+     C                     END                             - E1
+     C*
+     C** RUBRIC CREDIT SELECTED
+     C*D***      DHCRED    IFNE *ZEROS                     - B1           ULX046
+     C           DHCRED    IFNE *BLANKS                    - B1           ULX046
+     C           DHCRED    IFEQ DSCRED                     - B2
+     C*
+     C           DHDEBI    IFEQ *BLANKS
+     C***********DHAMTY    ANDEQ*BLANKS                                   ULX004
+     C           DHAMTY    ANDEQ*BLANKS                                   ULX011
+     C           DHPRCD    ANDEQ*BLANKS                                   ULX004
+     C           DHPORT    ANDEQ*BLANKS                                   ULX004
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+     C*
+     C***********DHAMTY    IFNE *BLANKS                    - B3           ULX004
+     C***********DHAMTY    IFEQ DSAMTY                     - B4           ULX004
+     C           DHAMTY    IFNE *BLANKS                    - B3           ULX011
+     C           DHAMTY    IFEQ DSAMTY                     - B4           ULX011
+     C                     MOVE '1'       *IN10                           ULX011
+     C                     ELSE                            - X4           ULX011
+     C                     MOVE '0'       *IN10                           ULX011
+     C                     GOTO ENDSEL                                    ULX011
+     C                     END                             - E4           ULX011
+     C                     END                             - E3           ULX011
+     C*                                                                   ULX011
+     C           DHPRCD    IFNE *BLANKS                    - B3           ULX004
+     C           DHPRCD    IFEQ DSPRCD                     - B4           ULX004
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C*                                                                   ULX004
+     C           DHPORT    IFNE *BLANKS                    - B3           ULX004
+     C           DHPORT    IFEQ DSPORT                     - B4           ULX004
+     C                     MOVE '1'       *IN10                           ULX004
+     C                     ELSE                            - X4           ULX004
+     C                     MOVE '0'       *IN10                           ULX004
+     C                     GOTO ENDSEL                                    ULX004
+     C                     END                             - E4           ULX004
+     C                     END                             - E3           ULX004
+     C*
+     C                     END                             - E2
+     C                     GOTO ENDSEL                                    ULX004
+     C                     END                             - E1
+      ***********                                                         ULX004
+      ***Amount*Type selected                                             ULX004
+      ***********                                                         ULX004
+     C***********DHAMTY    IFNE *BLANKS                    - B1           ULX004
+     C***********DHAMTY    IFEQ DSAMTY                     - B2           ULX004
+      ***********                                                         ULX004
+     C***********          MOVE '1'       *IN10                           ULX004
+     C***********                                                         ULX004
+     C***********          END                             - E2           ULX004
+     C***********          END                             - E1           ULX004
+      *                                                                   ULX004
+      **  Amount Type selected                                            ULX011
+     C           DHAMTY    IFNE *BLANKS                    - B1           ULX011
+     C           DHAMTY    IFEQ DSAMTY                     - B2           ULX011
+     C                     MOVE '1'       *IN10                           ULX011
+     C                     END                             - E2           ULX011
+     C                     END                             - E1           ULX011
+      *                                                                   ULX011
+      ** Product Code selected.                                           ULX004
+      *                                                                   ULX004
+     C           DHPRCD    IFNE *BLANKS                    - B1           ULX004
+     C           DHPRCD    IFEQ DSPRCD                     - B2           ULX004
+      *                                                                   ULX004
+     C           DHPORT    IFEQ *BLANKS                    - B3           ULX004
+     C                     MOVE '1'       *IN10                           ULX004
+     C                     END                             - E3           ULX004
+     C*                                                                   ULX004
+     C           DHPORT    IFNE *BLANKS                    - B3           ULX004
+     C           DHPORT    IFEQ DSPORT                     - B4           ULX004
+     C                     MOVE '1'       *IN10                           ULX004
+     C                     ELSE                            - X4           ULX004
+     C                     MOVE '0'       *IN10                           ULX004
+     C                     GOTO ENDSEL                                    ULX004
+     C                     END                             - E4           ULX004
+     C                     END                             - E3           ULX004
+     C*                                                                   ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+      *                                                                   ULX004
+      ** Portfolio Type selected.                                         ULX004
+      *                                                                   ULX004
+     C           DHPORT    IFNE *BLANKS                    - B1           ULX004
+     C           DHPORT    IFEQ DSPORT                     - B2           ULX004
+     C                     MOVE '1'       *IN10                           ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+     C*
+     C           ENDSEL    TAG
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C* SRVAL - SUBROUTINE TO VALIDATE CREDIT AND DEBIT AND EXTRACT TYPE       *
+     C**************************************************************************
+     C*
+     C           SRVAL     BEGSR
+     C*
+     C** EXTRACT TYPE MUST BE VALID
+     C*
+     C           DSEXTT    IFNE *BLANKS                    - B1
+     C           DSEXTT    ANDNE'Y'
+     C           DSEXTT    ANDNE'N'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB3002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E1
+     C*
+     C           DSEXTT    IFEQ *BLANKS                    - B1
+     C           DSDEBI    ANDNE*ZEROS
+     C           DSEXTT    OREQ *BLANKS
+     C           DSCRED    ANDNE*ZEROS
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB3006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E1
+     C*
+     C** VALIDATION IF FULLY NUMERIC
+     C*
+     C           DSDEBI    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    DSDEBI
+     C                     END                             - E1
+     C*
+     C           DSDEBI    IFNE *ZEROS                     - B1
+     C                     MOVELDSDEBI    TEST9   90
+     C                     MOVELTEST9     ALPH8   8
+     C           DSDEBI    IFNE ALPH8                      - B2
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+     C*                                                                   ERL415
+     C           DSDEBI    IFNE *ZEROS                     - B1           ERL415
+     C           *IN24     ANDEQ'0'                                       ERL415
+     C           DSDEBI    CHAINERLU11PD             82                   ERL415
+     C*                                                                   ERL415
+     C** IML code 1.1 must exist                                          ERL415
+     C           *IN82     IFEQ '1'                        - B2           ERL415
+     C                     MOVE '1'       *IN24                           ERL415
+     C                     MOVE '1'       *IN63                           ERL415
+     C                     MOVEL'ERL3010' ZAMSID                          ERL415
+     C                     EXSR ZASNMS                                    ERL415
+     C                     ELSE                            - X2           ERL415
+     C*                                                                   ERL415
+     C** IML code 1.1 can not be a 'Sub-total' not managed (action 'X')   ERL415
+     C           IMACTI    IFEQ 'X'                        - B3           ERL415
+     C           IMTYPE    ANDEQ'S'                                       ERL415
+     C                     MOVE '1'       *IN24                           ERL415
+     C                     MOVE '1'       *IN63                           ERL415
+     C                     MOVEL'ERL3011' ZAMSID                          ERL415
+     C                     EXSR ZASNMS                                    ERL415
+     C                     END                             - E3           ERL415
+     C*                                                                   ERL415
+     C** IML code 1.1 can not be a 'Dont' not managed (action 'X')        ERL415
+     C           IMACTI    IFEQ 'X'                        - B3           ERL415
+     C           IMTYPE    ANDEQ'I'                                       ERL415
+     C           IMACTI    OREQ 'X'                                       ERL415
+     C           IMTYPE    ANDEQ'X'                                       ERL415
+     C                     MOVE '1'       *IN24                           ERL415
+     C                     MOVE '1'       *IN63                           ERL415
+     C                     MOVEL'ERL3012' ZAMSID                          ERL415
+     C                     EXSR ZASNMS                                    ERL415
+     C                     END                             - E3           ERL415
+     C*                                                                   ERL415
+     C** IML code 1.1 can not be a 'Total' not managed (action 'X')       ERL415
+     C           IMACTI    IFEQ 'X'                        - B3           ERL415
+     C           IMTYPE    ANDEQ'T'                                       ERL415
+     C                     MOVE '1'       *IN24                           ERL415
+     C                     MOVE '1'       *IN63                           ERL415
+     C                     MOVEL'ERL3013' ZAMSID                          ERL415
+     C                     EXSR ZASNMS                                    ERL415
+     C                     END                             - E3           ERL415
+     C                     END                             - E2           ERL415
+     C                     END                             - E1           ERL415
+     C*
+     C           DSCRED    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    DSCRED
+     C                     END                             - E1
+     C*
+     C           DSCRED    IFNE *ZEROS                     - B1
+     C                     MOVELDSCRED    TEST9   90
+     C                     MOVELTEST9     ALPH8   8
+     C           DSCRED    IFNE ALPH8                      - B2
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+     C*                                                                   ERL415
+     C           DSCRED    IFNE *ZEROS                     - B1           ERL415
+     C           *IN25     ANDEQ'0'                        - B1           ERL415
+     C           DSCRED    CHAINERLU11PD             82                   ERL415
+     C*                                                                   ERL415
+     C** IML code 1.1 must exist                                          ERL415
+     C           *IN82     IFEQ '1'                        - B2           ERL415
+     C                     MOVE '1'       *IN25                           ERL415
+     C                     MOVE '1'       *IN63                           ERL415
+     C                     MOVEL'ERL3010' ZAMSID                          ERL415
+     C                     EXSR ZASNMS                                    ERL415
+     C                     ELSE                            - X2           ERL415
+     C*                                                                   ERL415
+     C** IML code 1.1 can not be a 'Sub-total' not managed (action 'X')   ERL415
+     C           IMACTI    IFEQ 'X'                        - B3           ERL415
+     C           IMTYPE    ANDEQ'S'                                       ERL415
+     C                     MOVE '1'       *IN25                           ERL415
+     C                     MOVE '1'       *IN63                           ERL415
+     C                     MOVEL'ERL3011' ZAMSID                          ERL415
+     C                     EXSR ZASNMS                                    ERL415
+     C                     END                             - E3           ERL415
+     C*                                                                   ERL415
+     C** IML code 1.1 can not be a 'Dont' not managed (action 'X')        ERL415
+     C           IMACTI    IFEQ 'X'                        - B3           ERL415
+     C           IMTYPE    ANDEQ'I'                                       ERL415
+     C           IMACTI    OREQ 'X'                                       ERL415
+     C           IMTYPE    ANDEQ'X'                                       ERL415
+     C                     MOVE '1'       *IN25                           ERL415
+     C                     MOVE '1'       *IN63                           ERL415
+     C                     MOVEL'ERL3012' ZAMSID                          ERL415
+     C                     EXSR ZASNMS                                    ERL415
+     C                     END                             - E3           ERL415
+     C*                                                                   ERL415
+     C** IML code 1.1 can not be a 'Total' not managed (action 'X')       ERL415
+     C           IMACTI    IFEQ 'X'                        - B3           ERL415
+     C           IMTYPE    ANDEQ'T'                                       ERL415
+     C                     MOVE '1'       *IN25                           ERL415
+     C                     MOVE '1'       *IN63                           ERL415
+     C                     MOVEL'ERL3013' ZAMSID                          ERL415
+     C                     EXSR ZASNMS                                    ERL415
+     C                     END                             - E3           ERL415
+     C                     END                             - E2           ERL415
+     C                     END                             - E1           ERL415
+      ***********                                                         ULX004
+      ***Validate Amount Type                                             ULX004
+      ***********                                                         ULX004
+     C***********DSAMTY    IFEQ *BLANKS                    - B1           ULX004
+     C***********          MOVE 'G'       DSAMTY                          ULX004
+     C***********          ELSE                            - X1           ULX004
+     C***********DSAMTY    IFNE 'G'                        - B2           ULX004
+     C***********DSAMTY    ANDNE'C'                                       ULX004
+     C***********DSAMTY    ANDNE'L'                                       ULX004
+     C***********          MOVE '1'       *IN27                           ULX004
+     C***********          MOVE '1'       *IN63                           ULX004
+     C***********          MOVEL'ERL3009' ZAMSID                          ULX004
+     C***********          EXSR ZASNMS                                    ULX004
+     C***********          END                             - E2           ULX004
+     C***********          END                             - E1           ULX004
+     C*                                                                   ULX004
+      **  Validate Amount Type                                            ULX011
+     C           DSAMTY    IFEQ *BLANKS                    - B1           ULX011
+     C*D***                MOVE '0'       DSAMTY                   ULX011 ULX046
+     C                     MOVE '00'      DSAMTY                          ULX046
+     C                     ELSE                            - X1           ULX011
+     C*D***      DSAMTY    LOKUPPORT                     83        ULX011 ULX046
+     C                     Z-ADD1         Y       30                      ULX046
+     C           DSAMTY    LOKUPAMTY,Y                   83               ULX046
+     C           *IN83     IFEQ *OFF                       - B2           ULX011
+     C                     MOVE '1'       *IN29                           ULX011
+     C                     MOVE '1'       *IN63                           ULX011
+     C                     MOVEL'ERL3009' ZAMSID                          ULX011
+     C                     EXSR ZASNMS                                    ULX011
+     C                     ELSE                                           ULX046
+     C                     MOVELAMTY2,Y   DSAMTY                          ULX046
+     C                     END                             - E2           ULX011
+     C                     END                             - E1           ULX011
+     C*                                                                   ULX011
+     C** Validate Product Code.                                           ULX004
+     C*                                                                   ULX004
+     C** Validation if fully numeric                                      ULX004
+     C           DSPRCD    IFEQ *BLANKS                    - B1           ULX004
+     C                     MOVE *ZEROS    DSPRCD                          ULX004
+     C                     END                             - E1           ULX004
+     C*                                                                   ULX004
+     C           DSPRCD    IFNE *ZEROS                     - B1           ULX004
+     C                     MOVELDSPRCD    TEST5   50                      ULX004
+     C                     MOVELTEST5     ALPH4   4                       ULX004
+     C           DSPRCD    IFNE ALPH4                      - B2           ULX004
+     C                     MOVE '1'       *IN27                           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVEL'ERL0012' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+     C*                                                                   ULX004
+     C           DSPRCD    IFNE *ZEROS                     - B1           ULX004
+     C           *IN28     ANDEQ'0'                                       ULX004
+     C                     MOVE DSPRCD    WPRCD   40                      ULX004
+     C******     WPRCD     LOKUPPROD                     83        ULX004 ULX011
+     C*                                                                   ULX004
+      ** Product*Code*doesn't*exist*on*table.                      ULX004 ULX011
+     C******     *IN83     IFEQ '0'                        - B2    ULX004 ULX011
+     C           WPRCD     CHAINERPRDCPD             82                   ULX011
+      ** Product Code doesn't exist                                       ULX011
+     C           *IN82     IFEQ '1'                        - B2           ULX011
+     C                     MOVE '1'       *IN27                           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVEL'ERL0013' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+     C*                                                                   ULX004
+     C** Validate Portfolio Type.                                         ULX004
+     C*                                                                   ULX004
+     C           DSPORT    IFEQ *BLANKS                    - B1           ULX004
+     C                     MOVE *ZEROS    DSPORT                          ULX004
+     C                     ELSE                            - E1           ULX004
+     C*                                                                   ULX004
+     C           DSPORT    LOKUPPORT                     83               ULX004
+     C*                                                                   ULX004
+     C** Portfolio Type doesn't exist on table.                           ULX004
+     C           *IN83     IFEQ '0'                        - B2           ULX004
+     C                     MOVE '1'       *IN28                           ULX004
+     C                     MOVE '1'       *IN63                           ULX004
+     C                     MOVEL'ERL0014' ZAMSID                          ULX004
+     C                     EXSR ZASNMS                                    ULX004
+     C                     END                             - E2           ULX004
+     C                     END                             - E1           ULX004
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C* INITIAL ROUTINE                                                        *
+     C**************************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVE CTRY      PARCTR
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C           ACTION    IFEQ 'E'
+     C                     MOVE '1'       *IN15
+     C                     END
+     C*
+     C*   Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'*'       DDPGMQ
+     C**********           MOVEL'ERUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+     C*
+     C*   Fill in fields for subroutine ZASNMS
+     C                     MOVEL'ERLU40'  ZAPGM  10        Message queue
+     C**********           MOVEL'ERUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C******               READ SDBANKPD                 88               ULX004
+      *                                                                   ULX004
+      **  Get Installation Control Data Record 1                          ULX004
+      *                                                                   ULX004
+     C                     CALL 'AOBANKR0'                                ULX004
+     C                     PARM '*MSG   ' @RTCD   7                       ULX004
+     C                     PARM '*FIRST ' @OPTN   7                       ULX004
+     C           SDBANK    PARM SDBANK    DSFDY                           ULX004
+     C           @RTCD     IFNE *BLANKS                    *----------1   ULX004
+     C                     Z-ADD1         DBASE            ***************ULX004
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *ULX004
+     C                     MOVEL'*FIRST'  DBKEY            ***************ULX004
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                           *----------1   ULX004
+      *                                                                                       CER001
+      ** Access AOSARDR0 and check if CDL038 is installed                                     CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   @RTCD                                               CER001
+     C                     PARM '*VERIFY' @OPTN                                               CER001
+     C*********************PARM 'ULX004'  @SARD   6                                    CER001 CLE042
+     C                     PARM 'CDL038'  @SARD   6                                           CLE042
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER001
+      *                                                                                       CER001
+     C           @RTCD     IFNE *BLANKS                                                       CER001
+     C           @RTCD     ANDNE'*NRF    '                                                    CER001
+     C                     Z-ADD2         DBASE                                               CER001
+     C                     MOVE 'SCSARDPD'DBFILE                                              CER001
+     C                     MOVEL'CDL038'  DBKEY                                               CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           @RTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVE 'Y'       CDL038  1                                           CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE 'N'       CDL038                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CLE042
+      ** Access AOSARDR0 and check if CLE042 is installed                                     CLE042
+      *                                                                                       CLE042
+     C                     CALL 'AOSARDR0'                                                    CLE042
+     C                     PARM *BLANKS   @RTCD                                               CLE042
+     C                     PARM '*VERIFY' @OPTN                                               CLE042
+     C                     PARM 'CLE042'  @SARD   6                                           CLE042
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE042
+      *                                                                                       CLE042
+     C           @RTCD     IFNE *BLANKS                                                       CLE042
+     C           @RTCD     ANDNE'*NRF    '                                                    CLE042
+     C                     Z-ADD30        DBASE                                               CLE042
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE042
+     C                     MOVEL'CLE042'  DBKEY                                               CLE042
+     C                     EXSR *PSSR                                                         CLE042
+     C                     ENDIF                                                              CLE042
+      *                                                                                       CLE042
+     C           @RTCD     IFEQ *BLANKS                                                       CLE042
+     C                     MOVE 'Y'       CLE042  1                                           CLE042
+     C                     ELSE                                                               CLE042
+     C                     MOVE 'N'       CLE042                                              CLE042
+     C                     ENDIF                                                              CLE042
+     C*
+     C                     MOVE *BLANKS   DHDEBI
+     C                     MOVE *BLANKS   DHCRED
+     C                     MOVE *BLANKS   WWDEBI
+     C                     MOVE *BLANKS   WWCRED
+     C*
+     C                     MOVE *BLANKS   DHMOD
+     C                     MOVE *BLANKS   DHTYPE
+     C                     MOVE *BLANKS   WWMOD   2
+     C**********           MOVE *BLANKS   WWTYPE  8                                    ER0102 CER001
+     C                     MOVE *BLANKS   WWTYPE                                              CER001
+     C                     MOVE *BLANKS   WW08A   8                       ULX004
+     C*
+     C** SETUP 'ADD' OR 'AMEND' MODE
+     C*
+     C                     READ ERLUTTL1                 88
+     C           *IN88     IFEQ '1'
+     C                     MOVE '1'       *IN09
+     C                     END
+     C*
+     C                     ENDSR
+     C****************************************************************
+     C*  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE            *
+     C****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C**   message file specified use PMSGF
+     C*
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C**
+     C**   Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - PROGRAM ERROR HANDLING ROUTINE                 *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY -                                                *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE 'E'       #RETRN
+     C                     DUMP
+     C*
+     C           #PSSR0    ENDSR
+     C**************************************************************************
+     C* CALLEN - SUBROUTINE TO CALCULATE THE LENGHT OF NARRATIVE INPUT
+     C**************************************************************************
+     C           CALLEN    BEGSR
+     C*
+     C                     MOVEADHNARA    ARR
+     C                     Z-ADD30        I       20
+     C*
+     C           ARR,I     DOWEQ*BLANKS
+     C                     SUB  1         I
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************ERL200
+      ** PRESS S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD WWAID,       ERL200
+      ** DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.                ERL200
+      **                                                                  ERL200
+     C*===================================================================ERL200
+     C*                                                                   ERL200
+     C           PRESS     BEGSR                           ** PRESS BSR **ERL200
+     C*                                                                   ERL200
+     C** If ENTER pressed, the VLDCMDKEY indicator will be off            ERL200
+     C*                                                                   ERL200
+     C                     MOVE '  '      WWAID                           ERL200
+     C*                                                                   ERL200
+     C           *IN45     IFEQ '0'                                       ERL200
+     C                     MOVE 'RA'      WWAID   2                       ERL200
+     C                     END                                            ERL200
+     C*                                                                   ERL200
+     C** If F3                                                            ERL200
+     C*                                                                   ERL200
+     C           *INKC     IFEQ '1'                                       ERL200
+     C                     MOVE '03'      WWAID                           ERL200
+     C                     END                                            ERL200
+     C*                                                                   ERL200
+     C** If F12                                                           ERL200
+     C*                                                                   ERL200
+     C           *INKL     IFEQ '1'                                       ERL200
+     C                     MOVE '12'      WWAID                           ERL200
+     C                     END                                            ERL200
+     C*                                                                   ERL200
+     C** If ROLLUP pressed                                                ERL200
+     C*                                                                   ERL200
+     C           *IN35     IFEQ '1'                                       ERL200
+     C                     MOVE 'UP'      WWAID                           ERL200
+     C                     END                                            ERL200
+     C*                                                                   ERL200
+     C                     ENDSR                           ** PRESS ESR **ERL200
+     C*                                                                   ERL200
+     C*===================================================================ERL200
+      **ITIPTDTICILNCDCLDLC1C2BPBDTBDATACSBSBRTSRATR                      ER0100
+**  PORT                                                                  ULX004
+0123456789                                                                ULX004
+**  ARDL
+ITIPTDTICILNCDCLDLC1C2BPBDTBDATACSBSBRTSRATRCXFSFPOPOTSWSIPIFRRFRPRRRSRX  ER0100
+**  ARDP1
+BLBBRPRRPDPL
+**  ARDP2
+Bond Lending     Bond Borrowing
+Repurchase Order Reverse Repo
+Pledged Deposit  Pledged Loan
+**  ARCP                                                                  ERL386
+Customer Position                                                         ERL386
+Discretionary Customer Assets                                             ERL436
+**  TABIT1 / TABIT2 - IT Narratives Table                                 ULX004
+1NY     FUTURE/MARKET TRADED/HEDGING                                      ULX004
+1NN     FUTURE/MARKET TRADED/TRADING                                      ULX004
+2NY     FUTURE/MARKET TRADED/HEDGING                                      ULX004
+2NN     FUTURE/MARKET TRADED/TRADING                                      ULX004
+3NY     FUTURE/MARKET TRADED/HEDGING                                      ULX004
+3NN     FUTURE/MARKET TRADED/TRADING                                      ULX004
+4YY     OPTION/OTC/HEDGING                                                ULX004
+4YN     OPTION/OTC/TRADING                                                ULX004
+4NY     OPTION/MARKET TRADED/HEDGING                                      ULX004
+4NN     OPTION/MARKET TRADED/TRADING                                      ULX004
+5YY     OPTION/OTC/HEDGING                                                ULX004
+5YN     OPTION/OTC/TRADING                                                ULX004
+5NY     OPTION/MARKET TRADED/HEDGING                                      ULX004
+5NN     OPTION/MARKET TRADED/TRADING                                      ULX004
+6YY     OPTION/OTC/HEDGING                                                ULX004
+6YN     OPTION/OTC/TRADING                                                ULX004
+6NY     OPTION/MARKET TRADED/HEDGING                                      ULX004
+6NN     OPTION/MARKET TRADED/TRADING                                      ULX004
+7NY     FUTURE/MARKET TRADED/HEDGING                                      ULX004
+7NN     FUTURE/MARKET TRADED/TRADING                                      ULX004
+8NY     OPTION/MARKET TRADED/HEDGING                                      ULX004
+8NN     OPTION/MARKET TRADED/TRADING                                      ULX004
+**  AMTY                                                                  ULX046
+00 00 01 11 02 22 03 33 04 44 05 55 06 66 07 77 08 88 09 99 101112        ULX046
+**  AMTY2                                                                 ULX046
+000000010101020202030303040404050505060606070707080808090909101112        ULX046
+**  CPY@
+(c) Finastra International Limited 2005

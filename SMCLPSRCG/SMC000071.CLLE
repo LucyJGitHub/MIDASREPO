@@ -1,0 +1,57 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Update GPBRCHEXPD from GZSDBRCHPD')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000071 - Update GPBRCHEXPD from GZSDBRCHPD               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27786 *CREATE   Date 02Jun10              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG27786 - New utility to handle file initialisation.       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 SYS0000 RPG0000) +
+                          EXEC(GOTO CMDLBL(ERROR))
+ 
+/* Build SQL statement to add records to GPBRCHEXPD from GZSDBRCHPD. */
+             CHGVAR     VAR(&STM_STR) VALUE('insert into GPBRCHEXPD +
+                          (BXBRCD) select A8BRCD from GZSDBRCHPD z +
+                          where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE('(select p.BXBRCD from +
+                          GPBRCHEXPD p where z.A8BRCD = p.BXBRCD);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+/* Build SQL statement to delete records from GPBRCHEXPD not in GZSDBRCHPD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from GPBRCHEXPD +
+                          p where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('(select *  from +
+                          GZSDBRCHPD z where z.A8BRCD = p.BXBRCD);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

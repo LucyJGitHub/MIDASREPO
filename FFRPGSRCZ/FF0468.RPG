@@ -1,0 +1,556 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Drop Deleted Trades After 1 Month')           *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module                              *
+     F*                                                                  *
+     F****FF0468**-**DROP*DELETED*TRADES*AFTER*1*MONTH********************100796
+     F*   FF0468  -  Drop deleted trades beyond historical period        *100796
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CER001             Date 25Apr05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS002             Date 14Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CFF007             Date 19Feb01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *                 170520             Date 19Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CPL002             Date 08MAR99               *
+     F*                 CAP003             Date 18Aug98               *
+     F*                 CFF004             Date 14OCT96               *
+     F*                  S01408            DATE 13AUG96                  *
+     F*                  100796            DATE 17JUL96                  *
+     F*                  S01408            DATE 08MAY96                  *
+     F*                  CPM003            DATE 12DEC95                  *
+     F*                  079418            DATE 12DEC95                  *
+     F*                  077485            DATE 17OCT94                  *
+     F*                  S01408            DATE 04SEP95                  *
+     F*                  087344            DATE 31MAR95                  *
+     F*                  S01456            DATE 08NOV93                  *
+     F*                  S01411            DATE 16APR93                  *
+     F*                  FO0015            DATE 03DEC90                  *
+     F*                  S01117            DATE 14DEC90                  *
+     F*                  E22799            DATE 17JUL90                  *
+     F*                  E21756            DATE 03MAY90                  *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CAS002 - Hedge Strategy/Linkage (Recompile)                  *
+      *  CFF007 - Futures and Options Enhancement for Private Banking *
+      *  170520 - Recompile over changed TRANSD file                  *
+     F*  CPL002 - Midas-Plato Interface (Recompiled)                  *
+      *  CAP003 - Conversion of Midas inputs to modular API structure *
+      *           (phase 2) - recompiled                              *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     F*  S01408 - Addition of hook  FF0468CCP4                           *
+     F*         - Addition of hook  FF0468CCP3                           *
+     F*  100796 - Amend program to drop deleted trades after historical  *
+     F*           period, consistent with drop of closed-out trades and  *
+     F*           position change records, rather than after 30 days.    *
+     F*  S01408 - Addition of hook  FF0468CCP2                           *
+     F*  CPM003 - FF PM Interface Upgrade to R10.                     *
+     F*  079418 - DROP RECORD IN AMORTIZATION DETAILS                 *
+     F*  077485 - FF/PM INTERFACE : MATURE FLAT POSITIONS NOT         *
+     F*           EXTRACTED FOR FF TRADES                             *
+     F*           (WHEN DROP MATURED FF TRADES SHOULD ALSO DELETE     *
+     F*           RECORD(S) FROM PF/PMMFHLPD)                         *
+     F*   S01408 - Addition of hooks FF0468CCP1                          *
+     F*                              FF0468FFP1                          *
+     F*   087344 - OUTPUT CORRECT DB ERROR INFORMATION                   *
+     F*          - PRODUCE DUMP IF DB ERROR                              *
+     F*   S01456 - 'FF' MONTHLY P&L ENHANCEMENTS.                        *
+     F*            Recompiled due to change to PF/MKCTLD.                *
+     A*   S01411 - RECOMPILED BECAUSE 'ORIGINAL ENTRY DATE' HAS BEEN     *
+     A*            ADDED TO TRANSD.                                      *
+     F*   FO0013  -  REMOVE FIX E22799 AND UPDATE TRANSD INSTEAD OF      *
+     F*              TRANSD2 SINCE FFC01 NO LONGER CREATES TRANSD2.      *
+     F*   FO0015  -  APPLY S01117 CORRECTLY. ALSO REMOVE TABFF FROM THE  *
+     F*              PROGRAM AS IT'S REDUNDANT.                          *
+     F*   S01117  -  R10 MULTIBRANCHING                                  *
+     F*   E22799  -  ADD OVRDBF IN THE CREATION PARAMETER FOR TRANSD2    *
+     F*   E21756  -  NEW PROGRAM CREATED TO DROP DELETED TRADES AFTER    *
+     F*              1 MONTH INSTEAD OF NEXT DAY                         *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/**VRF*:*OVRDBF*FILE(TRANSD2)*TOFILE(TRANSD)*SHARE(*NO)*************E22799FO0013
+     F*                                                               *
+     F*****************************************************************
+     F*RANSD2*UF**E                    DISK
+     FTRANSD  UF  E                    DISK                               FO0013
+     FTRSET   UF  E           K        DISK                               FO0013
+     FPMMFHLL1UF  E           K        DISK                           UC  077485
+     FMKCTL   IF  E           K        DISK
+     FDLAMTDLLUF  E           K        DISK                               079418
+     F*ABFF***IF* E           K        DISK
+     F**ICD*1**** TABTB10F                          KIGNORE               FO0015
+     F*********** TABTB11F                          KIGNORE               FO0015
+     F*********** TABTB20F                          KIGNORE               FO0015
+     F*********** TABTB40F                          KIGNORE               FO0015
+     F*********** TABTB80F                          KIGNORE               FO0015
+     F*********** TABTE10F                          KIGNORE               FO0015
+     F*********** TABTG10F                          KIGNORE               FO0015
+     F*********** TABLETHF                          KIGNORE               FO0015
+     F*********** TABLETLF                          KIGNORE               FO0015
+     F*********** TABLETRF                          KIGNORE               FO0015
+     F*********** TABLET2F                          KIGNORE               FO0015
+     F*
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,FF0468FFP1                                           S01408
+     FFFTRX1PDUF  E           K        DISK                           UC                      CER001
+      *                                                                                       CER001
+      ** IBLC 2002 - FF Transaction Ext Details                                               CER001
+      *                                                                                       CER001
+     FFFTRX2PDUF  E           K        DISK                                                   CER001
+      *                                                                                       CER001
+     F*                                                                   S01408
+     FFFCOCHL0UF  E           K        DISK                               CFF007
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*     01          First cycle indicator
+     F*
+     F*     99       General error indicator
+     F*
+     F*     U7+U8       Database Errors
+     F*
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     I**                                                                  S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I**                                                                  S01117
+     ISDMMOD    E DSSDMMODPD                                              CPM003
+     I**  EXTERNAL DS FOR MIDAS MODULES DETAILS                           CPM003
+     ISDPORT    E DSSDPORTPD                                              CPM003
+     I** Portfolio Management ICD                                         CPM003
+     I*                                                                   CPM003
+     ISDFODA    E DSSDFODAPD                                              100796
+     I** Futures and Options ICD                                          100796
+     I/COPY WNCPYSRC,FF0468I001
+     I*                                                                   CFF007
+     I** MIDAS Switchable Features Accessed Via Access Program            CFF007
+     I*                                                                   CFF007
+     ISCSARD    E DSSCSARDPD                                              CFF007
+     I*                                                                   CFF007
+     I** Long data structure for access objects                           CFF007
+     I*                                                                   CFF007
+     I@DSSDY    E DSDSSDY                                                 CFF007
+     I*                                                                   100796
+     ILDA        UDS                            256
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 138 DBFILE                087344
+     I***********                           139 167 DBKEY                 087344
+     I***********                           168 175 DBPGM                 087344
+     I***********                           176 1770DBASE                 087344
+     I                                      134 141 DBFILE                087344
+     I                                      142 170 DBKEY                 087344
+     I                                      171 180 DBPGM                 087344
+     I                                      181 1830DBASE                 087344
+     I*                                                                   087344
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               FO0015
+     IDSFDY     E DSDSFDY                                                 FO0015
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I            DS                                                      079418
+     I                                        1   5 ISTT                  079418
+     I                                        6   70YRNO                  079418
+     I                                        8   90MTHN                  079418
+     I                                       10  11 BOKC                  079418
+     I                                        1  11 WWERRO                079418
+     C********************************************************************
+      **             MAIN PROCESSING
+     C********************************************************************
+     C*                                                                   FO0015
+     C** Define the LDA to the program                                    FO0015
+     C*                                                                   FO0015
+     C           *NAMVAR   DEFN           LDA                             FO0015
+     C*
+      **   Parameter Market is passed to program
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MRKT
+     C*                                                                   077485
+     C           MFHLKY    KLIST                                          077485
+     C                     KFLD           QFCNUM                          077485
+     C                     KFLD           QFMODI                          077485
+     C                     KFLD           QFTRNB                          077485
+     C                     KFLD           QFTDSS                          077485
+     C                     KFLD           QFTXT2                          077485
+     C                     KFLD           QFPTFR                          077485
+     C*                                                                   077485
+     C           MFHLK1    KLIST                                          077485
+     C                     KFLD           QFCNUM                          077485
+     C                     KFLD           QFMODI                          077485
+     C                     KFLD           QFTRNB                          077485
+     C*
+      **    IF first cycle indicator is off
+      **         PROCESS Initial
+     C*
+     C           *IN01     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+     C*
+      *****Find*Drop*off*date*for*this*Centre******                       100796
+     C*****(Blank*for*OTCs*so*use*RUND*off*TABTB10)                       FO0015
+      **                                                                  100796
+      ** Drop off date is market centre business date less historic period100796
+     C*    (Blank for OTCs so use RUND off SDBANK)                        FO0015
+     C           MRKT      IFEQ *BLANKS
+     C           BJRDNB    SUB  BXHSPR    DROP                            100796
+     C***********RUND      SUB  30        DROP                            FO0015
+     C***********BJRDNB    SUB  30        DROP                      FO0015100796
+     C                     ELSE
+     C           MRKT      CHAINMKCTL                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C***********          MOVE 'MKCTL'   DBFILE                          087344
+     C                     MOVE 'MKCTL   'DBFILE                          087344
+     C                     MOVELMRKT      DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ***Move*business*date*to*Drop*off*date***                           100796
+      ** Drop off date is market centre business date less historic period100796
+     C*
+     C           *LIKE     DEFN BUSD      DROP
+     C           BUSD      SUB  BXHSPR    DROP                            100796
+     C***********BUSD      SUB  30        DROP                            100796
+     C*
+     C                     END
+     C*
+     C* Read TRANSD for all records and drop deleted records that have
+     C* a LCD before the drop off period.
+     C*
+     C***********          READ TRANSD2                  99               FO0013
+     C                     READ TRANSD                   99               FO0013
+     C           *IN99     DOWEQ'0'
+     C*
+      **    IF the Last change date is less than the drop off date
+      **    AND it is a deleted record
+     C*
+     C           LCD       IFLT DROP
+     C           RECI      ANDEQ'*'
+     C*
+      ***********Delete*record*from*TRANSD2***                            FO0013
+      **         Delete record from TRANSD                                FO0013
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0468CCP4                                           S01408
+     C*
+     C*
+     C                     DELETTRANSDF
+     C*                                                                   079418
+     C** Delete corresponding record in                                   079418
+     C** DLAMTDLL                                                         079418
+     C           KAMOR     CHAINDLAMTDLL             99                   079418
+     C  N99                DELETAMORTDF                                   079418
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0468CCP2                                           S01408
+     C*
+     C* Chain to TRSETD with the same KEY and delete the equivalent record
+     C*
+     C           TNBR      CHAINTRSETDF              99
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'TRSETD'  DBFILE           ***************
+     C                     MOVELTNBR      DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     EXSR DBERR
+     C*
+     C                     ELSE
+     C*
+     C                     DELETTRSETDF
+     C                     END
+      *                                                                   CFF007
+      ** IF enhancement CFF007 is installed                               CFF007
+      ** AND Private Banking module is installed                          CFF007
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'Y'                                       CFF007
+     C           BGN4ST    ANDEQ'Y'                                       CFF007
+     C*                                                                   CFF007
+     C** Chain FFCOCHL0 with the same KEY and delete the equivalent recordCFF007
+     C*                                                                   CFF007
+     C           TNBR      CHAINFFCOCHL0             99                   CFF007
+     C*                                                                   CFF007
+     C           *IN99     IFEQ '0'                                       CFF007
+     C                     DELETFFCOCHL0                                  CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0468CCP1                                           S01408
+      *                                                                                       CER001
+      ** Drop IBLC 2002 Ext Record if found                                                   CER001
+      *                                                                                       CER001
+     C           ULX043    IFEQ 'Y'                                                           CER001
+     C                     OPEN FFTRX1PD               99                                     CER001
+     C           *IN99     IFEQ *OFF                       File Opened                        CER001
+     C           TNBR      CHAINFFTRX1PD             99                                       CER001
+     C           *IN99     IFEQ *OFF                                                          CER001
+     C                     DELETFFTRX1PD                                                      CER001
+     C                     ENDIF                                                              CER001
+     C                     CLOSEFFTRX1PD                                                      CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** If feature ULX008 is installed - delete record on ext. file                          CER001
+      *                                                                                       CER001
+     C           ULX008    IFEQ 'Y'                                                           CER001
+     C           TNBR      CHAINFFTRX2PD             99                                       CER001
+     C           *IN99     IFEQ *OFF                                                          CER001
+     C                     DELETFFTRX2PD                                                      CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+     C*                                                                   S01408
+     C** IF PORTFOLIO REFERENCE NOT BLANK DELETE ALL HOLDINGS FOR THE     077485
+     C** TRADES FROM LF/PMMFHLL1                                          077485
+     C** If Bank Portfolios are supported, treat as if PM off             CPM003
+     C           PTFR      IFNE *BLANKS                                   077485
+     C           BGPFMG    ANDEQ'Y'                                       CPM003
+     C           FCPORS    ANDNE'B'                                       CPM003
+     C                     MOVE CUSC      QFCNUM                          077485
+     C                     MOVE 'FF'      QFMODI                          077485
+     C                     MOVE TNBR      QFTRNB                          077485
+     C                     MOVE *LOVAL    QFTDSS                          077485
+     C                     MOVE *LOVAL    QFTXT2                          077485
+     C                     MOVE *LOVAL    QFPTFR                          077485
+     C*                                                                   077485
+     C** SET FILE POINTER BEFORE FIRST RECORD FOR DEAL                    077485
+     C           MFHLKY    SETLLPMMFHLL1                                  077485
+     C           MFHLK1    READEPMMFHLL1                 60               077485
+     C*                                                                   077485
+     C           *IN60     DOWEQ'0'                                       077485
+     C                     DELETPMHOLDP0                                  077485
+     C           MFHLK1    READEPMMFHLL1                 60               077485
+     C                     END                                            077485
+     C                     END                                            077485
+     C*                                                                   077485
+     C                     END
+     C***********          READ TRANSD2                  99               FO0013
+     C                     READ TRANSD                   99               FO0013
+     C                     END
+     C*
+     C                     SETON                         LR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**           INDEX TO SUBROUTINES
+     C********************************************************************
+     C**
+     C** S/R DBERR TO PERFORM DATABASE ERROR PROCESSING
+     C** S/R INIT TO PERFORM INITIAL PROCESSING
+     C**
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C** S/R INIT TO PERFORM INITIAL PROCESSING
+     C** CALLED FROM MAIN PROCESSING
+     C** CALLS DBERR
+     C*
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+      ******Access*TABTB10*for*Installation*control*record*               S01117
+      **    Access SDBANKPD for Installation control record               S01117
+      **    IF no record found,
+      **    OR record not live
+      **         PROCESS Database-error
+     C*
+     C                     SETON                     01
+     C************         MOVE 'FF0468  'DBPGM                           087344
+     C                     MOVE *BLANKS   DBPGM                           087344
+     C                     MOVEL'FF0468  'DBPGM
+     C***********          READ TABTB10F                 99               S01117
+     C**********                                                          S01117
+     C********** *IN99     IFEQ '1'                                       S01117
+     C********** RECI      ORNE 'D'                                       S01117
+     C**********           MOVE 'TABLE'   DBFILE           ***************S01117
+     C**********           MOVEL'TABTB10' DBKEY            * DB ERROR 03 *S01117
+     C**********           Z-ADD3         DBASE            ***************S01117
+     C**********           EXSR DBERR                                     S01117
+     C**********           END                                            S01117
+     C**                                                                  S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 04  *S01117
+     C                     Z-ADD4         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0468CCP3                                           S01408
+      *                                                                                       CER001
+      ** Check if feature ULX008 is installed                                                 CER001
+      *                                                                                       CER001
+     C                     MOVEL'N'       ULX008  1                                           CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   @RTCD                                               CER001
+     C                     PARM '*VERIFY' @OPTN                                               CER001
+     C                     PARM 'ULX008'  @SARD                                               CER001
+      *                                                                                       CER001
+     C           @RTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVEL'Y'       ULX008                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Check if feature ULX043 is installed                                                 CER001
+      *                                                                                       CER001
+     C                     MOVEL'N'       ULX043  1                                           CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   @RTCD                                               CER001
+     C                     PARM '*VERIFY' @OPTN                                               CER001
+     C                     PARM 'ULX043'  @SARD                                               CER001
+      *                                                                                       CER001
+     C           @RTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVEL'Y'       ULX043                                              CER001
+     C                     ENDIF                                                              CER001
+     C*
+     C           KAMOR     KLIST                                          079418
+     C                     KFLD           ISTT                            079418
+     C                     KFLD           YRNO                            079418
+     C                     KFLD           MTHN                            079418
+     C                     KFLD           BOKC                            079418
+     C*                                                                   CPM003
+     C** Access SDMMODPD                                                  CPM003
+     C** IF no record found,                                              CPM003
+     C**     Perform Database-error                                       CPM003
+     C*                                                                   CPM003
+     C                     CALL 'AOMMODR0'                                CPM003
+     C                     PARM '*MSG   ' @RTCD                           CPM003
+     C                     PARM '*FIRST ' @OPTN                           CPM003
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPM003
+     C*                                                                   CPM003
+     C           @RTCD     IFNE *BLANK                                    CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     MOVEL'SDMMODPD'DBFILE                          CPM003
+     C                     MOVEL@OPTN     DBKEY                           CPM003
+     C                     MOVEL@OPTN     DBOPTN           ***************CPM003
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *CPM003
+     C                     OUT  LDA                        ***************CPM003
+     C                     EXSR DBERR                                     CPM003
+     C                     END                                            CPM003
+     C*                                                                   CPM003
+     C** Access SDFODAPD - FF ICD File                                    100796
+     C** IF no record found,                                              100796
+     C**     Perform Database-error                                       100796
+     C                     CALL 'AOFODAR0'                                100796
+     C                     PARM '*DBERR ' @RTCD   7                       100796
+     C                     PARM '*FIRST ' @OPTN   7                       100796
+     C           SDFODA    PARM SDFODA    DSFDY                           100796
+     C           @RTCD     IFNE *BLANKS                                   100796
+     C           *LOCK     IN   LDA                                       100796
+     C                     MOVE *BLANKS   DBKEY            ***************100796
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *100796
+     C                     MOVE 'SDFODAPD'DBFILE           ***************100796
+     C                     OUT  LDA                                       100796
+     C                     EXSR DBERR                                     100796
+     C                     END                                            100796
+     C*                                                                   100796
+     C** Access SDPORTPD - PM ICD File - if PM installed                  100796
+     C** IF no record found,                                              100796
+     C**     Perform Database-error                                       100796
+     C           BGPFMG    IFEQ 'Y'                                       CPM003
+     C                     CALL 'AOPORTR0'                                CPM003
+     C                     PARM *BLANKS   @RTCD                           CPM003
+     C                     PARM '*FIRST  '@OPTN                           CPM003
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM003
+     C           @RTCD     IFNE *BLANKS                                   CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     MOVE *BLANKS   DBKEY            ***************CPM003
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *CPM003
+     C                     MOVE 'SDPORTPD'DBFILE           ***************CPM003
+     C                     OUT  LDA                                       CPM003
+     C                     EXSR DBERR                                     CPM003
+     C                     END                                            CPM003
+     C                     END                                            CPM003
+     C*                                                                   CPM003
+     C           BGPFMG    IFEQ 'Y'                                       CPM003
+     C** If Bank Portfolios are supported, treat as if PM off             CPM003
+     C           FCPORS    ANDNE'B'                                       CPM003
+     C                     OPEN PMMFHLL1                                  CPM003
+     C                     END                                            CPM003
+      *                                                                   CFF007
+      ** Check if switchable feature CFF007 is installed                  CFF007
+      *                                                                   CFF007
+     C                     CALL 'AOSARDR0'                                CFF007
+     C                     PARM *BLANKS   @RTCD                           CFF007
+     C                     PARM '*VERIFY' @OPTN                           CFF007
+     C                     PARM 'CFF007'  @SARD   6                       CFF007
+     C           SCSARD    PARM SCSARD    @DSSDY                          CFF007
+     C*                                                                   CFF007
+     C           @RTCD     IFNE *BLANKS                                   CFF007
+     C           @RTCD     ANDNE'*NRF   '                                 CFF007
+     C           *LOCK     IN   LDA                                       CFF007
+     C                     Z-ADD8         DBASE              *************CFF007
+     C                     MOVE 'SCSARDPD'DBFILE             * DBERR 008 *CFF007
+     C                     MOVEL@SARD     DBKEY              *************CFF007
+     C                     MOVEL@OPTN     DBOPTN                          CFF007
+     C                     EXSR DBERR                                     CFF007
+     C                     ELSE                                           CFF007
+     C*                                                                   CFF007
+     C           @RTCD     IFEQ *BLANKS                                   CFF007
+     C                     MOVE 'Y'       CFF007  1                       CFF007
+     C                     ELSE                                           CFF007
+     C                     MOVE 'N'       CFF007                          CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C** S/R DBERR TO PERFORM DATABASE ERROR PROCESSING
+     C** CALLED FROM EVERYWHERE
+     C** CALLS DBERR
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+      **    Seton U7 U8 LR
+      **    Write Data Base Error message
+      **    Return
+     C*
+     C                     DUMP                                           087344
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

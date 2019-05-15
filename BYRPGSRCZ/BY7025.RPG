@@ -1,0 +1,253 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Set Download Flag on Files')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY7025 - Set download flag to 'Y' on files:                  *
+      *           BYEXABPP, BYEXLRPP, BYEXPLPP                        *
+      *                                                               *
+      *  Function:  This program sets the download flag to 'Y' on all *
+      *             records in files  BYEXABPP, BYEXLRPP, BYEXPLPP    *
+      *                                                               *
+      *  Called By: BYC7020                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 1997                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN021             Date 02Dec03               *
+      *                 XXXXXX             Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN021 - BoE Profit and Loss return                          *
+      *                                                               *
+      *****************************************************************
+      *  Indicators Used:                                             *
+      *                                                               *
+      *  03 - F3,  exit program                                       *
+      *  90 - General work indicator                                  *
+      *****************************************************************
+     FBYEXABPPUF  E           K        DISK         KINFSR *PSSR
+      *
+     FBYEXLRPPUF  E           K        DISK         KINFSR *PSSR
+      *
+     FBYEXPLPPUF  E           K        DISK         KINFSR *PSSR
+      /EJECT
+      *  Array containing Copyright statement
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZALIGNZ1                                               LLN021
+      *
+      /SPACE 3
+      *
+      *  Constant name for message file
+     I              'GBBYUSRMSG'          C         ULMGFN
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ULPGM
+     I                                      244 253 ULWSID
+     I                                      254 263 ULUSER
+      *
+      * File information data structure (for database files only)
+     IINFDS1    E DSY2I1DSP
+      *
+      * Display file information data structure  (for display files only)
+     IINFDS#    E DSY2I#DSP
+      *
+      * First DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LMAIN - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULRTCD           Return code
+      *
+      *  Main Processing
+     C                     EXSR #LMAIN
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LMAIN - Main Detail Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LMAIN    BEGSR                           ** SR/#LDETL**
+      *
+      *  Process BYEXABPP file
+     C           *IN60     DOUEQ*ON
+     C                     READ BYEXABPP                 60
+     C           *IN60     IFEQ *OFF
+     C                     MOVE 'Y'       L9DNLD
+     C                     UPDATBYEXABD0
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *  Process BYEXLRPP file
+     C           *IN61     DOUEQ*ON
+     C                     READ BYEXLRPP                 61
+     C           *IN61     IFEQ *OFF
+     C                     MOVE 'Y'       L9DNLD
+     C                     UPDATBYEXLRD0
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *
+      *  Process BYEXPLPP file
+     C           *IN62     DOUEQ*ON
+     C                     READ BYEXPLPP                 62
+     C           *IN62     IFEQ *OFF
+     C                     MOVE 'Y'       L9DNLD
+     C                     UPDATBYEXPLD0
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                           ** SR/#LTERM**
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      **************************************************************************
+      *
+      * #LSNMG - Send Message to Program Message Queue                *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      **************************************************************************
+      *
+     C           #LSNMG    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ULPGNM
+     C                     PARM '*SAME'   ULPGRL
+     C                     PARM           ULMSID
+     C                     PARM           ULMSGF
+     C                     PARM           ULMSDA
+     C                     PARM           ULMSTP
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      **************************************************************************
+      *                                                               *
+      * #LCLMG - Clear Program Message Queue                          *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      **************************************************************************
+     C           #LCLMG    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ULPGNM
+     C                     PARM '*SAME'   ULPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANKS   ULRTCD  1        Return code
+     C                     MOVEACPY@      ULCPY@ 80        Copyright
+     C                     MOVE ULMGFN    ULMSGF 10        Message File
+     C                     MOVE *BLANKS   ULMSID  7        Message Id
+     C                     MOVELULPGM     ULPGNM 10        PGM Q Name
+     C                     MOVE *BLANKS   ULMSDA132        Message Data
+     C                     MOVE *BLANKS   ULMSTP  7        Message Type
+     C                     MOVE *BLANKS   ULPGRL  5
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE 'Y'       ULRTCD
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2L                                              LLN021
+**  CPY@
+(c) Finastra International Limited 1997

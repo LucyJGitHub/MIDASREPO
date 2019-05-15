@@ -1,0 +1,582 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280FRAC                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 14Jan06               *
+      *                 CGL035  *CREATE    Date 01Mar05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL035 - EUSD Upgrade to Midasplus                           *
+      *                                                               *
+      *****************************************************************
+     C/EJECT                                                                                  CAS006
+      *****************************************************************                       CAS006
+      *                                                               *                       CAS006
+      *  SRFRAC - To calculate discounted settled amount for FRA      *                       CAS006
+      *           with Risk Value Factor                              *                       CAS006
+      *                                                               *                       CAS006
+      *****************************************************************                       CAS006
+     C     SRFRAC        BEGSR
+      *                                                                                       CAS006
+     C                   Z-ADD     WZVDAT        WZVDAT            5 0
+     C                   Z-ADD     WZMDAT        WZMDAT            5 0
+     C                   Z-ADD     WZPPL         WZPPL            13 0
+     C                   Z-ADD     WZFIX         WZFIX            11 7
+     C                   Z-ADD     WZFLT         WZFLT            11 7
+     C                   Z-ADD     WZICB         WZICB             1 0
+     C                   Z-ADD     WZIANP        WZIANP           13 0
+     C                   Z-ADD     0             WZFRAT           11 7
+     C                   Z-ADD     0             WZICVL            3 0
+     C                   Z-ADD     0             WZSDAT            5 0
+     C                   Z-ADD     0             WZEDAT            5 0
+     C                   Z-ADD     0             WZPER             5 0
+     C                   Z-ADD     0             WTYR              2 0
+     C                   Z-ADD     0             WTWRK             4 0
+     C                   Z-ADD     0             WTDAY             2 0
+     C                   Z-ADD     0             WTMTH             2 0
+     C                   Z-ADD     0             WENDYR            2 0
+     C                   Z-ADD     0             WENDWK            4 0
+     C                   Z-ADD     0             WENDDY            2 0
+     C                   Z-ADD     0             WENDMM            2 0
+     C                   Z-ADD     0             WYEAR1            4 0
+     C                   Z-ADD     0             WSTORE            4 0
+     C                   Z-ADD     0             WCHK              1 0
+     C                   Z-ADD     0             WYEAR2            4 0
+     C                   Z-ADD     0             WDAY1             2 0
+     C                   Z-ADD     0             WMTHS             2 0
+     C                   Z-ADD     0             WMTHS2            4 0
+     C                   Z-ADD     0             WZWRK1           11 7
+     C                   Z-ADD     0             WZWRK2           20 7
+     C                   Z-ADD     0             WZWRK3            5 0
+     C                   Z-ADD     0             WZWRK4           14 7
+     C                   Z-ADD     0             WZWRK5           14 7
+     C                   Z-ADD     0             WZWRK6           15 0
+     C                   Z-ADD     0             WZWRK7           12 9
+     C                   Z-ADD     0             WZWRK8           15 0
+     C                   Z-ADD     0             WZWRK9           15 7
+     C                   Z-ADD     0             WZSETL           18 0
+     C                   Z-ADD     0             WZRDF            11 7
+     C                   Z-ADD     0             WZRSA            15 0
+     C                   Z-ADD     0             WZRDS            13 0
+     C                   Z-ADD     0             WZDISC           11 7
+     C                   Z-ADD     0             WZDSA            15 0
+     C                   Z-ADD     0             WDATST            6 0
+     C                   Z-ADD     0             WDTEND            6 0
+     C                   Z-ADD     0             WSLEAP            5 0
+     C                   Z-ADD     0             WELEAP            5 0
+     C                   Z-ADD     0             WCHK2             1 0
+     C                   SETOFF                                       31
+      *                                                                                       CAS006
+      ** Check if Australia formula required                                                  CAS006
+      *                                                                                       CAS006
+     C     SETF          IFEQ      'A'
+      *                                                                                       CAS006
+      ** Calculate discounted settlement amount using Australian                              CAS006
+      ** formula                                                                              CAS006
+      *                                                                                       CAS006
+      ** Calculate days to maturity                                                           CAS006
+      *                                                                                       CAS006
+     C     WZMDAT        SUB       WZVDAT        WZWRK3
+      *                                                                                       CAS006
+      ** Multiply face value by (days in year x 100)                                          CAS006
+      *                                                                                       CAS006
+     C     WZPPL         MULT      36500         WZSETL
+      *                                                                                       CAS006
+      ** Calculate proceeds from floating rate                                                CAS006
+      *                                                                                       CAS006
+     C     WZWRK3        MULT      WZFRAT        WZWRK2
+     C                   ADD       36500         WZWRK2
+     C     WZWRK2        IFNE      *ZEROS
+     C     WZSETL        DIV(H)    WZWRK2        WZRSA
+     C                   ELSE
+     C                   Z-ADD     *ZEROS        WZRSA
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Calculate proceeds from fixed amount                                                 CAS006
+      *                                                                                       CAS006
+     C     WZWRK3        MULT      WZFIX         WZWRK2
+     C                   ADD       36500         WZWRK2
+     C     WZWRK2        IFNE      *ZEROS
+     C     WZSETL        DIV(H)    WZWRK2        WZWRK8
+     C                   ELSE
+     C                   Z-ADD     *ZEROS        WZWRK8
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Calculate discounted settlemetn amount                                               CAS006
+      *                                                                                       CAS006
+     C     WZRSA         IFGT      WZWRK8
+     C     WZRSA         SUB       WZWRK8        WZRDS
+     C                   ELSE
+     C     WZWRK8        SUB       WZRSA         WZRDS
+     C                   ENDIF
+      *                                                                                       CAS006
+     C                   ELSE
+      *                                                                                       CAS006
+      ** Check if U.S.A formula required                                                      CAS006
+      *                                                                                       CAS006
+     C     SETF          IFEQ      'U'
+      *                                                                                       CAS006
+      ** Calculate discounted settlement amount using U.S.A formula                           CAS006
+      *                                                                                       CAS006
+      ** Calculate days to maturity                                                           CAS006
+      *                                                                                       CAS006
+     C     WZMDAT        SUB       WZVDAT        WZWRK3
+      *                                                                                       CAS006
+      ** Calculate difference in rates                                                        CAS006
+      *                                                                                       CAS006
+     C     WZFRAT        IFGT      WZFIX
+     C     WZFRAT        SUB       WZFIX         WXWK1             7 4
+     C                   ELSE
+     C     WZFIX         SUB       WZFRAT        WXWK1
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Multiply difference in rates by days to maturity and                                 CAS006
+      ** contract amount and divide result by 36000                                           CAS006
+      *                                                                                       CAS006
+     C     WXWK1         MULT      WZWRK3        WXWK2            15 5
+     C     WXWK2         MULT      WZPPL         WXWK3            15 0
+     C     WXWK3         DIV(H)    36000         WXWK4            15 3
+      *                                                                                       CAS006
+      ** Multiply interest settlement rate by days to maturity                                CAS006
+      ** and divide result by 36000                                                           CAS006
+      *                                                                                       CAS006
+     C     WZFRAT        MULT      WZWRK3        WXWK5            13 4
+     C     WXWK5         DIV(H)    36000         WXWK6            15 9
+      *                                                                                       CAS006
+      ** Take this result and add 1 and then take reciprocal                                  CAS006
+      *                                                                                       CAS006
+     C                   ADD       1             WXWK6
+     C     WXWK6         IFNE      *ZEROS
+     C     1             DIV(H)    WXWK6         WXWK7            11 9
+     C                   ELSE
+     C                   Z-ADD     *ZEROS        WXWK7
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Calculate discounted settlement amount                                               CAS006
+      *                                                                                       CAS006
+     C     WXWK4         MULT(H)   WXWK7         WZRDS
+      *                                                                                       CAS006
+     C                   ELSE
+      *                                                                                       CAS006
+      ** Calculate discounted settlement amount using U.K. formula                            CAS006
+      *                                                                                       CAS006
+      ** Determine value asscoiated with interest calculation basis                           CAS006
+      *                                                                                       CAS006
+     C     WZICB         IFEQ      2
+     C     WZICB         OREQ      3
+     C     WZICB         OREQ      5
+     C     WZICB         OREQ      7
+     C     CIR004        ANDEQ     'Y'
+     C                   Z-ADD     360           WZICVL
+     C                   ENDIF
+      *                                                                                       CAS006
+     C     WZICB         IFEQ      1
+     C     WZICB         OREQ      4
+     C                   Z-ADD     365           WZICVL
+     C                   ENDIF
+      *                                                                                       CAS006
+     C     WZICB         IFEQ      6
+     C                   Z-ADD     366           WZICVL
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Set start date equal to value date                                                   CAS006
+      *                                                                                       CAS006
+     C                   Z-ADD     WZVDAT        WZSDAT
+      *                                                                                       CAS006
+      ** Process until end date is greater than maturity date                                 CAS006
+      *                                                                                       CAS006
+     C     *IN31         DOUEQ     '1'
+      *                                                                                       CAS006
+      ** Execute sub-routine ZDATE2                                                           CAS006
+      *                                                                                       CAS006
+     C                   Z-ADD     WZSDAT        ZDAYNO
+      *                                                                                       CAS006
+     C                   EXSR      ZDATE2
+      *                                                                                       CAS006
+      ** Increment year by 1                                                                  CAS006
+      *                                                                                       CAS006
+     C                   ADD       1             ZYEAR
+     C                   MOVE      ZYEAR         ZDATE
+      *                                                                                       CAS006
+      ** 29th February does not exist in a non-leap year.                                     CAS006
+      *                                                                                       CAS006
+     C     ZMTH          IFEQ      02
+     C     ZDAY          ANDEQ     29
+     C                   Z-ADD     28            ZDAY
+     C     *IN98         IFEQ      '0'
+     C                   MOVEL     ZDAY          ZDATE
+     C                   ELSE
+     C                   MOVE(P)   ZDAY          W@MDY             4 0
+     C                   MOVEL     ZMTH          W@MDY
+     C                   MOVEL     W@MDY         ZDATE
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Execute sub-routine ZDATE1                                                           CAS006
+      *                                                                                       CAS006
+     C                   EXSR      ZDATE1
+     C                   Z-ADD     ZDAYNO        WZEDAT
+      *                                                                                       CAS006
+      ** Check to see if maturity date falls between period end date                          CAS006
+      ** and period end date + 10 (this will only happen if an era                            CAS006
+      ** was entered with an increased maturity date due to the                               CAS006
+      ** actual maturity date falling on a non-working day).                                  CAS006
+      ** If it does do the later discounted settlement amount                                 CAS006
+      ** calculation upto maturity date otherwise upto the period                             CAS006
+      ** end date. The number 5 was chosen as this is the worst                               CAS006
+      ** possible case of non-working days in a row (Easter).                                 CAS006
+      *                                                                                       CAS006
+     C     WZEDAT        ADD       10            ##EDAT            5 0
+      *                                                                                       CAS006
+      ** If end date is greater than the maturity date                                        CAS006
+      ** then replace end date by maturity date                                               CAS006
+      *                                                                                       CAS006
+     C     WZEDAT        IFGE      WZMDAT
+     C     WZEDAT        ORLT      WZMDAT
+     C     ##EDAT        ANDGE     WZMDAT
+     C                   SETON                                        31
+     C                   Z-ADD     WZMDAT        WZEDAT
+     C                   ENDIF
+      *                                                                                       CIR013
+      * Check whether the period contains a 29th February                                     CIR013
+     C     SZICB         IFEQ      9                                                          CIR013
+      * Convert start date to YYYYMMDD format                                                 CIR013
+     C                   Z-ADD     WZSDAT        @@DAYN                                       CIR013
+     C                   EXSR      ZDATE9                                                     CIR013
+     C                   Z-ADD     @@VDT         ZZDATA                                       CIR013
+      * Convert end date to YYYYMMDD format                                                   CIR013
+     C                   Z-ADD     WZEDAT        @@DAYN                                       CIR013
+     C                   EXSR      ZDATE9                                                     CIR013
+     C                   Z-ADD     @@VDT         ZZDATB                                       CIR013
+      *                                                                                       CIR013
+     C                   Eval      ZZStartDate = ZZDATA                                       CIR013
+     C                   Eval      ZZEndDate = ZZDATB                                         CIR013
+     C                   EXSR      #FEB29                                                     CIR013
+      *                                                                                       CIR013
+     C     #29FEB        IFEQ      'N'                                                        CIR013
+     C                   Z-ADD     365           WZICVL                                       CIR013
+     C                   ELSE                                                                 CIR013
+     C                   Z-ADD     366           WZICVL                                       CIR013
+     C                   ENDIF                                                                CIR013
+     C                   ENDIF                                                                CIR013
+      *                                                                                       CAS006
+      ** Calculate the period between start date and end date                                 CAS006
+      *                                                                                       CAS006
+     C     WZICB         IFEQ      1
+     C     WZICB         OREQ      2
+     C     WZICB         OREQ      6
+     C     WZICB         OREQ      9                                                          CIR013
+     C     #29FEB        ANDEQ     'Y'                                                        CIR013
+     C     WZEDAT        SUB       WZSDAT        WZPER
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** If the end date is less than or equal to the maturity date                           CAS006
+      *                                                                                       CAS006
+     C     *IN31         IFEQ      '0'
+      *                                                                                       CAS006
+     C     WZICB         IFEQ      3
+     C     WZICB         OREQ      4
+     C     WZICB         OREQ      7
+     C     CIR004        ANDEQ     'Y'
+     C     WZICB         OREQ      9                                                          CIR013
+     C     #29FEB        ANDEQ     'N'                                                        CIR013
+     C                   Z-ADD     WZICVL        WZPER
+     C                   ENDIF
+      *                                                                                       CAS006
+     C     WZICB         IFEQ      5
+     C                   Z-ADD     365           WZPER
+     C                   ENDIF
+      *                                                                                       CAS006
+     C                   ELSE
+      *                                                                                       CAS006
+      ** The end date was replaced by the maturity date                                       CAS006
+      *                                                                                       CAS006
+     C     WZICB         IFEQ      4
+     C     WZICB         OREQ      5
+     C     WZICB         OREQ      9                                                          CIR013
+     C     #29FEB        ANDEQ     'N'                                                        CIR013
+     C     WZEDAT        SUB       WZSDAT        WZPER
+      *                                                                                       CAS006
+      ** Convert both start and end day numbers to dates                                      CAS006
+      *                                                                                       CAS006
+     C                   Z-ADD     WZSDAT        ZDAYNO
+     C                   EXSR      ZDATE2
+     C                   Z-ADD     ZDATE         WDATST
+      *                                                                                       CAS006
+     C                   Z-ADD     WZEDAT        ZDAYNO
+     C                   EXSR      ZDATE2
+     C                   Z-ADD     ZDATE         WDTEND
+      *                                                                                       CAS006
+      ** Attempt to calculate the day number for 29 Feb in the year                           CAS006
+      *                                                                                       CAS006
+     C     *IN98         IFEQ      '0'
+     C                   MOVEL     '2902'        WDATST
+     C                   MOVEL     '2902'        WDTEND
+     C                   ELSE
+     C                   MOVEL     '0229'        WDATST
+     C                   MOVEL     '0229'        WDTEND
+     C                   ENDIF
+      *                                                                                       CAS006
+     C                   Z-ADD     WDATST        ZDATE
+     C                   EXSR      ZDATE1
+     C                   Z-ADD     ZDAYNO        WSLEAP
+      *                                                                                       CAS006
+      ** If a day number is found check if it less between start date                         CAS006
+      ** and end date                                                                         CAS006
+      *                                                                                       CAS006
+     C     *IN99         IFEQ      '0'
+      *                                                                                       CAS006
+     C     WSLEAP        IFGE      WZSDAT
+     C     WSLEAP        ANDLE     WZEDAT
+     C     WZPER         SUB       1             WZPER
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS006
+     C                   Z-ADD     WDTEND        ZDATE
+     C                   EXSR      ZDATE1
+     C                   Z-ADD     ZDAYNO        WELEAP
+      *                                                                                       CAS006
+     C     *IN99         IFEQ      '0'
+      *                                                                                       CAS006
+     C     WELEAP        IFGE      WZSDAT
+     C     WELEAP        ANDLE     WZEDAT
+     C     WZPER         SUB       1             WZPER
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS006
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** For method 3 split both start and end dates into their                               CAS006
+      ** respective day,month and year portions                                               CAS006
+      *                                                                                       CAS006
+     C     WZICB         IFEQ      3
+     C     WZICB         OREQ      7
+     C     CIR004        ANDEQ     'Y'
+      *                                                                                       CAS006
+     C                   Z-ADD     0             WZPER
+      *                                                                                       CAS006
+     C                   Z-ADD     WZSDAT        ZDAYNO
+     C                   EXSR      ZDATE2
+     C                   Z-ADD     ZDATE         WDATST
+      *                                                                                       CAS006
+     C                   MOVE      WDATST        WTYR
+     C                   MOVE      WDATST        WTWRK
+     C     *IN98         IFEQ      '0'
+     C                   MOVEL     WDATST        WTDAY
+     C                   MOVEL     WTWRK         WTMTH
+     C                   ELSE
+     C                   MOVEL     WDATST        WTMTH
+     C                   MOVEL     WTWRK         WTDAY
+     C                   ENDIF
+      *                                                                                       CAS006
+     C                   Z-ADD     WZEDAT        ZDAYNO
+     C                   EXSR      ZDATE2
+     C                   Z-ADD     ZDATE         WDTEND
+      *                                                                                       CAS006
+     C                   MOVE      WDTEND        WENDYR
+     C                   MOVE      WDTEND        WENDWK
+     C     *IN98         IFEQ      '0'
+     C                   MOVEL     WDTEND        WENDDY
+     C                   MOVEL     WENDWK        WENDMM
+     C                   ELSE
+     C                   MOVEL     WDTEND        WENDMM
+     C                   MOVEL     WENDWK        WENDDY
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Check start date for leap year                                                       CAS006
+      *                                                                                       CAS006
+     C     WTYR          ADD       1900          WYEAR1
+     C     WYEAR1        DIV       4             WSTORE
+     C                   MVR                     WCHK
+      *                                                                                       CAS006
+      ** Check end date for leap year allowing for change in century                          CAS006
+      *                                                                                       CAS006
+     C     WENDYR        ADD       1900          WYEAR2
+     C     WYEAR2        IFLT      WYEAR1
+     C                   ADD       100           WYEAR2
+     C                   ENDIF
+     C     WYEAR2        DIV       4             WSTORE
+     C                   MVR                     WCHK2
+      *                                                                                       CAS006
+      ** If start month does not equal 2 subtract day portion from 30                         CAS006
+      ** setting negative result to zero for actual days in month                             CAS006
+      *                                                                                       CAS006
+     C     WTMTH         IFNE      2
+     C     30            SUB       WTDAY         WZPER
+     C     WZPER         IFLT      0
+     C                   Z-ADD     0             WZPER
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** If month does equal 2                                                                CAS006
+      *                                                                                       CAS006
+     C     WTMTH         IFEQ      2
+      *                                                                                       CAS006
+      ** If it is not a leap year subtract day portion from 28                                CAS006
+      *                                                                                       CAS006
+     C     WCHK          IFNE      0
+     C     28            SUB       WTDAY         WZPER
+     C                   ELSE
+      *                                                                                       CAS006
+      ** If it is a leap year subtract day portion from 29                                    CAS006
+      *                                                                                       CAS006
+     C     29            SUB       WTDAY         WZPER
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Adjust start month & year to cater for year end                                      CAS006
+      *                                                                                       CAS006
+     C     WTMTH         IFEQ      12
+     C                   Z-ADD     0             WTMTH
+     C                   ADD       1             WYEAR1
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** If end month is not equal to 2 and end day is 31; or month                           CAS006
+      ** equals 2 and it is not a leap year and end day equals 28;                            CAS006
+      ** or month equals 2 and it is a leap year and end day                                  CAS006
+      ** equals 29 then add 30 to period count                                                CAS006
+      *                                                                                       CAS006
+     C     WENDMM        IFNE      2
+     C     WENDDY        ANDEQ     31
+     C     WENDMM        OREQ      2
+     C     WCHK2         ANDNE     0
+     C     WENDDY        ANDEQ     28
+     C     WZICB         ANDEQ     3
+     C     WENDMM        OREQ      2
+     C     WCHK2         ANDEQ     0
+     C     WENDDY        ANDEQ     29
+     C     WZICB         ANDEQ     3
+      *                                                                                       CAS006
+     C                   ADD       30            WZPER
+      *                                                                                       CAS006
+     C                   ELSE
+      *                                                                                       CAS006
+      ** Add day number portion to period count                                               CAS006
+      *                                                                                       CAS006
+     C                   ADD       WENDDY        WZPER
+      *                                                                                       CAS006
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Subtract 1 from end month                                                            CAS006
+      *                                                                                       CAS006
+     C                   SUB       1             WENDMM
+      *                                                                                       CAS006
+      ** If start year and end year are the same subtract start                               CAS006
+      ** month from end month                                                                 CAS006
+      *                                                                                       CAS006
+     C     WYEAR1        IFEQ      WYEAR2
+     C     WENDMM        SUB       WTMTH         WMTHS
+     C                   ELSE
+      *                                                                                       CAS006
+      ** Add end mth to the result of subtracting start month from 12                         CAS006
+      *                                                                                       CAS006
+     C     12            SUB       WTMTH         WMTHS
+     C     WENDMM        ADD       WMTHS         WMTHS
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Multiply the number of monthe by 30 and add to the period                            CAS006
+      *                                                                                       CAS006
+     C     WMTHS         MULT      30            WMTHS2
+     C                   ADD       WMTHS2        WZPER
+      *                                                                                       CAS006
+     C                   ENDIF
+      *                                                                                       CAS006
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Calculate this period's discounted settlement amount using                           CAS006
+      ** this equation where SS = settlement amount                                           CAS006
+      **                       D = Period                                                     CAS006
+      **                                                                                      CAS006
+      **        SS = (Base Rate - Fixed Rate) x D x Principal                                 CAS006
+      **             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                           CAS006
+      **             (Interest Calc Basis x 100) + (Base Rate x D)                            CAS006
+      *                                                                                       CAS006
+     C     WZFRAT        IFGE      WZFIX
+      *                                                                                       CAS006
+     C     WZFRAT        SUB       WZFIX         WZWRK1
+      *                                                                                       CAS006
+     C                   ELSE
+      *                                                                                       CAS006
+     C     WZFIX         SUB       WZFRAT        WZWRK1
+      *                                                                                       CAS006
+     C                   ENDIF
+      *                                                                                       CAS006
+     C     WZWRK1        MULT      WZPER         WZWRK2
+      *                                                                                       CAS006
+      ** Multiply now by principal to get larger value for dividing                           CAS006
+      ** and avoid errors due to half-adjusting small numbers later                           CAS006
+      *                                                                                       CAS006
+     C     WZWRK2        MULT      WZPPL         WZWRK6
+      *                                                                                       CAS006
+     C     WZICVL        MULT      100           WZWRK3
+     C     WZFRAT        MULT      WZPER         WZWRK4
+     C     WZWRK3        ADD       WZWRK4        WZWRK5
+     C     WZWRK6        DIV(H)    WZWRK5        WZSETL
+      *                                                                                       CAS006
+      ** If value date = start date then first period so initialise                           CAS006
+      ** running discount factor to 1                                                         CAS006
+      *                                                                                       CAS006
+     C     WZVDAT        IFEQ      WZSDAT
+      *                                                                                       CAS006
+     C                   Z-ADD     1             WZRDF
+     C                   Z-ADD     WZSETL        WZRDS
+     C                   ELSE
+      *                                                                                       CAS006
+      ** Divide the discounted settlement amount by the running                               CAS006
+      ** discount factor to rediscount this period's settlement amount                        CAS006
+      ** back to start date                                                                   CAS006
+      *                                                                                       CAS006
+     C     WZSETL        DIV(H)    WZRDF         WZRSA
+      *                                                                                       CAS006
+      ** Add the rediscounted settlement amount to the running                                CAS006
+      ** discounted settlement total                                                          CAS006
+      *                                                                                       CAS006
+     C     WZRSA         ADD       WZRDS         WZRDS
+      *                                                                                       CAS006
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Calculate this period's discount factor using the equation                           CAS006
+      **                                                                                      CAS006
+      **    Factor = 1 +     (D x Base Rate)                                                  CAS006
+      **                 ~~~~~~~~~~~~~~~~~~~~~~~~~~                                           CAS006
+      **                 (Interest Calc Basis x 100)                                          CAS006
+      *                                                                                       CAS006
+     C     WZWRK4        DIV(H)    WZWRK3        WZWRK7
+     C     1             ADD(H)    WZWRK7        WZDISC
+      *                                                                                       CAS006
+      ** Multiply the discount factor by the running discount factor                          CAS006
+      ** to obtain the new running discount factor for rediscounting                          CAS006
+      ** settlement amounts back to start date                                                CAS006
+      *                                                                                       CAS006
+     C     WZDISC        MULT(H)   WZRDF         WZRDF
+      *                                                                                       CAS006
+      ** Set the start date to the end date                                                   CAS006
+      *                                                                                       CAS006
+     C                   Z-ADD     WZEDAT        WZSDAT
+     C                   ENDDO
+      *                                                                                       CAS006
+     C                   ENDIF
+      *                                                                                       CAS006
+     C                   ENDIF
+      *                                                                                       CAS006
+      ** Add the net accrued interest adjustments not posted to the                           CAS006
+      ** running discounted settlement total to give the discounted                           CAS006
+      ** settlement amount total                                                              CAS006
+      *                                                                                       CAS006
+     C     WZIANP        ADD       WZRDS         WZDSA
+      *                                                                                       CAS006
+     C                   ENDSR
+     C********************************************************************S01119
+     C/EJECT                                                              S01119

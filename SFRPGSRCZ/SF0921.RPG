@@ -1,0 +1,306 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas¦ABS Select Restricted Account Code Ranges')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility                            *
+      *                                                               *
+      *  SF0921 - SELECT RESTRICTED ACCOUNT CODE RANGE                *
+      *                                                               *
+      *  Function:  This program displays for selection all valid     *
+      *             account code ranges to which the user is not      *
+      *             already authorised.                               *
+      *                                                               *
+      *  Called By: SF0920 - Maintain Restricted Account Code Ranges  *
+      *                                                               *
+      *  (C) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CRE024  *CREATE    Date 07Oct05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE024 - COUNTRY LEVEL SWITCHABLE FEATURE :                  *
+      *           SECURITY FEATURES FOR RESTRICTED ACCOUNTS           *
+      *                                                               *
+      *****************************************************************
+      *
+     FSF0921DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS INFDS1
+     F                                        S0RRN KSFILE SF0921S0
+     FSFRACRPAIF  E           K        DISK         KINFSR *PSSR
+     FSFRAAUPAIF  E           K        DISK         KINFSR *PSSR
+      *-------------------------------------------------------------------
+     E                    CPY@    1   1 80               MKI Copyright array
+      *-------------------------------------------------------------------
+     IINFDS1      DS
+     I                                    B 378 3790INSFRC
+      *
+     ILDA       E DSLDA                         256
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+     I              'Authority to All Acc-C         ALLTXT
+     I              'ounts'
+      *
+      *-------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0AUSR           User
+     C                     PARM           P0FRAC           Account Code From
+     C                     PARM           P0TOAC           Account Code To
+      *
+     C                     EXSR #INIT
+     C                     EXSR #INLZ0
+     C                     EXSR #LOAD0
+      *
+     C           *INKL     DOWEQ'0'
+     C           S0SEL     ANDEQ' '
+      * Display screen
+     C                     EXSR #DISP0
+      *
+     C           *INKL     IFEQ '0'
+     C           *IN27     CASEQ'1'       #LOAD0           Rollup
+     C                     CAS            #READ0           Read
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *******************************************************************
+      *                                                                 *
+      * #INLZ0 - Initialize Subfile                                     *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INLZ0    BEGSR
+      * Clear subfile
+     C                     MOVEA'00'      *IN,30
+     C                     WRITESF0921C0
+     C                     MOVE '1'       *IN30
+      *
+     C                     Z-ADD0         S0RRN
+     C                     Z-ADD0         X0RRN
+      *
+      * Access SFRAAUPD to check if User already authorised to *ALL
+     C           K0RAAU    SETLLSFRAAUP0                 32
+      *
+      * If not, read through file
+     C           *IN32     IFEQ '0'
+     C           *LOVAL    SETLLSFRACRP0
+     C                     READ SFRACRP0                 32
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #LOAD0 - Load Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #LOAD0    BEGSR
+      *
+     C                     Z-ADD0         LINENO
+     C                     Z-ADDX0RRN     S0RRN
+      *
+      * Load SFL page until SFL page full or end of file
+     C           *IN32     DOWEQ'0'
+     C           LINENO    ANDLT14
+      *
+     C           S0RRN     IFEQ 0
+     C                     MOVE '*ALL'    S0FRAC
+     C                     MOVE *BLANKS   S0TOAC
+     C                     MOVE ALLTXT    S0RGDS
+     C                     MOVE *BLANK    S0SEL
+     C                     ADD  1         S0RRN      31
+     C                     ADD  1         LINENO
+     C                     WRITESF0921S0
+     C                     END
+      *
+      * Access SFRAAUPD to check if User already authorised to range
+     C           K1RAAU    SETLLSFRAAUP0                 90
+      *
+      * Write detail to subfile if user not authorised
+     C           *IN90     IFEQ '0'
+     C                     MOVE MFRAC     S0FRAC           Account Code From
+     C                     MOVE MTOAC     S0TOAC           Account Code To
+     C                     MOVE MRGDS     S0RGDS           Range Description
+     C                     MOVE *BLANK    S0SEL
+     C                     ADD  1         S0RRN      31
+     C                     ADD  1         LINENO
+     C                     WRITESF0921S0
+     C                     END
+      * Read next record
+     C                     READ SFRACRP0                 32
+     C                     END
+      *
+      * Set Subfile Record Number and Save
+     C           X0RRN     ADD  1         C0SFRC
+     C                     Z-ADDS0RRN     X0RRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #DISP0 - Display Subfile                                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #DISP0    BEGSR
+      *
+      * If no records displayed, output message
+     C           S0RRN     IFEQ 0
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT0
+     C                     EXFMTSF0921C0
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #READ0 - Read Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #READ0    BEGSR
+      *
+      * Maintain subfile page
+     C           INSFRC    IFNE 0
+     C                     Z-ADDINSFRC    C0SFRC
+     C                     END
+      * If record selected, place account code in parameter
+     C           *IN31     IFEQ '1'
+     C                     READCSF0921S0                 90
+     C           *IN90     IFEQ '0'
+     C                     MOVE S0FRAC    P0FRAC           Account Code Parm
+     C                     MOVE S0TOAC    P0TOAC           Account Code Parm
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * ZASNMS - Send Message to Program Message Queue                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     MOVE *BLANK    ZAPGRL           Rel queue
+     C                     MOVE *BLANK    ZAMSID           Message Id.
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #INIT - Initial Program Subroutine                              *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      * Define Key Lists
+     C           K0RAAU    KLIST
+     C                     KFLD           P0AUSR
+     C                     KFLD           X0FRAC
+      *
+     C           K1RAAU    KLIST
+     C                     KFLD           P0AUSR
+     C                     KFLD           MFRAC
+      *
+      * Define all program work fields
+     C           *LIKE     DEFN MAUSR     P0AUSR
+     C           *LIKE     DEFN MFRAC     P0FRAC
+     C           *LIKE     DEFN MTOAC     P0TOAC
+     C           *LIKE     DEFN MFRAC     X0FRAC
+      *
+     C                     MOVE *BLANKS   ZAPGM  10
+     C                     MOVE *BLANKS   ZAPGRL  5
+     C                     MOVE *BLANKS   ZAMSID  7
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C                     MOVE *BLANKS   ZAMSDA132
+     C                     MOVE *BLANKS   ZAMSTP  7
+      *
+     C                     Z-ADD0         LINENO  20
+     C                     Z-ADD0         S0RRN   50
+     C                     Z-ADD0         X0RRN   50
+      *
+     C                     MOVE '*ALL'    X0FRAC
+      *
+      * Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+      * Get Rundate
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+      * Set screen constants
+     C                     MOVE PGM       SPGM
+     C                     MOVE WSID      SWSID
+     C                     MOVE USER      SUSER
+     C                     MOVE AGMRDT    SRUNA
+      *
+     C                     MOVELPGM       ZAPGM
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - Program Exception Error Routine                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'SF0921'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *
+** CPY@     : Copyright notice for inclusion in all MKI programs
+(C) Finastra International Limited 2005

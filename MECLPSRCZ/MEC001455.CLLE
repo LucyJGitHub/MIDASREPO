@@ -1,0 +1,278 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ME SWIFTRef SEPA Plus Loader')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management                                  */
+/*                                                                   */
+/*       MEC001455 - SWIFTRef SEPA Plus Loader                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CFT051             Date 02Jun15              */
+/*                      MD023073           Date 27Oct13              */
+/*                      MD023072           Date 27Oct13              */
+/*                      CFT050  *CREATE    Date 03Jun13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CFT051 - SWIFTRef Directories 2014                          */
+/*       MD023073 - Incorrect error message for type of upload.      */
+/*       MD023072 - Incorrect input in type of upload accepted.      */
+/*       CFT050 - SWIFTRef Directories upload                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&REFDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ERRTYP)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&YYYYMMDD) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')                         /*CFT051*/
+             DCL        VAR(&CFT051) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CFT051*/
+ 
+             DCLF       FILE(ME001455DF)
+ 
+/* Copyright statement                                               */
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global Monitor Message                                            */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNOR)
+             CHGJOB     SWS(00000000)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Clear program message queue and initialise return code            */
+             RMVMSG     PGMQ(*SAME) CLEAR(*ALL)
+ 
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&S0MRDT)
+             RTVJOBA    JOB(&S0JOB)  USER(&S0USR)
+             CHGVAR     VAR(&S1USR)  VALUE(&S0USR)
+             CHGVAR     VAR(&S1JOB)  VALUE(&S0JOB)
+             CHGVAR     VAR(&S2MRDT) VALUE(&S0MRDT)
+             CHGVAR     VAR(&S2USR)  VALUE(&S0USR)
+             CHGVAR     VAR(&S2JOB)  VALUE(&S0JOB)
+ 
+             CALL       PGM(AOSARDR0) PARM(&PRTCD '*VERIFY' 'CFT051')                     /*CFT051*/
+             IF         COND(&PRTCD *EQ ' ') THEN(DO)                                     /*CFT051*/
+             CHGVAR     VAR(&CFT051) VALUE('Y')                                           /*CFT051*/
+             ENDDO                                                                        /*CFT051*/
+ 
+ 
+/** STEP 1 - Verify that CFT050 Database is Present - option may run **/
+ 
+             SNDRCVF    RCDFMT(ME001455F0)
+             IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(ENDCLPGM))
+ 
+ LOOP:
+             CALL       PGM(MEC001426) PARM('6' &S0MSG1 &S0MSG2 &S0MSG3 &S0MSG4 +
+                                            '' '' '')
+             IF         COND((&S0MSG1 *NE    ' ')  +
+                          *OR  (&S0MSG2 *NE    ' ') +
+                          *OR  (&S0MSG3 *NE    ' ') +
+                          *OR  (&S0MSG4 *NE    ' ')) THEN(DO)
+ 
+             CHGVAR     VAR(&IN60)  VALUE('1')
+             CHGVAR     VAR(&IN61)  VALUE('1')
+             CHGVAR     VAR(&IN62)  VALUE('1')
+             CHGVAR     VAR(&IN63)  VALUE('1')
+             CHGVAR     VAR(&S0MSG5A)  VALUE('Please Ensure with Midas +
+                                           Support a correct Delivery.')
+ 
+             SNDRCVF    RCDFMT(ME001455F0)
+             IF         COND(&IN03 *EQ '0') THEN(GOTO CMDLBL(LOOP))
+             ELSE
+             GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&IN60)  VALUE('0')
+             CHGVAR     VAR(&IN61)  VALUE('0')
+             CHGVAR     VAR(&IN62)  VALUE('0')
+             CHGVAR     VAR(&S0MSG1)   VALUE(' ')
+             CHGVAR     VAR(&S0MSG2)   VALUE(' ')
+             CHGVAR     VAR(&S0MSG5A)  VALUE(' ')
+ 
+             CHGVAR     VAR(&IN64)  VALUE('1')
+             CHGVAR     VAR(&S0MSG6A)  VALUE('Check of the necessary objects +
+                                           to run the loader is started.')
+ 
+             SNDF       RCDFMT(ME001455F0)
+             DLYJOB     DLY(5)
+ 
+/** STEP 2 - Retrieve data in interim files and detect Release date **/
+ 
+             CALL       PGM(MEC001456) PARM(&ERRTYP &REFDATE)
+ 
+             IF         COND(&ERRTYP *NE '0') THEN(DO)
+ 
+        /* Error message */
+             IF         COND(&ERRTYP *EQ '1') THEN(DO)
+             CHGVAR     VAR(&IN67)  VALUE('1')
+             CHGVAR     VAR(&S2MSG8)  VALUE('SP_' *CAT &REFDATE *CAT +
+                                           ' found but with invalid +
+                                           date format')
+             GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+        /* Error message */
+             IF         COND(&ERRTYP *EQ '2') THEN(DO)
+             CHGVAR     VAR(&IN67)  VALUE('1')
+             CHGVAR     VAR(&S2MSG8)  VALUE('SP_' *CAT &REFDATE +
+                                           *CAT ' found is empty')
+             GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+        /* Error - Abnormal Termination */
+             IF         COND(&ERRTYP *EQ '8') THEN(DO)
+             CHGVAR     VAR(&S2MSG8)  VALUE('Abnormal Termination')
+             GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+        /* Error message */
+             IF         COND(&ERRTYP *EQ '9') THEN(DO)
+             CHGVAR     VAR(&IN67)  VALUE('1')
+             CHGVAR     VAR(&IN68)  VALUE('1')
+             CHGVAR     VAR(&S2MSG8)  VALUE('SP_' *CAT &REFDATE +
+                                    *CAT ' is not found')
+             GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDDO
+ 
+  /** STEP 3 - End-user is choosing the kind of Upload **/
+ 
+ LOOP2:
+             CHGVAR     VAR(&S1DATE) VALUE(&REFDATE)
+             CHGVAR     VAR(&S1DTYP) VALUE('D')
+ 
+  /** Delay 5 seconds **/
+/**********  CHGVAR     VAR(&IN64)  VALUE('0')                       */                 /*MD023072*/
+/**********  SNDF       RCDFMT(ME001455F0)                           */                 /*MD023072*/
+/**********  DLYJOB     DLY(5)                                       */                 /*MD023072*/
+             SNDRCVF    RCDFMT(ME001455F0)                                              /*MD023072*/
+             IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(ENDCLPGM))                 /*MD023072*/
+ LOOP2A:
+             SNDRCVF    RCDFMT(ME001455F1)
+             CHGVAR     VAR(&IN51)   VALUE('0')
+             CHGVAR     VAR(&IN55)   VALUE('0')
+             CHGVAR     VAR(&IN56)   VALUE('0')
+             CHGVAR     VAR(&IN65)   VALUE('0')
+             CHGVAR     VAR(&S1MSG5)   VALUE(' ')
+             CHGVAR     VAR(&S1MSG6)   VALUE(' ')
+             CHGVAR     VAR(&S1MSG7)   VALUE(' ')
+ 
+             IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(ENDCLPGM))
+             ENDDO
+ 
+             IF         COND((&S1DTYP *NE 'D ')  +
+                          *AND (&S1DTYP *NE 'F')) THEN(DO)
+             CHGVAR     VAR(&IN51)  VALUE('1')
+ /********** CHGVAR     VAR(&S1MSG5)   VALUE('Valid value is D or F')*/                 /*MD023073*/
+             CHGVAR     VAR(&S1MSG5) VALUE('Type of upload required +
+                          value must be either ''D'' (Delta) or     +
+                          ''F'' (Full).')                                               /*MD023073*/
+             GOTO LOOP2A
+             ENDDO
+ 
+ /** STEP4 - Uploading the CFT050 Database **/
+ 
+             CHGVAR     VAR(&IN55)   VALUE('1')
+             CHGVAR     VAR(&IN65)   VALUE('1')
+ 
+ /** Converting ASCII to EBCDIC **/
+             CHGVAR     VAR(&S1MSG7)   VALUE('Converting Files into Interim files')
+ 
+             CALL       ME001462 PARM('4')
+ 
+             SNDF       RCDFMT(ME001455F1)
+             DLYJOB     DLY(5)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       ABNOR
+             ENDDO
+ 
+             CHGVAR     VAR(&S1MSG7)   VALUE('Uploading Changes using Delta Version Files.')
+             SNDF       RCDFMT(ME001455F1)
+             DLYJOB     DLY(5)
+ 
+ /** If full upload is requested */
+             IF         COND(&S1DTYP *EQ 'F ') THEN(DO)
+ 
+             CHGVAR     VAR(&S1MSG7)   VALUE('Clearing PF/MESEPAPD rebuilt in full Upload')
+             CLRPFM     MESEPAPD
+             MONMSG     MSGID(CPF0000)
+             SNDF       RCDFMT(ME001455F1)
+             DLYJOB     DLY(1)
+ 
+             IF         COND(&CFT051 *EQ 'Y') THEN(DO)                                    /*CFT051*/
+             CHGVAR     VAR(&S1MSG7) VALUE('Clearing PF/MEIASPPD +
+                          rebuilt in full Upload')                                        /*CFT051*/
+             CLRPFM     MEIASPPD                                                          /*CFT051*/
+             MONMSG     MSGID(CPF0000)                                                    /*CFT051*/
+             SNDF       RCDFMT(ME001455F1)                                                /*CFT051*/
+             DLYJOB     DLY(1)                                                            /*CFT051*/
+             ENDDO                                                                        /*CFT051*/
+ 
+ /** Re-output Screen for the CFT050 Database Update after the last CLRPFM one **/
+             CHGVAR     VAR(&S1MSG7)   VALUE('Uploading Changes using Delta Version Files.')
+             SNDF       RCDFMT(ME001455F1)
+             DLYJOB     DLY(5)
+ 
+             ENDDO
+ 
+ /** Override File(s) According type of Upload **/
+             IF         COND(&S1DTYP *EQ 'D ') THEN(DO)
+             OVRDBF     FILE(METSEPPD) TOFILE(METSEPL0)
+             ENDDO
+ 
+             CHGVAR     VAR(&YYYYMMDD) VALUE('20' *CAT &REFDATE)
+ 
+ /** Call SWIFTRef BANK DIRECTORY Plus DB Updater **/
+             CALL       ME001463 PARM('4' &YYYYMMDD)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             DLTOVR     FILE(*ALL)
+             GOTO       ABNOR
+             ENDDO
+             DLTOVR     FILE(*ALL)
+ 
+ /** Terminate pgm by the clear of all the working files: MEDWXXPD, METXXXPD **/
+             CHGVAR     VAR(&S1MSG7)   VALUE('Clearing PF/MEDWSPPD rebuilt in full Upload')
+             CLRPFM     MEDWSPPD
+             MONMSG     MSGID(CPF0000)
+             SNDF       RCDFMT(ME001455F1)
+             DLYJOB     DLY(1)
+ 
+             CHGVAR     VAR(&S1MSG7)   VALUE('Clearing PF/METSEPPD rebuilt in full Upload')
+             CLRPFM     METSEPPD
+             MONMSG     MSGID(CPF0000)
+             SNDF       RCDFMT(ME001455F1)
+             DLYJOB     DLY(1)
+ 
+             CHGVAR     VAR(&S1MSG7)   VALUE('Clearing PF/METXT4PD rebuilt in full Upload')
+             CLRPFM     METXT4PD
+             MONMSG     MSGID(CPF0000)
+             SNDF       RCDFMT(ME001455F1)
+             DLYJOB     DLY(1)
+ 
+             GOTO       ENDCLPGM
+ 
+ ABNOR:
+             CHGJOB     SWS(000XXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MEC001455 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDRCVF    RCDFMT(ME001455F2)
+ 
+ ENDCLPGM:
+ 
+             ENDPGM

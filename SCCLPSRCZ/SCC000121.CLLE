@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC PEA Dummy Component')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000121 - Midas SC PEA Dummy Component                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2012')
+ 
+/*/COPY SDCPYSRC,SDSVALDCL  */
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SCC000121 - SC PEA Dummy Component') +
+                                       TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&SVALK1) VALUE('PEAIndicator')
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK10 &SVAL10)
+ 
+             IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO ABNOR)
+ 
+             IF         COND(%SST(&SVAL1 1 1) *EQ 'N') THEN(GOTO END)
+ 
+/** Abnormal termination processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+             SNDPGMMSG  MSG('Program SCC000121 - Halt COB in PEA System') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             ENDPGM

@@ -1,0 +1,131 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGSQLBND*****************************************************                     MD021155
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail module                                        *
+      *                                                               *
+      *  RE003762 - Midas RE CLINTCB backup copy creation             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. MD021155*REDUNDANT Date 15Jul13               *
+      *  Prev Amend No. CRE083AD  *CREATE  Date 06Aug12               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD021155 - COB Restructure Phase 1 Remnants                  *
+      *           - Change the copy process to CPYF instead of SQL    *
+      *  CRE083AD - COB Restructure - RE COB Optimisation Phase 1     *
+      *                                                               *
+      *****************************************************************
+      *  Function of indicators                                       *
+      *                                                               *
+      *****************************************************************
+     D PRTCD           S              7
+ 
+     D COPYRows        C                   Const(500)
+ 
+     D                 DS                  Inz
+     D ULRows                         5U 0
+     D MLoopCtr                       5U 0
+     D MLoopRow                      10U 0
+ 
+     D RECOPYDS      E DS                  Occurs(COPYRows) Inz
+     D                                     Qualified
+     D                                     EXTNAME(CLINTCB)
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    PRTCD
+ 
+      ** Declare cursor for source file
+ 
+     C/EXEC SQL
+     C+ Declare COPYCur INSENSITIVE scroll cursor for
+     C+ Select *
+     C+  from CLINTCB
+     C/END-EXEC
+ 
+      ** Open cursor
+ 
+     C/EXEC SQL
+     C+ Open COPYCur
+     C/END-EXEC
+ 
+      ** DB2_NUMBER_ROWS() function returns total rows
+ 
+     C/EXEC SQL
+     C+ Get Diagnostics :MLoopRow = DB2_NUMBER_ROWS
+     C/END-EXEC
+ 
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
+     C                             OR MLoopRow = 0
+     C                   EVAL      PRTCD = '*ERROR '
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+      *
+     C                   IF        MLoopRow > COPYRows
+     C                   EVAL      ULRows = COPYRows
+      *
+     C                   EVAL      MLoopCtr = %DIV(MLoopRow:COPYRows)
+      *
+     C                   IF        %REM(MLoopRow:COPYRows) <> 0
+     C                   EVAL      MLoopCtr += 1
+     C                   ENDIF
+      *
+     C                   ELSE
+     C                   EVAL      ULRows = MLoopRow
+     C                   EVAL      MLoopCtr = 1
+     C                   ENDIF
+ 
+      ** Clear contents of backup file
+ 
+     C/EXEC SQL
+     C+ Delete from ECLINTCB
+     C/END-EXEC
+ 
+      ** Fetch multiple rows from cursor
+ 
+     C                   DOW       MLoopCtr > 0
+ 
+     C/EXEC SQL
+     C+ Fetch next from COPYCur for
+     C+  :ULRows rows into :RECOPYDS
+     C/END-EXEC
+ 
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
+     C                             OR ULRows = 0
+     C                   EVAL      PRTCD = '*ERROR '
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+      *
+     C                   EVAL      ULRows = SQLER3
+ 
+      ** Insert RECOPYDS by block to destination file
+ 
+     C/EXEC SQL
+     C+ Insert into ECLINTCB
+     C+  :ULRows rows VALUES(:RECOPYDS)
+     C/END-EXEC
+ 
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
+     C                             OR SQLER3 = 0
+     C                   EVAL      PRTCD = '*ERROR '
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+     C                   EVAL      MLoopCtr -= 1
+      *
+     C                   ENDDO
+ 
+      ** Close cursor
+ 
+     C/EXEC SQL
+     C+ Close COPYCur
+     C/END-EXEC
+ 
+     C                   RETURN
+      *****************************************************************

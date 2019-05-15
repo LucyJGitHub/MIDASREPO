@@ -1,0 +1,932 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Counterparty Exposure by Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1000 - COUNTERPARTY EXPOSURE BY EXTRACT                    *
+     F*                                                               *
+     F*  Function: Extract details required for Counterparty Exposure *
+     F*   (COB)    Report and Parent Exposure Report.  Add calculated *
+     F*            limits to the Counterparty Limits Extract file if  *
+     F*            required.                                          *
+     F*                                                               *
+     F*  Input Parameters:                                            *
+     F*            Reporting Level        - S,C or B                  *
+     F*            Report by Book         - Y or N                    *
+     F*            Counterparty or Parent - C or P                    *
+     F*            Report Control Date    - Calculated within Program *
+     F*                                                               *
+     F*  Called by: SEC0705 - Counterparty Exposure Report            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 257384             Date 23Oct08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 11Jan99               *
+      *                 052254             Date 10Jan94               *
+      *                 E29170             Date 01Nov91               *
+     F*                 S01117             DATE 21MAY91               *
+     F*                 E21582             DATE 30MAR90               *
+     F*                 E18215             DATE 04JAN90               *
+     F*                 E19505             DATE 14NOV89               *
+     F*                 E20125             DATE 10NOV89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  257384 - Increased some variables to prevent COB failure.    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  E21582 - Array Index Variable redefined larger.              *   E21582
+     F*  E18215 - Update CPLIMD if records already in File.           *   E18215
+     F*  E19505 - Array Index Limits were too small for Book Codes    *   E19505
+     F*           and Exposure Percentages. Increased to 150.         *   E19505
+     F*  E20125 - Recompile over amended TRADSJF.                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FTRADSJF IF  E           K        DISK
+     FTRADSJF1IF  E           K        DISK                               CAC005
+     FCPLIM   UF  E           K        DISK         KINFDS CPLDS A
+     F                                              KINFSR CPLSR
+     FSLIMHJF IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FBOOKD   IF  E           K        DISK
+     FTRADSA  IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     FTABTG30 IT  F      40           EDISK
+     FCPEXPD  O   E                    DISK         KINFDS CPXDS
+     F                                              KINFSR CPXSR
+     FSE1000AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - ENTITY IS BLANK                                       *
+     F*   11  - ENTITY IS COMPANY CODE                                *
+     F*   12  - ENTITY IS BRANCH CODE                                 *
+     F*   20  - CURRENCY FOUND IN TABLE ARRAY                         *
+     F*   21  - BOOK CODE FOUND IN ARRAY                              *
+     F*   80  - ERROR ON CHAIN TO CPLIM                               *
+     F*   81  - ERROR ON CHAIN TO CLINTCB                             *
+     F*   88  - END OF FILE ON BOOKD                                  *
+     F*   89  - END OF FILE ON TRADSJF                                *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*   U8  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - OBTAINS ICD INFO AND CALCULATES REPORT CONTROL DATE *
+     F*  EQUIV  - CONVERTS COUNTERVALUE FROM NOMINAL TO BASE CCY      *
+     F*  LIMIT  - CHECKS FOR COUNTERPARTY LIMITS                      *
+     F*  EXP    - SETS EXPOSURE INDICATORS                            *
+     F*  AUDIT  - OUTPUTS CONTROL REPORT                              *
+     F*  W01    - WRITES EXPOSURE RECORD TO CPEXPD                    *
+     F*  W02    - WRITES CALCULATED LIMIT FOR PARENT TO CPLIM         *
+     F*  W03    - WRITES CALCULATED LIMIT FOR COUNTERPARTY TO CPLIM   *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZEVCD  - CALCULATES EVENT CONTROL DATE (REPORT CONTROL)      *
+     F*  ZICD2  - CHAINS TO ICD TABTB11                               *
+     F*  ZSYSTM - Obtains ICD1.                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E* ARRAY TO LOAD CURRENCIES FROM TABTG30
+     E    TABTG30         CCYA    1 150  3   CCYDT  37
+     E* ARRAYS TO HOLD BOOK CODES AND ASSOCIATED EXPOSURE PERCENTAGES
+     E********************BOK        50  2                                E19505
+     E********************EPCT       50  3 0                              E19505
+     E**********          BOK       150  2                                             E19505 257384
+     E**********          EPCT      150  3 0                                           E19505 257384
+     E                    BOK       999  2                                                    257384
+     E                    EPCT      999  3 0                                                  257384
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E                    CPY@    1   1 80                                S01117
+      /EJECT
+     I*
+     I            DS
+     I*
+     I*    CURRENCY DETAILS FROM ARRAY CCYDT
+     I*
+     I                                        1  37 CCYDET
+     I                                        1   10XDECP
+     I                                        9   9 XMDIN
+     I                                    P  10  168XERLC
+     I*
+     I            DS
+     I*
+     I* DATA STRUCTURES TO STORE KEYS
+     I*
+     I                                        1  11 NEWKEY
+     I                                        1   3 ENTITY
+     I                                        4   5 TDBK
+     I**********                              6  110TCNR                                      CSD027
+     I                                        6  11 TCNR                                      CSD027
+     I            DS                                                      CAC005
+     I                                        1  11 WNUKEY                CAC005
+     I                                        1   3 WNTITY                CAC005
+     I                                        4   5 PSBKCD                CAC005
+     I**********                              6  110WTCNR                              CAC005 CSD027
+     I                                        6  11 WTCNR                                     CSD027
+     I            DS
+     I                                        1  11 OLDKEY
+     I            DS
+     I                                        1  12 CKEY
+     I**********                              1   60CUSTNO                                    CSD027
+     I                                        1   6 CUSTNO                                    CSD027
+     I                                        7   7 LEVEL
+     I                                        8  100CKENT
+     I                                       11  12 BOOKCD
+     I*
+     I            DS
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     ICPLDS       DS
+     I                                     *STATUS  STSCPL
+     I*
+     ICPXDS       DS
+     I                                     *STATUS  STSCPX
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*                                                                   S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C* KEYLISTS FOR CHAINING TO FILES
+     C*
+     C* SLIMHJF JOINED FILE
+     C*
+     C           SLHKEY    KLIST
+     C**********           KFLD           CUSTNO  60                                          CSD027
+     C                     KFLD           CUSTNO  6                                           CSD027
+     C                     KFLD           BOOKCD  2
+     C                     KFLD           LEVEL   1
+     C                     KFLD           ENTITY  3
+     C*
+     C* COUNTERPARTY LIMITS FILE
+     C*
+     C           CPLKEY    KLIST
+     C                     KFLD           CUSTNO
+     C                     KFLD           LEVEL
+     C                     KFLD           ENTITY
+     C                     KFLD           BOOKCD
+     C*
+     C* CLIENT FILE
+     C           CLIKEY    KLIST
+     C**********           KFLD           CUSTNO  60                                          CSD027
+     C                     KFLD           CUSTNO  6                                           CSD027
+     C*
+     C* INPUT PARAMETERS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PCUST   1
+     C                     PARM           PLEVEL  1
+     C                     PARM           PBYBOK  1
+     C                     PARM           PRPCD   50
+     C*
+     C* CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE1000  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     CABEQ'1'       EAUDIT
+     C*
+     C* CLEAR WORK FIELDS
+     C*
+     C           *LIKE     DEFN CASK      WCASK
+     C           *LIKE     DEFN CRNM      WCRNM
+     C           *LIKE     DEFN CTWN      WCTWN
+     C           *LIKE     DEFN CPAR      WCPAR
+     C                     Z-ADD0         TRDREC  50
+     C                     MOVE *BLANKS   OLDKEY
+     C                     MOVE PLEVEL    LEVEL
+     C*
+     C* DETERMINE ENTITY FROM LEVEL PARAMETER
+     C*
+     C           PLEVEL    IFEQ 'S'
+     C                     MOVE '1'       *IN10
+     C                     ELSE
+     C           PLEVEL    IFEQ 'C'
+     C                     MOVE '1'       *IN11
+     C                     ELSE
+     C           PLEVEL    IFEQ 'B'
+     C                     MOVE '1'       *IN12
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* LOOP ROUND PROCESSING FOR EACH RECORD READ FROM TRADSJF
+     C*
+     C           *IN89     DOUEQ'1'
+     C           *INU7     OREQ '1'
+     C*
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     READ TRADSJF1                 89               CAC005
+     C                     ELSE                                           CAC005
+     C                     READ TRADSJF                  89
+     C                     ENDIF                                          CAC005
+     C*
+     C* AT END OF FILE - EXIT
+     C*
+     C           *IN89     CABEQ'1'       ENDLP
+     C*
+     C*  INCREMENT RECORD COUNT
+     C*
+     C                     ADD  1         TRDREC
+     C*
+     C* PROCESS RECORDS WITH :
+     C*           DISCRETIONARY IND OF M
+     C*           DATE FULLY SETTLED IS ZERO
+     C*           CUST PARM OF C (COUNTERPARTY) OR P (PARENT)
+     C*           PARENT NUMBER NON-ZERO
+     C*
+     C           C1DI      IFEQ 'M'
+     C           TDFS      ANDEQ0
+     C*
+     C********** CPAR      IFNE *ZEROS                                                        CSD027
+     C           CPAR      IFNE *BLANKS                                                       CSD027
+     C           PCUST     ANDEQ'P'
+     C           PCUST     OREQ 'C'
+     C*
+     C*  -  DETERMINE ENTITY FOR TRADE
+     C*
+     C   10                MOVE *BLANKS   ENTITY
+     C***11*******         MOVELCMPY      ENTITY                          S01117
+     C***12*******         MOVE BRCD      ENTITY                          S01117
+     C   11                MOVELCMPYM     ENTITY                          S01117
+     C   12                MOVE BRCA      ENTITY                          S01117
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     MOVE ENTITY    WNTITY                          CAC005
+     C                     MOVE TCNR      WTCNR                           CAC005
+     C                     MOVE PSBKCD    WBKCD   2                       CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE TDBK      WBKCD                           CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C*   -  IF RECORD READ IS FIRST FOR AN ENTITY/BOOK/COUNTERPARTY
+     C*           CHECK FOR LIMITS
+     C*
+     C           OLDKEY    IFNE NEWKEY
+     C           CAC005    ANDEQ'N'                                       CAC005
+     C           OLDKEY    ORNE WNUKEY                                    CAC005
+     C           CAC005    ANDEQ'Y'                                       CAC005
+     C                     EXSR LIMITS
+     C           *INU7     CABEQ'1'       ENDLP
+     C                     END
+     C*
+     C*   -  CALCULATE LIMIT CURRENCY EQUIVALENT OF COUNTERVALUE
+     C*
+     C                     EXSR EQUIV
+     C*
+     C           *INU7     CABEQ'1'       ENDLP
+     C*
+     C*   -  SET SALES AND PURCHASE EXPOSURE INDICATORS
+     C*
+     C                     EXSR EXP
+     C*
+     C*   -  WRITE EXPOSURE RECORD TO CPEXPD
+     C*
+     C                     EXSR W01
+     C*
+     C*   - STORE OLD KEY
+     C*
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     MOVE WNUKEY    OLDKEY                          CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE NEWKEY    OLDKEY
+     C                     ENDIF                                          CAC005
+     C*
+     C                     END
+     C                     END
+     C*
+     C           ENDLP     TAG
+     C*
+     C                     END
+     C*
+     C           EAUDIT    TAG
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - Subroutine to access ICD Information.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C* ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ICD2
+     C*
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTKEY      DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* CALCULATE REPORT CONTROL DATE
+     C*
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+     C*
+     C                     Z-ADDECD       PRPCD
+     C*
+     C* READ THROUGH ALL BOOK DETAIL RECORDS STORING CODES AND EXPOSURE
+     C*  PERCENTAGES IN ARRAYS
+     C*
+     C***********          Z-ADD0         S       20                      E21582
+     C                     Z-ADD0         S       30                      E21582
+     C           *IN88     DOUEQ'1'
+     C                     READ BOOKD                    88
+     C           *IN88     IFEQ '0'
+     C                     ADD  1         S
+     C                     MOVE BOKC      BOK,S
+     C                     Z-ADDSTEP      EPCT,S
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+      *                                                                   CAC005
+      ** Access Switchable feature files for CAC005                       CAC005
+      *                                                                   CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD   7                       CAC005
+     C                     PARM '*VERIFY' POPTN   7                       CAC005
+     C                     PARM 'CAC005'  PSARD   6                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE 'Y'       CAC005  1                       CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE 'N'       CAC005                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EQUIV  - Subroutine to convert Countervalue from Nominal to  *
+      *           Base Currency for Limits.                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EQUIV     BEGSR                           **  EQUIV **
+     C*
+     C* RETRIEVE LIMIT CURRENCY EXCHANGE RATE
+     C*
+     C                     Z-ADD1         A       30
+     C           SETC      LOKUPCCYA,A                   20
+     C           *IN20     IFEQ '1'
+     C                     MOVE CCYDT,A   CCYDET
+     C                     ELSE
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELSETC      DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD03        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EEQUIV
+     C                     END
+     C*
+     C* CALCULATE LIMIT CURRENCY EQUIVALENT
+     C*
+     C           XMDIN     IFEQ '0'
+     C*
+     C           XERLC     IFEQ 0
+     C                     Z-ADD0         LMEQ   150
+     C                     ELSE
+     C           TOSV      DIV  XERLC     LMEQ      H
+     C                     END
+     C*
+     C                     ELSE
+     C           TOSV      MULT XERLC     LMEQ      H
+     C                     END
+     C*
+     C* CONVERT LIMIT CURR. EQUIV. TO WHOLE UNITS OF CURRENCY
+     C*
+     C           XDECP     ADD  5         N       10
+     C           LMEQ      DIV  POWER8,N  LMEQ      H
+     C*
+     C           EEQUIV    ENDSR                           ** EEQUIV **
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LIMITS - Subroutine to check for Counterparty Limits.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LIMITS    BEGSR                           ** LIMITS **
+     C*
+     C* CHECK FOR A LIMIT RECORD ON CPLIM
+     C*
+     C           PCUST     IFEQ 'C'
+     C                     MOVE TCNR      CUSTNO
+     C                     ELSE
+     C                     MOVE CPAR      CUSTNO
+     C                     END
+     C*
+     C           PBYBOK    IFEQ 'Y'
+     C***********          MOVE TDBK      BOOKCD                          CAC005
+     C                     MOVE WBKCD     BOOKCD                          CAC005
+     C                     ELSE
+     C                     MOVE *BLANKS   BOOKCD
+     C                     END
+     C*
+     C* CHAIN TO LIMITS FILE
+     C*
+     C           CPLKEY    CHAINCPLIM                80
+     C  N80      RECI      COMP 'D'                  8080
+     C*
+     C*  -  IF RECORD FOUND, EXIT
+     C*
+     C************IN80     CABEQ'0'       ELIMIT                          E18215
+     C           *IN80     IFEQ '0'                                       E18215
+     C           PCUST     IFEQ 'C'                                       E18215
+     C                     MOVE '1'       CLLI                            E18215
+     C                     MOVE *BLANKS   CLCR                            E18215
+     C                     MOVE *BLANKS   CLTW                            E18215
+     C                     UPDATCPLIMDF                                   E18215
+     C                     GOTO ELIMIT                                    E18215
+     C                     END                                            E18215
+     C                     END                                            E18215
+     C*
+     C* IF BYBOOK IS Y, CHECK FOR GENERAL LIMITS RECORD ON SLIMHJF
+     C*    - ELSE SET LIMITS TO ZER0
+     C*
+     C           PBYBOK    IFEQ 'N'
+     C                     Z-ADD0         CLSL
+     C                     Z-ADD0         CLPL
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   BOOKCD
+     C           SLHKEY    CHAINSLIMHJF              80
+     C  N80      RECI      COMP 'D'                  8080
+     C*
+     C*  -  IF FOUND, CALCULATE LIMITS ELSE SET LIMITS TO ZERO
+     C*
+     C           *IN80     IFEQ '0'
+     C*
+     C*  -  ACCESS EXPOSURE % FOR BOOK CODE
+     C*
+     C                     Z-ADD1         B       20
+     C***********TDBK      LOKUPBOK,B                    21               CAC005
+     C           WBKCD     LOKUPBOK,B                    21               CAC005
+     C           *IN21     IFEQ '0'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BOOKD'   DBFILE           *****************
+     C***********          MOVELTDBK      DBKEY            ** DB ERROR 04 CAC005
+     C                     MOVELWBKCD     DBKEY            ** DB ERROR 04 CAC005
+     C                     Z-ADD04        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ELIMIT
+     C                     ELSE
+     C           EPCT,B    DIV  100       WKAMT  154H
+     C           WKAMT     MULT CLSL      CLSL      H
+     C           WKAMT     MULT CLPL      CLPL      H
+     C                     END
+     C*
+     C                     ELSE
+     C                     Z-ADD0         CLSL
+     C                     Z-ADD0         CLPL
+     C                     END
+     C*
+     C                     END
+     C*
+     C* WRITE A NEW CPLIM RECORD ACCORDING TO CUST PARM
+     C*
+     C           PCUST     IFEQ 'P'
+     C*
+     C           *IN80     IFEQ '1'
+     C*
+     C*  STORE ORIGINAL CLINTCB DETAILS TO PREVENT OVERWRITE
+     C*
+     C                     MOVE CPAR      WCPAR
+     C                     MOVE CASK      WCASK
+     C                     MOVE CRNM      WCRNM
+     C                     MOVE CTWN      WCTWN
+     C*
+     C                     MOVE CPAR      CUSTNO
+     C           CLIKEY    CHAINCLINTCBF             81
+     C  N81      RECI      COMP 'D'                  8181
+     C           *IN81     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE           *****************
+     C                     MOVELCUSTNO    DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD05        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ELIMIT
+     C                     ELSE
+     C                     MOVE WCPAR     CPAR
+     C                     END
+     C*
+     C                     END
+     C*
+     C*   - WRITE CPLIM RECORD FOR PARENT
+     C*         AND RESTORE ORIGINAL CLIENT DETAILS
+     C*
+     C                     EXSR W02
+     C*
+     C           *IN80     IFEQ '1'
+     C                     MOVE WCASK     CASK
+     C                     MOVE WCRNM     CRNM
+     C                     MOVE WCTWN     CTWN
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C*   - WRITE CPLIM RECORD FOR COUNTERPARTY
+     C*
+     C                     EXSR W03
+     C*
+     C                     END
+     C*
+     C           ELIMIT    ENDSR                           ** ELIMIT **
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXP    - Subroutine to set Exposure Indicators.              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXP       BEGSR                           ** EXP **
+     C*
+     C* SET SALES/PURCHASE EXPOSURE INDICATORS ACCORDING TO TRADE TYPE
+     C*
+     C                     MOVE '0'       CESE
+     C           TDTP      IFEQ 'TS'
+     C           PCOD      IFEQ '0'
+     C           PCOD      OREQ '2'
+     C           PCOD      OREQ '3'
+     C                     MOVE '1'       CESE
+     C                     END
+     C                     END
+     C*
+     C                     MOVE '0'       CEPE
+     C           TDTP      IFEQ 'TP'
+     C           PCOD      IFEQ '0'
+     C           PCOD      OREQ '3'
+     C           PCOD      OREQ '4'
+     C                     MOVE '1'       CEPE
+     C                     ELSE
+     C                     MOVE '0'       CEPE
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W01    - Subroutine to write Exposure Record to CPEXD.       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W01       BEGSR                           ** W01 **
+     C*
+     C                     MOVE 'D'       RECI
+     C           PCUST     IFEQ 'P'
+     C                     MOVE CPAR      CELC
+     C                     ELSE
+     C                     MOVE TCNR      CELC
+     C                     END
+     C                     MOVE PLEVEL    CELV
+     C                     MOVE ENTITY    CEEN
+     C           PBYBOK    IFEQ 'Y'
+     C***********          MOVE TDBK      CEBK                            CAC005
+     C                     MOVE WBKCD     CEBK                            CAC005
+     C                     ELSE
+     C                     MOVE *BLANKS   CEBK
+     C                     END
+     C                     MOVE TCNR      CEEC
+     C                     MOVE TDRF      CETR
+     C                     MOVE TDTP      CETT
+     C                     MOVE PCOD      CEPC
+     C                     Z-ADDTDVD      CEVD
+     C                     MOVE TINC      CEII
+     C                     Z-ADDLMEQ      CECV
+     C                     MOVE CASK      CEAS
+     C                     MOVE CRNM      CECR
+     C                     MOVE CTWN      CETW
+     C*
+     C                     WRITECPEXPDF
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W02    - Subroutine to write calculated Limit for Parent.    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W02       BEGSR                           ** W02 **
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE CPAR      CLCU
+     C                     MOVE PLEVEL    CLLV
+     C                     MOVE ENTITY    CLEN
+     C           PBYBOK    IFEQ 'Y'
+     C***********          MOVE TDBK      CLBK                            CAC005
+     C                     MOVE WBKCD     CLBK                            CAC005
+     C                     ELSE
+     C                     MOVE *BLANKS   CLBK
+     C                     END
+     C*
+     C                     BITON'1'       CLCM
+     C                     BITOF'0234567' CLCM
+     C*
+     C                     Z-ADD99999     CLLE
+     C                     MOVE '1'       CLLI
+     C                     MOVE CASK      CLAS
+     C                     MOVE CRNM      CLCR
+     C                     MOVE CTWN      CLTW
+     C*
+     C                     WRITECPLIMDF
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W03 - Subroutine to write calculated Limit for Counterparty  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W03       BEGSR                           ** W03 **
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE TCNR      CLCU
+     C                     MOVE PLEVEL    CLLV
+     C                     MOVE ENTITY    CLEN
+     C           PBYBOK    IFEQ 'Y'
+     C***********          MOVE TDBK      CLBK                            CAC005
+     C                     MOVE WBKCD     CLBK                            CAC005
+     C                     ELSE
+     C                     MOVE *BLANKS   CLBK
+     C                     END
+     C*
+     C                     BITOF'01234567'CLCM
+     C*
+     C                     Z-ADD99999     CLLE
+     C                     MOVE '1'       CLLI
+     C                     MOVE CASK      CLAS
+     C*                    MOVE CRNM      CLCR
+     C*                    MOVE CTWN      CLTW
+     C                     MOVE *BLANKS   CLCR
+     C                     MOVE *BLANKS   CLTW
+     C*
+     C                     WRITECPLIMDF
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit Report.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C* IF NO DATABASE ERRORS - READ TRADSA AUDIT RECORD
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C                     READ TRADSAF                  99
+     C*
+     C* IF NOT FOUND - ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TRADS'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     ELSE
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     WRITEHEADAU
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C*
+     C* CHECK FOR ANY RECORDS READ
+     C*
+     C***********TRDREC    IFEQ 0                                         E29170
+     C***********          WRITENONE                                      E29170
+     C***********          ELSE                                           E29170
+     C                     WRITECONTROL
+     C***********          END                                            E29170
+     C*
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CPLSR - Subroutine for Error Handling of Counterparty Limits *
+      *           File (CPLIM).                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CPLSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CPLIM'   DBFILE
+     C                     MOVE ENTITY    CKENT
+     C                     MOVELCKEY      DBKEY
+     C                     Z-ADD90        DBASE
+     C                     MOVE STSCPL    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN97
+     C                     SETON                     U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  CPXSR  - Subroutine for Error Handling of Counterparty       *
+      *           Exposure Extract (CPEXP).                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CPXSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CPEXP'   DBFILE
+     C                     MOVELTCNR      DBKEY
+     C                     Z-ADD91        DBASE
+     C                     MOVE STSCPX    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN97
+     C                     SETON                     U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(c) Finastra International Limited 2001

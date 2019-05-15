@@ -1,0 +1,1431 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Repayment schedule report')                   *
+     H*****************************************************************
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas    - Customer Lending Module
+     F*                                                               *
+     F*  LE0865 - REPAYMENT SCHEDULE REPORT                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201123             Date 07Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187780             Date 28Mar01               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 136241             Date 08Jun00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 14Oct99               *
+     F*                 158853             Date 11Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 119398             DATE 23JAN98               *
+     F*                 125179             DATE 05JAN98               *
+     F*                 098616             DATE 21JUN96               *
+     F*                 099799             DATE 12JUN96               *
+     F*                 085382             DATE 12APR95               *
+     F*                 055518             DATE 03DEC93               *
+     F*                 049818             DATE 31AUG93               *
+     F*                 053716             DATE 02JUN93               *
+     F*                 052611             DATE 31MAY93               *
+     F*                 BH3476             DATE 12AUG92               *
+     F*                 BH3474             DATE 12AUG92               *
+     F*                 S01270             DATE 02JAN92               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
+      *           (Amendable Payment Type)                            *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  CSC042 - COB Performance fix. RZB Sofia calls AOLOANR* 468K  *
+      *           times for 115 records. Cache data                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  201123 - Include Original Borrower in this report when       *
+      *           processing type of loan is either 64, 65, 68 or 71. *
+      *  187780 - Check if there are existing transactions before     *
+      *           calling subroutine LNSR to prevent DBERR at 6 from  *
+      *           occurring.                                          *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  136241 - For loans which capitialise interest show interest  *
+     F*           due at maturity as outstanding amount.              *
+     F*           For interim repayments, outstanding amount is zero. *
+     F*  163486 - Recompile due to changes in LVENTEL.                *
+     F*  158853 - Show repayment & outstanding amounts of Parts Sold  *
+     F*           as negative. For processing type 66, the 'R1' and   *
+     F*           'M1' amounts must be subtracted from the total.     *
+     F*           (Completed fix 099799).                             *
+     F*  119398 - Correct editing of currency fields, and currency is *
+     F*           now printed on LE0865P1 consolidated report .       *
+     F*  125179 - Edit numeric fields such that ',' is included in    *
+     F*           LE0865P1 report. Changed length of fields to 25A    *
+     F*           instead of 16A. Patterned from fix 099589.          *
+     F*  098616 - Added the (OR) condition for overflow *IN80 each    *
+     F*           time the report headings are output (LE0865H1), and *
+     F*           recompile over amended print file, to prevent       *
+     F*           output of page with heading but no detail line.     *
+     F*  099799 - Repayment Schedule events should be reported for    *
+     F*           Call Loans and Term Participations Sold (proc. types*
+     F*           61 and 66) since Repayment Schedule events may be   *
+     F*           input for these loan types and this report is       *
+     F*           designed to include maturity events.                *
+     F*  088019 - No Period and Currency total for the last record,   *
+     F*           because at EOF, pgm does not call SR/MNTSR. Add     *
+     F*           processing to print totals for last record.         *
+     F*         - Incorrect outstanding amount calculated and output  *
+     F*           because *IN05 is still on when a second event is    *
+     F*           read for a loan, and CBAL is overwritten by CPAM.   *
+     F*           Fix is to reset *IN05 for each read of event record.*
+     F*         - Incorrect amount outstanding after each repayment.  *
+     F*           Fix is to amend program to use new file LEREPSPD to *
+     F*           store the outstanding amount for each loan.         *
+     F*  085382 - Additional fix to 055518. Open LE0865P1, if still   *
+     F*           unopened, before writing LE0865H1.                  *
+     F*  055518 - Additional fix to 049818. Open LE0865P1, if still   *
+     F*           unopened, before writing LE0865H1.                  *
+     F*  049818 - Run time error occur when the PGM tries to write to *
+     F*           an unopened printer file.  Fix - when events file is*
+     F*           empty open the printer file.                        *
+     F*  053716 - Multibranching problem + Reporting problem          *
+     F*         - Incorrectly blanks out the branch code before       *
+     F*           calling up the RCF function ZSFILE.                 *
+     F*         - for single-branch environment, should open the      *
+     F*           spool file LE0865P1 once only                       *
+     F*         - BH3476 messes up the whole report.                  *
+     F*           This amendment is added for 3 purposes:             *
+     F*           i.  Print the word 'Consolidated' on LE0865P1,      *
+     F*           ii. Show the date in the correct format, and        *
+     F*           iii.Remove the decimal places editing of all        *
+     F*               figures shown on LE0865P1, which is wrong.      *
+     F*         - Part iii of BH3476 is removed from the program.     *
+     F*  052611 - Incorrectly output to LDA without any prior read.   *
+     F*           Amended to read in and write out LDA every time     *
+     F*           the program uses it.                                *
+     F*  BH3476 - TIDY UP DETAILS OF REPORT                           *
+     F*  BH3474 - EXCLUDE INTERBRANCH EVENTS                          *
+     F*  S01270 - NEW PROGRAM UNDER THE CUSTOMER LENDING PROJECT      *
+     F*           TO REPORT REPAYMENTS FOR LOANS BY BRANCH, CCY,      *
+     F*           ACCOUNT OFFICER, CUSTOMER AND DATE                  *
+     F*                                                               *
+     F*****************************************************************
+     FLVENTR  IF  E           K        DISK                           UC
+     F            LVENTELF                          KRENAMELVENTRF
+     FLVENTR1 IF  E           K        DISK                           UC
+     F            LVENTELF                          KRENAMELVENTR1F
+     FCLOAN   IF  E           K        DISK                               136241
+     F            CLOANCKF                          KIGNORE               136241
+     F            CLOANHHF                          KIGNORE               136241
+     F            CLOANZ1F                          KIGNORE               136241
+     FLEREPSPDUF  E           K        DISK         KINFSR *PSSR A        088019
+     FLE0865P1O   E             80     PRINTER      KINFDS SPOOL      UC
+     FLE0865AUO   E                    PRINTER      KINFDS SPOOLU
+     F/COPY WNCPYSRC,LE0865F001
+     F*
+     F*   FUNCTION OF INDICATORS
+     F*
+     F* 02  CURRENCY CHANGED
+     F* 03  MONTH CHANGED
+     F* 04  CUSTOMER CHANGED
+     F* 05  LOAN REFERENCE CHANGED
+     F* 06  OUTPUT VALIDATED DETAIL RECORD
+     F* 20  OUTPUT OF BRANCH DETAILS ON REPORT
+     F* 24  On - details to be printed; Off - Totals to be printed        088019
+     F* 30  EOF FOR LVENTR/LVENTR1
+     F* 89  RECORD NOT FOUND IN CLOANCL                                   136241
+     F* U1  REPORT REQUESTED BY BRANCH
+     F* U2  REPORT REQUESTED CONSOLIDATED
+     F*
+     F*******************************************************************
+     F*****************************************************************
+     F** SUBROUTINE INDEX:
+     F**
+     F** DETAIL   DETAIL PROCESSING
+     F** PROCS    PROCESSES THE LOANS READ
+     F** REPORT   OUTPUTS TO ZSFILE AND HANDLES THE P1 REPORT HEADER
+     F** LNSR     HANDLES CHANGE OF LOAN NUMBER FIELD INITIALIZATION
+     F** CUST     HANDLES CHANGE OF CUTOMER TOTALS OUTPUT
+     F** MNTSR    HANDLES CHANGE OF MONTH TOTALS
+     F** CURR     HANDLES CHANGE OF CURRENCY/BRANCH
+     F** ZDATE2   CONVERTS DAY NUMBER TO DATE
+     F** *PSSR    ERROR HANDLING
+     F** AUDIT    OUTPUTS THE AUDIT REPORT
+     F** INIT     PERFORMS INITIAL PROCESSING
+     F**
+     F*****************************************************************
+     F/EJECT
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E***********COPY*ZSRSRC,ZEDITZ1**                                    125179
+     E/COPY ZSRSRC,ZFRPEDZ1                                               125179
+     E*
+     E**  COPYRIGHT ARRAY
+     E*
+     E                    CPY@    1   1 80
+     E                    ##LT      999  8               Loan Ty/S-Ty/Clas                    CSC042
+     E                    ##LP      999  2 0             Loan Process Type                    CSC042
+     I*
+     ICLOANCLF                                                            136241
+     I              MDAT                            MDATCL                136241
+     I/COPY WNCPYSRC,LE0865I001
+     I**  LOCAL DATA AREA FOR DATABASE RECORD
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**  DATA AREA RUNDAT
+     I*
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ISPOOL       DS
+     I** File Information Data Structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I** File Information Data Structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ISDBANK    E DSSDBANKPD
+      **  EXTERNAL DS FOR BANK DETAILS
+     I              BJURPT                          TITL
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  EXTERNAL DS FOR BRANCH DETAILS
+     I              A8BRNM                          BRNM
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  EXTERNAL DS FOR CUSTOMER DETAILS
+     I              BBCNA1                          CNA1
+     I              BBCNA2                          CNA2
+     I              BBCNA3                          CNA3
+     I              BBCNA4                          CNA4
+     I              QQDFAC                          Q1FAC1                                    CGL029
+      *
+     ISDCURR    E DSSDCURRPD
+     I** EXTERNAL DS FOR CURRENCY DETAILS
+     I*                                                                     0073
+     ISDLOAN    E DSSDLOANPD                                                0073
+     I**  EXTERNAL DS FOR LOAN TYPE/SUB TYPE                                0073
+     ISCSARD    E DSSCSARDPD                                                                  CLE154
+      ** External DS for Switchable Features                                                  CLE154
+      *
+     I/COPY WNCPYSRC,LE0865I002
+     I**  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I**  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I/COPY ZSRSRC,ZFRPEDZ2                                               125179
+     I*
+     C*
+     C*****************************************************************
+     C*****************************************************************
+     C*
+     C* MAIN PROCESSING
+     C*
+     C* CALLED BY:
+     C* CALLS:  INIT ; DETAIL; AUDIT
+     C*
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C                     EXSR DETAIL
+     C*
+     C                     EXSR AUDIT
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR DETAIL PROCESSING
+     C*
+     C* CALLED BY: MAIN
+     C* CALLS:  LNSR ; CUST; MNTSR ; CURR; PROCS;
+     C*
+     C*****************************************************************
+     C*
+     C           DETAIL    BEGSR                           *** DETAIL ***
+     C*
+     C** If *INU1 is on the report should be generated by branch
+     C** and therefore the file to be read is LVENTR (opened in sub-
+     C** routine INIT based on the same conditioning)
+     C*
+     C           *INU1     IFEQ '1'
+     C                     READ LVENTR                   30
+     C/COPY WNCPYSRC,LE0865C003
+     C*
+     C** Set the indicator that conditions the output of branch
+     C** details on the report
+     C*
+     C                     MOVE '1'       *IN20
+     C                     ELSE
+     C*
+     C** If *INU2 is on the report should be consolidated
+     C** and therefore the file to be read is LVENTR1 (opened in sub-
+     C** routine INIT based on the same conditioning)
+     C*
+     C           *INU2     IFEQ '1'
+     C*                                                                   119398
+     C           *IN30     DOUEQ'1'                                       119398
+     C           IBRE      OREQ 'N'                                       119398
+     C                     READ LVENTR1                  30
+     C/COPY WNCPYSRC,LE0865C004
+     C                     SETON                     40                  BH3476
+     C                     ENDDO                                          119398
+     C*                                                                   119398
+     C                     END
+     C                     END
+     C*
+     C** Move the values just read into the storage fields to prevent
+     C** a level break on the first execution of the do loop
+     C*
+     C                     MOVE *BLANKS   MONTH
+     C**********           Z-ADDLNRF      LNRF1   60                                          CLE148
+     C                     MOVELLNRF      LNRF1   6                                           CLE148
+     C                     MOVE MONTH     MNTH1   2
+     C                     MOVE ECCY      ECCY1   3
+     C                     MOVE EBRC      EBRC1   3
+     C                     MOVE CUNR      CUNR1   6
+     C*
+     C** If a record is found validate the currency and the branch
+     C** and output the headers accordingly
+     C*
+     C           *IN30     IFEQ '0'
+     C           IBRE      ANDNE'Y'                                       BH3474
+     C*
+     C** Use the flag first to signify the first call of the sub-
+     C** routines used for the report to allow validation of the
+     C** currency and branch without the output of the totals for these
+     C** levels of the report
+     C*
+     C                     MOVE 'Y'       FIRST   1
+     C                     EXSR LNSR
+     C*
+     C** Turn on the header conditioning indicator once currency
+     C** and branch have been validated to output the first header
+     C*
+     C                     MOVE '1'       *IN02
+     C                     EXSR CURR
+     C                     MOVE '0'       *IN02
+     C                     MOVE ' '       FIRST
+     C                     END
+     C*
+     C** Start of the detail processing loop
+     C*
+     C           *IN30     DOWEQ'0'
+     C           IBRE      IFNE 'Y'                                       BH3474
+     C*
+     C** Set off all the indicators that condition the output
+     C*
+     C                     SETOF                     020304
+     C                     SETOF                     05                   088019
+     C*
+     C** Count the records read
+     C*
+     C                     ADD  1         READRC  50
+     C*
+     C** Convert the Midas day number for the event day to a date and
+     C** save the month number for report breaks
+     C*
+     C                     Z-ADDEDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C** Save the alpha-numeric date for the report
+     C*
+     C                     MOVE ZADATE    EDATE   7
+     C                     MOVE EDATE     MDAT5   5
+     C*
+     C** And the month number for checking
+     C*
+     C           DATF      IFEQ 'D'                                      BH3476
+     C                     MOVE ZDATE     MONTH4  4
+     C                     ELSE                                          BH3476
+     C                     MOVELZDATE     MONTH4                         BH3476
+     C                     END                                           BH3476
+     C                     MOVELMONTH4    MONTH   2
+     C*
+     C** Check whether the currency and/or the branch has changed and
+     C** set on the indicator for currency format of the report
+     C*
+     C           EBRC      IFNE EBRC1
+     C           *INU1     ANDEQ'1'
+     C           ECCY      ORNE ECCY1
+     C                     MOVE '1'       *IN02
+     C                     END
+     C*
+     C** Check whether the month and/or the currency and/or the
+     C** branch has changed and seton the indicator for the month
+     C** format of the report
+     C*
+     C/COPY WNCPYSRC,LE0865C005
+     C           MONTH     IFNE MNTH1
+     C           *IN02     OREQ '1'
+     C                     MOVE '1'       *IN03
+     C                     END
+     C/COPY WNCPYSRC,LE0865C006
+     C*
+     C** Check whether the customer and/or the month and/or the currencY
+     C** and/or the branch has changed and set on the indicator for the
+     C** customer format of report
+     C*
+     C           CUNR      IFNE CUNR1
+     C           *IN03     OREQ '1'
+     C                     MOVE '1'       *IN04
+     C                     END
+     C*
+     C** Check whether the loan ref has changed and if it has set on
+     C** the indicators for loan ref subroutine
+     C*
+     C           LNRF      IFNE LNRF1
+     C           *IN04     OREQ '1'
+     C                     MOVE '1'       *IN05
+     C                     END
+     C*
+     C           *IN05     IFEQ '1'
+     C*
+     C** Execute the loan change subroutine
+     C*
+     C                     EXSR LNSR
+     C*
+     C                     END
+     C*
+     C           *IN04     IFEQ '1'
+     C*
+     C** Execute the customer change subroutine
+     C*
+     C                     EXSR CUST
+     C*
+     C                     END
+     C*
+     C           *IN03     IFEQ '1'
+     C*
+     C** Execute the month change subroutine
+     C*
+     C                     EXSR MNTSR
+     C*
+     C                     END
+     C*
+     C           *IN02     IFEQ '1'
+     C*
+     C** Execute the currency/branch change subroutine
+     C*
+     C                     EXSR CURR
+     C*
+     C                     END
+     C*
+     C** Store the fields of the current record needed for checking
+     C*
+     C**********           Z-ADDLNRF      LNRF1                                               CLE148
+     C                     MOVELLNRF      LNRF1                                               CLE148
+     C                     MOVE MONTH     MNTH1
+     C                     MOVE ECCY      ECCY1
+     C                     MOVE EBRC      EBRC1
+     C                     MOVE CUNR      CUNR1
+     C                     MOVE MDAT5     MDAT    5
+     C*
+     C** Having checked the report levels process the record read
+     C*
+     C                     EXSR PROCS
+     C*                                                                  BH3474
+     C                     END                                           BH3474
+     C*
+     C** Read the same file as was read at the top of the loop
+     C*
+     C           *INU1     IFEQ '1'
+     C                     READ LVENTR                   30
+     C/COPY WNCPYSRC,LE0865C007
+     C                     ELSE
+     C           *INU2     IFEQ '1'
+     C                     READ LVENTR1                  30
+     C/COPY WNCPYSRC,LE0865C008
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Output the report once the EOF has been reached for the last
+     C** record to allow the output of all the totals
+     C*
+     C           READRC    IFGT *ZERO                                     187780
+     C                     MOVE '0'       *IN02
+     C                     MOVE 'Y'       LAST    1
+     C                     EXSR LNSR
+     C           *IN24     IFEQ '1'                                       088019
+     C                     EXSR CUST                                      088019
+     C                     EXSR MNTSR                                     088019
+     C                     END                                            088019
+     C                     EXSR CURR
+     C                     MOVE ' '       LAST
+     C                     ENDIF                                          187780
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR PROCESSING OF RECORDS ON LVENTR
+     C*
+     C           PROCS     BEGSR                           *** PROCS ***
+     C*                                                                     0073
+     C** Check from the loan-type/sub-type combination whether this is      0073
+     C** a loan that should be processed ie. not CALL, RISK or PART         0073
+     C** SOLD                                                               0073
+     C*                                                                     0073
+     C                     MOVE LTYP      ATCD    2                         0073
+     C                     MOVE SUTP      AUCD    2                         0073
+     C                     MOVE CLAS      AUCL    4                                           CLE042
+      * Set up a key to the array                                                             CSC042
+     C           LTYP      CAT  SUTP      ##KT    8                                           CSC042
+     C                     MOVE CLAS      ##KT                                                CSC042
+      * Setoff the record found indicator                                                     CSC042
+     C                     SETOF                         88                                   CSC042
+      *                                                                                       CSC042
+      * If Q is zero set to 1 to avoid error                                                  CSC042
+     C           Q         IFEQ 0                                                             CSC042
+     C                     Z-ADD1         Q                                                   CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+      * Is this same as last look up? i.e. I'm looking for info i already                     CSC042
+      * have                                                                                  CSC042
+     C           ##KT      IFEQ ##LT,Q                                                        CSC042
+      * If same as last lookup then can avoid the LOKUP                                       CSC042
+     C                     SETON                         88                                   CSC042
+     C                     ELSE                                                               CSC042
+     C                     Z-ADD1         Q       40                                          CSC042
+     C           ##KT      LOKUP##LT,Q                   88                                   CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+      * Found in array so use the details                                                     CSC042
+     C           *IN88     IFEQ *ON                                                           CSC042
+     C                     MOVEL##LT,Q    AYLNTY                                              CSC042
+     C                     Z-ADD##LP,Q    AYLNPT                                              CSC042
+     C                     ELSE                                                               CSC042
+      * Not in Array so check in DB                                                           CSC042
+     C                     CALL 'AOLOANR0'                                  0073
+     C                     PARM '*MSG   ' @RTCD   7                         0073
+     C                     PARM '*KEY   ' @OPTN   7                         0073
+     C                     PARM           ATCD    2                         0073
+     C                     PARM           AUCD    2                         0073
+     C                     PARM           AUCL    4                                           CLE042
+     C           SDLOAN    PARM SDLOAN    DSFDY                             0073
+     C           @RTCD     IFNE *BLANKS                                     0073
+     C           *LOCK     IN   LDA                        ************     0073
+     C                     Z-ADD5         DBASE            *** DBASE 05     0073
+     C                     SETOF                     99    ***************  0073
+     C                     OUT  LDA                                       052611
+     C                     EXSR *PSSR                                       0073
+     C                     ELSE                                                               CSC042
+      * Found in DB so add to array if there is room                                          CSC042
+     C           K         IFLT 999                                                           CSC042
+     C                     ADD  1         K                                                   CSC042
+     C                     MOVEL##KT      ##LT,K                                              CSC042
+     C                     Z-ADDAYLNPT    ##LP,K                                              CSC042
+      *                                                                                       CSC042
+      * Set Q to K so that the next record checked is the last one                            CSC042
+      * added to the array                                                                    CSC042
+     C                     Z-ADDK         Q                                                   CSC042
+     C                     ENDIF                                                              CSC042
+     C                     END                                              0073
+     C                     ENDIF                                                              CSC042
+     C*                                                                     0073
+     C** Only process repayments on appropriate loans                       0073
+     C*                                                                     0073
+     C*  This report is alsp for maturity events, so only exclude events  099799
+     C*  for procrssing type 70.                                          099799
+     C*                                                                   099799
+     C           AYLNPT    IFNE 70                                          0073
+     C***********AYLNPT    ANDNE61                                    0073099799
+     C***********AYLNPT    ANDNE66                                    0073099799
+     C*                                                                     0073
+     C** and then only if the event amount is not zero                      0073
+     C*                                                                     0073
+     C           EAMT      ANDNE0                                           0073
+     C*
+     C** Check the event type to establish how the amount should be
+     C** processed
+     C*
+     C                     MOVE ETYP      TYPCH   2
+     C           TYPCH     IFEQ 'V3'
+     C*
+     C** If the event is a drawdown or a principal increase add the
+     C** event amount to the current balance (outstanding amount)
+     C** and to the event total
+     C*
+     C                     ADD  EAMT      CBAL   150
+     C           AYLNPT    IFEQ 66                                        158853
+     C                     ADD  EAMT      ETOT   150
+     C                     ELSE                                           158853
+     C                     SUB  EAMT      ETOT                            158853
+     C                     END                                            158853
+     C*                                                                     0089
+     C** Write the header when the branch changes                           0089
+     C*                                                                     0089
+     C           *IN02     IFEQ '1'                                         0089
+     C           *IN80     OREQ '1'                                       098616
+     C*                                                                   085382
+     C           P1OP      IFNE 'Y'                                       085382
+     C                     OPEN LE0865P1                                  085382
+     C                     MOVE 'Y'       P1OP                            085382
+     C                     ENDIF                                          085382
+     C*                                                                   085382
+     C/COPY WNCPYSRC,LE0865C011
+     C                     WRITELE0865H1                                    0089
+     C/COPY WNCPYSRC,LE0865C012
+     C                     MOVE '0'       *IN80                           098616
+     C                     END                                              0089
+     C*
+     C                     ELSE
+     C*
+     C           TYPCH     IFEQ 'R1'
+     C           TYPCH     OREQ 'M1'
+     C*
+     C** Count the processed records for report format conditioning
+     C** to prevent output of all the formats when no detail has
+     C** been output to the report
+     C*
+     C                     ADD  1         LNPROC
+     C*
+     C** If the event is a principal repayment, multi-currency repay-
+     C** ment or a maturity event subtract the event amount form the
+     C** current balance and from the month's total
+     C*
+     C           INTC      IFEQ 'Y'                                       136241
+     C                     MOVE OTHA      CBAL                            136241
+     C                     ELSE                                           136241
+     C                     SUB  EAMT      CBAL
+     C                     END                                            136241
+     C           AYLNPT    IFEQ 66                                        158853
+     C                     SUB  EAMT      ETOT
+     C                     ELSE                                           158853
+     C                     ADD  EAMT      ETOT                            158853
+     C                     END                                            158853
+     C                     Z-ADDCBAL      TCBAL  150                      088019
+     C           LNRF      CHAINLEREPSD0             61                   088019
+     C           *IN61     IFEQ '0'                                       088019
+     C                     Z-ADDTCBAL     CBAL                            088019
+     C                     UPDATLEREPSD0                                  088019
+     C                     END                                            088019
+     C*
+     C** Edit the event amount to get the correct decimals for the
+     C** report
+     C***********                                                         BH3476
+     C***********          MOVE EAMT      ZFIELD 16                       BH3476
+     C***********          Z-ADDDNUM      ZADEC   10                      BH3476
+     C***********          EXSR ZEDIT                                     BH3476
+     C***********                                                         BH3476
+     C***Save*the edited decimal amount in the report field EAMTA         BH3476
+     C***********                                                         BH3476
+     C***********          MOVE ZFIELD    EAMTA  16                       BH3476
+     C***********          MOVE EAMT      EAMTA  152                BH3476053716
+     C***********          MOVE EAMT      ZFIELD 16                 053716125179
+     C***********          Z-ADDDNUM      ZADEC   10                053716125179
+     C***********          EXSR ZEDIT                               053716125179
+     C           AYLNPT    IFEQ 66                                        158853
+     C                     Z-SUBEAMT      ZFLD15                          158853
+     C                     ELSE                                           158853
+     C                     Z-ADDEAMT      ZFLD15                          125179
+     C                     ENDIF                                          158853
+     C                     Z-ADDDNUM      ZDECS                           125179
+     C                     EXSR ZFRPED                                    125179
+     C                     MOVE ZOUT22    EAMTA  25                       125179
+     C*                                                                   053716
+     C** Save the edited decimal amount in the report field EAMTA         053716
+     C*                                                                   053716
+     C***********          MOVE ZFIELD    EAMTA  16                 053716125179
+     C*
+     C** Edit the customer balance to give the correct number of
+     C** decimals for the report
+     C*
+     C           CBAL      IFLT 0
+     C                     Z-SUBCBAL      CBAL
+     C                     END
+     C***********          MOVE CBAL      ZFIELD                          BH3476
+     C***********          EXSR ZEDIT                                     BH3476
+     C***********                                                         BH3476
+     C***Save*the edited decimal amount in the report field CBALA         BH3476
+     C***********                                                         BH3476
+     C***********          MOVE ZFIELD    CBALA  16                       BH3476
+     C***********          MOVE CBAL      CBALA  152                BH3476053716
+     C***********          MOVE CBAL      ZFIELD                    053716125179
+     C***********          EXSR ZEDIT                               053716125179
+     C           AYLNPT    IFEQ 66                                        158853
+     C                     Z-SUBCBAL      ZFLD15                          158853
+     C                     ELSE                                           158853
+     C                     Z-ADDCBAL      ZFLD15                          125179
+     C                     ENDIF                                          158853
+     C                     EXSR ZFRPED                                    125179
+     C                     MOVE ZOUT22    CBALA  25                       125179
+     C*                                                                   053716
+     C** Save the edited decimal amount in the report field CBALA         053716
+     C*                                                                   053716
+     C***********          MOVE ZFIELD    CBALA  16                 053716125179
+     C*
+     C** Write the header when there is an overflow or the branch
+     C** changes
+     C*
+     C           *IN80     IFEQ '1'
+     C           *IN02     OREQ '1'
+     C*                                                                   055518
+     C           P1OP      IFNE 'Y'                                       055518
+     C                     OPEN LE0865P1                                  055518
+     C                     MOVE 'Y'       P1OP                            055518
+     C                     ENDIF                                          055518
+     C*                                                                   055518
+     C/COPY WNCPYSRC,LE0865C013
+     C                     WRITELE0865H1
+     C/COPY WNCPYSRC,LE0865C014
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C** If loan repayment occurs output details to report
+     C*
+     C/COPY WNCPYSRC,LE0865C015
+     C                     WRITELE0865D1
+     C/COPY WNCPYSRC,LE0865C016
+     C                     SETON                     24                   088019
+     C                     ADD  1         LONOUT
+     C*
+     C** Count event records processed
+     C*
+     C                     ADD  1         COUNT
+     C*
+     C                     END
+     C                     END
+     C*                                                                     0089
+     C                     ELSE                                             0089
+     C*                                                                     0089
+     C** Write the header when the branch changes                           0089
+     C*                                                                     0089
+     C           *IN02     IFEQ '1'                                         0089
+     C           *IN80     OREQ '1'                                       098616
+     C*                                                                   085382
+     C           P1OP      IFNE 'Y'                                       085382
+     C                     OPEN LE0865P1                                  085382
+     C                     MOVE 'Y'       P1OP                            085382
+     C                     ENDIF                                          085382
+     C*                                                                   085382
+     C/COPY WNCPYSRC,LE0865C017
+     C                     WRITELE0865H1                                    0089
+     C/COPY WNCPYSRC,LE0865C018
+     C                     MOVE '0'       *IN80                           098616
+     C                     END                                              0089
+     C*                                                                     0089
+     C                     END                                              0073
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR REPORT OUTPUT
+     C*
+     C           REPORT    BEGSR                           ** REPORT ***
+     C*
+     C**   If not multi-branching only need to call ZSFILE once.
+     C*
+     C           MBIN      IFNE 'Y'
+     C           U1OPSF    IFNE 'Y'                                       053716
+     C*
+     C**   Open printer file
+     C*
+     C                     OPEN LE0865P1
+     C                     MOVE 'Y'       P1OP                            049818
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C***********          OUT  LDA                                       052611
+     C**
+     C***********          MOVE *BLANKS   EBRC    3                       053716
+     C                     MOVE 'Y'       U1OPSF  1                       053716
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM EBRC      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C************LOCK     IN   LDA                                       052611
+     C**
+     C**  Error during ZSFILE processing, return to calling program
+     C**
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+     C                     END                                            053716
+     C**
+     C                     ELSE
+     C*
+     C**   If multi-branching need separate report for each branch
+     C*
+     C           *IN02     IFEQ '1'
+     C           EBRC      ANDNEEBRC1
+     C           *INU2     ANDEQ'0'
+     C           FIRST     OREQ 'Y'
+     C*
+     C** If there were no details for this branch/currency output the
+     C** NO DETAILS format for the last branch before closing the
+     C** spool file and opening the next
+     C*
+     C           P1OP      IFEQ 'Y'
+     C           LNPROC    IFEQ 0
+     C                     WRITELE0865T1
+     C                     ELSE
+     C                     Z-ADD0         LNPROC
+     C*
+     C** Else write the end of report for branch format
+     C*
+     C                     WRITELE0865T2
+     C                     END
+     C                     END
+     C*
+     C                     CLOSELE0865P1
+     C                     MOVE 'N'       P1OP    1
+     C                     OPEN LE0865P1
+     C                     MOVE 'Y'       P1OP
+     C                     Z-ADD0         PAGE
+      *
+      **   Multi-branching so ensure each spool file recorded by R.C.F.
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C***********          OUT  LDA                                       052611
+      *
+     C*
+     C** Set up the entity field according to the type of report
+     C** being generated
+     C*
+     C           *INU1     IFEQ '1'
+     C                     MOVE EBRC      @BRCH   3
+     C                     ELSE
+     C           *INU2     IFEQ '1'
+     C                     MOVE *BLANKS   @BRCH
+     C                     END
+     C                     END
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM @BRCH     SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C************LOCK     IN   LDA                                       052611
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**   Error during ZSFILE processing, return to calling program
+     C*
+     C                     SETON                     U7U8LR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR CHANGE OF LOAN REFERENCE PROCESSING
+     C*
+     C           LNSR      BEGSR                           *** LNSR *  **
+     C*
+     C** Add the event total into the customer total
+     C*
+     C                     ADD  ETOT      CUSTOT 150
+     C*                                                                   088019
+     C           FIRST     IFNE 'Y'                                       088019
+     C           LNRF      CHAINLEREPSD0             61                   088019
+     C           *IN61     IFEQ '1'                                       088019
+     C                     MOVE CPAM      CBAL                            088019
+     C                     WRITELEREPSD0                                  088019
+     C                     END                                            088019
+     C*                                                                   136241
+     C                     MOVEL*BLANKS   OLNOZ                                               201123
+     C           LNRF      CHAINCLOAN                89                   136241
+     C           *IN89     IFEQ '1'                                       136241
+     C           *LOCK     IN   LDA                        ************   136241
+     C                     Z-ADD6         DBASE            * DBASE 06 *   136241
+     C                     MOVE LNRF      DBKEY            ************   136241
+     C                     MOVEL'CLOANCL 'DBFILE                          136241
+     C                     OUT  LDA                                       136241
+     C                     EXSR *PSSR                                     136241
+      *                                                                                       201123
+     C                     ELSE                                                               201123
+     C           PTYP      IFEQ 64                                                            201123
+     C           PTYP      OREQ 65                                                            201123
+     C           PTYP      OREQ 68                                                            201123
+     C           PTYP      OREQ 71                                                            201123
+     C                     MOVELOLNO      OLNOZ                                               201123
+     C                     ENDIF                                                              201123
+      *                                                                                       201123
+     C                     ENDIF                                          136241
+     C                     ELSE                                           088019
+     C*
+     C** Add the new current principal amount to the current balance
+     C*
+     C                     Z-ADDCPAM      CBAL
+     C                     END                                            088019
+     C/COPY WNCPYSRC,LE0865C001
+     C*
+     C** Initialise the event total for the next loan
+     C*
+     C                     Z-ADD0         ETOT
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR CUSTOMER PROCESSING
+     C*
+     C           CUST      BEGSR                           *** CUST ****
+     C*
+     C** IF THIS IS NOT THE FIRST CYCLE READ
+     C** WRITE THE FORMAT FOR THE CUSTOMER TOTALS
+     C*
+     C           FIRST     IFNE 'Y'
+     C*
+     C** Edit customer total to give correct decimal places for report
+     C* If ETYP = R1 or M1, CUSTOT amount should be negative.             158853
+     C*
+     C           CUSTOT    IFLT 0
+     C                     ADD  CUSTOT    CUSTO# 150                      158853
+     C                     Z-SUBCUSTOT    CUSTOT
+     C                     END
+     C***********          MOVE CUSTOT    ZFIELD                          BH3476
+     C***********          Z-ADDDNUM      ZADEC                           BH3476
+     C***********          EXSR ZEDIT                                     BH3476
+     C***********                                                         BH3476
+     C***Save*the edited value for the report                             BH3476
+     C***********                                                         BH3476
+     C***********          MOVE ZFIELD    CTOTA  16                       BH3476
+     C***********          MOVE CUSTOT    CTOTA  152                BH3476053716
+     C***********          MOVE CUSTOT    ZFIELD                    053716125179
+     C***********          Z-ADDDNUM      ZADEC                     053716125179
+     C***********          EXSR ZEDIT                               053716125179
+     C                     Z-ADDCUSTOT    ZFLD15                          125179
+     C                     Z-ADDDNUM      ZDECS                           125179
+     C                     EXSR ZFRPED                                    125179
+     C                     MOVE ZOUT22    CTOTA  25                       125179
+     C*                                                                   053716
+     C** Save the edited value for the report                             053716
+     C*                                                                   053716
+     C***********          MOVE ZFIELD    CTOTA  16                 053716125179
+     C*
+     C** If customer changes output totals for the customer if any
+     C*
+     C           LNPROC    IFNE 0
+     C           LONOUT    ANDNE0
+     C           LAST      OREQ 'Y'
+     C*                                                                     0073
+     C** Tidying up of report which is far too large to be useful           0073
+     C** all the calculations are still performed so the output             0073
+     C** could easily be reinstated if required                             0073
+     C*                                                                     0073
+     C*********************WRITELE0865D2                                    0073
+     C*                                                                     0073
+     C                     ADD  1         CSTOUT
+     C                     Z-ADD0         LONOUT  30
+     C                     END
+     C*
+     C** Add CUSTOT into the running total for the month
+     C*  take the negative amount if it exists.                           158853
+     C           CUSTO#    IFNE 0                                         158853
+     C                     ADD  CUSTO#    MNTTOT                          158853
+     C                     ELSE                                           158853
+     C*
+     C                     ADD  CUSTOT    MNTTOT 150
+     C                     END                                            158853
+     C                     Z-ADD0         CUSTOT
+     C                     Z-ADD0         CUSTO#                          158853
+     C                     END
+     C*
+     C** If a record has been read ie. *IN30 is off
+     C** access the customer file to get customer details for the
+     C** current record ready for the next output
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVEL*BLANKS   CKEY
+     C                     MOVELCUNR      CKEY
+     C                     CALL 'AOCUSTR0'PLIST1
+     C           @RTCD     IFNE *BLANKS                                ***
+     C           *LOCK     IN   LDA                        ************
+     C                     Z-ADD1         DBASE   30       *** DBASE 01
+     C                     SETOF                     99    ***************
+     C                     OUT  LDA                                       052611
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELBBCRNM    CNAM   20
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR MONTH PROCESSING
+     C*
+     C           MNTSR     BEGSR                           ** MNTSR ** *
+     C*
+     C** Edit month total to give correct decimal places for report
+     C*
+     C           MNTTOT    IFLT 0
+     C                     Z-SUBMNTTOT    MNTTOT
+     C                     END
+     C***********          MOVE MNTTOT    ZFIELD                          BH3476
+     C***********          Z-ADDDNUM      ZADEC                           BH3476
+     C***********          EXSR ZEDIT                                     BH3476
+     C***********                                                         BH3476
+     C***Save*the edited value for the report                             BH3476
+     C***********                                                         BH3476
+     C***********          MOVE ZFIELD    MTOTA  16                       BH3476
+     C***********          MOVE MNTTOT    MTOTA  152                BH3476053716
+     C***********          MOVE MNTTOT    ZFIELD                    053716125179
+     C***********          Z-ADDDNUM      ZADEC                     053716125179
+     C***********          EXSR ZEDIT                               053716125179
+     C                     Z-ADDMNTTOT    ZFLD15                          125179
+     C                     Z-ADDDNUM      ZDECS                           125179
+     C                     EXSR ZFRPED                                    125179
+     C                     MOVE ZOUT22    MTOTA  25                       125179
+     C*                                                                   053716
+     C** Save the edited value for the report                             053716
+     C*                                                                   053716
+     C***********          MOVE ZFIELD    MTOTA  16                 053716125179
+     C*
+     C** Write the format for the month totals
+     C*
+     C*
+     C** If month changes output totals for the month if any
+     C** but make sure it is not output when other totals are
+     C*
+     C           LNPROC    IFNE 0
+     C           CSTOUT    ANDNE0
+     C           LAST      OREQ 'Y'
+     C                     WRITELE0865D3
+     C                     SETOF                     24                   088019
+     C                     ADD  1         MNTOUT
+     C                     Z-ADD0         CSTOUT  30
+     C                     END
+     C*
+     C** Add the month total into the running total for the currency
+     C*
+     C                     ADD  MNTTOT    CCYTOT 150
+     C                     Z-ADD0         MNTTOT
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR CURRENCY PROCESSING
+     C*
+     C           CURR      BEGSR                           *** CURR *  **
+     C*
+     C** If this is not the first cycle call of this subroutine
+     C** write the format for the currency totals
+     C*
+     C           FIRST     IFNE 'Y'
+     C                     Z-ADDCCYTOT    CYTOT0 130
+     C*
+     C** Edit currency total to give correct decimal places for report
+     C*
+     C           CCYTOT    IFLT 0
+     C                     Z-SUBCCYTOT    CCYTOT
+     C                     END
+     C***********          MOVE CCYTOT    ZFIELD                          BH3476
+     C***********          Z-ADDDNUM      ZADEC                           BH3476
+     C***********          EXSR ZEDIT                                     BH3476
+     C***********                                                         BH3476
+     C***Save*the edited value for the report                             BH3476
+     C***********                                                         BH3476
+     C***********          MOVE ZFIELD    CYTOTA 16                       BH3476
+     C***********          MOVE CCYTOT    CYTOTA 152                BH3476053716
+     C***********          MOVE CCYTOT    ZFIELD                    053716125179
+     C***********          Z-ADDDNUM      ZADEC                     053716125179
+     C***********          EXSR ZEDIT                               053716125179
+     C                     Z-ADDCCYTOT    ZFLD15                          125179
+     C                     Z-ADDDNUM      ZDECS                           125179
+     C                     EXSR ZFRPED                                    125179
+     C                     MOVE ZOUT22    CYTOTA 25                       125179
+     C*                                                                   053716
+     C** Save the edited value for the report                             053716
+     C*                                                                   053716
+     C***********          MOVE ZFIELD    CYTOTA 16                 053716125179
+     C*
+     C** If currency changes output totals for the currency if any
+     C** but make sure it is not output when the other formats are
+     C*
+     C           LNPROC    IFNE 0
+     C           MNTOUT    ANDNE0
+     C                     WRITELE0865D4
+     C                     Z-ADD0         MNTOUT  30
+     C                     END
+     C*
+     C** Initialise the currency total
+     C*
+     C                     Z-ADD0         CCYTOT
+     C                     END
+     C*
+     C** Only validate the branch and the currency if this is not the
+     C** last call to the subroutine
+     C*
+     C           LAST      IFNE 'Y'
+     C*
+     C** Access the branch fiel to get the branch name from the
+     C** branch code
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM EBRC      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                                       052611
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@DSNB     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C************LOCK     IN   LDA                        ************   052611
+     C                     Z-ADD4         DBASE            * DBASE 04 *
+     C                     EXSR *PSSR                      ************
+     C                     OUT  LDA                                       052611
+     C                     SETON                     U7U8LR            ***
+     C                     END
+     C*
+     C** Access the currency file to get the currency name and
+     C** decimal places for the report on the current record
+     C*
+     C                     MOVE ECCY      @AJCD
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE             *************
+     C                     MOVEL'002'     DBASE              * DBASE 02 *
+     C                     MOVEL@OPTN     DBOPTN  7          ***********
+     C                     MOVEL@AJCD     DBKEY
+     C                     OUT  LDA                                       052611
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDA6NBDP    DNUM    10
+     C                     MOVE A6CYNM    CCYT   14
+     C                     MOVE A6CYNM    CYNM1  14
+     C/COPY WNCPYSRC,LE0865C009
+     C                     END
+     C*
+     C*
+     C** Next call of report subroutine executes the new header
+     C*
+     C                     EXSR REPORT
+     C*                                                                     0089
+     C                     ELSE                                             0089
+     C*
+     C***  Output end of report message                                     0089
+     C*                                                                     0089
+     C           P1OP      IFEQ 'Y'                                         0089
+     C           *INU2     OREQ '1'                                         0089
+     C           LNPROC    IFEQ 0                                           0089
+     C           *INU2     IFEQ '1'                                       049818
+     C           P1OP      ANDNE'Y'                                       049818
+     C                     OPEN LE0865P1                                  049818
+     C                     MOVE 'Y'       P1OP                            049818
+     C/COPY WNCPYSRC,LE0865C019
+     C                     WRITELE0865H1                                  049818
+     C/COPY WNCPYSRC,LE0865C020
+     C                     END                                            049818
+     C                     WRITELE0865T1                                    0089
+     C                     END                                              0089
+     C*                                                                     0089
+     C           MBIN      IFEQ 'Y'                                         0089
+     C           *INU1     ANDEQ'1'                                         0089
+     C*                                                                     0089
+     C** Write the end of report for branch format                          0089
+     C*                                                                     0089
+     C                     WRITELE0865T2                                    0089
+     C*                                                                     0089
+     C***  Write the end of report for non-multibranch run or               0089
+     C***  Consolidated run                                                 0089
+     C*                                                                     0089
+     C                     ELSE                                             0089
+     C                     WRITELE0865T3                                    0089
+     C                     END                                              0089
+     C*                                                                     0089
+     C                     END                                              0089
+     C*                                                                     0089
+     C                     END
+     C*
+     C** Initialise the loan processed counter
+     C*
+     C                     Z-ADD0         LNPROC  30
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C***********COPY*ZSRSRC,ZEDITZ2***                                   125179
+     C/COPY ZSRSRC,ZFRPEDZ3                                               125179
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   NONE                                   *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C***********          OUT  LDA                                       052611
+     C*
+     C** Execute the audit subroutine to output error messages to
+     C** report
+     C*
+     C                     EXSR AUDIT
+     C                     END
+      *
+     C           PSSR9     ENDSR
+      *
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR AUDIT REPORT OUTPUT
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT ** *
+     C*
+     C**   Print audit report header format
+     C*
+     C                     WRITELE0865AH
+     C*
+     C           COUNT     IFGT 0
+     C*
+     C**   Print audit report detail
+     C*
+     C                     WRITELE0865A1
+     C*
+     C**   Write the '***  NO DETAILS TO REPORT  ***' format if
+     C**   required and there are no database errors
+     C*
+     C                     ELSE
+     C           *INU7     IFEQ '0'
+     C           *INU8     ANDEQ'0'
+     C                     WRITELE0865A4
+     C                     END
+     C                     END
+     C*
+     C**   Output database error format if required
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITELE0865A2
+     C*
+     C**   else, write the '***  END OF REPORT  ***' format
+     C*
+     C                     ELSE
+     C                     WRITELE0865A3
+     C                     END
+     C*
+     C**   Ensure report spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+     C*
+     C************LOCK     IN   LDA                                       052611
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     END
+     C***********          OUT  LDA                                       052611
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* SUBROUTINE FOR INITIAL PROCESSING
+     C*
+     C           INIT      BEGSR                           *** INIT ****
+     C           *LOCK     IN   LDA
+     C                     MOVE 'LE0865'  DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Set up copyright
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *                                                                   119398
+      * MOVE IN THE EDIT CODE FOR NUMERICS                                119398
+     C                     MOVE 'J'       ZECODE                          119398
+      * Initialise Array index                                                                CSC042
+     C                     Z-ADD0         K       40                                          CSC042
+     C*
+     C**   Read in RUNDAT data area
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Define lda data area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Check which sort of report is required and open the
+     C** appropriate file
+     C*
+     C           *INU1     IFEQ '1'
+     C                     OPEN LVENTR
+     C                     ELSE
+     C           *INU2     IFEQ '1'
+     C                     OPEN LVENTR1
+     C                     ELSE                                        ***
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD3         DBASE            *** DBASE 3
+     C                     MOVE 'SWITCH'  DBFILE           ***************
+     C                     OUT  LDA                                       052611
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C*
+     C* Read first ICD details for report heading
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C**
+     C* Check whether the date format indicator is set for DDMMYY or
+     C* MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C/COPY WNCPYSRC,LE0865C002
+     C*
+     C** Initialise the counter for events processed
+     C*
+     C                     Z-ADD0         COUNT   50
+     C*
+     C** Turn on overflow indicator to produce first heading
+     C*
+     C                     MOVE '1'       *IN80
+     C*
+     C** Parameter list for program 'AOCUSTR0'
+     C*
+     C           PLIST1    PLIST
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           CKEY   10
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *                                                                                       CLE154
+      ** Parameter list for program 'AOSARDR0'                                                CLE154
+      *                                                                                       CLE154
+     C           PLIST2    PLIST                                                              CLE154
+     C                     PARM '*BLANKS' @RTCD                                               CLE154
+     C                     PARM '*VERIFY' @OPTN                                               CLE154
+     C                     PARM 'CLE154'  PSARD   6                                           CLE154
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE154
+      *                                                                                       CLE154
+      ** Access SAR file to determine if CLE154 is switched ON.                               CLE154
+      *                                                                                       CLE154
+     C                     CALL 'AOSARDR0'PLIST2                                              CLE154
+      *                                                                                       CLE154
+     C           @RTCD     IFEQ *BLANK                                                        CLE154
+     C                     MOVE 'Y'       CLE154  1                                           CLE154
+     C                     SETON                     28                                       CLE154
+     C                     ELSE                                                               CLE154
+     C                     MOVE 'N'       CLE154                                              CLE154
+     C                     END                                                                CLE154
+      *                                                                                       CLE154
+     C           @RTCD     IFNE '*NRF   '                                                     CLE154
+     C           @RTCD     ANDNE*BLANKS                                                       CLE154
+     C                     MOVE PSARD     DBKEY                                               CLE154
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE154
+     C                     Z-ADD7         DBASE                                               CLE154
+     C                     SETON                     U7U8LR                                   CLE154
+     C                     ENDIF                                                              CLE154
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/COPY WNCPYSRC,LE0865C010
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

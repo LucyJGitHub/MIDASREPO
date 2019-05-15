@@ -1,0 +1,281 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Format the SWIFT Common Reference')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE MAINTENANCE UTILITIES.
+     F*                                                               *
+     F*  ZM0020 - FORMAT SWIFT COMMON REFERENCE.                      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*        COMPANY CONFIDENTIAL.                                  *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 088422             Date 31May95               *
+      *                 059609             Date 15Dec93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  088422 - Wrong Sender/Receiver alphabetical precedence if    *
+     F*           only the sixth character is different.  It is not   *
+     F*           testing for the sixth character.                    *
+     F*  059609 - Prevent array index error when rate is too large.   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N    P A R A M E T E R S                       *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F* PURPOSE.                                                     *
+     F*                                                              *
+     F*  To generate the common reference for a transaction.         *
+     F*  Inputs are both the senders and destination SWIFT address   *
+     F*  and the rate (Interest or Exchange).                        *
+     F*  The output is the common reference - 16A.                   *
+     F*                                                              *
+     F*  The format of the common reference is as follows:-          *
+     F*             aaaabbnnnnxxxxyy                                 *
+     F*  where  aaaabb = bank and location code A.                   *
+     F*          nnnn  = four digits from the rate field.            *
+     F*         xxxxyy = bank and location code B                    *
+     F*                                                              *
+     F*  The bank and location codes are extracted from the          *
+     F*  SWIFT address. The codes MUST appear in alphabetical order  *
+     F*  letter taking precedence over numbers.                      *
+     F*                                                              *
+     F*  The four digits from the rate field consist of the rightmost*
+     F*  non-zero digit of the rate field,preceded by the three      *
+     F*  digits to the left of it. If there are no fields to the left*
+     F*  of it it is zero filled. Mathematically the least           *
+     F*  significant bits.                                           *
+     F*                                                              *
+     F*  If neither SWIFT address is found, no common reference is   *
+     F*  generated.                                                  *
+     F*                                                              *
+     F*  The 'rate' can either be the Exchange Rate ,if the ref. is  *
+     F*  generated for a deal or the Interest Rate.                  *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+     F* FUNCTION OF INDICATORS.                                      *
+     F*                                                              *
+     F* 90  The senders reference alphabetically preceeds the        *
+     F*     destination reference.                                   *
+     F* 91  The destination reference alphabetically preceeds        *
+     F*     the senders reference.                                   *
+     F* 92  Used to determine the least significant bit of the       *
+     F*     rate field.
+     F*                                                              *
+     F****************************************************************
+     E*
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY USED IN ZERO PROCESSING OF RATE.
+     E*
+     E********************ZRA        13  1                                059609
+     E                    ZRA        16  1                                059609
+     E*
+     E** Arrays used in comparing the swift 'references' for both
+     E** the sender and the destination in order to ensure
+     E** alphabetical order of the common reference.
+     E**   For the Sender.
+     E                    ZSR         6  1
+     E**   For the Destination.
+     E                    ZDR         6  1
+      /EJECT
+     E****************************************************************
+     I*
+     I** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I****************************************************************
+     C*
+     C**  Entry of parameters.
+     C**  ZSSWI = senders swift address.
+     C**  ZDSWI = destination swift address.
+     C**  ZRATE = exchange / interest rate.
+     C**  ZCREF = swift common reference.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ZSSWI  12
+     C                     PARM           ZDSWI  12
+     C                     PARM           ZRATE  138
+     C                     PARM           ZCREF  16
+     C*
+     C                     SETOF                     909192
+     C                     MOVE *BLANKS   ZCREF
+     C*
+     C/COPY WNCPYSRC,ZM0020C001
+     C** If either swift address is blank a common reference is not
+     C** formatted.Hence all the following processing is omitted.
+     C*
+     C           ZSSWI     IFNE *BLANKS
+     C           ZDSWI     ANDNE*BLANKS
+     C/COPY WNCPYSRC,ZM0020C002
+     C*
+     C** Extraction of the bank and location codes.
+     C*
+     C** Bank Code.
+     C** This is the 1st 4 digits of the swift address.
+     C*
+     C                     MOVELZSSWI     ZSBNK   4
+     C                     MOVELZDSWI     ZDBNK   4
+     C*
+     C** Location Code.
+     C** Location Code is digits 7 and 8 of the swift address.
+     C** Hence the address is moved to a holding field 8 long
+     C** and is then extracted.
+     C*
+     C                     MOVELZSSWI     HLDS8   8
+     C                     MOVELZDSWI     HLDD8   8
+     C*
+     C                     MOVE HLDS8     ZSLOC   2
+     C                     MOVE HLDD8     ZDLOC   2
+     C*
+     C** Combine the bank and location codes for both banks.
+     C*
+     C                     MOVELZSBNK     ZSREF   6
+     C                     MOVE ZSLOC     ZSREF
+     C*
+     C                     MOVELZDBNK     ZDREF   6
+     C                     MOVE ZDLOC     ZDREF
+     C*
+     C** Rate field.
+     C** Rate may be negative on input so ensure it is positive
+     C*
+     C           ZRATE     IFLT 0
+     C                     Z-SUBZRATE     ZRATE
+     C                     END
+     C*
+     C***********          MOVE ZRATE     ZRATE1 13                       059609
+     C                     MOVE *ZEROS    ZRATE1 16                       059609
+     C                     MOVE ZRATE     ZRATE1                          059609
+     C                     MOVEAZRATE1    ZRA
+     C*
+     C** Determine the least significant bit.
+     C*
+     C***********          Z-ADD13        ZR      20                      059609
+     C                     Z-ADD16        ZR      20                      059609
+     C           *IN92     DOWEQ'0'
+     C           ZRA,ZR    IFEQ '0'
+     C                     SUB  1         ZR
+     C                     ELSE
+     C                     MOVE '1'       *IN92
+     C                     END
+     C*
+     C** In the event of a zero interest rate.
+     C** 3 is added to ZR to prevent it going negative.
+     C*
+     C           ZR        IFEQ 4                                         059609
+     C                     MOVE '1'       *IN92                           059609
+     C                     END                                            059609
+     C*                                                                   059609
+     C***********ZR        IFEQ 0                                         059609
+     C***********          MOVE '1'       *IN92                           059609
+     C***********          Z-ADD4         ZR                              059609
+     C***********          END                                            059609
+     C                     END
+     C*
+     C** Move the 4 least significant bits into a 4 digit field
+     C** with leading zeros if required.
+     C*
+     C           ZR        SUB  3         ZR
+     C                     MOVEAZRA,ZR    HLD4    4
+     C*
+     C                     MOVE '0000'    RATE    4
+     C                     MOVE HLD4      RATE
+     C*
+     C** Use the combined field to determine the order of the addresses.
+     C** Create the common reference field.
+     C*
+     C** Compare each digit of the swift addresses (from the most
+     C** significant bit ) in order to place them in alphabetical
+     C** order. If the senders address alphabetically proceeds
+     C** the destination address seton *in90 ; else seton *in91
+     C*
+     C** Load the array fields.
+     C*
+     C                     MOVEAZSREF     ZSR
+     C                     MOVEAZDREF     ZDR
+     C*
+     C                     Z-ADD1         ZR      20
+     C*
+     C           *IN90     DOWEQ'0'
+     C           *IN91     ANDEQ'0'
+     C           ZR        ANDLE6                                         088422
+     C*
+     C           ZSR,ZR    IFGT ZDR,ZR
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*
+     C           ZSR,ZR    IFLT ZDR,ZR
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C           ZSR,ZR    IFEQ ZDR,ZR
+     C                     ADD  1         ZR
+     C*
+     C** If the senders reference and the destination reference are
+     C** the same , seton *in90 . Either address could be output first.
+     C*
+     C***********ZR        IFEQ 6                                         088422
+     C           ZR        IFGT 6                                         088422
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If indicator 90 is on , the senders reference alphabetically
+     C** preceeds the destination reference. Hence the common
+     C** reference is formatted with the senders reference first.
+     C** HLD10 is a holding field used to build up the first part of
+     C** the message.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVELZSREF     HLD10  10
+     C                     MOVE RATE      HLD10
+     C                     MOVELHLD10     CREF   16
+     C                     MOVE ZDREF     CREF
+     C                     END
+     C*
+     C** If indicator 91 is on , the destination reference alphabetically
+     C** preceeds the senders reference. Hence the common reference
+     C** is formatted with the destination reference first.
+     C** HLD10 is a holding field used to build up the first part of
+     C** the message.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVELZDREF     HLD10
+     C                     MOVE RATE      HLD10
+     C                     MOVELHLD10     CREF
+     C                     MOVE ZSREF     CREF
+     C                     END
+     C*
+     C**
+     C** Move to a 16A SWIFT format field for output.
+     C*
+     C                     MOVE CREF      ZCREF  16
+     C*
+     C                     END
+     C*
+     C**  Termination Processing.
+     C*
+     C                     SETON                     LR
+     C*
+     C**********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,475 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL ATU Generate Dummy Dr/Cr Posting')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL003800 - Midas GL ATU Generate Dummy Dr/Cr Entries         *
+      *                                                               *
+      *  Function:  This program writes dummy Dr/Cr entries to APOSTPD*
+      *             before the actual Batch Update is applied to the  *
+      *             same file.                                        *
+      *                                                               *
+      *  Called By: GL003600                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2010                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039864           Date 02Aug16               *
+      *                 CRE075             Date 06Dec10               *
+      *                 BUG27769           Date 09Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27473           Date 21Apr10               *
+      *                 CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD039864 - Allow dummy entries not to be generated.          *
+      *             Posting Amount is zero, send warning message.     *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  BUG27769 - Incorrect error code                              *
+      *  BUG27473 - Error in retail account                           *
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *****************************************************************
+      *
+     FGLIPDFPDIF  E                    DISK         KINFSR *PSSR
+      *
+     FAPOSTL1 O   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT                                  BUG27473
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDACOD    E DSSDACODPD
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+     ISDACCT    E DSACCNTAB
+      *
+     IDSFDY     E DSDSFDY
+      *
+     IDSSDY     E DSDSSDY
+      *
+     IDSFRAC      DS
+     I                                        1   6 DSFCNU
+     I                                        7   9 DSFCCY
+     I                                       10  19 DSFACO
+     I                                       20  21 DSFACS
+     I                                       22  24 DSFBRC
+      *
+     IDSTOAC      DS
+     I                                        1   6 DSTCNU
+     I                                        7   9 DSTCCY
+     I                                       10  19 DSTACO
+     I                                       20  21 DSTACS
+     I                                       22  24 DSTBRC
+      *
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I              'A/C Transfer'        C         WNARR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           P@PRCD    IFEQ '*LR '
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     EXSR SRINIT
+      *
+     C                     Z-ADD0         WCTR    10
+      *
+     C                     EXSR XRACCT
+     C                     EXSR XRACOD
+     C                     EXSR XREAD1
+      *
+     C           BDPSTA    IFGT 0                                                           MD039864
+     C                     EXSR XWAPOS
+     C                     ENDIF                                                            MD039864
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XWAPOS - Write Dr/CR Entries to Midas GL Account Posting     *
+      *           Detail                                              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XWAPOS    BEGSR
+      *
+     C                     Z-ADD1         WLOOP   10
+     C           WLOOP     DOWNE3
+     C                     Z-ADDACNO      WACNO  100                                        BUG27473
+     C                     CLEARAPOSTPDF
+      *
+     C           WCTR      ADD  1         WCTR
+     C                     MOVE 'P'       RECI
+     C                     MOVE DSFCNU    CNUM
+     C                     MOVE DSFCCY    CCY
+     C                     MOVE DSFACO    ACOD
+     C                     MOVE DSFACS    ACSQ
+     C                     MOVE DSFBRC    BRCA
+     C**********           MOVE ACOD      ACNO                                              BUG27473
+     C                     MOVE WACNO     ACNO                                              BUG27473
+     C                     MOVE BJRDNB    PSTD
+     C                     MOVE BJRDNB    VALD
+      *
+     C           BDPNAR    IFNE *BLANKS
+     C                     MOVE BDPNAR    PNAR
+     C                     ELSE
+     C                     MOVELWNARR     PNAR
+     C                     ENDIF
+      *
+     C           LDBL      IFNE *ZERO
+     C           LDBL      IFGE *ZERO
+     C                     Z-ADDLDBL      PSTA
+     C                     ELSE
+     C                     Z-SUBLDBL      PSTA
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     EXSR XRCCY
+      *
+     C           A6NBDP    IFEQ 0
+     C                     Z-ADD15        WDIG    20
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 1
+     C                     Z-ADD14        WDIG
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 2
+     C                     Z-ADD13        WDIG
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 3
+     C                     Z-ADD12        WDIG
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WFIELD
+     C                     MOVELBDPSTA    WFIELD
+      *
+     C                     CALL 'ZALIGN'
+     C                     PARM           W0RTN   7
+     C                     PARM           WFIELD 16
+     C                     PARM A6NBDP    WDEC    10
+     C                     PARM WDIG      WDIGG   20
+     C                     PARM           ZFIELD 16
+      *
+     C           W0RTN     IFEQ *BLANK
+     C                     MOVE ZFIELD    PSTA
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL003800'DBPGM
+     C                     MOVEL'ZALIGN'  DBFILE
+     C                     MOVELBDPSTA    DBKEY
+     C                     Z-ADD008       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WCTR      IFEQ 1
+     C                     MOVE '1'       DRCR
+     C                     ELSE
+     C                     MOVE '0'       DRCR
+     C                     ENDIF
+      *
+     C                     MOVE 'GE-ATU'  SPOS
+     C                     MOVE BDTRAT    TRAT
+      *
+     C           ACOD      IFNE *ZERO
+     C                     MOVE '1'       RIND
+     C                     ELSE
+     C                     MOVE '0'       RIND
+     C                     ENDIF
+      *
+     C                     MOVE A5ACSC    ACSC
+     C                     MOVE A5ACTY    ATYP
+     C                     MOVE A5ACST    STYP
+     C                     Z-ADD235959    PTIM
+     C                     WRITEAPOSTPDF               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL003800'DBPGM
+     C                     MOVEL'APOSTPD' DBFILE
+     C                     MOVEL'WRITE'   DBKEY
+     C                     Z-ADD001       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           WLOOP     ADD  1         WLOOP
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XREAD1 - Read GLIPDFPD file.                                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XREAD1    BEGSR
+      *
+     C                     READ GLIPDFPD               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL003800'DBPGM
+     C                     MOVEL'GLIPDFPD'DBFILE
+     C                     MOVEL'NONE'    DBKEY
+     C                     MOVEL'003'     DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XRCCY - Retrieve/Select Currency Code.                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOCURRR0                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XRCCY     BEGSR
+      *
+      ** Retrieve/Select Currency Code. If the Currency Code field
+      ** contains a ? then a selection list is displayed.
+      *
+     C                     CALL 'AOCURRR0'             21
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DSFCCY    WKCUR   3
+     C           SDCURR    PARM SDCURR    DSFDY
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL003800'DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELDSFCCY    DBKEY
+     C                     Z-ADD007       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XRACOD - Retrieve/Select Account Code.                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOACODR0                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XRACOD    BEGSR
+      *
+     C                     CALL 'AOACODR0'             21
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DSFACO    WKACC  10
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL003800'DBPGM
+     C                     MOVEL'SDACODPD'DBFILE
+     C                     MOVELSDACOD    DBKEY
+     C                     Z-ADD004       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XRACCT - Retrieve/Select Account Details                     *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOACCTR0                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XRACCT    BEGSR
+      *
+      ** Retrieve Account Details.
+      *
+     C                     CALL 'AOACCTR0'             21
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @RETL  10
+     C                     PARM DSFCNU    @CNUM   6
+     C                     PARM DSFCCY    @CUCD   3
+     C                     PARM DSFACO    @ACCD  10
+     C                     PARM DSFACS    @ACSQ   2
+     C                     PARM DSFBRC    @BRCA   3
+     C           SDACCT    PARM SDACCT    DSSDY
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL003800'DBPGM
+     C                     MOVEL'ACCNTAB' DBFILE
+     C                     MOVELSDACCT    DBKEY
+     C                     Z-ADD005       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialise and define fields                        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBANKR0, XRACCT, XRACOD, XREAD1                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@PRCD  4
+     C                     PARM           P@RFNO 10
+     C           DSFRAC    PARM           P@FRAC 24
+     C           DSTOAC    PARM           P@TOAC 24
+     C                     PARM           P@RTCD  1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Retrieve Run Date.
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If return with an error (LR seton in called program) then
+      ** process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C********** @RTCD     OREQ '*ERROR*'                                                   BUG27769
+     C           @RTCD     ORNE *BLANKS                                                     BUG27769
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL003800'DBPGM
+     C                     MOVEL'AOBANKR0'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD006       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBJMRDT    WKDFMT  9
+     C                     MOVE BJMRDT    WKYEAR  20
+      *
+     C           WKYEAR    IFLT 72
+     C           WKYEAR    ADD  2000      WKCCYY  40
+     C                     ELSE
+     C           WKYEAR    ADD  1900      WKCCYY
+     C                     ENDIF
+      *
+     C                     MOVE WKCCYY    WKDFMT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE 'F'       P@RTCD
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2010

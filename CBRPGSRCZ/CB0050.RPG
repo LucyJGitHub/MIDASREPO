@@ -1,0 +1,1189 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Standard COB program')                        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing                         *
+     F*                                                               *
+     F*  CB0050 - STANDARD CLOSE OF BUSINESS PROGRAM                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022112           Date 03Sep13               *
+      *                 BUG27914           Date 21Jul10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247203             Date 25Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197767             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CCB009             Date 01Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 098640             Date 28Jan98               *
+     F*                 107700             Date 04Sep96               *
+     F*                 081912             DATE 18JAN95               *
+     F*                 S01491             DATE 01OCT94               *
+     F*                 LN0989             DATE 21NOV90               *
+     F*                 LN0545             DATE 20JUL90               *
+     F*                 LN0278             DATE 13JUL90               *
+     F*                 LN0382             DATE 16JUN90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD022112 - SCC1711 performance improvement                   *
+      *  BUG27914 - RAME Design Changes                               *
+      *  247203 - Set Halt After status to 'H' once halt is in        *
+      *           progress so that Halt After message is correct.     *
+      *  197767 - CB0300 shows for failed components incorrect time   *
+      *           duration containing alphabets and brackets. Ensure  *
+      *           that fields DHCETI and DHCEDE in file CBCOMSPD are  *
+      *           updated with values from CBTIME if component failed.*
+     F*  CCB009 - Journal files throughout the close of business.     *
+     F*           Write a record to CBAUDTL1 when component starts.   *
+     F*  098640 - If CBCOMSPD record is locked (RPG1218 received),    *
+     F*           continue reading CBCOMSL0 until record is available,*
+     F*           instead of terminating abnormally.                  *
+     F*  107700 - Update the Stream Number field on CBCOMSPD with     *
+     F*           the stream in which the component is running.       *
+     F*  081912 - Correct concatenation of command string. Allow      *
+     F*           256 characters                                      *
+     F*  S01491 - Autocall                                            *
+     F*  LN0989 - PROVIDE ADDITIONAL COB ERROR INFORMATION            *
+     F*  LN0545 - RE-TRY THE LOCK OF CBSTAT TO AVOID POTENTIAL        *
+     F*           COB CRASH AS A NUMBER OF PROGRAMS PERFORM THE       *
+     F*           *LOCK TO UPDATE THE DATA AREA                       *
+     F*  LN0278 - USE NEW PROGRAM CBTIME TO ACCESS TIME AND           *
+     F*           DATE IN CORRECT FORMAT FOR CALCULATIONS             *
+     F*           AND REMOVE ZDATE1 SUBROUTINE                        *
+     F*  LN0382 - REMOVE CALL TO AOBANKR0 AND USE RUNDAT TO           *
+     F*           OBTAIN DATE FORMAT IN ORDER TO AVOID AOBANKR0       *
+     F*           BEING CALLED BY ITSELF                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*CBAUDTPDO**E***        K        DISK                           UC  CCB009
+     FCBAUDTL1UF  E           K        DISK                      A    UC  CCB009
+     F                                              KINFDS AUDDS
+     F                                              KINFSR AUDSR
+     FCBCOMSL0UF  E           K        DISK
+     F                                              KINFDS COMDS
+     F                                              KINFSR COMSR
+     F***CBRAMEL0UF  E           K        DISK                           UC        BUG27914 MD022112
+     F*
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*    30      READE not successful indicator for file CBCOMSL0       098640
+     F*    35      NO RECORDS IN COMPONENTS FILE - CBCOMSL0
+     F*    36      No record in audit file - CBAUDTL1                     CCB009
+     F*****37******CHAIN*to*CBRAMEL0*file******************************            BUG27914 MD022112
+     F*    70      RE-TRY LOCK OF DATA AREA                               LN0545
+     F*****90-99***USED IN STANDARD SUBROUTINE ZDATE1                     LN0278
+     F*
+     F*       LR   LAST RECORD INDICATOR
+     F*
+     F*     U7&U8  DATABASE ERROR IN COMPONENT CALLED
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E****/COPY ZSRSRC,ZDATE1Z1                                           LN0278
+     E***SR.ARRAY*FOR*ZDATE1                                              LN0278
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICOMKDS      DS
+     I                                        1  10 CMPNMX
+     I                                       11  15 CMPSQX
+     I** DATA STRUCTURE FOR KEY FIELD COMKEY TO BE MOVED INTO DBKEY FIELD
+     I*
+     IAUDKDS      DS                                                      CCB009
+     I                                        1  10 CCOTX                 CCB009
+     I                                       11  15 CSEQX                 CCB009
+     I                                       16  20 CSDEX                 CCB009
+     I                                       21  26 CSTIX                 CCB009
+     I** DATA STRUCTURE FOR KEY FIELD AUDKEY TO BE MOVED INTO DBKEY FIELD CCB009
+     I*                                                                   CCB009
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     LOCAL DATA AREA
+     I*
+     ICBSTAT      DS                             50
+     I                                       20  20 HSTS
+     I**     CBSTAT DATA AREA
+     I*
+     I***RUNDAT   DS                             13                 LN0382LN0278
+     I*******                                    12  12 AGDFF       LN0382LN0278
+     I***DATA*STRUCTURE*TO*GET*DATE*FROM*RUNDAT*DATA*AREA           LN0382LN0278
+     I*                                                                   LN0382
+     I***ACCOBT*     DS                             10                               S01491 MD022112
+     I**********                              1   1 ACCBTP                           S01491 MD022112
+     I*******AUTOCALL*DATA*AREA*TO*DEFINE*COB*TYPE**********************             S01491 MD022112
+     I**********                                                                     S01491 MD022112
+     IAUDDS       DS                            366
+     I****FILE*INFORMATION*DATA*STRUCTURE*FOR*CBAUDTPD*******             CCB009
+     I**  FILE INFORMATION DATA STRUCTURE FOR CBAUDTL1                    CCB009
+     I*
+     ICOMDS       DS                            366
+     I                                     *STATUS  FSTAT                 098640
+     I**  FILE INFORMATION DATA STRUCTURE FOR CBCOMSL0
+     I*
+     IEPFDS       DS
+     I                                        1 256 EPFDS1
+     I                                      257 366 EPFDS2
+     I**  FILE INFORMATION DATA STRUCTURE USED BY ERROR PROCESSING
+     I*
+     IEPPDS      SDS
+     I                                        1  10 EPPP
+     I                                       81  90 EPPPL
+     I                                        1 253 EPPDS1
+     I                                      254 429 EPPDS2
+     I                                      244 253 JOJOB                 LN0989
+     I                                      254 263 JOUSER                LN0989
+     I                                      264 2690JONBR                 LN0989
+     I**  PROGRAM STATUS DATA STRUCTURE USED BY ERROR PROCESSING
+     I*
+     I**SDBANK    E DSSDBANKPD                                            LN0382
+     I***EXTERNAL*DATA*STRUCTURE*FOR*ACCESS*OBJECT*FORMAT                 LN0382
+     I*
+     I**DSFDY     E DSDSFDY                                               LN0382
+     I***FIRST*DATA*STRUCTURE*FOR*ACCESS*OBJECT,*SHORT*DATA*STRUCTURE     LN0382
+     I*
+     I*****************************************************************
+     I/EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           COMPNM 10
+     C                     PARM           COMPSQ  5
+     C                     PARM           CMSTS   1
+     C                     PARM           CMEDT   60                      S01491
+     C                     PARM           STREAM  8                       107700
+     C*
+     C** KEY TO READ TO CBCOMSL0
+     C*
+     C           COMKEY    KLIST
+     C                     KFLD           COMPNM
+     C                     KFLD           COMPSQ
+     C*                                                                   CCB009
+     C** Key to chain to CBAUDTL1                                         CCB009
+     C*                                                                   CCB009
+     C           AUDKEY    KLIST                                          CCB009
+     C                     KFLD           CCOT                            CCB009
+     C                     KFLD           CSEQ                            CCB009
+     C                     KFLD           CSDE                            CCB009
+     C                     KFLD           CSTI                            CCB009
+     C*
+     C** DEFINE LOCAL DATA AREA AND CBSTAT
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           CBSTAT
+     C********   *NAMVAR   DEFN           RUNDAT                    LN0382LN0278
+     C*                                                                   LN0382
+     C***GET*DATE*FORMAT*FROM*RUNDAT                                LN0382LN0278
+     C*                                                                   LN0382
+     C********             IN   RUNDAT                              LN0382LN0278
+     C********             MOVE AGDFF     BJDFIN  1                 LN0382LN0278
+     C********             UNLCKRUNDAT                              LN0382LN0278
+     C*
+     C** SET UP PROGRAM NAME FOR DATABASE ERRORS
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CB0050  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+      *                                                                   CCB009
+      ** Set flag to show whether Audit file has been written             CCB009
+     C                     MOVE 'N'       WAUDT   1                       CCB009
+     C*
+     C***USE*ACCESS*OBJECT*AOBANKR0*TO*                                   LN0382
+     C***RETRIEVE*DATE*FORMAT*FOR*ZDATE1                                  LN0382
+     C*****                                                               LN0382
+     C*****                CALL 'AOBANKR0'                                LN0382
+     C*****                PARM '*MSG   ' P@RTCD  7                       LN0382
+     C*****                PARM '*FIRST ' P@OPTN  7                       LN0382
+     C*****      SDBANK    PARM SDBANK    DSFDY                           LN0382
+     C*****                                                               LN0382
+     C***IF ERROR FOUND BY ACCESS OBJECT EXIT                             LN0382
+     C***PROGRAM VIA DATABASE ERROR SUBROUTINE                            LN0382
+     C*****                                                               LN0382
+     C*****      P@RTCD    IFNE *BLANKS                                   LN0382
+     C*****                MOVEL'AOBNK'   DBFILE           ***************LN0382
+     C*****                Z-ADD1         DBASE            * DB ERROR 01 *LN0382
+     C*****                EXSR DBERR                      ***************LN0382
+     C*****                END                                            LN0382
+     C*
+     C***VALIDATION*OF*DATE*FORMAT*ON*RUNDAT                              LN0278
+     C***AS*REQUIRED*BY*SUBROUTINE*ZDATE1                                 LN0278
+     C*
+     C******     BJDFIN    IFEQ 'M'                                       LN0278
+     C******               SETON                     98                   LN0278
+     C******               ELSE                                           LN0278
+     C******               SETOF                     98                   LN0278
+     C******               END                                            LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C******               MOVE ZDAYNO    STDE                            LN0278
+     C*                                                                   LN0278
+     C** ACCESS DATE, TIME AND DATE FORMAT USING PROGRAM CBTIME           LN0278
+     C*                                                                   LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA  5                       LN0278
+     C                     PARM           STIME   6                       LN0278
+     C                     PARM           DFMT    1                       LN0278
+      *                                                                                       197767
+      ** When time is zero, call SR/TIMSR to call CBTIME until                                197767
+      ** time is not equal to zero.                                                           197767
+      ** This prevents the date and runtime errors in CBCOMSL0.                               197767
+      *                                                                                       197767
+     C                     MOVE STIME     ST2     60                                          197767
+     C           ST2       IFEQ 0                                                             197767
+     C                     EXSR TIMSR                                                         197767
+     C                     ENDIF                                                              197767
+     C*                                                                   LN0278
+     C** SET START DATE FIELD                                             LN0278
+     C** WITH VALUE FROM CBTIME                                           LN0278
+     C*                                                                   LN0278
+     C                     MOVE DAYNOA    STDE                            LN0278
+     C*
+     C***ACCESS*SWITCHABLE*FEATURE*FILE*TO*CHECK*IF*AUTOCALL*IS*********             S01491 MD022112
+     C******SWITCHED*ON*************************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C**********           MOVE 'N'       S01491  1                                  S01491 MD022112
+     C**********                                                                     S01491 MD022112
+     C**********           CALL 'AOSARDR0'                                           S01491 MD022112
+     C**********           PARM '       ' @RTCD   7                                  S01491 MD022112
+     C**********           PARM '*VERIFY' @OPTN   7                                  S01491 MD022112
+     C**********           PARM 'S01491 ' @SARD   6                                  S01491 MD022112
+     C**********                                                                     S01491 MD022112
+     C********** @RTCD     IFEQ *BLANKS                                              S01491 MD022112
+     C**********           MOVE 'Y'       S01491                                     S01491 MD022112
+     C**********           END                                                       S01491 MD022112
+     C*******************************************************************            S01491 MD022112
+      ***Check*if*CAP203*is*switched*ON.*********************************          BUG27914 MD022112
+      *******************************************************************          BUG27914 MD022112
+     C**********           MOVE 'N'       CAP203  1                                BUG27914 MD022112
+     C**********           CALL 'AOSARDR0'                                         BUG27914 MD022112
+     C**********           PARM '       ' @RTCD                                    BUG27914 MD022112
+     C**********           PARM '*VERIFY' @OPTN                                    BUG27914 MD022112
+     C**********           PARM 'CAP203 ' @SARD                                    BUG27914 MD022112
+      **********                                                                   BUG27914 MD022112
+     C********** @RTCD     IFNE *BLANKS                                            BUG27914 MD022112
+     C********** @RTCD     ANDNE'*NRF'                                             BUG27914 MD022112
+     C**********           MOVEL'CAP203'  DBKEY                                    BUG27914 MD022112
+     C**********           MOVEL'SCSARDPD'DBFILE                                   BUG27914 MD022112
+     C**********           Z-ADD9         DBASE                                    BUG27914 MD022112
+     C**********           EXSR DBERR                                              BUG27914 MD022112
+     C**********           ENDIF                                                   BUG27914 MD022112
+      **********                                                                   BUG27914 MD022112
+     C********** @RTCD     IFEQ *BLANKS                                            BUG27914 MD022112
+     C**********           MOVE 'Y'       CAP203                                   BUG27914 MD022112
+     C**********           ENDIF                                                   BUG27914 MD022112
+      *******************************************************************          BUG27914 MD022112
+     C** SETLL ON CBCOMSL0 WITH COMPNM,COMPSQ
+     C*
+     C           *IN30     DOUEQ'0'                                       098640
+     C           COMKEY    SETLL@DHREGG
+     C*
+     C** READ CBCOMSL0
+     C*
+     C***********COMKEY    READE@DHREGG                  35               098640
+     C           COMKEY    READE@DHREGG                3035               098640
+     C*                                                                   098640
+     C**  If file status is not 01218 for 'Unable to allocate a Record',  098640
+     C**  execute error-handling subroutine, otherwise, read CBCOMSL0     098640
+     C**  again.                                                          098640
+     C*                                                                   098640
+     C           FSTAT     IFNE 1218                                      098640
+     C           *IN30     ANDEQ'1'                                       098640
+     C                     EXSR COMSR                                     098640
+     C                     ENDIF                                          098640
+     C                     ENDDO                                          098640
+     C*
+     C** IF RECORD NOT FOUND ON CBCOMSL0 SET
+     C** COMPONENT STATUS PARAMETER TO 'A'
+     C*
+     C           *IN35     IFEQ '1'
+     C                     MOVE 'A'       CMSTS
+     C*
+     C** SET COMPONENT START TIME WORK FIELD(STTI) TO SYSTEM TIME
+     C*
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA                          LN0278
+     C                     PARM           STIME                           LN0278
+     C                     PARM           DFMT                            LN0278
+     C******               TIME           TIMDAT 120                      LN0278
+     C******               MOVELTIMDAT    STTI                            LN0278
+      *                                                                                       197767
+      ** Repeat time date fix as above.                                                       197767
+      *                                                                                       197767
+     C                     MOVE STIME     ST2                                                 197767
+     C           ST2       IFEQ 0                                                             197767
+     C                     EXSR TIMSR                                                         197767
+     C                     ENDIF                                                              197767
+      *                                                                                       197767
+     C                     MOVE STIME     STTI                            LN0278
+     C*
+     C***SET*COMPONENT*START*DATE*WORK*FIELD(STDE)*TO*SYSTEM*DATE*USING   LN0278
+     C***SUBROUTINE*ZDATE1*TO*CONVERT*SYSTEM*DATE*TO*MIDAS*DAY*NO         LN0278
+     C*
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE COMPNM    CMPNMX
+     C                     MOVE COMPSQ    CMPSQX
+     C                     MOVELCOMKDS    DBKEY
+     C                     MOVEL'CMPL0'   DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** SET COMPONENT START TIME (DHCSTI) TO SYSTEM TIME
+     C***TIMDAT*LEFT*SIX*FIELDS*HHMMSS*RIGHT*SIX*FIELDS*DDMMYY            LN0278
+     C*
+     C******               TIME           TIMDAT 120                      LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA                          LN0278
+     C                     PARM           STIME                           LN0278
+     C                     PARM           DFMT                            LN0278
+     C******               MOVELTIMDAT    DHCSTI                          LN0278
+      *                                                                                       197767
+      ** Repeat time fix as above.                                                            197767
+      *                                                                                       197767
+     C                     MOVE STIME     ST2                                                 197767
+     C           ST2       IFEQ 0                                                             197767
+     C                     EXSR TIMSR                                                         197767
+     C                     ENDIF                                                              197767
+      *                                                                                       197767
+     C                     MOVE STIME     DHCSTI                          LN0278
+     C*
+     C** SET COMPONENT START DATE (DHCSDE) TO SYSTEM DATE USING
+     C***SUBROUTINE*ZDATE1*TO*CONVERT*SYSTEM*DATE*TO*MIDAS*DAY*NO         LN0278
+     C** VALUE OBTAINED IN CALL TO PROGRAM CBTIME                         LN0278
+     C*
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C*                                                                   LN0278
+     C*********            MOVE ZDAYNO    DHCSDE                          LN0278
+     C                     MOVE DAYNOA    DHCSDE                          LN0278
+     C*
+     C** UPDATE COMPONENT STATUS TO PROCESSING - DHABST TO 'P'
+     C*
+     C                     MOVE 'P'       DHCSTS
+     C                     MOVE STREAM    DHCBSN                          107700
+     C*
+     C**********           Z-ADD0         CMEDT   60                                 S01491 MD022112
+     C***IF*AUTOCALL*IS*ON,*PICK*UP*THE*ESTIMATED*TIME*FOR*THE**********             S01491 MD022112
+     C******GIVEN*COMPONENT.********************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C********** S01491    IFEQ 'Y'                                                  S01491 MD022112
+     C**********           EXSR ACSR1                                                S01491 MD022112
+     C**********           END                                                       S01491 MD022112
+     C**********                                                                     S01491 MD022112
+     C                     UPDAT@DHREGG
+      *****************************************************************            BUG27914 MD022112
+     C********** CAP203    IFEQ 'Y'                                                BUG27914 MD022112
+     C**********           OPEN CBRAMEL0                                           BUG27914 MD022112
+     C********** COMKEY    CHAINCBRAMEL0             37                            BUG27914 MD022112
+      *****************************************************************            BUG27914 MD022112
+      ***If*record*found,*Update*component*status**********************            BUG27914 MD022112
+      *****************************************************************            BUG27914 MD022112
+     C********** *IN37     IFEQ '0'                                                BUG27914 MD022112
+     C**********           MOVE 'N'       REFLAG                                   BUG27914 MD022112
+     C**********           UPDATCBRAMED0                                           BUG27914 MD022112
+     C**********           CALL 'GO000130'                                         BUG27914 MD022112
+     C**********           ENDIF                                                   BUG27914 MD022112
+     C**********           CLOSECBRAMEL0                                           BUG27914 MD022112
+     C**********           ENDIF                                                   BUG27914 MD022112
+     C*
+     C***IF*AUTOCALL*IS*ON,*CALL*AC0001*TO*CALCULATE*THE*END*TIME*FOR***             S01491 MD022112
+     C******THE*GIVEN*COMPONENT*****************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C********** S01491    IFEQ 'Y'                                                  S01491 MD022112
+     C**********           EXSR ACSR2                                                S01491 MD022112
+     C**********           END                                                       S01491 MD022112
+     C**********                                                                     S01491 MD022112
+     C** SAVE COMPONENT START DATE AND TIME IN WORK FIELDS
+     C*
+     C                     MOVE DHCSTI    STTI    60
+     C                     MOVE DHCSDE    STDE    50
+     C*                                                                   CCB009
+     C** Open failed details file CBAUDTL1.                               CCB009
+     C*                                                                   CCB009
+     C                     OPEN CBAUDTL1                                  CCB009
+     C*                                                                   CCB009
+     C** Set up component name and sequence number to write out           CCB009
+     C** to LF/CBAUDTL1.                                                  CCB009
+     C*                                                                   CCB009
+     C                     MOVE COMPNM    CCOT                            CCB009
+     C                     MOVE COMPSQ    CSEQ                            CCB009
+     C*                                                                   CCB009
+     C** Set component end date and time to zero.                         CCB009
+     C*                                                                   CCB009
+     C                     Z-ADD0         CETI                            CCB009
+     C                     Z-ADD0         CEDE                            CCB009
+     C*                                                                   CCB009
+     C** Retrieve component start time and date from work fields.         CCB009
+     C*                                                                   CCB009
+     C                     MOVE STTI      CSTI                            CCB009
+     C                     MOVE STDE      CSDE                            CCB009
+     C*                                                                   CCB009
+     C** Write record to failed details file.                             CCB009
+     C*                                                                   CCB009
+     C                     WRITECBAUDTP0                                  CCB009
+     C*                                                                   CCB009
+      ** Set flag to show whether Audit file has been written             CCB009
+     C                     MOVE 'Y'       WAUDT                           CCB009
+     C*                                                                   CCB009
+     C** Close failed details file.                                       CCB009
+     C*                                                                   CCB009
+     C                     CLOSECBAUDTL1                                  CCB009
+     C*
+     C** CALL COMPONENT VIA CBC0051 WITH ANY PARAMETERS REQUIRED
+     C*
+     C                     MOVEL*BLANKS   O#CPRM                          081912
+     C                     MOVELDHCPRM    O#CPRM                          081912
+      *                                                                   081912
+     C                     CALL 'CBC0051'
+     C                     PARM           DHCOTT
+     C**********           PARM           DHCPRM                          081912
+     C                     PARM           O#CPRM256                       081912
+     C                     PARM           INDU7   1
+     C                     PARM           INDU8   1
+     C                     PARM           ERROR   1
+     C*
+     C** IF INDICATOR FOR PARAMETERS U7 AND U8 ARE PASSED
+     C** BACK AS ON THEN SETON INDICATORS FOR PROCESSING
+     C** UPDATE OF COMPONENTS AND FAILED DETAILS FILES
+     C*
+     C           INDU7     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     END
+     C*
+     C           INDU8     IFEQ '1'
+     C                     MOVE '1'       *INU8
+     C                     END
+     C*
+     C** IF INDICATOR U7 IS ON
+     C** OR U8 ON AND CONTINUE ON FILE
+     C** CONTROLS OUT OF BALANCE FIELD NOT 'Y'
+     C** OR ERROR PARAMETER IS '1' - DATABASE ERROR IN PROGRAM CALLED
+     C** SET ABNORMAL TERMINATION DETAILS
+     C*
+     C           *INU7     IFEQ '1'
+     C           *INU8     OREQ '1'
+     C           DHCFOB    ANDNE'Y'
+     C           ERROR     OREQ '1'
+     C*
+     C** SETLL ON CBCOMSL0 WITH COMPNM,COMPSQ
+     C*
+     C           *IN30     DOUEQ'0'                                       098640
+     C           COMKEY    SETLL@DHREGG
+     C*
+     C** READ CBCOMSL0
+     C*
+     C***********COMKEY    READE@DHREGG                  35               098640
+     C           COMKEY    READE@DHREGG                3035               098640
+     C*                                                                   098640
+     C**  If file status is not 01218 for 'Unable to allocate a Record',  098640
+     C**  execute error-handling subroutine, otherwise, read CBCOMSL0     098640
+     C**  again.                                                          098640
+     C*                                                                   098640
+     C           FSTAT     IFNE 1218                                      098640
+     C           *IN30     ANDEQ'1'                                       098640
+     C                     EXSR COMSR                                     098640
+     C                     ENDIF                                          098640
+     C                     ENDDO                                          098640
+     C*
+     C** IF NO RECORD FOUND ON CBCOMSL0 SET
+     C** COMPONENT STATUS PARAMETER TO 'A'
+     C*
+     C           *IN35     IFEQ '1'
+     C                     MOVE 'A'       CMSTS
+     C           *LOCK     IN   LDA
+     C                     MOVE COMPNM    CMPNMX
+     C                     MOVE COMPSQ    CMPSQX
+     C                     MOVELCOMKDS    DBKEY
+     C                     MOVEL'CMPL0'   DBFILE           ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** UPDATE COMPONENT STATUS TO ABNORMAL TERMINATION - DHCSTS TO 'A'
+     C** AND SET ON COMPONENT FAILED TODAY FLAG - DHCFAL TO 'Y'
+     C*
+     C                     MOVE 'A'       DHCSTS
+     C                     MOVE 'Y'       DHCFAL
+     C*
+     C** SET COMPONENT STATUS PARAMETER TO 'A'
+     C*
+     C                     MOVE 'A'       CMSTS
+     C*
+     C***OPEN*FAILED*DETAILS*FILE*CBAUDTPD*************                   CCB009
+     C** OPEN FAILED DETAILS FILE CBAUDTL1                                CCB009
+     C*                                                                   CCB009
+     C***********          OPEN CBAUDTPD                                  CCB009
+     C                     OPEN CBAUDTL1                                  CCB009
+     C**********************************************************          CCB009
+     C***SET*UP*COMPONENT*NAME*AND*SEQ*NUMBER*TO*WRITE*OUT*TO***          CCB009
+     C***LF/CBAUDTL1.*******************************************          CCB009
+     C**********************************************************          CCB009
+     C***********          MOVE COMPNM    CCOT                            CCB009
+     C***********          MOVE COMPSQ    CSEQ                            CCB009
+      *                                                                   CCB009
+      ** Chain to component start record on LF/CBAUDTL1.                  CCB009
+      *                                                                   CCB009
+     C           AUDKEY    CHAINCBAUDTL1             36                   CCB009
+      *                                                                   CCB009
+      ** If no record found on CBAUDTL1, set                              CCB009
+      ** component status parameter to 'A'                                CCB009
+      *                                                                   CCB009
+     C           *IN36     IFEQ '1'                                       CCB009
+     C                     MOVE 'A'       CMSTS                           CCB009
+     C           *LOCK     IN   LDA                                       CCB009
+     C                     MOVE CCOT      CCOTX                           CCB009
+     C                     MOVE CSEQ      CSEQX                           CCB009
+     C                     MOVE CSDE      CSDEX                           CCB009
+     C                     MOVE CSTI      CSTIX                           CCB009
+     C                     MOVELAUDKDS    DBKEY                           CCB009
+     C                     MOVEL'CBAUDTL1'DBFILE           ***************CCB009
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *CCB009
+     C                     EXSR DBERR                      ***************CCB009
+     C                     END                                            CCB009
+     C*
+     C** SET COMPONENT END TIME (CETI) TO SYSTEM TIME
+     C***TIMDAT*LEFT*SIX*FIELDS*HHMMSS*RIGHT*SIX*FIELDS*DDMMYY            LN0278
+     C*
+     C******               TIME           TIMDAT                          LN0278
+     C******               MOVELTIMDAT    CETI                            LN0278
+     C*
+     C** SET COMPONENT END DATE (CEDE) TO SYSTEM DATE USING
+     C***SUBROUTINE*ZDATE1*TO*CONVERT*SYSTEM*DATE*TO*MIDAS*DAY*NO         LN0278
+     C** PROGRAM CBTIME                                                   LN0278
+     C*
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C*                                                                   LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA                          LN0278
+     C                     PARM           STIME                           LN0278
+     C                     PARM           DFMT                            LN0278
+      *                                                                                       197767
+      ** Repeat time fix as above.                                                            197767
+      *                                                                                       197767
+     C                     MOVE STIME     ST2                                                 197767
+     C           ST2       IFEQ 0                                                             197767
+     C                     EXSR TIMSR                                                         197767
+     C                     ENDIF                                                              197767
+     C*                                                                   LN0278
+     C                     MOVE STIME     CETI                            LN0278
+     C*********            MOVE ZDAYNO    CEDE                            LN0278
+     C                     MOVE DAYNOA    CEDE                            LN0278
+     C**************************************************************      CCB009
+     C***RETREIVE*COMPONENT*START*TIME*AND*DATE*FROM*WORK*FIELDS****      CCB009
+     C**************************************************************      CCB009
+     C***********          MOVE STTI      CSTI                            CCB009
+     C***********          MOVE STDE      CSDE                            CCB009
+     C*
+     C** WRITE RECORD TO FAILED DETAILS FILE
+     C*
+     C***********          WRITECBAUDTP0                                  CCB009
+     C                     UPDATCBAUDTP0                                  CCB009
+     C*
+     C** CLOSE FAILED DETAILS FILE
+     C*
+     C***********          CLOSECBAUDTPD                                  CCB009
+     C                     CLOSECBAUDTL1                                  CCB009
+      *                                                                                       197767
+      ** Also update fields DHCETI and DHCEDE in file CBCOMSPD with                           197767
+      ** values taken from CBTIME.                                                            197767
+      *                                                                                       197767
+     C                     MOVE STIME     DHCETI                                              197767
+     C                     MOVE DAYNOA    DHCEDE                                              197767
+     C*
+     C** UPDATE COMPONENTS FILE WITH STATUS FIELD AND FAILED TODAY FLAG
+     C*
+     C                     UPDAT@DHREGG
+     C*
+     C** ELSE COMPONENT COMPLETED NORMALLY OR FILE CONTROLS OUT OF
+     C** BALANCE IGNORED...
+     C*
+     C                     ELSE
+     C*
+     C** SETLL ON CBCOMSL0 WITH COMPNM,COMPSQ
+     C*
+     C           *IN30     DOUEQ'0'                                       098640
+     C           COMKEY    SETLL@DHREGG
+     C*
+     C** READ CBCOMSL0
+     C*
+     C***********COMKEY    READE@DHREGG                  35               098640
+     C           COMKEY    READE@DHREGG                3035               098640
+     C*                                                                   098640
+     C**  If file status is not 01218 for 'Unable to allocate a Record',  098640
+     C**  execute error-handling subroutine, otherwise, read CBCOMSL0     098640
+     C**  again.                                                          098640
+     C*                                                                   098640
+     C           FSTAT     IFNE 1218                                      098640
+     C           *IN30     ANDEQ'1'                                       098640
+     C                     EXSR COMSR                                     098640
+     C                     ENDIF                                          098640
+     C                     ENDDO                                          098640
+     C*
+     C** IF NO RECORD FOUND ON CBCOMSL0 SET
+     C** COMPONENT STATUS PARAMETER TO 'A'
+     C*
+     C           *IN35     IFEQ '1'
+     C                     MOVE 'A'       CMSTS
+     C           *LOCK     IN   LDA
+     C                     MOVE COMPNM    CMPNMX
+     C                     MOVE COMPSQ    CMPSQX
+     C                     MOVELCOMKDS    DBKEY
+     C                     MOVEL'CMPL0'   DBFILE           ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** UPDATE COMPONENT STATUS TO COMPLETED - DHABST TO 'C'
+     C*
+     C                     MOVE 'C'       DHCSTS
+     C*
+     C** IF INDICATOR U8 ON THEN FILES OUT OF BALANCE MUST HAVE BEEN
+     C** IGNORED DUE TO FIELD DHDNCD = 'Y' - UPDATE FIELD DHKKST TO 'F'
+     C** TO STORE THIS INFORMATION.
+     C*
+     C           *INU8     IFEQ '1'
+     C                     MOVE 'F'       DHCFAL
+     C                     END
+     C*
+     C** SET COMPONENT END TIME (DHCETI) TO SYSTEM TIME
+     C***TIMDAT*LEFT*SIX*FIELDS*HHMMSS*RIGHT*SIX*FIELDS*DDMMYY            LN0278
+     C** USING VALUES FROM PROGRAM CBTIME                                 LN0278
+     C*
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA                          LN0278
+     C                     PARM           STIME                           LN0278
+     C                     PARM           DFMT                            LN0278
+     C*********            TIME           TIMDAT                          LN0278
+     C*********            MOVELTIMDAT    DHCETI                          LN0278
+      *                                                                                       197767
+      ** Repeat time fix as above.                                                            197767
+      *                                                                                       197767
+     C                     MOVE STIME     ST2                                                 197767
+     C           ST2       IFEQ 0                                                             197767
+     C                     EXSR TIMSR                                                         197767
+     C                     ENDIF                                                              197767
+      *                                                                                       197767
+     C                     MOVE STIME     DHCETI                          LN0278
+     C*
+     C** SET COMPONENT END DATE (DHCEDE) TO SYSTEM DATE USING
+     C***SUBROUTINE*ZDATE1*TO*CONVERT*SYSTEM*DATE*TO*MIDAS*DAY*NO         LN0278
+     C** VALUE FROM PROGRAM CBTIME                                        LN0278
+     C*
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C******               MOVE ZDAYNO    DHCEDE                          LN0278
+     C                     MOVE DAYNOA    DHCEDE                          LN0278
+     C*                                                                                       247203
+     C           DHCHTA    IFEQ 'Y'                                                           247203
+     C                     MOVE 'H'       DHCHTA                                              247203
+     C                     ENDIF                                                              247203
+     C*
+     C** UPDATE COMPONENTS FILE WITH STATUS AND TIME
+     C*
+     C                     UPDAT@DHREGG
+      *                                                                                     BUG27914
+     C********** CAP203    IFEQ 'Y'                                                BUG27914 MD022112
+     C**********           OPEN CBRAMEL0                                           BUG27914 MD022112
+     C********** COMKEY    CHAINCBRAMEL0             37                            BUG27914 MD022112
+      *****************************************************************            BUG27914 MD022112
+      ***If*record*found,*Update*component*status**********************            BUG27914 MD022112
+      *****************************************************************            BUG27914 MD022112
+     C********** *IN37     IFEQ '0'                                                BUG27914 MD022112
+     C**********           MOVE 'Y'       REFLAG                                   BUG27914 MD022112
+     C**********           UPDATCBRAMED0                                           BUG27914 MD022112
+     C**********           ENDIF                                                   BUG27914 MD022112
+     C**********           CLOSECBRAMEL0                                           BUG27914 MD022112
+     C**********           ENDIF                                                   BUG27914 MD022112
+     C*
+     C** UPDATE COMPONENT STATUS PARAMETER CMSTS TO 'C'
+     C*
+     C                     MOVE 'C'       CMSTS
+     C*
+     C** IF HALT AFTER COMPONENT RUN INDICATOR IS ON (DHKJST = Y)
+     C** AND POSITION 20 OF CBSTAT = 'N'
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C*
+     C***********DHCHTA    IFEQ 'Y'                                                           247203
+     C           DHCHTA    IFEQ 'H'                                                           247203
+     C           HSTS      ANDEQ'N'
+     C*
+     C** UPDATE HALT STATUS FIELD ON CBSTAT TO 'R' AND
+     C** SEND HALT MESSAGE TO SCHEDULER DATA QUEUE
+     C*
+     C                     MOVE 'R'       HSTS
+     C*
+     C** SET UP PARAMETERS FOR PROGRAM TO SEND MESSAGE TO DATA QUEUE
+     C*
+     C                     MOVEL'CBDTQA'  DTAQ
+     C                     MOVEL'*LIBL'   LIB
+     C                     Z-ADD16        LEN
+     C                     MOVEL'AFTER'   DTQMSG 16
+     C                     MOVE 'H'       DTQMSG
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DTAQ   10
+     C                     PARM           LIB    10
+     C                     PARM           LEN     50
+     C                     PARM           DTQMSG
+     C*
+     C                     END
+     C*
+     C                     OUT  CBSTAT
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** INDEX OF SUBROUTINES
+     C**
+     C**
+     C***ZDATE1*-*CONVERSION*OF*DATE*INTO*MIDAS*DAY*NUMBER                LN0278
+     C**
+     C** DBERR  - DATABASE ERROR HANDLING
+     C**
+     C***AUDSR**-*CBAUDTPD*ERROR*SUBROUTINE**************                 CCB009
+     C** AUDSR  - CBAUDTL1 ERROR SUBROUTINE                               CCB009
+     C**
+     C** COMSR  - CBCOMSL0 ERROR SUBROUTINE
+     C**
+     C***ACSR1**-*AUTOCALL*SR.*TO*PICK*UP*'TIME*TAKEN'*FOR*COMPONENT.***             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C***ACSR2**-*AUTOCALL*SR.*TO*CALCULATE*END*TIME*FOR*COMPONENT.*****             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C** *PSSR  - ERROR HANDLING SUBROUTINE
+      **                                                                                      197767
+      ** TIMSR  - SR To negate errors caused by time = 0                                      197767
+     C**
+     C********************************************************************
+     C***ZDATE1*SUBROUTINE***                                             LN0278
+     C*****/COPY ZSRSRC,ZDATE1Z2                                          LN0278
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C***OPEN*FAILED*DETAILS*FILE*CBAUDTPD*************                   CCB009
+     C** OPEN FAILED DETAILS FILE CBAUDTL1                                CCB009
+     C*
+     C***********          OPEN CBAUDTPD                                  CCB009
+     C                     OPEN CBAUDTL1                                  CCB009
+     C*
+     C** SET UP COMPONENT NAME AND SEQ NUMBER TO WRITE OUT TO
+     C** LF/CBAUDTL1.
+      ** or Update audit record if already written                        CCB009
+     C*
+     C           WAUDT     IFEQ 'N'                                       CCB009
+      *                                                                   CCB009
+     C                     MOVE COMPNM    CCOT
+     C                     MOVE COMPSQ    CSEQ
+      *                                                                   CCB009
+     C                     ELSE                                           CCB009
+      *                                                                   CCB009
+      ** Chain to component start record on LF/CBAUDTL1.                  CCB009
+      *                                                                   CCB009
+     C           AUDKEY    CHAINCBAUDTL1             36                   CCB009
+      *                                                                   CCB009
+      ** If no record found on CBAUDTL1, database error.                  CCB009
+      *                                                                   CCB009
+     C           *IN36     IFEQ '1'                                       CCB009
+     C           *LOCK     IN   LDA                                       CCB009
+     C                     MOVE CCOT      CCOTX                           CCB009
+     C                     MOVE CSEQ      CSEQX                           CCB009
+     C                     MOVE CSDE      CSDEX                           CCB009
+     C                     MOVE CSTI      CSTIX                           CCB009
+     C                     MOVELAUDKDS    DBKEY                           CCB009
+     C                     MOVEL'CBAUDTL1'DBFILE           ***************CCB009
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *CCB009
+     C*                                                    ***************CCB009
+     C                     ENDIF                                          CCB009
+      *                                                                   CCB009
+     C                     ENDIF                                          CCB009
+     C*
+     C** SET COMPONENT END TIME (CETI) TO SYSTEM TIME
+     C***TIMDAT*LEFT*SIX*FIELDS*HHMMSS*RIGHT*SIX*FIELDS*DDMMYY            LN0278
+     C*
+     C******               TIME           TIMDAT                          LN0278
+     C******               MOVELTIMDAT    CETI                            LN0278
+     C*
+     C** SET COMPONENT END DATE (CEDE) TO SYSTEM DATE USING
+     C***SUBROUTINE*ZDATE1*TO*CONVERT*SYSTEM*DATE*TO*MIDAS*DAY*NO         LN0278
+     C** PROGRAM CBTIME                                                   LN0278
+     C*
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C*                                                                   LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA                          LN0278
+     C                     PARM           STIME                           LN0278
+     C                     PARM           DFMT                            LN0278
+      *                                                                                       197767
+      ** Repeat time fix as above.                                                            197767
+      *                                                                                       197767
+     C                     MOVE STIME     ST2                                                 197767
+     C           ST2       IFEQ 0                                                             197767
+     C                     EXSR TIMSR                                                         197767
+     C                     ENDIF                                                              197767
+     C*                                                                   LN0278
+     C                     MOVE STIME     CETI                            LN0278
+     C*********            MOVE ZDAYNO    CEDE                            LN0278
+     C                     MOVE DAYNOA    CEDE                            LN0278
+     C*
+     C** RETREIVE COMPONENT START TIME AND DATE FROM WORK FIELDS
+      ** if audit record not already written                              CCB009
+     C*
+     C           WAUDT     IFEQ 'N'                                       CCB009
+     C                     MOVE STTI      CSTI
+     C                     MOVE STDE      CSDE
+     C*
+     C** WRITE RECORD TO FAILED DETAILS FILE
+     C*
+     C                     WRITECBAUDTP0
+     C                     ELSE                                           CCB009
+     C                     UPDATCBAUDTP0                                  CCB009
+     C                     ENDIF                                          CCB009
+     C*
+     C** CLOSE FAILED DETAILS FILE
+     C*
+     C***********          CLOSECBAUDTPD                                  CCB009
+     C                     CLOSECBAUDTL1                                  CCB009
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                               *
+     C***SUBROUTINE*:*CBAUDTPD*EXCEPTION/ERROR*SUBROUTINE**************   CCB009
+     C*  SUBROUTINE : CBAUDTL1 EXCEPTION/ERROR SUBROUTINE             *   CCB009
+     C*                                                               *
+     C*                                                               *
+     C*  CALLED BY : THIS ROUTINE IS CALLED IF THERE ARE ANY          *
+     C*              ERRORS ON THIS FILE                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDSR     BEGSR
+     C*
+     C                     MOVE AUDDS     EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : CBCOMSL0 EXCEPTION/ERROR SUBROUTINE             *
+     C*                                                               *
+     C*                                                               *
+     C*  CALLED BY : THIS ROUTINE IS CALLED IF THERE ARE ANY          *
+     C*              ERRORS ON THIS FILE                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           COMSR     BEGSR
+     C*
+     C                     MOVE COMDS     EPFDS
+     C                     MOVE 'F'       EPFLAG
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************              S01491 MD022112
+      */*EJECT**                                                                     S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C***SUBROUTINE*:*ACSR1*TOCALL*SR*TO*PICK*UP*'TIME*TAKEN'*FOR*******             S01491 MD022112
+     C**********************COMPONENT***********************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C***CALLED*BY*:*THIS*ROUTINE*IS*CALLED*IF*AUTOCALL*(S01491)********             S01491 MD022112
+     C***************IS*SWITCHED*ON.************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C********** ACSR1     BEGSR                                                     S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C********** *NAMVAR   DEFN           ACCOBT                                     S01491 MD022112
+     C**********           IN   ACCOBT                                               S01491 MD022112
+     C********** ACCBTP    IFEQ 'Y'                                                  S01491 MD022112
+     C**********           Z-ADDDHEOYT    CMEDT                                      S01491 MD022112
+     C**********           END                                                       S01491 MD022112
+     C*****************************************************************              S01491 MD022112
+     C********** ACCBTP    IFEQ 'B'                                                  S01491 MD022112
+     C**********           Z-ADDDHBOMT    CMEDT                                      S01491 MD022112
+     C**********           END                                                       S01491 MD022112
+     C*****************************************************************              S01491 MD022112
+     C********** ACCBTP    IFEQ 'M'                                                  S01491 MD022112
+     C**********           Z-ADDDHEOMT    CMEDT                                      S01491 MD022112
+     C**********           END                                                       S01491 MD022112
+     C*****************************************************************              S01491 MD022112
+     C********** ACCBTP    IFEQ 'D'                                                  S01491 MD022112
+     C**********           Z-ADDDHEODT    CMEDT                                      S01491 MD022112
+     C**********           END                                                       S01491 MD022112
+     C*****************************************************************              S01491 MD022112
+     C**********           ENDSR                                                     S01491 MD022112
+     C*****************************************************************              S01491 MD022112
+     C*****************************************************************              S01491 MD022112
+      */*EJECT*                                                                      S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C***SUBROUTINE*:*ACSR2*:*AUTOCALL*SR*TO*CALCULATE*'END TIME'*******             S01491 MD022112
+     C*************************FOR*COMPONENT****************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C***CALLED*BY*:*THIS*ROUTINE*IS*CALLED*IF AUTOCALL*(S01491)********             S01491 MD022112
+     C***************IS*SWITCHED*ON.************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C******************************************************************             S01491 MD022112
+     C*****************************************************************              S01491 MD022112
+     C********** ACSR2     BEGSR                                                     S01491 MD022112
+     C**********           CALL 'AC0001'                                             S01491 MD022112
+     C**********           PARM           COMPNM                                     S01491 MD022112
+     C**********           PARM           COMPSQ                                     S01491 MD022112
+     C**********           PARM           CMEDT                                      S01491 MD022112
+     C**********           PARM 'A'       MODE    1                                  S01491 MD022112
+     C*****************************************************************              S01491 MD022112
+     C**********           ENDSR                                                     S01491 MD022112
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: *PSSR - ERROR HANDLING SUBROUTINE.               *
+     C*                                                               *
+     C*  CALLED BY : THIS ROUTINE IS CALLED IF THERE ARE ANY PROGRAM  *
+     C*              OR FILE ERRORS                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C**  SET EPSW TO 'Y' TO PREVENT
+     C**  SUBROUTINE LOOPING IF FURTHER ERRORS
+     C*
+     C           EPSW      IFNE '1'
+     C                     MOVE '1'       EPSW    1
+     C*
+     C** SETLL ON CBCOMSL0 WITH COMPNM,COMPSQ
+     C*
+     C           *IN30     DOUEQ'0'                                       098640
+     C           COMKEY    SETLL@DHREGG
+     C*
+     C** READ CBCOMSL0
+     C*
+     C***********COMKEY    READE@DHREGG                  35               098640
+     C           COMKEY    READE@DHREGG                3035               098640
+     C*                                                                   098640
+     C**  If file status is not 01218 for 'Unable to allocate a Record',  098640
+     C**  execute error-handling subroutine, otherwise, read CBCOMSL0     098640
+     C**  again.                                                          098640
+     C*                                                                   098640
+     C           FSTAT     IFNE 1218                                      098640
+     C           *IN30     ANDEQ'1'                                       098640
+     C                     EXSR COMSR                                     098640
+     C                     ENDIF                                          098640
+     C                     ENDDO                                          098640
+     C*
+     C** IF RECORD NOT FOUND ON CBCOMSL0 THEN ALSO DATABASE ERROR
+     C*
+     C           *IN35     IFEQ '1'
+     C*
+     C** UPDATE LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE COMPNM    CMPNMX
+     C                     MOVE COMPSQ    CMPSQX
+     C                     MOVELCOMKDS    DBKEY
+     C                     MOVEL'CMPL0'   DBFILE           ***************
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C*                                                    ***************
+     C** SETON INDICATORS U7 U8 AND OUTPUT TO LDA
+     C*
+     C                     SETON                     U7U8
+     C                     OUT  LDA
+     C                     END
+     C*
+     C** UPDATE COMPONENT STATUS TO ABNORMAL TEMINATION - DHABST TO 'A'
+     C** AND SET ON COMPONENT FAILED TODAY FLAG - DHKKST TO 'Y'
+     C*
+     C                     MOVE 'A'       DHCSTS
+     C                     MOVE 'Y'       DHCFAL
+     C*
+     C** UPDATE COMPONENTS FILE WITH STATUS FIELD AND FAILED TODAY FLAG
+     C*
+     C                     UPDAT@DHREGG
+     C*
+     C***OPEN*FAILED*DETAILS*FILE*CBAUDTPD*************                   CCB009
+     C** OPEN FAILED DETAILS FILE CBAUDTL1                                CCB009
+     C*
+     C***********          OPEN CBAUDTPD                                  CCB009
+     C                     OPEN CBAUDTL1                                  CCB009
+     C*
+     C** SET UP COMPONENT NAME AND SEQ NUMBER TO WRITE OUT TO
+     C** LF/CBAUDTL1.
+      ** or Update audit record if already written                        CCB009
+     C*
+     C           WAUDT     IFEQ 'N'                                       CCB009
+      *                                                                   CCB009
+     C                     MOVE COMPNM    CCOT
+     C                     MOVE COMPSQ    CSEQ
+      *                                                                   CCB009
+     C                     ELSE                                           CCB009
+      *                                                                   CCB009
+      ** Chain to component start record on LF/CBAUDTL1.                  CCB009
+      *                                                                   CCB009
+     C           AUDKEY    CHAINCBAUDTL1             36                   CCB009
+      *                                                                   CCB009
+      ** If no record found on CBAUDTL1, database error.                  CCB009
+      *                                                                   CCB009
+     C           *IN36     IFEQ '1'                                       CCB009
+     C           *LOCK     IN   LDA                                       CCB009
+     C                     MOVE CCOT      CCOTX                           CCB009
+     C                     MOVE CSEQ      CSEQX                           CCB009
+     C                     MOVE CSDE      CSDEX                           CCB009
+     C                     MOVE CSTI      CSTIX                           CCB009
+     C                     MOVELAUDKDS    DBKEY                           CCB009
+     C                     MOVEL'CBAUDTL1'DBFILE           ***************CCB009
+     C                     Z-ADD8         DBASE            * DB ERROR 08 *CCB009
+     C*                                                    ***************CCB009
+     C                     ENDIF                                          CCB009
+      *                                                                   CCB009
+     C                     ENDIF                                          CCB009
+     C*
+     C** SET COMPONENT END TIME (CETI) TO SYSTEM TIME
+     C***TIMDAT*LEFT*SIX*FIELDS*HHMMSS*RIGHT*SIX*FIELDS*DDMMYY            LN0278
+     C*
+     C******               TIME           TIMDAT                          LN0278
+     C******               MOVELTIMDAT    CETI                            LN0278
+     C*
+     C** SET COMPONENT END DATE (CEDE) TO SYSTEM DATE USING
+     C***SUBROUTINE*ZDATE1*TO*CONVERT*SYSTEM*DATE*TO*MIDAS*DAY*NO         LN0278
+     C** PROGRAM CBTIME                                                   LN0278
+     C*
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C*                                                                   LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA                          LN0278
+     C                     PARM           STIME                           LN0278
+     C                     PARM           DFMT                            LN0278
+      *                                                                                       197767
+      ** Repeat time fix as above.                                                            197767
+      *                                                                                       197767
+     C                     MOVE STIME     ST2                                                 197767
+     C           ST2       IFEQ 0                                                             197767
+     C                     EXSR TIMSR                                                         197767
+     C                     ENDIF                                                              197767
+     C*                                                                   LN0278
+     C                     MOVE STIME     CETI                            LN0278
+     C*********            MOVE ZDAYNO    CEDE                            LN0278
+     C                     MOVE DAYNOA    CEDE                            LN0278
+     C*
+     C** RETREIVE COMPONENT START TIME AND DATE FROM WORK FIELDS
+      ** or Update audit record if already written                        CCB009
+     C*
+     C           WAUDT     IFEQ 'N'                                       CCB009
+     C                     MOVE STTI      CSTI
+     C                     MOVE STDE      CSDE
+     C*
+     C** WRITE RECORD TO FAILED DETAILS FILE
+     C*
+     C                     WRITECBAUDTP0
+     C                     ELSE                                           CCB009
+     C                     UPDATCBAUDTP0                                  CCB009
+     C                     ENDIF                                          CCB009
+     C*
+     C** CLOSE FAILED DETAILS FILE
+     C*
+     C***********          CLOSECBAUDTPD                                  CCB009
+     C                     CLOSECBAUDTL1                                  CCB009
+     C*
+     C** SET COMPONENT STATUS PARAMETER TO 'A'
+     C*
+     C                     MOVE 'A'       CMSTS
+     C*
+     C                     END
+     C*
+     C**  TERMINATE THE PROGRAM
+     C*
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      *                                                               *                       197767
+      *  TIMSR - To correct errors if time is equal to zero.          *                       197767
+      *                                                               *                       197767
+      *  Called By : This is called if Start or End Time is zero.     *                       197767
+      *                                                               *                       197767
+      *****************************************************************                       197767
+     C           TIMSR     BEGSR                                                              197767
+      *                                                                                       197767
+     C           ST2       DOUGT0                                                             197767
+     C                     CALL 'CBTIME'                                                      197767
+     C                     PARM           DAYNOA                                              197767
+     C                     PARM           STIME                                               197767
+     C                     PARM           DFMT                                                197767
+     C                     MOVE STIME     ST2                                                 197767
+     C                     ENDDO                                                              197767
+      *                                                                                       197767
+     C                     ENDSR                                                              197767
+      *****************************************************************                       197767
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

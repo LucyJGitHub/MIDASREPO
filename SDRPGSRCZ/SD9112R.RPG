@@ -1,0 +1,2654 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Cust lending ICD maint - authorisations')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9112R - Edit Customer Lending ICD - Authorisations.        *
+      *                                                               *
+      *  Function:  This program maintains 'Authorisation' fields on  *
+      *             the Customer Lending ICD file.                    *
+      *                                                               *
+      *  Called By: SD9111R - Edit Customer Lending ICD.              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 225889             Date 19Mar04               *
+      *                 CGP001             Date 05Dec03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 207969             Date 11Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      *                 CAS001             Date 23Nov01               *
+      *                 197084             Date 12Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 27Oct97               *
+      *                 123857             Date 17Oct97               *
+      *                 CLE004             Date 11FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan processing                       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  225889 - Cant amend Lending ICD as msg Y2U0007 appears. Need *
+      *           to increase length of #1DBRC, YARDCS & P1PARM to    *
+      *           to include new field. This is Bugzilla Bug01518.    *
+      *  CGP001 - Global processing.  New ICD setting for             *
+      *           Authorisation of Fee Adjustments.                   *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  207969 - No need to validate the default book code on the    *
+      *           second screen.                                      *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *  CAS001 - Net Present Present (NPV) Accounting                *
+      *  197084 - Created the correct error message for the           *
+      *           validation of field BPAURV.                         *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  123857 - Add field for Authorisation to Review All Screens   *
+      *  CLE004 - Lending Enhancements:                               *
+      *           Second ICD screen for 'Authorisations'.             *
+      *                                                               *
+      *****************************************************************
+     F*Edit Cust Lnd ICD - Auth Initialise Program F-spec
+     F/COPY WNCPYSRC,SD9112RFPG
+     FSD9112R#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Edit Customer Lendng ICD - Authorisations
+      *
+     FSDCLNDL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Customer Lending ICD retrieval
+      *
+     FSDBOOKL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas¦SD Book details retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     FSDCLNDL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Customer Lending ICD update
+      *
+     FSDFCTLL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0004
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Standing data controls update
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*Edit Cust Lnd ICD - Auth Initialise Program E-spec
+     E/COPY WNCPYSRC,SD9112REPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I****/COPY QWINDSRC,GUE1DTA                                          S01229
+     I/COPY QWINDSRC,SD9110GDTA                                           S01229
+     I*Edit Cust Lnd ICD - Auth Initialise Program I-spec
+     I/COPY WNCPYSRC,SD9112RIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     ILDA         DS                            256                                           CAS001
+      ** Local data area for database error details                                           CAS001
+      *                                                                                       CAS001
+     I                                      134 183 DBLOT                                     CAS001
+     I                                      134 141 DBFILE                                    CAS001
+     I                                      142 170 DBKEY                                     CAS001
+     I                                      171 180 DBPGM                                     CAS001
+     I                                      181 1830DBASE                                     CAS001
+     IDSSDY     E DSDSSDY                                                                     CAS001
+      ** Second DS for access programs, Long Date Structure                                   CAS001
+      *                                                                                       CAS001
+     ISCSARD    E DSSCSARDPD                                                                  CAS001
+      **  External data structures for Switchable Features Details                            CAS001
+      *                                                                                       CAS001
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I@1DBRC    E DSSDCLNDL0
+      * UPD : Midas SD Customer Lending ICD update
+      * Current/previous master file format fields for change control
+      *
+     I***#1DBRC******DS                             72                    123857
+     I***#1DBRC*     DS                             73                                 123857 CAS001
+     I*#1DBRC*****DS                             74                                    CAS001 CLE023
+     I***#1DBRC*     DS                             75                                 CLE023 CAS005
+     I***#1DBRC*     DS                             78                                 CAS005 225889
+     I***#1DBRC*     DS                             79                                 225889 CLE071
+     I#1DBRC      DS                            582                                           CLE071
+      * Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     I***YARDCS******DS                             72                    123857
+     I***YARDCS*     DS                             73                                 123857 CAS001
+     I*YARDCS*****DS                             74                                    CAS001 CLE023
+     I***YARDCS*     DS                             75                                 CLE023 CAS005
+     I***YARDCS*     DS                             78                                 CAS005 225889
+     I***YARDCS*     DS                             79                                 225889 CLE071
+     IYARDCS      DS                            582                                           CLE071
+     IQSDFC1    E DSSDFCTLL0
+      * UPD : Midas SD Standing data controls update
+     IYBRDCS      DS                             22
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     IID0004      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     I***P1PARM******DS                             72                    123857
+     I***P1PARM*     DS                             73                                 123857 CAS001
+     I*P1PARM*****DS                             74                                    CAS001 CLE023
+     I***P1PARM*     DS                             75                                 CLE023 CAS005
+     I***P1PARM*     DS                             78                                 CAS005 225889
+     I***P1PARM*     DS                             79                                 225889 CLE071
+     IP1PARM      DS                             80                                           CLE071
+      * RCD: Midas SD Customer Lending ICD retrieval
+      * I : MAP Customer Lend
+     I                                        1  10 P1CLND
+      * I : MAP Base Rate Change Facility
+     I                                       15  15 P1BRCF
+      * I : MAP Generate Events to End/Bk
+     I                                       16  16 P1GEEB
+      * I : MAP Billing Telex Indicator
+     I                                       17  17 P1BTIN
+      * I : MAP Large Amount
+     I                                    P  18  230P1LGAM
+      * I : MAP End of Last Activity Per.
+     I                                    P  24  260P1ELAP
+      * I : MAP Past Due Notice Days 1
+     I                                    P  27  280P1PND1
+      * I : MAP Past Due Notice Days 2
+     I                                    P  29  300P1PND2
+      * I : MAP Past Due Notice Days 3
+     I                                    P  31  320P1PND3
+      * I : MAP Past Due Notice Days 4
+     I                                    P  33  340P1PND4
+      * I : MAP Past Due Notice Days 5
+     I                                    P  35  360P1PND5
+      * I : MAP Past Due Notice Days 6
+     I                                    P  37  380P1PND6
+      * I : MAP Past Due Notice Days 7
+     I                                    P  39  400P1PND7
+      * I : MAP Past Due Notice Days 8
+     I                                    P  41  420P1PND8
+      * I : MAP Default Billing Days
+     I                                    P  43  440P1DBDY
+      * I : MAP Historic Retention Period
+     I                                       45  460P1HRPR
+      * I : MAP Default Book Code
+     I                                       47  48 P1DBKC
+      * I : MAP Exp. Fac. Retention Per.
+     I                                       49  500P1EFRP
+      * I : MAP Guarantees Issued Active
+     I                                       51  51 P1GIAV
+      * I : MAP Default Auto-settle Ind
+     I                                       52  52 P1DASI
+      * I : MAP Book Codes on P/L Account Keys                                                CAS001
+     I                                       74  74 P1BCPL                                    CAS001
+      * I : MAP Default Rate to Spot                                                          CLE023
+     I                                       75  75 P1DRTS                                    CLE023
+      * I : MAP No. of Days to Maturity                                                       CAS005
+     I                                       76  780P1NODM                                    CAS005
+     IP2PARM      DS
+      * O : MAP Duplicate Return Code
+     I                                        1   7 P2DRTC
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Authorisations Active TXT'
+      * Message data for 'Consolidtd Confs Req  INV'
+      * Consolidated Conf Reqd
+     I                                        1   1 ZA0001
+      * Message data for 'Facilities to be Auth INV'
+      * Facilities to be Authrsd
+     I                                        1   1 ZA0002
+      * Message data for 'Loans to be Auth.     INV'
+      * Loans to be Authorised
+     I                                        1   1 ZA0003
+      * Message data for 'Parts Purch to be AuthINV'
+      * Parts Purch to be Authrsd
+     I                                        1   1 ZA0004
+      * Message data for 'Parts Sold to be Auth INV'
+      * Parts Sold to be Authrsd
+     I                                        1   1 ZA0005
+      * Message data for 'Rollover to be Auth.  INV'
+      * Rollovers to be Authrsd
+     I                                        1   1 ZA0006
+      * Message data for 'Loan Amnds to be Auth INV'
+      * Loan Amends to be Authrsd
+     I                                        1   1 ZA0007
+      * Message data for 'Man Paymnts to be AuthINV'
+      * Manual Reps to be Authrsd
+     I                                        1   1 ZA0008
+      * Message data for 'Repmnt Scds to be AuthINV'
+      * Repay Schds to be Authrsd
+     I                                        1   1 ZA0009
+      * Message data for 'Tfr of Prin to be AuthINV'
+      * Trnsfr Prin to be Authrsd
+     I                                        1   1 ZA0010
+      * Message data for 'Guar/Collat to be AuthINV'
+      * Guarnt/Coll to be Authrsd
+     I                                        1   1 ZA0011
+      * Message data for 'Fees to be Authorised INV'
+      * Fees to be Authorised
+     I                                        1   1 ZA0012
+      * Message data for 'Fee Stlmnts to be AuthINV'
+      * Fees Settmt to be Authrsd
+     I                                        1   1 ZA0013
+      * Message data for 'Fclty Amnds to be AuthINV'
+      * Faclty Amds to be Authrsd
+     I                                        1   1 ZA0014
+      * Message data for 'Man Fclty Ut to be AthINV'
+      * Man Fac Uts to be Authrsd
+     I                                        1   1 ZA0015
+      * Message data for 'Credit Apls to be AuthINV'
+      * Credit Apls to be Authrsd
+     I                                        1   1 ZA0016
+      * Message data for 'Authorisation to Review  INV'                   123857
+      * Authorisation to Review                                           123857
+     I                                        1   1 ZA0017                123857
+      * Message data for 'Fee Settlements to be Authorised Invalid                            CGP001
+      * Fee Adjustments to be Authrsd                                                         CGP001
+     I                                        1   1 ZA0018                                    CGP001
+      ** Message data for Fee Rate Change Amendments to be Authorised                         CLE071
+     I                                        1   1 ZA0019                                    CLE071
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           RCD: Customer L
+     C           P2DRTC    PARM P2DRTC    WP0001  7        Duplicate Retur
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1CLND    IFEQ *BLANK                     Customer Lend
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           BPCLND           Customer Lend
+      * Setup key
+     C                     MOVEL#1CLND    BPCLND           Customer Lend
+     C           KRTV      CHAIN@BPREER              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     9932  *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     9932  *
+      * Send message 'Customer Lending Data  NF'
+     C                     MOVEL'USR0213' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * 00/Copy Member SD9112RSFF - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9112RSFF
+      * USER: Initialize detail screen (existing record)
+      * Set up 'Authorisations Active for:' text field.
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+      * Setup message data for message
+      * Retrieve message Authorisations Active TXT
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2RVMGC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'USR3237' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C           #DAATX    PARM           W0MTX 132        Returned messag
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     END                             *FI
+      * The following fields are only initialised if they are blank
+      * Consolidated Confirmations Required
+      * CASE: DB1.Consolidated Conf Reqd is Blank
+     C           BPCONR    IFEQ *BLANK                     *IF
+     C                     MOVEL'N'       #1CONR           Consolidated Co
+     C                     END                             *FI
+      * Facilities to be Authorised
+      * CASE: DB1.Facilities to be Authrsd is Blank
+     C           BPFAAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1FAAU           Facilities to b
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1FAAU           Facilities to b
+     C                     END                             *FI
+     C                     END                             *FI
+      * Loans to be Authorised
+      * CASE: DB1.Loans to be Authorised is Blank
+     C           BPLOAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1LOAU           Loans to be Aut
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1LOAU           Loans to be Aut
+     C                     END                             *FI
+     C                     END                             *FI
+      * Parts Purchased to be Authorised
+      * CASE: DB1.Parts Purch to be Authrsd is Blank
+     C           BPPPAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1PPAU           Parts Purch to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1PPAU           Parts Purch to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Parts Sold to be Authorised
+      * CASE: DB1.Parts Sold to be Authrsd is Blank
+     C           BPPSAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1PSAU           Parts Sold to b
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1PSAU           Parts Sold to b
+     C                     END                             *FI
+     C                     END                             *FI
+      * Rollovers to be Authorised
+      * CASE: DB1.Rollovers to be Authrsd is Blank
+     C           BPROAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1ROAU           Rollovers to be
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1ROAU           Rollovers to be
+     C                     END                             *FI
+     C                     END                             *FI
+      * Loan Amendments to be Authorised
+      * CASE: DB1.Loan Amends to be Authrsd is Blank
+     C           BPLMAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1LMAU           Loan Amends to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1LMAU           Loan Amends to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Manual Repayments to be Authorised
+      * CASE: DB1.Manual Reps to be Authrsd is Blank
+     C           BPMRAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1MRAU           Manual Reps to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1MRAU           Manual Reps to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Repayment Schedules to be Authorised
+      * CASE: DB1.Repay Schds to be Authrsd is Blank
+     C           BPREAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1REAU           Repay Schds to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1REAU           Repay Schds to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Transfers of Principal to be Authorised
+      * CASE: DB1.Trnsfr Prin to be Authrsd is Blank
+     C           BPTPAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1TPAU           Trnsfr Prin to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1TPAU           Trnsfr Prin to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Guarantees/Collateral to be Authorised
+      * CASE: DB1.Guarnt/Coll to be Authrsd is Blank
+     C           BPGUAU    IFEQ *BLANK                     *IF
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       #1GUAU           Guarnt/Coll to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1GUAU           Guarnt/Coll to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Fees to be Authorised
+      * CASE: DB1.Fees to be Authorised is Blank
+     C           BPFEAU    IFEQ *BLANK                     *IF
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Switchable Feature CLE002 is Present
+      *   |- c2    : WRK.Switchable Feature CLE005 is Present
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WULE02    IFEQ 'Y'                        *IF
+     C           WULE05    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       #1FEAU           Fees to be Auth
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1FEAU           Fees to be Auth
+     C                     END                             *FI
+     C                     END                             *FI
+      * Fee Settlements to be Authorised
+      * CASE: DB1.Fees Settmt to be Authrsd is Blank
+     C           BPFSAU    IFEQ *BLANK                     *IF
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Switchable Feature CLE002 is Present
+      *   |- c2    : WRK.Switchable Feature CLE005 is Present
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WULE02    IFEQ 'Y'                        *IF
+     C           WULE05    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       #1FSAU           Fees Settmt to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1FSAU           Fees Settmt to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Facility Amendments to be Authorised
+      * CASE: DB1.Faclty Amds to be Authrsd is Blank
+     C           BPFAAM    IFEQ *BLANK                     *IF
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Switchable Feature CLE002 is Present
+      *   |- c2    : WRK.Switchable Feature CLE005 is Present
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WULE02    IFEQ 'Y'                        *IF
+     C           WULE05    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       #1FAAM           Faclty Amds to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1FAAM           Faclty Amds to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Manual Facility Utilisations to be Authorised
+      * CASE: DB1.Man Fac Uts to be Authrsd is Blank
+     C           BPFAUT    IFEQ *BLANK                     *IF
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Switchable Feature CLE002 is Present
+      *   |- c2    : WRK.Switchable Feature CLE005 is Present
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WULE02    IFEQ 'Y'                        *IF
+     C           WULE05    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       #1FAUT           Man Fac Uts to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1FAUT           Man Fac Uts to
+     C                     END                             *FI
+     C                     END                             *FI
+      * Credit Apllications to be Authorised
+      * CASE: DB1.Credit Apls to be Authrsd is Blank
+     C           BPCAAU    IFEQ *BLANK                     *IF
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Switchable Feature CLE002 is Present
+      *   |- c2    : WRK.Switchable Feature CLE005 is Present
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WULE02    IFEQ 'Y'                        *IF
+     C           WULE05    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       #1CAAU           Credit Apls to
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       #1CAAU           Credit Apls to
+     C                     END                             *FI
+     C                     END                             *FI
+      *                                                                                       CGP001
+      * Fee Adjustments to be Authorised                                                      CGP001
+      * CASE: If field Fees Adjustments to be Authorised is Blank                             CGP001
+     C           BPFJAU    IFEQ *BLANK                     Blank BPFJAU                       CGP001
+      *                                                                                       CGP001
+     C                     MOVEL'0'       Y0CX01  1                                           CGP001
+     C           WULE02    IFEQ 'Y'                        CLE002 on                          CGP001
+     C           WULE05    IFEQ 'Y'                        CLE005 on                          CGP001
+     C                     MOVEL'1'       Y0CX01                                              CGP001
+     C                     END                             End CLE005 on                      CGP001
+     C                     END                             End CLE002 on                      CGP001
+      *                                                                                       CGP001
+     C           Y0CX01    IFEQ '1'                        Author. req.                       CGP001
+     C                     MOVEL'Y'       #1FJAU           Y Fee Adjusts                      CGP001
+     C                     ELSE                            Else                               CGP001
+     C                     MOVEL'N'       #1FJAU           N Fee Adjusts                      CGP001
+     C                     END                             End Author. req.                   CGP001
+      *                                                                                       CGP001
+     C                     END                             End Blank BPFJAU                   CGP001
+      *                                                                                       CGP001
+      ** Fee Rate Change Amendment to be Authorised                                           CLE071
+      ** CASE: If field Fee Rate Change to be Authorised is Blank                             CLE071
+      *                                                                                       CLE071
+     C           BPFCAU    IFEQ *BLANK                                                        CLE071
+      *                                                                                       CLE071
+     C                     MOVEL'0'       Y0CX01  1                                           CLE071
+     C           WULE02    IFEQ 'Y'                                                           CLE071
+     C           CLE071    IFEQ 'Y'                                                           CLE071
+     C                     MOVEL'1'       Y0CX01                                              CLE071
+     C                     ENDIF                                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C           Y0CX01    IFEQ '1'                                                           CLE071
+     C                     MOVEL'Y'       #1FCAU                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVEL'N'       #1FCAU                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      * Authorisation to Review is Required                               123857
+      * CASE: Authorisation to Review is Blank                            123857
+     C           BPAURV    IFEQ *BLANK                     *IF            123857
+     C                     MOVEL'N'       #1AURV           Auth to Review 123857
+     C                     END                             *FI            123857
+      * 00/Copy Member SD9112RISE - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Initialise Dtl Exist Rcd
+     C/COPY WNCPYSRC,SD9112RISE
+     C                     END
+      *
+      *..................................................
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * 00/Copy Member SD9112RVKS - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Validate Key Screen
+     C/COPY WNCPYSRC,SD9112RVKS
+      * Customer Lend required
+     C           #1CLND    IFEQ *BLANK                     IF
+     C                     SETON                     9932  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+     C           W0TRN     IFEQ 'R'
+     C           W0PMD     IFEQ 'ADD'
+     C                     EXSR MAIZ#1
+     C                     END
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * 00/Copy Member SD9112RPKR - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD9112RPKR
+      * Bypass Key screen if F12 is taken at Detail screen
+     C                     MOVEL'USR0790' P2DRTC           Duplicate Retur
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'R'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: update record
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * Validate Consolidated Conf Reqd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1CONR    W0NSRQ  1        Consolidated Co
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208388   Y2LSNO  70
+     C           #1CONR    PARM #1CONR    W0EXVL 20        Consolidated Co
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Facilities to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1FAAU    W0NSRQ  1        Facilities to b
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1FAAU    PARM #1FAAU    W0EXVL 20        Facilities to b
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Loans to be Authorised
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1LOAU    W0NSRQ  1        Loans to be Aut
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1LOAU    PARM #1LOAU    W0EXVL 20        Loans to be Aut
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Parts Purch to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1PPAU    W0NSRQ  1        Parts Purch to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1PPAU    PARM #1PPAU    W0EXVL 20        Parts Purch to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Parts Sold to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1PSAU    W0NSRQ  1        Parts Sold to b
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1PSAU    PARM #1PSAU    W0EXVL 20        Parts Sold to b
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Rollovers to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1ROAU    W0NSRQ  1        Rollovers to be
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1ROAU    PARM #1ROAU    W0EXVL 20        Rollovers to be
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Loan Amends to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1LMAU    W0NSRQ  1        Loan Amends to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1LMAU    PARM #1LMAU    W0EXVL 20        Loan Amends to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Manual Reps to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1MRAU    W0NSRQ  1        Manual Reps to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1MRAU    PARM #1MRAU    W0EXVL 20        Manual Reps to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Repay Schds to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1REAU    W0NSRQ  1        Repay Schds to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1REAU    PARM #1REAU    W0EXVL 20        Repay Schds to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Trnsfr Prin to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1TPAU    W0NSRQ  1        Trnsfr Prin to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1TPAU    PARM #1TPAU    W0EXVL 20        Trnsfr Prin to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Guarnt/Coll to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1GUAU    W0NSRQ  1        Guarnt/Coll to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1GUAU    PARM #1GUAU    W0EXVL 20        Guarnt/Coll to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Fees to be Authorised
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1FEAU    W0NSRQ  1        Fees to be Auth
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1FEAU    PARM #1FEAU    W0EXVL 20        Fees to be Auth
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Fees Settmt to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1FSAU    W0NSRQ  1        Fees Settmt to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1FSAU    PARM #1FSAU    W0EXVL 20        Fees Settmt to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Faclty Amds to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1FAAM    W0NSRQ  1        Faclty Amds to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1FAAM    PARM #1FAAM    W0EXVL 20        Faclty Amds to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Man Fac Uts to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1FAUT    W0NSRQ  1        Man Fac Uts to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1FAUT    PARM #1FAUT    W0EXVL 20        Man Fac Uts to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Credit Apls to be Authrsd
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1CAAU    W0NSRQ  1        Credit Apls to
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1208393   Y2LSNO  70
+     C           #1CAAU    PARM #1CAAU    W0EXVL 20        Credit Apls to
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *                                                                                       CGP001
+      * Validate Fees Ajustments to be Authorised                                             CGP001
+     C                     MOVEL*BLANK    W0RTN                                               CGP001
+     C                     MOVEL#1FJAU    W0NSRQ  1        Fees Adjustments                   CGP001
+      * Name search required?                                                                 CGP001
+     C           W0NSRQ    IFEQ '?'                                                           CGP001
+     C                     CALL 'Y2VLLSR'              90  *                                  CGP001
+     C                     PARM           W0RTN   7                                           CGP001
+     C                     PARM 1208393   Y2LSNO  70                                          CGP001
+     C           #1FJAU    PARM #1FJAU    W0EXVL 20        Fees Adjustments                   CGP001
+      * Defer confirm                                                                         CGP001
+     C                     MOVEL'Y'       W0DCF   1                                           CGP001
+     C                     END                                                                CGP001
+      *                                                                                       CGP001
+      ** Validate Fee Rate Change to be Authorised                                            CLE071
+     C                     MOVEL*BLANK    W0RTN                                               CLE071
+     C                     MOVEL#1FCAU    W0NSRQ  1                                           CLE071
+      ** Name search required?                                                                CLE071
+     C           W0NSRQ    IFEQ '?'                                                           CLE071
+     C                     CALL 'Y2VLLSR'              90                                     CLE071
+     C                     PARM           W0RTN   7                                           CLE071
+     C                     PARM 1208394   Y2LSNO  70                                          CLE071
+     C           #1FCAU    PARM #1FCAU    W0EXVL 20                                           CLE071
+      ** Defer confirm                                                                        CLE071
+     C                     MOVEL'Y'       W0DCF   1                                           CLE071
+     C                     ENDIF                                                              CLE071
+      *
+      * USER: Validate detail screen fields
+      * Consolidated Confirmations Required
+      * CASE: DTL.Consolidated Conf Reqd is Valid Values
+     C           #1CONR    IFEQ 'N'                        *IF
+     C           #1CONR    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1CONR    ZA0001           Consolidated Co
+      * Send message 'Consolidtd Confs Req  INV'
+     C                     MOVEL'USR3221' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+      * CASE: WRK.Switchable Feature CLE002 is Present
+     C           WULE02    IFEQ 'Y'                        *IF
+      * Facilities to be Authorised
+      * CASE: DTL.Facilities to be Authrsd is Valid Values
+     C           #1FAAU    IFEQ 'N'                        *IF
+     C           #1FAAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1FAAU    ZA0002           Facilities to b
+      * Send message 'Facilities to be Auth INV'
+     C                     MOVEL'USR3222' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     END                             *FI
+      * Loans to be Authorised
+      * CASE: DTL.Loans to be Authorised is Valid Values
+     C           #1LOAU    IFEQ 'N'                        *IF
+     C           #1LOAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1LOAU    ZA0003           Loans to be Aut
+      * Send message 'Loans to be Auth.     INV'
+     C                     MOVEL'USR3223' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+      * Parts Purchased to be Authorised
+      * CASE: DTL.Parts Purch to be Authrsd is Valid Values
+     C           #1PPAU    IFEQ 'N'                        *IF
+     C           #1PPAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1PPAU    ZA0004           Parts Purch to
+      * Send message 'Parts Purch to be AuthINV'
+     C                     MOVEL'USR3224' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9934  *
+      *
+     C                     END                             *FI
+      * Parts Sold to be Authorised
+      * CASE: DTL.Parts Sold to be Authrsd is Valid Values
+     C           #1PSAU    IFEQ 'N'                        *IF
+     C           #1PSAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1PSAU    ZA0005           Parts Sold to b
+      * Send message 'Parts Sold to be Auth INV'
+     C                     MOVEL'USR3225' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9935  *
+      *
+     C                     END                             *FI
+      * Rollovers to be Authorised
+      * CASE: DTL.Rollovers to be Authrsd is Valid Values
+     C           #1ROAU    IFEQ 'N'                        *IF
+     C           #1ROAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1ROAU    ZA0006           Rollovers to be
+      * Send message 'Rollover to be Auth.  INV'
+     C                     MOVEL'USR3226' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9936  *
+      *
+     C                     END                             *FI
+      * Loan Amendments to be Authorised
+      * CASE: DTL.Loan Amends to be Authrsd is Valid Values
+     C           #1LMAU    IFEQ 'N'                        *IF
+     C           #1LMAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1LMAU    ZA0007           Loan Amends to
+      * Send message 'Loan Amnds to be Auth INV'
+     C                     MOVEL'USR3227' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9937  *
+      *
+     C                     END                             *FI
+      * Manual Repayments to be Authorised
+      * CASE: DTL.Manual Reps to be Authrsd is Valid Values
+     C           #1MRAU    IFEQ 'N'                        *IF
+     C           #1MRAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1MRAU    ZA0008           Manual Reps to
+      * Send message 'Man Paymnts to be AuthINV'
+     C                     MOVEL'USR3228' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9938  *
+      *
+     C                     END                             *FI
+      * Repayment Schedules to be Authorised
+      * CASE: DTL.Repay Schds to be Authrsd is Valid Values
+     C           #1REAU    IFEQ 'N'                        *IF
+     C           #1REAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1REAU    ZA0009           Repay Schds to
+      * Send message 'Repmnt Scds to be AuthINV'
+     C                     MOVEL'USR3229' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9939  *
+      *
+     C                     END                             *FI
+      * Transfers of Principal to be Authorised
+      * CASE: DTL.Trnsfr Prin to be Authrsd is Valid Values
+     C           #1TPAU    IFEQ 'N'                        *IF
+     C           #1TPAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1TPAU    ZA0010           Trnsfr Prin to
+      * Send message 'Tfr of Prin to be AuthINV'
+     C                     MOVEL'USR3230' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9940  *
+      *
+     C                     END                             *FI
+      * Guarantees/Collateral to be Authorised
+      * CASE: DTL.Guarnt/Coll to be Authrsd is Valid Values
+     C           #1GUAU    IFEQ 'N'                        *IF
+     C           #1GUAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1GUAU    ZA0011           Guarnt/Coll to
+      * Send message 'Guar/Collat to be AuthINV'
+     C                     MOVEL'USR3231' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9941  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Switchable Feature CLE002 is Present
+      *   |- c2    : WRK.Switchable Feature CLE005 is Present
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WULE02    IFEQ 'Y'                        *IF
+     C           WULE05    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * Fees to be Authorised
+      * CASE: DTL.Fees to be Authorised is Valid Values
+     C           #1FEAU    IFEQ 'N'                        *IF
+     C           #1FEAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1FEAU    ZA0012           Fees to be Auth
+      * Send message 'Fees to be Authorised INV'
+     C                     MOVEL'USR3232' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9942  *
+      *
+     C                     END                             *FI
+      * Fee Settlements to be Authorised
+      * CASE: DTL.Fees Settmt to be Authrsd is Valid Values
+     C           #1FSAU    IFEQ 'N'                        *IF
+     C           #1FSAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1FSAU    ZA0013           Fees Settmt to
+      * Send message 'Fee Stlmnts to be AuthINV'
+     C                     MOVEL'USR3233' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9943  *
+      *
+     C                     END                             *FI
+      * Facility Amendments to be Authorised
+      * CASE: DTL.Faclty Amds to be Authrsd is Valid Values
+     C           #1FAAM    IFEQ 'N'                        *IF
+     C           #1FAAM    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1FAAM    ZA0014           Faclty Amds to
+      * Send message 'Fclty Amnds to be AuthINV'
+     C                     MOVEL'USR3234' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9944  *
+      *
+     C                     END                             *FI
+      * Manual Facility Utilisations to be Authorised
+      * CASE: DTL.Man Fac Uts to be Authrsd is Valid Values
+     C           #1FAUT    IFEQ 'N'                        *IF
+     C           #1FAUT    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1FAUT    ZA0015           Man Fac Uts to
+      * Send message 'Man Fclty Ut to be AthINV'
+     C                     MOVEL'USR3235' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+      * Credit Apllications to be Authorised
+      * CASE: DTL.Credit Apls to be Authrsd is Valid Values
+     C           #1CAAU    IFEQ 'N'                        *IF
+     C           #1CAAU    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1CAAU    ZA0016           Credit Apls to
+      * Send message 'Credit Apls to be AuthINV'
+     C                     MOVEL'USR3236' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9946  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      *                                                                                       CGP001
+      * Fee Adjustments to be Authorised                                                      CGP001
+      * If Fee Adjustments to be Authorised field is not a Valid Value:                       CGP001
+     C           #1FJAU    IFNE 'N'                                                           CGP001
+     C           #1FJAU    ANDNE'Y'                                                           CGP001
+      * Setup message data for message                                                        CGP001
+     C                     MOVEL#1FJAU    ZA0018           Fees Settmt to                     CGP001
+      * Send message 'Fee Adjustments to be Authorised is invalid'                            CGP001
+     C                     MOVEL'USR4013' ZAMSID                                              CGP001
+     C                     EXSR ZASNMS                                                        CGP001
+     C                     SETON                     9950                                     CGP001
+      *                                                                                       CGP001
+     C                     END                                                                CGP001
+      *                                                                                       CGP001
+      ** Fee Rate Change to be authorised                                                     CLE071
+      ** If Fee Rate Change to be Auth field is not a Valid Value                             CLE071
+      *                                                                                       CLE071
+     C           #1FCAU    IFNE 'N'                                                           CLE071
+     C           #1FCAU    ANDNE'Y'                                                           CLE071
+     C                     MOVEL#1FCAU    ZA0019                                              CLE071
+     C                     MOVEL'USS0919' ZAMSID                                              CLE071
+     C                     EXSR ZASNMS                                                        CLE071
+     C                     SETON                     9951                                     CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      * Authorisation to Review All Fields                                123857
+      * CASE: DTL.Auth to Review All Fields is Valid Values               123857
+     C           #1AURV    IFEQ 'N'                        *IF            123857
+     C           #1AURV    OREQ 'Y'                                       123857
+     C                     ELSE                                           123857
+      * CASE: *OTHERWISE                                                  123857
+      * Setup message data for message                                    123857
+     C                     MOVEL#1AURV    ZA0017           Auth to Review 123857
+      * Send message 'Auth to Review  INV'                                123857
+     C**********           MOVEL'USR3502' ZAMSID                                       123857 197084
+     C                     MOVEL'USR9128' ZAMSID                                              197084
+     C                     EXSR ZASNMS                                    123857
+     C                     SETON                     9949  *              123857
+      *                                                                   123857
+     C                     END                             *FI            123857
+      * 00/Copy Member SD9112RVSF - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Validate Detail Screen
+     C/COPY WNCPYSRC,SD9112RVSF
+      * Check relations
+      * Check reference to Book Details
+     C**********           EXSR VACKRL                                                        207969
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CALC: Detail screen function fields
+      * 00/Copy Member SD9112RSFF - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9112RSFF
+      * USER: Validate detail screen relations
+      * 00/Copy Member SD9112RVSR - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Validate Screen Relns
+     C/COPY WNCPYSRC,SD9112RVSR
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes
+     C                     ROLBK
+     C                     GOTO EBEXIT
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes
+     C                     COMIT
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * USER: Process command keys
+      * 00/Copy Member SD9112RPCK - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Process Command Keys
+     C/COPY WNCPYSRC,SD9112RPCK
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      * USER: Change DBF record
+      * Change Cust Lend ICD-Auth - Customer Lending Data  *
+     C                     EXSR SACHRC
+     C           W0RTN     IFNE *BLANK
+      * Data update error
+      * Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P1CLND    IFEQ *BLANK                     Customer Lend
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+     C                     MOVEL'0'       *IN78
+     C                     MOVEL'0'       *IN79
+     C           WULE02    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN78
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN77
+     C           WUDAF2    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN77
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN76
+     C           WUDPGF    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN76
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN75                                               CLE071
+     C           WUDAF3    IFEQ 'N'                                                           CLE071
+     C                     MOVEL'1'       *IN75                                               CLE071
+     C                     ENDIF                                                              CLE071
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     MOVEL*BLANK    #PDRTC           Duplicate Retur
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVELP1BRCF    #1BRCF           Base Rate Chang
+     C                     MOVELP1GEEB    #1GEEB           Generate Events
+     C                     MOVELP1BTIN    #1BTIN           Billing Telex I
+     C                     Z-ADDP1LGAM    #1LGAM           Large Amount
+     C                     Z-ADDP1ELAP    #1ELAP           End of Last Act
+     C                     Z-ADDP1PND1    #1PND1           Past Due Notice
+     C                     Z-ADDP1PND2    #1PND2           Past Due Notice
+     C                     Z-ADDP1PND3    #1PND3           Past Due Notice
+     C                     Z-ADDP1PND4    #1PND4           Past Due Notice
+     C                     Z-ADDP1PND5    #1PND5           Past Due Notice
+     C                     Z-ADDP1PND6    #1PND6           Past Due Notice
+     C                     Z-ADDP1PND7    #1PND7           Past Due Notice
+     C                     Z-ADDP1PND8    #1PND8           Past Due Notice
+     C                     Z-ADDP1DBDY    #1DBDY           Default Billing
+     C                     Z-ADDP1HRPR    #1HRPR           Historic Retent
+     C                     MOVELP1DBKC    #1DBKC           Default Book Co
+     C                     Z-ADDP1EFRP    #1EFRP           Exp. Fac. Reten
+     C                     MOVELP1GIAV    #1GIAV           Guarantees Issu
+     C                     MOVELP1DASI    #1DASI           Default Auto-se
+     C                     MOVEL*BLANK    #1CONR           Consolidated Co
+     C                     MOVEL*BLANK    #DAATX           Authorisations
+     C                     MOVEL*BLANK    #1FAAU           Facilities to b
+     C                     MOVEL*BLANK    #1LOAU           Loans to be Aut
+     C                     MOVEL*BLANK    #1PPAU           Parts Purch to
+     C                     MOVEL*BLANK    #1PSAU           Parts Sold to b
+     C                     MOVEL*BLANK    #1ROAU           Rollovers to be
+     C                     MOVEL*BLANK    #1LMAU           Loan Amends to
+     C                     MOVEL*BLANK    #1MRAU           Manual Reps to
+     C                     MOVEL*BLANK    #1REAU           Repay Schds to
+     C                     MOVEL*BLANK    #1TPAU           Trnsfr Prin to
+     C                     MOVEL*BLANK    #1GUAU           Guarnt/Coll to
+     C                     MOVEL*BLANK    #1FEAU           Fees to be Auth
+     C                     MOVEL*BLANK    #1FSAU           Fees Settmt to
+     C                     MOVEL*BLANK    #1FAAM           Faclty Amds to
+     C                     MOVEL*BLANK    #1FAUT           Man Fac Uts to
+     C                     MOVEL*BLANK    #1CAAU           Credit Apls to
+     C                     Z-ADD*ZERO     #1GRPR           Grace Days for
+     C                     Z-ADD*ZERO     #1GRIR           Grace Days for
+     C                     MOVEL*BLANK    #1AURV           Auth to Review 123857
+     C                     MOVEL*BLANK    #1FJAU           Fees Adjustments                   CGP001
+     C                     MOVEL*BLANK    #1FCAU                                              CLE071
+      *                                                                                       CAS001
+      ** When CAS001 enhancement is installed                                                 CAS001
+     C           CAS001    IFEQ 'Y'                                                           CAS001
+     C                     MOVELP1BCPL    #1BCPL                                              CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CLE023
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C                     MOVELP1DRTS    #1DRTS                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CAS005
+      ** Set the No. of Days to Maturity hidden field if CAS005 is                            CAS005
+      ** enabled.                                                                             CAS005
+      *                                                                                       CAS005
+     C           CAS005    IFEQ 'Y'                                                           CAS005
+     C                     Z-ADDP1NODM    #1NODM                                              CAS005
+     C                     ENDIF                                                              CAS005
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @BPREER fields to screen
+      *================================================================
+     C                     MOVELBPCLND    #1CLND           Customer Lend
+     C                     Z-ADDBPLCD     #1LCD            Last Change Dat
+     C                     MOVELBPTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELBPBRCF    #1BRCF           Base Rate Chang
+     C                     MOVELBPGEEB    #1GEEB           Generate Events
+     C                     MOVELBPBTIN    #1BTIN           Billing Telex I
+     C                     Z-ADDBPLGAM    #1LGAM           Large Amount
+     C                     Z-ADDBPELAP    #1ELAP           End of Last Act
+     C                     Z-ADDBPPND1    #1PND1           Past Due Notice
+     C                     Z-ADDBPPND2    #1PND2           Past Due Notice
+     C                     Z-ADDBPPND3    #1PND3           Past Due Notice
+     C                     Z-ADDBPPND4    #1PND4           Past Due Notice
+     C                     Z-ADDBPPND5    #1PND5           Past Due Notice
+     C                     Z-ADDBPPND6    #1PND6           Past Due Notice
+     C                     Z-ADDBPPND7    #1PND7           Past Due Notice
+     C                     Z-ADDBPPND8    #1PND8           Past Due Notice
+     C                     Z-ADDBPDBDY    #1DBDY           Default Billing
+     C                     Z-ADDBPHRPR    #1HRPR           Historic Retent
+     C                     MOVELBPDBKC    #1DBKC           Default Book Co
+     C                     Z-ADDBPEFRP    #1EFRP           Exp. Fac. Reten
+     C                     MOVELBPGIAV    #1GIAV           Guarantees Issu
+     C                     MOVELBPDASI    #1DASI           Default Auto-se
+     C                     MOVELBPCONR    #1CONR           Consolidated Co
+     C                     MOVELBPFAAU    #1FAAU           Facilities to b
+     C                     MOVELBPLOAU    #1LOAU           Loans to be Aut
+     C                     MOVELBPPPAU    #1PPAU           Parts Purch to
+     C                     MOVELBPPSAU    #1PSAU           Parts Sold to b
+     C                     MOVELBPROAU    #1ROAU           Rollovers to be
+     C                     MOVELBPLMAU    #1LMAU           Loan Amends to
+     C                     MOVELBPMRAU    #1MRAU           Manual Reps to
+     C                     MOVELBPREAU    #1REAU           Repay Schds to
+     C                     MOVELBPTPAU    #1TPAU           Trnsfr Prin to
+     C                     MOVELBPGUAU    #1GUAU           Guarnt/Coll to
+     C                     MOVELBPFEAU    #1FEAU           Fees to be Auth
+     C                     MOVELBPFSAU    #1FSAU           Fees Settmt to
+     C                     MOVELBPFAAM    #1FAAM           Faclty Amds to
+     C                     MOVELBPFAUT    #1FAUT           Man Fac Uts to
+     C                     MOVELBPCAAU    #1CAAU           Credit Apls to
+     C                     Z-ADDBPGRPR    #1GRPR           Grace Days for
+     C                     Z-ADDBPGRIR    #1GRIR           Grace Days for
+     C                     MOVELBPAURV    #1AURV           Auth to Review 123857
+     C                     MOVELBPFJAU    #1FJAU           Fees Adjustments                   CGP001
+     C                     MOVELBPFCAU    #1FCAU                                              CLE071
+      *                                                                                       CAS001
+      ** If CAS001 enhancement is installed                                                   CAS001
+     C           CAS001    IFEQ 'Y'                                                           CAS001
+     C                     MOVELBPBCPL    #1BCPL                                              CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CLE023
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C                     MOVELBPDRTS    #1DRTS                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CAS005
+      ** Set the No. of Days to Maturity hidden field if CAS005 is                            CAS005
+      ** enabled.                                                                             CAS005
+      *                                                                                       CAS005
+     C           CAS005    IFEQ 'Y'                                                           CAS005
+     C                     Z-ADDBPNODM    #1NODM                                              CAS005
+     C                     ENDIF                                                              CAS005
+      *                                                                                       CAS005
+      * Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVEL*BLANK    #PDRTC           Duplicate Retur
+     C                     MOVELP1CLND    #1CLND           Customer Lend
+      * USER: Initialize key screen
+      * 00/Copy Member SD9112RIKS - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Initialise Key Screen
+     C/COPY WNCPYSRC,SD9112RIKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SACHRC    BEGSR
+      *================================================================
+      * Change Cust Lend ICD-Auth - Customer Lending Data  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YARDC   1
+      *
+      * Move key fields to @BPREEQ
+     C                     MOVELP1CLND    BPCLND           Customer Lend
+      *
+     C           KLCHSA    KLIST
+     C                     KFLD           BPCLND           Customer Lend
+     C           KLCHSA    CHAIN@BPREEQ              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
+      * Check for changed record
+     C********** #1DBRC    IFNE @1DBRC                     IF                                 CLE134
+     C********** #1DBRC    IFNE @1DBRX                                                 CLE134 CLE071
+     C           #1DBRC    IFNE @1DBRC                                                        CLE071
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Release record lock
+     C                     UNLCKSDCLNDL0               91  *
+     C                     GOTO SAEXIT
+     C                     END                             FI #1DBRC
+      * Store record data for null update check
+     C**********           MOVE @1DBRC    YARDCS                                              CLE134
+     C                     MOVEL@1DBRC    YARDCS                                              CLE134
+      * USER: Processing after Data read
+      * save Last Change Date from record
+     C                     Z-ADDBPLCD     WULCD            Last Change Dat
+      * Move non-key fields to @BPREEQ
+     C                     Z-ADDWURDNB    BPLCD            Last Change Dat
+     C                     MOVEL'A'       BPTYLC           Type of Last Ch
+     C                     MOVELP1BRCF    BPBRCF           Base Rate Chang
+     C                     MOVELP1GEEB    BPGEEB           Generate Events
+     C                     MOVELP1BTIN    BPBTIN           Billing Telex I
+     C                     Z-ADDP1LGAM    BPLGAM           Large Amount
+     C                     Z-ADDP1ELAP    BPELAP           End of Last Act
+     C                     Z-ADDP1PND1    BPPND1           Past Due Notice
+     C                     Z-ADDP1PND2    BPPND2           Past Due Notice
+     C                     Z-ADDP1PND3    BPPND3           Past Due Notice
+     C                     Z-ADDP1PND4    BPPND4           Past Due Notice
+     C                     Z-ADDP1PND5    BPPND5           Past Due Notice
+     C                     Z-ADDP1PND6    BPPND6           Past Due Notice
+     C                     Z-ADDP1PND7    BPPND7           Past Due Notice
+     C                     Z-ADDP1PND8    BPPND8           Past Due Notice
+     C                     Z-ADDP1DBDY    BPDBDY           Default Billing
+     C                     Z-ADDP1HRPR    BPHRPR           Historic Retent
+     C                     MOVELP1DBKC    BPDBKC           Default Book Co
+     C                     Z-ADDP1EFRP    BPEFRP           Exp. Fac. Reten
+     C                     MOVELP1GIAV    BPGIAV           Guarantees Issu
+     C                     MOVELP1DASI    BPDASI           Default Auto-se
+     C                     MOVEL#1CONR    BPCONR           Consolidated Co
+     C                     MOVEL#1FAAU    BPFAAU           Facilities to b
+     C                     MOVEL#1LOAU    BPLOAU           Loans to be Aut
+     C                     MOVEL#1PPAU    BPPPAU           Parts Purch to
+     C                     MOVEL#1PSAU    BPPSAU           Parts Sold to b
+     C                     MOVEL#1ROAU    BPROAU           Rollovers to be
+     C                     MOVEL#1LMAU    BPLMAU           Loan Amends to
+     C                     MOVEL#1MRAU    BPMRAU           Manual Reps to
+     C                     MOVEL#1REAU    BPREAU           Repay Schds to
+     C                     MOVEL#1TPAU    BPTPAU           Trnsfr Prin to
+     C                     MOVEL#1FEAU    BPFEAU           Fees to be Auth
+     C                     MOVEL#1FSAU    BPFSAU           Fees Settmt to
+     C                     MOVEL#1GUAU    BPGUAU           Guarnt/Coll to
+     C                     MOVEL#1FAAM    BPFAAM           Faclty Amds to
+     C                     MOVEL#1FAUT    BPFAUT           Man Fac Uts to
+     C                     MOVEL#1CAAU    BPCAAU           Credit Apls to
+     C                     Z-ADD#1GRPR    BPGRPR           Grace Days for
+     C                     Z-ADD#1GRIR    BPGRIR           Grace Days for
+     C                     MOVEL#1AURV    BPAURV           Auth to Review 123857
+     C                     MOVEL#1FJAU    BPFJAU           Fee Adjustments                    CGP001
+     C                     MOVEL#1FCAU    BPFCAU                                              CLE071
+      *                                                                                       CAS001
+      ** If CAS001 enhancement is installed                                                   CAS001
+     C           CAS001    IFEQ 'Y'                                                           CAS001
+     C           P1BCPL    IFEQ *BLANKS                                                       CAS001
+     C                     MOVEL'N'       BPBCPL                                              CAS001
+     C                     ELSE                                                               CAS001
+     C                     MOVELP1BCPL    BPBCPL                                              CAS001
+     C                     ENDIF                                                              CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CLE023
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C                     MOVELP1DRTS    BPDRTS                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CAS005
+      ** Set the No. of Days to Maturity field if CAS005 is enabled.                          CAS005
+      *                                                                                       CAS005
+     C           CAS005    IFEQ 'Y'                                                           CAS005
+     C                     Z-ADDP1NODM    BPNODM                                              CAS005
+     C                     ENDIF                                                              CAS005
+      *
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
+      * Set PGM.*Record Data Changed flag
+     C********** @1DBRC    IFNE YARDCS                                                        CLE134
+     C********** @1DBRX    IFNE YARDCS                                                 CLE134 CLE071
+     C           @1DBRC    IFNE YARDCS                                                        CLE071
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * USER: Processing before Data update
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'A'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD9112RBUW - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Before Update, Window on
+     C/COPY WNCPYSRC,SD9112RBUW
+     C                     END                             *FI
+      * 00/Copy Member SD9112RBDU - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Processing Before Update
+     C/COPY WNCPYSRC,SD9112RBDU
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
+      * Set PGM.*Record Data Changed flag
+     C********** @1DBRC    IFNE YARDCS                                                        CLE134
+     C********** @1DBRX    IFNE YARDCS                                                 CLE134 CLE071
+     C           @1DBRC    IFNE YARDCS                                                        CLE071
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YARDC     IFEQ 'Y'
+     C                     UPDAT@BPREEQ                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDCLNDL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+      * DBF change successful
+      * USER: Processing after Data update
+      * CASE: WRK.Last Change Date NE WRK.Run day number
+     C           WULCD     IFNE WURDNB                     *IF
+      * only update file controls if ICD record hasnot been updated alrea
+      * today
+     C                     Z-ADD*ZERO     WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes
+     C                     Z-ADD1         WUNOAM           No. of Amends
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SBCHRC
+     C                     END                             *FI
+      * TABTB50 - Customer Lending Data  *
+     C                     CALL 'TABTB50'              90  TABTB50
+     C                     PARM BPLCD     WQ0002  50       Last Change Dat
+     C                     PARM 'A'       WQ0003  1        Type of Last Ch
+     C                     PARM BPBRCF    WQ0004  1        Base Rate Chang
+     C                     PARM BPGEEB    WQ0005  1        Generate Events
+     C                     PARM BPBTIN    WQ0006  1        Billing Telex I
+     C                     PARM BPLGAM    WQ0007 110       Large Amount
+     C                     PARM BPELAP    WQ0008  50       End of Last Act
+     C                     PARM BPPND1    WQ0009  30       Past Due Notice
+     C                     PARM BPPND2    WQ0010  30       Past Due Notice
+     C                     PARM BPPND3    WQ0011  30       Past Due Notice
+     C                     PARM BPPND4    WQ0012  30       Past Due Notice
+     C                     PARM BPPND5    WQ0013  30       Past Due Notice
+     C                     PARM BPPND6    WQ0014  30       Past Due Notice
+     C                     PARM BPPND7    WQ0015  30       Past Due Notice
+     C                     PARM BPPND8    WQ0016  30       Past Due Notice
+     C/COPY WNCPYSRC,SD9112RC01
+     C                     PARM BPDBDY    WQ0017  20       Default Billing
+     C/COPY WNCPYSRC,SD9112RC02
+     C                     PARM BPHRPR    WQ0018  20       Historic Retent
+     C           W0RTN     PARM *BLANK    WQ0019  7        *Return code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'TABTB50' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * 00/Copy Member SD9112RADU - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Processing After Update
+     C/COPY WNCPYSRC,SD9112RADU
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YBRDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDICDRPD'AHFLNM           Filename
+      *
+     C           KLCHSB    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSB    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YBRDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YBRDCS
+     C                     MOVE 'Y'       YBRDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YBRDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSC     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Check reference to Book Details
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Name search required?
+     C                     MOVEL#1DBKC    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Book Code
+     W* Y2W0053 - One or more arguments defaulted to available contexts
+      * Field '(DTL) #1DBKC' defaulted for 'Default Book Code'.
+     C                     CALL 'SD0310S'              90  Select Book Det
+     C                     PARM *BLANK    W0RTN   7
+     C           #1DBKC    PARM #1DBKC    WQ0001  2        Book Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0310S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     IFNE *BLANK
+     C                     GOTO VAEXIT
+     C                     END
+     C                     END
+      *................................................................
+      * If all low order keys not entered, exit
+     C           #1DBKC    IFEQ *BLANK                     Book Code
+     C                     GOTO VAEXIT
+     C                     END
+      *
+     C           KLVABD    KLIST
+     C                     KFLD           BDBKCD           Book Code
+      * Setup key
+     C                     MOVEL#1DBKC    BDBKCD           Book Code
+     C           KLVABD    CHAIN@BDREDK              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     GOTO VAEXIT
+     C                     END
+      * Send message 'Book Details           NF'
+     C                     MOVEL'USR0085' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'USR0085' W0RTN
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM 'SDMVE1R' W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P2DRTC           Duplicate Retur
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+      * 00/Copy Member SD9112REPP - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Exit Program Processing
+     C/COPY WNCPYSRC,SD9112REPP
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Switchable Feature CLE002
+     C                     MOVEL*BLANK    WULE02  1
+      * Define work field Switchable Feature CLE005
+     C                     MOVEL*BLANK    WULE05  1
+      ** Define work field Switchable Feature CLE071                                          CLE071
+     C                     MOVEL*BLANK    CLE071  1                                           CLE071
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Last Change Date
+     C                     Z-ADD*ZERO     WULCD   50
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field Display LE ICD Auth Flds2
+     C                     MOVEL*BLANK    WUDAF2  1
+      ** Define work field Display LE ICD Rate Change to be auth                              CLE071
+     C                     MOVEL*BLANK    WUDAF3  1                                           CLE071
+      * Define work field Display Grace Day fields
+     C                     MOVEL*BLANK    WUDPGF  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Switchable Feature CLE004
+     C                     MOVEL*BLANK    WULE04  1
+      * Define work field Access Pgm Return Code
+     C                     MOVEL*BLANK    WUAPRC  7
+      * Define work field SAR number field
+     C                     MOVEL*BLANK    WUSARN  6
+      * Define work field Access obj dummy DS (76)
+     C                     MOVEL*BLANK    WUFDY  76
+      * Define work field Switchable Feature CLE007
+     C                     MOVEL*BLANK    WULE07  1
+      * Define work field Switchable Feature CLE023                                           CLE023
+     C                     MOVEL*BLANK    CLE023  1                                           CLE023
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C                     OPEN SD9112R#
+     C                     OPEN SDCLNDL1
+     C                     OPEN SDBOOKL1
+     C                     OPEN SDMMODL1
+     C                     OPEN SDCLNDL0
+     C                     OPEN SDFCTLL0
+     C                     MOVEL'N'       W0PMT   1
+      * Set to *CHANGE mode
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD9112R Precompiler - Customer Lending Data  *
+      * Copyright Statement 1997 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SCRVGN
+      * Data Stuct. for Cus. Ldg - Customer Lending Data  *
+      * Program is called when Switchable Feature CLE004 is on.
+      * So, switch on CLE004 flag
+     C                     MOVEL'Y'       WULE04           Switchable Feat
+      * Is CLE002 On ?
+     C                     MOVEL'N'       WULE02           Switchable Feat
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+     C                     MOVEL'CLE002'  WUSARN           SAR number fiel
+      * SAR switched on check - Standard Functions  *
+     C                     CALL 'AOSARDR0'             90  SAR switched on
+     C           WUAPRC    PARM WUAPRC    WQ0020  7        Access Pgm Retu
+     C                     PARM '*VERIFY' WQ0021  7        Option for ACCO
+     C           WUSARN    PARM WUSARN    WQ0022  6        SAR number fiel
+     C                     PARM WUFDY     WQ0023 76        Access obj dumm
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOSARDR0'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Is CLE002 switched on ?
+      * CASE: WRK.Access Pgm Return Code is *Normal
+     C           WUAPRC    IFEQ *BLANK                     *IF
+     C                     MOVEL'Y'       WULE02           Switchable Feat
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WULE02           Switchable Feat
+     C                     END                             *FI
+      * Is CLE005 On ?
+     C                     MOVEL'N'       WULE05           Switchable Feat
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+     C                     MOVEL'CLE005'  WUSARN           SAR number fiel
+      * SAR switched on check - Standard Functions  *
+     C                     CALL 'AOSARDR0'             90  SAR switched on
+     C           WUAPRC    PARM WUAPRC    WQ0024  7        Access Pgm Retu
+     C                     PARM '*VERIFY' WQ0025  7        Option for ACCO
+     C           WUSARN    PARM WUSARN    WQ0026  6        SAR number fiel
+     C                     PARM WUFDY     WQ0027 76        Access obj dumm
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOSARDR0'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Is CLE005 switched on ?
+      * CASE: WRK.Access Pgm Return Code is *Normal
+     C           WUAPRC    IFEQ *BLANK                     *IF
+     C                     MOVEL'Y'       WULE05           Switchable Feat
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WULE05           Switchable Feat
+     C                     END                             *FI
+      * Is CLE007 On ?
+     C                     MOVEL'N'       WULE07           Switchable Feat
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+     C                     MOVEL'CLE007'  WUSARN           SAR number fiel
+      * SAR switched on check - Standard Functions  *
+     C                     CALL 'AOSARDR0'             90  SAR switched on
+     C           WUAPRC    PARM WUAPRC    WQ0028  7        Access Pgm Retu
+     C                     PARM '*VERIFY' WQ0029  7        Option for ACCO
+     C           WUSARN    PARM WUSARN    WQ0030  6        SAR number fiel
+     C                     PARM WUFDY     WQ0031 76        Access obj dumm
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOSARDR0'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Is CLE007 switched on ?
+      * CASE: WRK.Access Pgm Return Code is *Normal
+     C           WUAPRC    IFEQ *BLANK                     *IF
+     C                     MOVEL'Y'       WULE07           Switchable Feat
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WULE07           Switchable Feat
+     C                     END                             *FI
+      *                                                                                       CLE023
+      ** Is Lending Facility History Improvements CLE023 is ON                                CLE023
+      *                                                                                       CLE023
+     C                     MOVEL'N'       CLE023                                              CLE023
+     C                     CALL 'AOSARDR0'             90                                     CLE023
+     C                     PARM *BLANKS   PRTCD   7                                           CLE023
+     C                     PARM '*VERIFY' POPTN   7                                           CLE023
+     C                     PARM 'CLE023'  PSARD   6                                           CLE023
+      *                                                                                       CLE023
+      **  Call to program ended in error                                                      CLE023
+      *                                                                                       CLE023
+     C           *IN90     IFEQ '1'                                                           CLE023
+     C                     MOVEL'Y2U0032' W0RTN                                               CLE023
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CLE023
+     C                     MOVEL'AOSARDR0'W0CLPG                                              CLE023
+     C                     MOVEL'Y2U0032' ZAMSID                                              CLE023
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CLE023
+     C                     MOVELW0CLPG    ZAMSDA                                              CLE023
+     C                     EXSR ZASNMS                                                        CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+     C           PRTCD     IFEQ *BLANK                                                        CLE023
+     C                     MOVEL'Y'       CLE023                                              CLE023
+     C                     ELSE                                                               CLE023
+     C                     MOVEL'N'       CLE023                                              CLE023
+     C                     ENDIF                                                              CLE023
+      * Set display flag for Tranche 3 Authorisation fields
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Switchable Feature CLE002 is Present
+      *   |- c2    : WRK.Switchable Feature CLE005 is Present
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WULE02    IFEQ 'Y'                        *IF
+     C           WULE05    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       WUDAF2           Display LE ICD
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUDAF2           Display LE ICD
+     C                     END                             *FI
+      * Set Display flag for for 'Grace Day' fields.
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Switchable Feature CLE007 is Present
+      *   |- c2    : WRK.Switchable Feature CLE005 is Present
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WULE07    IFEQ 'Y'                        *IF
+     C           WULE05    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       WUDPGF           Display Grace D
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUDPGF           Display Grace D
+     C                     END                             *FI
+      *                                                                                       CAS001
+      ** Determine if CAS001 is installed                                                     CAS001
+     C                     CALL 'AOSARDR0'                                                    CAS001
+     C                     PARM *BLANKS   PRTCD   7                                           CAS001
+     C                     PARM '*VERIFY 'POPTN   7                                           CAS001
+     C                     PARM 'CAS001'  PSARD   6                                           CAS001
+     C           SCSARD    PARM SCSARD    DSSDY                                               CAS001
+      *                                                                                       CAS001
+     C           PRTCD     IFNE *BLANKS                                                       CAS001
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS001
+     C           *NAMVAR   DEFN           LDA                                                 CAS001
+     C           *LOCK     IN   LDA                                                           CAS001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS001
+     C                     Z-ADD1         DBASE                                               CAS001
+     C                     MOVEL'CAS001'  DBKEY                                               CAS001
+     C                     OUT  LDA                                                           CAS001
+     C                     MOVE *ON       *INU7                                               CAS001
+     C                     MOVE *ON       *INU8                                               CAS001
+     C                     MOVE *ON       *INLR                                               CAS001
+     C                     EXSR *PSSR                                                         CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CAS001
+     C           PRTCD     IFEQ *BLANKS                                                       CAS001
+     C                     MOVE 'Y'       CAS001  1                                           CAS001
+     C                     ELSE                                                               CAS001
+     C                     MOVE 'N'       CAS001                                              CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CAS001
+      ** Access SAR details to see if CAS005 is enabled.                                      CAS005
+      *                                                                                       CAS005
+     C                     CALL 'AOSARDR0'                                                    CAS005
+     C                     PARM *BLANKS   PRTCD                                               CAS005
+     C                     PARM '*VERIFY' POPTN                                               CAS005
+     C                     PARM 'CAS005'  PSARD                                               CAS005
+     C           SCSARD    PARM SCSARD    DSSDY                                               CAS005
+      *                                                                                       CAS005
+     C                     MOVE 'N'       CAS005  1                                           CAS005
+     C           PRTCD     IFEQ *BLANKS                                                       CAS005
+     C                     MOVE 'Y'       CAS005                                              CAS005
+     C                     ELSE                                                               CAS005
+      *                                                                                       CAS005
+     C           PRTCD     IFNE '*NRF'                                                        CAS005
+     C           *LOCK     IN   LDA                                                           CAS005
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS005
+     C                     Z-ADD2         DBASE                                               CAS005
+     C                     MOVEL'CAS005'  DBKEY                                               CAS005
+     C                     OUT  LDA                                                           CAS005
+     C                     MOVE *ON       *INU7                                               CAS005
+     C                     MOVE *ON       *INU8                                               CAS005
+     C                     MOVE *ON       *INLR                                               CAS005
+     C                     EXSR *PSSR                                                         CAS005
+     C                     ENDIF                                                              CAS005
+      *                                                                                       CAS005
+     C                     ENDIF                                                              CAS005
+      *                                                                                       CAS005
+      ** Access SAR details to see if CLE071 is enabled                                       CLE071
+      *                                                                                       CLE071
+     C                     MOVE 'N'       CLE071  1                                           CLE071
+     C                     CALL 'AOSARDR0'                                                    CLE071
+     C                     PARM *BLANKS   PRTCD                                               CLE071
+     C                     PARM '*VERIFY' POPTN                                               CLE071
+     C                     PARM 'CLE071'  PSARD                                               CLE071
+     C           SCSARD    PARM SCSARD    DSSDY                                               CLE071
+      *                                                                                       CLE071
+     C           PRTCD     IFEQ *BLANKS                                                       CLE071
+     C                     MOVE 'Y'       CLE071                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Set Dsply flag for for 'Fee Rate Change Amendment to be Auth'                        CLE071
+      *                                                                                       CLE071
+     C                     MOVEL'0'       Y0CX01  1                                           CLE071
+     C           WULE02    IFEQ 'Y'                                                           CLE071
+     C           CLE071    IFEQ 'Y'                                                           CLE071
+     C                     MOVEL'1'       Y0CX01                                              CLE071
+     C                     ENDIF                                                              CLE071
+     C                     ENDIF                                                              CLE071
+     C           Y0CX01    IFEQ '1'                                                           CLE071
+     C                     MOVEL'Y'       WUDAF3                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVEL'N'       WUDAF3                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      * 00/Copy Member SD9112RIPG - Customer Lending Data  *
+      * 00/Copy Member SD9112RFPG - Customer Lending Data  *
+      * 00/Copy Member SD9112REPG - Customer Lending Data  *
+      * 00/Copy Member SD9112RCPG - Customer Lending Data  *
+     C*Edit Cust Lnd ICD - Auth Initialise Program C-spec
+     C/COPY WNCPYSRC,SD9112RCPG
+      * 00/Copy Member SD9112ROPG - Customer Lending Data  *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9112RPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9112RPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9112RPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*Edit Cust Lnd ICD - Auth Initialise Program O-spec
+     O/COPY WNCPYSRC,SD9112ROPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

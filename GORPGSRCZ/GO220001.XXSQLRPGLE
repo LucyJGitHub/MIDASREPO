@@ -1,0 +1,589 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+      *****************************************************************
+/*S*D ***RPGSQLMOD*****************************************************                     MD023662
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GO220001 - Midas UDF Files purging initialisation            *
+      *                                                               *
+      *  Function:  This program initialises the UDF Files list that  *
+      *             will be used in purging UDF records.              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  Last Amend No. MD023662 *REDUNDANTDate 21Nov13               *
+      *  Prev Amend No. AR1018468          Date 20Oct12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR685293A          Date 23Feb11               *
+      *                 AR685293  *CREATE  Date 26Jan11               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD023662 - Reconciliation: T_GZAMADEX records not dropped    *
+      *  AR1018468 - UDF Historical files (Child:AR1018470)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR685293A - SQL errors encountered on GOC220000. Sync fields *
+      *              used to match with the affected tables. Applied  *
+      *              and enhanced fix AR663226A. (Child: AR685294A)   *
+      *  AR685293 - UDF Files are not purged during COB.  Created     *
+      *             program to purge UDF files during COB.            *
+      *             (Child: AR685294)                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      ***AMAD***                                                                           AR1018468
+      **********                                                                           AR1018468
+     C**********         EVAL      UDFKey = 'LEFT(DDBRCA,3) CONCAT DDCUSN ' +              AR1018468
+     C**********                   'CONCAT LEFT(DDCCY,3) CONCAT LEFT(CAST ' +              AR1018468
+     C**********                   '(DDACOD AS BIGINT),10) CONCAT LEFT(CAST ' +            AR1018468
+     C**********                   '(DDACSQ AS INT),2) NOT IN (SELECT BRCA ' +             AR1018468
+     C**********                   'CONCAT CGGLOB CONCAT CCY CONCAT LEFT(ACOD '+           AR1018468
+     C**********                   ',10) CONCAT LEFT(ACSQ,2) FROM GLAMADK1'                AR1018468
+     C**********                                                                           AR1018468
+     C***/EXEC SQL                                                                         AR1018468
+     C**INSERT*INTO*GPUDFDPD*******************************************                    AR1018468
+     C**VALUES*('T_GZAMADEX',*:UDFKey,*'ZONE',*'2')********************                    AR1018468
+     C*END-EXEC********************************************************                    AR1018468
+      *
+      ** AIAJ
+      *
+     C                   EVAL      UDFKey = 'DDLNRF NOT IN (SELECT LNRF '+                 AR685293A
+     C                             'FROM CLOANCL UNION SELECT LNRF FROM '+                 AR685293A
+     C                             'MCLONCL)'                                              AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZAIAJEX',
+     C*+*********'DDLNRF*NOT*IN*(SELECT*LNRF*FROM*CLOANCL)',*'ZONE',*'1')****              AR685293A
+     C+         :UDFKey , 'ZONE', '1')                                                     AR685293A
+     C/END-EXEC
+      *
+      ** AMAJ
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZAMAJEX',
+     C+         'DDLNRF NOT IN (SELECT LNRF FROM MTRAND)', 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** BITH
+      *
+     C                   EVAL      UDFKey = 'LEFT(DDBEDT,5) CONCAT DDBTNB' +               AR1018468
+     C                             ' NOT IN (SELECT LEFT(HHBEDT,5) CONCAT' +               AR1018468
+     C                             ' HHBTNB FROM GLJEHHPD)'                                AR1018468
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZBITHEX',
+     C+         :UDFKey, 'ZONE', '1')                                                      AR1018468
+     C**********'DDBTNB*NOT*IN*(SELECT*BRBTNB*FROM*GLJENHPD)',*'ZONE',*'1')                AR1018468
+     C/END-EXEC
+      *
+      ** BITP
+      *
+     C**********         EVAL      UDFKey = 'DDBTNB CONCAT LEFT(CAST(DDBINB' +             AR1018468
+     C**********                   ' AS INT),3) NOT IN (SELECT BTBTNB CONCAT ' +           AR1018468
+     C**********                   ' LEFT(BTBINB,3) FROM GLJENPPD)'                        AR1018468
+                                                                                           AR1018468
+     C                   EVAL      UDFKey = 'LEFT(DDBEDT,5) CONCAT DDBTNB' +               AR1018468
+     C                             ' CONCAT LEFT(CAST(DDBINB AS INT),3)'   +               AR1018468
+     C                             ' NOT IN (SELECT LEFT(HPBEDT,5) CONCAT' +               AR1018468
+     C                             ' HPBTNB CONCAT LEFT(HPBINB,3)' +                       AR1018468
+     C                             ' FROM GLJEHPPD)'                                       AR1018468
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZBITPEX', :UDFKey, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** CACF
+      *
+     C                   EVAL      UDFKey = 'DDDLNO NOT IN (SELECT DLNO '+                 AR685293A
+     C                             'FROM DEALSDG UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLGHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZCACFEX',
+     C*+*********'DDDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDG)',*'ZONE',*'1')****              AR685293A
+     C+         :UDFKey, 'ZONE', '1')                                                      AR685293A
+     C/END-EXEC
+      *
+      ** CCTD
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZCCTDEX',
+     C+         'PCCTID NOT IN (SELECT CCTID FROM FT102HPD)', 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** CCT2
+      *
+     C                   EVAL      UDFKey = 'PCCTID CONCAT PTRNSID NOT IN ' +
+     C                             '(SELECT CCTID CONCAT TRNSID FROM FT102DPD)'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZCCT2EX', :UDFKEY, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** CIRS
+      *
+     C                   EVAL      UDFKey = 'SDLNO NOT IN (SELECT DLNO '+                  AR685293A
+     C                             'FROM DEALSDG UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLGHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZCIRSEX',
+     C*+*********'SDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDG)',*'CUSTZONE',*'1')*              AR685293A
+     C+         :UDFKey, 'CUSTZONE', '1')                                                  AR685293A
+     C/END-EXEC
+      *
+      ** CLIP
+      *
+     C                   EVAL      UDFKey = 'DDLNRF NOT IN (SELECT LNRF '+                 AR685293A
+     C                             'FROM CLOANCL UNION SELECT LNRF FROM '+                 AR685293A
+     C                             'MCLONCL)'                                              AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZCLIPEX',
+     C*+*********'DDLNRF*NOT*IN*(SELECT*LNRF*FROM*CLOANCL)',*'ZONE',*'1')****              AR685293A
+     C+         :UDFKey , 'ZONE', '1')                                                     AR685293A
+     C/END-EXEC
+      *
+      ** CLSP
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZCLSPEX', 'RECORD' , 'ZONE', '3')
+     C/END-EXEC
+      *
+      ** CLS2
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZCLS2EX', 'RECORD' , 'ZONE', '3')
+     C/END-EXEC
+      *
+      ** CUSX
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZCUSXEX',
+     C+         'IPDN NOT IN (SELECT IPDN FROM CUSEXCE)', 'CUSTZONE', '1')
+     C/END-EXEC
+      *
+      ** DPMV
+      *
+     C                   EVAL      UDFKey = 'DDDPRN CONCAT DDDPMV NOT IN' +
+     C                             ' (SELECT DPRN CONCAT DPMV FROM DPTMVD)'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZDPMVEX', :UDFKey, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** DEAM
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZDEAMEX', 'RECORD' , 'ZONE', '3')
+     C/END-EXEC
+      *
+      ** FAMD
+      *
+     C                   EVAL      UDFKey = 'S_CSSN CONCAT LEFT(CAST(S_FACT ' +
+     C                             'AS INT),3) CONCAT LEFT(CAST(S_FCNO AS INT' +
+     C                             '),2) CONCAT S_FATP CONCAT LEFT(S_VLDT,5) '+
+     C                             'CONCAT LEFT(CAST(S_SQNO AS INT),3) NOT IN '+
+     C                             '(SELECT CGGLOB CONCAT LEFT(FACT,3) CONCAT '+
+     C                             'LEFT (FCNO,2) CONCAT FATP CONCAT LEFT( ' +
+     C                             'VLDT,5) CONCAT LEFT(SQNO,3) FROM LEFCAMK1 '
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZFAMDEX', :UDFKey, 'ZONE', '2')
+     C/END-EXEC
+      *
+      ** FCIP
+      *
+     C                   EVAL      UDFKey = 'LEFT(CAST(DDCSSN AS INT),6) ' +
+     C                             'CONCAT LEFT(CAST(DDFACT AS INT),3) CONCAT '+
+     C                             'LEFT(CAST(DDFCNO AS INT),2) NOT IN (SELECT'+
+     C                             ' LEFT(CNUM,6) CONCAT LEFT(FACT,3) CONCAT '+
+     C                             'LEFT(FCNO,2) FROM FCLTYFM)'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZFCIPEX', :UDFKey, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** FEAD
+      *
+     C**********         EVAL      UDFKey = 'S_CSSN CONCAT LEFT(CAST(S_FACT AS'+           AR1018468
+     C**********                   'INT),3) CONCAT LEFT(CAST(S_FCNO AS INT),2)'+           AR1018468
+     C**********                   'CONCAT LEFT(CAST(S_FSEQ AS INT),2) NOT IN '+           AR1018468
+     C**********                   '(SELECT CGGLOB CONCAT LEFT(FAFACL,5) ' +               AR1018468
+     C**********                   'CONCAT FAFSEQ,2) FROM LEFEADK1'                        AR1018468
+                                                                                           AR1018468
+     C                   EVAL      UDFKey = 'S_CSSN CONCAT LEFT(CAST(S_FACT' +             AR1018468
+     C                             ' AS INT),3) CONCAT LEFT(CAST(S_FCNO' +                 AR1018468
+     C                             ' AS INT),2) CONCAT LEFT(CAST(S_FSEQ' +                 AR1018468
+     C                             ' AS INT),2) NOT IN (SELECT CGGLOB CONCAT' +            AR1018468
+     C                             ' LEFT(FAFACL,5) CONCAT LEFT(FAFSEQ,2)' +               AR1018468
+     C                             ' FROM LEFEADK1'                                        AR1018468
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZFEADEX', :UDFKey, 'ZONE', '2')
+     C/END-EXEC
+      *
+      ** FEEM
+      *
+     C                   EVAL      UDFKey = 'DDCSSN CONCAT LEFT(CAST(DDFACT ' +
+     C                             'AS INT),3) CONCAT LEFT(CAST(DDFCNO AS INT)'+
+     C*****************************',2)*CONCAT*LEFT(CAST(DDLNRF*AS*INT),6)*'*+                CLE148
+     C                             ',2) CONCAT LEFT(DDLNRF,6) ' +                             CLE148
+     C                             'CONCAT LEFT(CAST(DDFSEQ AS INT),2) NOT IN '+
+     C                             '(SELECT CGGLOB CONCAT LEFT(FEFACL,5) ' +
+     C                             'CONCAT LEFT(FELOAN,6) CONCAT LEFT(FEFSEQ, '+
+     C                             '2) FROM LEFEEDK1'
+     C
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZFEEMEX', :UDFKey, 'ZONE', '2')
+     C/END-EXEC
+      *
+      ** FEST
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZFESTEX', 'RECORD' , 'ZONE', '3')
+     C/END-EXEC
+      *
+      ** FRA
+      *
+     C                   EVAL      UDFKey = 'SDLNO NOT IN (SELECT DLNO '+                  AR685293A
+     C                             'FROM DEALSDG UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLGHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZFRAEX',
+     C*+*********'SDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDG)',*'ZONE',*'1')*****             AR685293A
+     C+         :UDFKey, 'ZONE', '1')                                                      AR685293A
+     C/END-EXEC
+      *
+      ** FUND
+      *
+     C                   EVAL      UDFKey = 'DDDLNO NOT IN (SELECT DLNO '+                 AR685293A
+     C                             'FROM DEALSDC UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLCHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZFUNDEX',
+     C*+*********'DDDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDB)',*'ZONE',*'1')****              AR685293A
+     C+         :UDFKey, 'ZONE', '1')                                                      AR685293A
+     C/END-EXEC
+      *
+      ** FXDL
+      *
+     C                   EVAL      UDFKey = 'DDDLNO NOT IN (SELECT DLNO '+                 AR685293A
+     C                             'FROM DEALSDB UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLBHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZFXDLEX',
+     C*+*********'DDDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDB)',*'ZONE',*'1')****              AR685293A
+     C+         :UDFKey, 'ZONE', '1')                                                      AR685293A
+     C/END-EXEC
+      *
+      ** HDIT
+      *
+     C                   EVAL      UDFKey = 'LEFT(CNUM,6) CONCAT CCY CONCAT ' +
+     C                             'LEFT(ACOD,10) CONCAT LEFT(ACSQ,2) CONCAT ' +
+     C                             'LEFT(HIRF,3) CONCAT BRCA NOT IN (SELECT ' +
+     C**********                   'LEFT(CNUM,6) CONCAT CCY CONCAT LEFT(ACOD, '+           AR1018468
+     C                             'LEFT(CNUM,6) CONCAT CCY CONCAT LEFT(ACOD' +            AR1018468
+     C                             ',10) CONCAT LEFT(ACSQ,2) CONCAT LEFT(HIRF,'+
+     C                             '3) CONCAT BRCA FROM ' +
+     C**********                   'HELDIHB'                                               AR685293A
+     C                             'HELDIHB)'                                              AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZHDITEX', :UDFKey, 'CUSTZONE', '1')
+     C/END-EXEC
+      *
+      ** INTC
+      *
+     C                   EVAL      UDFKey = 'LEFT(CAST(DDL1DN AS INT),6) '+
+     C                             'CONCAT LEFT(CAST(DDL2DN AS INT),6) CONCAT '+
+     C                             'LEFT(DDBRCD,3) CONCAT LEFT(DDORBR,3) ' +
+     C                             'NOT IN (SELECT LEFT(JPFD38,6) CONCAT ' +
+     C                             'LEFT(JPSD38,6) CONCAT JPDBRC CONCAT ' +
+     C                             'JPORBR FROM ABDEALPP)'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZINTCEX', :UDFKey, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** IPAY
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZIPAYEX',
+     C+         'DDPREF NOT IN (SELECT PREF FROM INPAYDD)', 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** LDNI
+      *
+     C                   EVAL      UDFKey = 'DDDLNO NOT IN (SELECT DLNO '+                 AR685293A
+     C                             'FROM DEALSDC UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLCHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZLDNIEX',
+     C*+*********'DDDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDC)',*'ZONE',8'1')****              AR685293A
+     C+         :UDFKey, 'ZONE', '1')                                                      AR685293A
+     C/END-EXEC
+      *
+      ** LERI
+      *
+     C                   EVAL      UDFKey = 'DDLNRF NOT IN (SELECT LNRF '+                 AR685293A
+     C                             'FROM CLOANCL UNION SELECT LNRF FROM '+                 AR685293A
+     C                             'MCLONCL)'                                              AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZLERIEX',
+     C*+*********'DDLNRF*NOT*IN*(SELECT*LNRF*FROM*CLOANCL)',*'ZONE',*'1')****              AR685293A
+     C+         :UDFKey , 'ZONE', '1')                                                     AR685293A
+     C/END-EXEC
+      *
+      ** LOAM
+      *
+     C*******************EVAL******UDFKey*=*'LEFT(CAST(DDLOAN*AS*INT),*'*+                    CLE148
+     C                   EVAL      UDFKey = 'LEFT(DDLOAN,' +                                  CLE148
+     C                             '6) CONCAT LEFT(DDVDAT,5) CONCAT LEFT(CAST '+
+     C                             '(DDSEQN AS INT),3) NOT IN (SELECT LEFT( ' +
+     C                             'LNRF,6) CONCAT LEFT(VDAT,5) CONCAT LEFT( ' +
+     C                             'LASN,3) FROM LOAMSDK)'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZLOAMEX', :UDFKey, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** MAPY
+      *
+     C*******************EVAL******UDFKey*=*'LEFT(CAST(DDLNRF*AS*INT),6)*'*+                  CLE148
+     C                   EVAL      UDFKey = 'LEFT(DDLNRF,6) ' +                               CLE148
+     C                             'CONCAT LEFT(DDVALD,5) CONCAT LEFT(CAST(' +
+     C                             'DDSEQN AS INT),3) NOT IN (SELECT LEFT(' +
+     C                             'LNRF,6) CONCAT LEFT(VDAT,5) CONCAT ' +
+     C                             'LEFT(LASN,3) FROM LOAMSDK)'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZMAPYEX', :UDFKey, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** NASP
+      *
+     C                   EVAL      UDFKey = 'DDDLNO NOT IN (SELECT DLNO '+                 AR685293A
+     C                             'FROM DEALSDD UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLDHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZNASPEX',
+     C*+*********'DDDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDD)',*'ZONE',*'1')****              AR685293A
+     C+         :UDFKey, 'ZONE', '1')                                                      AR685293A
+     C/END-EXEC
+      *
+      ** NASS
+      *
+     C                   EVAL      UDFKey = 'DDDLNO NOT IN (SELECT DLNO '+                 AR685293A
+     C                             'FROM DEALSDE UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLEHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZNASSEX',
+     C*+*********'DDDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDE)',*'ZONE',*'1')****              AR685293A
+     C+         :UDFKey, 'ZONE', '1')                                                      AR685293A
+     C/END-EXEC
+      *
+      ** OPAY
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZOPAYEX',
+     C+         'SPREF NOT IN (SELECT PREF FROM OTPAYDD)', 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** OTCC
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZOTCCEX',
+     C+         'STNBR NOT IN (SELECT TNBR FROM TRANSD)', 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** OTCO
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZOTCOEX',
+     C+         'STNBR NOT IN (SELECT TNBR FROM TRSETD)', 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** PRCS
+      *
+     C                   EVAL      UDFKey = 'DDPSSN CONCAT DDPPRT CONCAT ' +
+     C                             'DDPMKT CONCAT DDPBRA CONCAT DDPBOK CONCAT '+
+     C**********                   'DDPTRF CONCAT DDPCNM NOT IN (SELECT PSSN ' +           AR1018468
+     C                             'DDPTFR CONCAT DDPCNM NOT IN (SELECT PSSN ' +           AR1018468
+     C                             'CONCAT PPRT CONCAT PMKT CONCAT PBRA CONCAT'+
+     C**********                   'PBOK CONCAT PTFR CONCAT CGGLOB ' +                     AR1018468
+     C                             ' PBOK CONCAT PTFR CONCAT CGGLOB ' +                    AR1018468
+     C                             'FROM SEPRCSK1'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C*+*VALUES*('T_GZPRCSEX',*:UDFKey,*'ZONE',*'2')***************                        AR685293A
+     C+ VALUES ('T_GZPRCSEX', :UDFKey, 'DDZONE', '2')                                      AR685293A
+     C/END-EXEC
+      *
+      ** PTPF
+      *
+     C**********         EVAL      UDFKey = 'LEFT(CAST(DDPTLN AS INT),6)'+                 AR685293A
+     C**********                   '|| LEFT(DDVDAT,5) || LEFT(CAST(DDLASN' +               AR685293A
+     C**********                   ' AS INT),3) NOT IN (SELECT LEFT(' +                    AR685293A
+     C**********                   'LNRF,6) || LEFT(VDAT,5) || LEFT(LASN,3)'+              AR685293A
+     C**********                   ' FROM LOAMSDK)'                                        AR685293A
+     C***/EXEC*SQL***                                                                      AR685293A
+     C*+*INSERT*INTO*GPUDFPD***************                                                AR685293A
+     C*+*VALUES*('T_GZPTPFEX',*:UDFKey,*'ZONE',*'1')***************                        AR685293A
+     C***/END-EXEC***                                                                      AR685293A
+      *
+      ** RFTD
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZRFTDEX',
+     C+         'PRFTID NOT IN (SELECT RFTID FROM FT101HPD)', 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** RFT2
+      *
+     C                   EVAL      UDFKey = 'PRFTHDR CONCAT PTRNSID NOT  ' +
+     C                             'IN (SELECT RFTID CONCAT TRNSID FROM '  +
+     C                             'FT101DPD)'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZRFT2EX', :UDFKey, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** RPSC
+      *
+     C*******************EVAL******UDFKey*=*'LEFT(CAST(DDLNRF*AS*INT),6)*'*+                  CLE148
+     C                   EVAL      UDFKey = 'LEFT(DDLNRF,6) ' +                               CLE148
+     C                             'CONCAT LEFT(DDVDAT,5) CONCAT LEFT(CAST( ' +
+     C**********                   'DDSEQN AS INT),3) NOT IN (SELECT LEFT(LNFR'+           AR1018468
+     C                             'DDSEQN AS INT),3) NOT IN (SELECT LEFT(LNRF'+           AR1018468
+     C                             ',6) CONCAT LEFT(VDAT,5) CONCAT LEFT(LASN, '+
+     C                             '3) FROM LOAMSDK)'
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZRPSCEX', :UDFKey, 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** SEDE
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZSEDEEX', 'RECORD' , 'ZONE', '3')
+     C/END-EXEC
+      *
+      ** SESN
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZSECSEX',
+     C+         'DDSESN NOT IN (SELECT SESN FROM SECTYD)', 'ZONE', '1')
+     C/END-EXEC
+      *
+      ** SIRS
+      *
+     C                   EVAL      UDFKey = 'SDLNO NOT IN (SELECT DLNO '+                  AR685293A
+     C                             'FROM DEALSDG UNION SELECT DLNO FROM '+                 AR685293A
+     C                             'DLGHISPD)'                                             AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZSIRSEX',
+     C*+*********'SDLNO*NOT*IN*(SELECT*DLNO*FROM*DEALSDG)',*'CUSTZONE',*'1')*              AR685293A
+     C+         :UDFKey, 'CUSTZONE', '1')                                                  AR685293A
+     C/END-EXEC
+      *
+      ** STCQ
+      *
+     C                   EVAL      UDFKey = 'LEFT(CNUM,6) CONCAT CCY CONCAT ' +
+     C                             'LEFT (ACOD,10) CONCAT LEFT(ACSQ,2) CONCAT '+
+     C                             'LEFT(STCR,3) CONCAT LEFT(ACNO,10) CONCAT ' +
+     C                             'BRCA NOT IN (SELECT LEFT(CNUM,6) CONCAT ' +
+     C                             'CCY CONCAT LEFT(ACOD,10) CONCAT LEFT(ACSQ '+
+     C                             ',2) CONCAT LEFT(STCR,3) CONCAT LEFT(ACNO, '+
+     C                             '10) CONCAT BRCA FROM STOPCSD) '
+     C
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZSTCQEX', :UDFKey, 'CUSTZONE', '1')
+     C/END-EXEC
+      *
+      ** STOR
+      *
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZSTOREX',
+     C+         'STOR NOT IN (SELECT STOR FROM STANDSB)', 'CUSTZONE', '1')
+     C/END-EXEC
+      *
+      ** TRAD
+      *
+     C                   EVAL      UDFKey = 'DDTDRF NOT IN (SELECT TDRF '+                 AR685293A
+     C                             'FROM TRADSD UNION SELECT TDRF FROM '+                  AR685293A
+     C                             'HSTTRD)'                                               AR685293A
+     C/EXEC SQL
+     C+ INSERT INTO GPUDFDPD
+     C+ VALUES ('T_GZTRADEX',
+     C*+*********'DDTDRF*NOT*IN*(SELECT*TDRF*FROM*TRADSD)',*'ZONE',*'1')*****              AR685293A
+     C+         :UDFKey, 'ZONE', '1')                                                      AR685293A
+     C/END-EXEC
+     C                   SETON                                            LR
+      *
+      *****************************************************************
+      * *INZSR - Program Initialisation routine                       *
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+     C                   MOVE      *blank        UDFKey          800
+     C                   ENDSR
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  Called By :                                                  *
+      *  Calls     :                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR

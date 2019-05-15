@@ -1,0 +1,80 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC003050 - Midas UP Shell Switch for DBU - Global          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. A1076141 *REDUNDANTDate 11Jan13              */
+/*       Prev Amend No. CBF012 *CREATE     Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       A1076141 - Change back to only having one type of DBU.      */
+/*       CBF012 - BF Infrastructure: Upgradability                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GPFXSVAL &BRGSVAL &SRCSVAL &MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SRCSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+/** Global monitor message  */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Create data area /MIDASMSG in QTEMP  */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/** Proceed with standard Midas database upgrade  */
+             CALL       PGM(UPC002051) PARM(&GPFXSVAL &BRGSVAL +
+                          &SRCSVAL '*NML')
+ 
+/** Run only HIL database upgrade if Midas database upgrade is */
+/** successful  */
+             RTVDTAARA  DTAARA(UPSTAT) RTNVAR(&UPSTAT)
+ 
+             IF         COND(%SST(&UPSTAT 1 16) *EQ ' ') THEN(DO)
+ 
+/** If mode is set to '*HIL', process HIL database upgrade  */
+               IF         COND(&MODE *EQ '*HIL') THEN(DO)
+ 
+                 CALL       PGM(UPC002051) PARM(&GPFXSVAL &BRGSVAL +
+                                &SRCSVAL &MODE)
+               ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/** Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC003050') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC003050' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

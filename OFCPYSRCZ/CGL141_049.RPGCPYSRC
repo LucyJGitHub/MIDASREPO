@@ -1,0 +1,131 @@
+      *****************************************************************                       CGL141
+      *                                                               *                       CGL141
+      *  Midas - /COPY Member (RPG) for GL1180                        *                       CGL141
+      *                                                               *                       CGL141
+      *  CGL141_049 - Midas Amount accrual by reference rept no       *                       CGL141
+      *                                                               *                       CGL141
+      *  Last Amend No. CGL141  *CREATE    Date 12Dec12               *                       CGL141
+      *                                                               *                       CGL141
+      *---------------------------------------------------------------*                       CGL141
+      *                                                               *                       CGL141
+      *  CGL141 - Amount Accruals Extended Narrative                  *                       CGL141
+      *                                                               *                       CGL141
+      *****************************************************************                       CGL141
+      *                                                                                       CGL141
+      *****************************************************************                       CGL141
+      * Get Currency Details                                                                  CGL141
+      *****************************************************************                       CGL141
+     C           GETCCY    BEGSR                                                              CGL141
+      *                                                                                       CGL141
+     C                     CALL 'AOCURRR0'                                                    CGL141
+     C                     PARM '*BLANKS '@RTCD   7                                           CGL141
+     C                     PARM '*KEY    '@OPTN   7                                           CGL141
+     C                     PARM           @AJCD   3                                           CGL141
+     C           SDCURR    PARM SDCURR    DSSDY                                               CGL141
+      *                                                                                       CGL141
+      ** Clear @AJCD for next use                                                             CGL141
+      *                                                                                       CGL141
+     C                     CLEAR@AJCD                                                         CGL141
+     C                     ENDSR                                                              CGL141
+      *                                                                                       CGL141
+      *****************************************************************                       CGL141
+      * Format date to MM/DD/YY                                                               CGL141
+      *****************************************************************                       CGL141
+     C           FORDAT    BEGSR                                                              CGL141
+      *                                                                                       CGL141
+     C                     CALL 'ZDATE2'               90                                     CGL141
+     C                     PARM           ZDAYNO  50                                          CGL141
+     C                     PARM BJDFIN    ZDYNBR  1                                           CGL141
+     C                     PARM           ZDATFM  60                                          CGL141
+     C                     PARM           ZDATEN  7                                           CGL141
+      *                                                                                       CGL141
+      ** Clear ZDAYNO for next use                                                            CGL141
+      *                                                                                       CGL141
+     C                     CLEARZDAYNO                                                        CGL141
+     C                     ENDSR                                                              CGL141
+      *                                                                                       CGL141
+      *****************************************************************                       CGL141
+      * ZA0920 routine                                                                        CGL141
+      *****************************************************************                       CGL141
+     C           ZA0920    BEGSR                                                              CGL141
+      *                                                                                       CGL141
+      ** Initialization                                                                       CGL141
+      *                                                                                       CGL141
+     C                     MOVE '0'       @@SWT1  1                                           CGL141
+      *                                                                                       CGL141
+      ** Finding where decimal position is                                                    CGL141
+      *                                                                                       CGL141
+     C           14        SUB  @@QECN    @@QECW  20                                          CGL141
+      *                                                                                       CGL141
+      ** Finding out most significant position                                                CGL141
+      *                                                                                       CGL141
+     C           @@QECW    SUB  1         @@SIG   20                                          CGL141
+     C                     MOVEA*BLANKS   @Z                                                  CGL141
+     C                     Z-ADD1         @@Q     20                                          CGL141
+      *                                                                                       CGL141
+      ** Check to see if no. of decimal places is Zero. If Zero                               CGL141
+      ** then significant position is 14 and postion 1 is Blank                               CGL141
+      *                                                                                       CGL141
+     C           @@QECW    IFEQ 14                                                            CGL141
+     C                     Z-ADD14        @@SIG                                               CGL141
+     C                     Z-ADD2         @@Z     20                                          CGL141
+     C                     ELSE                                                               CGL141
+     C                     Z-ADD1         @@Z     20                                          CGL141
+     C                     END                                                                CGL141
+      *                                                                                       CGL141
+      ** Performing Actual movement                                                           CGL141
+      *                                                                                       CGL141
+     C           @@Z       DOWLT15                                                            CGL141
+     C           @@Q       ANDLT14                                                            CGL141
+      *                                                                                       CGL141
+      ** Switch for zero suppression                                                          CGL141
+      *                                                                                       CGL141
+     C                     MOVE '0'       @@SWT                                               CGL141
+      *                                                                                       CGL141
+      ** If element of Arrat @Q = 0 and index @@Z for Array @Z is *LT                         CGL141
+      ** Sig. Posistion and *LT Decimal Position then Zero can be suppressed                  CGL141
+      ** and Zero suppresion switched is Set On.                                              CGL141
+      *                                                                                       CGL141
+     C           @Q,@@Q    IFEQ 0                                                             CGL141
+     C           @@SWT1    ANDEQ'0'                                                           CGL141
+     C           @@Z       ANDLT@@SIG                                                         CGL141
+     C           @@Z       ANDLT@@QECW                                                        CGL141
+     C                     MOVE *BLANK    @Z,@@Z                                              CGL141
+     C                     MOVE '1'       @@SWT   1                                           CGL141
+     C                     END                                                                CGL141
+      *                                                                                       CGL141
+      ** If Index @@Z for array @Z is equal to the decimal position                           CGL141
+      ** and not equal to the length if the array @Z(14) then move                            CGL141
+      ** decimal position and increment @@Z by 1                                              CGL141
+      *                                                                                       CGL141
+     C           @@Z       IFEQ @@QECW                                                        CGL141
+     C           @@Z       ANDNE14                                                            CGL141
+     C                     MOVE DECMAL    @Z,@@Z                                              CGL141
+     C                     ADD  1         @@Z                                                 CGL141
+     C                     END                                                                CGL141
+      *                                                                                       CGL141
+      ** If Zero has not been suppressed then move element from array                         CGL141
+      ** @Q to @Z. Set On Zero suppression switch over(@@SWT1)                                CGL141
+      *                                                                                       CGL141
+     C           @@SWT     IFEQ '0'                                                           CGL141
+     C                     MOVE @Q,@@Q    @Z,@@Z                                              CGL141
+     C                     MOVE '1'       @@SWT1                                              CGL141
+     C                     END                                                                CGL141
+      *                                                                                       CGL141
+     C                     ADD  1         @@Q                                                 CGL141
+     C                     ADD  1         @@Z                                                 CGL141
+      *                                                                                       CGL141
+     C                     END                                                                CGL141
+      *                                                                                       CGL141
+      ** Dummy moves for definition of work fields.                                           CGL141
+      *                                                                                       CGL141
+     C                     GOTO ZA0929                                                        CGL141
+     C                     MOVE @@QECN    @@QECN  10                                          CGL141
+      *                                                                                       CGL141
+     C                     CLEAR@@AMTW                                                        CGL141
+      *                                                                                       CGL141
+     C           ZA0929    ENDSR                                                              CGL141
+      *                                                                                       CGL141
+      *****************************************************************                       CGL141
+      * End of /COPY CGL141_049                                       *                       CGL141
+      *****************************************************************                       CGL141

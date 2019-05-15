@@ -1,0 +1,847 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Loans & Guarantees by Company Report')        *
+0002 F********************************************************************
+0003 F*                                                                  *
+     F*  Midas   Customer Lending Module
+0005 F*                                                                  *
+0006 F*     LE0812 - GUARANTEES BY REGION & GUARANTOR REPORT BY COMPANY  *
+0007 F*              THIS PROGRAM WAS GENERATED FROM LE0811              *
+0005 F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 199884             Date 28Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 168267             Date 11Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 124245             Date 11Oct98               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE026 - Consumer Banking                                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  199884 - Currency and guarantee amount not printed.  Adjust  *
+      *           level indicator L2 to include the facility customer *
+      *           number.                                             *
+     F*  168267 - Correction to 124245, to add COLC to end of GSCEXGG,*
+     F*           to comply with standard coding practice.            *
+     F*  124245 - Upgrade of 61326 and 60984 to DBA2.  SGLNSL2        *
+     F*           increased in length.  Recompile over changed        *
+     F*           SGLNSL2.                                            *
+0011 F*                                                               *
+0012 F********************************************************************
+0011 F*                                                                  *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F*SGLNSL2 IP  F     128 16AI     2 DISK                              124245
+     F***********SGLNSL2 IP  F     134 16AI     2 DISK             124245 168267
+     FSGLNSL2 IP  F     137 16AI     2 DISK                               168267
+0016 FLE0812P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC
+     FLE0812AUO   F     132     OA     PRINTER      KINFDS SPOOLU
+0011 F*                                                                  *
+0017 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0018 F* 01            SGLNSL2 - DETAIL
+0019 F* 02                    - TRAILER
+0021 F*       11-14   GUARANTEE CCY DPS 0-3
+0022 F*       15-18   LOAN CCY DPS 0-3
+0023 F*       19      NO DETAILS TO REPORT
+0024 F*       20      FIRST CYCLE
+0025 F*       21      DATABASE ERROR ON REGION OR COUNTRY CODE
+     F*       22      REGION CODE BLANK
+0026 F*       24      DETAIL OUTPUT
+0027 F*       25      CONTROL SPACING AFTER OVERFLOW
+     F*       50      FACILITY REF. NO. = 0
+0028 F*       73      PRINTER FILE LE0812P1 OPEN FOR OUTPUT
+     F*       80      OUTPUT FILE PRODUCED
+0029 F*       90-99   STANDARD SUBROUTINES
+0030 F*       U7,U8   STANDARD MIDAS USAGE
+     F*             L1 - GUARANTEE SEQ. NO.
+     F*             L2 - FACILITY REF.
+     F*             L3 - CUSTOMER NUM.
+     F*             L4 - GUARANTOR
+     F*             L5 - COUNTRY
+     F*             L6 - REGION
+0033 F*             L7 - COMPANY
+     E                    CPY@    1   1 80
+0034 I**
+0035 I**   SORTED GUARANTEES AND LOANS EXTRACT FILE
+0036 I**
+0037 ISGLNSL2 NS  01   1 CD
+0038 I                                        1   1 RECI
+     I                                        2   3 REGC  L6        22
+     I                                        4   5 CTYC  L5
+     I**********                              9  140CNUM  L3                                  CSD027
+     I                                        9  14 CNUM  L3                                  CSD027
+0043 I**********                             15  200LNNO                                      CLE148
+     I                                       15  20 LNNO                                      CLE148
+     I                                       21  230GUSN  L1
+     I**********                             24  290GBCN  L4                                  CSD027
+     I                                       24  29 GBCN  L4                                  CSD027
+0046 I                                       30  32 CCY
+0047 I                                    P  33  390UAMT
+0048 I                                    P  40  420NOUN
+0049 I                                    P  43  490TAMT
+0050 I                                       50  84 NARR
+0051 I                                       85  85 GSCI
+0052 I                                       86  88 CCYL
+0053 I                                    P  89  950CPAM
+     I                                      121 123 CMPYM L7
+     I**********                            124 1280FCLNF L2      50                          199884
+     I                                      124 1280FCTYS           50                        199884
+     I**********                            124 1340FCLNF L2                           199884 CSD027
+     I                                      124 134 FCLNF L2                                  CSD027
+0054 I        NS  02   1 CT
+0055 I                                        1   1 RECI
+0056 I                                    P   2   40NORE
+0057 I                                    P   5  120HRWN
+0058 I                                    P  13  140HRDC
+0059 I        NS
+0190 I**   LOCAL DATA AREA FOR DATABASE ERROR IDENTIFICATION
+0191 ILDA        UDS                            256
+0232 I                                      134 141 DBFILE
+0233 I                                      142 170 DBKEY
+0234 I                                      171 180 DBPGM
+0235 I                                      181 1830DBASE
+     I**
+0173 I**
+     I**   SPOOL FILE INFORMATION DATA STRUCTURE
+     I**
+     I**
+     I*      SPOOL FILE  DATA STRUCTURE
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I**
+     I** DATA AREA RUNDAT
+     I**
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I**
+     ISDBANK    E DSSDBANKPD
+     I**  EXTERNAL DS FOR BANK CODES
+     I              BJURPT                          TITL
+     I**
+     ISDCOMP    E DSSDCOMPPD
+     I              APCMNM                          CMNM
+     I**  EXTERNAL DS FOR COMPANY CODES
+     I**
+     ISDCTRY    E DSSDCTRYPD
+     I**  EXTERNAL DS FOR COUNTRY DETAILS
+     I              A4CNNM                          CNM
+     I              A4RGCD                          REGC
+     I**
+     ISDCURR    E DSSDCURRPD
+     I**  EXTERNAL DS FOR CURRENCY CODES
+     I              A6NBDP                          CDP
+     I              A6CYCD                          CCY
+     I**
+     ISDCUST    E DSSDCUSTPD
+     I**  EXTERNAL DS FOR CUSTOMER CODES
+     I              BBCRNM                          CRNM
+     I**
+     ISDREGN    E DSSDREGNPD
+     I**  EXTERNAL DS FOR REGION DETAILS
+     I              A3RGNM                          REGN
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0084 I/EJECT
+     C**
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5         SEQUENCE NUM.
+     C                     PARM           BRNCH   3        COMPANY OR ALL
+     C**
+0196 C   20                GOTO ENDFC
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+0464 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0197 C                     SETON                     2019
+0198 C**
+0199 C**   FIRST CYCLE PROCESSING
+0200 C**
+     C                     MOVE *BLANK    DBFILE
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVE *BLANK    DBASE
+     C                     MOVEL'LE0812'  DBPGM
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     88
+     C                     END
+0201 C                     EXSR ZSYSTM
+0206 C   99                GOTO END
+0207 C**
+0208 C                     Z-ADD2         COUNT   50
+0209 C                     Z-ADD0         HASHF  150
+0210 C                     Z-ADD0         HASHL   30
+0211 C**
+0215 C           ENDFC     TAG                             ** ENDFC TAG***
+0216 C**
+0217 C**   DETAIL PROCESSING
+0218 C**
+0219 C                     SETOF                     2425
+0220 C   02                SETON                     LR
+0221 C  N01                GOTO END
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           BRNCH     IFGT CMPYM
+     C           BRNCH     ANDNE'ALL'
+     C                     SETOF                     73
+     C                     GOTO END
+     C                     END
+     C                     END
+     C*
+     C*   CLOSE & OPEN PRTF LE0812P1 FOR CHANGE OF VALID BRANCH
+     C           *INL7     IFEQ '1'
+     C                     CLOSELE0812P1
+     C           BRNCH     IFEQ 'ALL'
+     C           BRNCH     OREQ CMPYM
+     C                     SETON                     7380  ALLOW OUTPUT
+     C                     OPEN LE0812P1
+     C**
+     C*    ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C**
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     OUT  LDA
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM CMPYM     SENTY
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+     C           ZSERR     IFEQ 'Y'
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     Z-ADD0         PAGE
+     C** To get Branch Name
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CMPYM     @DSNB   3
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     MOVEL'SDCOMPPD'DBFILE           ***************
+     C                     MOVEL@DSNB     DBKEY            * DBERROR 005 *
+     C                     MOVEL'005'     DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C                     ELSE
+     C                     SETOF                     73
+     C           MBIN      IFEQ 'Y'
+     C           CMPYM     ANDGTBRNCH
+     C                     SETON                     LR
+     C                     END
+     C                     END
+     C                     END
+     C*
+0222 C                     SETOF                     19
+0223 C**
+0224 C**   ACCESS SDREGNPD FOR REGION NAME IF NOT BLANK
+0225 C**
+     C           *INL6     IFEQ '1'
+     C           *IN22     ANDEQ'0'
+     C                     CALL 'AOREGNR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM REGC      @KEY    2
+     C           SDREGN    PARM SDREGN    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     21
+     C                     SETON                     U7U8LR
+     C                     MOVEL'SDREGNPD'DBFILE           ***************
+     C                     MOVEL@KEY      DBKEY            * DBERROR 002 *
+     C                     MOVEL'002'     DBASE            ***************
+     C                     GOTO END
+     C                     END
+     C                     END
+0230 C**
+0231 C**   CHAIN TO SDCTRYPD FOR COUNTRY NAME
+0232 C**
+     C           *INL5     IFEQ '1'
+     C                     CALL 'AOCTRYR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CTYC      @KEY
+     C           SDCTRY    PARM SDCTRY    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     21
+     C                     SETON                     U7U8LR
+     C                     MOVEL'SDCTRYPD'DBFILE           ***************
+     C                     MOVEL@KEY      DBKEY            * DBERROR 006 *
+     C                     MOVEL'006'     DBASE            ***************
+     C                     GOTO END
+     C                     END
+     C                     END
+0237 C**
+0238 C**   CHAIN TO SDCUSTPD FOR GUARANTOR NAME
+0239 C**
+     C           *INL4     IFEQ '1'
+     C                     MOVELGBCN      CLIKEY 10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           CLIKEY
+     C                     PARM '*CNUM  ' KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8LR
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     MOVE CLIKEY    DBKEY            * DBERROR 03  *
+     C                     MOVE '03'      DBASE            ***************
+     C                     GOTO END
+     C                     END
+     C                     END
+0248 C**
+0249 C**   ACCESS SDCURRPD FOR GUARANTEE CURRENCY DPS
+0250 C**
+0251 C                     MOVE CCY       CCYD    3
+0252 C                     EXSR TABCN2
+0253 C  N10                GOTO END
+0254 C           CDP       COMP 1                      1112
+0255 C           CDP       COMP 2                    14  13
+0256 C**
+0257 C**   ACCESS SDCURRPD FOR LOAN CURRENCY DPS
+0258 C**
+0259 C                     MOVE CCYL      CCYD
+0260 C                     EXSR TABCN2
+0261 C  N10                GOTO END
+0262 C           CDP       COMP 1                      1516
+0263 C           CDP       COMP 2                    18  17
+0264 C**
+0265 C                     SETON                     24
+0266 C   24 OF             SETON                     25
+0267 C**
+0268 C**   MAINTAIN HASH TOTALS
+0269 C**
+0270 C           COUNT     ADD  1         COUNT
+0271 C                     Z-ADDHASHF     ZZTOTI
+0272 C                     Z-ADDHASHL     ZZTOTD
+0273 C                     MOVE TAMT      ZZAMT
+0274 C                     EXSR GLZADD
+0275 C                     Z-ADDZZTOTI    HASHF
+0276 C                     Z-ADDZZTOTD    HASHL
+0277 C**
+0278 C           END       TAG                             ** END TAG ****
+0279 C**
+0280 C**   LAST RECORDS CALCS
+0281 C**
+     C**
+     C** SET UP FOR P1  REPORT
+     C**
+     C**
+     C** SET UP FOR CONTROL REPORT
+     C**
+     C**
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60
+     C**
+     CLR                   OUT  LDA
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANK    SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU  60
+     CLR                   PARM           ZSERR   1
+     CLR         *LOCK     IN   LDA
+      *
+     CLR         ZSERR     IFEQ 'Y'
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     CLR                   SETON                     U7U8
+     CLR                   RETRN
+     CLR                   END
+     C**
+     CLR         *IN73     IFEQ '0'
+     CLR         BRNCH     ANDNE'ALL'
+     CLR         *IN80     ANDEQ'0'
+     CLR                   EXSR NODETL
+     CLR                   ELSE
+     CLR         COUNT     IFLE 2
+     CLR                   SETON                     U8
+     C**
+     CLRN73                OPEN LE0812P1
+     C**
+     CLR                   Z-ADDSFNUM     ZSNUM   60
+     CLR                   OUT  LDA
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ
+     CLR                   PARM *BLANK    SENTY
+     CLR                   PARM           SFILE
+     CLR                   PARM           ZSNUM   60
+     CLR                   PARM           ZSERR   1
+     CLR         *LOCK     IN   LDA
+      *
+     CLR         ZSERR     IFEQ 'Y'
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     CLR                   Z-ADD0         PAGE
+     CLR                   EXCPTNODTL
+     CLR                   SETOF                     U8
+     CLR                   END
+     CLR                   END
+     C**
+0282 CLR U7                GOTO ENDLR
+     CLR         MBIN      IFEQ 'Y'
+     CLR         BRNCH     ANDEQ'ALL'
+     CLR         MBIN      OREQ 'N'
+0283 CLR         COUNT     COMP NORE                 U8U8
+0284 CLRNU8      HASHF     COMP HRWN                 U8U8
+0285 CLRNU8      HASHL     COMP HRDC                 U8U8
+     CLR                   END
+0286 C**
+0287 CLR         ENDLR     TAG                             ** ENDLR TAG **
+0288 CLR U7                MOVE 'LE0812'  DBPGM
+     CLR U7 U8             EXSR *PSSR
+0307 C********************************************************************
+0308 C*                                                                  *
+0309 C*    TABCN2 SR. TO ACCESS SDCURRPD FOR CURRENCY RECORDS            *
+0310 C*    AND SET ERROR INDICATORS IF NOT FOUND.                        *
+0311 C*                                                                  *
+0312 C           TABCN2    BEGSR                           ** TABCN2 BEGSR
+0313 C**
+0314 C                     SETOF                     1039
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           CCYD                         A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     LRU7U8
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD4         DBASE            * DBERROR 04  *
+     C                     MOVE CCYD      DBKEY            ***************
+     C                     ELSE
+     C                     SETON                     10
+     C                     END
+0320 C**
+0321 C                     ENDSR
+0322 C*                                                                  *
+0323 C********************************************************************
+0324 C********************************************************************
+0325 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0326 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0327 C*
+0328 CSR         GLZADD    BEGSR                           *** GLZADD ****
+0329 C*
+0330 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0331 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+0332 C*
+0333 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0334 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0335 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+0336 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0337 C*
+0338 CSR                   EXSR GLZSUM
+0339 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+0340 C*
+0341 C********************************************************************
+0342 C********************************************************************
+0343 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0344 C*                        GLZADD, GLZSUB, GLZCMP.
+0345 C*          PARAMETERS PASSED -
+0346 C*                     I/P ZZAMTI ZZAMTD
+0347 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0348 C*
+0349 CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+0350 C*
+0351 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0352 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0353 CSR                   SETOF                     919293
+0354 CSR                   SETOF                     949599
+0355 C*
+0356 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0357 CSR         ZZAMTI    COMP 0                      9293
+0358 CSR 93      ZZAMTD    COMP 0                      9293
+0359 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0360 C*
+0361 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0362 CSR         ZZTOTI    COMP 0                      9193
+0363 CSR 93      ZZTOTD    COMP 0                      9193
+0364 C*
+0365 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0366 CSR 93                Z-ADDZZAMTI    ZZTOTI
+0367 CSR 93                Z-ADDZZAMTD    ZZTOTD
+0368 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0369 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0370 CSR 91N92
+0371 CORN91 92             GOTO ZZOFPS
+0372 C*
+0373 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0374 CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+0375 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0376 C*
+0377 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0378 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0379 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0380 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0381 C*
+0382 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0383 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0384 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0385 CSRN99                Z-ADDZZWK2     ZZTOTD
+0386 CSRN99                Z-ADDZZWK3     ZZTOTI
+0387 C*
+0388 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0389 CSR 99                Z-ADD0         ZZAMT  153
+0390 CSR                   GOTO ZZSEND
+0391 C*
+0392 C* THE 'SIGNS' ARE DIFFERENT
+0393 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+0394 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0395 C*
+0396 CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+0397 CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+0398 C*
+0399 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0400 C*
+0401 CSR 91                Z-SUBZZTOTI    ZZTOTI
+0402 CSR 91                Z-SUBZZTOTD    ZZTOTD
+0403 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0404 C*
+0405 CSR         ZZTOTI    COMP ZZAMTI               93  95
+0406 CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+0407 C*
+0408 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0409 CSR 95                Z-ADD0         ZZTOTI
+0410 CSR 95                Z-ADD0         ZZTOTD
+0411 CSR 95                GOTO ZZSEND
+0412 C*
+0413 C* IF ZZTOT GT. ZZAMT.
+0414 CSR 93      ZZAMTD    COMP ZZTOTD               94
+0415 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+0416 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+0417 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0418 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0419 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0420 C*
+0421 C*
+0422 C* IF ZZAMT GT. ZZTOT.
+0423 CSRN93      ZZTOTD    COMP ZZAMTD               94
+0424 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+0425 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+0426 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0427 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0428 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0429 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0430 C*
+0431 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0432 CSR                   SETOF                     94
+0433 CSR 93 91
+0434 CORN93 92             SETON                     94
+0435 CSR 94                Z-SUBZZTOTI    ZZTOTI
+0436 CSR 94                Z-SUBZZTOTD    ZZTOTD
+0437 C**
+0438 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0439 CSR 92                Z-SUBZZAMTI    ZZAMTI
+0440 CSR 92                Z-SUBZZAMTD    ZZAMTD
+0441 CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+0442 C**
+0443 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0444 CSR                   SETOF                     96
+0445 CSR         ZZTOTD    COMP 0                        91
+0446 CSR 91      ZZTOTI    COMP 0                      96
+0447 CSR 96                MOVE '.000-'   ZZNEGD  5
+0448 CSR                   ENDSR                             ** ENDSR **
+0449 C********************************************************************
+0450 C********************************************************************
+0451 C**
+0452 C**   ZSYSTM SR. TO ACCESS SDBANKPD
+0453 C**
+0454 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+     C**
+     C**   ACCESS BANK DETAILS
+     C**
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     SETON                     99
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     END
+0465 C**
+0466 C                     ENDSR
+0467 C**
+0468 C**
+0469 C********************************************************************
+     C*
+     C** PRINT OUT NO DETAIL TO REPORT IN LE0812P1
+     C*
+0454 C           NODETL    BEGSR                           *** NODETL ***
+     C**
+     C           *IN73     IFEQ '0'
+     C                     OPEN LE0812P1
+     C                     Z-ADD*ZEROS    PAGE
+     C**
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     OUT  LDA
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRNCH     SENTY
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+     C           ZSERR     IFEQ 'Y'
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8
+     C                     RETRN
+     C                     END
+     C                     END
+     C** To get COMPANY NAME
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRNCH     @DSNB   3
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     MOVEL'SDCOMPPD'DBFILE           ***************
+     C                     MOVEL@DSNB     DBKEY            * DBERROR 007 *
+     C                     MOVEL'007'     DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C                     EXCPTNODTL
+0466 C                     ENDSR
+     C*
+0497 C********************************************************************
+     C*
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C* CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+0470 O**
+0471 O**   LOANS OUTSTANDING BY COUNTRY AND REGION BY GUARANTOR REPORT
+0472 O**
+     OLE0812P1H   03   OFNL5 73
+     O       OR        L5N21 73
+0475 O       OR        LR 19 73
+0476 O                                   22 'REFERENCE LE0812P1'
+0477 O                         TITL      89
+0478 O                                  104 'DATE'
+0479 O                         RUNA     113
+0480 O                                  122 'PAGE'
+0481 O                         PAGE  3  127
+     O        H   05   OFNL5 73
+     O       OR        L5N21 73
+0484 O       OR        LR 19 73
+0485 O                                   50 'LOANS OUTSTANDING BY'
+0486 O                                   72 'COUNTRY AND REGION BY'
+0487 O                                   82 'GUARANTOR'
+     O                       88          93 'COMPANY'
+     O                       88CMPYM     99
+     O                       88         102 ' - '
+     O                       88CMNM     132
+     O        H   06   OFNL5 73
+     O       OR        L5N21 73
+0490 O       OR        LR 19 73
+0491 O                                   54 '------------------------'
+0492 O                                   78 '------------------------'
+0493 O                                   82 '----'
+     O        H   10   OFNL5N22
+     O       AND       73
+     O       OR        L5N21N22
+     O       AND       73
+0496 O                                    7 'REGION'
+0497 O                         REGN      39
+     O        H   12   OFNL5 73
+     O       OR        L5N21 73
+0500 O                                   12 'COUNTRY'
+0501 O                         CNM       44
+     O        H   14   OFNL5 73
+     O       OR        L5N21 73
+0504 O       OR        LR 19 73
+0505 O                                   23 'GUARANTOR NAME'
+0506 O                                   53 'NUMBER    CCY   AMOUNT'
+0507 O                                   66 'OF GUARANTEE'
+0508 O                                   92 'LOAN     CCY'
+0509 O                                  113 'CURRENT PRINCIPAL'
+     O        D 2      24 L4N25
+     O       AND       73
+     O       OR 1      24NL4N25
+     O       AND       73
+0512 O       OR   14   25
+     O       AND       73
+     O                       L4CRNM      27
+     O                       L4GBCN      37
+     O*                   L1   CCY       44
+     O*                   L1 11TAMT      65 ' ,   ,   ,   , 0 '
+     O*                   L1 12TAMT      65 '   ,   ,   , 0 . '
+     O*                   L1 13TAMT      65 '  ,   ,   , 0 .  '
+     O*                   L1 14TAMT      65 ' ,   ,   , 0 .   '
+     O                    L1N50CCY       44
+     O                 11 L1N50TAMT      65 ' ,   ,   ,   , 0 '
+     O                 12 L1N50TAMT      65 '   ,   ,   , 0 . '
+     O                 13 L1N50TAMT      65 '  ,   ,   , 0 .  '
+     O                 14 L1N50TAMT      65 ' ,   ,   , 0 .   '
+     O                       50CCY       44
+     O                 11    50TAMT      65 ' ,   ,   ,   , 0 '
+     O                 12    50TAMT      65 '   ,   ,   , 0 . '
+     O                 13    50TAMT      65 '  ,   ,   , 0 .  '
+     O                 14    50TAMT      65 ' ,   ,   , 0 .   '
+0520 O                         LNNO      85
+0521 O                         CCYL      92
+0522 O                       15CPAM     114 ' ,   ,   ,   , 0 -'
+0523 O                       16CPAM     114 '   ,   ,   , 0 . -'
+0524 O                       17CPAM     114 '  ,   ,   , 0 .  -'
+0525 O                       18CPAM     114 ' ,   ,   , 0 .   -'
+0526 O        T   17   LR 19NU7
+     O       AND       73
+     O                                   63 '***   NO DETAILS TO REPO'
+     O                                   71 'RT   ***'
+0528 O        T 32     LR U7 73
+     O                                   74 '** DATABASE IN ERROR **'
+     O        T 3      L7 73
+     O                 88                66 '*** END OF REPORT FOR'
+     O                 88                75 ' COMPANY '
+     O                 88      CMPYM     79
+     O                 88                83 ' ***'
+0518 O                N88                76 '*** END OF REPORT ***'
+     OLE0812P1E   03           NODTL
+0476 O                                   22 'REFERENCE LE0812P1'
+0477 O                         TITL      89
+0478 O                                  104 'DATE'
+0479 O                         RUNA     113
+0480 O                                  122 'PAGE'
+0481 O                         PAGE  3  127
+     O        E   05           NODTL
+0485 O                                   50 'LOANS OUTSTANDING BY'
+0486 O                                   72 'COUNTRY AND REGION BY'
+0487 O                                   82 'GUARANTOR'
+     O                       88          93 'COMPANY'
+     O                       88BRNCH     99
+     O                       88         102 ' - '
+     O                       88CMNM     132
+     O        E   06           NODTL
+0491 O                                   54 '------------------------'
+0492 O                                   78 '------------------------'
+0493 O                                   82 '----'
+     O        E 3        NU7   NODTL
+     O                                   73 '***   NO DETAILS TO REPO'
+     O                                   81 'RT   ***'
+     O        E 3      U8 U7   NODTL
+     O                                   74 '** DATABASE IN ERROR **'
+     O        E 3              NODTL
+     O                 88                66 '*** END OF REPORT FOR'
+     O                 88                75 ' COMPANY '
+     O                 88      BRNCH     79
+     O                 88                83 ' ***'
+0518 O                N88                76 '*** END OF REPORT ***'
+0537 OLE0812AUT   03   LR
+0538 O                                   22 'REFERENCE LE0812AU'
+0539 O                         TITL      89
+0540 O                                  104 'DATE'
+0541 O                         RUNA     112
+0542 O                                  122 'PAGE'
+0543 O                         PAGE1 3  127
+0544 O        T   05   LR
+0545 O                                   56 'LOANS OUTSTANDING BY COU'
+0546 O                                   80 'NTRY AND REGION BY GUARA'
+0547 O                                  100 'NTOR - FILE CONTROLS'
+0548 O        T   06   LR
+0549 O                                   56 '------------------------'
+0550 O                                   80 '------------------------'
+0551 O                                  100 '--------------------'
+0552 O        T   09   LR
+0553 O                                   28 'S/SGLNS - RUN CONTROLS'
+0554 O                                   59 'NUMBER'
+0555 O                                   84 'VALUE'
+0556 O        T   10   LR
+0557 O                                   28 '----------------------'
+0558 O                                   59 'OF RECORDS'
+0559 O                                   84 'OF RECORDS'
+0560 O        T   12   LR
+0561 O                                   29 'TOTAL RECORDS ON FILE'
+0562 O                         NORE  3   59
+0563 O                         HRWN  4   81
+0564 O                         HRDC      84
+0565 O        T   14   LR
+0566 O                                   29 'TOTAL RECORDS ON FILE'
+0567 O                                   42 '- CALCULATED'
+0568 O                         COUNT 3   59
+0569 O                         HASHF 4   81
+0570 O                         HASHL     84
+0571 O                   NU7 U8         111 '***   DIFFERENCE   ***'
+0528 O        T 32     LR U7 U8
+0529 O                                   51 '***REFERENCE LE0812'
+0530 O                                   71 '- DATABASE ERROR AT'
+0531 O                         DBASE     74
+0532 O        T        LR U7
+0579 O                                   37 'FILENAME'
+0580 O                         DBFILE    46
+0581 O                                   51 'KEY'
+0582 O                         DBKEY     81
+     O        T 3      LRNU7N80
+     O                                   63 '***   NO DETAILS TO REPO'
+     O                                   71 'RT   ***'
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

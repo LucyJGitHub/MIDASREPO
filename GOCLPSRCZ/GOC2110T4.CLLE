@@ -1,0 +1,118 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO GPWTRAPPD Housekeeping - End TS')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GOC2110T4 - Midas GO GPWTRAPPD Housekeeping - End TS        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD023876A          Date 06Jan14              */
+/*                      MD023876 *CREATE   Date 14Dec13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD023876A - Wrong location of task split objects            */
+/*       MD023876 - GOC210000 Performance Issues                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/**********  DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +           */                /*MD023876A*/
+/**********               VALUE('GPWTRPDPD')                         */                /*MD023876A*/
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOWTRPDPD')                                           /*MD023876A*/
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC)  TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZODNWD)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZOBCCY)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB)  TYPE(*DEC)  LEN(1 0)
+             DCL        VAR(&PROC)  TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(SDSBNKTD)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ. */
+             SNDPGMMSG  MSG('GOC2110T4 - GPWTRAPPD Housekeeping +
+                          - End Task Split') TOMSGQ(MRUNQ)
+ 
+/* Get zone */
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Determine if it is this zone to do the housekeeping */
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(GP210000) PARM(&RTCD &ERMS &ZOZONE +
+                          &BJMRDT &PROC)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&PROC *NE 'Y') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Determine library names. */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSID *CAT 'DMLIB')
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Retrieve first member description. */
+             RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
+ 
+/* Delete sub-task data queue. */
+LOOP:
+             DLTDTAQ    DTAQ(&DTAQLIB/&MEMBER)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+/* Retrieve next member description. */
+             RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
+ 
+/* Loop for all members in driving file. */
+             GOTO       CMDLBL(LOOP)
+ 
+REMOVE:
+/* Remove all members from driving file and trailer file */
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program GOC2110T4 ended abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

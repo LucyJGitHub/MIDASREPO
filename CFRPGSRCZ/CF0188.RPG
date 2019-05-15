@@ -1,0 +1,841 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Dealing confirmation audit report')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Confirmation Matching                            *
+     F*                                                               *
+     F*  CF0188 - Dealing Confirmations Status Audit                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 113352             Date 13Feb97               *
+      *                 CCF003             Date 01Aug96               *
+     F*                 114028             DATE 01AUG96               *
+     F*                 062641             DATE 18FEB94               *
+     F*                 S01453             DATE 13DEC93               *
+     F*                 060983             DATE 10NOV93               *
+     F*                 060086             DATE 08NOV93               *
+     F*                 E39374             DATE 01MAY92               *
+     F*                 S01310             DATE 06DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*  113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                 *
+     F*  CCF003 - Include MT360 and MT362 Confirmation Matching       *
+     F*  114028 - DB error when FRA                                   *
+     F*  062641 - Incorrect COUNTERPARTIES are shown in Dealing       *
+     F*           Confirmations Status Audit report CF0188P1.         *
+     F*  S01453 - Margin and FX Positions/Points and Base currency    *
+     F*           Positions/Points added to FX input (Recompiled)     *
+     F*  060983 - Database error on file SDBANKPD at 006 in program   *
+     F*           CF0188 causing COB to halt at DLC0603 seq 00001.    *
+     F*  060086 - DB Error at 007 file SDCUSTL0 key 000000. Applied   *
+     F*           fixes 055057 AND 039932.                            *
+     F*  E39374 - RECOMPILED FOR CHANGE TO PRINTER FILE               *
+     F*  S01310 - RE WRITTEN FOR SWIFT RATIONALISATION                *
+     F*                                                               *
+     F*****************************************************************
+     FCFFEEDL0IF  E           K        DISK
+     FCFFEEDL1IF  E           K        DISK
+     F            CFFEEDD0                          KRENAMECFFEDD01
+     FMGOREFL1IF  E           K        DISK
+     FMSIXI2L4IF  E           K        DISK
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE               060086
+     F            DEALSDFF                          KIGNORE               060086
+     FSDCURRL0IF  E           K        DISK
+     FSDBROKL0IF  E           K        DISK
+     FSDCUSTL0IF  E           K        DISK
+     FSDBANKPDIF  E                    DISK
+     FSDBRCHL0IF  E           K        DISK
+     FCF0188AUO   E                    PRINTER      KINFDS SPOOLA     UC
+     FCF0188P1O   E             20     PRINTER      KINFDS SPOOLP     UC
+      *
+     E                    TXT     1   4 20               TEXT
+     E                    TAB1    1  10  2 0 TAB2   15   STATUS NARRRATIVES
+     E                    TABMON 12  12  3   TABMM   2   MMM TO MM
+     E                    ZYDY    4   4  4 0             ZDATE2
+     E                    ZMDY   13  13  3 0             ZDATE2
+     E                    ZMNM   12  12  3               ZDATE2
+     E                    CPY@    1   1 80
+      *
+      * ID C  F  H  L    Function of indicators
+      * 20               OVERFLOW
+      * 30               ERROR CFMSIXL3
+      * 31               EOF CFFEEDL0
+      * 32               ERROR DEALS
+      * 33               ERROR MSIXI2L4
+      * 34               ERROR SDCUSTL0
+      * 35               ERROR SDCURRL0
+      * 36               ERROR SDBROKL0
+      * 40-43            0-3 DECIMAL PLACE PURCHASE AMOUNT
+      * 44-47            0-3 DECIMAL PLACE SELL AMOUNT
+      * 48               MT300 (FX) - OUTPUT "SELL"
+      * 98               DATE FORMAT = M
+      * 99               LOKUP
+      * U7U8LR           DATABASE  ERROR
+      *
+     IMSIXI2D0
+     I              MTPY                            MTPYX
+     I              CNUM                            CNUMX                 060086
+      *
+     IDEALSDEF
+     I              SCUS                            CNUM
+      ** Rename SCUS so that all deals files have same customer field
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  LOCAL DATA AREA - DATABASE ERRORS
+      *
+     I            DS
+     I                                        1   7 BJHZNB
+     I                                        1   2 DD
+     I                                        3   5 MMM
+     I                                        6   7 YY
+      **  Run Date (DDMMMYY)
+      *
+     I            DS
+     I                                        1   60@RUNDN
+     I                                        1   2 @YY
+     I                                        3   4 @MM
+     I                                        5   6 @DD
+      **  Run Date (YYMMDD)
+      *
+     I            DS
+     I                                        1  16 IMRF
+     I                                        3   80@DLE
+     I                                        9  11 @SEQ
+      **  MSIXOPF key
+      *
+     I            DS
+     I                                        1  130AM10
+     I                                        1  131AM11
+     I                                        1  132AM12
+     I                                        1  133AM13
+      **  PURCHASE AMOUNT redefined to have 0, 1, 2 OR 3 decimal places
+      *
+     I            DS
+     I                                        1  130AM20
+     I                                        1  131AM21
+     I                                        1  132AM22
+     I                                        1  133AM23
+      **  SELL AMOUNT redefined to have 0, 1, 2 OR 3 decimal places
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     ISPOOLA      DS
+     I                                       83  92 AFILE
+     I                                    B 123 1240AFNUM
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+      **  File information data structure
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN   - Main process                                       *
+      *   INIT   - Initial process                                    *
+      *   REPT   - Process report                                     *
+      *   DETL   - COLLECT REPORT DETAILS                             *
+      *   DEAL   - COLLECT DEAL DETAILS                               *
+      *   CUST   - COLLECT CUSTOMER NAME AND TOWN                     *
+      *   ZDATE2 - TO CONVERT A DAY NUMBER TO DATE FORMATS            *
+      *   *PSSR  - Error handling                                     *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT Initial process                               *
+      *            REPT Process report                                *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  If multibranching off
+     C           MBIN      IFNE 'Y'
+     C                     READ CFFEEDL0                 31
+      *
+     C                     OPEN CF0188P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C           BRCA      CHAINSDBRCHL0             88
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+      *
+     C           *IN31     DOWEQ'0'
+     C                     EXSR REPT
+      *
+      **  Read next FEEDBACK record
+     C                     READ CFFEEDL0                 31
+     C                     MOVE *BLANKS   TEXT
+     C                     END
+      *
+      **  No status changes today
+     C           @PRT      IFNE 'Y'
+     C                     SETOF                     20
+     C                     WRITENODETAIL
+     C                     END
+      *
+      **  If multibranching on
+     C                     ELSE
+     C                     READ CFFEEDL1                 31
+     C                     MOVE BRCA      @BRCA   3
+      *
+     C                     OPEN CF0188P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C           BRCA      CHAINSDBRCHL0             88
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+      *
+     C           *IN31     DOWEQ'0'
+     C                     EXSR REPT
+      *
+      **  Read next FEEDBACK record
+     C                     READ CFFEEDL1                 31
+     C                     MOVE *BLANKS   TEXT
+      *
+     C           *IN31     IFEQ '0'
+     C           BRCA      ANDNE@BRCA
+      **  MAKE SURE OVERFLOW PROCESSING WONT PRINT NEW HEADER AS
+      **  THIS IS ALREADY PRINTED FOR NEXT BRANCH
+     C                     WRITEEOREPORT
+     C                     CLOSECF0188P1
+     C                     OPEN CF0188P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C           BRCA      CHAINSDBRCHL0             88
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     SETOF                         20
+     C                     END
+      *
+     C                     MOVE BRCA      @BRCA
+     C                     END
+     C                     END
+      *
+      **  Write "*** END OF REPORT ***"
+     C                     WRITEEOREPORT
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'CF0188'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Read BANK DETAILS
+     C                     READ SDBANKPD                 34
+      *
+     C           *IN34     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     MOVEL'FIRST'   DBKEY            ***************
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0188AU
+     C                     MOVE AFILE     SFILE
+     C                     Z-ADDAFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADERA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Determine DATE FORMAT
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *                                                                   CCF003
+      ** Access Switchable features file to see if CCF003 is switched     CCF003
+      ** ON.                                                              CCF003
+      *                                                                   CCF003
+     C                     CALL 'AOSARDR0'                                CCF003
+     C                     PARM '       ' RTCDA   7                       CCF003
+     C                     PARM '*VERIFY' RTCDB   7                       CCF003
+     C                     PARM 'CCF003'  RTCDC   6                       CCF003
+      *                                                                   CCF003
+     C           RTCDA     IFEQ *BLANK                                    CCF003
+     C                     MOVE 'Y'       CCF003  1                       CCF003
+     C                     ELSE                                           CCF003
+     C                     MOVE 'N'       CCF003                          CCF003
+     C                     ENDIF                                          CCF003
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+      *
+      **  Convert Dun Date (DDMMMYY) to YYMMDD format
+     C                     MOVE YY        @YY
+     C           MMM       LOKUPTABMON    TABMM          10
+     C                     MOVE TABMM     @MM
+     C                     MOVE DD        @DD
+      *
+      **  If multibranching on display branch code
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN49
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT - Process report                                       *
+      *   Calls - DETL COLLECT REPORT DETAILS                         *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           REPT      BEGSR
+      *
+      **  IF Feedback status has changed today
+     C           DTSC      IFEQ @RUNDN
+     C           IMRF      CHAINMGOREFL1             30
+      *
+      **  Output "* MESSAGE DELETED *"
+     C           *IN30     IFEQ '1'
+     C                     MOVELTXT,4     TEXT
+     C                     MOVE *BLANKS   MTPY
+     C                     END
+      *
+      **  Extract details for report
+     C                     EXSR DETL
+      *
+      **  Page overflow?
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     SETOF                     20
+     C                     END
+      *
+      **  Print message and feedback details
+     C                     WRITEDETAIL1
+     C                     WRITEDETAIL2
+     C                     WRITEDETAIL3
+     C                     WRITEDETAIL4
+     C                     MOVE 'Y'       @PRT    1
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DETL - COLLECT REPORT DETAILS                               *
+      *   CALLS - DEAL   COLLECT DEAL DETAILS                         *
+      *           CUST   COLLECT CUSTOMER NAME AND TOWN               *
+      *           ZDATE2 CONVERT DAY NUMBER TO DDMMMYY                *
+      *   CALLED BY - REPT PROCESS REPORT                             *
+      *****************************************************************
+      *
+     C           DETL      BEGSR
+      *
+      **  Write "NO FEEDBACK YET" or appropriate COUNTERPARTY STATUS
+     C           CPSX      LOKUPTAB1      TAB2           99
+     C                     MOVELTAB2      @STSC
+      *
+      **  Write "NO FEEDBACK YET" or appropriate BROKER STATUS
+     C           BKSX      LOKUPTAB1      TAB2           99
+     C                     MOVELTAB2      @STSB
+      *
+      **  If feedback is not for same deal as previous, extract deal
+      **  details
+     C           @DLE      IFNE @SVDL
+     C                     EXSR DEAL
+     C                     END
+      *
+      **  IF MSIXOPF record deleted chain for customer name and town
+      **  using customer from deals file
+      **  (if deal not found leave blank by using indicators in DDS)
+     C************IN30     IFEQ '1'                                       062641
+     C************IN32     ANDEQ'0'                                       062641
+     C           *IN32     IFEQ '0'                                       062641
+     C                     EXSR CUST
+     C                     END
+      *
+      **  "* CANCEL REQUESTED *"
+     C           CNRQ      IFEQ 'Y'
+     C           TEXT      IFEQ *BLANKS
+     C                     MOVELTXT,2     TEXT
+     C                     END
+     C                     ELSE
+      *
+      **  If incoming expected get SWIFT REFERENCE (MIR) from MSIXI2L4
+     C           CPSX      IFEQ 50
+     C           CPSX      OREQ 51
+     C           CPSX      OREQ 52
+     C           CPSX      OREQ 53
+     C           CPSX      OREQ 54
+     C           CPSX      OREQ 99
+      *
+     C           CPRF      CHAINMSIXI2L4             33
+     C           *IN33     IFEQ '1'
+     C                     MOVELCPRF      MIR
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DEAL - COLLECT DEAL DETAILS                                 *
+      *   CALLED BY - DETL EXTRACT DETAILS FOR REPORT                 *
+      *****************************************************************
+      *
+     C           DEAL      BEGSR
+      *
+     C           @DLE      CHAINDEALS                32
+      *
+      **  Write '*** DEAL DELETED ***' if deleted or not found
+      **  (n.b. if deal not found the deal fields in report will be
+      **  left blank by using *IN32 in the DDS)
+     C           *IN32     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVELTXT,3     TEXT
+     C                     END
+      *
+      **  If deal found, extract deal details
+     C           *IN32     IFEQ '0'
+      *
+      **  Convert DEAL DATE to DDMMMYY
+     C                     Z-ADDDDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    @DAT
+      *
+      **  Convert VALUE DATE to DDMMMYY
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    @VAT
+      *
+      **  Format PURCHASE AMOUNT
+      **  FX
+     C           RCDT      IFEQ 'B'
+     C                     Z-ADDPUAM      AM10
+     C                     END
+      **  MM
+     C           RCDT      IFEQ 'C'
+     C                     Z-ADDPCPL      AM10
+     C                     END
+      **  NAS
+     C           RCDT      IFEQ 'D'
+     C                     Z-ADDPUPR      AM10
+     C                     END
+      **  NAB
+     C           RCDT      IFEQ 'E'
+     C                     Z-ADDSAPR      AM10
+     C                     END
+      **  FRA/IRS                                                         114028
+     C           RCDT      IFEQ 'G'                                       114028
+     C                     Z-ADDUPAMT     AM10                            114028
+     C                     ENDIF                                          114028
+      *
+     C           RCDT      IFEQ 'B'
+     C                     MOVE PUCY      CCY1
+     C                     ELSE
+     C                     MOVE CCY       CCY1
+     C                     END
+      *                                                                   114028
+     C           RCDT      IFEQ 'G'                                       114028
+     C                     MOVE UCUCY     CCY1                            114028
+     C                     ENDIF                                          114028
+      *
+      **  Get number of decimal places for currency
+     C           CCY1      CHAINSDCURRL0             35
+      *
+     C           *IN35     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD04        DBASE            * DB ERROR 04 *
+     C                     MOVELCCY1      DBKEY            ***************
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0188AU
+     C                     MOVE AFILE     SFILE
+     C                     Z-ADDAFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADERA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Edit amount with number of decimal places using indicators
+     C           A6NBDP    COMP 0                        40
+     C           A6NBDP    COMP 1                        41
+     C           A6NBDP    COMP 2                        42
+     C           A6NBDP    COMP 3                        43
+      *
+      **  If FX deal, format SELL AMOUNT
+     C                     SETOF                     48
+     C           RCDT      IFEQ 'B'
+      *
+      **  *IN48 => "SELL" output to report
+     C                     SETON                     48
+     C                     Z-ADDSLAM      AM20
+     C                     MOVE SLCY      CCY2
+      *
+      **  Get number of decimal places for SELL CURRENCY
+     C           CCY2      CHAINSDCURRL0             35
+      *
+     C           *IN35     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD05        DBASE            * DB ERROR 05 *
+     C                     MOVELCCY2      DBKEY            ***************
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0188AU
+     C                     MOVE AFILE     SFILE
+     C                     Z-ADDAFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADERA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CCF003
+      **  If Cross Currency IRS deals, format amount for their            CCF003
+      **  side                                                            CCF003
+      *                                                                   CCF003
+     C                     MOVE *OFF      *IN50                           CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'Y'                                       CCF003
+     C           RCDT      ANDEQ'B'                                       CCF003
+     C           DTYP      ANDEQ'RX'                                      CCF003
+     C                     MOVE *ON       *IN50                           CCF003
+     C                     Z-ADDTPAMT     AM20                            CCF003
+     C                     MOVE TCUCY     CCY2                            CCF003
+      *                                                                   CCF003
+      **  Get number of decimal places for SELL CURRENCY                  CCF003
+     C           CCY2      CHAINSDCURRL0             35                   CCF003
+      *                                                                   CCF003
+     C           *IN35     IFEQ '1'                                       CCF003
+     C           *LOCK     IN   LDA                        ***************CCF003
+     C                     Z-ADD08        DBASE            * DB ERROR 08 *CCF003
+     C                     MOVELCCY2      DBKEY            ***************CCF003
+     C                     MOVEL'SDCURRPD'DBFILE                          CCF003
+     C                     OUT  LDA                                       CCF003
+     C                     OPEN CF0188AU                                  CCF003
+     C                     MOVE AFILE     SFILE                           CCF003
+     C                     Z-ADDAFNUM     ZSNUM                           CCF003
+     C                     EXSR SPLF                                      CCF003
+     C                     WRITEHEADERA                                   CCF003
+     C                     WRITEDBERROR                                   CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     END                                            CCF003
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+      *
+      **  Edit amount with number of decimal places using indicators
+     C           A6NBDP    COMP 0                        44
+     C           A6NBDP    COMP 1                        45
+     C           A6NBDP    COMP 2                        46
+     C           A6NBDP    COMP 3                        47
+     C                     END
+      *
+      **  BROKER NAME and TOWN
+     C                     MOVE *BLANKS   BNAM   30
+     C                     MOVE *BLANKS   BTWN   10
+     C***********                                                         060983
+     C****If*PHON,*TELX,*MAIL*or*SWAP*output*"NO BROKER"***************   060983
+     C***********                                                         060983
+     C*                                                                   060983
+     C**  If PHON, TELX, MAIL or SWAP OR BLANK OUTPUT "NO BROKER"         060983
+     C*                                                                   060983
+     C           BRKC      IFEQ 'PHON'
+     C                     MOVEL'PHONE'   BTWN
+     C                     MOVELTXT,1     @STSB
+      *
+     C                     ELSE
+     C           BRKC      IFEQ 'TELX'
+     C                     MOVEL'TELEX'   BTWN
+     C                     MOVELTXT,1     @STSB
+      *
+     C                     ELSE
+     C           BRKC      IFEQ 'SWAP'
+     C           BRKC      OREQ 'MAIL'
+     C                     MOVELBRKC      BTWN
+     C                     MOVELTXT,1     @STSB
+      *
+     C                     ELSE                                           060983
+     C           BRKC      IFEQ '    '                                    060983
+     C                     MOVEL'     '   BTWN                            060983
+     C                     MOVELTXT,1     @STSB                           060983
+     C                     ELSE
+      *
+     C           BRKC      CHAINSDBROKL0             36
+      *
+     C           *IN36     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD06        DBASE            * DB ERROR 06 *
+     C                     MOVELBRKC      DBKEY            ***************
+     C                     MOVEL'SDBROKPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0188AU
+     C                     MOVE AFILE     SFILE
+     C                     Z-ADDAFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADERA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVELA9BKNM    BNAM
+     C                     MOVELA9BRTN    BTWN
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END                                            060983
+      *
+     C                     MOVE @DLE      @SVDL   60
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   CUST - COLLECT CUSTOMER NAME AND TOWN                       *
+      *   CALLED BY - DETL EXTRACT DETAILS FOR REPORT                 *
+      *****************************************************************
+      *
+     C           CUST      BEGSR
+      *
+     C                     MOVE CNUM      @CUST   6
+     C           @CUST     CHAINSDCUSTL0             34
+     C           *IN34     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD07        DBASE            * DB ERROR 07 *
+     C                     MOVELCNUM      DBKEY            ***************
+     C                     MOVEL'SDCUSTL0'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0188AU
+     C                     MOVE AFILE     SFILE
+     C                     Z-ADDAFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADERA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE BBCRNM    RPNM
+     C                     MOVE BBCRTN    RPTN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS          *
+      *   CALLED BY   DEAL - COLLECT DEAL DETAILS                     *
+      *****************************************************************
+      *
+     C           ZDATE2    BEGSR
+      *
+      **   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+      *
+      **   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+      *
+      **   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+      *
+      **   DETERMINE YEAR NUMBER.
+      **   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+      *
+      **   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1
+      *
+      **   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+      *
+     C           ZWRK2     SUB  1         ZWRK2
+      *
+      **   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+      *
+      **   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR
+      *
+      **   DETERMINE MONTH NUMBER.
+      **   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+      *
+      **   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+      *
+     C           ZWRK2     SUB  1         ZWRK2
+      *
+     C                     Z-ADDZWRK2     ZMTH    20
+      *
+      **   DETERMINE DAY OF MONTH.
+      **   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+      *
+      **   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20
+      *
+      **   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+      *
+      **   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+      *
+      **   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+      *
+     C           ZDEND2    ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SPLF  - Error handling                                      *
+      *****************************************************************
+      *
+     C           SPLF      BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM BRCA      @PARM   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *       *PSSR - ERROR HANDLING                                  *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+**  TXT                                                      *****
+NO BROKER
+* CANCEL REQUESTED *
+*** DEAL DELETED ***
+* MESSAGE DELETED *
+**  STATUS NARRATIVES (TAB1 TAB2)                            *****
+00NO FEEDBACK YET
+01WAITING
+02TIMED OUT
+50PROPOSED PAIR
+51PAIRED ERROR-O
+52PAIRED ERROR-T
+53PAIRED ERROR-B
+54PROPOSED INVEST
+97NONE EXPECTED
+99PAIRED NO ERROR
+**  TABMON TABMM                                               *****
+JAN01FEB02MAR03APR04MAY05JUN06JUL07AUG08SEP09OCT10NOV11DEC12
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN           *****
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR             *****
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES                                 *****
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

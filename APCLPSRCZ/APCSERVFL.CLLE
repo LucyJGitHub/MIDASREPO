@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas AP APISERVFL entry point module')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - APIs module                                         */
+/*                                                                   */
+/*       APCSERVFL - Entry point module for APISERVFL.               */
+/*                                                                   */
+/*       Function   - This module performs preparatory tasks         */
+/*                    required for handling incoming messages, such  */
+/*                    as applying file overrides.                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. 246059             Date 05Mar07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      240283             Date 07Jun06              */
+/*                      BUG9940            Date 16Jan06              */
+/*                      CAP084             Date 26Feb04              */
+/*                      CAP083              Date 20Feb03             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       246059 - CPF4101 appeared during open of file TRADSDZ3.     */
+/*                Patterned fix 201429.                              */
+/*       240283 - Locking the wrong dataarea. Apply BUG9940.         */
+/*                Applied fix annotated as BUG9940.                  */
+/*       BUG9940 - Locking the wrong dataarea                        */
+/*       CAP084 - API wrapper project - prevent APISERVER jobs       */
+/*                being submitted when already active.               */
+/*       CAP083 - APISERVER File Adapter                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** +
+    Allocate a data area to show that the server is active.    +
+**/
+/************ALCOBJ     OBJ((APISERVER *DTAARA *EXCL))                                    /*CAP084*/
+/************ALCOBJ     OBJ((APISERVER *DTAARA *EXCL)) WAIT(0)                /*CAP084*/ /*BUG9940*/
+             ALCOBJ     OBJ((APISERVFL *DTAARA *EXCL)) WAIT(0)                           /*BUG9940*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))                             /*CAP084*/
+ 
+/** +
+    Apply an override to prevent shared opens of MMDEALL0, as these +
+    can cause problems further down the stack. +
+**/
+             OVRDBF     FILE(MMDEALL0) SHARE(*NO)
+             OVRDBF     FILE(TRADSDZ3) TOFILE(TRADSDY2) SHARE(*NO)                        /*246059*/
+ 
+/** +
+    Receive journal entries from file APITRANSPD +
+**/
+ RCVJ:
+             RCVJRNE    JRN(ICJRN) EXITPGM(APINCOMMSF) +
+                          FILE((APITRANSPD)) RCVRNG(*CURRENT) +
+                          FROMENT(*FIRST) ENTTYP(*ALL) DELAY(*NEXTENT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** +
+    Deallocate the data area to show that the server is no longer     +
+    active.                                                           +
+**/
+             DLCOBJ     OBJ((APISERVFL *DTAARA *EXCL))
+             DLTOVR     *ALL                                                              /*246059*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Module +
+                          APCSERVFL ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

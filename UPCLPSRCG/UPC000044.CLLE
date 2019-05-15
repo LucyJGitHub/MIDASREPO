@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Merge message files')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000044 - Merge message files                             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. CUP042             Date 26May15              */
+/*       Prev Amend No. CUP041   *CREATE   Date 25Jul14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP042 - Option to copy ZZGBLANG moved to general copy of   */
+/*                Extract Files.                                     */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBMOV &BRGDTALIB &MSGF &OWNER &AUTL +
+                          &STATUS)
+ 
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&TLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Change status to 'C'; only an error will set it to 'F'. */
+             CHGVAR     VAR(&STATUS) VALUE('C')
+ 
+             CHGVAR     VAR(&TLIB) VALUE(%SST(&LIBMOV 3 3) *TCAT +
+                          'TALIB')
+ 
+/* If the message file does not already exist in the library list then copy */
+/*  the message file across.                                                */
+             RTVOBJD    OBJ(&MSGF) OBJTYPE(*MSGF) TEXT(&TEXT)
+             MONMSG     MSGID(CPF9812) EXEC(DO)
+                CRTDUPOBJ  OBJ(&MSGF) FROMLIB(&BRGDTALIB) +
+                             OBJTYPE(*MSGF) TOLIB(&TLIB)
+                CHGOBJOWN  OBJ(&MSGF) OBJTYPE(*MSGF) NEWOWN(&OWNER)
+                GRTOBJAUT  OBJ(&MSGF) OBJTYPE(*MSGF) AUTL(&AUTL)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* If the message file does exist then take a copy before merging it. */
+             DLTMSGF    MSGF(&LIBMOV/&MSGF)
+             MONMSG     MSGID(CPF0000)
+             DLTMSGF    MSGF(QTEMP/&MSGF)
+             MONMSG     MSGID(CPF0000)
+             CRTMSGF    MSGF(QTEMP/&MSGF) TEXT(&TEXT)
+             CRTDUPOBJ  OBJ(&MSGF) FROMLIB(*LIBL) OBJTYPE(*MSGF) +
+                          TOLIB(&LIBMOV)
+             IF         COND(&MSGF *EQ 'ZZGBMSGF') THEN(DO)
+                DLTMSGF    MSGF(ZZGBMSGF)
+                MONMSG     MSGID(CPF0000)
+                CRTDUPOBJ  OBJ(&MSGF) FROMLIB(&BRGDTALIB) +
+                             OBJTYPE(*MSGF) TOLIB(&TLIB)
+                CHGOBJOWN  OBJ(&MSGF) OBJTYPE(*MSGF) NEWOWN(&OWNER)
+                GRTOBJAUT  OBJ(&MSGF) OBJTYPE(*MSGF) AUTL(&AUTL)
+/**It*is*expected*that*ZZGBLANG*would*be*delivered*as*well*so*handle*it**/ /*          */ /*CUP042*/
+/***here.**Check*that*it*has*been*delivered*first.***********************/ /*          */ /*CUP042*/
+/**********     CHKOBJ     OBJ(&BRGDTALIB/ZZGBLANG) OBJTYPE(*FILE)                     */ /*CUP042*/
+/**********     MONMSG     MSGID(CPF9801) EXEC(DO)                                     */ /*CUP042*/
+/**********        GOTO       CMDLBL(ENDPGM)                                           */ /*CUP042*/
+/**********     ENDDO                                                                  */ /*CUP042*/
+/**********     CPYF       FROMFILE(ZZGBLANG) TOFILE(&LIBMOV/ZZGBLANG) +               */ /*CUP042*/
+/**********                  MBROPT(*REPLACE) CRTFILE(*YES) +                          */ /*CUP042*/
+/**********                  FMTOPT(*MAP *DROP)                                        */ /*CUP042*/
+/**********     CPYF       FROMFILE(&BRGDTALIB/ZZGBLANG) +                             */ /*CUP042*/
+/**********                  TOFILE(ZZGBLANG) MBROPT(*REPLACE) +                       */ /*CUP042*/
+/**********                  FMTOPT(*MAP *DROP)                                        */ /*CUP042*/
+             ENDDO
+             ELSE       CMD(DO)
+                MRGMSGF    FROMMSGF(&BRGDTALIB/&MSGF) TOMSGF(&MSGF) +
+                             RPLMSGF(QTEMP/&MSGF)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&STATUS) VALUE('F')
+ENDPGM:
+             ENDPGM

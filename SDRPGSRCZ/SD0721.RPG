@@ -1,0 +1,2093 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Collateral Types Maintenance')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0721 - Collateral Types Maintenance                        *
+      *                                                               *
+      *  Function:  This program maintains the Collateral Types       *
+      *             Details                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG17355           Date 26Mar08               *
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8090            Date 15Aug05               *
+      *                 BUG2203            Date 26Apr04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL018             Date 25Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011  *CREATE    Date 20Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  BUG17355 - Data mapping error on field CTTMST                *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8090 - The COB failed at component GLC001500 00001 due to *
+      *            collaterals.                                       *
+      *  BUG2203 - Should define dataarea SCCMTJOB correctly.         *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL018 - Risk Weighted Assets                                *
+      *           Allow The Type Of 'X' (Switchable)                  *
+      *  CGL011 - Collateral Processing for Midas DBA                 *
+      *                                                               *
+      *****************************************************************
+     FSD0721DFCF  E                    WORKSTN                        UC
+     F                                        SRLRN KSFILE SD0721F4
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+     FGLCOLLL7IF  E           K        DISK
+      ** Collateral Details by Collateral Type
+      *
+     FSDCOTPL1IF  E           K        DISK
+     F            SDCOTPD0                          KRENAMESDCOTPD1
+      ** Collateral Types Retrieval Index
+      *
+     FSDCOTPL2IF  E           K        DISK
+     F            SDCOTPD0                          KRENAMESDCOTPD2
+      ** Collateral Types Retrieval Index 2
+      *
+     FSDCOTPL0UF  E           K        DISK         KCOMIT       A
+      ** Collateral Types Update Index
+      *
+     FSDFCTLL0UF  E           K        DISK         KCOMIT
+      ** Control File Update Index
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - F3 Exit                                               *
+      *   05  - F5 Refresh                                            *
+      *   09  - F9 Add Mode                                           *
+      *   10  - F10 Confirm Delete                                    *
+      *   12  - F12 Previous                                          *
+      *   20  - Enable F5                                             *
+      *   21  - Maintenance Mode (PMMODE='M')                         *
+      *   22  - Select Mode (PMMODE='?')                              *
+      *   23  - Enquiry Mode (PMMODE='E')                             *
+      *   24  - Action is D                                           *
+      *   28  - Invalid Position Criteria                             *
+      *   29  - Error Indicator for Selection field                   *
+      *   30  - Protect other fields                                  *
+      *   31  - Invalid Collateral Type                               *
+      *   32  - Invalid Collateral Description                        *
+      *   33  - Invalid Collateral Processing Type                    *
+      *   34  - Invalid Default Margin Percentage                     *
+      *   35  - Invalid Retention Period                              *
+      *   36  - Invalid Revaluation Method                            *
+      *   37  - Invalid Revaluation Date                              *
+      *   38  - Invalid Revaluation Frequency                         *
+      *   39  - Invalid Revaluation Day Number                        *
+      *   40  - Non-display other fields                              *
+      *   41  - Display DELETED text                                  *
+      *   42  - Protect Collateral Type                               *
+      *   51  - Enable F9                                             *
+      *   54  - SFLNXTCHG                                             *
+      *   60  - SFLCLR                                                *
+      *   61  - SFLEND                                                *
+      *   63  - SFLDSP                                                *
+      *   64  - ROLLUP                                                *
+      *   80  - Read to SDCOTPL1                                      *
+      *   81  - Readc to subfile record                               *
+      *   82  - Read to GLCOLLL7                                      *
+      *   83  - Chain to SDCOTPL2                                     *
+      *   84  - Chain to SDCOTPL0                                     *
+      *   85  - Chain to SDFCTLL0                                     *
+      *   86  - TESTN Indicator                                       *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E*****               TXT     1   9  9               CGL018
+     E                    TXT     1  10  9               CGL018
+      ** Array containing Processing Type Texts
+     E                    STAMP   1   1 26                                                  BUG17355
+      ** Array containing dummy timestamp                                                   BUG17355
+      *                                                                                       CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      *                                                                                       CSC022
+     E                    WCMT       10 10                                                    CSC022
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZALIGNZ1
+      /EJECT
+      *
+     IPGMDS     ESDSY2PGDSP
+      ** Program data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      ** File information data structure
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Standard data area layout for system flags & run date
+      *
+     I/COPY ZSRSRC,ZTNLU1Z1
+      ** Used by ZTNLU1 subroutine
+      *
+     ICMTTXT      DS                            179
+      ** Data structure for setup of commitment text
+      *
+     I                                        1   50WCNATN
+     I                                        6   7 WCMDID
+     I                                        8  15 WCPGMN
+     I                                       16  18 WCWSID
+     I                                       19  240WCTIME
+     I                                       25  25 WCACTN
+     I                                       26  35 WCUSER
+     I                                       51 179 WCSCRN
+      *
+     I            DS
+      ** Message Data
+      *
+     I                                        1 132 ZAMSDA
+     I                                        1   1 ZA0001
+     I                                        1   1 ZA0002
+     I                                        1   1 ZA0003
+     I                                        1   1 ZA0004
+     I                                        1   1 ZA0005
+     I                                        1   1 ZA0006
+     I/COPY WNCPYSRC,SDH00562
+     ISDBANK    E DSSDBANKPD
+      ** External data structure for Bank Details
+      *
+     ISDDEAL    E DSSDDEALPD
+      ** External data structure for Dealing ICD
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     ISCSARD    E DSSCSARDPD                                              CGL018
+      **  External data structures for Switchable Features Details        CGL018
+      *                                                                   CGL018
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      ** External DS for Access Programs                                                      CSC022
+      *                                                                                       CSC022
+     IWDSJOB    E DSSCCMTJOB                                                                  CSC022
+     I              COMITNUM                        WCMTNO                                    CSC022
+     I              COMITJOB1                       WJOB01                                    CSC022
+     I              COMITJOB2                       WJOB02                                    CSC022
+     I              COMITJOB3                       WJOB03                                    CSC022
+     I              COMITJOB4                       WJOB04                                    CSC022
+     I              COMITJOB5                       WJOB05                                    CSC022
+     I              COMITJOB6                       WJOB06                                    CSC022
+     I              COMITJOB7                       WJOB07                                    CSC022
+     I              COMITJOB8                       WJOB08                                    CSC022
+     I              COMITJOB9                       WJOB09                                    CSC022
+     I              COMITJOB10                      WJOB10                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      *                                                                                       CSC022
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRIZSF - Subfile Initialisation and Load routine             *
+      *  SRLOAD - Load one page of subfile                            *
+      *  SRDSPS - Display Screen Processing                           *
+      *  SRPROC - Screen Input Processing                             *
+      *  SRSFPR - Subfile Processing                                  *
+      *  SRVALS - Validate selection field on subfile                 *
+      *  SRSFPR - Subfile Processing                                  *
+      *  SRVALI - Validate Add Mode Initial Screen                    *
+      *  SRDETL - Detail Screen Processing                            *
+      *  SRENQY - Collateral Type Enquiry                             *
+      *  SRAMND - Record Amendment                                    *
+      *  SRDELT - Delete Collateral Type record                       *
+      *  SRVALD - Validate Detail Screen Fields                       *
+      *  SRUPDF - File Update Processing                              *
+      *  SREXIT - Exit of Program Processing                          *
+      *  SRSTPR - Setup Protect Indicators                            *
+      *  SRSELE - Collateral Type Selection                           *
+      *  SRCMF5 - Refresh Subfile Screen                              *
+      *  SRCLR  - Clear messages in program queue                     *
+      *  SRFRSH - Blank out all details on screen                     *
+      *  ZASNMS - Send messages to program queue                      *
+      *  *PSSR  - Standard DB Error Processing                        *
+      *                                                               *
+      *****************************************************************
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+     C                     DO   *HIVAL
+      *
+      ** Initialise and load subfile page
+      *
+     C                     EXSR SRIZSF
+      *
+      ** Initialise reset field
+      *
+     C                     MOVEL'N'       W0RSF   1
+      *
+      ** Display screen
+      *
+     C           W0RSF     DOWEQ'N'
+      *
+      ** Selection mode while no data on file
+      *
+     C           PMMODE    IFEQ '?'
+     C           WNODAT    ANDEQ'Y'
+     C                     EXSR SRSELE
+     C                     ENDIF
+      *
+      ** Display Screen
+      *
+     C                     EXSR SRDSPS
+      *
+      ** Perform detailed processing
+      *
+     C           *IN03     CASEQ'1'       SREXIT
+     C           *IN05     CASEQ'1'       SRCMF5
+     C           *IN64     CASEQ'1'       SRLOAD
+     C                     CAS            SRPROC
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Program Initialisation                            *
+      *  Called By: Main routine                                      *
+      *  Calls    : AOBANKR0 - Access Bank Details                    *
+      *             AODEALR0 - Access Dealing Details                 *
+      *             SRCLR                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7
+     C                     PARM           PMMODE  1
+     C                     PARM           PCOLT   5
+      *
+      ** Initialize LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE 'SD0721'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access RUNDAT data area
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Obtain default message file
+      *
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      *                                                                                     BUG17355
+      ** Set up default timestamp                                                           BUG17355
+      *                                                                                     BUG17355
+     C                     MOVEASTAMP,1   CTTMST                                            BUG17355
+      *
+      ** Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELWOPTN     DBKEY            *************
+     C                     Z-ADD001       DBASE            * DBERR 001 *
+     C                     MOVEL'SD0721'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      **  Check System Date Format, DDMMYY (*IN98 off)
+      **                            MMDDYY (*IN98  on)
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Call Access Program for Dealing details
+      *
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C           SDDEAL    PARM SDDEAL    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDDEALPD'DBFILE
+     C                     MOVELWOPTN     DBKEY            *************
+     C                     Z-ADD002       DBASE            * DBERR 002 *
+     C                     MOVEL'SD0721'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Initialise Header Screen
+      *
+     C                     OPEN SD0721DF
+      *
+     C                     Z-ADD15        WSFPG   30
+      *
+     C                     MOVEL##JOB     SWSID
+     C                     MOVEL##USR     SUSER
+     C                     MOVELBJMRDT    SRUNA
+     C                     MOVE 'N'       WNOAC   1
+      *
+      ** Initialise screen message queue
+      *
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     EXSR SRCLR
+      *
+      ** Clear selection fields and setup command text line
+      *
+     C                     MOVE *BLANKS   S1SEL
+      *
+      ** Initialise No data work field
+      *
+     C                     MOVE 'N'       WNODAT  1
+     C                     MOVE 'N'       W#EROR  1
+      *                                                                   CGL018
+      ** Access SAR Details File To Determine If CGL018 Is On.            CGL018
+      *                                                                   CGL018
+     C                     CALL 'AOSARDR0'                                CGL018
+     C                     PARM *BLANKS   @RTCD   7                       CGL018
+     C                     PARM '*VERIFY' @OPTN   7                       CGL018
+     C                     PARM 'CGL018'  @SARD   6                       CGL018
+     C           SCSARD    PARM SCSARD    DSSDY                           CGL018
+      *                                                                   CGL018
+      ** Database Error                                                   CGL018
+      *                                                                   CGL018
+     C           @RTCD     IFNE *BLANKS                                   CGL018
+     C           @RTCD     ANDNE'*NRF   '                                 CGL018
+     C                     MOVEL'SCSARDPD'DBFILE                          CGL018
+     C                     Z-ADD8         DBASE                           CGL018
+     C                     MOVEL'CGL018'  DBKEY                           CGL018
+     C                     EXSR *PSSR                                     CGL018
+     C                     END                                            CGL018
+      *                                                                   CGL018
+     C           @RTCD     IFEQ *BLANK                                    CGL018
+     C                     MOVE 'Y'       CGL018  1                       CGL018
+     C                     ELSE                                           CGL018
+     C                     MOVE 'N'       CGL018                          CGL018
+     C                     ENDIF                                          CGL018
+     C/COPY WNCPYSRC,SDH00563
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD                                               CSC022
+     C                     PARM '*VERIFY' @OPTN                                               CSC022
+     C                     PARM 'CSC022'  @SARD                                               CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C                     MOVE 'N'       WCMTSK                                              CSC022
+      *                                                                                       CSC022
+     C                     IN   WDSJOB                                                        CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+     C           ##JOB     LOKUPWCMT,I                   50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+     C           @RTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  DBFILE                                              CSC022
+     C                     MOVEL'SCSARDPD'DBKEY                                               CSC022
+     C                     Z-ADD9         DBASE                                               CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           *LIKE     DEFN *INLR     CSC022                                              CSC022
+     C           *LIKE     DEFN *INLR     WCMTSK                                              CSC022
+     C********** *NAMVAR   DEFN           WDSJOB                                      CSC022 BUG2203
+     C           *NAMVAR   DEFN SCCMTJOB  WDSJOB                                             BUG2203
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIZSF  -  Subfile Initialisation and Load routine           *
+      *  Called By: Main routine                                      *
+      *  Calls    : SRLOAD                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRIZSF    BEGSR
+      *
+      ** Clear subfile
+      *
+     C                     MOVE '1'       *IN60
+     C                     WRITESD0721F5
+     C                     MOVE '0'       *IN60
+      *
+      ** Reset number of records in subfile
+      *
+     C                     Z-ADD0         WLRCD   40
+      *
+      ** Set Collateral Type file to appropriate record
+      *
+     C           *LOVAL    SETLLSDCOTPL1
+      *
+     C           S1SCRI    IFNE *BLANKS
+     C           W#EROR    IFEQ 'Y'
+     C                     EXSR SRCLR
+     C                     ENDIF
+     C           S1SCRI    SETLLSDCOTPL1
+     C                     ENDIF
+      *
+      ** Save previous selection criteria
+      *
+     C                     MOVELS1SCRI    WSCRI   5
+      *
+      ** Load subfile page
+      *
+     C                     EXSR SRLOAD
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD  -  Load one page of subfile                          *
+      *  Called By: SRIZSF and Main routine                           *
+      *  Calls    : SRCLR, ZASNMS                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+      ** Set subfile record load counter to 1
+      *
+     C                     Z-ADD1         WRCTR   50
+     C                     Z-ADDWLRCD     SRLRN
+     C                     MOVE *BLANKS   S1SEL
+     C                     MOVE '0'       *IN61
+      *
+      ** Read Collateral Types retrieval index
+      *
+     C                     READ SDCOTPL1                 80
+      *
+      ** No data to display
+      *
+     C           *IN80     IFEQ '1'
+     C                     EXSR SRCLR
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '0'       *IN63
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ** Seton SFLDSP
+      *
+     C                     MOVE '1'       *IN63
+     C                     ENDIF
+      *
+      ** Load records until EOF
+      *
+     C           *IN80     DOWEQ'0'
+     C           WRCTR     ANDLEWSFPG
+     C                     MOVELCTCOLT    S1COLT
+     C                     MOVELCTCOLD    S1COLD
+     C                     MOVE CTCOPT    S1COPT
+      *
+     C                     SELEC
+     C           CTCOPT    WHEQ 'A'
+     C                     MOVELTXT,1     S1TEXT
+     C           CTCOPT    WHEQ 'C'
+     C                     MOVELTXT,2     S1TEXT
+     C           CTCOPT    WHEQ 'D'
+     C                     MOVELTXT,3     S1TEXT
+     C           CTCOPT    WHEQ 'G'
+     C                     MOVELTXT,4     S1TEXT
+     C           CTCOPT    WHEQ 'H'
+     C                     MOVELTXT,5     S1TEXT
+     C           CTCOPT    WHEQ 'L'
+     C                     MOVELTXT,6     S1TEXT
+     C           CTCOPT    WHEQ 'M'
+     C                     MOVELTXT,7     S1TEXT
+     C           CTCOPT    WHEQ 'O'
+     C                     MOVELTXT,8     S1TEXT
+     C           CTCOPT    WHEQ 'P'
+     C                     MOVELTXT,9     S1TEXT
+     C           CTCOPT    WHEQ 'X'                        CGL018
+     C                     MOVELTXT,10    S1TEXT           CGL018
+     C                     ENDSL
+      *
+      ** Check if deleted
+      *
+     C           CTRECI    IFEQ 'R'
+     C                     MOVEL'DELETED' S1DELT
+     C                     ELSE
+     C                     MOVE *BLANKS   S1DELT
+     C                     ENDIF
+      *
+     C                     MOVE CTMPCT    S1MPCT
+     C                     MOVE CTRTNP    S1RTNP
+     C                     MOVE CTRVLM    S1RVLM
+     C                     MOVE CTRVLD    S1RVLD
+     C                     MOVE CTRVLF    S1RVLF
+     C                     MOVE CTRVLN    S1RVLN
+      *
+      ** Write records to SFL
+      *
+     C           PMMODE    IFNE '?'
+     C           PMMODE    OREQ '?'
+     C           CTRECI    ANDNE'R'
+     C                     ADD  1         SRLRN
+     C                     ADD  1         WRCTR
+     C                     WRITESD0721F4
+     C                     ENDIF
+      *
+     C                     READ SDCOTPL1                 80
+     C                     ENDDO
+      *
+      ** Seton SFLEND indicator if EOF
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN61
+     C                     ELSE
+     C                     READPSDCOTPL1                 80
+     C                     ENDIF
+      *
+      ** No records on subfile
+      *
+     C           SRLRN     IFEQ 0
+     C                     MOVE 'Y'       WNODAT
+     C                     MOVE *BLANKS   S1COLT
+     C                     ELSE
+     C                     MOVE 'N'       WNODAT
+     C                     ENDIF
+      *
+      ** Save last relative record number to workfield
+      *
+     C                     Z-ADDSRLRN     WLRCD
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDSPS  -  Display  Screen Processing                        *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRCLR                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDSPS    BEGSR
+      *
+      ** Determine Mode used in calling program
+      *
+     C                     SELEC
+      *
+      ** Enquiry mode
+      *
+     C           PMMODE    WHEQ 'E'
+     C                     MOVEA'1001'    *IN,20
+      *
+      ** Maintenance mode
+      *
+     C           PMMODE    WHEQ 'M'
+     C                     MOVEA'1100'    *IN,20
+     C                     MOVE '1'       *IN51
+      *
+      ** Selection Mode(via access object for collateral location code)
+      *
+     C           PMMODE    WHEQ '?'
+     C                     MOVEA'1010'    *IN,20
+     C                     ENDSL
+      *
+      *
+      ** Display subfile page
+      *
+     C                     WRITESD0721F0
+     C                     WRITE#MSGCTL
+     C                     WRITESD0721F2
+     C                     EXFMTSD0721F5
+      *
+      ** Clear messages from program message queue
+      *
+     C                     EXSR SRCLR
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC  -  Screen Input Processing                           *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRVALS, SRSFPR, SRCLR, SRFRSH, SRVALI, SRDETL     *
+      *             SREXIT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     MOVE 'N'       W0DCF   1
+      *
+      ** Change in selection criteria, exit subroutine
+      *
+     C           S1SCRI    IFNE WSCRI
+     C                     MOVE 'Y'       W0RSF
+     C                     GOTO PREXIT
+     C                     ENDIF
+      *
+      ** Validate selection fields
+      *
+     C           WNODAT    IFEQ 'N'
+     C                     EXSR SRVALS
+      *
+      ** Invalid subfile entry
+      *
+     C           W#EROR    IFEQ 'Y'
+     C                     GOTO PREXIT
+     C                     ENDIF
+      *
+      ** Process subfile records
+      *
+     C                     EXSR SRSFPR
+      *
+      ** Error in subfile processing
+      *
+     C           W#EROR    IFEQ 'Y'
+     C                     GOTO PREXIT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Add mode requested
+      *
+     C           *IN09     IFEQ '1'
+      *
+     C                     MOVEL'I'       S1SEL
+     C                     MOVE *BLANKS   SCOLT
+     C                     EXSR SRCLR
+      *
+      ** Setup appropriate indicators for protect and non-display of other details
+      *
+     C                     MOVEA'10'      *IN,30
+     C                     MOVEA'100'     *IN,40
+      *
+      ** Add mode
+      *
+     C                     WRITESD0721F3
+     C                     EXFMTSD0721F1
+      *
+      ** Exit and Cancel not pressed
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     OREQ '0'
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+      *
+      ** F5 has been pressed, refresh screen fields
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE '0'       *IN05
+     C                     MOVE 'N'       W#EROR
+     C                     EXSR SRFRSH
+     C                     EXSR SRCLR
+     C                     ELSE
+      *
+      ** Validate Collateral Type
+      *
+     C                     EXSR SRVALI
+      *
+      ** Process details if Collateral Type is valid
+      *
+     C           W#EROR    IFEQ 'N'
+     C                     EXSR SRDETL
+      *
+      ** F12 pressed from SRDETL subroutine
+      *
+     C           *IN12     IFEQ '1'
+     C                     MOVE '0'       *IN12
+     C                     MOVE 'N'       W#EROR
+     C                     ENDIF
+     C                     MOVE *BLANKS   SCOLT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Setup appropriate indicators for protect and non-display of other details
+      *
+     C                     MOVEA'10'      *IN,30
+     C                     MOVE '1'       *IN40
+     C                     MOVE '0'       *IN42
+      *
+      ** Add mode initial screen
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTSD0721F1
+     C                     ENDIF
+      *
+      ** F3 pressed
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SREXIT
+     C                     ENDIF
+      *
+      ** F12 pressed
+      *
+     C           *IN12     IFEQ '1'
+     C                     MOVE '0'       *IN12
+     C                     EXSR SRCLR
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       W0RSF
+      *
+     C           PREXIT    ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALS  -  Validate selection field on subfile               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : SRCLR, ZASNMS                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALS    BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     MOVE 'N'       W#EROR
+     C                     EXSR SRCLR
+      *
+      ** Set subfile record pointer to top of subfile
+      *
+     C                     Z-ADD1         SRLRN
+     C                     Z-ADD0         WSLCTR  30
+      *
+     C                     READCSD0721F4                 81
+      *
+     C           *IN81     DOWEQ'0'
+      *
+      ** For Selection mode, selection field must be '1'
+      *
+     C           PMMODE    IFEQ '?'
+     C           S1SEL     IFNE '1'
+     C           S1SEL     ANDNE*BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN29
+     C                     MOVELS1SEL     ZA0001
+     C                     MOVEL'USR8800' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           S1SEL     IFEQ '1'
+     C                     ADD  1         WSLCTR
+     C           WSLCTR    IFGT 1
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN29
+     C                     MOVEL'USR8801' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** For Enquiry mode, if selection field is not 'E' send error
+      ** message
+      *
+     C           PMMODE    IFEQ 'E'
+     C           S1SEL     ANDNE'E'
+     C           S1SEL     ANDNE*BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN29
+     C                     MOVELS1SEL     ZA0002
+     C                     MOVEL'USR8802' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** For Maintenance mode, if selection field not A,E, or D
+      ** send error message
+      *
+     C           PMMODE    IFEQ 'M'
+     C           S1SEL     IFNE 'A'
+     C           S1SEL     ANDNE'E'
+     C           S1SEL     ANDNE'D'
+     C           S1SEL     ANDNE*BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN29
+     C                     MOVELS1SEL     ZA0003
+     C                     MOVEL'USR8803' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** For amend or delete requests, record must not be deleted
+      *
+     C           S1SEL     IFEQ 'A'
+     C           S1SEL     OREQ 'D'
+     C           S1DELT    IFNE *BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN29
+     C                     MOVELS1SEL     ZA0004
+     C                     MOVEL'USR8804' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Records in Live Collateral Details file cannot be deleted
+      *
+     C           S1SEL     IFEQ 'D'
+     C           S1COLT    CHAINGLCOLLL7             82
+      *
+     C           *IN82     IFEQ '0'
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN29
+     C                     MOVELS1SEL     ZA0005
+     C                     MOVEL'USR8805' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Record already deleted, only 'E' must be entered on the
+      ** selection field
+      *
+     C           S1DELT    IFNE *BLANKS
+     C           S1SEL     ANDNE'E'
+     C           S1SEL     ANDNE*BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN29
+     C                     MOVELS1SEL     ZA0006
+     C                     MOVEL'USR8802' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Switch *ON SFLNXTCHG
+      *
+     C                     MOVE '1'       *IN54
+     C                     UPDATSD0721F4
+     C                     MOVE '0'       *IN29
+     C                     READCSD0721F4                 81
+      *
+     C                     ENDDO
+     C                     MOVE '0'       *IN54
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSFPR  -  Subfile Processing                                *
+      *  Called By: SRPROC                                            *
+      *  Calls    : SRENQY, SRDELT, SRAMND, SRSELE                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSFPR    BEGSR
+      *
+     C                     MOVE 'N'       W#EROR
+      *
+      ** Set subfile record pointer to top of subfile
+      *
+     C                     Z-ADD1         SRLRN
+      *
+     C                     READCSD0721F4                 81
+      *
+     C           *IN81     DOWEQ'0'
+      *
+      ** Process Action entered
+      *
+     C           S1SEL     CASEQ'E'       SRENQY
+     C           S1SEL     CASEQ'D'       SRDELT
+     C           S1SEL     CASEQ'A'       SRAMND
+     C           S1SEL     CASEQ'1'       SRSELE
+     C                     ENDCS
+      *
+      ** Exit from detail screen if F12 is pressed
+      *
+     C           *IN12     IFEQ '1'
+     C                     EXSR SRCLR
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   S1SEL
+      *
+      ** Update subfile record
+      *
+     C                     UPDATSD0721F4
+     C                     READCSD0721F4                 81
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALI  -  Validate Add Mode Initial Screen                  *
+      *  Called By: SRPROC                                            *
+      *  Calls    : SRCLR, SRFRSH, ZASNMS                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALI    BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     EXSR SRCLR
+      *
+     C                     MOVE 'N'       W#EROR
+     C                     EXSR SRFRSH
+      *
+      ** Check Collateral Type field if blank
+      *
+     C           SCOLT     IFEQ *BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN31
+     C                     MOVEL'USR8806' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ** Check Collateral Type if it already exists
+      *
+     C           SCOLT     CHAINSDCOTPL2             83
+      *
+     C           *IN83     IFEQ '0'
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN31
+     C                     MOVEL'USR8807' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL  -  Detail Screen Processing                          *
+      *  Called By: SRPROC, SRAMND                                    *
+      *  Calls    : SRCLR, SRSTPR, SRVALD, SRUPDF, SREXIT             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Setup protect indicators and fields for amend and insert mode
+      *
+     C           S1SEL     IFEQ 'A'
+     C           S1SEL     OREQ 'I'
+     C                     EXSR SRSTPR
+     C                     ENDIF
+      *
+      ** Process input fields
+      *
+     C                     WRITESD0721F3
+     C                     EXFMTSD0721F1
+     C/COPY WNCPYSRC,SDH00564
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     OREQ '0'
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+      *
+     C           *IN05     IFEQ '1'
+     C           S1SEL     IFEQ 'A'
+     C           S1SEL     OREQ 'I'
+     C                     EXSR SRSTPR
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** Validate detail screen
+      *
+     C                     MOVE 'Y'       WRDSP   1
+     C           WRDSP     DOWEQ'Y'
+     C           *IN03     ANDEQ'0'
+     C           *IN05     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C                     EXSR SRVALD
+      *
+      ** Redisplay screen if needed after validation
+      *
+     C           WRDSP     IFEQ 'Y'
+     C/COPY WNCPYSRC,SDH00565
+     C           W#EROR    IFEQ 'Y'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+     C                     EXFMTSD0721F1
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Invalid entry or F5 pressed
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C           W#EROR    IFEQ 'Y'
+     C           *IN05     OREQ '1'
+     C           *IN05     IFEQ '1'
+     C                     MOVE '0'       *IN05
+     C                     MOVE 'N'       W#EROR
+     C                     EXSR SRSTPR
+     C                     EXSR SRCLR
+     C                     ENDIF
+     C           W#EROR    IFEQ 'Y'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+     C                     EXFMTSD0721F1
+     C                     ELSE
+     C/COPY WNCPYSRC,SDH00566
+      *
+      ** Update file, then display initial screen again
+      *
+     C                     EXSR SRUPDF
+     C                     LEAVE
+     C/COPY WNCPYSRC,SDH00567
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN12     IFEQ '1'
+     C                     EXSR SRCLR
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SREXIT
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRENQY  -  Collateral Type Enquiry                           *
+      *  Called By: SRSFPR                                            *
+      *  Calls    : SRSTPR, SREXIT                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENQY    BEGSR
+      *
+     C           S1COLT    CHAINSDCOTPL2             83
+      *
+      ** Record not found
+      *
+     C           *IN83     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCOTPPD'DBFILE
+     C                     MOVELS1COLT    DBKEY            *************
+     C                     Z-ADD003       DBASE            * DBERR 003 *
+     C                     MOVEL'SD0721'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** Setup protect indicators
+      *
+     C                     EXSR SRSTPR
+      *
+      ** Enquiry mode
+      *
+     C/COPY WNCPYSRC,SDH00568
+     C                     WRITESD0721F3
+     C                     EXFMTSD0721F1
+     C/COPY WNCPYSRC,SDH00569
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SREXIT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAMND  -  Record Amendment                                  *
+      *  Called By: SRSFPR                                            *
+      *  Calls    : SRDETL                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAMND    BEGSR
+      *
+     C           S1COLT    CHAINSDCOTPL2             83
+      *
+      ** Record not found
+      *
+     C           *IN83     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCOTPPD'DBFILE
+     C                     MOVELS1COLT    DBKEY            *************
+     C                     Z-ADD004       DBASE            * DBERR 004 *
+     C                     MOVEL'SD0721'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** Detail screen processing
+      *
+     C                     EXSR SRDETL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDELT  -  Delete Collateral Type Record                     *
+      *  Called By: SRSFPR                                            *
+      *  Calls    : SRSTPR, SRUPDF, SREXIT, SRCLR                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDELT    BEGSR
+      *
+     C           S1COLT    CHAINSDCOTPL2             83
+      *
+      ** Record not found
+      *
+     C           *IN83     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCOTPPD'DBFILE
+     C                     MOVELS1COLT    DBKEY            *************
+     C                     Z-ADD005       DBASE            * DBERR 005 *
+     C                     MOVEL'SD0721'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+     C           CTRECI    IFEQ 'D'
+      *
+      ** Setup indicators
+      *
+     C                     EXSR SRSTPR
+      *
+      ** Process details
+      *
+     C                     WRITESD0721F3
+     C                     EXFMTSD0721F1
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     OREQ '0'
+      *
+      ** Update file if F10 is pressed
+      *
+     C           *IN10     IFEQ '1'
+     C                     EXSR SRUPDF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SREXIT
+     C                     ENDIF
+      *
+     C           *IN12     IFEQ '1'
+     C                     EXSR SRCLR
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     EXFMTSD0721F1
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALD  -  Validate Detail Screen Fields                     *
+      *  Called By: SRDETL                                            *
+      *  Calls    : SRCLR, ZASNMS, ZALIGN, ZEDIT, ZDATE1              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+      ** Reset Error Indicators
+      *
+     C                     MOVEA'00000'   *IN,31
+     C                     MOVEA'0000'    *IN,36
+     C                     MOVE 'N'       W#EROR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Validate Collateral Type Description
+      *
+     C           SCOLD     IFEQ *BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN32
+     C                     MOVEL'USR8808' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate Collateral Processing Type
+      *
+     C           CGL018    IFNE 'Y'                                       CGL018
+      *                                                                   CGL018
+     C           SCOPT     IFNE 'A'                        Account
+     C           SCOPT     ANDNE'C'                        Charge
+     C           SCOPT     ANDNE'D'                        Deposit
+     C           SCOPT     ANDNE'G'                        Guarantee
+     C           SCOPT     ANDNE'H'                        Holding
+     C           SCOPT     ANDNE'L'                        Letter
+     C           SCOPT     ANDNE'M'                        Mortgage
+     C           SCOPT     ANDNE'O'                        Official Guarantee
+     C           SCOPT     ANDNE'P'                        Pledge
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN33
+     C                     MOVEL'USR8809' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *                                                                   CGL018
+     C                     ELSE                                           CGL018
+      *                                                                   CGL018
+     C           SCOPT     IFNE 'A'                        Account        CGL018
+     C           SCOPT     ANDNE'C'                        Charge         CGL018
+     C           SCOPT     ANDNE'D'                        Deposit        CGL018
+     C           SCOPT     ANDNE'G'                        Guarantee      CGL018
+     C           SCOPT     ANDNE'H'                        Holding        CGL018
+     C           SCOPT     ANDNE'L'                        Letter         CGL018
+     C           SCOPT     ANDNE'M'                        Mortgage       CGL018
+     C           SCOPT     ANDNE'O'                        Official GuaranCGL018
+     C           SCOPT     ANDNE'P'                        Pledge         CGL018
+     C           SCOPT     ANDNE'X'                        Special ConditiCGL018
+     C                     MOVE 'Y'       W#EROR                          CGL018
+     C                     MOVE '1'       *IN33                           CGL018
+     C                     MOVEL'USR8809' ZAMSID                          CGL018
+     C                     MOVEL'SDUSRMSG'ZAMSGF                          CGL018
+     C                     EXSR ZASNMS                                    CGL018
+     C                     ENDIF                                          CGL018
+      *                                                                   CGL018
+     C                     ENDIF                                          CGL018
+      *
+      ** Validate Default Margin Cover %
+      *
+     C                     MOVE '0'       *IN99
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD0         W#MPCT  52
+      *
+     C           SMPCT     IFNE *BLANKS
+     C                     Z-ADD3         ZADIG
+     C                     MOVE SMPCT     ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN34
+     C                     MOVEL'USR8810' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    W#MPCT
+     C           W#MPCT    IFLT 0
+     C           W#MPCT    ORGT 100
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN34
+     C                     MOVEL'USR8810' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SMPCT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Retention Period
+      *
+     C           SRTNP     IFEQ *BLANKS
+     C                     MOVE '01'      SRTNP
+     C                     ELSE
+     C                     TESTN          SRTNP      86
+     C           *IN86     IFEQ '0'
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN35
+     C                     MOVEL'USR8811' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Revaluation Method
+      *
+     C********** SRVLM     IFNE 'D'                        Daily Automatic Update            BUG8090
+     C********** SRVLM     ANDNE'M'                        Manual Revaluation                BUG8090
+     C********** SRVLM     ANDNE'P'                        Regular Application of Price Feed BUG8090
+     C********** SRVLM     ANDNE'R'                        Restatement of Collateral Value   BUG8090
+     C**********           MOVE 'Y'       W#EROR                                             BUG8090
+     C**********           MOVE '1'       *IN36                                              BUG8090
+     C**********           MOVEL'USR8812' ZAMSID                                             BUG8090
+     C**********           MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C**********           EXSR ZASNMS                                                       BUG8090
+     C**********           ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'A'                                                          BUG8090
+     C           SRVLM     ANDNE'D'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'D or M'  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'C'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'M     '  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'D'                                                          BUG8090
+     C           SRVLM     ANDNE'D'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'D or M'  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'G'                                                          BUG8090
+     C           SRVLM     ANDNE'R'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'R or M'  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'H'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'M     '  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'L'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'M     '  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'M'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'M     '  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'O'                                                          BUG8090
+     C           SRVLM     ANDNE'R'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'R or M'  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           SCOPT     IFEQ 'P'                                                          BUG8090
+     C           SRVLM     ANDNE'P'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'P or M'  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+      *                                                                                      BUG8090
+     C           CGL018    IFEQ 'Y'                                                          BUG8090
+     C           SCOPT     IFEQ 'X'                                                          BUG8090
+     C           SRVLM     ANDNE'M'                                                          BUG8090
+     C                     MOVE 'Y'       W#EROR                                             BUG8090
+     C                     MOVE '1'       *IN36                                              BUG8090
+     C                     MOVEL'M     '  ZAMSDA                                             BUG8090
+     C                     MOVEL'USR8866' ZAMSID                                             BUG8090
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BUG8090
+     C                     EXSR ZASNMS                                                       BUG8090
+     C                     ENDIF                                                             BUG8090
+     C                     ENDIF                                                             BUG8090
+      *
+      ** Validate Next Revaluation Date
+      *
+     C                     MOVE '0'       *IN99
+     C                     Z-ADD0         ZDAYNO
+      *
+     C           SRVLD     IFNE *BLANKS
+     C           SRVLM     IFNE 'M'
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN37
+     C                     MOVEL'USR8813' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE SRVLD     ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN37
+     C                     MOVEL'USR8814' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           ZDAYNO    IFLE BJRDNB
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN37
+     C                     MOVEL'USR8815' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Revaluation Frequency
+      *
+     C           *IN37     IFNE '1'
+     C           SRVLF     IFNE *BLANKS
+     C           SRVLD     IFEQ *BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN38
+     C                     MOVEL'USR8816' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           SRVLF     IFNE 'D'                        Daily
+     C           SRVLF     ANDNE'W'                        Weekly
+     C           SRVLF     ANDNE'F'                        Forthnightly
+     C           SRVLF     ANDNE'M'                        Monthly
+     C           SRVLF     ANDNE'T'                        Every Two Months
+     C           SRVLF     ANDNE'Q'                        Quarterly
+     C           SRVLF     ANDNE'X'                        Six Monthly
+     C           SRVLF     ANDNE'Y'                        Yearly
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN38
+     C                     MOVEL'USR8817' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+     C           SRVLD     IFNE *BLANKS
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN38
+     C                     MOVEL'USR8818' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Revaluation Day Number
+      *
+     C           SRVLN     IFNE *BLANKS
+     C           *IN38     ANDNE'1'
+     C           SRVLF     IFNE 'M'
+     C           SRVLF     ANDNE'T'
+     C           SRVLF     ANDNE'Q'
+     C           SRVLF     ANDNE'X'
+     C           SRVLF     ANDNE'Y'
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN39
+     C                     MOVEL'USR8819' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           SRVLN     IFLT '01'
+     C           SRVLN     ORGT '31'
+     C                     MOVE 'Y'       W#EROR
+     C                     MOVE '1'       *IN39
+     C                     MOVEL'USR8820' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Update flag if screen is needed to be redisplayed
+      *
+     C           W#EROR    IFEQ 'N'
+     C                     MOVE 'N'       WRDSP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDF  -  File Update Processing                            *
+      *  Called By: SRDETL, SRDELT                                    *
+      *  Calls    : ZTNLU1                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDF    BEGSR
+      *
+     C           S1SEL     IFEQ 'A'
+     C           S1SEL     OREQ 'D'
+     C           S1COLT    CHAINSDCOTPL0             84
+      *
+      ** Cannot amend nor delete record which does not exist
+      *
+     C           CTRECI    IFEQ 'R'
+     C           *IN81     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCOTPPD'DBFILE
+     C                     MOVELS1COLT    DBKEY            *************
+     C                     Z-ADD006       DBASE            * DBERR 006 *
+     C                     MOVEL'SD0721'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format fields for file update
+      *
+     C           S1SEL     IFEQ 'I'
+     C           S1SEL     OREQ 'A'
+     C                     MOVELSCOLT     CTCOLT
+     C                     MOVELSCOLD     CTCOLD
+     C                     MOVELSCOPT     CTCOPT
+     C                     MOVE W#MPCT    CTMPCT
+     C                     MOVELSRTNP     CTRTNP
+     C                     MOVELSRVLM     CTRVLM
+     C                     MOVE ZDAYNO    CTRVLD
+     C                     MOVELSRVLF     CTRVLF
+     C                     MOVELSRVLN     CTRVLN
+     C                     ENDIF
+      *
+     C           S1SEL     IFEQ 'D'
+     C                     MOVEL'R'       CTRECI
+     C                     ELSE
+     C                     MOVEL'D'       CTRECI
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    CTLCD
+     C                     MOVELS1SEL     CTTYLC
+      *
+      ** Obtain next available transaction number
+      *
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      CTTNLU
+      *
+     C           S1SEL     IFEQ 'A'
+     C           S1SEL     OREQ 'D'
+     C                     UPDATSDCOTPD0
+     C                     ELSE
+     C                     WRITESDCOTPD0
+     C                     ENDIF
+      *
+     C                     MOVEL'SDCOTPPD'WFNAM  10
+     C           WFNAM     CHAINSDFCTLL0             85
+      *
+     C           *IN85     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDFCTLPA'DBFILE
+     C                     MOVELWFNAM     DBKEY            *************
+     C                     Z-ADD007       DBASE            * DBERR 007 *
+     C                     MOVEL'SD0721'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     SELEC
+     C           S1SEL     WHEQ 'I'
+     C                     ADD  1         AHNORC
+     C                     ADD  1         AHNOIN
+     C           S1SEL     WHEQ 'D'
+     C                     ADD  1         AHNODL
+     C           S1SEL     WHEQ 'A'
+     C                     ADD  1         AHNOAM
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C                     UPDAT@AHREAU
+      *
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREXIT  -  Exit of Program Processing                        *
+      *  Called By: Main Processing, SRPROC, SRDETL, SRENQY, SRDELT   *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREXIT    BEGSR
+      *
+      ** If selection mode and F3 has been pressed
+      *
+     C           PMMODE    IFEQ '?'
+     C                     MOVEL'*NOSEL ' PRTCD
+     C                     MOVE *BLANKS   PCOLT
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSTPR  -  Setup Protect Indicators                          *
+      *  Called By: SRDETL, SRENQY, SRDELT                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSTPR    BEGSR
+      *
+      ** Add Mode
+      *
+     C           S1SEL     IFEQ 'I'
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN21
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN30
+     C                     MOVEA'00000000'*IN,32
+     C                     MOVEA'00'      *IN,40
+     C                     MOVE '1'       *IN42
+     C                     MOVE '0'       *IN51
+     C                     MOVE *BLANKS   SCOLD
+     C                     MOVE *BLANKS   SCOPT
+     C                     MOVE *BLANKS   SMPCT
+     C                     MOVE *BLANKS   SRTNP
+     C                     MOVE *BLANKS   SRVLM
+     C                     MOVE *BLANKS   SRVLD
+     C                     MOVE *BLANKS   SRVLF
+     C                     MOVE *BLANKS   SRVLN
+     C                     ENDIF
+      *
+      ** Enquiry mode
+      *
+     C           S1SEL     IFEQ 'E'
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '1'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '1'       *IN30
+     C                     MOVE '0'       *IN40
+     C                     MOVE '1'       *IN42
+     C                     MOVE '0'       *IN51
+      *
+      ** Deleted record
+      *
+     C           S1DELT    IFNE *BLANKS
+     C                     MOVE '1'       *IN41
+     C                     ELSE
+     C                     MOVE '0'       *IN41
+     C                     ENDIF
+      *
+     C                     MOVELCTCOLT    SCOLT
+     C                     MOVELCTCOLD    SCOLD
+     C                     MOVELCTCOPT    SCOPT
+      *
+     C                     Z-ADD2         ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CTMPCT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SMPCT
+      *
+     C                     MOVE CTRTNP    SRTNP
+      *
+     C                     MOVELCTRVLM    SRVLM
+      *
+     C                     MOVELCTRVLD    ZDAYNO
+     C                     EXSR ZDATE2
+     C           ZDATE     IFEQ 0
+     C                     MOVE *BLANKS   SRVLD
+     C                     ELSE
+     C                     MOVELZDATE     SRVLD
+     C                     ENDIF
+      *
+     C                     MOVELCTRVLF    SRVLF
+      *
+     C           CTRVLN    IFEQ 0
+     C                     MOVE *BLANKS   SRVLN
+     C                     ELSE
+     C                     MOVE CTRVLN    SRVLN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Amend mode
+      *
+     C           S1SEL     IFEQ 'A'
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN21
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN30
+     C                     MOVEA'00000000'*IN,32
+     C                     MOVEA'00'      *IN,40
+     C                     MOVE '1'       *IN42
+     C                     MOVE '0'       *IN51
+     C                     MOVELCTCOLT    SCOLT
+     C                     MOVELCTCOLD    SCOLD
+     C                     MOVELCTCOPT    SCOPT
+      *
+     C                     Z-ADD2         ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CTMPCT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SMPCT
+      *
+     C                     MOVE CTRTNP    SRTNP
+      *
+     C                     MOVELCTRVLM    SRVLM
+      *
+     C                     MOVELCTRVLD    ZDAYNO
+     C                     EXSR ZDATE2
+     C           ZDATE     IFEQ 0
+     C                     MOVE *BLANKS   SRVLD
+     C                     ELSE
+     C                     MOVELZDATE     SRVLD
+     C                     ENDIF
+      *
+     C                     MOVELCTRVLF    SRVLF
+      *
+     C           CTRVLN    IFEQ 0
+     C                     MOVE *BLANKS   SRVLN
+     C                     ELSE
+     C                     MOVE CTRVLN    SRVLN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Delete mode
+      *
+     C           S1SEL     IFEQ 'D'
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN23
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN30
+     C                     MOVEA'001'     *IN,40
+     C                     MOVE '0'       *IN51
+     C                     MOVELCTCOLT    SCOLT
+     C                     MOVELCTCOLD    SCOLD
+     C                     MOVELCTCOPT    SCOPT
+      *
+     C                     Z-ADD2         ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CTMPCT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SMPCT
+      *
+     C                     MOVE CTRTNP    SRTNP
+      *
+     C                     MOVELCTRVLM    SRVLM
+      *
+     C                     MOVELCTRVLD    ZDAYNO
+     C                     EXSR ZDATE2
+     C           ZDATE     IFEQ 0
+     C                     MOVE *BLANKS   SRVLD
+     C                     ELSE
+     C                     MOVELZDATE     SRVLD
+     C                     ENDIF
+      *
+     C                     MOVELCTRVLF    SRVLF
+      *
+     C           CTRVLN    IFEQ 0
+     C                     MOVE *BLANKS   SRVLN
+     C                     ELSE
+     C                     MOVE CTRVLN    SRVLN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSELE  -  Collateral Type Selection                         *
+      *  Called By: Main Processing, SRSFPR                           *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSELE    BEGSR
+      *
+      ** Check collateral location code if existing
+      *
+     C           S1COLT    CHAINSDCOTPL2             83
+      *
+      ** Record not found
+      *
+     C           *IN83     IFEQ '1'
+     C                     MOVEL'*ERROR'  PRTCD
+     C                     MOVE *BLANKS   PCOLT
+     C                     ELSE
+     C                     MOVELCTCOLT    PCOLT
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCMF5  -  Refresh Subfile Screen                            *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRCLR                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCMF5    BEGSR
+      *
+     C                     MOVE 'Y'       W0RSF
+     C                     EXSR SRCLR
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLR   -  Clear messages in program queue                   *
+      *  Called By: SRINIT, SRLOAD, SRDSPS, SRPROC, SRVALS, SRVALI    *
+      *             SRDETL, SRDELT, SRVALD                            *
+      *  Calls    : Y2CLMSC - Clears messages from program queue      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCLR     BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRSH  -  Blank out all details on screen                   *
+      *  Called By: SRPROC, SRVALI                                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFRSH    BEGSR
+      *
+      ** Reset Error Indicators
+      *
+     C                     MOVEA'00000'   *IN,31
+     C                     MOVEA'0000'    *IN,36
+     C                     MOVE 'N'       W#EROR
+      *
+     C                     MOVE *BLANKS   SCOLD
+     C                     MOVE *BLANKS   SCOPT
+     C                     MOVE *BLANKS   SMPCT
+     C                     MOVE *BLANKS   SRTNP
+     C                     MOVE *BLANKS   SRVLM
+     C                     MOVE *BLANKS   SRVLD
+     C                     MOVE *BLANKS   SRVLF
+     C                     MOVE *BLANKS   SRVLN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS  -  Send messages to program queue                    *
+      *  Called By: SRLOAD, SRVALS, SRVALI, SRVALD                    *
+      *  Calls    : Y2SNMGC - Sends messages to program queue         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+      ** If no message file specified, use default
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVELZADFMF    ZAMSGF
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Standard DB Error processing                      *
+      *  Called By: SRINIT, SRENQY, SRAMND, SRDELT, SRUPDF            *
+      *  Calls    : DBERRCTL - DB Error Control                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     DUMP
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     ROLBK
+     C                     ENDIF                                                              CSC022
+     C                     MOVE '1'       *INLR
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2L
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2L
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  TXT
+Account
+Charge
+Deposit
+Guarantee
+Holding
+Letter
+Mortgage
+Off. Guar
+Pledge
+Special
+** STAMP - Dummy timestamp                                                                  BUG17355
+0001-01-01-00.00.00.000000
+**   ZYDY - Years in Days cumulative, four year span
+0366073110961461
+**   ZMDY - Months in Days cumulative through year
+000031059090120151181212243273304334365
+**   ZMNM - Months Short Names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,59 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE CLIP CER073 Initialization program')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC009704 - Midas LE CLIP CER073 Initialization program     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2017                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER073B            Date 25Sep17              */
+/*                      CER073A            Date 05Sep17              */
+/*                      CER073   *CREATE   Date 10Jul17              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER073B - CER073 Change Control 2 (Recompile)               */
+/*       CER073A - CER073 Change Control 1 (Recompile)               */
+/*       CER073 - AnaCredit Reporting                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2017')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Mode 1 - First call */
+
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+             CALL       PGM(LE009704)
+             ENDDO
+
+/** Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(END)
+ ABNOR:
+
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+             SNDPGMMSG  MSG('Program LEC009704 ended abnormally') +
+                          TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:
+             ENDPGM

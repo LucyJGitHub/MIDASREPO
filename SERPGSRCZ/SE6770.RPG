@@ -1,0 +1,664 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trades & dpt mvt actions for ptfr tfr')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6770 - SE Generate Trade and Depot Movement Actions        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 18Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 101124             Date 04Mar96               *
+      *                 095718             Date 09Nov95               *
+     F*                 095249             DATE 06NOV95               *
+     F*                 S01496             DATE 03OCT94               *
+     F*                 S10978             DATE 19APR93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  207006 - Add Counterparty & Market Centre to SSI (Recompile) *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  101124 - Settlement records dated Value date, and Trade      *
+     F*           Record Id overwritten by Security & Investment type *
+     F*  095718 - COUNTERPARTY IS NOT WRITTEN IN SETTDMPD             *
+     F*  095249 - Add branch for accounts - RECOMPILE ONLY            *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS (NEW PGM FOR CDEPPD)      *
+     F*           FOR PORTFOLIO TRANSFERS                             *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F**   PM - Portfolio Transfert Details
+     FPMTRSFL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE - Depot Movements
+     FDPTMV   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE - Trade Events
+     FTRADS   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE - Settlement Eevents                                        101124
+     FSETLE   IF  E           K        DISK                               101124
+     F                                              KINFSR *PSSR          101124
+     F**   Securities Details
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   Investment Types Details
+     FINVTP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE - Depot Movement Actions for Portfolio Transfert
+     F***TDPMVD**O   E                    DISK                            S01496
+     FSETDPMPDO   E                    DISK                               S01496
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE - Trade Actions for Portfolio Transfert
+     F***TTDMVD**O   E                    DISK                            S01496
+     FSETTDMPDO   E                    DISK                               S01496
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE - Settlement Actions for Portfolio Transfert
+     F***TSTACD  O   E                    DISK                            S01496
+     FSETSTAPDO   E                    DISK                               S01496
+     F                                              KINFSR *PSSR
+     F*                                                                   S01496
+     F**  Printer file - Trades and Depot Movement Action Audit Rpt       S01496
+     FSE6770AUO   E                    PRINTER                        UC  S01496
+     F                                              KINFSR *PSSR          S01496
+     F*                                                                   S01496
+     ******************************************************************
+      /EJECT
+     *********************************************************************
+      *
+      * ID F  C  H  L    Function of indicators
+      * ---------------------------------------
+      *
+      *   LR :    Last record
+      *   U7/U8 : Database error
+      *
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+      * Name of the Subroutines
+      * -----------------------
+      *
+      *       P001  - Main processing
+      *       P002  - Termination processing
+      *
+      *       *PSSR - "Standard" Database error processing
+      *
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E*
+     E**   FOR COMPILATION - COPYRIGHT INSERTION
+     E*
+     E                    CPY@    1   1 80
+     E*
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     IINVTPDF                                                             101124
+     I              RECI                            IVRECI                101124
+     ISECTYDF                                                             101124
+     I              RECI                            SCRECI                101124
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR
+     I*
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     IKEY1DS      DS
+     I                                        1  10 KSESN
+     I                                       11  16 KTRNB
+     I*                                                                   S01496
+     ISDBANK    E DSSDBANKPD                                              S01496
+     I**  Data structure for bank details                                 S01496
+     I*                                                                   S01496
+     IDSFDY     E DSDSFDY                                                 S01496
+     I**  Short data structure for access programs                        S01496
+     I*                                                                   S01496
+     *********************************************************************
+      /EJECT
+     C********************************************************************
+     C**    P R O G R A M   S T A R T
+     C********************************************************************
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR P001
+     C*
+     C**   TERMINATION PROCESSING
+     C*
+     C                     EXSR P002
+     C*
+     C********************************************************************
+     C**    P R O G R A M     E N D
+     C********************************************************************
+      /EJECT
+     ******************************************************************
+     C* P001   : MAIN PROCESSING                                      *
+     ******************************************************************
+     C*
+     C           P001      BEGSR
+     C*
+     C**   INITIALISE KEY AND WORKING FIELDS
+     C*
+     C           KEY1      KLIST
+     C                     KFLD           KSESN  10
+     C                     KFLD           KTRNB   6
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           KNMCY   3
+     C                     KFLD           KSITP   3
+     C*
+     C           KEY3      KLIST                                          101124
+     C                     KFLD           TDBA                            101124
+     C                     KFLD           KTRNB                           101124
+     C*                                                                   101124
+     C                     MOVE *BLANKS   WWLOT
+     C                     MOVEL'SE6770'  DBPGM  10
+     C*                                                                   S01496
+     C**  Get report title and rundate using access object                S01496
+     C*                                                                   S01496
+     C                     CALL 'AOBANKR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*FIRST'  WLOPTN  7                       S01496
+     C           SDBANK    PARM SDBANK    DSFDY                           S01496
+     C*                                                                   S01496
+     C**  Check if error occurred                                         S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     Z-ADD5         DBASE            ***************S01496
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 05 *S01496
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01496
+     C                     EXSR *PSSR                                     S01496
+     C                     END                                            S01496
+     C*
+     C**   READ FIRST RECORD
+     C*
+     C           *LOVAL    SETLLPMTRSFL1
+     C                     READ PMTRSFL1                 88
+     C*
+     C**   DO WHILE NOT END OF FILE ON PMTRSFL1
+     C*
+     C           *IN88     DOWEQ'0'                        B*1
+     C*
+     C**   IF POSITION/TRANSACTION INDICATOR IS EQUAL TO 'D'
+     C*
+     C           P8POTI    IFEQ 'D'                        B*2
+     C*
+     C                     MOVE P8SESN    KSESN
+     C                     MOVE P8TRNB    KTRNB
+     C*
+     C**   OBTAIN DETAILS OF DEPOT MOVEMENT
+     C*
+     C           KEY1      CHAINDPTMV                89
+     C*
+     C**   IF RECORD NOT FOUND, TERMINATE WITH DATABASE ERROR
+     C*
+     C           *IN89     IFEQ '1'                        B*3
+     C                     MOVEL'001'     DBASE   30       *****************
+     C***********          MOVEL'DPTMV'   DBFILE 10        ** DB ERROR 01 S01496
+     C                     MOVE 'DPTMV'   DBFILE 10        * DB ERROR 01 *S01496
+     C                     MOVELKEY1DS    DBKEY  29        *****************
+     C                     EXSR *PSSR
+     C                     END                             E*3
+     C*
+     C**   IF RECORD IDENTIFICATION IS EQUAL TO 'S' (ALREADY PROCESSED)
+     C*
+     C           RECI      IFEQ 'S'                        B*3
+     C*
+     C**   WRITE TWO RECORDS TO FILE/TDPMVD (A REVERSAL ACTION AND A NEW INSERT)
+     C*
+     C                     EXSR WR001
+     C                     END                             E*3
+     C*
+     C**   ELSE, IF POSITION/TRANSACTION INDICATOR IS EQUAL TO 'T'
+     C*
+     C                     ELSE                            X*2
+     C*
+     C                     MOVE P8TRNB    KTRNB
+     C*
+     C**   OBTAIN DETAILS OF TRADE
+     C*
+     C           KTRNB     CHAINTRADS                89
+     C*
+     C**   IF RECORD NOT FOUND, TERMINATE WITH DATABASE ERROR
+     C*
+     C           *IN89     IFEQ '1'                        B*3
+     C                     MOVEL'002'     DBASE            *****************
+     C***********          MOVEL'TRADS'   DBFILE           ** DB ERROR 02 S01496
+     C                     MOVE 'TRADS'   DBFILE           * DB ERROR 02 *S01496
+     C                     MOVELKTRNB     DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*3
+     C*
+     C**   ACCESS SECURITY DETAILS WITH CURRENT SECURITY SHORTNAME
+     C*
+     C           TDSS      CHAINSECTY                89
+     C*
+     C**   IF NO RECORD IS FOUND
+     C*
+     C           *IN89     IFEQ '1'                        B*3
+     C                     MOVEL'003'     DBASE            *****************
+     C***********          MOVEL'SECTY'   DBFILE           ** DB ERROR 03 S01496
+     C                     MOVE 'SECTY'   DBFILE           * DB ERROR 03 *S01496
+     C                     MOVELTDSS      DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*3
+     C*
+     C**   ACCESS INVESTMENT TYPE FILE TO RETRIEVE PROCESSING TYPE (PROT)
+     C*
+     C                     MOVE NMCY      KNMCY
+     C                     MOVE SITP      KSITP
+     C*
+     C           KEY2      CHAININVTP                89
+     C*
+     C**   IF NO RECORD FOUND
+     C*
+     C           *IN89     IFEQ '1'                        B*3
+     C                     MOVELNMCY      WFLD1   6
+     C                     MOVE SITP      WFLD1
+     C                     MOVEL'004'     DBASE            *****************
+     C***********          MOVEL'INVTP   'DBFILE           ** DB ERROR 04 S01496
+     C                     MOVE 'INVTP   'DBFILE           * DB ERROR 04 *S01496
+     C                     MOVELWFLD1     DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*3
+     C*
+     C**   IF BIT '0' OF ACCOUNTING INDICATOR IS ON AND RECI EQUAL TO 'S' OR 'D'
+     C**   (TRADE DATE ACTIONS ALREADY GENERATED)
+     C*
+     C                     TESTB'0'       TACI           87
+     C*
+     C           *IN87     IFEQ '1'                        B*3
+     C           RECI      ANDEQ'S'
+     C           *IN87     OREQ '1'
+     C           RECI      ANDEQ'D'
+     C*
+     C**   WRITE TWO TRADE DATE RECORDS TO FILE/TTDMVD
+     C*
+     C                     EXSR WR002
+     C                     END                             E*3
+     C*
+     C**   IF BIT '1' OF ACCOUNTING INDICATOR IS ON AND RECI EQUAL TO 'S' OR 'D'
+     C**   (VALUE DATE ACTIONS ALREADY GENERATED)
+     C*
+     C                     TESTB'1'       TACI           87
+     C*
+     C           *IN87     IFEQ '1'                        B*3
+     C           RECI      ANDEQ'S'
+     C           *IN87     OREQ '1'
+     C           RECI      ANDEQ'D'
+     C*
+     C**   WRITE TWO VALUE DATE RECORDS TO FILE/TTDMVD
+     C*
+     C                     EXSR WR003
+     C                     END                             E*3
+     C*
+     C**   IF NOMINAL HAS ALREADY BEEN POSTED
+     C*
+     C           TNSP      IFNE *ZEROS                     B*3
+     C** Access SETLED record for Settlement Date(s)                      101124
+     C*                                                                   101124
+     C           KEY3      SETLLSETLE                    86               101124
+     C           KEY3      READESETLE                    89               101124
+     C           *IN89     DOWEQ'0'                        B*4            101124
+     C           RECI      IFEQ 'H'                        B*5            101124
+     C*
+     C**   WRITE TWO SETTLEMENT ACTION RECORDS TO FILE/TSTACD
+     C*
+     C                     EXSR WR004
+     C                     ENDIF                           E*5            101124
+     C           KEY3      READESETLE                    89               101124
+     C                     ENDDO                           E*4            101124
+     C                     END                             E*3
+     C                     END                             E*2
+     C*
+     C**   READ NEXT RECORD
+     C*
+     C                     READ PMTRSFL1                 88
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     ******************************************************************
+     C* P002   : TERMINATION PROCESSING                               *
+     ******************************************************************
+     C*
+     C           P002      BEGSR
+     C*
+     C**   END OF PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* WR001  : WRITE REVERSAL ACTION FOR 'FROM' PORTFOLIO TO TDPMVD *
+     C*          WRITE INSERT   ACTION FOR 'TO'   PORTFOLIO TO TDPMVD *
+     ******************************************************************
+     C*
+     C           WR001     BEGSR
+     C*
+     C**   REVERSAL ACTION FOR 'FROM' PORTFOLIO
+     C*
+     C                     MOVE 'D'       RECI             Record ID
+     C***********          Z-ADDDPBC      CPBC             Branch Code    S01496
+     C                     MOVE DPBA      CPBA             Branch Code    S01496
+     C                     MOVE DPSS      CPSS             Security Shortname
+     C**********           Z-ADDDPBN      CCRT             Customer                           CSD027
+     C                     MOVE DPBN      CCRT             Customer                           CSD027
+     C                     MOVE DPMK      CMRT             Market
+     C*
+     C           DPMV      IFEQ 'WI'                       B*1
+     C**********           Z-ADDDPID      CDEP             Depot                              CSD027
+     C                     MOVE DPID      CDEP             Depot                              CSD027
+     C                     Z-ADDDPMD      CADA             Date
+     C                     MOVE 'CI'      CPMV             Movement Type
+     C                     ELSE                            X*1
+     C**********           Z-ADDDPOD      CDEP             Depot                              CSD027
+     C                     MOVE DPOD      CDEP             Depot                              CSD027
+     C                     Z-ADDDPDO      CADA             Date
+     C                     MOVE 'CO'      CPMV             Movement Type
+     C                     END                             E*1
+     C*
+     C                     MOVE DPRN      CDMR             Ref Numer of Depot Mo
+     C                     Z-ADD*ZEROS    CPRC             Price
+     C                     MOVE 'A'       CDBA             Date Basis
+     C                     Z-ADDDPNA      CMNA             Nominal Amount
+     C                     MOVE 'Y'       CRIN             Reversal Indicator
+     C                     MOVE *BLANKS   DPNR             Narrative
+     C                     MOVE P8FPTF    PTFR             Portfolio Reference
+     C                     Z-ADD*ZEROS    SPXR             Exchange Rate
+     C                     MOVE *BLANKS   SPMD             Spot Rate Mult/Div
+     C                     Z-ADD*ZEROS    CYLD             Customer Yield Rate
+     C                     MOVE *BLANKS   CPEXCL           Exclude Form Cust Pos
+     C                     WRITETDPMVDF
+     C*
+     C**   INSERT ACTION FOR 'TO' PORTFOLIO
+     C*
+     C                     MOVE 'N'       CRIN             Reversal Indicator
+     C                     MOVE P8TPTF    PTFR             Portfolio Reference
+     C                     WRITETDPMVDF
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* WR002  : FOR TRANSFER OF A TRADE, WRITE 2 TRADE DATE RECORDS  *
+     C*          WRITE REVERSAL ACTION FOR 'FROM' PORTFOLIO TO TTDMVD *
+     C*          WRITE INSERT   ACTION FOR 'TO'   PORTFOLIO TO TTDMVD *
+     ******************************************************************
+     C*
+     C           WR002     BEGSR
+     C*
+     C**   REVERSAL ACTION FOR 'FROM' PORTFOLIO
+     C*
+     C                     MOVE 'D'       RECI             Record Id
+     C**********           Z-ADDTCNR      TRCP             Customer                    095718 CSD027
+     C                     MOVE TCNR      TRCP             Customer                           CSD027
+     C*
+     C           TDTP      IFEQ 'TP'
+     C                     MOVE 'P'       PRSL             Trade Reference
+     C**********           Z-ADDDELT      OUDP             Our Depot                          CSD027
+     C**********           Z-ADDDELF      PTCD             Portfolio Customer Dp              CSD027
+     C                     MOVE DELT      OUDP             Our Depot                          CSD027
+     C                     MOVE DELF      PTCD             Portfolio Customer Dp              CSD027
+     C                     ELSE
+     C                     MOVE 'S'       PRSL             Trade Reference
+     C**********           Z-ADDDELF      OUDP             Our Depot                          CSD027
+     C**********           Z-ADDDELT      PTCD             Portfolio Customer Dp              CSD027
+     C                     MOVE DELF      OUDP             Our Depot                          CSD027
+     C                     MOVE DELT      PTCD             Portfolio Customer Dp              CSD027
+     C                     END
+     C*
+     C                     Z-ADDTDDT      EVTD             Event Date
+     C                     Z-ADDTDVD      OTRD             Other Date
+     C                     MOVE 'T'       TVDA             Trade/Value Date Act
+     C                     MOVE *BLANKS   ACTS             Action Sequence No.
+     C                     Z-ADD*ZEROS    CNSD             Consideration
+     C                     Z-ADD*ZEROS    RALL             Reallowance
+     C                     Z-ADD*ZEROS    CCTL             Charges Total
+     C                     Z-ADD*ZEROS    CCCT             Commission Total
+     C                     Z-ADD*ZEROS    TRPR             Trade Price
+     C                     MOVE 'Y'       RVLI             Reversal Indicator
+     C                     Z-ADD*ZEROS    INAJ             Interest Adjustment
+     C                     Z-ADD*ZEROS    PCHI             Purchased Interest
+     C                     MOVE *BLANKS   RMIP             Rev. this Month
+     C                     Z-ADD*ZEROS    CNTP             Contract Price
+     C*
+     C           PROT      IFEQ '4'                        B*1
+     C                     MOVE EXDV      ACRI             Accrued Indicator
+     C                     ELSE                            X*1
+     C                     MOVE ACIN      ACRI             Accrued Indicator
+     C                     END                             E*1
+     C*
+     C                     MOVE 'Y'       PTFI             Portfolio Indicator
+     C                     Z-ADD*ZEROS    CPNR             Coupon Rate
+     C                     Z-ADD*ZEROS    SDCP             Current Factor (MP)
+     C                     Z-ADD*ZEROS    STCA             Total Called Amount %
+     C                     MOVE P8FPTF    PTFR             Portfolio Reference
+     C                     Z-ADD*ZEROS    SETAM            Settlement Amount
+     C                     MOVE *BLANKS   SETCY            Settlement Currency
+     C                     Z-ADD*ZEROS    SPXR             Spot Rate
+     C                     MOVE *BLANKS   SPMD             FX Mult/Div Ind
+     C                     WRITETTDMVDF
+     C*
+     C**   INSERT ACTION FOR 'TO' PORTFOLIO
+     C*
+     C                     MOVE 'N'       RVLI             Reversal Indicator
+     C                     MOVE P8TPTF    PTFR             Portfolio Reference
+     C                     WRITETTDMVDF
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* WR003  : FOR TRANSFER OF A TRADE, WRITE 2 VALUE DATE RECORDS  *
+     C*          WRITE REVERSAL ACTION FOR 'FROM' PORTFOLIO TO TTDMVD *
+     C*          WRITE INSERT   ACTION FOR 'TO'   PORTFOLIO TO TTDMVD *
+     ******************************************************************
+     C*
+     C           WR003     BEGSR
+     C*
+     C**   REVERSAL ACTION FOR 'FROM' PORTFOLIO
+     C*
+     C                     MOVE 'D'       RECI             Record Id
+     C**********           Z-ADDTCNR      TRCP             Customer                    095718 CSD027
+     C                     MOVE TCNR      TRCP             Customer                           CSD027
+     C*
+     C           TDTP      IFEQ 'TP'
+     C                     MOVE 'P'       PRSL             Trade Reference
+     C**********           Z-ADDDELT      OUDP             Our Depot                          CSD027
+     C**********           Z-ADDDELF      PTCD             Portfolio Customer Dp              CSD027
+     C                     MOVE DELT      OUDP             Our Depot                          CSD027
+     C                     MOVE DELF      PTCD             Portfolio Customer Dp              CSD027
+     C                     ELSE
+     C                     MOVE 'S'       PRSL             Trade Reference
+     C**********           Z-ADDDELF      OUDP             Our Depot                          CSD027
+     C**********           Z-ADDDELT      PTCD             Portfolio Customer Dp              CSD027
+     C                     MOVE DELF      OUDP             Our Depot                          CSD027
+     C                     MOVE DELT      PTCD             Portfolio Customer Dp              CSD027
+     C                     END
+     C*
+     C                     Z-ADDTDVD      EVTD             Event Date
+     C                     Z-ADDTDDT      OTRD             Other Date
+     C                     MOVE 'V'       TVDA             Trade/Value Date Act
+     C                     MOVE *BLANKS   ACTS             Action Sequence No.
+     C                     Z-ADD*ZEROS    CNSD             Consideration
+     C                     Z-ADD*ZEROS    RALL             Reallowance
+     C                     Z-ADD*ZEROS    CCTL             Charges Total
+     C                     Z-ADD*ZEROS    CCCT             Commission Total
+     C                     Z-ADD*ZEROS    TRPR             Trade Price
+     C                     MOVE 'Y'       RVLI             Reversal Indicator
+     C                     Z-ADD*ZEROS    INAJ             Interest Adjustment
+     C                     Z-ADD*ZEROS    PCHI             Purchased Interest
+     C                     MOVE *BLANKS   RMIP             Rev. this Month
+     C                     Z-ADD*ZEROS    CNTP             Contract Price
+     C*
+     C           PROT      IFEQ '4'                        B*1
+     C                     MOVE EXDV      ACRI             Accrued Indicator
+     C                     ELSE                            X*1
+     C                     MOVE ACIN      ACRI             Accrued Indicator
+     C                     END                             E*1
+     C*
+     C                     MOVE 'Y'       PTFI             Portfolio Indicator
+     C                     Z-ADD*ZEROS    CPNR             Coupon Rate
+     C                     Z-ADD*ZEROS    SDCP             Current Factor (MP)
+     C                     Z-ADD*ZEROS    STCA             Total Called Amount %
+     C                     MOVE P8FPTF    PTFR             Portfolio Reference
+     C                     Z-ADD*ZEROS    SETAM            Settlement Amount
+     C                     MOVE *BLANKS   SETCY            Settlement Currency
+     C                     Z-ADD*ZEROS    SPXR             Spot Rate
+     C                     MOVE *BLANKS   SPMD             FX Mult/Div Ind
+     C                     WRITETTDMVDF
+     C*
+     C**   INSERT ACTION FOR 'TO' PORTFOLIO
+     C*
+     C                     MOVE 'N'       RVLI             Reversal Indicator
+     C                     MOVE P8TPTF    PTFR             Portfolio Reference
+     C                     WRITETTDMVDF
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* WR004  : FOR TRANSFER OF A TRADE, WRITE 2 SETTLEMENT RECORDS  *
+     C*          REVERSAL ACTION FOR 'FROM' PORTFOLIO TO TSTACD       *
+     C*          INSERT   ACTION FOR 'TO  ' PORTFOLIO TO TSTACD       *
+     ******************************************************************
+     C*
+     C           WR004     BEGSR
+     C*
+     C**   REVERSAL ACTION FOR 'FROM' PORTFOLIO
+     C*
+     C                     MOVE 'D'       RECI             Record Id
+     C***********          Z-ADDTDBR      SBCD             Branch Code    S01496
+     C***********          MOVE TDBA      SBCA             Branch CS01496 101124
+     C**********           Z-ADDTCNR      SCPT             Customer                           CSD027
+     C                     MOVE TCNR      SCPT             Customer                           CSD027
+     C***********          MOVE TDSS      SSSN             Security Shortn101124
+     C***********          MOVE TDBK      SBOC             Book Code      101124
+     C***********          MOVE TDMI      SMAR             Market         101124
+     C                     MOVE SMKI      SMAR             Market         101124
+     C*
+     C           TDTP      IFEQ 'TP'
+     C**********           Z-ADDDELT      SODP             Our Depot                          CSD027
+     C**********           Z-ADDDELF      SPCD             Portf Customer Depot               CSD027
+     C                     MOVE DELT      SODP             Our Depot                          CSD027
+     C                     MOVE DELF      SPCD             Portf Customer Depot               CSD027
+     C                     ELSE
+     C**********           Z-ADDDELF      SODP             Our Depot                          CSD027
+     C**********           Z-ADDDELT      SPCD             Portf Customer Depot               CSD027
+     C                     MOVE DELF      SODP             Our Depot                          CSD027
+     C                     MOVE DELT      SPCD             Portf Customer Depot               CSD027
+     C                     END
+     C*
+     C                     MOVE 'Y'       SPFI             Portfolio Indicator
+     C***********          MOVE TDTP      STET             Trade Type     101124
+     C***********          MOVE TDRF      STDR             Trade Reference101124
+     C***********          MOVE LKRF      SSRF             Settlement Refe101124
+     C***********          Z-ADDTNSP      SNMS             Nominal Settled101124
+     C                     MOVE 'Y'       SRIN             Reversal Indicator
+     C***********          Z-ADDTDVD      SEDE             Date of Moveme 101124
+     C                     MOVE P8FPTF    PTFR             Portfolio Reference
+     C*
+     C                     WRITETSTACDF
+     C*
+     C**   INSERT ACTION FOR 'TO' PORTFOLIO
+     C*
+     C                     MOVE 'N'       SRIN             Reversal Indicator
+     C                     MOVE P8TPTF    PTFR             Portfolio Reference
+     C                     WRITETSTACDF
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* *PSSR - TO PROCESS ABNORMAL END OF PROGRAM                    *
+     ******************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C**   UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C***********          MOVELDBFILE    WWFILE                          S01496
+     C                     MOVE DBFILE    WWFILE                          S01496
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*                                                                   S01496
+     C**  Output database error details                                   S01496
+     C*                                                                   S01496
+     C                     OPEN SE6770AU                                  S01496
+     C                     WRITEHEADAU                                    S01496
+     C                     WRITEDBERROR                                   S01496
+     C                     CLOSESE6770AU                                  S01496
+     C*
+     C**   PRINT DUMP AND CANCEL PROGRAM
+     C*
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

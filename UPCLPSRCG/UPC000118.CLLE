@@ -1,0 +1,66 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Pass parameters; no base or merge')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000118 - Pass parameters to on-screen compare            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSM005  *CREATE    Date 12Sep05              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSM005 - Program to pass parameters to on-screen compare    */
+/*                program.  This is required because the parameters  */
+/*                do not fit in the field on UTMENUPD.               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20) +
+                          VALUE('BrgMidasGlobalPrefix')
+             DCL        VAR(&BASSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&CMPSVAL) TYPE(*CHAR) LEN(20) +
+                          VALUE('BrgCoreSourceLib')
+             DCL        VAR(&MRGSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&WRKSVAL) TYPE(*CHAR) LEN(20) +
+                          VALUE('BrgDeliveredBrgLib')
+             DCL        VAR(&JOBDSVAL) TYPE(*CHAR) LEN(20) +
+                          VALUE('BrgJobDescription')
+             DCL        VAR(&PROMPT) TYPE(*CHAR) LEN(6) VALUE('NYNYNN')
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2005')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CALL       PGM(UPC000111) PARM(&PFXSVAL &BASSVAL +
+                          &CMPSVAL &MRGSVAL &WRKSVAL &JOBDSVAL &PROMPT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000118') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details.')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000118' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ ENDPGM:
+             ENDPGM

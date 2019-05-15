@@ -1,0 +1,193 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *  MODULE(IRSIRSVU) ACTGRP(*CALLER)                             *
+/*EXI *  TEXT('Midas IR Single Currency IRS validate and update')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas  - FRA/IRS Module                                      *
+      *                                                               *
+      *  IRSIRSVU - Single Currency IRS Validate and Update           *
+      *                                                               *
+      *  Function:  This program validates and updates Single         *
+      *             Currency Interest Rate Swaps received from the    *
+      *             front end                                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               * 
+      *  Last Amend No. MD052154           Date 28Jan19               *
+      *  Prev Amend No. MD051249           Date 17Jul18               *      
+      *                 MD046248           Date 27Oct17               *
+      *                 MD044506           Date 28Mar17               *
+      *                 CSD095CC1          Date 13Sep16               *
+      *                 CSW216             Date 14Mar16               *
+      *                 MD031775           Date 09Jan15               *
+      *                 MD031224           Date 25Nov14               *
+      *                 MD029165           Date 25Nov14               *
+      *                 CSW214             Date 25Nov14               *
+      *                 CDL094             Date 03Sep14               *
+      *                 MD029596           Date 03Sep14               *
+      *                 CIR017             Date 10Apr14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 MD025726           Date 19Mar14               *
+      *                 264029             Date 22Feb10               *
+      *                 245692             Date 11Dec13               *
+      *                 MD023734           Date 30Nov13               *
+      *                 MD022508           Date 23Sep13               *
+      *                 CSW213             Date 03Jun13               *
+      *                 MD000091           Date 08May13               *
+      *                 AR981707           Date 19Nov12               *
+      *                 CSF011A            Date 28Nov11               *
+      *                 AR664921           Date 04Nov10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23454           Date 19Mar09               *
+      *                 BUG27882           Date 09Jul10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256564             Date 17Sep08               *
+      *                 248489             Date 14Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244254             Date 12Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 240134             Date 09Sep06               *
+      *                 BUG12565           Date 09Nov06
+      *                 240240             Date 26Jun06               *
+      *                 CIR014             Date 11May06               *
+      *                 BUG11457           Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG11543           Date 23Jun06               *
+      *                 BUG11254           Date 19Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG7587            Date 04Oct05               *
+      *                 239204             Date 31May06               *
+      *                 CLE031             Date 26Apr05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG8997            Date 27Oct05               *
+      *                 BUG7621            Date 17Jun05               *
+      *                 BUG5871            Date 24May05               *
+      *                 BUG6512            Date 28Apr05               *
+      *                 BUG7166            Date 12May05               *
+      *                 BUG7046            Date 06May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG6671            Date 26Apr05               *
+      *                 BUG6472            Date 22Apr05               *
+      *                 BUG6940            Date 29Apr05               *
+      *                 BUG6876            Date 27Apr05               *
+      *                 BUG6577            Date 12Apr05               *
+      *                 BUG6377            Date 11Apr05               *
+      *                 BUG6470            Date 05Apr05               *
+      *                 BUG6386            Date 23Mar05               *
+      *                 BUG6075            Date 23Feb05               *
+      *                 BUG5964            Date 17Feb05               *
+      *                 BUG5610            Date 27Jan05               *
+      *                 BUG5438            Date 12Jan05               *
+      *                 BUG5357            Date 05Jan05               *
+      *                 BUG4646            Date 25Oct04               *
+      *                 BUG4482            Date 29Sep04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CAP084  *CREATE    Date 02Jul03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD052154 - IRS - Confirmed Holiday 'Y' flag for principal    *
+      *             changes processing. (Recompile)                   *
+      *  MD051249 - Set APIRetc to '0' after PSSR. (Recompile)        *      
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD044506 - MT300 98D trade execution date can not be before  *
+      *             value date. (Recompile)                           *
+      *  CSD095CC1 - Allow Deal Sub-Type and Branch for IRS, FRA and  *
+      *              CCF SSIs (Recompiled)                            *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
+      *  MD031775 - Cannot insert transaction due to errors. Correct  *
+      *             mapping to include CDL094 fields. (Recompile)     *
+      *  MD031224 - Schedule dates does not throw warning when falls  *
+      *             on holiday. Amend date validation to prompt       *
+      *             warning message when it falls on holiday.         *
+      *             (Recompile)                                       *
+      *  MD029165 - Manually defined values in field 72 of Settlement *
+      *             Confirmation tab are being overwritten (Recompile)*
+      *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompile)                                         *
+      *  MD029596 - FRNT of DEALSDG not being populated. Remove part  *
+      *             of GEMS248489. (Recompile)                        *
+      *  CIR017 - SIRS Business Day Conventions for both legs         *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  MD025726 - Retrieve ISDA details from FRA/IRS ICD for        *
+      *             customers with no extended settlement details     *
+      *             (SSI). (Recompile)                                *
+      *  264029 - Recompile due to changes made in IRSIRSVU mod.      *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".  (Recompiled)                          *
+      *  MD023734 - Clearing Threshold Ind not defaulted. (Recompile) *
+      *  MD022508 - Error encountered when RPIF Execution             *
+      *             Timestamp date is entered. (Recompile)            *
+      *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
+      *  MD000091 - Event Codes Substitution (Recompile)              *
+      *  AR981707 - Cannot authorise an amendment to IRS deal when    *
+      *             auto-authorise flag is 'Y'. (Recompile)           *
+      *             (Child: AR981710)                                 *
+      *  CSF011A -  CCR015: Display Order in Confirmation Pages       *
+      *             (Recompile)                                       *
+      *  AR664921 - Can't authorise repaired transaction              *
+      *             (Recompile)                                       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23454 - Recompiled due to change in IRSIRSVU              *
+      *  BUG27882 - Settlement Confirmation data cleared after Amend  *
+      *             (Recompile)                                       *
+      *  256564 - Recompile due to PF changes done by fix 256330      *
+      *  248489 - Front Office ID blanked out when deal is edited.    *
+      *  244254 - Retrieve ISDA details from customer's default       *
+      *           settlement details even if the pay/recv details     *
+      *           are manually input on the screen.                   *
+      *  240134 - Recompile.                                          *
+      *  BUG12565 - Encountered Error in rejecting record in SIRS.    *
+      *             (Recompile).                                      *
+      *  240240 - CALLB FFDATE. Call results in 'cannot resolve' bug. *
+      *  CIR014 - Mark to Market Cross-currency Interest Rate Swaps   *
+      *           (Recompile)                                         *
+      *  BUG11457-Transaction ccy is not passed by callers. Recompile.*
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG11543 - Serious midas error upon authorise (Recompile)    *
+      *  BUG11254 - Recompiled due to change in IRSIRSVU module       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7587-Recompiled due to change in IRSIRSVU                 *
+      *  239204 - Recompile over changes in IRSIRSVU module.          *
+      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG8997- Recompiled due to change in IRSIRSVU                *
+      *  BUG7621- Recompiled due to change in IRSIRSVU                *
+      *  BUG5871- Send deal status to MidasPlus (Recompile)           *
+      *  BUG6512-Recompiled due to change in IRSIRSVU                 *
+      *  BUG7166- Valid files do not match DEALSDG (Recompile)        *
+      *  BUG7046 - Validate Principal Change schedule if present      *
+      *            (Recompile)                                        *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG6671- Recompiled due to change in IRSIRSVU                *
+      *  BUG6472- Recompiled due to change in IRSIRSVU                *
+      *  BUG6940-Recompiled due to change in IRSIRSVU                 *
+      *  BUG6876- Recompiled due to change in IRSIRSVU                *
+      *  BUG6577-Recompiled due to change in IRSIRSVU                 *
+      *  BUG6377- Recompiled due to change in IRSIRSVU                *
+      *  BUG6470 - Recompiled due to change in IRSIRSVU               *
+      *  BUG6386 - Principal Change schedules not showing for migrated*
+      *            deals                                              *
+      *  BUG6075-Duplicated deal numbers assigned by the system       *
+      * BUG5964- Schedule 1st non processed date should be the same as*
+      *          the date in the main details                         *
+      *  BUG5610-Amount formatting                                    *
+      *  BUG5438-Error messages relating to edit table need more      *
+      *          detailed information                                 *
+      *  BUG5357- Cash flow/principle change schedule formulae need   *
+      *           additional fields                                   *
+      *  BUG4646- Completion of SIRS api                              *
+      *  BUG4482 - Authorise should call Validate to show all the     *
+      *            warning errors.                                    *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CAP084 - Synchronous calling of APIs                         *
+      *                                                               *
+      *****************************************************************

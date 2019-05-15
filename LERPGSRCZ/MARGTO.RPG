@@ -1,0 +1,398 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Margin Take on')                              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  MARGTO - Margin Accruals, Profitabilty Extract               *
+     F*                                      - INITIAL SETUP          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1056323          Date 14Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
+      *              LKEYFED (Recompile)                              *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Posting     *
+      *           Information                                         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FPETEMPLNIF  E           K        DISK
+     FLEPEMGD UF  E           K        DISK                      A
+     FLEPEMGZ UF  E                    DISK
+     FMKEYDP  O   E                    DISK
+     FMKEYZZ  UF  E                    DISK
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    20  - LEPEMGD record not found                             *
+     F*    30  - Trailer missing                                      *
+     F*    89  - End of file on PETEMPLN                              *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ZHASH  - Hash totalling processing                           *
+     F*  *PSSR  - Program Error Processing Subroutine                 *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     E                    CPY@    1   1 80
+     E                    INT         6 15 0             ZHASH INTEGERS
+     E                    DEC         6  3 0             ZHASH DECIMALS
+      /EJECT
+     I            DS
+     I****************************************1  10 AKEY                                      CLE042
+     I                                        1  14 AKEY                                      CLE042
+     I                                        1   2 MDLTYP
+     I                                        3   3 ETYPE
+     I                                        4   5 MDSUTP
+     I                                        6   8 AK3
+     I                                        9   9 WTYPE
+     I                                       10  10 ATYPE
+     I                                       11  14 MDCLAS                                    CLE042
+     I/COPY ZSRSRC,ZHASHZ2
+     IPSDS       SDS
+     I***  Program Status Data Structure
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I*
+     ILDA       E DSLDA
+     I***  Database error DS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I***  Bank Details
+     I*
+     I              BJRDNB                          RUND
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CGL020
+     I***  Enhancement File                                                                   CGL020
+     I*                                                                                       CGL020
+     IDSFDY     E DSDSFDY
+     I***  First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I***  Second DS for access programs, long data structure
+     I*
+     I            DS                                                                          CGL020
+      ** DS to hold work variable of zoned decimal type                                       CGL020
+      *                                                                                       CGL020
+     I**********                              1   60PROCN                              CGL020 CSD027
+     I**********                              7  120PROBN                              CGL020 CSD027
+     I**********                             13  180PPOCN                              CGL020 CSD027
+     I**********                             19  240PPOBN                              CGL020 CSD027
+     I                                        1   6 PROCN                                     CSD027
+     I                                        7  12 PROBN                                     CSD027
+     I                                       13  18 PPOCN                                     CSD027
+     I                                       19  24 PPOBN                                     CSD027
+      *                                                                                       CGL020
+     I              'ZAAMLSETLE'          C         ZAAML                                     CGL020
+      ** Constant for calling the AML Settlement Extract program                              CGL020
+      *                                                                                       CGL020
+     C/EJECT
+     C*
+     C***  Define LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C***  COPYRIGHT ARRAY
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C***  DEFINE KEY LIST FOR LEPEMGD
+     C*
+     C           KEYMGN    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           LNRF
+     C                     MOVE 'M'       ATYPE
+     C                     MOVE 'A'       ETYPE
+     C*
+     C***  Call access program for bank specific details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MARGTO  'DBPGM
+     C                     MOVEL'*READ   'DBKEY
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                                       CGL020
+      ** Access SAR Details to see if Compliance Watch is installed                           CGL020
+      *                                                                                       CGL020
+     C                     MOVEL'N'       CGL020  1                                           CGL020
+     C                     CALL 'AOSARDR0'                                                    CGL020
+     C                     PARM *BLANKS   WRTCD                                               CGL020
+     C                     PARM '*VERIFY 'WOPTN                                               CGL020
+     C                     PARM 'CGL020'  PSARD   6                                           CGL020
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL020
+      *                                                                                       CGL020
+     C           WRTCD     IFNE *BLANKS                                                       CGL020
+     C           WRTCD     ANDNE'*NRF   '                                                     CGL020
+     C           *LOCK     IN   LDA                                                           CGL020
+     C                     MOVEL'MARGTO'  DBPGM                                               CGL020
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL020
+     C                     MOVEL'CGL020'  DBKEY                                               CGL020
+     C                     Z-ADD4         DBASE                                               CGL020
+     C                     OUT  LDA                                                           CGL020
+     C                     EXSR *PSSR                                                         CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C           WRTCD     IFEQ *BLANKS                                                       CGL020
+     C                     MOVEL'Y'       CGL020                                              CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     MOVE *BLANKS   F1FFLG                                              CGL020
+     C                     Z-ADD0         F1FVAL                                              CGL020
+     C                     Z-ADD0         F1FPCT                                              CGL020
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C                     READ PETEMPLN                 89
+     C*                                                                    0107
+     C** Check that a record has been found before starting to process     0107
+     C*                                                                    0107
+     C           *IN89     IFEQ '0'                                        0107
+     C*
+     C           INTR      IFNE 0
+     C*
+     C***  SET UP NEW FIELDS.
+     C*
+     C           KEYMGN    CHAINLEPEMGD              20
+     C*
+     C                     MOVE CNUM      MDCNUM
+     C                     MOVE LNRF      MDLNRF
+     C                     MOVE LTYP      MDLTYP
+     C                     MOVE SUTP      MDSUTP
+     C                     MOVE CLAS      MDCLAS                                              CLE042
+     C                     Z-ADDMARG      MDMGNR
+     C                     Z-ADD0         MDMATD
+     C                     Z-ADD0         MDPSTD
+     C                     Z-ADD0         MDIATD
+     C*
+     C           AITC      IFNE 0
+     C           AITC      MULT MARG      WRK15  150
+     C                     DIV  INTR      WRK15     H
+     C                     Z-ADDWRK15     MDMATD
+     C                     END
+     C*
+     C           AIPD      IFNE 0
+     C           AIPD      MULT MARG      WRK15  150
+     C                     DIV  INTR      WRK15     H
+     C                     Z-ADDWRK15     MDPSTD
+     C                     END
+     C*
+     C                     Z-ADDAITC      MDIATD
+     C*
+     C           *IN20     IFEQ '0'
+     C                     UPDATLEPEMGDF
+     C                     ELSE
+     C*
+     C***  WRITE MARGIN EXTRACT RECORD.
+     C*
+     C                     Z-ADD0         MDJANA
+     C                     Z-ADD0         MDFEBA
+     C                     Z-ADD0         MDMARA
+     C                     Z-ADD0         MDAPRA
+     C                     Z-ADD0         MDMAYA
+     C                     Z-ADD0         MDJUNA
+     C                     Z-ADD0         MDJULA
+     C                     Z-ADD0         MDAUGA
+     C                     Z-ADD0         MDSEPA
+     C                     Z-ADD0         MDOCTA
+     C                     Z-ADD0         MDNOVA
+     C                     Z-ADD0         MDDECA
+     C                     ADD  1         MGNO    50
+     C                     WRITELEPEMGDF
+     C                     END
+     C*
+     C***  SET UP ACCOUNT KEY
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE LNRF      LNNO
+     C                     MOVE LASQ      ACSQ
+     C                     Z-ADDRUND      EDAT
+     C                     Z-ADDMDPSTD    EAMT
+     C                     MOVE CCY       ECCY
+     C                     Z-ADDSDST      SETP
+     C                     MOVE OSDA      OSAC
+     C                     Z-ADD0         REVI
+     C                     Z-ADDMDPSTD    OTHA
+     C                     MOVE CCY       OTHC
+     C                     Z-ADD1         EXRT
+     C                     Z-ADDVDAT      STDT
+     C                     Z-ADDMARG      INTR
+     C                     Z-ADD1         SSEQ
+     C                     Z-ADDIACD      PACD
+     C                     MOVE *BLANK    ZZ002
+     C                     Z-ADDSDST      PELAP
+     C                     ADD  1         ACKNO   50
+      *                                                                                       CGL020
+      ** If Midas Compliance Watch - Anti-money Laundering is installed                       CGL020
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+      *                                                                                       CGL020
+      ** Move packed variables to zoned work variables                                        CGL020
+      *                                                                                       CGL020
+     C**********           Z-ADDROCN      PROCN                                        CGL020 CSD027
+     C**********           Z-ADDROBN      PROBN                                        CGL020 CSD027
+     C**********           Z-ADDPOCN      PPOCN                                        CGL020 CSD027
+     C**********           Z-ADDPOBN      PPOBN                                        CGL020 CSD027
+     C                     MOVE ROCN      PROCN                                               CSD027
+     C                     MOVE ROBN      PROBN                                               CSD027
+     C                     MOVE POCN      PPOCN                                               CSD027
+     C                     MOVE POBN      PPOBN                                               CSD027
+      *                                                                                       CGL020
+      ** Call ZAAMLSETLE                                                                      CGL020
+      *                                                                                       CGL020
+     C                     CALL ZAAML                                                         CGL020
+     C                     PARM           PROCN                                               CGL020
+     C                     PARM           PROBN                                               CGL020
+     C                     PARM           PPOCN                                               CGL020
+     C                     PARM           PPOBN                                               CGL020
+     C                     PARM           BENN                                                CGL020
+     C                     PARM           BENA                                                CGL020
+     C                     PARM           AWBN                                                CGL020
+     C                     PARM           AWBA                                                CGL020
+     C                     PARM           F1RACT                                              CGL020
+     C                     PARM           F1RCTY                                              CGL020
+     C                     PARM           F1RBNK                                              CGL020
+     C                     PARM           F1RCDE                                              CGL020
+     C                     PARM           F1PACT                                              CGL020
+     C                     PARM           F1PCTY                                              CGL020
+     C                     PARM           F1PBNK                                              CGL020
+     C                     PARM           F1PCDE                                              CGL020
+     C                     PARM           F1DACT                                              CGL020
+     C                     PARM           F1DCTY                                              CGL020
+     C                     PARM           F1DBNK                                              CGL020
+      *                                                                                       CGL020
+      ** Equate Settlement Date to Maturity Date                                              CGL020
+      *                                                                                       CGL020
+     C                     Z-ADDMDAT      F1SDAT                                              CGL020
+      *                                                                                       CGL020
+     C                     ENDIF                                                              CGL020
+     C*
+     C***  ADD EVENT AMOUNT TO HASH TOTAL FOR TRAILER
+     C*
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C*
+     C           EAMT      DIV  1000      ZZAMT
+     C                     Z-ADD@VLRF     ZZTOTI
+     C                     Z-ADD@VLRL     ZZTOTD
+     C*
+     C                     EXSR ZHASH
+     C*
+     C                     Z-ADDZZTOTI    @VLRF  150
+     C                     Z-ADDZZTOTD    @VLRL   30
+     C*
+     C                     WRITELKEY1DPF
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END                                             0107
+      *                                                                    0107
+     C                     READ LEPEMGZ                  30
+     C*
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MARGTO  'DBPGM
+     C                     MOVEL'*READ   'DBKEY
+     C                     MOVE 'LEPEMGZ 'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ADD  MGNO      MZNREC
+     C                     UPDATLEPEMGZF
+     C*
+     C                     READ MKEYZZ                   30
+     C*
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MARGTO  'DBPGM
+     C                     MOVEL'*READ   'DBKEY
+     C                     MOVE 'MKEYZZ  'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ADD  @VLRF     VLRF
+     C                     ADD  @VLRL     VLRL
+     C                     ADD  ACKNO     NORE
+     C                     UPDATLKEY1ZZF
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C*****************************************************************
+      /TITLE SR/ZHASH
+     C/COPY ZSRSRC,ZHASHZ3
+     C*****************************************************************
+     C*
+     C***  *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C***  CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

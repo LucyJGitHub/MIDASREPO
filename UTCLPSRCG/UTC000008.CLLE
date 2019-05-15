@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*S*D****CLPBASEMOD                                                  */                   /*CPK022*/
+/*STD    CLPBASEBND                                                  */                   /*CPK022*/
+/*EXI *  TEXT('Midas UT Update an SQL objects field labels')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000008 - Update an SQL object field labels               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK022             Date 10Aug05              */
+/*                      CPK018             Date 30Jan04              */
+/*                      CAP084  *CREATE    Date 22Oct03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CPK022 - Change to a bound program.                         */
+/*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
+/*       CAP084 - MidasPlus wrapper project                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CALLCODE &ORIGFIELD &FILENAME)
+ 
+             DCL        VAR(&CALLCODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ORIGFIELD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILENAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VAR) TYPE(*CHAR) LEN(250)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* The first time the program is called, copy the file to QTEMP or clear existing file */
+             IF         COND(&CALLCODE = '1') THEN(DO)
+/**********     DLTF       FILE(QTEMP/UTFLTXPD)                                        */ /*CPK018*/
+/**********     MONMSG     MSGID(CPF2105 CPF3220)                                      */ /*CPK018*/
+/**********     CPYF       FROMFILE(UTFLTXPD) TOFILE(QTEMP/UTFLTXPD) +                 */ /*CPK018*/
+/**********                  CRTFILE(*YES)                                             */ /*CPK018*/
+                CPYF       FROMFILE(UTFLTXPD) TOFILE(QTEMP/UTFLTXPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                               /*CPK018*/
+                MONMSG     MSGID(CPF2817)                                                 /*CPK018*/
+/**********     MONMSG     MSGID(CPF2874) EXEC(SNDPGMMSG MSG('OVERRIDE +               */ /*CPK018*/
+/**********                  RESULTS IN COPYING FILE TO ITSELF'))                      */ /*CPK018*/
+/**********     MONMSG     MSGID(CPF2817)                                              */ /*CPK018*/
+                OVRDBF     FILE(UTFLTXPD) TOFILE(QTEMP/UTFLTXPD)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**Override*to*QTEMP*file**/ /*                                                        */ /*CPK018*/
+/**********  OVRDBF     FILE(UTFLTXPD) TOFILE(QTEMP/UTFLTXPD)                          */ /*CPK018*/
+             RTVOBJD    OBJ(&FILENAME) OBJTYPE(*FILE) RTNLIB(&LIB)
+             SNDPGMMSG  MSG(&FILENAME *CAT &LIB)
+ 
+/* Set up the conditions to query SYSCOLUMNS file, passing the file name and field name */
+             CHGVAR     VAR(&VAR) VALUE('SYS_CNAME = ''' *TCAT +
+                          &ORIGFIELD *TCAT ''' *AND SYS_TNAME = ''' +
+                          *TCAT &FILENAME *TCAT ''' *AND SYS_DNAME +
+                          = ''' *TCAT &LIB *TCAT '''')
+ 
+             SNDPGMMSG  MSG(&VAR)
+ 
+             OPNQRYF    FILE((SYSCOLUMNS)) QRYSLT(&VAR)
+ 
+/* Copy the selected record to the file in QTEMP so it may be accessed by the SQL statement */
+             CPYFRMQRYF FROMOPNID(SYSCOLUMNS) TOFILE(UTFLTXPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DLTOVR     FILE(UTFLTXPD)
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*CPK018*/
+/**********  CLOF       OPNID(SYSCOLUMNS)                                              */ /*CPK018*/
+ 
+END:
+             CLOF       OPNID(SYSCOLUMNS)                                                 /*CPK018*/
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDPGM

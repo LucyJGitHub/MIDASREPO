@@ -1,0 +1,297 @@
+     A*****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas LE Assignments Details')                         *
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Customer Lending Module                              *
+     A*                                                               *
+     A*  DSPF/LE2023DF - Assignments Details Display                  *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CLE106             Date 01Aug04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158645             Date 12Apr99               *
+      *                 148534             Date 09Dec98               *
+      *                 123857             Date 27Oct97               *
+      *                 123476             Date 02Oct97               *
+     A*                 CLE004 *Create     Date 16JUN97               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE106 - Syndication Manager                                 *
+      *  158645 - Settlement details not appearing for second of two  *
+      *           duplicate assignments.                              *
+      *  148534 - Show Report Customer Name & Report Town details     *
+      *           for 'Assigned To' & 'Assigned From' customer.       *
+      *  123857 - F12 from subfile should take you to Facilities      *
+      *           Maintenance                                         *
+      *         - F3 should exit facilities maintenance program       *
+     A*  123476 - Change screen text and add new field                *
+     A*  CLE004 - Customer Lending  Enhancements - Syndications       *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      REF(*LIBL/MFRFL)
+     A                                      CHGINPDFT
+     A                                      CA03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+     A                                      INDARA
+     A                                      PRINT(*LIBL/MPRINT)
+     A*=========================================================================
+     A*
+     A* Header format
+     A*
+     A          R LE2023F2
+     A                                      TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      KEEP
+     A            S#USER    R        O  1  2REFFLD(USER)
+     A            S#WSID    R        O  2  2REFFLD(JOJOB)
+     A                                  1 14'LE2023'
+     A                                  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A            S#RUNA    R        O  1 72REFFLD(RUNA)
+     A                                  2 29'ASSIGNMENT DETAILS'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A*=========================================================================
+     A          R LE2023S1                  SFL
+     A  35                                  SFLNXTCHG
+     A            S#SEL          1A  B 12  3
+     A  40                                  DSPATR(RI)
+     A  40                                  DSPATR(PC)
+     A N40                                  DSPATR(UL)
+     A N40                                  DSPATR(HI)
+      *                                              Begin /123476/
+     A************S#CSSN        10A  O 12 16DSPATR(HI)
+     A************S#CNUM         6A  O 12  8DSPATR(HI)
+     A************S#SHTP         1A  O 12 47DSPATR(HI)
+     A************S#SHAR        16A  O 12 55DSPATR(HI)
+     A************S#JDTE         6A  O 12 34DSPATR(HI)
+      **Start of change CLE106
+     A**********  S#HIST         1A  O 12 08DSPATR(HI)                                        CLE106
+     A**********  S#CNUM         6A  O 12 13DSPATR(HI)                                        CLE106
+     A**********  S#CSSN        10A  O 12 21DSPATR(HI)                                        CLE106
+     A            S#HIST         1A  O 12 07DSPATR(HI)
+     A            S#CNUM         6A  O 12 12DSPATR(HI)
+     A            S#CSSN        10A  O 12 20DSPATR(HI)
+     A            H#PRTR         8A  H
+      **End of change CLE106
+     A            H#VDTC         5S 0H
+     A            H#INUM        10A  H
+      **Start of change CLE106
+     A**********  S#JDTE         6A  O 12 39DSPATR(HI)                                        CLE106
+     A**********  S#SHTP         1A  O 12 52DSPATR(HI)                                        CLE106
+     A            S#JDTE         6A  O 12 36DSPATR(HI)
+     A            S#SEQN         2A  O 12 47DSPATR(HI)
+     A            S#SHTP         1A  O 12 54DSPATR(HI)
+      **End of change CLE106
+     A            S#SHAR        16A  O 12 60DSPATR(HI)
+      *                                              End   /123476/
+      *                                              Begin /158645/
+     A            H#PCRF        15A  H
+      *                                              End   /158645/
+     A*=========================================================================
+     A          R LE2023C1                  SFLCTL(LE2023S1)
+     A                                      SFLSIZ(0036)
+     A                                      SFLPAG(0009)
+     A N61                                  CF09(09 'Add')
+     A*                                      Begin /123857/
+     A                                      CF12(12 'Previous')
+     A*                                      END   /123857/
+     A                                      OVERLAY
+     A  30                                  SFLDSP
+     A  31                                  SFLDSPCTL
+     A N31                                  SFLCLR
+     A  32                                  SFLEND(*MORE)
+     A*=========================================================================
+     A*=========================================================================
+     A            ##SFRC         4S 0H      SFLRCDNBR(CURSOR)
+     A                                 10  2'Sel'
+     A                                  4  6'Facility'
+     A            S#FCNM         6A  O  4 16DSPATR(HI)
+     A*/COPY WNCPYSRC,LEH00478
+     A                                  4 23'-'
+     A            S#FACT         3A  O  4 25DSPATR(HI)
+     A                                  4 29'-'
+     A            S#FCNO         2A  O  4 31DSPATR(HI)
+     A*/COPY WNCPYSRC,LEH00479
+     A                                  5 61'Currency'
+     A            S#FCCY         3A  O  5 71DSPATR(HI)
+     A                                  4 63'Branch'
+     A            S#BRCA         3A  O  4 71DSPATR(HI)
+     A                                  7  2'Actions'
+     A                                  8  3'E=Enquire'
+      *                                              Begin /123476/
+     A*********************************10  8'---Assigned  To---'
+     A*********************************11  8'Number  Shortname'
+     A*********************************10 32'Assignment'
+     A*********************************11 35'Date'
+     A*********************************11 45'Type'
+     A*********************************10 45'----Assignment    Share----'
+     A*********************************11 55'Amount/Percentage'
+      **Start of change CLE106
+     A**********                       10 07'HIST'                                            CLE106
+     A**********                       10 13'---Assigned  To---'                              CLE106
+     A**********                       11 13'Number  Shortname'                               CLE106
+     A**********                       10 37'Assignment'                                      CLE106
+     A**********                       11 40'Date'                                            CLE106
+     A**********                       11 50'Type'                                            CLE106
+     A**********                       10 50'----Assignment    Share----'                     CLE106
+     A                                 10 06'HIST'
+     A                                 10 12'---Assigned  To---'
+     A                                 11 12'Number  Shortname'
+     A                                 10 34'Assignment'
+     A                                 11 37'Date'
+     A                                 11 46'Seq'
+     A                                 11 52'Type'
+     A                                 10 52'---Assignment    Share---'
+      **End of change CLE106
+     A                                 11 60'Amount/Percentage'
+      *                                              End   /123476/
+     A                                  8 17'A=Amend     R=Reverse'
+     A  61                                  DSPATR(ND)
+     A                                  4 37'Amount:'
+     A            S#FAMT        14A  O  4 46DSPATR(HI)
+     A*=========================================================================
+     A          R LE2023F1
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                 23 14'F5=Refresh'
+     A                                 23 29'F10=Reverse'
+     A N56                                  DSPATR(ND)
+     A                                 23 44'F12=Previous'
+     A                                 23 61'F14=Settlements'
+     A*=========================================================================
+     A          R LE2023F3
+     A                                      CF12(12 'Previous')
+     A  56                                  CF10(10 'Reverse')
+     A                                      CF14(14 'Settlement')
+     A                                      OVERLAY
+     A                                      PROTECT
+     A*=========================================================================
+     A*=========================================================================
+     A                                  8 23'Assigned To ........ :'
+     A                                 11 23'Assigned From ...... :'
+      *                                              Begin /123476/
+     A*********************************14 23'Joining Date ....... :'
+     A                                 14 23'Assignment Date .... :'
+      *                                              End   /123476/
+      **Start of change CLE106
+     A                                 14 59'Seq .... :'
+     A                                 16 23'Participation Type . :'
+      **End of change CLE106
+     A                                 17  2'Assigned Share Type: Amount/Percen-
+     A                                      tage... :'
+     A                                 18 23'Share .............. :'
+     A            S#MNUM        10A  B  8 47
+     A  55
+     AON09                                  DSPATR(PR)
+     A  41                                  DSPATR(RI)
+     A  41                                  DSPATR(PC)
+     A N55 09                               DSPATR(UL)
+     A N41                                  DSPATR(HI)
+     A            S#INUM        10A  B 11 47
+     A  55                                  DSPATR(PR)
+     A  42                                  DSPATR(RI)
+     A  42                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A            S#JDTE         6A  B 14 47
+     A  55                                  DSPATR(PR)
+     A  43                                  DSPATR(RI)
+     A  43                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N43                                  DSPATR(HI)
+      **Start of change CLE106
+     A            S#SEQN         2A  B 14 70
+     A  55                                  DSPATR(PR)
+     A  43                                  DSPATR(RI)
+     A  43                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N43                                  DSPATR(HI)
+      *
+     A            S#PRTR         8A  B 16 47
+     A  55                                  DSPATR(PR)
+     A  43                                  DSPATR(RI)
+     A  43                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N43                                  DSPATR(HI)
+      **End of change CLE106
+     A            S#SHTP         1A  B 17 47
+     A  55                                  DSPATR(PR)
+     A  44                                  DSPATR(RI)
+     A  44                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N44                                  DSPATR(HI)
+     A            S#SHAR        16A  B 18 47
+     A  55                                  DSPATR(PR)
+     A  45                                  DSPATR(RI)
+     A  45                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N45                                  DSPATR(HI)
+     A                                  4  6'Facility'
+     A*/COPY WNCPYSRC,LEH00480
+     A                                  4 23'-'
+     A            S#FACT         3A  O  4 25DSPATR(HI)
+     A                                  4 29'-'
+     A            S#FCNO         2A  O  4 31DSPATR(HI)
+     A            S#FCNM         6A  O  4 16DSPATR(HI)
+     A*/COPY WNCPYSRC,LEH00481
+     A                                  5 61'Currency'
+     A            S#FCCY         3A  O  5 71DSPATR(HI)
+     A                                  4 63'Branch'
+     A            S#BRCA         3A  O  4 71DSPATR(HI)
+     A                                  4 37'Amount:'
+     A            S#FAMT        14A  O  4 46DSPATR(HI)
+      *                                              Begin /148534/
+     A            S#MRNM        20A  O  8 59DSPATR(HI)
+     A            S#MRTN        10A  O  9 47DSPATR(HI)
+     A            S#IRNM        20A  O 11 59DSPATR(HI)
+     A            S#IRTN        10A  O 12 47DSPATR(HI)
+      *                                              End   /148534/
+     A*=========================================================================
+     A          R LE2023F4
+     A                                      OVERLAY
+     A                                 13 34'NO RECORDS FOUND'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(RI)
+     A*=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A          R #MSGCTL                   SFLCTL(#MSGRCD)
+     A                                      TEXT('Program messages')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A  25                                  SFLDSP
+     A  25                                  SFLDSPCTL
+     A  25                                  SFLINZ
+     A  25                                  SFLCLR
+     A  25                                  SFLEND
+     A                                      SFLSIZ(0003)
+     A                                      SFLPAG(0001)
+     A            ##PGM                     SFLPGMQ(10)
+     A*=========================================================================
+     A          R LE2023F5
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                 23 14'F5=Refresh'
+     A                                 23 29'F9=Add'
+     A  61                                  DSPATR(ND)
+     A*                                      Begin /123857/
+     A                                 23 36'F12=Previous'
+     A*                                      END   /123857/

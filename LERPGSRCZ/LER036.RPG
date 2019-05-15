@@ -1,0 +1,711 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Non-RVCR facility updat for LEO repayment')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LER036 - Facility update for LEO Repayments against          *
+      *           non-revolving credit facilities.                    *
+      *                                                               *
+      *  Function: This program updates non-revolving credit          *
+      *  (COB)     facilities for L/C maturity and principal          *
+      *            decreases and Negotiation repayments. The facility *
+      *            amount is adjusted to take account of the new      *
+      *            amount outstanding. The program extracts details   *
+      *            from the LEO actions file PF/LEOACTPD              *
+      *                                                               *
+      *  Called By: LERC20                                            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE029             Date 04Sep02               *
+      *                 CAP073             Date 08Aug02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP068             Date 25JUN02               *
+      *                 CLE023             Date 19Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 128034             Date 23Dec97               *
+      *                 CLE005             Date 22May97               *
+      *                 S01473             Date 27Oct94               *
+      *                 nxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE029 - Addition of Severity code and Limit ID to FCLTYFM   *
+      *  CAP073 - Conversion of MN inputs into modular structure to   *
+      *           use as APIs. Facility input Transaction Details     *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAP068 - Recompiled for changes to FCLTYFM and FCLTYFN.      *
+      *  CLE023 - Lending Facility History Improvements. (Recompiled) *
+      *  128034 - Re-compile for changes to FCLTY (T1/T2)             *
+      *  CLE005 - Customer Lending Enhancements - Others              *
+      *  S01473 - Midas Leo Integration. This program has been        *
+      *           created for the Integration Project.                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FLEOACTL1IF  E           K        DISK
+     FFCLTY   UF  E           K        DISK
+     F            FCLTYHHF                          KIGNORE
+     FHISUPD  IF  E           K        DISK
+     F            HISACTF                           KIGNORE
+      *                                                                   CLE005
+     FLECARDPDO   E                    DISK                           UC  CLE005
+      ** Credit Agreement Reduction Extract File                          CLE005
+      *                                                                   CLE005
+     FEMXT4F1LUF  E           K        DISK                           UC
+     FLER036P1O   E             50     PRINTER      KINFDS SPOOL      UC
+     FLER036AUO   E                    PRINTER
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    02  - Multibranching (used on P1 report)                   *
+      *    03  - Currency Details have 0 decimal places               *
+      *    04  - Currency Details have 1 decimal place                *
+      *    05  - Currency Details have 2 decimal places               *
+      *    06  - Currency Details have more than 2 decimal places     *
+      *    07  - Historic Reporting Indicator                         *
+      *    08  - Spool File Open Flag                                 *
+      *    10  - Read of LF/LEOACTL1                                  *
+      *    11  - NRF on LF/FCLTY                                      *
+      *    12  - EOF on PF/FCTLYZZ                                    *
+      *    13  - BOF on PF/HISUPD                                     *
+      *    14  - NRF on EMXT4F1L                                      *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program initialisation.                             *
+      *  PROCES - Detail processing.                                  *
+      *  SRMOVE  -  Subroutine to move fields to PF/LECARDPD          *   CLE005
+      *  *PSSR  - Program exception processing.                       *
+      *  TERM   - Program termination.                                *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+     E/SPACE 3
+      *
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID.
+      *
+     INEWKEY      DS
+     I**********                              1   60ACFCUS                                    CSD027
+     I                                        1   6 ACFCUS                                    CSD027
+     I                                        7   90ACFTYP
+     I                                       10  110ACFSEQ
+     I                                        7  110ACFCTY
+      ** Facility Reference Data Structure.
+      *
+     IPRVKEY      DS
+     I**********                              1   60PFCUS                                     CSD027
+     I                                        1   6 PFCUS                                     CSD027
+     I                                        7   90PFTYP
+     I                                       10  110PFSEQ
+      ** Previous Facility Reference Data Structure.
+      *
+     I            DS
+     I                                        1  130OFAMT
+     I                                        1  131OFAM1
+     I                                        1  132OFAM2
+     I                                        1  133OFAM3
+      ** Old Facility Amount.
+      *
+     I            DS
+     I                                        1  130RFAMT
+     I                                        1  131RFAM1
+     I                                        1  132RFAM2
+     I                                        1  133RFAM3
+      ** Reduced Facility Amount.
+      *
+     I            DS
+     I                                        1  130DFAMT
+     I                                        1  131DFAM1
+     I                                        1  132DFAM2
+     I                                        1  133DFAM3
+      ** Difference in Facility Amount.
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      ** File Information Data Structure.
+      *
+     IRUNDAT    E DS
+     I              AGMBIN                          MBIN
+      ** RUNDAT Data Area.
+      *
+     IMMOD       UDS                            256
+     I                                        7   7 EMFLG
+      ** MMOD Data Area.
+      *
+     ILDA       E DSLDA
+      ** Local Data Area.
+      *
+     ILERSTS    E DSLERSTS
+     I              LERC2030                        RENAM1
+     I              LERC135                         RENAM2
+     I              LERC315                         RENAM3
+     I              FACHISD                         TONDAT
+     I              LERC425                         RENAM4
+     I              EOYFLAG                         RENAM5
+      ** Profitability Status Data Area.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details.
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+      ** Branch Details.
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details.
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs.
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access programs.
+      *
+     ISCSARD    E DSSCSARDPD                                              CLE005
+      ** External data structures for SAR Details                         CLE005
+      *                                                                   CLE005
+     C/EJECT
+      *****************************************************************
+      *  MAIN   - Main Processing                                     *
+      *                                                               *
+      *  Calls:     INIT   - Program initialisation                   *
+      *             PROCES - Detail Processing                        *
+      *             TERM   - Program Termination                      *
+      *****************************************************************
+     C/TITLE Main Processing
+      *
+      ** Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ** Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      ** Program Termination.
+     C                     EXSR TERM
+     C/EJECT
+      *****************************************************************
+      *  INIT   - Program initialisation subroutine.                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:     Nothing                                           *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Define LDA.
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'LER036'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      ** Define RUNDAT.
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Define LERSTS.
+     C           *NAMVAR   DEFN           LERSTS
+     C                     IN   LERSTS
+      *
+      ** Set up copyright statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Initialise Sequence No. for RCF to blanks.
+     C                     MOVE *BLANKS   SEQ     5
+     C                     MOVE 'A'       RCDT    1
+     C                     Z-ADD0         FCLTYA 130
+     C                     Z-ADD0         ZFAMTO
+     C                     Z-ADD0         ZFAMTR
+     C                     Z-ADD0         ZFAMTD
+     C                     Z-ADD0         RCOUNT  50
+     C                     Z-ADD0         RPTDET
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     02
+     C                     END
+      *
+      ** Key list for LF/FCLTY.
+     C           FACKEY    KLIST
+     C                     KFLD           ACFCUS
+     C                     KFLD           ACFTYP
+     C                     KFLD           ACFSEQ
+     C                     KFLD           RCDT
+      *
+      ** Key list for LF/HISUPD.
+     C           HISKEY    KLIST
+     C                     KFLD           ACBRCA
+     C                     KFLD           ACFCUS
+     C                     KFLD           ACFCTY
+     C                     KFLD           ACEDAT
+      *
+      ** Key list for LF/EMXT4F1L.
+     C           EMKEY     KLIST
+     C                     KFLD           MCUN
+     C                     KFLD           MFTP
+     C                     KFLD           MFN
+      *
+      ** Access bank specific details.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ   'DBKEY
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Open EM Facility Details File if EM module present.
+     C           EMFLG     IFEQ 'Y'
+     C                     OPEN EMXT4F1L
+     C                     END
+      *                                                                   CLE005
+      ** Check if SAR CLE005 is switched *ON.                             CLE005
+      *                                                                   CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   WRTCD                           CLE005
+     C                     PARM '*KEY   ' WOPTN                           CLE005
+     C                     PARM 'CLE005 ' WSARD   6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+     C           WRTCD     IFEQ *BLANK                                    CLE005
+     C                     MOVE 'Y'       CLE005  1                       CLE005
+     C                     ELSE                                           CLE005
+     C                     MOVE 'N'       CLE005                          CLE005
+     C           WRTCD     IFNE '*NRF    '                                CLE005
+     C           *LOCK     IN   LDA                                       CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE005
+     C                     Z-ADD6         DBASE            * DBERR 06 *   CLE005
+     C                     MOVEL'CLE005  'DBKEY            ************   CLE005
+     C                     OUT  LDA                                       CLE005
+     C                     EXSR *PSSR                                     CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+      ** If CLE005 is switched on, open LECARDPD.                         CLE005
+      *                                                                   CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C                     OPEN LECARDPD                                  CLE005
+     C                     ENDIF                                          CLE005
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  PROCES - Detail processing subroutine.                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:     UPDFAC                                            *
+      *            SRMOVE - Move fields to PF/LECARDPD                *   CLE005
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** Read LF/LEOACTL1 until EOF.
+     C                     READ LEOACTL1                 10
+      *
+     C           *IN10     DOWEQ'0'
+      *
+      ** Process LF/LEOACTL1 maturity and repayment actions.
+     C           ACACTN    IFEQ 'MT'
+     C           ACACTN    OREQ 'RE'
+      *
+      ** On change of PF/LEOACT facility reference - update facility
+      ** (except first read) and access new facility details.
+     C           PRVKEY    IFNE NEWKEY
+     C           FCLTYA    IFNE *ZEROS
+     C                     EXSR UPDFAC
+     C                     END
+     C                     MOVE NEWKEY    PRVKEY
+     C           FACKEY    CHAINFCLTY                11
+      *
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELNEWKEY    DBKEY
+     C                     MOVE 'FCLTY   'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+      ** Only process action if facility is a non-revolving credit.
+      ** If action is back-valued, check whether facility was revolving
+      ** or non-revolving on the value date of the transaction in order
+      ** to determine wheteher the facility needs to be reduced.
+     C                     MOVE 'Y'       PROCAC  1
+     C           ACEDAT    IFLT BJRDNB
+      *
+      ** Back-valuation is only allowed to CPF take-on date.
+     C           ACEDAT    IFLT TONDAT
+     C                     Z-ADDTONDAT    ACEDAT
+     C                     END
+      *
+      ** Access last facility history (PF/FACHISA) record on value date.
+     C           HISKEY    SETGTHISUPD
+     C                     READPHISUPD                   13
+      *
+      ** If BOF or different facility reference, check facility file.
+     C           *IN13     IFEQ '1'
+     C           ACFCUS    ORNE FACNUM
+     C           ACFCTY    ORNE FAFCTY
+     C           RVCR      IFEQ 'Y'
+     C                     MOVE 'N'       PROCAC
+     C                     END
+     C                     ELSE
+      *
+      ** Seton reporting indicator and check facility history file.    .
+     C           *IN07     IFEQ '0'
+     C           FARCIN    ANDNERVCR
+     C                     SETON                     07
+     C                     END
+      *
+     C           FARCIN    IFEQ 'Y'
+     C                     MOVE 'N'       PROCAC
+     C                     END
+     C                     END
+     C                     ELSE
+      *
+      ** If Action is value dated on run date, check facility file.
+     C           RVCR      IFEQ 'Y'
+     C                     MOVE 'N'       PROCAC
+     C                     END
+     C                     END
+      *
+     C           PROCAC    IFEQ 'Y'
+     C                     ADD  1         RCOUNT
+     C                     ADD  ACAAMT    FCLTYA
+      *                                                                   CLE005
+      ** If CLE005 is switched on and Tranche/Credit Agreement            CLE005
+      ** indicator = 'TR', write to LECARDPD.                             CLE005
+      *                                                                   CLE005
+     C           TRCA      IFEQ 'TR'                                      CLE005
+     C           CLE005    ANDEQ'Y'                                       CLE005
+     C                     EXSR SRMOVE                                    CLE005
+     C                     WRITELECARDPF                                  CLE005
+      *                                                                   CLE005
+      ** Restore the previous values of FACT, FCNO, RECI                  CLE005
+      *                                                                   CLE005
+     C                     Z-ADDWTMFT     FACT                            CLE005
+     C                     Z-ADDWTMFN     FCNO                            CLE005
+     C                     MOVE WTMRC     RECI                            CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     END
+      *
+     C                     END
+      *
+      ** Read LF/LEOACTL1
+     C                     READ LEOACTL1                 10
+      *
+     C                     END
+      *
+      ** At EOF update final facility (if there is one). FCLTYA will
+      ** not have been re-set as SR/UPDFAC never called - DOWEQ loop
+      ** not re-entered at EOF.
+     C           FCLTYA    IFNE *ZEROS
+     C                     EXSR UPDFAC
+     C                     END
+      *
+      ** Update PF/FCLTYZZ.
+     C           RCOUNT    IFNE *ZEROS
+     C                     READ FCLTYZZF                 12
+      *
+     C           *IN12     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ   'DBKEY
+     C                     MOVE 'FCLTYZZ 'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Adjust both the value before and the values after for the
+      ** the total amount reduced.
+     C           VLBF      MULT 1000      WRKTOT 180
+     C                     ADD  VLBL      WRKTOT
+     C           WRKTOT    SUB  ZFAMTD    WRKTOT
+     C           WRKTOT    DIV  1000      VLBF
+     C                     MVR            VLBL
+     C           VLAF      MULT 1000      WRKTOT
+     C                     ADD  VLAL      WRKTOT
+     C           WRKTOT    SUB  ZFAMTD    WRKTOT
+     C           WRKTOT    DIV  1000      VLAF
+     C                     MVR            VLAL
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'A'       CHTP
+     C                     UPDATFCLTYZZF
+      *
+     C                     END
+      *
+      ** Output audit report.
+     C                     WRITELER036AH
+     C           RPTDET    IFEQ *ZEROS
+     C                     WRITELER036A1
+     C                     ELSE
+     C                     WRITELER036A2
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  UPDFAC - Update non-revolving credit facility records.       *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDFAC    BEGSR
+      *
+      ** Update facility file.
+     C                     Z-ADDFAMT      OFAMT
+     C                     ADD  FAMT      ZFAMTO
+     C                     SUB  FCLTYA    FAMT
+     C           FAMT      IFLE 0
+     C           OFAMT     SUB  1         FCLTYA
+     C                     Z-ADD1         FAMT
+     C                     END
+     C                     Z-ADDFAMT      RFAMT
+     C                     ADD  FAMT      ZFAMTR
+     C                     Z-ADDFCLTYA    DFAMT
+     C                     ADD  FCLTYA    ZFAMTD
+     C                     UPDATFCLTYFMF
+      *
+      ** Update exposure file if necessary.
+     C           EMFLG     IFEQ 'Y'
+     C           RECI      ANDEQ'D'
+     C**********           Z-ADDCNUM      MCUN                                                CSD027
+     C                     MOVE CNUM      MCUN                                                CSD027
+     C                     Z-ADDFACT      MFTP
+     C                     Z-ADDFCNO      MFN
+     C           EMKEY     CHAINEMXT4F1L             14
+      *
+     C           *IN14     IFEQ '0'                                       BH3610
+     C                     Z-ADDFAMT      MCYA
+     C                     EXCPTUPDEMF
+     C                     END                                            BH3610
+     C                     END
+      *
+      ** Access facility currency details.
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           FCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELFCCY      DBKEY
+     C                     MOVE 'SDCURRPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           A6NBDP    IFEQ 0
+     C                     SETON                     03
+     C                     ELSE
+     C           A6NBDP    IFEQ 1
+     C                     SETON                     04
+     C                     ELSE
+     C           A6NBDP    IFEQ 2
+     C                     SETON                     05
+     C                     ELSE
+     C                     SETON                     06
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Access branch details if multibranching system and change of
+      ** branch code.
+     C           BRCA      IFNE STRBRC
+     C           MBIN      IFEQ 'Y'
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG    'WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           BRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELBRCA      DBKEY
+     C                     MOVE 'SDCURRPD'DBFILE           ************
+     C                     Z-ADD5         DBASE            * DBERR 05 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+      ** Write Trailer if spool file is already open.
+     C           *IN08     IFEQ '1'
+     C                     WRITELER036T1
+     C                     END
+      *
+      ** Close and Open spool file for next branch.
+     C                     CLOSELER036P1
+     C                     OPEN LER036P1
+     C                     Z-ADD0         PAGE
+      *
+      ** Set On Spool file open flag.
+     C                     MOVE '1'       *IN08
+      *
+      ** Ensure Report Spool File recorded by RCF.
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Store Branch Code to allow for next check of level break.
+     C                     MOVE BRCA      STRBRC  3
+      *
+      ** Write Header.
+     C                     WRITELER036H1
+      *
+     C                     END
+      *
+      ** If Overflow then Write Header.
+     C           *IN50     IFEQ '1'
+     C                     WRITELER036H1
+     C                     END
+      *
+      ** Write Detail record on report.
+     C                     WRITELER036D1
+     C                     ADD  1         RPTDET
+     C                     Z-ADD0         FCLTYA
+      *
+     C                     ENDSR
+      /EJECT                                                              CLE005
+      *****************************************************************   CLE005
+      * SRMOVE  -  Move fields to file fields                         *   CLE005
+      * Called by: PROCES                                             *   CLE005
+      * Calls    : None                                               *   CLE005
+      *****************************************************************   CLE005
+     C           SRMOVE    BEGSR                                          CLE005
+      *                                                                   CLE005
+      ** Save the values of FACT and FCNO.                                CLE005
+      *                                                                   CLE005
+     C                     Z-ADDFACT      WTMFT   30                      CLE005
+     C                     Z-ADDFCNO      WTMFN   20                      CLE005
+     C                     MOVE RECI      WTMRC   1                       CLE005
+      *                                                                   CLE005
+     C                     MOVE CNUM      TRNM                            CLE005
+     C                     MOVE FACT      TRFT                            CLE005
+     C                     MOVE FCNO      TRFN                            CLE005
+     C                     MOVE FCCY      TRCY                            CLE005
+     C                     MOVE 'D'       RECI                            CLE005
+     C                     MOVE CANM      FCUS                            CLE005
+     C                     MOVE CAFT      FACT                            CLE005
+     C                     MOVE CAFN      FCNO                            CLE005
+     C                     Z-ADDACAAMT    RAMT                            CLE005
+     C                     MOVE ACEDAT    VDAT                            CLE005
+      *                                                                   CLE005
+     C                     ENDSR                                          CLE005
+     C/EJECT
+      *****************************************************************
+      * *PSSR  - Program exception processing.                        *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: VARIOUS                                           *
+      *  Calls:     AUDIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Ensure dump is executed only once.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8
+     C                     DUMP
+      *
+      ** Produce error report
+     C                     WRITELER036AH
+     C                     WRITEDBFMTAU
+      *
+     C                     EXSR TERM
+     C                     END
+      *
+      ** Exit program.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  TERM   - Program termination subroutine.                     *
+      *                                                               *
+      *  Called By: Main Processing, *PSSR                            *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TERM      BEGSR
+      *
+      ** End Program and Return.
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     OEMXT4F1FE                UPDEMF
+     O                         MCYA
+** CPY@   Object Copyright
+(c) Finastra International Limited 2001

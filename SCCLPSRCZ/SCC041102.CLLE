@@ -1,0 +1,110 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input cycle initiation - A')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC041102 - Input Cycle Initiation                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD031966           Date 27Jul15              */
+/*                      MD021102           Date 01Jul13              */
+/*                      CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD031966 - BFM GL3572P1 issue                               */
+/*       MD021102 - Missing projected account movements after COB    */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)                                 /*MD021102*/
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Get Modules Installed */                                                             /*MD021102*/
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)                                      /*MD021102*/
+                                                                                        /*MD021102*/
+/* Set up periodic requests to be run today */
+ 
+             CALL       PGM(FC0010)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(DBETAG)
+             ENDDO
+ 
+/* Set up Account Maintenance periodic selections */    /* MD031966 */
+ 
+             CALL       PGM(FC0070) /* MD031966 */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO) /* MD031966 */
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM) /* MD031966 */
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) TOMSGQ(MOPERQ) +
+                             /* MD031966 */
+                GOTO       CMDLBL(DBETAG) /* MD031966 */
+             ENDDO      /* MD031966 */
+ 
+/* Check for any midas activity to report */
+ 
+             CHGMSGQ    MSGQ(MRUNQ) RESET(*YES)
+             RCVMSG     MSGQ(MRUNQ) MSGTYPE(*NEXT) MSGKEY(*TOP) +
+                           MSG(&MSG) RMV(*NO)
+ 
+             IF         COND(&MSG = ' ') THEN(DO)
+                SNDPGMMSG  MSG('No Midas Activity To Report From +
+                             MQ/MRUNQ') TOMSGQ(MOPERQ)
+             ENDDO
+             ELSE       CMD(CALL PGM(SCRUNQP) PARM(P))
+ 
+/* CLEAR projected movements file */
+/* When dealing module is OFF */                                                        /*MD021102*/
+ 
+             IF         COND(%SUBSTRING(&MMOD 2 1) *EQ 'N') THEN(DO)                    /*MD021102*/
+                CLRPFM     FILE(RSACMTPD)
+             ENDDO                                                                      /*MD021102*/
+ 
+/* Successful completion */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Database error processing */
+ 
+DBETAG:
+ 
+/* Retrieve database error information from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ)
+             ENDDO
+ 
+/* Abnormal error processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('Program SCC041102 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

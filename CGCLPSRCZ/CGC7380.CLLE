@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Interest Scale Lending History Rebuild')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - User Defined Correspondence                         */
+/*                                                                   */
+/*       CGC7380 - Interest Scale Lending History Rebuild            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/*  Declare the variables */
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Set-off Database Error Switches */
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*  Send a message to say the component is running */
+             SNDPGMMSG  MSG('CGC7380 - Interest Scale Lending +
+                          History Rebuild') TOMSGQ(MRUNQ)
+ 
+/*  Clear the history file */
+             CLRPFM     FILE(CGISLHPD)
+ 
+/*  Call the extract program */
+             CALL       PGM(CG7380)
+ 
+/* Database error handling */
+             IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
+                RTVDTAARA   DTAARA(LDA (134 50))   RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                    TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC7380 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/* Logical end of the program */
+ END:        ENDPGM

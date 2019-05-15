@@ -1,0 +1,1238 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Portfolio performance by account officer')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM1700 - Portfolio Performance By Account Officer Report     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 12Jul96               *
+      *                 082112             Date 24Jan95               *
+     F*                 S01486             DATE 11AUG94               *
+     F*                 059470             DATE 11/08/93              *
+     F*                 49579              DATE 14JAN93               *
+     F*                 46502              DATE 30OCT92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*  082112 - Do not overwrite sequence number                    *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  059470 - IF NO EXCEPTIONS EXIST STILL OUTPUT 'PM1700EX'      *
+     F*           REPORT STAING 'NO EXCEPTIONS TO REPORT'             *
+     F*  49579  - CHECK FOR OUTSTANDING POSITION SETTLEMENTS          *
+     F*  46502  - ONLY SHOW DIFFERENCE GREATER THAN 10 CENTS          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F/COPY WNCPYSRC,PM1700F001
+     F***PERFORMANCE*REQUIRED*-*PREFIX*QR******************************   S01486
+     F***PMPFMRQQIF**E           K        DISK         KINFSR *PSSR       S01486
+     F*                                                                   S01486
+     F*  PERFORMANCE REQUIRED - PREFIX QR (KEYED ON ACCOUNT OFFICER)      S01486
+     FPMPFMRL0IF  E           K        DISK         KINFSR *PSSR          S01486
+     F*                                                                   S01486
+     F*  PERFORMANCE REQUIRED - PREFIX QR (KEYED ON DEPARTMENT)           S01486
+     FPMPFMRL1IF  E           K        DISK         KINFSR *PSSR          S01486
+     F            PMPFMRP0                          KRENAMEPMPFMRP1       S01486
+     F***BANK*DETAILS*FILE*-*PREFIX*BJ*********************************   S01486
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F***DEPARTMENT*CODES**-*PREFIX*AE*********************************   S01486
+     F***SDDEPTL1IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F***ACCOUNT*OFFICER*CODES*-*PREFIX*AZ*****************************   S01486
+     F***SDACOFL1IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F*  PORTFOLIO DETAILS - PREFIX PN
+     F***PMPORTPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMPORTPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F*
+     F***CUSTOMER*DETAILS*-*PREFIX*BB**********************************   S01486
+     F***SDCUSTL0IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F*  PORTFOLIO PERFORMANCE TOTALS - PREFIX QV
+     F***PMPSPOPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMPSPOQ0IF  E           K        DISK         KINFSR *PSSR          S01486
+     F*                                                                   49579
+     F*  POSITION STTLEMENTS BY PORTFOLIO                                 49579
+     F***POSETO**IF  E           K        DISK         KINFSR *PSSR  49579S01486
+     FPMPOSDL1IF  E           K        DISK         KINFSR *PSSR          S01486
+     F*
+     F*  PRINTER FILE - PREFIX RR
+     F***PM1700P1O***E                    PRINTER                     UC  S01486
+     FPM1700P1O   E             20     PRINTER      KINFDS SPOOL      UC  S01486
+     F                                              KINFSR *PSSR
+     F*
+     F***PRINTER*FILE*-*PREFIX*RR**************************************   S01486
+     F***PM1700EXO***E                    PRINTER                      UC S01486
+     FPM1700AUO   E             22     PRINTER      KINFDS SPOOLU     UC  S01486
+     F                                              KINFSR *PSSR
+     F*
+     F**    UNUSED INDICATORS
+     F**    -----------------
+     F*
+     F**       01  02  03  04  05  06  07  08  09  10
+     F**       11  12  13  14  15  16  17  18  19  20
+     F**       21  22  23  24  25  26  27  28  29  30
+     F**       31  32  33  34  35  36  37  38  39  40
+     F**       41  42  43  44  45  46  47  48  49  50
+     F**       51  52  53  54  55  56  57  58  59  60
+     F**       61  62  63  64  65  66  67  68  69  70
+     F**       71  72  73  74  75  76  77  78  79  80
+     F**       81  82  83  84  85  86  87  88  89  90
+     F**       91  92  93  94  95  96  97  98  99
+     F**
+     F** ID F  C  H  L     FUNCTION OF INDICATORS
+     F**                   ----------------------
+      /EJECT
+     E*
+     E***ARRAY*USED*TO*OVERRIDE*SPOOL*FILE*NAME************************   S01486
+     E***********         CMD     1   1 43                                S01486
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E***ARRAY*OF*DEPARTMENT*/*ACCOUNT*OFFICER*NARRATIVE***************   S01486
+     E***********         NARR    1   2 30                                S01486
+     E*
+     E***ARRAY*CONTAINING*PERFOMANCE*CATEGORIES*ON*PMPSPOPP************   S01486
+     E** ARRAY CONTAINING PERFOMANCE CATEGORIES ON PMPSPOQ0               S01486
+     E                    PFMC   20  20  3
+     E*
+     E** ARRAY USED IN CALCULATING PERFORMANCE TOTALS
+     E                    PFMA       20 15 0
+      /COPY ZSRSRC,ZSEDITZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+     I*==================================================================
+     I*
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I** PM DATA AREA
+     IPMSTAT      DS                            256
+     I                                       29  330WWLXTR
+      *                                                                   S01486
+      **   File Information Data Structure                                S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+      *                                                                   S01486
+      **   For Overflow                                                   S01486
+     I                                    B 367 3680LINE                  S01486
+     I*                                                                   S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I*                                                                   S01486
+     I**   For Overflow                                                   S01486
+     I                                    B 367 3680LINE1                 S01486
+     I**
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     I**
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for bank details                                 S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I**  Data structure for customer details                             S01486
+     I*                                                                   S01486
+     ISDACOF    E DSSDACOFPD                                              S01486
+     I**  Data structure for account officer details                      S01486
+     I*                                                                   S01486
+     ISDDEPT    E DSSDDEPTPD                                              S01486
+     I**  Data structure for department code details                      S01486
+     I*                                                                   CPM005
+     ISDPORT    E DSSDPORTPD                                              CPM005
+     I**  Data structure for Portfolio Management ICD details             CPM005
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I**  Long data structure for access programs                         S01486
+     I*                                                                   S01486
+      /EJECT                                                              S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -                                                       *
+      * #INIT    -                                                       *
+      * #FIRST   -                                                       *
+      * #WRITE   -                                                       *
+      * #SPOOL   -                                                       *
+      * #DEPT    -                                                       *
+      * #ACOC    -                                                       *
+      * #CALCN   -                                                       *
+      * #FMTEX   -                                                       *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * QCMDEXC  -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C                     EXSR #INIT
+     C*
+     C** READ FIRST RECORD TO BE REPORTED FROM QRYF/PMPFMRQQ
+     C***********          READ PMPFMRQQ                 60               S01486
+     C           @RLEV     IFEQ 'A'                                       S01486
+     C                     READ PMPFMRL0                 60               S01486
+     C                     MOVELQRACOC    WWENT   3                       S01486
+     C/COPY WNCPYSRC,PM1700C012
+     C                     ELSE                                           S01486
+     C                     READ PMPFMRL1                 60               S01486
+     C                     MOVELQRDPCD    WWENT                           S01486
+     C/COPY WNCPYSRC,PM1700C013
+     C                     END                                            S01486
+     C*
+     C** PERFORM PROCESSING FOR FIRST RECORD READ FROM PMPFMRQQ
+     C                     EXSR #FIRST
+     C*
+     C** DO WHILE RECORDS READ FROM QRYF/PMPFMRQQ
+     C           *IN60     DOWEQ'0'                        B1
+     C*
+     C** IF PORTFOLIO CHANGED OUTPUT DETAIL RECORD
+     C           WWWRIT    IFEQ 'Y'                        B2
+     C                     EXSR #WRITE
+     C                     MOVE 'N'       WWWRIT
+     C                     END                             E2
+     C*
+     C***ON*CHANGE*OF*PRINTER*LOCATION*CODE*OVERRIDE*PRINTER*FILE******   S01486
+     C***********QRPRTL    IFNE WWSPRT                     B2             S01486
+     C           WWENT     IFNE @WWENT                                    S01486
+     C                     EXSR #SPOOL                                    S01486
+     C***********          MOVE QRPRTL    WWSPRT                          S01486
+     C                     END                             E2
+     C*
+     C** ON CHANGE OF DEPARTMENT CODE OBTAIN NEW DETAILS
+     C           QRDPCD    IFNE WSDPCD                     B2
+     C                     MOVELQRDPCD    PDPCD                           S01486
+     C                     MOVELQRDPCD    RRDPCD
+     C                     MOVELQRDPCD    W1DPCD  3
+     C                     EXSR #DEPT
+     C                     MOVE AEDPNM    RRDPNM
+     C                     MOVE AEDPNM    PDPNM                           S01486
+     C                     END                             E2
+     C*
+     C** ON CHANGE OF ACCOUNT OFFICER CODE OBTAIN NEW DETAILS
+     C           QRACOC    IFNE WSACOC                     B2
+     C                     MOVELQRACOC    RRACOC
+     C***********          MOVELQRACOC    W1ACOC                          S01486
+     C                     MOVELQRACOC    W1ACOC  2                       S01486
+     C                     MOVELQRACOC    PACOC                           S01486
+     C                     EXSR #ACOC
+     C                     MOVE AZACON    RRACON
+     C                     MOVE AZACON    PACNM                           S01486
+     C                     END                             E2
+     C*
+     C** IF NEW SPOOL FILE OPENED OR PAGE OVERFLOW OR CHANGE OF
+     C** ACCOUNT OFFICER OR DEPARTMENT OUTPUT NEW HEADING
+     C           WWLINE    IFGE 60                         B2
+     C           QRACOC    ORNE WSACOC
+     C           QRDPCD    ORNE WSDPCD
+     C                     WRITEFORMAT1                61
+     C                     Z-ADDWWLINE    WSLINE  30
+     C                     Z-ADD10        WWLINE
+     C*
+     C                     MOVE QRCNUM    WACUST  6
+     C           RRCUST    IFEQ WACUST                     B3
+     C                     WRITEFORMAT3                61
+     C                     ADD  2         WWLINE
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C                     MOVE QRACOC    WSACOC  2
+     C                     MOVE QRDPCD    WSDPCD  3
+     C*
+     C** CALCULATE DETAILS TO BE OUTPUT AS PER SR/#CALCN
+     C                     EXSR #CALCN
+     C*                                                                   46502
+     C** DETERMINE ABSOLUTE AMOUNT OF DIFFERENCE                          46502
+     C           WWRTRN    SUB  WWSCMP    WWDIFF 150                      46502
+     C           WWDIFF    IFLT 0                          B2             46502
+     C                     Z-SUBWWDIFF    WWDIFF                          46502
+     C                     END                             E2             46502
+     C*                                                                   46502
+     C***IF 'RETURN ON INVESTED CAPITAL *NE SUM OF COMPONENTS OF          46502
+     C***PERFORMANCE WRITE LINE TO RECONCILIATION REPORT                  46502
+     C****       WWRTRN    IFNE WWSCMP                     B2             46502
+     C*                                                                   46502
+     C** IF DIFFERENCE GREATER THAN 10 CENTS OUTPUT ERROR MESSAGE         46502
+     C           WWDIFF    IFGT 100                        B2             46502
+     C/COPY WNCPYSRC,PM1700C014
+     C*
+     C***********WWNODE    IFNE 'Y'                        B3             S01486
+     C***********          OPEN PM1700EX                                  S01486
+     C***********          END                             E3             S01486
+     C*
+     C************IN62     IFEQ '1'                        B3             S01486
+     C***********WWNODE    ORNE 'Y'                                       S01486
+     C                     WRITEFORMAT5                62
+     C***********          END                             E3             S01486
+     C                     MOVE 'Y'       WWNODE  1
+     C*
+     C** OUTPUT EXCEPTION DETAILS
+     C                     EXSR #FMTEX
+     C                     WRITEFORMAT6                62
+     C                     END                             E2
+     C*
+     C**********           Z-ADDQRCNUM    WLCNUM  60                                          CSD027
+     C                     MOVE QRCNUM    WLCNUM  6                                           CSD027
+     C                     MOVE QRPTFR    WLPTFR  4
+     C*
+     C***********          READ PMPFMRQQ                 60               S01486
+     C           @RLEV     IFEQ 'A'                                       S01486
+     C                     READ PMPFMRL0                 60               S01486
+     C                     MOVELQRACOC    WWENT                           S01486
+     C                     ELSE                                           S01486
+     C                     READ PMPFMRL1                 60               S01486
+     C                     MOVELQRDPCD    WWENT                           S01486
+     C                     END                                            S01486
+     C*
+     C** IF PORTFOLIO HAS CHANGED SET FLAG 'PROCESSING FIRST PORTFOLIO'
+     C** TO 'N'
+     C           QRCNUM    IFNE WLCNUM                     B2
+     C           QRPTFR    ORNE WLPTFR
+     C           *IN60     OREQ '1'
+     C                     MOVE 'Y'       WWWRIT  1
+     C                     MOVE 'Y'       WWFRST  1
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF DETAILS REMAIN TO BE OUTPUT FOR PORTFOLIO WRITE RECORD
+     C** AND END REPORT
+     C           WWWRIT    IFNE ' '                        B1
+     C                     EXSR #WRITE
+     C                     WRITEENDRPT                 61
+     C                     END                             E1
+     C*
+     C** IF RECONCILIATION ERRORS EXIST WRITE END OF REPORT COMMENT
+     C/COPY WNCPYSRC,PM1700C015
+     C           WWNODE    IFEQ 'Y'                        B1
+     C***********          WRITEENDRP1                 62                 S01486
+     C*                                                                   059470
+     C** ...OTHERWISE OUTPUT 'NO EXCEPTIONS' COMMENT                      059470
+     C                     ELSE                                           059470
+     C***********          OPEN PM1700EX                            059470S01486
+     C                     WRITEFORMAT5                62                 059470
+     C                     WRITENOEX                   62                 059470
+     C***********          WRITEENDRP1                 62           059470S01486
+     C                     END                             E1
+     C/COPY WNCPYSRC,PM1700C016
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -                                                       *
+      * ZDATE2   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDPCD   -                                                       *
+      * WWACOC   -                                                       *
+      * WWCMD    -                                                       *
+      * WWPRTL   -                                                       *
+      * WWSPRT   -                                                       *
+      * WWLXTR   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*
+     C** RECEIVE PARAMETERS FROM CALLING PROGRAM
+     C           *ENTRY    PLIST
+     C***********          PARM           WWDPCD  4                       S01486
+     C***********          PARM           WWACOC  4                       S01486
+     C***********          PARM           @RSEQ   5                 S01486082112
+     C                     PARM           SEQ     5                       082112
+     C                     PARM           @RLEV   1                       S01486
+     C                     PARM           @RENT   3                       S01486
+     C*
+     C***KLIST*FOR*ACCESS*OF*PMPORTPP**********************************   S01486
+     C** KLIST FOR ACCESS OF PMPORTPD                                     S01486
+     C           PORTKY    KLIST
+     C                     KFLD           WLCNUM
+     C                     KFLD           WLPTFR
+     C*
+     C***KLIST*FOR*ACCESS*OF*PMPORTPP**********************************   S01486
+     C** KLIST FOR ACCESS OF PMPORTPD                                     S01486
+     C           PORTK1    KLIST
+     C                     KFLD           QRCNUM
+     C                     KFLD           QRPTFR
+     C*
+     C***KLIST*FOR*ACCESS*OF*PMPSPOPP**********************************   S01486
+     C** KLIST FOR ACCESS OF PMPSPOQ0                                     S01486
+     C           PSPOKY    KLIST
+     C                     KFLD           QRCNUM
+     C                     KFLD           QRPTFR
+     C                     KFLD           QRPFMP
+     C*                                                                   49579
+     C** KLIST FOR ACCESS OF POSETD                                       49579
+     C           POSKY     KLIST                                          49579
+     C                     KFLD           QRCNUM                          49579
+     C                     KFLD           QRPTFR                          49579
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   S01486
+     C           @RLEV     IFEQ 'D'                                       S01486
+     C                     MOVE '1'       *IN46                           S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '1'       *IN47                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*
+     C*  PREPARE LDA:
+     C                     MOVEL'PM1700'  DBPGM  10
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA                                       S01486
+     C*
+     C** GET BANK DETAILS:
+     C***********          READ SDBANKL1                 70               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST'  P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*
+     C************IN70     IFEQ '1'                        B1             S01486
+     C           P@RTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'003'     DBASE            ***************
+     C***********          MOVEL'SDBANKL1'DBFILE           * DB ERROR 03 *S01486
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 03 *S01486
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E1
+     C**
+     C           BJDFIN    IFEQ 'M'                        B1
+     C                     MOVE '1'       *IN98
+     C                     END                             E1
+     C*
+     C** GET PORTFOLIO MANAGEMENT ICD DETAILS:                            CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM *BLANKS   P@RTCD                          CPM005
+     C                     PARM '*FIRST'  P@OPTN                          CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+     C*                                                                   CPM005
+     C           P@RTCD    IFNE *BLANK                                    CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD7         DBASE            ***************CPM005
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 07 *CPM005
+     C                     MOVE *BLANKS   DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     END                             E1             CPM005
+     C***BUILT*COMMAND*EXPRESSION*FOR*QCMDEXEC*************************   S01486
+     C***********          MOVELCMD,1     WWCMD  43                       S01486
+     C***********          MOVE ')'       WWPRTL  4                       S01486
+     C***********          MOVEL*BLANKS   WWSPRT  3                       S01486
+     C*
+     C** DETERMINE DATE ON WHICH DETAILS LAST EXTRACTED
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C*
+     C                     Z-ADDWWLXTR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRPERD
+     C                     MOVE SEQ       @RSEQ   5                       082112
+     C/COPY WNCPYSRC,PM1700C001
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #FIRST   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * QCMDEXC  -                                                       *
+      * #DEPT    -                                                       *
+      * #ACOC    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPRTL   -                                                       *
+      * WWCMD    -                                                       *
+      * WWDPCD   -                                                       *
+      * WWACOC   -                                                       *
+      * WWSPRT   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #FIRST    BEGSR
+     C*
+     C** IF NO DETAILS READ FROM QRYF/PMPFMRQQ OUTPUT REPORT WITH NO
+     C** DETAILS TO REPORT COMMENT
+     C           *IN60     IFEQ '1'                        B1
+     C***********          MOVEL'1  '     WWPRTL                          S01486
+     C***********          MOVE WWPRTL    WWCMD                           S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA   43                       S01486
+     C***********          PARM 43        QCAN   155                      S01486
+     C***********          OPEN PM1700P1                                  S01486
+     C***********                                                         S01486
+     C***SET*UP*DEPARTMENT*TEXT*TO*BE*OUTPUT***************************   S01486
+     C***********          MOVE WWDPCD    RRDPCD                          S01486
+     C***********WWDPCD    IFNE '*ALL'                     B2             S01486
+     C***********          MOVELWWDPCD    W1DPCD  3                       S01486
+     C***********          EXSR #DEPT                                     S01486
+     C***********          MOVE AEDPNM    RRDPNM                          S01486
+     C***********          ELSE                            X2             S01486
+     C***********          MOVELNARR,1    RRDPNM                          S01486
+     C***********          END                             E2             S01486
+     C***********                                                         S01486
+     C***SET*UP*ACCOUNT*OFFICER*TEXT*TO*BE*OUTPUT**********************   S01486
+     C***********          MOVE WWACOC    RRACOC                          S01486
+     C***********WWACOC    IFNE '*ALL'                     B2             S01486
+     C***********          MOVELWWACOC    W1ACOC  2                       S01486
+     C***********          EXSR #ACOC                                     S01486
+     C***********          MOVE AZACON    RRACON                          S01486
+     C***********          ELSE                            X2             S01486
+     C***********          MOVELNARR,2    RRACON                          S01486
+     C***********          END                             E2             S01486
+     C***********                                                         S01486
+     C***********          WRITEFORMAT1                61                 S01486
+     C***********          WRITENODET                  61                 S01486
+     C***********          WRITEENDRPT                 61                 S01486
+     C*                                                                   S01486
+     C           AUOPN     IFNE 'Y'                                       S01486
+     C                     OPEN PM1700AU                                  S01486
+     C                     MOVE 'Y'       AUOPN   1                       S01486
+     C*                                                                   S01486
+     C** Call ZSFILE for AU file                                          S01486
+     C*                                                                   S01486
+     C                     MOVE SEQ       @RSEQ                           BZFIX
+     C                     Z-ADDSFNUMU    ZSNUM   60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           @RSEQ                           S01486
+     C                     PARM *BLANKS   @PARM   3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     MOVE '1'       *INU7                           S01486
+     C                     MOVE '1'       *INU8                           S01486
+     C                     MOVE '1'       *INLR                           S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     WRITEAUHEADER                                  S01486
+     C                     WRITENODTLS                                    S01486
+     C*
+     C** OTHERWISE RECORD FOUND OPEN PRINTER FILE FOR FIRST TIME
+     C                     ELSE                            X1
+     C***********          MOVELQRPRTL    WWPRTL                          S01486
+     C***********          MOVE WWPRTL    WWCMD                           S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA   43                       S01486
+     C***********          PARM 43        QCAN   155                      S01486
+     C***********          OPEN PM1700P1                                  S01486
+     C***********          MOVE QRPRTL    WWSPRT                          S01486
+     C                     EXSR #SPOOL                                    S01486
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #WRITE   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWLINE   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #WRITE    BEGSR
+     C*
+     C** OUTPUT NEW CUSTOMER HEADING IF DETAILS TO BE OUTPUT ARE FOR
+     C** DIFFERENT CUSTOMER TO LAST CUSTOMER REPORTED
+     C           WLCNUM    IFNE RLCNUM                     B1
+     C*
+     C                     MOVELWLCNUM    W1CNUA  6
+     C***********W1CNUA    CHAINSDCUSTL0             70                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*KEY   ' P@OPTN  7                       S01486
+     C                     PARM W1CNUA    P@KEY1 10                       S01486
+     C                     PARM *BLANKS   P@KYST  7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*
+     C************IN70     IFEQ '1'                        B2             S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'001'     DBASE            ***************
+     C***********          MOVEL'SDCUSTL0'DBFILE           * DB ERROR 01 *S01486
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 01 *S01486
+     C                     MOVELW1CNUA    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E2
+     C*
+     C                     MOVE W1CNUA    RRCUST
+     C                     MOVE BBCRNM    RRCRNM
+     C*
+     C** IF ROOM ON CURRENT PAGE OUTPUT NEW CUSTOMER HEADING
+     C           WWLINE    IFLT 58                         B2
+     C                     WRITEFORMAT3                61
+     C                     ADD  2         WWLINE  30
+     C*
+     C** OTHERWISE START NEW PAGE
+     C                     ELSE                            X2
+     C                     WRITEFORMAT1                61
+     C                     WRITEFORMAT3                61
+     C                     Z-ADD12        WWLINE
+     C                     END                             E2
+     C*
+     C**********           Z-ADDWLCNUM    RLCNUM  60                                          CSD027
+     C                     MOVE WLCNUM    RLCNUM  6                                           CSD027
+     C                     END                             E1
+     C*
+     C** ON CHANGE OF EITHER CUSTOMER OR PORTFOLIO OUTPUT SET OF
+     C** PORTFOLIO DETAILS
+     C           WLCNUM    IFNE RLCUST                     B1
+     C           WLPTFR    ORNE RLPTFR
+     C*
+     C***********PORTKY    CHAINPMPORTPP             70                   S01486
+     C           PORTKY    CHAINPMPORTPD             70                   S01486
+     C*
+     C           *IN70     IFEQ '1'                        B2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'002'     DBASE            ***************
+     C***********          MOVEL'PMPORTPP'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVE 'PMPORTPD'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVELWLCNUM    DBKEY            ***************
+     C                     MOVE WLPTFR    DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E2
+     C*
+     C           PNPTFR    IFEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C                     MOVE FCN997    RRPTFN                          CPM005
+     C                     ELSE                                           CPM005
+     C           PNPTFR    IFEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C                     MOVE FCN998    RRPTFN                          CPM005
+     C                     ELSE                                           CPM005
+     C           PNPTFR    IFEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     MOVE FCN999    RRPTFN                          CPM005
+     C                     ELSE                                           CPM005
+     C                     MOVE PNPTFR    RRPTFR
+     C                     MOVE PNPTFN    RRPTFN
+     C/COPY WNCPYSRC,PM1700C002
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+     C*
+     C** OUTPUT PERFORMANCE DETAILS
+     C           WWLINE    IFLT 60                         B2
+     C                     WRITEFORMAT4                61
+     C                     ADD  1         WWLINE
+     C*
+     C** OTHERWISE START NEW PAGE
+     C                     ELSE                            X2
+     C                     WRITEFORMAT1                61
+     C                     WRITEFORMAT3                61
+     C                     WRITEFORMAT4                61
+     C                     Z-ADD13        WWLINE
+     C                     END                             E2
+     C*
+     C** RESET ALL REPORT FIELDS TO BLANKS
+     C/COPY WNCPYSRC,PM1700C003
+     C                     MOVE *BLANKS   RRPSPY
+     C                     MOVE *BLANKS   RRABPY
+     C                     MOVE *BLANKS   RRANPY
+     C/COPY WNCPYSRC,PM1700C004
+     C                     MOVE *BLANKS   RRPSTY
+     C                     MOVE *BLANKS   RRABTY
+     C                     MOVE *BLANKS   RRANTY
+     C                     MOVE *BLANKS   RRPSSP
+     C                     MOVE *BLANKS   RRABSP
+     C                     MOVE *BLANKS   RRANSP
+     C*
+     C**********           Z-ADDWLCNUM    RLCUST  60                                          CSD027
+     C                     MOVE WLCNUM    RLCUST  6                                           CSD027
+     C                     MOVE WLPTFR    RLPTFR  4
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #SPOOL   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * QCMDEXC  -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPRTL   -                                                       *
+      * WWCMD    -                                                       *
+      * WWLINE   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #SPOOL    BEGSR
+     C*                                                                   S01486
+     C**  If printer file is open, print report footer                    S01486
+     C*                                                                   S01486
+     C           P1OPN     IFEQ 'Y'                                       S01486
+     C*
+     C** WRITE END OF REPORT LINE
+     C                     WRITEENDRPT                 61
+     C*
+     C** CLOSE SPOOL FILE
+     C                     CLOSEPM1700P1
+     C                     MOVE *BLANK    P1OPN                           S01486
+     C                     END                                            S01486
+     C*
+     C***OVERRIDE*TO*NEW*SPOOL*FILE*AND*REOPEN*************************   S01486
+     C***********          MOVELQRPRTL    WWPRTL                          S01486
+     C***********          MOVE WWPRTL    WWCMD                           S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA   43                       S01486
+     C***********          PARM 43        QCAN   155                      S01486
+     C***********          OPEN PM1700P1                                  S01486
+     C*                                                                   S01486
+     C**  Open printer file PM1700P1 if entity is 'ALL' or equal to       S01486
+     C**  Entity selected                                                 S01486
+     C*                                                                   S01486
+     C           @RENT     IFEQ 'ALL'                                     S01486
+     C           @RENT     OREQ WWENT                                     S01486
+     C                     OPEN PM1700P1                                  S01486
+     C                     MOVE 'Y'       P1OPN   1                       S01486
+     C*                                                                   S01486
+     C** Ensure Report Spool File recorded by RCF                         S01486
+     C*                                                                   S01486
+     C                     MOVE SEQ       @RSEQ                           BZFIX
+     C                     Z-ADDSFNUM     ZSNUM1  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           @RSEQ                           S01486
+     C                     PARM WWENT     SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM1                          S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C** If an error occurred during ZSFILE processing,                   S01486
+     C** return to the calling program.                                   S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     MOVE '1'       *INU7                           S01486
+     C                     MOVE '1'       *INU8                           S01486
+     C                     MOVE '1'       *INLR                           S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**  Reset page and line numbers and initialise fields               S01486
+     C*                                                                   S01486
+     C                     Z-ADD*ZEROS    PAGE                            S01486
+     C                     Z-ADD*ZEROS    LINE                            S01486
+     C                     MOVE '1'       *IN20                           S01486
+     C                     MOVELWWENT     @WWENT  3                       S01486
+      *                                                                   S01486
+     C                     END                                            S01486
+     C*
+     C                     Z-ADD61        WWLINE
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #DEPT    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      * #FIRST   -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #DEPT     BEGSR
+     C*
+     C***********W1DPCD    CHAINSDDEPTL1             70                   S01486
+     C                     CALL 'AODEPTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY   ' P@OPTN                          S01486
+     C                     PARM W1DPCD    P@DEPT  3                       S01486
+     C           SDDEPT    PARM SDDEPT    DSFDY                           S01486
+     C*
+     C************IN70     IFEQ '1'                        B4             S01486
+     C           P@RTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'004'     DBASE            ***************
+     C***********          MOVEL'SDDEPTL1'DBFILE           * DB ERROR 04 *S01486
+     C                     MOVE 'SDDEPTPD'DBFILE           * DB ERROR 04 *S01486
+     C                     MOVELW1DPCD    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E4
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #ACOC    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      * #FIRST   -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #ACOC     BEGSR
+     C*
+     C***********W1ACOC    CHAINSDACOFL1             70                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOACOFR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY   ' P@OPTN                          S01486
+     C                     PARM W1ACOC    P@ACOC  2                       S01486
+     C           SDACOF    PARM SDACOF    DSFDY                           S01486
+     C*
+     C************IN70     IFEQ '1'                        B4             S01486
+     C           P@RTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'005'     DBASE            ***************
+     C***********          MOVEL'SDACOFL1'DBFILE           * DB ERROR 05 *S01486
+     C                     MOVE 'SDACOFPD'DBFILE           * DB ERROR 05 *S01486
+     C                     MOVELW1ACOC    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E4
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #CALCN   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   -                                                       *
+      * ZSEDIT   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRTRN   -                                                       *
+      * WWAVIC   -                                                       *
+      * WWAVI1   -                                                       *
+      * WWSCMP   -                                                       *
+      * WWABRT   -                                                       *
+      * WWDATE   -                                                       *
+      * WWABSR   -                                                       *
+      * WWANSR   -                                                       *
+      * WWANNR   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #CALCN    BEGSR
+     C*
+     C** SET ALL ELEMENTS OF TOTALS ARRAY TO 0
+     C                     Z-ADD1         I       30
+     C           I         DOWLE20                         B1
+     C                     Z-ADD0         PFMA,I
+     C                     ADD  1         I
+     C                     END                             E1
+     C*
+     C** READ ALL RECORDS FOR CUSTOMER, PORTFOLIO AND PERFORMANCE PERIOD
+     C***********PSPOKY    SETLLPMPSPOPP                                  S01486
+     C***********PSPOKY    READEPMPSPOPP                 63               S01486
+     C           PSPOKY    SETLLPMPSPOQ0                                  S01486
+     C           PSPOKY    READEPMPSPOQ0                 63               S01486
+     C*
+     C** ADD AMOUNTS TO CORRECT ELEMENT OF TOTALS ARRAY
+     C           *IN63     DOWEQ'0'                        B1
+     C                     Z-ADD1         I
+     C           QVPFMC    LOKUPPFMC,I                   64
+     C           QVPFMS    IFNE 'C  '                      B2
+     C                     ADD  QVPFMA    PFMA,I
+     C                     END                             E2
+     C***********PSPOKY    READEPMPSPOPP                 63               S01486
+     C           PSPOKY    READEPMPSPOQ0                 63               S01486
+     C                     END                             E1
+     C*
+     C** CALCULATE RETURN ON INVESTED CAPITAL
+     C                     Z-ADDPFMA,1    WWRTRN 150
+     C           WWRTRN    SUB  PFMA,2    WWRTRN
+     C           WWRTRN    ADD  PFMA,5    WWRTRN
+     C           WWRTRN    SUB  PFMA,4    WWRTRN
+     C           WWRTRN    SUB  PFMA,20   WWRTRN
+     C*
+     C           QRPMNG    IFEQ 'G'                        B1
+     C                     SUB  PFMA,17   WWRTRN
+     C                     END                             E1
+     C*
+     C** CALCULATE AVERAGE INVESTED CAPITAL
+     C                     Z-ADDPFMA,3    WWAVIC 150
+     C                     Z-ADDPFMA,6    WWAVI1 150
+     C           WWAVIC    ADD  WWAVI1    WWAVIC
+     C*
+     C** CALCULATE SUM OF COMPONENTS OF PERFORMANCE
+     C                     Z-ADDPFMA,7    WWSCMP 150
+     C           WWSCMP    ADD  PFMA,8    WWSCMP
+     C           WWSCMP    ADD  PFMA,9    WWSCMP
+     C           WWSCMP    ADD  PFMA,10   WWSCMP
+     C           WWSCMP    ADD  PFMA,11   WWSCMP
+     C           WWSCMP    ADD  PFMA,12   WWSCMP
+     C           WWSCMP    ADD  PFMA,13   WWSCMP
+     C           WWSCMP    ADD  PFMA,14   WWSCMP
+     C           WWSCMP    ADD  PFMA,15   WWSCMP
+     C           WWSCMP    ADD  PFMA,16   WWSCMP
+     C           WWSCMP    ADD  PFMA,18   WWSCMP
+     C           WWSCMP    ADD  PFMA,19   WWSCMP
+     C*
+     C           QRPMNG    IFEQ 'N'                        B1
+     C           WWSCMP    ADD  PFMA,17   WWSCMP
+     C                     END                             E1
+     C*
+     C** CALCULATE ABSOLUTE PERFORMANCE AS RETURN ON CAPITAL DIVIDED
+     C** BY AVERAGE INVESTED CAPITAL
+     C           WWAVIC    IFNE 0                          B1
+     C           WWRTRN    DIV  WWAVIC    WWABRT 158
+     C*
+     C** CONVERT ABSOLUTE AMOUNT TO PERCENTAGE FIGURE
+     C           WWABRT    MULT 100       WWABRT
+     C*
+     C** RULES FOR DETERMINING SIGN OF PERFORMANCE AMOUNT ARE SHOWN
+     C** IN THE TABLE BELOW
+     C**    ---------------------------------------------------
+     C**    I TOP LINE I BOTTOM LINE I SIGN OF RATE OF RETURN I
+     C**    I----------I-------------I------------------------I
+     C**    I    -     I     -       I          -             I
+     C**    I    -     I     +       I          -             I
+     C**    I    +     I     -       I SET TO '******'        I
+     C**    I    +     I     +       I          +             I
+     C**    I  + OR -  I     0       I SET TO '******'        I
+     C**    ---------------------------------------------------
+     C** NOTE: NO CALCULATIONS FOR LINES 2 AND 4 OF ABOVE TABLE AS
+     C** RESULT OF CALCULATIONS ABOVE CORRECTLY SIGNED
+     C*
+     C** SET UP SIGN AS PER LINE 1 OF TABLE ABOVE
+     C           WWAVIC    IFLT 0                          B2
+     C           WWRTRN    ANDLT0
+     C                     Z-SUBWWABRT    WWABRT
+     C                     END                             E2
+     C*
+     C** SET UP SIGN AS PER LINE 3 OF TABLE ABOVE
+     C           WWAVIC    IFLT 0                          B2
+     C           WWRTRN    ANDGT0
+     C           WWABRT    ORGT 999.999
+     C           WWABRT    ORLT -999.999
+     C                     Z-ADD*HIVAL    WWABRT
+     C                     END                             E2
+     C*
+     C** OTHERWISE IF BOTTOM LINE (INVESTED CAPITAL) SET TO 0
+     C                     ELSE                            X1
+     C*
+     C** IF A RETURN HAS BEEN EARNED SET RETURN TO *HIVAL OTHERWISE NO
+     C** RETURN EARNED IMPLIES PERFORMANCE OF 0
+     C           WWRTRN    IFNE 0                          B2
+     C                     Z-ADD*HIVAL    WWABRT
+     C                     ELSE                            X2
+     C                     Z-ADD0         WWABRT
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C** FORMAT DETAILS FOR OUTPUT TO REPORT
+     C/COPY WNCPYSRC,PM1700C005
+     C                     MOVE QRPMNG    RRPMNG
+     C/COPY WNCPYSRC,PM1700C006
+     C*
+     C                     Z-ADDQRPMSD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WWDATE  7
+     C*
+     C** IF VALID FIGURES NOT AVAILABLE OUTPUT '******'
+     C           WWABRT    IFEQ *HIVAL                     B1
+     C                     MOVE '********'WWABSR  8
+     C                     MOVE '********'WWANSR  8
+     C                     ELSE                            X1
+     C*
+     C** OTHERWISE FORMAT ABSOLUTE RETURN AS VIA SR/ZSEDIT
+     C                     Z-ADD0         ZFLD15
+     C                     MOVELWWABRT    WRK100 100
+     C                     MOVE WRK100    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWABSR
+     C*
+     C** CONVERT ABSOLUTE PERFORMANCE TO AN ANNUALISED RATE AND THEN
+     C** FORMAT
+     C           WWABRT    MULT 365       WWANNR 158
+     C           WWANNR    DIV  QRDYPP    WWANNR 158
+     C*
+     C           WWANNR    IFGT 999.999                    B2
+     C           WWANNR    ORLT -999.999
+     C                     MOVE '********'WWANSR
+     C                     ELSE                            X2
+     C*
+     C** OTHERWISE FORMAT ABSOLUTE RETURN AS VIA SR/ZSEDIT
+     C                     Z-ADD0         ZFLD15
+     C                     MOVELWWANNR    WRK100 100
+     C                     MOVE WRK100    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWANSR
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** DEPENDING UPON PERFORMANCE PERIOD MOVE FIELDS FORMATTED ABOVE
+     C** TO CORRECT FIELDS TO BE OUTPUT ON REPORT
+     C           QRPFMP    IFEQ '1'                        B1
+     C/COPY WNCPYSRC,PM1700C007
+     C                     MOVE WWDATE    RRPSPY
+     C                     MOVE WWABSR    RRABPY
+     C                     MOVE WWANSR    RRANPY
+     C/COPY WNCPYSRC,PM1700C008
+     C                     END                             E1
+     C*
+     C           QRPFMP    IFEQ '2'                        B1
+     C                     MOVE WWDATE    RRPSTY
+     C                     MOVE WWABSR    RRABTY
+     C                     MOVE WWANSR    RRANTY
+     C                     END                             E1
+     C*
+     C           QRPFMP    IFEQ '3'                        B1
+     C                     MOVE WWDATE    RRPSSP
+     C                     MOVE WWABSR    RRABSP
+     C                     MOVE WWANSR    RRANSP
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #FMTEX   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -                                                       *
+      * ZSEDIT   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRTRN   -                                                       *
+      * WWSCMP   -                                                       *
+      * WWDIFF   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #FMTEX    BEGSR
+     C*
+     C** FORMAT DETAILS FOR OUTPUT TO REPORT
+     C                     MOVE QRCNUM    R1CUST
+     C                     MOVE QRPTFR    R1PTFR
+     C                     MOVE QRPFMP    R1PFMP
+     C*
+     C***ACCESS*PMPORTPP*FOR*CURRENCY*AND*CURRENCY*DECIMALS************   S01486
+     C** ACCESS PMPORTPD FOR CURRENCY AND CURRENCY DECIMALS               S01486
+     C***********PORTK1    CHAINPMPORTPP             70                   S01486
+     C           PORTK1    CHAINPMPORTPD             70                   S01486
+     C*
+     C           *IN70     IFEQ '1'                        B4
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'006'     DBASE            ***************
+     C***********          MOVEL'PMPORTPP'DBFILE           * DB ERROR 06 *S01486
+     C                     MOVE 'PMPORTPD'DBFILE           * DB ERROR 06 *S01486
+     C                     MOVELQRCNUM    DBKEY            ***************
+     C                     MOVE QRPTFR    DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E4
+     C*
+     C                     MOVE PNPTCY    R1PTCY
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE WWRTRN    ZFLD15
+     C                     Z-ADDPNPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    R1RTRN
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE WWSCMP    ZFLD15
+     C                     Z-ADDPNPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    R1SCMP
+     C*
+     C           WWRTRN    SUB  WWSCMP    WWDIFF 150
+     C           WWDIFF    IFLT 0
+     C                     Z-SUBWWDIFF    WWDIFF
+     C                     END
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE WWDIFF    ZFLD15
+     C                     Z-ADDPNPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    R1DIFF
+     C*
+     C** CHECK WHETHER POSITION SETTLEMENTS OUTSTANDING FOR PORTFOLIO
+     C                     MOVE 'N'       R1OTPS
+     C***********POSKY     CHAINPOSETO               65                   S01486
+     C           POSKY     CHAINPMPOSDL1             65                   S01486
+     C           *IN65     IFEQ '0'
+     C                     MOVE 'Y'       R1OTPS
+     C                     END
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    -                                                       *
+      * #WRITE   -                                                       *
+      * #DEPT    -                                                       *
+      * #ACOC    -                                                       *
+      * #FMTEX   -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*                                                                   S01486
+     C           P1OPN     IFEQ 'Y'                                       S01486
+     C                     WRITEDBERREF                                   S01486
+     C                     CLOSEPM1700P1                                  S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** Output header, Database error format                             S01486
+     C*                                                                   S01486
+     C           AUOPN     IFNE 'Y'                                       S01486
+     C                     OPEN PM1700AU                                  S01486
+     C                     MOVE 'Y'       AUOPN   1                       S01486
+     C*                                                                   S01486
+     C** Call ZSFILE for AU file                                          S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUM   60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           @RSEQ                           S01486
+     C                     PARM *BLANKS   @PARM   3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     MOVE '1'       *INU7                           S01486
+     C                     MOVE '1'       *INU8                           S01486
+     C                     MOVE '1'       *INLR                           S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     WRITEAUHEADER                                  S01486
+     C                     WRITEDBERROR                                   S01486
+     C                     CLOSEPM1700AU                                  S01486
+     C*
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      /COPY ZSRSRC,ZSEDITZ3
+      /COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(c) Finastra International Limited 2001
+**  PFMC
+VE VS VP CI CO CX TR TU DV IERIEUXIRXIUXTRXTUF  T  OT C  ADJ
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

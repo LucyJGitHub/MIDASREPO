@@ -1,0 +1,71 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update SDFWRTPD from FWDRTFE')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC001076 - Update SDFWRTPD from FWDRTFE                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD030683 *CREATE   Date 23Sep14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD030683 - New utility program to update SDFWRTPD from      */
+/*                  FWDRTFE records                                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 SYS0000 RPG0000) +
+                          EXEC(GOTO CMDLBL(ERROR))
+ 
+/* Create a temporary source file for RUNSQLSTM. */
+ 
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SKXBRIDGE')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Build SQL statement to add records to SDFWRTPD from FWDRTFE     */
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SDFWRTPD +
+                          (FRCCY) select CCY from FWDRTFE z where +
+                          not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE('(select p.FRCCY from +
+                          SDFWRTPD p where z.CCY = p.FRCCY and +
+                          z.RECI <> ''*'');')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+/* Build SQL statement to delete records from SDFWRTPD not in FWDRTFE */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SDFWRTPD +
+                          p where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('(select *  from +
+                          FWDRTFE z where z.CCY = p.FRCCY and +
+                          z.RECI <> ''*'');')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

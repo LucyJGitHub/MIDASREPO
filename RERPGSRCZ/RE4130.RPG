@@ -1,0 +1,912 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Teller Sign On')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4130 - Teller Sign On                                      *
+     F*                                                               *
+     F*  Function:  This program validates the authority of a teller  *
+     F*  (I/C)      to sign on to the Retail Teller System.           *
+     F*                                                               *
+     F*  Called By: REC4130 - RTS Teller Sign On and Input Control    *
+     F*             REC4131 - RTS Teller Sign Off with Override       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD047742           Date 25Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 TDA035             Date 25Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT001  *CREATE    Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD047742 - Allow mutiple teller IDs for one user.            *
+      *  MD046248 - Finastra Rebranding                               *
+      *  TDA035 - Initialise dataarea if webuser.                     *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N   P A R A M E T E R S                        *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FTTRNT   UF  E           K        DISK         KINFSR *PSSR
+     F**  Teller controls file
+     F*                                                                                     MD047742
+     FMUSER   UF  E           K        DISK         KINFSR *PSSR                            MD047742
+     F**  User profile control                                                              MD047742
+     F*                                                                                     MD047742
+     FRE4130DFCF  E                    WORKSTN      KINFSR *PSSR
+     F**  Display file - Teller sign on
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*     F U N C T I O N   O F   I N D I C A T O R S               *
+     F*                                                               *
+     F*       09         Condition title display                      *
+     F*       10         Message Subfile End Indicator (SFLEND)       *
+     F*                                                               *
+     F*       31         Error in field STLID                         *
+     F*       32         Error in field STLPC                         *
+     F*                                                               *
+     F*       61         Any error in fields validation               *
+     F*                                                               *
+     F*       70         General Indicator Used For CHAIN             *
+     F*                                                               *
+     F*       80         CHAIN operation failed                       *
+     F*                                                               *
+     F*       KC         Exit Program                                 *
+     F*       KE         Refresh Screen                               *
+     F*                                                               *
+     F*     90-99        Standard Subroutine indicators               *
+     F*                                                               *
+     F*       U6         Multiple sign on                             *
+     F*     U7-U8        If Database error occurs                     *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Control routines                                             *
+     F*                                                               *
+     F*  DBERR  - Database error handling                             *
+     F*  FIRST  - Initial Processing                                  *
+     F*  LAST   - Final Processing                                    *
+     F*  MAIN   - Control Process                                     *
+     F*  SNDMSG - Send program message parameters                     *
+     F*  UPDRTN - Update control routine                              *
+     F*  WIDCHK - Teller workstation conditions check                 *
+     F*  ZA0150 - Get Midas Rundate & Setup Indicator                 *
+     F*  *PSSR  - Program error                                       *
+     F*                                                               *
+     F*  Screen Handling                                              *
+     F*                                                               *
+     F*  DSPF0  - Display screen format                               *
+     F*                                                               *
+     F*  Screen Initialisation / Resets                               *
+     F*                                                               *
+     F*  RFRESH - Refresh screen                                      *
+     F*  IFLDS  - Initialize screen/work fields                       *
+     F*                                                               *
+     F*  Validation routines                                          *
+     F*                                                               *
+     F*  VALF0  - Validate screen input                               *
+     F*                                                               *
+     F*  Updates routines                                             *
+     F*                                                               *
+     F*  ZTSDTA - Update job dataarea                                 *
+     F*                                                               *
+     F*  Standard RTS Subroutines                                     *
+     F*                                                               *
+     F*  RTENCP - Encript passcode                                    *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250- Clear Message Queue                                 *
+     F*  SCC0240- Send Message                                        *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E/COPY ZSRSRC,RTENCPE1
+     E**  Array for SR.RTENCP
+     E*
+     E                    CPY@    1   1 80
+     E*
+     I*****************************************************************
+     I/SPACE 3
+     I*
+     I            DS
+     I**  Data structure to hold key fields of LF/TTRNT
+     I                                        1   5 @TTRNT
+     I                                        1   1 KTBRI
+     I                                        2   4 KTBID
+     I                                        5   5 KRCTP
+     I*
+     IPSDS       SDS
+     I**  Program Status Data Structure
+     I*
+     I**  Field containing Program name
+     I                                        1  10 @PGM
+     I**  Field containing Workstation ID
+     I                                      244 253 @JOB
+     I**  Field Containing User ID
+     I                                      254 263 @USER
+     I*
+     ILDA        UDS                            256
+     I**  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+     I                                       31  40 ERUSER
+     I**  Field combining the following fields
+     I                                      134 183 DBLOT
+     I**  Name of database file in error
+     I                                      134 141 DBFILE
+     I**  Key value causing database error
+     I                                      142 170 DBKEY
+     I**  Name of program causing database error
+     I                                      171 180 DBPGM
+     I**  Number of database error
+     I                                      181 1830DBASE
+     I*
+     IRTSDTA     UDS                            256
+     I**  Job dataarea data structure
+     I*
+     I                                        1   3 @TLID
+     I                                        4   6 @TLBC
+     I                                        7   7 @SPVI
+     I                                        8  32 @OVRI
+     I                                    P  33  390@CHTL
+     I                                    P  40  460@NCTL
+     I                                       47  76 @TLNM
+     I                                       77  800@TLMG
+     I                                       81  840@TLSL
+     I                                       85  890@TLTO
+     I                                       90  92 @DEPC
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Bank Details
+     I*
+     ISDTELD    E DSSDTELDPD
+     I**  Teller ID Details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs (200 long)
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            MAIN   - Control Process                           *
+     C*                                                               *
+     C* CALLS      FIRST  - Initial Processing                        *
+     C*            LAST   - Final Processing                          *
+     C*            DSPF0  - Display screen format                     *
+     C*            RFRESH - Refresh screen                            *
+     C*            VALF0  - Validate screen input                     *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Initial processing
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  Display initial screen
+     C*
+     C                     EXSR DSPF0
+     C*
+     C**  Do while cmd/3 is not pressed
+     C*
+     C           *INKC     DOWEQ'0'
+     C*
+     C**  Process screen input - depending upon input type.
+     C*
+     C**  If Cmd/5 is pressed, perform initialisation
+     C*
+     C           *INKE     CASEQ'1'       RFRESH
+     C*
+     C**  If Enter key is pressed, validate screen input
+     C*
+     C                     CAS            VALF0
+     C*
+     C                     END
+     C*
+     C**  Redisplay appropriate screen
+     C*
+     C                     EXSR DSPF0
+     C*
+     C                     END
+     C*
+     C**  Final Processing
+     C*
+     C                     EXSR LAST
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            DSPF0  - Display screen format                     *
+     C*                                                               *
+     C* CALLS      SCC0250- Clear Message Queue                       *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control Process                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           DSPF0     BEGSR                           ** DSPF0  **
+      *                                                                                     MD047742
+     C           @USER     CHAINMUSER                86                                     MD047742
+     C           *IN86     IFEQ '0'                                                         MD047742
+      *                                                                                     MD047742
+     C                     MOVELTLID      STLID                                             MD047742
+     C                     ENDIF                                                            MD047742
+     C*
+     C**  If Cmd/3 is not pressed
+     C*
+     C           *INKC     IFEQ '0'
+     C*
+     C**  Display message subfile control record format
+     C*
+     C                     WRITERE4130C0
+     C*
+     C**  Display and accept screen format
+     C*
+     C                     EXFMTRE4130F0
+     C*
+     C**  Clear program message queue
+     C*
+     C                     CALL 'SCC0250'
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            RFRESH - Refresh screen                            *
+     C*                                                               *
+     C* CALLS      IFLDS  - Initialize screen/work fields             *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control Process                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C********************************************************************
+     C           RFRESH    BEGSR                           ** RFRESH **
+     C*
+     C**  Initialize work/screen fields
+     C*
+     C                     EXSR IFLDS
+     C*
+     C**  Set off work indicators
+     C                     SETOF                     313261
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            VALF0  - Validate screen input                     *
+     C*                                                               *
+     C* CALLS      SNDMSG - Send program message parameters           *
+     C*            UPDRTN - Control routine for updates               *
+     C*            WIDCHK - Teller workstation conditions check       *
+     C*            DBERR  - Database error handling                   *
+     C*            RTENCP - Encript passcode                          *
+     C*                                                               *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control Process                           *
+     C*                                                               *
+     C*****************************************************************
+     C           VALF0     BEGSR                           ** VALF0  **
+     C*
+     C**  Set off validation indicators
+     C*
+     C                     SETOF                     313261
+     C*
+     C**  Validate teller -id - check if blanks
+     C**  message - Teller identifier must not be blanks or zeros
+     C*
+     C           STLID     IFEQ *BLANKS
+     C           STLID     OREQ *ZEROS
+     C                     SETON                     3161
+     C                     MOVEL'USR0032' @MSGID
+     C                     EXSR SNDMSG
+     C*
+     C                     ELSE
+     C*
+     C**  Validate teller -id - it must exist in telidpd
+     C**  message - Teller identifier not found
+     C*
+     C                     CALL 'AOTELDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM STLID     @TLID   3
+     C           SDTELD    PARM SDTELD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     3161
+     C                     MOVEL'USR0030' @MSGID
+     C                     EXSR SNDMSG
+      *                                                                                       TDA035
+      ** Pass Teller-ID back to *ENTRY                                                        TDA035
+      *                                                                                       TDA035
+     C                     ELSE                                                               TDA035
+     C                     MOVELSTLID     P#TLID                                              TDA035
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Validate teller pass code - if entered and no errors in id
+     C**  message - Teller passcode is required
+     C*
+     C           *IN61     IFEQ '0'                        ** IF   1
+     C           *IN61     OREQ '0'                        ** IF   1
+     C           STLPC     IFEQ *BLANKS                    ** IF   2
+     C                     SETON                     3261
+     C                     MOVEL'USR0033' @MSGID
+     C                     EXSR SNDMSG
+     C*
+     C                     ELSE                            ** ELSE 2
+     C*
+     C**  Validate teller pass code - must exist in telidpd (Encripted)
+     C**  message - Teller passcode does not match
+     C*
+     C**  Encript the passcode
+     C*
+     C                     MOVEASTLPC     BPWD
+     C                     Z-ADD6         X       10
+     C                     EXSR RTENCP
+     C                     MOVEAEPWD      STLPC
+     C*
+     C           FRTLPC    IFNE STLPC
+     C                     SETON                     3261
+     C                     MOVEL'USR0039' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C                     END                             ** END  2
+     C*
+     C                     END                             ** END  1
+     C*
+     C**  If no errors - if U1 is off perform teller-wsid-conds-check
+     C**               - Update teller controls
+     C*
+     C           *IN61     IFEQ '0'
+     C*
+     C           *INU1     IFEQ '0'
+     C*
+     C**  Move fields to key data structure.
+     C*
+     C                     MOVEL'T'       KTBRI
+     C                     MOVELSTLID     KTBID
+     C                     MOVEL'1'       KRCTP
+     C*
+     C                     MOVELSTLID     @TLID
+      *                                                                                       TDA035
+      ** If not a Web user                                                                    TDA035
+      *                                                                                       TDA035
+     C           P#WEBU    IFEQ 'N'                                                           TDA035
+     C                     EXSR WIDCHK
+     C*
+     C**  Record not found.
+     C*
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **
+     C                     MOVEL'TTRNT'   DBFILE           ***************
+     C                     MOVEL@TTRNT    DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C                     ENDIF                                                              TDA035
+     C*
+     C                     END
+      *                                                                                       TDA035
+      ** User is a MidasPlus profile, lock the dataarea                                       TDA035
+      ** call REC004151                                                                       TDA035
+      *                                                                                       TDA035
+     C           P#WEBU    IFEQ 'Y'                                                           TDA035
+      *                                                                                       TDA035
+     C           *INU1     IFEQ '0'                                                           TDA035
+     C                     MOVEL'REC00'   PGMCA   9                                           TDA035
+     C                     MOVE '4151'    PGMCA                                               TDA035
+      *                                                                                       TDA035
+     C                     CALL PGMCA                                                         TDA035
+     C                     PARM           @RTCD                                               TDA035
+     C                     PARM           P#TLID                                              TDA035
+      *                                                                                       TDA035
+      ** If return code is '*NO_ALC ', the teller is already signed on                        TDA035
+      ** to another workstation                                                               TDA035
+      *                                                                                       TDA035
+     C           @RTCD     IFEQ '*NO_ALC '                                                    TDA035
+     C                     MOVE '1'       *IN31                                               TDA035
+     C                     MOVE '1'       *IN61                                               TDA035
+     C                     MOVEL'USR0702' @MSGID                                              TDA035
+     C                     EXSR SNDMSG                                                        TDA035
+     C                     GOTO ENDVAL                                                        TDA035
+     C                     ENDIF                                                              TDA035
+      *                                                                                       TDA035
+     C           @RTCD     IFNE *BLANKS                                                       TDA035
+     C           *LOCK     IN   LDA                        ***************                    TDA035
+     C                     Z-ADD005       DBASE            ** DB ERR 05 **                    TDA035
+     C                     MOVELPGMCA     DBFILE           ***************                    TDA035
+     C                     MOVELP#TLID    DBKEY                                               TDA035
+     C                     EXSR DBERR                                                         TDA035
+     C                     ENDIF                                                              TDA035
+     C                     ENDIF                                                              TDA035
+      *                                                                                       TDA035
+      ** Unlock dataarea for teller signoff                                                   TDA035
+      *                                                                                       TDA035
+     C           *INU1     IFEQ '1'
+     C                     MOVEL'REC00'   PGMCA   9                                           TDA035
+     C                     MOVE '4152'    PGMCA                                               TDA035
+      *                                                                                       TDA035
+     C                     CALL PGMCA                                                         TDA035
+     C                     PARM           @RTCD                                               TDA035
+     C                     PARM           P#TLID                                              TDA035
+     C                     ENDIF                                                              TDA035
+     C                     MOVEL*BLANKS   @MSGID                                              TDA035
+      *                                                                                       TDA035
+      ** If return code is '*NO_DLC ', the teller is already signed on                        TDA035
+      ** to another workstation                                                               TDA035
+      *                                                                                       TDA035
+     C           @RTCD     IFEQ '*NO_DLC '                                                    TDA035
+     C                     MOVE '1'       *IN31                                               TDA035
+     C                     MOVE '1'       *IN61                                               TDA035
+     C                     MOVEL'USR0702' @MSGID                                              TDA035
+     C                     EXSR SNDMSG                                                        TDA035
+     C                     GOTO ENDVAL                                                        TDA035
+     C                     ENDIF                                                              TDA035
+      *                                                                                       TDA035
+     C           @RTCD     IFNE *BLANKS                                                       TDA035
+     C           *LOCK     IN   LDA                        ***************                    TDA035
+     C                     Z-ADD006       DBASE            ** DB ERR 06 **                    TDA035
+     C                     MOVELPGMCA     DBFILE           ***************                    TDA035
+     C                     MOVELP#TLID    DBKEY                                               TDA035
+     C                     EXSR DBERR                                                         TDA035
+     C                     ENDIF                                                              TDA035
+     C                     ENDIF                                                              TDA035
+      *                                                                                     MD047742
+      * If no error update teller id for user                                               MD047742
+      *                                                                                     MD047742
+     C           *IN61     IFEQ '0'                                                         MD047742
+     C*                                                                                     MD047742
+     C           @USER     CHAINMUSER                85                                     MD047742
+     C           *IN85     IFEQ '0'                                                         MD047742
+      *                                                                                     MD047742
+     C                     MOVELSTLID     TLID                                              MD047742
+     C                     EXCPTMUSERO                                                      MD047742
+     C                     ENDIF                                                            MD047742
+     C                     ENDIF                                                            MD047742
+     C*
+     C**  Update files and dataarea - rtsdta
+     C*
+     C           P#WEBU    IFEQ 'N'                                                           TDA035
+     C                     EXSR UPDRTN
+     C                     ENDIF                                                              TDA035
+     C*
+     C**  Exit the program
+     C*
+     C                     EXSR LAST
+     C*
+     C                     END
+      *                                                                                       TDA035
+     C           ENDVAL    TAG                                                                TDA035
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            WIDCHK - Teller workstation conditions check       *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @TLID  - Teller identifier                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           WIDCHK    BEGSR                           ** WIDCHK **
+     C*
+     C**  Define parameters
+     C*
+     C                     MOVEL@TLID     @TLID   3
+     C*
+     C**  Define key list
+     C*
+     C           KLTRNT    KLIST
+     C                     KFLD           KTBRI
+     C                     KFLD           KTBID
+     C                     KFLD           KRCTP
+     C*
+     C**  Move fields to key list.
+     C*
+     C                     MOVEL'T'       KTBRI
+     C                     MOVEL@TLID     KTBID
+     C                     MOVEL'1'       KRCTP
+     C*
+     C**  Get Teller Control Details
+     C*
+     C           KLTRNT    CHAINTTRNT                80
+     C*
+     C**  If record found
+     C*
+     C           *IN80     IFEQ '0'
+     C*
+     C**  Release the record
+     C*
+     C                     EXCPTRELTT
+     C*
+     C**  Check for multiple sign on
+     C*
+     C           TWID      IFNE *BLANK
+     C           TWID      IFNE @JOB
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL@TLID     ERTLID
+     C                     MOVELTWID      ERTWID
+     C                     MOVEL@JOB      ERWSID
+     C                     MOVELUSER      ERUSER                                              TDA035
+     C                     OUT  LDA
+     C                     SETON                     U6LR
+     C                     RETRN
+      *
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            UPDRTN - Update control routine                    *
+     C*                                                               *
+     C* CALLS      ZTSDTA - Update job dataarea                       *
+     C*                                                               *
+     C* CALLED BY  VALF0  - Validate screen input                     *
+     C*                                                               *
+     C*****************************************************************
+     C           UPDRTN    BEGSR                           ** UPDRTN **
+     C*
+     C**  Move fields to key data structure.
+     C*
+     C                     MOVEL'T'       KTBRI
+     C                     MOVELSTLID     KTBID
+     C                     MOVEL'1'       KRCTP
+     C*
+     C           KLTRNT    CHAINTTRNTM2F             70
+     C*
+     C**  If record exists - update
+     C*
+     C           *IN70     IFEQ '0'
+     C*
+     C                     MOVEL@JOB      TWID
+     C                     UPDATTTRNTM2F
+     C*
+     C**  If record does not exist - db error
+     C*
+     C                     ELSE
+     C*
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD3         DBASE            ** DB ERR 03 **
+     C                     MOVEL'TTRNTM2' DBFILE           ***************
+     C                     MOVEL@TTRNT    DBKEY
+     C                     EXSR DBERR
+     C*
+     C                     END
+     C*
+     C                     EXSR ZTSDTA
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            ZTSDTA - Update job dataarea                       *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  UPDRTN - Update control routine                    *
+     C*                                                               *
+     C*****************************************************************
+     C           ZTSDTA    BEGSR                           ** ZTSDTA **
+     C*
+     C           *NAMVAR   DEFN           RTSDTA
+     C           *LOCK     IN   RTSDTA
+     C                     MOVE FRTLID    @TLID
+     C                     MOVE FRTLBC    @TLBC
+     C                     MOVE FRSPVI    @SPVI
+     C                     MOVE FROVRI    @OVRI
+     C                     MOVE FRCHTL    @CHTL
+     C                     MOVE FRNCTL    @NCTL
+     C                     MOVE FRTLNM    @TLNM
+     C                     MOVE FRTLMG    @TLMG
+     C                     MOVE FRTLSL    @TLSL
+     C                     MOVE FRTLTO    @TLTO
+     C                     MOVE FRDEPC    @DEPC
+     C                     OUT  RTSDTA
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            LAST   - Final Processing                          *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control Process                           *
+     C*                                                               *
+     C*****************************************************************
+     C           LAST      BEGSR                           ** LAST   **
+     C*
+     C**  If F3 is pressed, blank out RTSDTA
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE *BLANKS   @MSGID                                              TDA035
+     C                     MOVE *BLANKS   P#TLID                                              TDA035
+      *                                                                                       TDA035
+     C           P#WEBU    IFEQ 'N'                                                           TDA035
+     C           *LOCK     IN   RTSDTA
+     C                     MOVE *BLANKS   RTSDTA
+     C                     OUT  RTSDTA
+     C                     ENDIF                                                              TDA035
+     C                     END
+     C*
+     C**  End the program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            *PSSR  - Program error                             *
+     C*                                                               *
+      * CALLS      DBERRCTL                                           *
+     C*                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            FIRST  - Initial Processing                        *
+     C*                                                               *
+     C* CALLS      ZA0150 - Get Midas Rundate & Setup Indicator       *
+     C*            IFLDS  - Initialize screen/work fields             *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Control Process                           *
+     C*                                                               *
+     C*****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *                                                                                       TDA035
+      ** Entry Parameters                                                                     TDA035
+      **   (Web user, Display Sign on Screen, Display Error message)                          TDA035
+      *                                                                                       TDA035
+     C           *ENTRY    PLIST                                                              TDA035
+     C                     PARM           P#WEBU  1                                           TDA035
+     C                     PARM           P#TLID  3                                           TDA035
+      *                                                                                       TDA035
+      ** Check whether user is a web browser user, if so overwrite                            TDA035
+      ** Call SFC000026                                                                       TDA035
+      *                                                                                       TDA035
+     C                     MOVEL'SFC0000' SFCPGM  9                                           TDA035
+     C                     MOVE '26'      SFCPGM                                              TDA035
+      *                                                                                       TDA035
+     C                     CALL SFCPGM                                                        TDA035
+     C                     PARM *BLANKS   USER   10                                           TDA035
+     C                     MOVELUSER      @USER                                               TDA035
+     C*
+     C**  Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+     C*
+     C**  Initialize parameters for SCC0240- build program message Q
+     C*
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF' @MSGF  10
+     C*
+     C**  Initialize screen message queue
+     C*
+     C                     MOVEL'*'       SPGMQ
+     C*
+     C**  Seton  message subfile end indicator
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C**  If U1 is on - seton 09 to condition display
+     C*
+     C           *INU1     IFEQ '1'
+     C                     SETON                     09
+     C                     END
+     C*
+     C                     MOVEL@JOB      SWID   10
+     C                     MOVEL@USER     SUSER
+     C                     MOVE *BLANKS   SMRDT   7
+     C*
+     C**  Initialize program work fields
+     C*
+     C                     EXSR IFLDS
+     C*
+     C**  Call subroutine to access ICD file for Midas Run Date.
+     C*
+     C                     EXSR ZA0150
+     C*
+     C                     MOVELBJMRDT    SMRDT
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            IFLDS  - Initialize screen/work fields             *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY  FIRST  - Initial Processing                        *
+     C*            VALF0  - Validate screen input                     *
+     C*                                                               *
+     C*****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+     C*
+     C                     MOVE *BLANKS   STLID
+     C                     MOVE *BLANKS   STLPC
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            ZA0150 - Get Midas Rundate & Setup Indicator       *
+     C*                                                               *
+     C*        - This subroutine chains to file LF/SDBANKL1           *
+     C*            to get Midas Rundate & setup-complete-flag         *
+     C*                                                               *
+     C*            Indicator 70 is set on if the chain fails          *
+     C*                                                               *
+     C*            if indicator 70 is on, details of the              *
+     C*            attempted access is placed in the LDA              *
+     C*                                                               *
+     C* CALLS      DBERR  - Database error handling                   *
+     C*                                                               *
+     C* CALLED BY  FIRST  - Initial Processing                        *
+     C*                                                               *
+     C*****************************************************************
+     C           ZA0150    BEGSR                           ** ZA0150 **
+     C*
+     C**  Access bank details for midas-run-date
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SNDMSG  - Sends parameters of SNDPGMMSG command to be executed*
+     C*                                                               *
+     C* CALLS      SCC0240- Send Message                              *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  @MSGID - Message id                                *
+     C*            @MSGF  - Message file                              *
+     C*                                                               *
+     C*****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+     C*
+     C                     CALL 'SCC0240'
+     C                     PARM           @MSGID
+     C                     PARM           @MSGF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            DBERR  - Database error handling                   *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+     C*                                                               *
+     C* CALLED BY  ZA0150 - Get Midas Rundate & Setup Indicator       *
+     C*            VALF0  - Validate screen input                     *
+     C*            UPDRTN - Update control routine                    *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+     C*
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,RTENCPC1
+     C** Passcode encription
+     C*
+     C*****************************************************************
+     O/EJECT
+     O*****************************************************************
+     O*
+     O**  Release the ttrnt record
+     OTTRNTM2FE                RELTT
+     O*                                                                                     MD047742
+     O**  Release the ttrnt record                                                          MD047742
+     OMUSERDDFE                MUSERO                                                       MD047742
+     O                         TLID                                                         MD047742
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Tables for passcode encription
+**  alphanumeric table
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789
+**  encription code table
+SDKJFIENVQPWOCMUXZ293847501LRBAGYHT6ZSDKJ
+FIENVQPWOCMUXZ293847501LRBAGYHT6ZSDKJFIEN
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

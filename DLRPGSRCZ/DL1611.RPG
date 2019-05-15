@@ -1,0 +1,561 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Floating rate CDs Expected Extrct')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL1611 - Floating Rate CD Issued Rate Changes Expected       *
+      *           Extract program                                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL033  *CREATE    Date 10Feb05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL033 - Floating rate CDs issued                            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *       U7      DATABASE ERROR                                  *
+      *       U8      GENERAL ERROR INDICATOR                         *
+      *                                                               *
+      *****************************************************************
+      *
+     FDEALSDC IF  E                    DISK
+     FDLDGXD  O   E           K        DISK
+     FDLDGXZ  UF  E                    DISK                      A
+     FDL1611AUO   E                    PRINTER
+     F/SPACE 3
+      *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+     E                    FXTERM  5   5  2
+     E/COPY ZSRSRC,ZHOLE
+      *
+      *****************************************************************
+      *
+     IDBERR       DS                            256
+      *
+      **   Local data area to hold database error information
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank details accessed via access program
+      *
+     ISDBSRT    E DSSDBSRTPD
+      *
+      ** Base Rate code details accessed via access program
+      *
+     ISDMMOD    E DSSDMMODPD
+      *
+      ** Module details accessed via access program
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      ** Externally described DS for SAR Details
+      *
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+      *
+      ** Dummy data structures used by access programs
+      ** (DSSDY only used if file record over 150 chars. long)
+      *
+     I/COPY ZSRSRC,ZHOLI
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      ** Todays date etc.
+      *
+      *****************************************************************
+      *                                                               *
+      *    INDEX TO SUBROUTINES                                       *
+      *                                                               *
+      *    1.   P06 - RECORDS EXTRACTED                               *
+      *    2.   GLZADD                                                *
+      *    3.   GLZSUM                                                *
+      *    6.   P10 - 'CF' DEAL TYPE                                  *
+      *    7.   ZFWDT                                                 *
+      *    8.   *PSSR - DATABASE ERROR HANDLING                       *
+      *    9.   *INZSR- INITIAL TIME ROUTINE                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVE 'N'       WTYFL   1
+      *
+     C                     READ DEALSDC                  LR
+     C           *INLR     DOWEQ*OFF
+     C                     EXSR SRTYPC
+     C           DTYP      CASEQ'CF'      P10
+     C           WTYFL     CASEQ'Y'       P10
+     C                     END
+     C                     READ DEALSDC                  LR
+     C                     ENDDO
+      *
+      **  When all the DEALSDC records have been read, write the hash
+      **  totals of the principal amounts to the trailer record and
+      **  produce a control report.
+      *
+     C                     MOVE 'T'       RECI
+     C                     MOVE ZZTOTI    HSTP1
+     C                     MOVE ZZTOTD    HSTP2
+      *
+     C           *IN77     IFEQ *ON
+     C                     WRITEDLDGXZF
+     C                     ELSE
+     C                     UPDATDLDGXZF
+     C                     ENDIF
+      *
+     C                     WRITECTLRPT
+      *
+     C           *INU7     IFEQ *ON
+     C           *INU8     ANDEQ*ON
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** SRTYPC - Check if deal type is Fix Term or Call Notice
+      *****************************************************************
+      *
+     C           SRTYPC    BEGSR
+      *
+     C                     MOVE 'N'       WTYFL
+     C           DTYP      LOKUPFXTERM                   69
+      *
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       WTYFL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * P10 - Process CF deal type records
+      *****************************************************************
+     C           P10       BEGSR
+      *
+     C                     MOVE *ON       *IN40
+      *
+     C           BRTT      IFGT 0
+      *
+     C           XKINFD    IFGT BJRDNB
+     C           XKINFD    ANDLEZDYNBR
+      *
+     C                     MOVE XKINFD    XINFD
+     C                     MOVE CCY       XCUCY
+     C                     MOVE BRTT      XBRTT
+     C                     MOVE XKRCDT    XNICD
+     C                     MOVE PCPL      XPAMT
+     C                     Z-ADDXKINFD    XSTRT  117
+      *
+      ** interest rate
+      *
+     C           BJRDNB    IFGE XKINFD
+     C           WURDNB    ANDLTXKRCDT
+     C           XKBSRF    ADD  RTSP      XEINR
+     C           XEINR     IFLT *ZERO
+     C                     Z-ADD*ZERO     XEINR
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADDINTR      XEINR
+     C                     ENDIF
+      *
+     C                     EXSR P06
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * P06 - To process all deal type records, set the rate
+      *       indicator and rate type values and write record
+      *       to extract file.
+      *****************************************************************
+     C           P06       BEGSR                                       *
+      *
+     C           XBRTT     IFGT 0
+     C                     MOVE 'V'       FVRI
+      *
+      **  if it is not a floating rate, set the indicator to 'FIXED'
+      *
+     C                     ELSE
+     C                     MOVE 'F'       FVRI
+     C                     END
+      *
+      ** If rate on value date has not been fixed yet,
+      ** rate fixing is for value date.
+      *
+     C           XKBSVF    IFEQ *BLANK
+     C                     Z-ADDVDAT      XNICD
+     C                     ENDIF
+      *
+      **  use subroutine GLZADD to produce hash totals
+      *
+     C           XPAMT     DIV  1000      ZZAMT
+     C                     EXSR GLZADD
+      *
+      ** Move Base Rate type into a 2A field and then call
+      ** access program to get base rate shortname
+      *
+     C                     MOVE XBRTT     @BRTT   2
+     C                     CALL 'AOBSRTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM XCUCY     @CUCY   3
+     C                     PARM           @BRTT
+     C           SDBSRT    PARM SDBSRT    DSFDY
+      *
+      ** If error occurs in access program move currency/base rate
+      ** fields into a work field to set up DBKEY correctly in
+      ** audit report and LDA
+      *
+     C           @RTCD     IFNE *BLANKS
+      *
+     C                     MOVELXCUCY     WRK5    5
+     C                     MOVE @BRTT     WRK5
+     C                     Z-ADD0         BRTE
+     C                     MOVE *BLANKS   BRTN
+      *
+      ** Call DB error routine
+      *
+     C                     MOVE '04'      DBASE
+     C                     MOVE 'SDBSRTPD'DBFILE
+     C                     MOVE WRK5      DBKEY
+     C                     EXSR *PSSR
+      *
+      ** else move Base Rate Shortname and Type into PF/DLDGXD fields
+      *
+     C                     ELSE
+     C                     MOVELBABSRN    BRTN
+     C                     MOVE BACBSR    BRTE
+     C                     END
+      *
+      **  if 'FIXED/VARIABLE rate indicator' calculated above is
+      **  not equal to 'F', set the 'FIXED RATE' equal to zero.
+      *
+     C           FVRI      IFNE 'F'
+     C                     MOVE *ZEROS    XEINR
+     C                     END
+      *
+      **  if 'FIXED/VARIABLE rate indicator' calculated above is
+      **  not equal to 'V', set the 'VARIABLE RATE TYPE' to zero.
+      *
+     C           FVRI      IFNE 'V'
+     C                     MOVE *ZEROS    YBRTT
+     C                     END
+      *
+      **  write a record to the extract file
+      *
+     C                     MOVE 'D'       RECI
+     C                     WRITEDLDGXDF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * GLZADD - To Split a 15,3 field into a 15,0 'integer'
+      *          field and a 3,0 'decimal'field.
+      *****************************************************************
+     C           GLZADD    BEGSR
+      *
+     C           ZZAMT     CABEQ0         ZZAEND
+      *
+      ** split ZZAMT into integer and decimal fields
+      *
+     C                     Z-ADDZZAMT     ZZAMTI 150
+     C                     MOVE ZZAMT     ZZAMTD  30
+      *
+      ** both ZZAMTI and ZZAMTD contain a 'sign' zone now
+      *
+     C                     EXSR GLZSUM
+      *
+     C           ZZAEND    ENDSR
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      * GLZSUM - To add a 15,0 'integer' field and a 3,0
+      *          'decimal' field to the hash total fields
+      *****************************************************************
+     C           GLZSUM    BEGSR
+      *
+     C                     Z-ADDZZTOTI    ZZTOTI 150
+     C                     Z-ADDZZTOTD    ZZTOTD  30
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+      *
+      ** determine sign of ZZAMTI & D, 92 if neg.
+      *
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND
+      *
+      ** determine sign of ZZTOTI & D, 91 if neg.
+      *
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+      *
+      ** if ZZTOTAL is zero, return ZZAMOUNT.
+      *
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND
+      *
+      ** if signs differ, bypass overflow checks.
+      *
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+      *
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93
+     C  N93      ZZWK2     COMP -999                   93
+      *
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150
+     C      93 92ZZAMTI    SUB  1         ZZWK3
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+      *
+      ** if the modulus of ZZWK3 is LT MOD. ZZTOTI then O/F has occured
+      *
+     C  N92      ZZWK3     COMP ZZTOTI                 99
+     C   92      ZZWK3     COMP ZZTOTI               99
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+      *
+      ** if O/F ZEROIZE ZZAMT, ind '99' set and ZZTOT fields left
+      ** intact.
+      *
+     C   99                Z-ADD0         ZZAMT  153
+     C                     GOTO ZZSEND
+      *
+      ** the 'signs' are different
+      *
+     C           ZZOFPS    TAG
+      *
+      ** if ZZAMT was negative, make it pos. to comp with ZZTOT
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+      *
+      ** if ZZTOT was negative, make it pos. to comp with ZZAMT.
+      *
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** both ZZAMT and ZZTOT are now positive.
+      *
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+      *
+      ** if ZZTOT eq ZZAMT return zero.
+      *
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+      *
+      ** if ZZTOT gt ZZAMT.
+      *
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+      *
+      ** if ZZAMT gt ZZTOT.
+      *
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+      *
+      ** reverse sign of ZZTOT if larger I/P fields were negative
+      *
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** restore sign of ZZAMTI & ZZAMTD if it was reversed.
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG
+      *
+      ** if ZZTOTD is zero and ZZTOTI is neg. setup ZZNEGD.
+      *
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+     C                     ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZFWDT
+     C/COPY ZSRSRC,ZACCH
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR - To exit program upon database error
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'DL1611'  DBPGM
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *INZSR - INITIAL PROCESSING
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+      *
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      BJMRDT
+     C                     MOVE RDNB      WURDNB  50
+      *
+      ** Initialize DBKEY to blanks in case db error occurs
+      *
+     C                     MOVE *BLANKS   DBKEY
+      *
+      ** Call Access prog. for Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle database error
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '01'      DBASE
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     EXSR *PSSR
+     C                     MOVE *BLANKS   DTYP
+     C                     END
+      *
+      ** Check system date format, DDMMYY or MMDDYY
+      ** *IN98 on if MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** Call Access prog. for Module Details provided no error
+      ** so far (otherwise LDA will get overwritten if another
+      ** error occurs)
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      ** Handle database error
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '02'      DBASE
+     C                     MOVE 'SDMMODPD'DBFILE
+     C                     EXSR *PSSR
+     C                     MOVE *BLANKS   DTYP
+     C                     END
+     C                     END
+      *
+      ** Determine if switchable feature S98052 (30 reporting
+      ** days forward for FRA/IRS Expected Rate Changes)
+      ** is switched on.
+      *
+     C                     MOVE *BLANK    S98052  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'S98052'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       S98052
+     C                     ELSE
+     C           @RTCD     IFNE '*NRF   '
+     C                     MOVE '03'      DBASE
+     C                     MOVEL'S98052'  DBKEY
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     EXSR *PSSR
+     C                     MOVE *BLANKS   DTYP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Calculate the interest fix date control day number
+      ** (ZDYNBR - output by SR/ZFWDT).
+      *
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     MOVE BJLCCY    ZCCY
+     C                     MOVE BJSLCD    ZLOC
+      *
+     C           S98052    IFEQ 'Y'
+     C                     Z-ADD30        ZNRDYS
+     C                     ELSE
+     C                     Z-ADD5         ZNRDYS
+     C                     ENDIF
+      *
+     C                     EXSR ZFWDT
+      *
+     C                     READ DLDGXZ                   77
+      *
+     C           *IN77     IFEQ '0'
+     C                     Z-ADDHSTP1     ZZTOTI
+     C                     Z-ADDHSTP2     ZZTOTD
+     C                     END
+      *
+     C                     ENDSR
+**  CPY@
+(c) Finastra International Limited 2005
+**  FXTERM
+ITIPTDTICI

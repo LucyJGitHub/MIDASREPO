@@ -1,0 +1,612 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Input cycle revaluation I')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Futures and Options Module                         *
+      *                                                               *
+      *   FF0200  -  INPUT CYCLE REVALUATION I                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR746662           Date 03May11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247517             Date 09May07               *
+      *                 247296             Date 25Apr07               *
+      *                 CPK027             Date 16Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241147A            Date 07Nov06               *
+      *                 241147             Date 26Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 06May06               *
+      *                 215528             Date 21Mar03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 126117             Date 20Apr00               *
+      *                 140017             Date 20Apr00               *
+     F*                 140455             Date 20Apr00               *
+     F*                 136056             Date 13Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CFF004             Date 13SEP96               *
+     F*                 S71062             Date 19DEC95                  *
+     F*                 S01408             DATE 09JAN96                  *
+     F*                 S01411             DATE 05JUL93                  *
+     F*                 E30419             DATE 02MAR93               *
+     F*                 E30416             DATE 02MAR93               *
+     F*                 S01393             DATE 30OCT92               *
+     F*                 E44985             DATE 25SEP92               *
+     F*                  FUJI-FF0011        DATE 21SEP92                 *
+     F*                  AUS022             DATE 06AUG92                 *
+     F*                  E20526             DATE 03MAY90                 *
+     F*                  S01117             DATE 15JAN90                 *
+     F*                                                                  *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR746662 - Discrepancy in premium amount in Currency OTC     *
+      *             screen and Projected Available Balance Enquiry    *
+      *             Applied fix 249171. (Recompile)                   *
+      *             (Child: Artf746663)                               *
+      *  247517 - Reversed fix 241147.                                *
+      *  247296 -  For Ccy OTC, as MNPF was defaulted to '0.00000001',*
+      *            premium must be divided by 100.                    *
+      *  CPK027 - Errors in compiling MP1_3_TTTS - recompile over     *
+      *           changed FFTVCLZ2.                                   *
+      *  241147A - Recompile.                                         *
+      *  241147 - Recompile.                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  215528 - System is associating a wrong premium amount.       *
+      *           Recompiled only.                                    *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed FFYTOPZ1.                    *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*  126117 - Recompiled due to changes to FFYTOPZ1.              *
+     F*  140017 - Recompiled due to changes to FFPMCLZ1.              *
+     F*  140455 - Recompiled due to changes to FFPMCLZ1               *
+     F*  136056   Calculate Australian option premiums correctly      *
+     F*           Recompiled due to changes in FFYTOPZ1               *
+     F*  CFF004 - Increase in size of Price Fields                       *
+     F*  S71062 - FF/PM Interface (Just Recompiled)                      *
+     F*  S01408 - Addition of core hooks FF0200FFP1
+     F*                                  FF0200IIP1
+     F*                                  FF0200CCP1
+     F*                                  FF0200CCP2
+     F*  S01411 - Recompiled as field 'ORIGINAL ENTRY DATE' added to     *
+     F*           PF/TRANSD.                                             *
+     F*  E30419 - Recompiled due to amendments on subroutine FFPLCL   *
+     F*           due to rounding errors and incorrect sign of        *
+     F*           profit/loss.                                        *
+     F*  E30416 - Recompiled due to amendments on subroutines FFPLCL  *
+     F*           and FFYTOP                                          *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F*   E44985  -  ZYIELD requires 3 new parameters. Recompile only    *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*              Types 7 and 8.                                      *
+     F*   E20526  -  RECOMPILED OVER CHANGED FILE PRICS                  *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,FF0200FFP1                                           S01408
+     F*                                                                   S01408
+     FWUNRLK  UF  E           K        DISK         KCOMIT       A
+     FWUNRLC  UF  E           K        DISK         KCOMIT       A
+     FINTYP   IF  E           K        DISK
+     FPRICS   IF  E           K        DISK
+     FTRANS6  IF  E           K        DISK
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*      01         Read fail for LF/TRANS6
+     F*      02         Chain fail for LF/INTYP
+     F*      03         Chain fail for LF/PRICS
+     F*      04         Chain fail for LF/WUNRLC
+     F*      05         Chain fail for LF/WUNRLK
+     F*
+     F*     80-89       Reserved for Standard FF Subroutines
+     F*
+     F*     90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*     U7+U8       Database Errors
+     F*
+     F*
+     E                    CPY@    1   1 80
+     I/EJECT
+     IINTYPDF                                                             AUS022
+     I*                                                                   AUS022
+     I**   Selected Instrument Type details                               AUS022
+     I*                                                                   AUS022
+     I              CTAM                            FFCTAM                AUS022
+     I              CNTT                            FFCNTT                AUS022
+     I**  Set up key for LF/TRANS6
+     I*
+     ITRAKY       DS
+     I                                        1   5 ISTT
+     I                                        6   70YRNO
+     I                                        8   90MTHN
+     I                                       10  10 PCAL
+     I***********                         P  11  167STRP                  CFF004
+     I                                    P  11  188STRP                  CFF004
+     I/COPY ZSRSRC,FFSRDSZ1
+     I/COPY ZSRSRC,ZYLDZ1                                                 AUS022
+     I*
+     I**   Program Status data structure
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+     ILDA         DS                            256
+     I*
+     I**   Local Data Area for Database Error Details
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FF0200IIP1                                           S01408
+     I*                                                                   S01408
+     C/EJECT
+     C*
+     C**  INITIAL PROCESSING
+     C*
+     C*
+     C**  Set up key for LF/INTYP
+     C*
+     C           TRAKY1    KLIST
+     C                     KFLD           ISTT
+     C*
+     C**  Set up key for LF/PRICS
+     C*
+     C           KTRAKY    KLIST
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+     C**  Set up key for LF/WUNRLC
+     C*
+     C           WLCKY     KLIST
+     C***********          KFLD           BRCD                            S01117
+     C                     KFLD           BRCA                            S01117
+     C                     KFLD           CBCD
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+     C**  Set up key for LF/WUNRLK
+     C*
+     C           WLKKY     KLIST
+     C***********          KFLD           BRCD                            S01117
+     C                     KFLD           BRCA                            S01117
+     C                     KFLD           BOKC
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+     C**  Set up fields to store data from previous record read
+     C*
+     C           *LIKE     DEFN TRAKY     STRAKY
+     C           *LIKE     DEFN ISTT      STRAK1
+     C*
+     C**   Reset LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C***********          MOVE *BLANKS   DBLOT                           S01117
+     C                     MOVE *BLANKS   DBFILE                          S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     MOVE 'FF0200  'DBPGM
+     C                     OUT  LDA
+     C*
+     C**  MAIN PROCESSING
+     C*
+     C                     READ TRANS6                   01
+     C*
+     C**  PROCESS UNTIL THERE IS NO MORE TRANS6  RECORD
+     C*
+     C           *IN01     DOWEQ'0'
+     C*
+     C**  STORE NEW INSTRUMENT TYPE
+     C*
+     C                     MOVE ISTT      STRAK1
+     C*
+     C**  ACCESS INTYP IF THERE IS A CHANGE IN INSTRUMENT TYPE
+     C*
+     C           TRAKY1    CHAININTYP                02
+      ** DB ERROR
+     C           RECI      IFNE 'D'
+     C           *IN02     OREQ '1'
+     C           *LOCK     IN   LDA
+     C***********          MOVEL'01'      DBASE            ***************S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     MOVEL'INTYP'   DBFILE           * DB ERROR 01 *
+     C                     MOVELISTT      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C**  PROCESS UNTIL THERE IS NO MORE TRANS6  RECORD OR INSTRUMENT TYPE
+     C**  CHANGES
+     C*
+     C           *IN01     DOWEQ'0'
+     C           ISTT      ANDEQSTRAK1
+     C*
+     C**  STORE NEW KEY
+     C*
+     C                     MOVE TRAKY     STRAKY
+     C*
+     C**  ACCESS PRICS IF THERE IS A CHANGE IN TRANS6  KEY, TRAKY
+     C*
+     C           KTRAKY    CHAINPRICS                03
+     C*
+     C**  PROCESS UNTIL THERE IS NO MORE TRANS6  RECORD OR INSTRUMENT TYPE
+     C**  CHANGES
+     C*
+     C           *IN01     DOWEQ'0'
+     C           TRAKY     ANDEQSTRAKY
+     C*
+     C           *IN03     IFEQ '1'
+     C**  SET BROKER AND CUST/BOOK UNREALISED PL TO 0
+     C******               Z-ADD0         BUPAL  130                      AUS022
+     C******               Z-ADD0         CUPAL  130                      AUS022
+     C                     Z-ADD0         BUPAL  152                      AUS022
+     C                     Z-ADD0         CUPAL  152                      AUS022
+     C*
+     C                     ELSE
+     C*
+     C**  CALL FFPLCL TO CALCULATE THE UNREALIZED PL
+     C*
+     C                     Z-ADDMNPF      FFMNPF
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDTKVL      FFTKVL
+     C*********************Z-ADDNEWP      FFPRCX                          AUS022
+     C*********************Z-ADDCOPR      FFPRCY                          AUS022
+     C***********          Z-ADDNEWP      FFPRCX 117                AUS022CFF004
+     C***********          Z-ADDCOPR      FFPRCY 117                AUS022CFF004
+     C           *LIKE     DEFN NEWP      FFPRCX                          CFF004
+     C           *LIKE     DEFN COPR      FFPRCY                          CFF004
+     C                     Z-ADDNEWP      FFPRCX                          CFF004
+     C                     Z-ADDCOPR      FFPRCY                          CFF004
+     C                     Z-ADDSTRP      FFSTRP                          136056
+     C************LIKE     DEFN TKVL      FFTKVL                   AUS022 136056
+     C************LIKE     DEFN YIELDX    FFYLD                    AUS022 136056
+     C*
+     C** CALCULATE BROKER UNREALIZED PL (IN UNITS OF TICKS DENOMINATOR)
+     C*
+      ** IF A BROKER IS INVOLVED AND THE INSTRUMENT
+      ** IS AN OPTION USE CUSTOMER/BOOK CONTRACTS
+     C*
+     C********** BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C           ISPT      ANDGT3
+     C           ISPT      ANDNE7                                         AUS022
+     C                     Z-ADDNOCO      NOBO
+     C                     END
+     C*
+     C           NOBO      IFEQ *ZERO
+     C                     Z-ADD*ZERO     BUPAL
+     C                     ELSE
+     C                     Z-ADDNOBO      FFNOC
+     C***********          EXSR FFPLCL                                    136056
+     C                     EXSR FFUNPL                                    136056
+      **                                                                                      247296
+      **   for processing type 5 (CCY OTC), divide net transaction value by 100               247296
+     C           ISPT      IFEQ 5                                                             247296
+     C           FFNTVL    DIV  100       FFNTVL                                              247296
+     C                     ENDIF                                                              247296
+      *                                                                                       247296
+     C*   FOR INSTRUMENT TYPE 1-6, EXPRESSED IN UNIT OF TICKS DENOMINATOR AUS022
+     C*   FOR INSTRUMENT TYPE 7,8, EXPRESSED IN CURRENCY                  AUS022
+     C           ISPT      IFLE 6                                         AUS022
+     C                     Z-ADDFFNTVL    BUPAL
+     C                     ELSE                                   ISPT=7,8AUS022
+     C                     Z-ADDFFPOL     BUPAL                           AUS022
+     C                     END                                    OF IFLE6AUS022
+     C                     END
+     C*
+     C**  CALCULATE CUSTOMER/BOOK UNREALIZED PL (IN UNITS OF TICKS DENOMINATOR)
+     C*
+     C           NOCO      IFEQ *ZERO
+     C                     Z-ADD*ZERO     CUPAL
+     C                     ELSE
+     C                     Z-ADDNOCO      FFNOC
+     C***********          EXSR FFPLCL                                    136056
+     C                     EXSR FFUNPL                                    136056
+      **                                                                                      247296
+      **   for processing type 5 (CCY OTC), divide net transaction value by 100               247296
+     C           ISPT      IFEQ 5                                                             247296
+     C           FFNTVL    DIV  100       FFNTVL                                              247296
+     C                     ENDIF                                                              247296
+      *                                                                                       247296
+     C*   FOR INSTRUMENT TYPE 1-6, EXPRESSED IN UNIT OF TICKS DENOMINATOR AUS022
+     C*   FOR INSTRUMENT TYPE 7,8, EXPRESSED IN CURRENCY                  AUS022
+     C           ISPT      IFLE 6                                         AUS022
+     C                     Z-ADDFFNTVL    CUPAL
+     C                     ELSE                                   ISPT=7,8AUS022
+     C                     Z-ADDFFPOL     CUPAL                           AUS022
+     C                     END                                    OF IFLE6AUS022
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Output the unrealized profit/loss
+     C*
+     C                     EXSR OUTPUT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0200CCP1                                           S01408
+     C*                                                                   S01408
+     C*
+     C                     COMIT
+     C*
+     C* READ NEXT TRANS6  RECORD
+     C                     READ TRANS6                   01
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*                   INDEX TO SUBROUTINES                       *
+     C*                                                              *
+     C*        1. FFPLCL - CALCULATES PROFIT OR LOSS DUE TO A PRICE  *
+     C*                    DIFFERENCE BETWEEN PRICE X & PRICE Y FOR  *
+     C*                    A GIVEN NUMBER OF CONTRACTS               *
+     C*        2. FFTVCL - CALCULATES TRANSACTION VALUE FOR A GIVEN  *
+     C*                    NUMBER OF CONTRACTS AT A GIVEN PRICE IN   *
+     C*                    UNITS OF THE APPROPRIATE TICKS DENOMINATOR*
+     C*                    OR MINIMUM PRICE FLUCTUATION              *
+     C*        3. OUTPUT- OUTPUT UNREALIZED PROFIT/LOSS              *
+     C*        4. *PSSR  - HANDLES ABRNORMAL ERROR CONDITIONS        *    S01117
+     C*                                                              *
+     C****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,FFPLCLZ1
+     C/EJECT                                                              136056
+     C/COPY ZSRSRC,FFPMCLZ1                                               136056
+     C/EJECT                                                              136056
+     C/COPY ZSRSRC,FFUNPLZ1                                               136056
+     C/EJECT                                                              136056
+     C/COPY ZSRSRC,FFTVCLZ2
+     C/EJECT                                                              AUS022
+     C/COPY ZSRSRC,FFYTOPZ1                                               AUS022
+     C/EJECT                                                              AUS022
+     C****************************************************************
+     C*                                                              *
+     C*   SR:OUTPUT   - OUTPUTS UNREALIZED PROFIT/LOSS               *
+     C*   CALLED FROM - MAIN PROCESSING                              *
+     C*   CALLS       -                                              *
+     C*   INPUTS      -                                              *
+     C*   OUTPUTS     -                                              *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           OUTPUT    BEGSR
+     C*
+     C**  If broker code is non-zero access LF/WUNRLC
+     C*
+     C*********  BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C*
+     C**  Set up customer/broker code field for LF/WUNRLC
+     C*
+     C*********            Z-ADDBOCO      CBCD                                                CSD027
+     C                     MOVE BOCO      CBCD                                                CSD027
+     C           WLCKY     CHAINWUNRLCDF             04
+     C*
+     C           *IN04     IFEQ '1'
+     C                     Z-ADD0         ULPL
+     C                     END
+     C*
+     C**  If the trade is a purchase subtract broker-unrealized p/l from total
+     C*
+     C           TRTY      IFEQ 'P'
+     C           ULPL      SUB  BUPAL     ULPL
+     C*
+     C                     ELSE
+     C*
+     C**  Trade is a sale so add to total
+     c*
+     C           ULPL      ADD  BUPAL     ULPL
+     C                     END
+     C*
+     C**  If record already exists update it with new total
+     C*
+     C           *IN04     IFEQ '0'
+     C                     UPDATWUNRLCDF
+     C*
+     C                     ELSE
+     C*
+     C**  Write a new record to LF/WUNRLC
+     C*
+     C                     WRITEWUNRLCDF
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  If customer code is non-zero access record on LF/WUNRLC
+     C*
+     C*********  CUSC      IFNE 0                                                             CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C*
+     C**  Set up customer/broker code field for LF/WUNRLC
+     C*
+     C*********            Z-ADDCUSC      CBCD                                                CSD027
+     C                     MOVE CUSC      CBCD                                                CSD027
+     C           WLCKY     CHAINWUNRLCDF             04
+     C*
+     C           *IN04     IFEQ '1'
+     C                     Z-ADD0         ULPL
+     C                     END
+     C*
+     C**  If broker code is non-zero
+     C*
+     C********   BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C*
+     C**  If trade is a purchase add CUST/BOOK UNREALISED PL to total
+     C*
+     C           TRTY      IFEQ 'P'
+     C           ULPL      ADD  CUPAL     ULPL
+     C*
+     C                     ELSE
+     C*
+     C**  Trade is a sale subtract from total
+     C*
+     C           ULPL      SUB  CUPAL     ULPL
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C**  No broker is involved
+     C*
+     C**  Trade is a purchase ; subtract from total
+     C*
+     C           TRTY      IFEQ 'P'
+     C           ULPL      SUB  CUPAL     ULPL
+     C*
+     C                     ELSE
+     C*
+     C**  Trade is a sale ; add to total
+     C*
+     C           ULPL      ADD  CUPAL     ULPL
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  If record already exists update it with new total
+     C*
+     C           *IN04     IFEQ '0'
+     C                     UPDATWUNRLCDF
+     C*
+     C                     ELSE
+     C*
+     C**  Write a new record to LF/WUNRLC
+     C*
+     C                     WRITEWUNRLCDF
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  If book code is non-zero and either of broker or customer
+     C**  codes are non-zero(NB. but not both) access LF/WUNRLK
+     C*
+     C           BOKC      IFNE *BLANKS
+     C*
+     C********   BOCO      IFEQ 0                                                             CSD027
+     C********   CUSC      ANDNE0                                                             CSD027
+     C********   BOCO      ORNE 0                                                             CSD027
+     C********   CUSC      ANDEQ0                                                             CSD027
+     C           BOCO      IFEQ *BLANKS                                                       CSD027
+     C           CUSC      ANDNE*BLANKS                                                       CSD027
+     C           BOCO      ORNE *BLANKS                                                       CSD027
+     C           CUSC      ANDEQ*BLANKS                                                       CSD027
+     C*
+     C           WLKKY     CHAINWUNRLKDF             05
+     C*
+     C           *IN05     IFEQ '1'
+     C                     Z-ADD0         ULPL
+     C                     END
+     C*
+     C**  If trade is a purchase ; add CUST/BOOK UNREALIZED PL to total
+     C*
+     C           TRTY      IFEQ 'P'
+     C           ULPL      ADD  CUPAL     ULPL
+     C*
+     C                     ELSE
+     C*
+     C**  Trade is a sale ; subtract from total
+     C*
+     C           ULPL      SUB  CUPAL     ULPL
+     C                     END
+     C*
+     C**  If record already exists update it with new total
+     C*
+     C           *IN05     IFEQ '0'
+     C                     UPDATWUNRLKDF
+     C*
+     C                     ELSE
+     C*
+     C**  Write a new record to LF/WUNRLK
+     C*
+     C                     WRITEWUNRLKDF
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0200CCP2                                           S01408
+     C*                                                                   S01408
+     C*
+     C*****************************************************************
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+**  CPY@
+(c) Finastra International Limited 2001

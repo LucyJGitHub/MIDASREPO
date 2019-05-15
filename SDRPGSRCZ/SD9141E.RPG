@@ -1,0 +1,1283 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Funds transfer ICD enquiry')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9141E - Funds Transfer ICD Enquiry.                        *
+      *                                                               *
+      *  Function:  This program allows a user to enquire on the      *
+      *             Funds Transfer module ICD settings.               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CFT017             Date 12Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 05Jun00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      *                 CFT006             Date 06Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 093954             Date 20FEB96               *
+      *                 S01459             Date 20FEB96               *
+      *                 S01433             Date 22OCT93               *
+      *                 S01339             Date 28MAY92               *
+      *                 LN0662             Date 24JAN91               *
+      *                 LN0649             Date 21AUG90               *
+      *                 LN0255             Date 15JUN90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFT017 - Multilateral Inter-bank Exchange Fee.               *
+      *  CFT009 - FT Straight Through Processing - Fees and Charges   *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CFT006 - Addition of RFT and CCT id to SDFTFRPD (recompile)  *
+      *  093954 - This program does not divide the file value of      *
+      *           Mature Held Period before displaying it.            *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  S01433 - Regenerate/recompile over changed SDCURRPD.         *
+      *  S01339 - Program run from MITEM.                             *
+      *  LN0662 - Regenerate due to change in SDCURRPD.               *
+      *  LN0255 - Standardise ICD headers and footers.                *
+      *  LN0649 - Addition of fields to Funds Transfer (Release 10).  *
+      *                                                               *
+      *****************************************************************
+     F*
+     F/COPY WNCPYSRC,SD9141EFPG
+     F*
+     FSD9141E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Funds transfer ICD enquiry
+      *
+     FSDFTFRL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Funds transfer ICD retrieval
+      *
+     FSDBANKL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Bank details ICD retrieval
+      *
+     FSDCURRL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Currency codes retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright     array
+     E*
+     E/COPY WNCPYSRC,SD9141EEPG
+     E*
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I****/COPY QWINDSRC,IKE1DTA                                          S01229
+     I/COPY QWINDSRC,SD9140GDTA                                           S01229
+     I*
+     I/COPY WNCPYSRC,SD9141EIPG
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     ISDGELR    E DSSDGELRPD                                                                  CFT017
+      **   Currency details from SDGELRPD                                                     CFT017
+      *                                                                                       CFT017
+     ISDCURR    E DSSDCURRPD                                                                  CFT017
+      ** External DS for Currency details                                                     CFT017
+      *                                                                                       CFT017
+     ISCSARD    E DSSCSARDPD                                              CFT009
+     I** SAR Details Accessed via access program                          CFT009
+     I*                                                                   CFT009
+     IDSFDY     E DSDSFDY                                                 CFT009
+     I** Data structure used by access programs                           CFT009
+     I*                                                                   CFT009
+     IDSSDY     E DSDSSDY                                                                     CFT017
+      ** Second DS for access programs, long data structure                                   CFT017
+      *                                                                                       CFT017
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Midas SD Funds transfer ICD retrieval
+      * I : RST Funds Transfer Data
+     I                                        1  10 P1FTD
+     IP2PARM      DS
+      * B :  Work Return code
+     I                                        1   5 P2WRTC
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0001
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Funds Tran
+     C           P2WRTC    PARM P2WRTC    WP0001  5        Work Return cod
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT                                                                                  CFT017
+      *****************************************************************                       CFT017
+      *                                                               *                       CFT017
+      * SRFMIF - Subroutine that formats MIF fields for screen output *                       CFT017
+      *                                                               *                       CFT017
+      * Called by: SR/BPERKY                                          *                       CFT017
+      *                                                               *                       CFT017
+      * Calls: None                                                   *                       CFT017
+      *                                                               *                       CFT017
+      *****************************************************************                       CFT017
+      *                                                                                       CFT017
+     CSR         SRFMIF    BEGSR                                                              CFT017
+      *                                                                                       CFT017
+     C                     MOVE WKEUND    WUZAND                                              CFT017
+      *                                                                                       CFT017
+      ** ZEDIT Screen Field - Standard Functions                                              CFT017
+      *                                                                                       CFT017
+     C                     CALL 'ZEDIT'                90                                     CFT017
+     C           WUZASF    PARM WUZASF    WQ0001                                              CFT017
+     C                     PARM WUZAND    WQ0002                                              CFT017
+      *                                                                                       CFT017
+     C           *IN90     IFEQ '1'                                                           CFT017
+      *                                                                                       CFT017
+      ** Call to program ended in error                                                       CFT017
+      *                                                                                       CFT017
+     C                     MOVEL'Y2U0032' W0RTN                                               CFT017
+     C                     MOVEL*BLANKS   W0CLPG                                              CFT017
+     C                     MOVEL'ZEDIT'   W0CLPG                                              CFT017
+      *                                                                                       CFT017
+      ** Send message '*Error occured on CALL...'                                             CFT017
+      *                                                                                       CFT017
+     C                     MOVEL'Y2U0032' ZAMSID                                              CFT017
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CFT017
+     C                     MOVELW0CLPG    ZAMSDA                                              CFT017
+     C                     EXSR ZASNMS                                                        CFT017
+      *                                                                                       CFT017
+     C                     ENDIF                                                              CFT017
+      *                                                                                       CFT017
+     CSR         UBEXIT    ENDSR                                                              CFT017
+      *****************************************************************                       CFT017
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1FTD     IFEQ *BLANK                     Funds Transfer
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           BTFTD            Funds Transfer
+      * Setup key
+     C                     MOVEL#1FTD     BTFTD            Funds Transfer
+     C           KRTV      CHAIN@BTREE4              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'Funds Transfer Details NF'
+     C                     MOVEL'USR0226' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141ESFF - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141ESFF
+     C*
+     C                     END                             *FI
+      * USER: Load detail screen from DBF record
+      * Start of Fix LN0649
+      * Get Base Currency - Bank Details  *
+     C                     EXSR SARVGN
+      * Get Base Curr Details 2 - Currency Codes  *
+     C                     EXSR SBRVGN
+     C                     Z-ADDWUNBDP    WUZAND           ZALIGN No Of De
+      * Move right AUDT into ZASF - Funds Transfer Details  *
+     C*                                                               *
+     C                     MOVE BTAUDT    WUZASF                      *
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0001 16        ZALIGN Screen F
+     C                     PARM WUZAND    WQ0002  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Move right value AUTF - Funds Transfer Details  *
+     C*                                                               *
+     C                     MOVE WUZASF    #DAUTF                      *
+      * End of Fix LN0649
+      *                                                                   CFT009
+      * Convert numeric value of Advice Notification Limit to alpha for   CFT009
+      * screen use.  No. of decimal places dictated by Base Ccy.          CFT009
+     C           CFT009    IFEQ 'Y'                                       CFT009
+     C                     MOVE ADNLIM    ZFIELD 16                       CFT009
+     C                     Z-ADDWUNBDP    ZADEC   10                      CFT009
+      *                                                                   CFT009
+     C                     CALL 'ZEDIT'                90                 CFT009
+     C                     PARM           ZFIELD                          CFT009
+     C                     PARM           ZADEC                           CFT009
+      *                                                                   CFT009
+      * Call to program ended in error                                    CFT009
+     C           *IN90     IFEQ '1'                                       CFT009
+     C                     MOVEL'Y2U0032' W0RTN                           CFT009
+     C                     MOVEL*BLANKS   W0CLPG                          CFT009
+     C                     MOVEL'ZEDIT'   W0CLPG                          CFT009
+     C                     MOVEL'Y2U0032' ZAMSID                          CFT009
+     C                     MOVEL'Y2USRMSG'ZAMSGF                          CFT009
+     C                     MOVELW0CLPG    ZAMSDA           Message data   CFT009
+     C                     EXSR ZASNMS                                    CFT009
+     C                     ELSE                                           CFT009
+      *                                                                   CFT009
+      * Else move ZEDIT field to screen                                   CFT009
+     C                     MOVE ZFIELD    #ADLIM                          CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                   CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                   CFT009
+     C           CFT017    IFEQ 'Y'                                                           CFT017
+      *                                                                                       CFT017
+      ** If CFT017 is installed, edit Multilateral Inter-bank fee filed                       CFT017
+      *                                                                                       CFT017
+     C                     MOVE BTMIFE    WUZASF                                              CFT017
+     C                     EXSR SRFMIF                                                        CFT017
+     C                     MOVE WUZASF    #MIBFE                                              CFT017
+      *                                                                                       CFT017
+      ** Then, edit MIF threshold field                                                       CFT017
+      *                                                                                       CFT017
+     C                     MOVE *BLANKS   WUZASF                                              CFT017
+     C                     MOVE BTMIFT    WUZASF                                              CFT017
+     C                     EXSR SRFMIF                                                        CFT017
+     C                     MOVE WUZASF    #MIBFT                                              CFT017
+      *                                                                                       CFT017
+     C                     ENDIF                                                              CFT017
+      * Start of change 093954.
+      * Initialisation for Matured Held Period
+     C                     EXSR UASUBR                     Initialisation
+      * End of change 093954.
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141ELDS - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141ELDS
+     C*
+     C                     END                             *FI
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141EVKS - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141EVKS
+     C*
+     C                     END                             *FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141EPKR - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141EPKR
+     C*
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P2WRTC           Work Return cod
+     C                     MOVEL'PREV'    P2WRTC           Work Return cod
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141ESFF - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141ESFF
+     C*
+     C                     END                             *FI
+      * USER: Validate detail screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * S01339 - Removed F8 processing
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * Start of SAR S01117
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * End of SAR S01117
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/COPY Member SD9141EVSW - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141EVSW
+     C*
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141EVDS - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141EVDS
+     C*
+     C                     END                             *FI
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141EPCA - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141EPCA
+     C*
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * S01339 - remove F8 (further records) processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141EPCK - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141EPCK
+     C*
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *                                                                   CFT009
+      * Non-display Fees and Charges fields if CFT009 is off              CFT009
+     C           CFT009    IFEQ 'Y'                                       CFT009
+     C                     MOVE *ON       *IN85                           CFT009
+     C                     ELSE                                           CFT009
+     C                     MOVE *OFF      *IN85                           CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                                       CFT017
+      ** Set indicator that displays/hides MIF fields                                         CFT017
+      *                                                                                       CFT017
+     C           CFT017    IFEQ 'Y'                                                           CFT017
+     C                     MOVE *ON       *IN83                                               CFT017
+     C                     ELSE                                                               CFT017
+     C                     MOVE *OFF      *IN83                                               CFT017
+     C                     ENDIF                                                              CFT017
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #1MAHP           Matured Held Pe
+     C                     Z-ADD*ZERO     #1AUDT           Audit Threshold
+     C                     MOVEL*BLANK    #1LVJN           Level Joiner
+     C                     MOVEL*BLANK    #1CHCY           Charges Currenc
+     C                     MOVEL*BLANK    #1MSCS           Message Creatio
+     C                     MOVEL*BLANK    #1AFTM           Autocreation of
+     C                     MOVEL*BLANK    #1IOSA           Inward/Outward
+     C                     Z-ADD*ZERO     #1OVCP           Overdue Cheque
+     C                     MOVEL*BLANK    #DMHPF           Matured Held Pe
+     C                     Z-ADD*ZERO     #1PCRD           Percent. Rate D
+     C                     MOVEL*BLANK    #DAUTF           Audit threshold
+     C           CFT009    IFEQ 'Y'                                       CFT009
+     C                     MOVEL*BLANK    #CHTCY                          CFT009
+     C                     MOVEL*BLANK    #FCHCY                          CFT009
+     C                     MOVEL*BLANK    #FCYSP                          CFT009
+     C                     MOVEL*BLANK    #ADLIM                          CFT009
+     C                     MOVEL*BLANK    #HEXAN                          CFT009
+     C                     MOVEL*BLANK    #INPCD                          CFT009
+     C                     MOVEL*BLANK    #OTPCD                          CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                                       CFT017
+      ** If CFT017 is on, clear fields                                                        CFT017
+      *                                                                                       CFT017
+     C           CFT017    IFEQ 'Y'                                                           CFT017
+     C                     MOVEL*BLANK    #MIBFE                                              CFT017
+     C                     MOVEL*BLANK    #MIBFT                                              CFT017
+     C                     ENDIF                                                              CFT017
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @BTREE4 fields to screen
+      *================================================================
+     C                     MOVELBTFTD     #1FTD            Funds Transfer
+     C                     Z-ADDBTLCD     #1LCD            Last Change Dat
+     C                     MOVELBTTYLC    #1TYLC           Type of Last Ch
+     C                     Z-ADDBTMAHP    #1MAHP           Matured Held Pe
+     C                     Z-ADDBTAUDT    #1AUDT           Audit Threshold
+     C                     MOVELBTLVJN    #1LVJN           Level Joiner
+     C                     MOVELBTCHCY    #1CHCY           Charges Currenc
+     C                     MOVELBTMSCS    #1MSCS           Message Creatio
+     C                     MOVELBTAFTM    #1AFTM           Autocreation of
+     C                     MOVELBTIOSA    #1IOSA           Inward/Outward
+     C                     Z-ADDBTOVCP    #1OVCP           Overdue Cheque
+     C                     Z-ADDBTPCRD    #1PCRD           Percent. Rate D
+     C           CFT009    IFEQ 'Y'                                       CFT009
+     C                     MOVELCHTRCY    #CHTCY                          CFT009
+     C                     MOVELFCHCCY    #FCHCY                          CFT009
+     C                     MOVELFXCCYI    #FCYSP                          CFT009
+     C                     MOVELHDEXAN    #HEXAN                          CFT009
+     C                     MOVELINTRCD    #INPCD                          CFT009
+     C                     MOVELOTTRCD    #OTPCD                          CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                                       CFT017
+      ** If CFT017 is on, move to screen fields                                               CFT017
+      *                                                                                       CFT017
+     C           CFT017    IFEQ 'Y'                                                           CFT017
+     C                     MOVELBTMIFE    #MIBFE                                              CFT017
+     C                     MOVELBTMIFT    #MIBFT                                              CFT017
+     C                     ENDIF                                                              CFT017
+      *                                                                                       CFT017
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1FTD     #1FTD            Funds Transfer
+      * USER: Load key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141ELKS - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141ELKS
+     C*
+     C                     END                             *FI
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get Base Currency - Bank Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BJBANK           Bank
+      * Move fields to key list
+     C                     MOVE *BLANK    BJBANK           Bank
+     C                     MOVEL'BANK'    BJBANK           Bank
+     C           KRSSA     CHAIN@BJREEF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0197' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDBANKPD'ZA0001           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SAEXIT                     *QUIT
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * PAR = DB1 By name
+     C                     MOVELBJCYCD    WUCYCD           Currency Code
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Get Base Curr Details 2 - Currency Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           A6CYCD           Currency Code
+      * Move fields to key list
+     C                     MOVELWUCYCD    A6CYCD           Currency Code
+     C           KRSSB     CHAIN@A6REA3              90    *
+      * Data record not found
+     C   90                MOVEL'USR0071' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * PAR = DB1 By name
+     C                     Z-ADDA6NBDP    WUNBDP           Number of Decim
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSC     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         UASUBR    BEGSR
+      *================================================================
+      * Initialisation for Matured Held Period
+      *================================================================
+     C           BTMAHP    DIV  31        #1MAHP    H      Matured Held Pe
+      * Move right MAHP into ZASF - Funds Transfer Details  *
+     C*                                                               *
+     C                     MOVE #1MAHP    WUZASF                      *
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0003 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0004  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * zalign Matured held perd - Funds Transfer Details  *
+     C*     ZALIGN MATURED HELD PERIOD                                *
+     C                     MOVE WUZASF    #DMHPF                      *
+      *================================================================
+     CSR         UAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9141EEPP - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141EEPP
+     C*
+     C                     END                             *FI
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'CMD01'   P2WRTC           Work Return cod
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      *                                                                   CFT009
+      * Find out if CFT009 is on                                          CFT009
+     C                     CALL 'AOSARDR0'                                CFT009
+     C                     PARM *BLANKS   @RTCD   7                       CFT009
+     C                     PARM '*VERIFY' @OPTN   7                       CFT009
+     C                     PARM 'CFT009'  @SARD   6                       CFT009
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT009
+      *                                                                   CFT009
+     C           @RTCD     IFEQ *BLANKS                                   CFT009
+     C                     MOVEL'Y'       CFT009  1                       CFT009
+     C                     ELSE                                           CFT009
+     C                     MOVEL'N'       CFT009                          CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                                       CFT017
+      ** Call access object to find out if switchable feature CFT017 is installed             CFT017
+      *                                                                                       CFT017
+     C                     CALL 'AOSARDR0'                                                    CFT017
+     C                     PARM *BLANKS   @RTCD                                               CFT017
+     C                     PARM '*VERIFY' @OPTN                                               CFT017
+     C                     PARM 'CFT017'  @SARD                                               CFT017
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT017
+      *                                                                                       CFT017
+     C           @RTCD     IFEQ *BLANKS                                                       CFT017
+     C                     MOVEL'Y'       CFT017  1                                           CFT017
+     C                     ELSE                                                               CFT017
+     C                     MOVEL'N'       CFT017                                              CFT017
+     C                     ENDIF                                                              CFT017
+      *                                                                                       CFT017
+     C**********           CALL 'AOGELRR0'                                             CFT017 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR'  @RTCD                                               CFT017
+     C                     PARM '*FIRST ' @OPTN                                               CFT017
+     C********** SDGELR    PARM SDGELR    DSFDY                                        CFT017 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                                       CFT017
+      ** If CFT017 is on, check for Euro Currency Name                                        CFT017
+      *                                                                                       CFT017
+     C           CFT017    IFEQ 'Y'                                                           CFT017
+     C           @RTCD     ANDEQ*BLANKS                                                       CFT017
+      *                                                                                       CFT017
+     C                     MOVE BKEURO    #EUROE                                              CFT017
+     C                     MOVE BKEURO    #EUROT                                              CFT017
+      *                                                                                       CFT017
+      ** Find our the number of decimal places for the Euro currency                          CFT017
+      *                                                                                       CFT017
+     C                     CALL 'AOCURRR0'                                                    CFT017
+     C                     PARM *BLANKS   @RTCD                                               CFT017
+     C                     PARM '*KEY   ' @OPTN                                               CFT017
+     C                     PARM BKEURO    @CCY    3                                           CFT017
+     C           SDCURR    PARM SDCURR    DSSDY                                               CFT017
+      *                                                                                       CFT017
+     C           @RTCD     IFEQ *BLANKS                                                       CFT017
+     C                     MOVELA6NBDP    WKEUND  10                                          CFT017
+     C                     ENDIF                                                              CFT017
+      *                                                                                       CFT017
+     C                     ENDIF                                                              CFT017
+      *                                                                                       CFT017
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Currency Code
+     C                     MOVEL*BLANK    WUCYCD  3
+      * Define work field Number of Decimal Places
+     C                     Z-ADD*ZERO     WUNBDP  10
+      * Define work field ZALIGN No Of Decimals
+     C                     Z-ADD*ZERO     WUZAND  10
+      * Define work field ZALIGN Screen Fun Field
+     C                     MOVEL*BLANK    WUZASF 16
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD9141E#
+     C                     OPEN SDFTFRL1
+     C                     OPEN SDBANKL1
+     C                     OPEN SDCURRL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD9141E Precompiler - Funds Transfer Details  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Copyright Statement 1988 - Standard Functions  * copyright
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SCRVGN
+      * Data Struct. for Funds Tr - Funds Transfer Details  *
+      * 00/COPY Member SD9141EFPG - Funds Transfer Details  * S01212
+      * 00/COPY Member SD9141EEPG - Funds Transfer Details  * S01212
+      * 00/COPY Member SD9141EIPG - Funds Transfer Details  * S01212
+      * 00/COPY Member SD9141ECPG - Funds Transfer Details  * S01212
+     C*
+     C/COPY WNCPYSRC,SD9141ECPG
+     C*
+      * 00/COPY Member SD9141EOPG - Funds Transfer Details  * S01212
+     C                     END                             *FI
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9141EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9141EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9141EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*
+     O/COPY WNCPYSRC,SD9141EOPG
+     O*
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

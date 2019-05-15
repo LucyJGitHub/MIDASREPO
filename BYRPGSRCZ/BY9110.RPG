@@ -1,0 +1,492 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Customer Details Validation')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY9110 - Customer Details Validation                         *
+      *                                                               *
+      *  Function:  This program retrieves and validates the customer *
+      *             details for the Bank of England Extract.  Details *
+      *             are validated as per customer details maintenance.*
+      *             If there are any errors, then a flag will be set  *
+      *             in the relevant position of the error flag, 1 for *
+      *             invalid and 0 for valid.                          *
+      *                                                               *
+      *  Called By: Bank of England Extract Programs                  *
+      *                                                               *
+      *  (c) Finastra International Limited 1997                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 263136             Date 17Dec09               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 LLN022             Date 24Jan05               *
+      *                 LLN021/017         Date 17Feb04               *
+      *                 LLN016             Date 15May00               *
+      *                 LLN012             Date 04May99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  263136 - BOE Extract ISO ctry code corrupted                 *
+      *  LLN022 - BOE Upgrade to MidasPlus.                           *
+      *  LLN021/017 Program should continue if record deleted         *
+      *  LLN016 - Upgrade BoE to DBAR3.                               *
+      *  LLN012 - Recompile only due to file changes                  *
+      *                                                               *
+      *****************************************************************
+      *
+      * File description for files defined
+     F***BYCNTYV1IF  E           K        DISK         KINFSR *PSSR                           LLN022
+     FBYINSTV0IF  E           K        DISK         KINFSR *PSSR
+     FBYINDRV0IF  E           K        DISK         KINFSR *PSSR
+     F*DCUSTY7IF**E******     K        DISK         KINFSR *PSSR                              LLN016
+     FBYCUSTY0IF  E           K        DISK         KINFSR *PSSR                              LLN016
+     FSDCRWCL1IF  E           K        DISK         KINFSR *PSSR
+      /EJECT
+      *
+      *  Array containing Copyright statement
+     E                    @CPY    1   1 80
+      *
+      /SPACE 3
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM DSPGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+      *
+      ** Customer details Data Structure from PF/SDCUSTPD
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Customer details Data Structure from PF/SDCUSTPD
+     IULCUSD      DS
+     I                                        1 200 ULFLD1
+     I                                      201 400 ULFLD2
+     I                                      401 600 ULFLD3
+      *
+      ** Customer details Data Structure from PF/SDCUSTX7
+     I*DCUS7****E*DSSDCUSTX7*************                                                     LLN016
+     ISDCUS7    E DSBYCUSTX0                                                                  LLN016
+      *
+      ** Data Structure for additional customer details
+     ISDCUSX      DS
+     I                                        1   2 ULLISO
+     I                                        3   4 ULRISO
+     I                                        5   80ULRWAM
+      *
+      ** Data Structure for ISO Country Code only
+     ISDCTRY    E DSSDCTRYPD
+      *
+      ** Data Structure for error indicators
+     I            DS
+     I                                        1   70ULERRS
+     I                                        1   10ULERR1
+     I                                        2   20ULERR2
+     I                                        3   30ULERR3
+     I                                        4   40ULERR4
+     I                                        5   50ULERR5
+     I                                        6   60ULERR6
+     I                                        7   70ULERR7
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LDETL - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *        SR/#LVALD - Perform Validation                         *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      *  Detail Processing
+     C                     EXSR #LDETL
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDETL    BEGSR                                       **
+      *
+      ** Clear Data Structures for customer details
+     C                     MOVE *BLANKS   SDCUST
+     C                     MOVE *BLANKS   SDCUS7
+     C                     MOVE *BLANKS   SDCUSX
+     C                     Z-ADD0         ULERRS
+      *
+      ** Get customer details using AOCUSTR0
+     C                     CALL 'AOCUSTR0'             90
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*KEY  '  P@OPTN  7
+     C                     PARM ULCUST    P@KEY  10
+     C                     PARM           P@KSTS  7
+     C                     PARM           SDCUST
+      *
+      ** Check Return Code
+     C***        P@RTCD    IFNE *BLANKS                                                       LLN021
+     C******     P@RTCD    IFEQ '*NRF   '                                                     LLN021
+     C******     BBDTDL    ANDNE0                                                             LLN021
+     C******     P@RTCD    OREQ '*ERROR '                                                     LLN021
+     C           P@RTCD    IFEQ '*ERROR '                                                     LLN021
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 02 *
+     C                     MOVEL'SDCUSTPD'DBFILE           ************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *
+      ***Obtain*BoE*details*from*LF/SDCUSTY7***                                               LLN016
+     C********** ULCUST    CHAINSDCUSTY7             90                                       LLN016
+      ** Obtain BoE details from LF/BYCUSTY0                                                  LLN016
+     C           ULCUST    CHAINBYCUSTY0             90                                       LLN016
+      *
+      ** Default values if record does not exist
+     C           *IN90     IFEQ *ON
+     C                     MOVE *BLANKS   LSIOF
+     C                     MOVE *BLANKS   LUPAR
+     C                     MOVE 'N'       LHASI
+     C                     MOVE 'N'       LELGF
+     C                     ENDIF
+      *
+      *
+      ** Get ISO code for country of location using AOCTRYR0
+     C                     MOVE BBCOLC    ULCNCD
+     C                     EXSR #LCTRY
+     C                     MOVE ULISOC    ULLISO
+      *
+      *
+      ** Get ISO code for country of citizenship using AOCTRYR0
+     C                     MOVE BBCNCZ    ULCNCD
+     C                     EXSR #LCTRY
+     C                     MOVE ULISOC    ULRISO
+      *
+      *
+      ** If customer is child
+     C           BBPCNB    IFNE *BLANKS
+     C           BBBSIN    ANDNE'P'
+     C           BBBSIN    ANDNE'W'
+      *
+      ** Save customer details
+     C                     MOVELSDCUST    ULCUSD
+      *
+      ** Get Parent Country of Citizenship as Country of Risk
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*KEY  '  P@OPTN  7
+     C                     PARM BBPCNB    P@KEY  10
+     C                     PARM           P@KSTS  7
+     C                     PARM *BLANK    SDCUST
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 04 *
+     C                     MOVEL'SDCUSTPD'DBFILE           ************
+     C                     Z-ADD4         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Get ISO code for country of citizenship as country of risk
+     C                     MOVE BBCNCZ    ULCNCD
+     C                     EXSR #LCTRY
+     C                     MOVE ULISOC    ULRISO
+      *
+      ** Restore customer details
+     C                     MOVELULCUSD    SDCUST
+      *
+     C                     ENDIF
+      *
+      ** Validate Customer Details
+     C                     EXSR #LVALD
+      *
+      ** Calculate Risk Weighting Amount
+     C                     EXSR #LRWAM
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LVALD - Validate Customer Details                            *
+      *                                                               *
+      * Called by:  SR/#LDETL                                         *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LVALD    BEGSR
+      *
+      ** Validate Country of Location ISO code
+     C********** ULLISO    CHAINBYCNTYV1             90                                       LLN022
+     C********** *IN90     IFEQ *ON                                                           LLN022
+     C**********           Z-ADD1         ULERR1                                              LLN022
+     C**********           ENDIF                                                              LLN022
+      *
+      ** Validate Country of Risk ISO code
+     C********** ULRISO    CHAINBYCNTYV1             90                                       LLN022
+     C********** *IN90     IFEQ *ON                                                           LLN022
+     C**********           Z-ADD1         ULERR2                                              LLN022
+     C**********           ENDIF                                                              LLN022
+      *
+      ** Validate Customer Institution Code
+     C                     MOVE LLINC     ULLINC
+     C           ULLINC    CHAINBYINSTV0             90
+     C           *IN90     IFEQ *ON
+     C                     Z-ADD1         ULERR3
+     C                     ENDIF
+      *
+      ** Validate Customer Industry Code
+     C           LLICD     IFNE *BLANKS
+     C           LLICD     CHAINBYINDRV0             90
+     C           *IN90     IFEQ *ON
+     C                     Z-ADD1         ULERR4
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Institution code for Country of Location - 'GB'
+     C           ULLISO    IFEQ 'GB'
+     C           LAUKRI    ANDNE'Y'
+     C                     Z-ADD1         ULERR5
+     C                     ENDIF
+      *
+      ** Validate Institution code for non-GB Country of Location
+     C           ULLISO    IFNE 'GB'
+     C           LAUKRI    ANDNE'N'
+     C                     Z-ADD1         ULERR6
+     C                     ENDIF
+      *
+      ** Validate existence of Industry Code for UK non-Monetary Sector
+     C           LAUKMI    IFEQ 'N'
+     C           LAUKRI    ANDEQ'Y'
+     C           LLICD     ANDEQ*BLANKS
+     C                     Z-ADD1         ULERR7
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LRWAM - Calculate Risk Weighting Amount                      *
+      *                                                               *
+      * Called by:  SR/#LDETL                                         *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LRWAM    BEGSR
+      *
+      ** Set Risk Weight Amount to zero
+     C                     Z-ADD0         ULRWAM
+      *
+      ** Get Risk Weighting details
+     C           BBRWCD    CHAINSDCRWCL1             90
+      *
+      ** If Risk Weighting Code found adjust by 100
+     C           *IN90     IFEQ *OFF
+     C           D5BRWP    MULT 100       ULRWAM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                                       **
+      *
+      *  Return error indicators
+     C                     Z-ADDULERRS    ULERRR
+      *
+      *  Terminate program without setting LR on
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LCTRY - Get country ISO code                                 *
+      *                                                               *
+      * Called by:  SR/#LDETL                                         *
+      *                                                               *
+      * Calls: PGM/AOCTRYR0                                           *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LCTRY    BEGSR
+      *
+      ** Call PGM/AOCTRYR0 for ISO country code
+     C                     CALL 'AOCTRYR0'             90
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY  '  P@OPTN  7
+     C                     PARM ULCNCD    P@KEY1  2
+     C                     PARM           SDCTRY
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 03 *
+     C                     MOVEL'SDCTRYPD'DBFILE           ************
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C**********           MOVE A4ISOC    ULISOC                                              LLN022
+     C**********           MOVE ULCNCD    ULISOC                                       LLN022 263136
+     C                     MOVE A4ISOC    ULISOC                                              263136
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                                       **
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     Z-ADD0         ULLINC  20
+     C                     MOVE *BLANKS   ULRTCD  1
+     C                     MOVE *BLANKS   ULERRI  1                    dicator
+     C                     MOVE *BLANKS   P@RTCD  7
+     C                     MOVE *BLANKS   P@OPTN  7
+     C                     MOVE *BLANKS   ULCNCD  2
+     C********** *LIKE     DEFN A4ISOC    ULISOC                                              LLN022
+     C           *LIKE     DEFN ULCNCD    ULISOC                                              LLN022
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANKS
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                                       **
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULCUST  6
+     C                     PARM           SDCUST
+     C                     PARM           SDCUS7
+     C                     PARM           SDCUSX
+     C                     PARM           ULERRR  70
+     C                     PARM           ULRTCD
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+      ** COPYRIGHT STATEMENT
+     C                     MOVEA@CPY      UL@CPY  8
+      *
+     C                     ENDSR
+      *
+      /EJECT
+**  @CPY
+(c) Finastra International Limited 1997

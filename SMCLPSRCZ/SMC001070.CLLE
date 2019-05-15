@@ -1,0 +1,206 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Shell to decide between pre or post MP')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC001070 - Migrate Midas user data to new system files.    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR808720           Date 20Jul11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP038             Date 30Jul07              */
+/*                      CSM010             Date 22Jun07              */
+/*                      CUP037             Date 08May07              */
+/*                      CUP034             Date 13Dec06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*     AR808720 - Option to convert branch moved after SPF options.  */
+/*       CUP038 - Error in code.                                     */
+/*       CSM010 - Applied by CUP037.                                 */
+/*       CUP037 - Add branch conversion for MBRBSDD and MBROSDD.     */
+/*       CUP034 - MidasPlus user data migration.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL &OPFXSVAL &BRGSVAL)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TDVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FDVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MITEMDD) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPSVALJ0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC1076' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Create temporary file to hold error messages. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+ 
+/* Set up library list for new system. */
+             CALL       PGM(UPC0014) PARM(&SBSID)
+ 
+/* Check if MITEMDD exists in the "from" system to determine which program */
+/*  to call.                                                               */
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
+             CHGVAR     VAR(&TDVLIB) VALUE(&SBSID *TCAT 'DVLIB')
+             CHGVAR     VAR(&FDVLIB) VALUE(&OLDSBSID *TCAT 'DVLIB')
+/* Check if the "from" system has MITEMDD and set flag. */
+             CHKOBJ     OBJ(&FDTALIB/MITEMDD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&MITEMDD) VALUE('N')
+             ENDDO
+ 
+/* Delete temporary file for users, if it exists. */
+/**********  DLTF       FILE(MUSERQT/QTEMP)                                            */ /*CUP038*/
+             DLTF       FILE(QTEMP/MUSERQT)                                               /*CUP038*/
+             MONMSG     MSGID(CPF0000)
+/* Copy the old version of MUSER to the latest version so that */
+/*  the format is standard.                                    */
+             CPYF       FROMFILE(&TDVLIB/MUSER) +
+                          TOFILE(QTEMP/MUSERQT) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             CPYF       FROMFILE(&FDVLIB/MUSER) +
+                          TOFILE(QTEMP/MUSERQT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* Call program SM001070 to add data to user files. */
+             OVRDBF     FILE(OLDUSER) TOFILE(QTEMP/MUSERQT) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(NEWUSER) TOFILE(&TDVLIB/MUSER) +
+                          OVRSCOPE(*JOB)
+ 
+             CALL       PGM(SM001070) PARM(&OLDSBSID &SBSID &MITEMDD)
+             DLTOVR     FILE(*ALL) LVL(*JOB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call program to drop non-existent or logically deleted menu items */
+/*  from MACBRDD if migration was between MidasPlus systems.         */
+             IF         COND(&MITEMDD *NE 'Y') THEN(DO)
+                CALL       PGM(SM001072)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+/**Run*the*branch*conversion*command*but*first*copy*the*drivng*file**/ /*            */ /*AR808720*/
+/***so*that*only*MACBRDD*is*updated.*********************************/ /*              */ /*CUP037*/
+/***so*that*MACBRDD,*MBRBSDD*and*MBROSDD*are*updated.****************/ /* */ /*CUP037*/ /*AR808720*/
+/**********  CPYF       FROMFILE(SMBRCFLDPD) +                                       */ /*AR808720*/
+/**********               TOFILE(&PTFUPG/SMBRCFLD) MBROPT(*REPLACE) +                */ /*AR808720*/
+/**********               CRTFILE(*YES)                                              */ /*AR808720*/
+/**********  CPYF       FROMFILE(&PTFUPG/SMBRCFLD) +                                   */ /*CUP037*/
+/**********               TOFILE(SMBRCFLDPD) MBROPT(*REPLACE) +                        */ /*CUP037*/
+/**********               INCCHAR(BFFILE 1 *EQ 'MACBRDD')                              */ /*CUP037*/
+/**********  CPYF       FROMFILE(&PTFUPG/SMBRCFLD) +                                 */ /*AR808720*/
+/**********               TOFILE(SMBRCFLDPD) MBROPT(*REPLACE) +                      */ /*AR808720*/
+/**********               INCREL((*IF BFFILE *EQ 'MACBRDD') (*OR +                   */ /*AR808720*/
+/**********               BFFILE *EQ 'MBRBSDD') (*OR BFFILE *EQ +                    */ /*AR808720*/
+/**********               'MBROSDD'))                                     */ /*CUP037*/ /*AR808720*/
+/**********  CVTBROPTN  OPSUSFLD(*NO)                                                */ /*AR808720*/
+/**********  CPYF       FROMFILE(&PTFUPG/SMBRCFLD) +                                 */ /*AR808720*/
+/**********               TOFILE(SMBRCFLDPD) MBROPT(*REPLACE)                        */ /*AR808720*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                             */ /*AR808720*/
+/**********     GOTO       CMDLBL(ABNOR)                                             */ /*AR808720*/
+/**********  ENDDO                                                                   */ /*AR808720*/
+ 
+/* Call program SMC1074 to reconcile MUSERZZ with MUSERDD. */
+             CALL       PGM(SM001074)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC001070') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC001070' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

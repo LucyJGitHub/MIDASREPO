@@ -1,0 +1,896 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Forward rates recalculation for EMU')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL4130 - Forward Rates Recalculation for EMU Currencies      *
+      *                                                               *
+      *  Function:  This program recalculates Forward Rates for       *
+      *             those currencies that are a part of the           *
+      *             EMU and past their transition start date.         *
+      *  (phase(s) I/C)                                               *
+      *                                                               *
+      *  Called By: DL0090  - DL Forward Rates input Maintenance      *
+      *             DL0090A - DL Forward Rates input by Forward Pts   *
+      *             DL0091  - DL Validate/Update Forward Rates        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15Mar00               *
+      *                 CAP059             Date 15Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU026  *CREATE    Date 15JUL98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  CSD006 - MDF file changes to FWDRT                           *
+     F*  CAP059 - Conversion of Forward Rates into Modular APIs       *
+      *  CEU026 - Forward Rates Changes for EMU                       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     F***********FWDRT   UF  F     611  3AI     2 DISK                                        CSD006
+     FFWDRT   UF  F     719  3AI     2 DISK                                                   CSD006
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    DYS        25  5 0             NO. DAYS - FWDRT
+     E                    DEU        25  5 0             NO. DAYS - EURO
+     E                    RTN        25 13 8             RATE - FWDRT
+     E                    REU        25 13 8             RATE - FWDRT EUR
+     E                    PNF        25 13 8             POINTS - FWDRT
+     E                    SGN        25  1               SIGN - FWDRT
+     E                    NQD     1   6  6 0             NORM QUOTED DP DIV
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+      /SPACE 3
+     IFWDRT   NS  08   1 CH
+     I                                        1   1 RECI
+     I                                        2   4 CCY
+     I                                    P   5   70NORE
+     I                                    P   8  100FLSZ
+     I                                    P  11  130NLRB
+     I                                    P  14  160NINS
+     I                                    P  17  190NAMD
+     I                                    P  20  220NDEL
+     I                                    P  23  250NLRA
+     I                                    P 250 2520LCD
+     I                                      253 253 CHTP
+     I                                    P 254 2560TNLU
+      *
+     IFWDRT   NS  06   1 CD
+     I       OR   07   1 C*
+     I                                        1   1 RECI
+     I                                        2   4 CCY
+     I                                    P   5  79 DYS
+     I                                    P  80 254 RTN
+     I                                    P 255 2570LCDF
+     I                                      258 258 CHTPF
+     I                                    P 259 2610TNLUF
+     I                                      412 436 SGN
+     I                                    P 437 611 PNF
+     I                                      612 612 RPRL                                      CSD006
+     I                                      613 638 TSTAMP                                    CSD006
+     I                                    P 639 6460DFTS                                      CSD006
+     I                                      647 666 FOID                                      CSD006
+     I                                      667 686 AFOI                                      CSD006
+     I                                      687 718 DREQ                                      CSD006
+     I                                      719 719 FWRT                                      CSD006
+      *
+     IDBERR     E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDCURR    E DSSDCURRPD
+      **   Currency details from SDCURRD
+     I*
+     IDSSDY     E DSDSSDY
+     I* Second DS For Access Programs, LONG DATA STRUCTURE
+      **                                                                                      CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+     I* Data Structures used by Access Programs                                               CSC022
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** Switchable Features File                                                             CSC022
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  End Program and Return.
+      *
+     C                     EXSR EXIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  RTVCUR - Currency Details                                    *
+      *  *PSSR  - Error Control Program                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      *  Entry Parameter List
+     C           *ENTRY    PLIST
+     C                     PARM           BASCCY  3        Base Ccy
+     C                     PARM           EURCOD  3        EURO Code
+     C                     PARM           INCCY   1        IN Ccy
+     C                     PARM           INITN   1        First Call?
+     C                     PARM           RCODE   7        Return Code
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'DL4130'  DBPGM
+     C                     MOVE 'A'       ACTNX   1        Type of Lst chg
+     C                     MOVE *ZEROS    ZRATE1 138
+     C                     MOVE *BLANKS   ZMDI1   1
+     C                     MOVE *ZEROS    ZRATE2 138
+     C                     MOVE *BLANKS   ZMDI2   1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C*
+     C/COPY ZSRSRC,DFTTSTAMPC                                                                 CSD006
+      *                                                                                       CSD006
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Access Currency Data For The Base Ccy.
+      *
+     C                     MOVE BASCCY    CCYCOD  3
+      *
+     C                     EXSR RTVCUR
+      *
+      ** Store Exchange Rate and Mult/Div Ind for Base Currency
+      ** EURO Rate.
+      *
+     C           *LIKE     DEFN A6EUER    WREUER
+     C           *LIKE     DEFN A6EUMD    WREUMD
+     C                     Z-ADDA6EUER    WREUER
+     C                     MOVELA6EUMD    WREUMD
+      *
+      ** Access Currency Data For The EURO Ccy. Code.
+      *
+     C                     MOVE EURCOD    CCYCOD  3
+      *
+     C                     EXSR RTVCUR
+      *
+      ** Store Exchange Rate and Mult/Div Ind for EURO Ccy Code.
+      *
+     C           *LIKE     DEFN A6SPRT    WRSPRT
+     C           *LIKE     DEFN A6MDIN    WRMDIN
+     C                     Z-ADDA6SPRT    WRSPRT
+     C                     MOVELA6MDIN    WRMDIN
+      *
+     C*
+     C* If the record for 'EURO' currency is not found, the conversion
+     C*  'In' currencies is not carried out.
+     C*
+     C* Save Forward Days and Rates fo 'EURO' currency for later
+     C*  conversions.
+     C                     MOVE EURCOD    FRTKEY  3
+     C                     EXSR FRTCHN
+     C           *IN26     IFEQ *OFF
+     C                     MOVE 'Y'       W#EURO  1
+     C                     MOVEADYS       DEU
+     C                     MOVEARTN       REU
+     C                     ENDIF
+     C*
+     C                     MOVEA'000'     *IN,06
+     C*
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      **                                                                                      CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCRSKP  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   PRTCD   7                                           CSC022
+     C                     PARM '*VERIFY' POPTN   7                                           CSC022
+     C                     PARM 'CSC022'  PSARD   7                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           PRTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           WSID      LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCRSKP                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           PRTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     MOVEL'DL4130'  DBPGM                                               CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     Z-ADD2         DBASE                                               CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do Program Processing                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  FIRST  - Recalc. Spots For Init. Disp. (Including EURO Base) *
+      *  INBASE - Recalculate Spot For all Currencies (Except EURO)   *
+      *  OUTBAS - Recalculate Spot For 'IN' Currencies only           *
+      *  *PSSR  - Error Control Program                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+     C                     SELEC
+     C           INITN     WHEQ 'Y'
+     C                     EXSR FIRST
+     C           INCCY     WHEQ 'Y'
+     C                     EXSR INBASE
+     C           INCCY     WHNE 'Y'
+     C                     EXSR OUTBAS
+     C                     ENDSL
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - Subroutine to do Program Processing                 *
+      *         - for First Call.                                     *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  *PSSR  - Error Control Program                               *
+      *  INBASE - Recalculate Spot For all Currencies (Except EURO)   *
+      *  OUTBAS - Recalculate Spot For 'IN' Currencies only           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR
+      *
+      ** If Base is EURO then Reset 'IN' Currency Forward rates
+      ** to the same as their EURO Rates.
+      *
+     C           EURCOD    IFEQ BASCCY
+     C           *LOVAL    SETLLFWDRT
+     C           *IN89     DOWEQ*OFF
+     C                     SETOF                     060708
+     C                     READ FWDRT                    89
+     C           *IN89     IFEQ *OFF
+     C*  Bypass the Header record and deleted record
+     C           *IN08     IFEQ *ON
+     C           *IN07     OREQ *ON
+     C                     ITER
+     C                     ENDIF
+      *
+      ** If Currency is 'IN' Currency, and Past its Start Date
+      ** Use The EURO Rate .
+      *
+     C                     MOVE CCY       CCYCOD
+     C                     EXSR RTVCUR
+     C           A6INCY    IFEQ 'Y'
+     C           A6TPSD    ANDLEAGRDNB
+     C           A6CYCD    ANDNEEURCOD
+      *
+      ** Update FORWARD rate to EURO Rate.
+      *
+     C                     Z-ADD1         A
+     C           A         DOWLE25
+     C           DYS,A     ANDGT0
+     C                     Z-ADDA6EUER    RTN,A
+     C                     Z-ADD0         PNF,A
+     C                     MOVE *BLANKS   SGN,A
+     C                     ADD  1         A
+     C                     ENDDO
+     C                     SETON                     46
+     C                     EXSR EXCEPT
+     C*
+     C** Read Forward Rates Header
+     C                     MOVE *BLANKS   FRTKEY
+     C                     EXSR FRTCHN
+     C           *IN26     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C** Record amended
+     C           NAMD      ADD  1         NAMD
+     C** Update Forward Rates Header
+     C                     SETON                     44
+     C                     EXSR EXCEPT
+      *
+     C           CCYCOD    SETGTFWDRT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** If Base is 'IN' Currency, update all 'IN' currencies
+      *
+     C           INCCY     IFEQ 'Y'
+     C                     EXSR INBASE
+     C                     ENDIF
+      *
+      ** If Base is 'OUT' Currency Then Recalculate Rates in case
+      ** EURO Rate has Changed
+      *
+     C           INCCY     IFEQ 'N'
+     C                     EXSR OUTBAS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INBASE - Subroutine to do Program Processing                 *
+      *         - for an 'IN' Base Currency                           *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  CTVRAT - Subroutine to convert rates                         *
+      *  RTVCUR - Subroutine to retrieve currency details             *
+      *  EXCEPT - Subroutine to update Forward rate                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INBASE    BEGSR
+      *
+     C* Do not process if the Forward rates are not entered for
+     C*  'EURO' currency.
+     C* Do not process if Base currency is Euro currency.
+     C*
+     C           W#EURO    IFEQ 'Y'
+     C           BASCCY    ANDNEEURCOD
+     C*
+     C           *LOVAL    SETLLFWDRT
+     C           *IN89     DOWEQ*OFF
+     C                     SETOF                     060708
+     C                     READ FWDRT                    89
+      *
+     C           *IN89     IFEQ *OFF
+     C*  Bypass the Header record and deleted record
+     C           *IN08     IFEQ *ON
+     C           *IN07     OREQ *ON
+     C                     ITER
+     C                     ENDIF
+     C*
+     C** Don't Process if Currency is Base Currency or EURO.
+     C*
+     C           CCY       IFEQ BASCCY
+     C           CCY       OREQ EURCOD
+     C                     ITER
+     C                     ENDIF
+     C*
+     C** Process only 'In' currencies whose EMU transition start
+     C**  date is equal to or less than Run date of the system.
+     C*
+     C                     MOVE CCY       CCYCOD
+     C                     EXSR RTVCUR
+     C           A6INCY    IFEQ 'Y'
+     C           A6TPSD    ANDLEAGRDNB
+     C*
+     C** Recalculate Forward rates using Euro Forward rate
+     C*
+     C                     EXSR CVTRAT
+      *
+     C                     SETON                     46
+     C                     EXSR EXCEPT
+     C*
+     C**  Read Forward Rates Header
+     C                     MOVE *BLANKS   FRTKEY
+     C                     EXSR FRTCHN
+     C           *IN26     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C**  Record amended
+     C           NAMD      ADD  1         NAMD
+     C*
+     C**  Update Forward Rates Header
+     C                     SETON                     44
+     C                     EXSR EXCEPT
+     C           CCYCOD    SETGTFWDRT
+     C                     ELSE
+     C                     ITER
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  OUTBAS - Subroutine to do Program Processing                 *
+      *         - for an 'OUT' Base Currency                          *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  CTVRAT - Subroutine to convert rates                         *
+      *  RTVCUR - Subroutine to retrieve currency details             *
+      *  EXCEPT - Subroutine to update Forward rate                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTBAS    BEGSR
+      *
+     C* Do not process if the Forward rates are not entered for
+     C*  'EURO' currency.
+     C* Do not process if Base currency is Euro currency.
+     C*
+     C           W#EURO    IFEQ 'Y'
+     C           BASCCY    ANDNEEURCOD
+     C*
+     C           *LOVAL    SETLLFWDRT
+     C           *IN89     DOWEQ*OFF
+     C                     SETOF                     060708
+     C                     READ FWDRT                    89
+      *
+     C           *IN89     IFEQ *OFF
+     C*  Bypass the Header record
+     C           *IN08     IFEQ *ON
+     C           *IN07     OREQ *ON
+     C                     ITER
+     C                     ENDIF
+      *
+     C** Don't Process if Currency is Base Currency or EURO.
+     C*
+     C           CCY       IFEQ BASCCY
+     C           CCY       OREQ EURCOD
+     C                     ITER
+     C                     ENDIF
+     C*
+     C** Process only 'In' currencies whose EMU transition start
+     C*   date is equal to or less than Run date of the system.
+     C*
+     C                     MOVE CCY       CCYCOD
+     C                     EXSR RTVCUR
+     C           A6INCY    IFEQ 'Y'
+     C           A6TPSD    ANDLEAGRDNB
+     C*
+     C** Recalculate Forward rates using Euro Forward rate
+     C*
+     C                     EXSR CVTRAT
+     C*
+     C                     SETON                     46
+     C                     EXSR EXCEPT
+     C**  Read Forward Rates Header
+     C                     MOVE *BLANKS   FRTKEY
+     C                     EXSR FRTCHN
+     C           *IN26     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C**  Record amended
+     C           NAMD      ADD  1         NAMD
+     C*
+     C**  Update Forward Rates Header
+     C                     SETON                     44
+     C                     EXSR EXCEPT
+     C           CCYCOD    SETGTFWDRT
+     C                     ELSE
+     C                     ITER
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CVTRAT - Subroutine to Convert Forward rates                 *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls:                                                       *
+      *  EURRAT - Retrieve Euro Forward rates                         *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           CVTRAT    BEGSR                           *** CVTRAT ***
+     C                     Z-ADD1         A       20
+     C                     Z-ADD1         B       20
+     C*
+     C           A         DOWLE25
+     C* If a valid days are found, find the corresponding days in the
+     C*  Euro days array.
+     C*
+     C           DYS,A     IFGT 0
+     C                     EXSR EURRAT
+     C                     ADD  1         A
+     C*
+     C* If the days are zero, leave the loop, as the rest will be zeros
+     C*
+     C                     ELSE
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C* After calculating rates, recalculate forward points.
+     C                     Z-ADD2         C       20
+     C*
+     C           C         DOWLE25
+     C           RTN,C     IFGT 0
+     C           RTN,C     IFGT RTN,1
+     C           RTN,C     SUB  RTN,1     PNF,C
+     C           A6NQDP    ADD  1         I       20
+     C           PNF,C     MULT NQD,I     PNF,C
+     C                     MOVE '+'       SGN,C
+     C                     ELSE
+     C           RTN,1     SUB  RTN,C     PNF,C
+     C           A6NQDP    ADD  1         I
+     C           PNF,C     MULT NQD,I     PNF,C
+     C                     MOVE '-'       SGN,C
+     C                     ENDIF
+     C                     ADD  1         C
+     C                     ELSE
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EURRAT - Subroutine to retrieve EURO forward rates and       *
+      *           recalculate currency forward rates.                 *
+      *                                                               *
+      *  Called By: CTVRAT                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EURRAT    BEGSR                           *** EURRAT ***
+     C*
+     C           B         DOWLE25
+     C           DYS,A     COMP DEU,B                525051
+     C                     Z-ADDB         Y       20
+     C           B         SUB  1         X       20
+     C*
+     C* If equal days are found, New forward rate for 'In' currency
+     C*   is calculated by dividing Euro forward rate by Euro fixed
+     C*   spot rate for 'In' currency.
+     C*
+     C           *IN51     IFEQ *ON
+     C                     Z-ADDREU,Y     ZRATE2
+     C           INCCY     IFEQ 'Y'
+     C                     MOVE WREUMD    ZMDI2
+     C                     ELSE
+     C           WRMDIN    IFEQ 'D'
+     C                     MOVE 'M'       ZMDI2
+     C                     ELSE
+     C                     MOVE 'D'       ZMDI2
+     C                     ENDIF
+     C                     ENDIF
+     C                     Z-ADDA6EUER    ZRATE1
+     C                     MOVE A6EUMD    ZMDI1
+     C                     EXSR ZXRATE
+     C                     Z-ADDZRATEX    RTN,A
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C           *IN50     IFEQ *ON
+     C           X         IFEQ 0
+     C                     Z-ADD0         ZINDAT
+     C           INCCY     IFEQ 'Y'
+     C                     Z-ADDWREUER    ZINRAT           EMU X-RATE BASE
+     C                     ELSE
+     C                     Z-ADDWRSPRT    ZINRAT
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADDDEU,X     ZINDAT
+     C                     Z-ADDREU,X     ZINRAT
+     C                     ENDIF
+     C*
+     C                     Z-ADDDYS,A     ZIBDAT           BROKEN DAYS
+     C                     Z-ADDDEU,Y     ZIFDAT           FAR DAYS
+     C                     Z-ADDREU,Y     ZIFRAT           FAR RATE
+     C**********           EXSR ZINTPL                                                        CAS001
+     C                     Z-ADD0         ZIBRAT                                              CAS001
+     C                     CALL 'ZAINTPL'                                                     CAS001
+     C                     PARM           ZINDAT  50                                          CAS001
+     C                     PARM           ZIBDAT  50                                          CAS001
+     C                     PARM           ZIFDAT  50                                          CAS001
+     C                     PARM           ZINRAT 139                                          CAS001
+     C                     PARM           ZIFRAT 139                                          CAS001
+     C                     PARM           ZIBRAT 139                                          CAS001
+     C                     Z-ADDZIBRAT    ZRATE2
+     C           INCCY     IFEQ 'Y'
+     C                     MOVE WREUMD    ZMDI2
+     C                     ELSE
+     C           WRMDIN    IFEQ 'D'
+     C                     MOVE 'M'       ZMDI2
+     C                     ELSE
+     C                     MOVE 'D'       ZMDI2
+     C                     ENDIF
+     C                     ENDIF
+     C                     Z-ADDA6EUER    ZRATE1
+     C                     MOVE A6EUMD    ZMDI1
+     C                     EXSR ZXRATE
+     C                     Z-ADDZRATEX    RTN,A
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C                     ADD  1         B
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C*    SR TO CHAIN TO FORWARD RATES FILE
+     C           FRTCHN    BEGSR                           *** FRTCHN ***
+     C*
+     C           FRTKEY    CHAINFWDRT                26
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXCEPT - Subroutine to perform exception output              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXCEPT    BEGSR
+     C*
+     C**  Obtain last transaction number and set up standard output
+     C**  information
+      *
+     C                     EXSR ZTNLU1
+     C                     MOVE 'DL'      MDID    2
+     C                     MOVEL'DL4130'  PGMN    8
+     C                     MOVE WSID      WSIDX   3
+     C                     MOVE USER      USRIDX 10
+     C                     MOVE ACTNX     ACTNY   1
+      *
+     C                     EXCPT
+     C                     SETOF                     4446
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RTVCUR - Subroutine to retrieve currency details             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: AOCURRR0 - Access program for currency details        *
+      *  *PSSR - Program Exception Error Routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RTVCUR    BEGSR                           *** RTVCUR ***
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCYCOD    @KEYCY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL'001'     DBASE            * DBERROR 001 *
+     C                     MOVELCCYCOD    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXIT   - Subroutine to do EXIT Program                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR                           ***  EXIT  ***
+      *
+      ** Commit details if first time call of program.
+      *
+     C           INITN     IFEQ 'Y'
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF
+      *
+      ** Set on Last record and return to Calling Program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+      *
+     C           *NAMVAR   DEFN           LDA   256
+     C           *LOCK     IN   LDA
+     C                     MOVELDBERR     LDA
+     C                     OUT  LDA
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     END
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      **  Subroutine to Calculate Exchange Rates
+      /COPY ZSRSRC,ZXRATEZ1
+      *
+      ****Subroutine*to*Calculate*Straight*Line*Interpolation**********                       CAS001
+      **/C*PY*ZSRSRC,ZINTPLZ1******************************************                       CAS001
+      *
+      **  Subroutine to Access Next Available Transaction Number
+      /COPY ZSRSRC,ZTNLU1Z2
+      *****************************************************************
+     O*  UPDATE FWDRT HEADER
+     OFWDRT   E        44
+     O                         NAMD      19P
+     O                         AGRDNB   252P
+     O                         ACTNX    253
+     O                         NATN     256P
+     O*  UPDATE FWDRT DETAIL
+     OFWDRT   E        46    06
+     O                                    1 'D'
+     O                         DYS       79P
+     O                         RTN      254P
+     O                         AGRDNB   257P
+     O                         ACTNX    258
+     O                         NATN     261P
+     O                         SGN      436
+     O                         PNF      611P
+     O                         RPRL     612                                                   CSD006
+     O                         TSTAMP   638                                                   CSD006
+     O                         DFTS     646P                                                  CSD006
+     O                         FOID     666                                                   CSD006
+     O                         AFOI     686                                                   CSD006
+     O                         DREQ     718                                                   CSD006
+     O                         FWRT     719                                                   CSD006
+**  CPY@
+(c) Finastra International Limited 2001
+**   NQD - NORMALLY QUOTED DECIMAL PLACES DIVISORS
+000001
+000010
+000100
+001000
+010000
+100000

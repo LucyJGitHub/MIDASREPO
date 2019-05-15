@@ -1,0 +1,120 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Re-set ready-to-send or failed msgs')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *   ME0505 - RE-SET STATUS OF OUTGOING MESSAGES TO 'CRTD'       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21SEP98               *
+      *                   113352           DATE 13FEB97               *
+      *                   E29588           DATE 22NOV91               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *   141572 - Recompile over changes in MGOREFPD.                *
+      *   113352 - Recompile over changes in MGOREFPD                 *
+      *   E29588 - POST COLLECTION SWIFT RATIONALISATION AMENDMENTS   *
+      *             o Re-set status to Amended rather than Created    *
+      *             o Allow re-set of PENDing Tx messages             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      * This program is used to re-set 'Ready-to-Send' or failed -    *
+      * NAK/ed messages.                                              *
+      * This capability should be limited to the System Routing       *
+      * Officer, and should be used with care...                      *
+      * Messages eligible for re-set are headers of multiples or      *
+      * single messages, for networks other than PAPER, which are     *
+      * either 'Ready-to-Send' or in some way negatively acknowledged.*
+      *****************************************************************
+      *
+     FMGOREFL0UF  E           K        DISK
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  Data area for RUNDAT
+      *
+      ** @ERR is a return code for the calling program:
+      ** '1' => Message not found.
+      ** '2' => Message not eligible for re-set
+      ** '0' => OK. Message re-set.
+     C           *ENTRY    PLIST
+     C                     PARM           @TRN   16
+     C                     PARM           @ERR    1
+      *
+      **  Access RUNDAT to find run-date
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+     C           @TRN      CHAINMGOREFD0             99
+      *
+      ** Is message found on file? If not, set ERR code to '1'.
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       @ERR
+     C                     ELSE
+      *
+      ** If found, is message eligible for re-set?
+     C           TRNF      IFEQ *BLANKS
+     C           NWRK      ANDNE'PAPER'
+     C           MGST      IFEQ 'RSND'
+     C           MGST      OREQ 'PEND'                                    E29588
+     C           MGST      OREQ 'EFMT'
+     C           MGST      OREQ 'ELAU'
+     C           MGST      OREQ 'ESEQ'
+     C           MGST      OREQ 'ETID'
+     C           MGST      OREQ 'ELEN'
+     C           MGST      OREQ 'EAUT'
+     C           MGST      OREQ 'NACK'
+     C           MGST      OREQ 'EBL1'
+     C           MGST      OREQ 'EBL2'
+     C           MGST      OREQ 'EBL4'
+     C           MGST      OREQ 'EBL5'
+     C                     SETON                     50
+     C                     END
+     C                     END
+      *
+      ** If eligible, set-up appropriate fields and update
+     C           *IN50     IFEQ '1'
+     C                     MOVE '1'       MGSG
+     C******************** MOVE 'CRTD'    MGST                            E29588
+     C                     MOVE 'AMND'    MGST                            E29588
+     C                     MOVE *BLANKS   RELD
+     C                     MOVE *ZEROS    RELT
+     C                     MOVE *BLANKS   RUSR
+     C                     MOVE *BLANKS   RWSN
+     C                     MOVE RUNA      LADT
+     C                     TIME           LATM
+     C                     UPDATMGOREFD0
+     C                     MOVE '0'       @ERR
+      *
+      ** If not eligible, set error code to '2'
+     C                     ELSE
+     C                     MOVE '2'       @ERR
+     C                     END
+     C                     END
+      *
+     C                     SETON                     LR

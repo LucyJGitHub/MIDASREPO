@@ -1,0 +1,410 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Update Mark to Market Reval. Date')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2285 - Update next Mark to Market Revaluation Date On ICD  *
+     F*                                                               *
+     F*  Function: Update next Mark to Market Revaluation Date on ICD *
+     F*   (COB)    according to Frequency and Base Date.              *
+     F*                                                               *
+     F*  Called by: SEC0608 - Generate A/c Keys - Mark to Market      *
+     F*                       Revaluations                            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSE084             Date 14Feb06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Plus 1.2 -----------------------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 05Mar96               *
+     F*                 S01455             Date 05Nov93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 057482             DATE 05NOV93               *
+     F*                 E26998             DATE 19SEP91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 S01195             DATE 07JUN91               *
+     F*                 S01269             DATE 02AUG90               *
+     F*                 E23818             DATE 10OCT90               *
+     F*                 E23817             DATE 09OCT90               *
+     F*                 S01251             DATE 03FEB90               *
+     F*                 S01168             DATE 18/08/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*   S01168
+     F*                                                               *   S01168
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSE084 - Mark to market date is not updated correctly        *
+      *           if working days have been skipped.                  *
+      *           If mark to market frequency is daily, use the       *
+      *           current rundate to calculate the next m-m date.     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+     F*  S01408 - Addition of core hook SE2285FFP1
+     F*           Addition of core hook SE2285CCP1
+     F*           Addition of core hook SE2285CCP2
+     F*           Addition of core hook SE2285CCP3
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*           Recompiled due to changes in PF/TABTB80.            *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  057482 - M-M date not updated if daily frequency             *
+     F*  E26998 - Mark to market date is advanced each day and not    *
+     F*           only after a mark to market date                    *
+     F*  S01117 - MULTIBRANCHING                                      *
+     F*  S01195 - Holiday amendment                                   *
+     F*  S01269 - TRADE AUTHORISATION: RECOMPILED OVER CHANGED        *
+     F*           FILE SDSTRDL0.                                      *
+     F*  E23818 - If mark to market frequency is blank then do not    *
+     F*           update.                                             *
+     F*  E23817 - Duplication of RECI field.                          *
+     F*  S01251 - SYNON FIELD/PROGRAM NAME CHANGES                    *   S01251
+     F*  S01168 - SD SYNON, UPDATE NEW ICD FILE AT SAME TIME          *   S01168
+     F*                                                               *   S01168
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*TABLETJ*IF**E           K        DISK                              S01117
+     FSDSTRDL0UF  E           K        DISK                               S01168
+     FTABICD  UF  E           K        DISK         KINFDS TBLDS
+     F                                              KINFSR TBLSR
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F            TABTB35F                          KIGNORE
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB50F                          KIGNORE
+     F            TABTB55F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE2285FFP1                                           S01408
+     F*                                                                   S01408
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  FUNCTION OF INDICATORS                                       *
+     F*                                                               *
+     F*90-99  USED IN Z-SUBROUTINES                                   *
+     F*U7-U8  DATABASE ERROR                                          *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   ZFRQA   -  CALCULATES NEXT MARK TO MARKET REVALUATION       *
+     F*   ZSYSTM  -  OBTAINS ICD INFO FROM TABTB10                    *
+     F*   ZICD2   -  OBTAINS ICD INFO FROM TABTB11                    *
+     F*   ZICDSE  -  OBTAINS ICD INFO FROM TABTB36                    *
+     F*   *PSSR   -  ERROR HANDLING                                   *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80                                S01117
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRQAZ1
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+      /EJECT
+     I*
+     I*                                                                   E23817
+     I* Rename field RECI on TABTB36 to avoid confusion with other        E23817
+     I*                                                                   E23817
+     ITABTB36F                                                            E23817
+     I              RECI                            TBRECI                E23817
+     I*                                                                   E23817
+     ICPYR@#      DS                                                      S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     I            DS
+     I*
+     I* DATA STRUCTURES FOR Z-SUBROUTINES
+     I*
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     ISDGELR    E DSSDGELRPD                                              S01195
+     I**  EXTERNAL DS FOR GENERAL LEDGER DETAILS                          S01195
+     I**                                                                  S01195
+     IDSFDY     E DSDSFDY                                                 S01195
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE          S01195
+     I**                                                                  S01195
+     ITBLDS       DS
+     I*
+     I* DATA STRUCTURES FOR ERROR HANDLING
+     I*
+     I                                     *STATUS  STSTBL
+     I*
+     I*DA********UDS                            256                       S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* KEYLISTS FOR FILE CHAINS
+     C*
+     C*  - TABLE
+     C*
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+     C*
+     C* CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE2285  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2285CCP1                                           S01408
+     C*                                                                   S01408
+     C*
+     C* ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ICD2
+     C*
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C                     SETON                     U8                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTKEY      DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ZICDSE
+     C*
+     C                     EXSR ZICDSE
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            **DB ERROR 03
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     END
+     C                     END
+      *                                                                                       CSE084
+      ** Check if CSE084 is installed                                                         CSE084
+      *                                                                                       CSE084
+     C                     CALL 'AOSARDR0'                                                    CSE084
+     C                     PARM *BLANKS   PRTCD   7                                           CSE084
+     C                     PARM '*VERIFY' POPTN   7                                           CSE084
+     C                     PARM 'CSE084'  PSARD   6                                           CSE084
+      *                                                                                       CSE084
+     C           PRTCD     IFEQ *BLANKS                                                       CSE084
+     C                     MOVE 'Y'       CSE084  1                                           CSE084
+     C                     ELSE                                                               CSE084
+     C                     MOVE 'N'       CSE084                                              CSE084
+     C                     ENDIF                                                              CSE084
+     C*
+     C* CHECK FOR DATABASE ERROR ON ICD READS
+     C*    - IF NO ERROR CALCULATE NEXT MARK TO MARKET REVALUATION
+     C*
+     C           *INU7     IFEQ '0'
+     C*                                                                   E26998
+     C* Find event control date and only update mark to market date       E26998
+     C* if not FIFO and date is LE event control date                     E26998
+     C*                                                                   E26998
+     C                     Z-ADDDNWD      ZZDNWD                          E26998
+     C                     Z-ADDAPDA      ZZAPDT                          E26998
+     C                     EXSR ZEVCD                                     E26998
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2285CCP2                                           S01408
+     C*                                                                   S01408
+     C*
+      * Do not update if mark to market frequency is blank.               E23818
+      *                                                                   E23818
+     C           MMKF      IFNE *BLANKS                                   E23818
+     C           FIFO      ANDNE'Y'                                       E26998
+     C           MMND      ANDNE0                                         E26998
+     C***********MMBD      ANDNE0                                  E26998 057482
+     C           MMND      ANDLEECD                                       E26998
+      *                                                                   E23818
+     C                     MOVE MMKF      ZFREQ
+      *
+      *  Skipping working days can corrupt the mark to market date.       CSE084
+      *  If mark to market frequency is daily, use the current rundate    CSE084
+      *  to calculate the next m-m date.                                  CSE084
+      *                                                                   CSE084
+     C           MMKF      IFEQ 'D'                                       CSE084
+     C           CSE084    ANDEQ'Y'                                       CSE084
+     C                     Z-ADDRUND      ZDAYNO                          CSE084
+     C                     ELSE                                           CSE084
+     C                     Z-ADDMMND      ZDAYNO
+     C                     ENDIF                                          CSE084
+      *                                                                   CSE084
+     C                     Z-ADDMMBD      ZMDAY
+     C                     MOVE LOCY      ZCCY
+     C                     MOVE *BLANKS   ZLOC                            S01195
+     C*
+     C                     EXSR ZFRQA
+     C*
+     C*  -  UPDATE TABTB36 WITH NEW MARK TO MARKET REVALUATION DATE
+     C*
+     C                     Z-ADDZDAYNO    MMND
+      *                                                                   E23818
+     C                     END                                            E23818
+      *                                                                   E23818
+     C                     UPDATTABTB36F
+     C*                                                                   S01168
+     C** UPDATE SDSTRDL0                                                  S01168
+     C*                                                                   S01168
+     C**********           MOVEL'STRD'    BVCBCD                    S01168S01251
+     C********** BVCBCD    CHAINSDSTRDL0             99             S01168S01251
+     C                     MOVEL'STRD'    BVSCTR                          S01251
+     C           BVSCTR    CHAINSDSTRDL0             99                   S01251
+     C*                                                                   S01168
+     C           *IN99     IFEQ '0'                                       S01168
+     C**********           Z-ADDMMND      BVI8NB                    S01168S01251
+     C                     Z-ADDMMND      BVMMND                          S01251
+     C                     UPDAT@BVREFE                                   S01168
+     C                     ELSE                                           S01168
+     C                     SETON                     U7U8                 S01168
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDSTR'   DBFILE           ***************S01168
+     C                     MOVEL'SDSTRDL0'DBKEY            **DB ERROR 04  S01168
+     C                     Z-ADD04        DBASE            ***************S01168
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                                            S01168
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2285CCP3                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   TBLSR  - SUBROUTINE FOR ERROR HANDLING OF ICDSE RECORD      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TBLSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVEL'ICDSE'   DBKEY
+     C                     Z-ADD90        DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     99U7U8
+     C***********          SETON                     LR                   S01117
+     C*
+     C                     ENDSR
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*   *PSSR -- ERROR HANDLING SUBROUTINE                              S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C           *PSSR     BEGSR                                          S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     SETON                     LR                   S01117
+     C                     RETRN                                          S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+     C**                                                                  S01117
+     C*
+     C*****************************************************************
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZFRQAZ2
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT                                                              E26998
+     C/COPY ZSRSRC,ZEVCDZ1                                                E26998
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031

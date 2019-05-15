@@ -1,0 +1,750 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Autoclosure extract')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0325  -  AUTOCLOSURE EXTRACT                                 *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 190408             Date 02Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                 131939             Date 04APR00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 105587             Date 11OCT95               *
+     F*                 CFF004             DATE 16SEP96                  *
+     F*                 S71062             DATE 11DEC95                  *
+     F*                 046303             DATE 13JAN94                  *
+     F*                  S01456             DATE 08NOV93                 *
+     F*                  S01411             DATE 16APR93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE 21SEP92                 *
+     F*                  E38323             DATE 30JUL92                 *
+     F*                  AUS022             DATE 10AUG92                 *
+     F*                  S01195             DATE 13MAR90                 *
+     F*                  S01117             DATE 13MAR90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  190408 - System wrongly closes trade set to be left open for    *
+      *           broker.  Condition Automatic closure to also check     *
+      *           TBLO field.                                            *
+     F*  131939 - System doesn't take care about 'Automatic Close-out    *
+     F*           indicator' if Positions combined is equal 'Y'          *
+     F*  105587 - System doesn't take care about 'Automatic Close-out    *
+     F*           indicator' in case of broker and pick-up the value     *
+     F*           for the last customer.                                 *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     F*  S71062 - FF/PM Interface                                     *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array      *
+     F*           error if no holiday record found - fixed by S01434.    *
+     F*           Program recompiled.                                    *
+     F*   S01456 - 'FF' MONTHLY P&L ENHANCEMENTS.                        *
+     F*            Recompiled due to change to PF/MKCTLD.                *
+     A*   S01411 - RECOMPILED BECAUSE 'ORIGINAL ENTRY DATE' HAS BEEN     *
+     A*           ADDED TO TRANSD.                                       *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   E38323  -  Recompilation of the program done due to a change   *
+     F*              in copy source ZFWDT subroutine                     *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Contract Type (CNTT) added to   *
+     F*              PF/INTYPD.  Recompile program only.                 *
+     F*   S01195  -  HOLIDAY AMENDMENT                                   *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*     IGNDECERR(*NO )                                              *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E           K        DISK                               S01117
+     F*ABTB11*IF* E           K        DISK                           UC  S01117
+     F*ABLETJ*IF* E           K        DISK                               S01195
+     FMARKT   IF  E           K        DISK                           UC
+     FMKCTL   IF  E           K        DISK                           UC
+     FFOCLT   IF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FTRANS5  IP  E           K        DISK
+     FWTRNSD  O   E                    DISK
+     F*
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*             L6   CHANGE OF INSTRUMENT ON TRANS5
+     F*             L5   CHANGE OF YEAR ON TRANS5
+     F*             L4   CHANGE OF MONTH ON TRANS5
+     F*             L3   CHANGE OF BROKER ON TRANS5
+     F*             L2   CHANGE OF CUSTOMER ON TRANS5
+     F*             L1   CHANGE OF BOOK ON TRANS5
+     F*
+     F********40*********CHAIN*FAIL*TO*TABTB10/TABTB11/MKCTL/MARKT********S01117
+     F*       40         CHAIN FAIL TO MKCTL/MARKT                        S01117
+     F*       80-89      RESERVED FOR STANDARD FF SUBROUTINES
+     F*       98         DATE FORMAT
+     F*       99         CHAIN FAIL TO LF/FOCLT/BOOKD/INTYP
+     F*
+     F*       U7 & U8    DATABASE ERROR
+     F*
+     F********************************************************************
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,FFDATEZ1
+     E*COPY*ZSRSRC,ZDATE5Z1                                               S01195
+     E*COPY*ZSRSRC,ZDATE3Z1                                               S01195
+     E/COPY ZSRSRC,ZDATE1Z1
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E** SR.ARRAY FOR BOTH ZACCH AND ZCHKH                                S01195
+     E*                                                                   S01195
+     E/EJECT
+     I********************************************************************
+     ITRANSDF
+     I                                              ISTT  L6
+     I                                              YRNO  L5
+     I                                              MTHN  L4
+     I                                              BOCO  L3
+     I                                              CUSC  L2
+     I                                              BOKC  L1
+     I*
+     I*COPY*ZSRSRC,ZDATE3Z2                                               S01195
+     I*COPY*ZSRSRC,ZDATE3Z3                                               S01195
+     I***********                                                         S01195
+     I***DATA*STRUCTURE*FOR*SR.*ZDATE3************************************S01195
+     I*
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I** SR.ARRAY FOR BOTH ZACCH AND ZCHKH                                S01195
+     I*                                                                   S01195
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJDNWD                          DNWD                  S01117
+      *                                                                   S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE              S01117
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               S01195
+     I*
+     I/COPY ZSRSRC,FFDATEZ2
+     I*
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C********************************************************************
+     C*
+      ** FIRST CYCLE ONLY
+     C*
+     C           UPDI      IFEQ *BLANK
+     C                     EXSR FIRST
+     C                     END
+     C*
+      ** IF L6 IS ON ACCESS INTYP FOR SETTLEMENT DATE/PROCESSING TYPE
+     C*
+     C           *INL6     IFEQ '1'
+     C           ISTT      CHAININTYP                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'INTYP'   DBFILE           * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+      ** IF L4 IS ON AND INSTRUMENT IS A MARKET INSTRUMENT
+      ** CALCULATE SETTLEMENT DATE USING SR.FFDATE
+     C*
+     C           *INL4     IFEQ '1'
+     C           ISTI      ANDEQ'N'
+     C                     MOVE SEDF      FFDATC
+     C                     MOVE MKLC      FFCCY1
+     C                     MOVE ISCY      FFCCY2
+     C                     MOVE OTHC      FFCCY3
+     C                     Z-ADDYRNO      FFYR
+     C                     Z-ADDMTHN      FFMTH
+     C                     MOVE MLOC      FFLOC                           S01195
+     C                     EXSR FFDATE
+     C                     MOVE FFDAY     SETD
+     C                     END
+     C*
+      ** IF L3 IS ON, AND A BROKER IS PRESENT
+      ** CHAIN TO LF/FOCLT FOR BROKER DETAILS
+     C*
+     C           *INL3     IFEQ '1'
+     C********** BOCO      ANDGT0                                                             CSD027
+     C           BOCO      ANDNE*BLANKS                                                       CSD027
+     C           BOCO      CHAINFOCLT                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'FOCLT'   DBFILE           * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     MOVELBOCO      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C*
+      ** SAVE BROKER DETAILS OTHERWISE
+     C*
+     C                     ELSE
+     C           *LIKE     DEFN PSCI      BPSCI
+     C                     MOVE PSCI      BPSCI
+     C                     MOVE AUCI      BRAUCS                   105587
+     C           *LIKE     DEFN AUCI      BRAUCS                   105587
+     C                     END
+     C*
+     C                     END
+     C*
+      ** IF L2 IS ON, AND A CUSTOMER IS PRESENT
+      ** CHAIN TO LF/FOCLT FOR CUSTOMER DETAILS
+     C*
+     C           *INL2     IFEQ '1'
+     C********** CUSC      ANDGT0                                                             CSD027
+     C           CUSC      ANDNE*BLANKS                                                       CSD027
+     C           CUSC      CHAINFOCLT                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'FOCLT'   DBFILE           * DB ERROR 07 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVELCUSC      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C*
+      ** SAVE CUSTOMER DETAILS OTHERWISE
+     C*
+     C                     ELSE
+     C                     MOVE AUCI      CTAUCS
+     C           *LIKE     DEFN AUCI      CTAUCS
+     C                     END
+     C*
+     C                     END
+     C*
+      ** IF L1 IS ON, AND A BOOK IS PRESENT
+      ** CHAIN TO LF/BOOKD FOR BOOK DETAILS
+     C*
+     C           *INL1     IFEQ '1'
+     C           BOKC      ANDNE*BLANK
+     C           BOKC      CHAINBOOKD                99
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'BOOKD'   DBFILE           * DB ERROR 08 *
+     C                     Z-ADD8         DBASE            ***************
+     C                     MOVELBOKC      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C*
+      ** SAVE BOOK DETAILS OTHERWISE
+     C*
+     C                     ELSE
+     C                     MOVE AUCI      BKAUCS
+     C           *LIKE     DEFN AUCI      BKAUCS
+     C                     END
+     C*
+     C                     END
+     C*
+      /SPACE 5
+     C*
+      ** RECORD PROCESSING
+     C*
+      ** IF SETTLEMENT DATE IS DUE FORCE AUTOCLOSURE
+     C*
+     C           SETD      IFLT DNWD
+     C                     MOVEL'N'       TBLO
+     C                     MOVE 'Y'       BRAUCI                   105587
+     C                     MOVE 'Y'       CTAUCI
+     C                     MOVE 'Y'       BKAUCI
+     C                     ELSE
+     C                     MOVE BRAUCS    BRAUCI                   105587
+     C           *LIKE     DEFN BRAUCS    BRAUCI                   105587
+     C                     MOVE CTAUCS    CTAUCI
+     C           *LIKE     DEFN CTAUCS    CTAUCI
+     C                     MOVE BKAUCS    BKAUCI
+     C           *LIKE     DEFN BKAUCS    BKAUCI
+     C                     END
+     C*
+      ** CUSTOMER/BOOK PROCESSING IF NO BROKER PRESENT
+     C*
+     C********** BOCO      IFEQ 0                                                             CSD027
+     C           BOCO      IFEQ *BLANKS                                                       CSD027
+     C*
+      ** IF NO OPEN CONTRACTS FOR CUSTOMER/BOOK, IGNORE
+     C*
+     C           NOCO      ANDGT0
+     C*
+      ** IF TRANSACTION IS TO BE LEFT OPEN, IGNORE
+     C*
+     C           TBLO      ANDEQ'N'
+     C*
+      ** IF CUSTOMER TO BE NOT TO BE CLOSED, IGNORE
+     C*
+     C           CTAUCI    ANDEQ'Y'
+     C*
+      ** OTHERWISE (ALL CONDITIONS MET) OUTPUT TO WTRNSD
+     C*
+     C                     MOVE 'C'       CLUI
+     C                     Z-ADDNOCO      NUMO
+     C                     EXCPTCUSTBK
+     C                     END
+     C*
+      ** IF BROKER PRESENT, PROCESS BROKER
+     C*
+     C********** BOCO      IFGT 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C                     EXSR BROKCL
+     C                     END
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **              INDEX TO SUBROUTINES
+      **
+      **  FIRST : FIRST CYCLE PROCESSING
+      **  BROKCL: PERFORMS PROCESSING FOR NON-BLANK BROKER CODE
+      **             RECORDS
+      **  *PSSR : HANDLES ABNORMAL ERROR CONDITIONS                       S01117
+      **
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** S/R FIRST : TO PERFORM FIRST CYCLE PROCESSING
+      **
+      ** CALLED FROM MAIN PROCESSING
+      **
+      ** CALLS NO OTHER SUBROUTINES
+      **
+     C********************************************************************
+     C*
+     C           FIRST     BEGSR
+     C*
+      ** PREPARE LDA                                                      S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBFILE                          S01117
+     C                     MOVEL*BLANK    DBKEY                           S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     MOVE 'FF0325  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C                     MOVE 'N'       UPDI
+     C*
+      ** ACCEPT INPUT PARAMETER   (BLANK FOR OTC'S)
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PMRKT
+     C*
+     C           *LIKE     DEFN MRKT      PMRKT
+     C***********                                                         S01117
+      ***ACCESS*TABTB10***************************************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 40               S01117
+     C***********                                                         S01117
+      ***DATABASE*ERROR*IF*NOT*FOUND**************************************S01117
+     C***********                                                         S01117
+     C************IN40     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          SETON                     U7U8LR***************S01117
+     C***********          MOVE 'TABLE'   DBFILE           * DB ERROR 01 *S01117
+     C***********          Z-ADD01        DBASE            ***************S01117
+     C***********          MOVEL'TABTB10' DBKEY                           S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C*     IN THE DATAAREA RUNDAT                                        S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+      ***IF*PROCESSING*FOR*OTC*,*OPEN*AND*ACCESS*TABTB11******************S01117
+     C*  IF PROCESSING FOR OTC , ACCESS SDBANKPD FOR NEXT WORKING DAY     S01117
+     C*
+     C           PMRKT     IFEQ *BLANKS
+     C***********          OPEN TABTB11                                   S01117
+     C***********          READ TABTB11                  40               S01117
+      *                                                                   S01117
+      **   ACCESS BANK DETAILS                                            S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG    '@RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C************IN40     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8LR***************
+     C***********          MOVE 'TABLE'   DBFILE           * DB ERROR 02 *S01117
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 02 *S01117
+     C                     Z-ADD02        DBASE            ***************
+     C***********          MOVEL'TABTB11' DBKEY                           S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+      ** IF PROCESSING FOR A MARKET , OPEN FILES AND ACCESS MKCTL
+     C*
+     C           PMRKT     IFNE *BLANKS
+     C                     OPEN MARKT
+     C                     OPEN MKCTL
+      *
+     C           PMRKT     CHAINMKCTL                40
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN40     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'MKCTL'   DBFILE           * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     MOVELPMRKT     DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+      ** ACCESS MARKT
+     C*
+     C           PMRKT     CHAINMARKT                40
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN40     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'MARKT'   DBFILE           * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     MOVELPMRKT     DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     ELSE
+      *
+      ***Calculate*date*of*next*working*day*using*SR.ZDATE5***************S01195
+      ** Calculate date of next working day using SR.ZFWDT                S01195
+      *
+     C           BUSD      ADD  1         ZDAYNO
+     C                     MOVE MKLC      ZCCY
+     C                     MOVE MLOC      ZLOC                            S01195
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C                     Z-ADDZDYNBR    DNWD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** S/R BROKCL: TO PERFORM PROCESSING FOR NON-BLANK BROKER CODE
+      **             RECORDS
+      **
+      ** CALLED FROM MAIN PROCESSING
+      **
+      ** CALLS NO OTHER SUBROUTINES
+      **
+     C********************************************************************
+     C*
+     C           BROKCL    BEGSR
+     C*
+      ** IF BROKER HAS OPEN CONTRACTS AND IS POSITIONS COMBINED
+     C*
+     C           NOBO      IFGT 0
+     C           BPSCI     ANDEQ'Y'
+     C           BRAUCI    ANDEQ'Y'                                131939
+     C           TBLO      ANDEQ'N'                                                           190408
+     C*
+      ** THEN OUTPUT BROKER RECORD TO WTRNSD
+     C*
+     C                     MOVE 'B'       CLUI
+     C                     Z-ADDNOBO      NUMO
+     C                     EXCPTBROKER
+     C                     END
+     C*
+      ** REMAINING PROCESSING FOR CUSTOMER/BOOK: IF TO BE LEFT OPEN
+     C*
+     C           TBLO      IFEQ 'N'
+     C*
+      ** AND CUSTOMER/BOOK HAS OPEN CONTRACTS
+     C*
+     C           NOCO      ANDGT0
+     C*
+      ** FOR CUSTOMER SIDE, IF AUTOCLOSURE REQUIRED
+     C*
+     C********** CUSC      IFGT 0                                                             CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C           CTAUCI    ANDEQ'Y'
+     C           BRAUCI    ANDEQ'Y'                                105587
+     C********** CUSC      ORGT 0                                                      105587 CSD027
+     C           CUSC      ORNE *BLANKS                                                       CSD027
+     C           CTAUCI    ANDEQ'Y'                                105587
+     C           BPSCI     ANDEQ'Y'                                105587
+     C*
+      ** IF BROKER HAS POSITIONS COMBINED,
+      ** WRITE CUSTOMER UPDATE RECORD TO WTRNSD
+      ** (BROKER RECORD PREVIOUSLY WRITTEN)
+      ** OTHERWISE WRITE CUSTOMER/BROKER UPDATE RECORD TO WTRNSD
+     C*
+     C           BPSCI     IFEQ 'Y'
+     C                     MOVE 'C'       CLUI
+     C                     ELSE
+     C                     MOVE 'X'       CLUI
+     C                     END
+     C*
+     C                     Z-ADDNOCO      NUMO
+     C                     EXCPTCUSTER
+     C*
+      ** END OF CUSTOMER PROCESSING
+     C*
+     C                     END
+     C*
+      ** FOR BOOK SIDE, IF BOOK HAS AUTOCLOSURE
+     C*
+     C********** CUSC      IFEQ 0                                                             CSD027
+     C           CUSC      IFEQ *BLANKS                                                       CSD027
+     C           BKAUCI    ANDEQ'Y'
+     C           BRAUCI    ANDEQ'Y'                                105587
+     C********** CUSC      OREQ 0                                                      105587 CSD027
+     C           CUSC      OREQ *BLANKS                                                       CSD027
+     C           BKAUCI    ANDEQ'Y'                                105587
+     C           BPSCI     ANDEQ'Y'                                105587
+     C*
+      ** IF BROKER HAS POSITIONS COMBINED,
+      ** WRITE BOOK UPDATE RECORD TO WTRNSD
+      ** (BROKER RECORD PREVIOUSLY WRITTEN)
+      ** OTHERWISE WRITE BROKER/BOOK UPDATE RECORD TO WTRNSD
+     C*
+     C           BPSCI     IFEQ 'Y'
+     C                     MOVE 'C'       CLUI
+     C                     ELSE
+     C                     MOVE 'X'       CLUI
+     C                     END
+     C*
+     C                     Z-ADDNOCO      NUMO
+     C                     EXCPTBROKBK
+     C*
+      ** END OF BOOK PROCESSING
+     C*
+     C                     END
+     C*
+      ** END OF CUSTOMER/BROKER OPEN CONTRACTS PROCESSING
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C*COPY*ZSRSRC,ZDATE5Z2                                               S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/EJECT
+     C/COPY ZSRSRC,FFDATEZ3
+     C/EJECT
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZBKDT                                                  S01195
+     C/EJECT                                                              S01195
+     C*COPY*ZSRSRC,ZDATE3Z4                                               S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C********************************************************************
+     C/EJECT
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT                                                              S01117
+     O********************************************************************S01117
+     OWTRNSDF E                BROKER
+     O*
+      ** OUTPUT FOR BROKER ONLY RECORD (CUSTOMER & BOOK BLANK)
+     O*
+     O                         RECI
+     O***********              BRCD                                       S01117
+     O                         BRCA                                       S01117
+     O                         ISTT
+     O                         YRNO
+     O                         MTHN
+     O                         PCAL
+     O                         STRP
+     O                         BOCO
+     O                         TRSD
+     O                         TNBR
+     O                         TRTY
+     O                         NUMO
+     O                         COPR
+     O                         UPDI
+     O                         CLUI
+     O*
+     OWTRNSDF E                CUSTER
+     O*
+      ** OUTPUT FOR CUSTOMER/BROKER RECORD (BOOK BLANK)
+     O*
+     O                         RECI
+     O***********              BRCD                                       S01117
+     O                         BRCA                                       S01117
+     O                         ISTT
+     O                         YRNO
+     O                         MTHN
+     O                         PCAL
+     O                         STRP
+     O                         BOCO
+     O                         CUSC
+     O                         TRSD
+     O                         TNBR
+     O                         TRTY
+     O                         NUMO
+     O                         COPR
+     O                         UPDI
+     O                         CLUI
+     O                         PTFR                                       S71062
+     OWTRNSDF E                BROKBK
+     O*
+      ** OUTPUT FOR BROKER/BOOK RECORD (CUSTOMER BLANK)
+     O*
+     O                         RECI
+     O***********              BRCD                                       S01117
+     O                         BRCA                                       S01117
+     O                         ISTT
+     O                         YRNO
+     O                         MTHN
+     O                         PCAL
+     O                         STRP
+     O                         BOCO
+     O                         BOKC
+     O                         TRSD
+     O                         TNBR
+     O                         TRTY
+     O                         NUMO
+     O                         COPR
+     O                         UPDI
+     O                         CLUI
+     OWTRNSDF E                CUSTBK
+     O*
+      ** OUTPUT FOR CUSTOMER/BOOK RECORD (BROKER BLANK)
+     O*
+     O                         RECI
+     O***********              BRCD                                       S01117
+     O                         BRCA                                       S01117
+     O                         ISTT
+     O                         YRNO
+     O                         MTHN
+     O                         PCAL
+     O                         STRP
+     O                         CUSC
+     O                         BOKC
+     O                         TRSD
+     O                         TNBR
+     O                         TRTY
+     O                         NUMO
+     O                         COPR
+     O                         UPDI
+     O                         CLUI
+     O                         PTFR                                       S71062
+**  CPY@
+(c) Finastra International Limited 2001
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

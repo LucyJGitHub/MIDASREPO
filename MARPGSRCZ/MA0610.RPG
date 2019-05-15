@@ -1,0 +1,525 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MA Archive on output queue')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Microfiche/Optical Disk Archiving Module             *
+      *                                                               *
+      *  MA0610 - ARCHIVE AN OUTPUT QUEUE                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG5869            Date 21Mar05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 201324             Date 15Jan02               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 22Feb94               *
+      *                 S01382             Date 04Aug92               *
+      *                 E29281             Date 23OCT91               *
+      *                 LN1073             Date 10DEC90               *                       LN1073
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,MAH00001                                 *
+      *             WNCPYSRC,MAH00002                                 *
+      *             WNCPYSRC,MAH00003                                 *
+      *             WNCPYSRC,MAH00004                                 *
+      *             WNCPYSRC,MAH00005                                 *
+      *             WNCPYSRC,MAH00009                                 *
+      *  BUG5869 - For archiving from outq, assign entity details as  *
+      *            held by RCF; for archiving on request, report name *
+      *            should include suffix.                             *
+      *     201324 - Changes for OS V5R1                              *
+      *     S01408 - ADDITION OF CORE HOOK MA0610CCP1                 *
+      *              ADDITION OF CORE HOOK MA0610CCP2                 *
+      *              ADDITION OF CORE HOOK MA0610CCAU                 *
+      *              ADDITION OF CORE HOOK MA0610CCBU                 *
+      *     S01382 - OPTICAL DISK DEVELOPMENT                         *
+      *            - REMOVE OLD OPTICAL DISK PROCESSING               *
+      *            - WRITE TO BOTH MAFICDPD AND MAOPTDPD IF MEDIUM    *
+      *              FLAG IS 'B' (BOTH MEDIA)                         *
+      *            - CALL MA0640 TO SET UP OPTICAL DISK HEADER STRING *
+      *            - CALL MAC0660 TO WRITE HEADER TO MAOPTDPD         *
+      *            - FOR EACH SPOOL FILE FROM AN OUTPUT QUEUE COPIED  *
+      *              FOR ARCHIVING :- FOR OPTICAL WRITE A HEADER TO   *
+      *              MAOPTDPD FOLLOWED BY THE CORRESPONDING SPOOL;    *
+      *              FOR MICROFICHE WRITE A HEADER TO MAFICDPD        *
+      *              FOLLOWED BY ALL THE SPOOL FILES ON THE OUTQ.     *
+      *              (NOTE: MAOPTDPD IS NOW MULTIMEMBERED WITH        *
+      *                     ARCHIVE IDS AS THE NAME OF THE MEMBERS)   *
+      *     E29281 - OUTPUT '1*$*$' TO THE OPTICAL DISK HEADER RECORD *
+      *     LN1073 - CONDITION WRITE TO OPTICAL DISK FILE             *LN1073
+      *                                                               *
+      *****************************************************************
+      *  PGM FUNCTION :                                               *
+      *                Write a header record to Microfiche, or        *
+      *                optical disk bureau file . Using the spool file*
+      *                information from MAOUTQPD copy that spool file *
+      *                to microfich/optical disk detail file          *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  FUNCTION OF INDICATORS                                       *
+      *       10  UNSUCCESSFUL CHAIN OF MAARCHL1                      *
+      *       20  INIT SUBROUTINE RUN                                 *
+      *       50  TO TRAP ERROR ON QCMDEXC                            *
+      *                                                               *
+      *****************************************************************
+     FMAOUTQPDIPE E                    DISK
+     FMAARCHL1IF  E           K        DISK
+     FMAFICDPDO   E                    DISK
+     FFCSFNOJ1IF  E           K        DISK                                                  BUG5869
+     FFCYFNOJ1IF  E           K        DISK                                                  BUG5869
+     F***MAOPTDPDO   E                    DISK                            S01382
+      *
+     E                    CPY@    1   1 80
+      *   Copyright statement                                         *
+      *
+     E                    PCMD    1   2 75
+      *   CPYSPLF command for QCMDEXC
+      *
+     ILDA        UDS                            256
+      *    MIDAS Local Data area
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IHMFICH    E DSMAFICHPD
+      **  EXTERNAL DS FOR MICROFICHE HEADER
+      *
+     I/COPY WNCPYSRC,MAH00001
+     I***HODISK    E DSMAOPTHPD                                           S01382
+      *****  EXTERNAL DS FOR OPTICAL DISK HEADER                          S01382
+      *
+     IDETDS       DS
+      ****DATA STRUCTURE FOR MICROFICHE/OPTICAL DISK DETAIL               S01382
+      * DATA STRUCTURE FOR MICROFICHE DETAIL                              S01382
+      *
+     I                                        1   1 MACCHR
+     I                                        2 133 MARDTL
+     I                                      134 154 F00021
+      *
+     IRUNDAT      DS                             13
+     I                                        1   7 @DATA
+     I                                    P   8  100@NDATA
+      *
+      *
+     IOUTQ        DS
+      * Data Structure for spool file details
+      *
+     I                                        2  11 IFILE
+     I                                       13  22 IUSER                 S01382
+     I**********                             82  91 IJOB                                      201324
+     I**********                             93  98 IJBNBR                                    201324
+     I**********                             73  76 ISLNBR                                    201324
+     I                                       84  93 IJOB                                      201324
+     I                                       95 100 IJBNBR                                    201324
+     I                                       75  78 ISLNBR                                    201324
+      *
+     IQCMD        DS
+      * Data structure for copy spool file
+      *
+     I                                        1 150 PCMD
+     I                                       14  23 @FILE
+     I                                       35  44 @TFILE
+     I                                       53  58 @JBNBR
+     I                                       63  72 @JOB
+     I                                       86  89 @SLNBR
+     I                                      135 144 @TOMBR                S01382
+      *
+      *                                                                   S01382
+      ** Parameters for setting up header                                 S01382
+      *                                                                   S01382
+     IIHEAD       DS                                                      S01382
+     I                                        1 198 HEADER                S01382
+     I                                        1   4 OUTPUT                S01382
+     I                                        5  14 REPORT                S01382
+     I                                       15  24 USERID                S01382
+     I                                       25  34 JOBNAM                S01382
+     I                                       35  40 JOBNBR                S01382
+     I                                       41  44 SPLFNO                S01382
+     I                                       45  45 RPTLVL                S01382
+     I                                       46  48 ENTITY                S01382
+     I                                       49  53 RSEQNO                S01382
+     I                                       54  63 PRTFNM                S01382
+     I/COPY WNCPYSRC,MAH00002
+      *
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+      *
+      * Check, if data in IJBNBR (job nbr) is numeric :
+      *           numeric data - process record
+      *           else         - ignore record
+      *
+     C                     MOVE IJBNBR    NJBNBR  60
+     C                     MOVE NJBNBR    @JBNBR
+      *
+     C           @JBNBR    IFEQ IJBNBR
+      *
+      * Initialisation process
+      *
+     C           *IN20     CASEQ'0'       INIT
+     C                     END
+     C/COPY WNCPYSRC,MAH00003
+      *
+     C                     MOVE IFILE     @FILE
+     C                     MOVE IJOB      @JOB
+     C                     MOVE IJBNBR    @JBNBR
+     C                     MOVE ISLNBR    @SLNBR
+     C                     MOVELIUSER     @USER  10                       S01382
+      *
+      * Write header records                                              S01382
+      *                                                                   S01382
+      * If medium is 'M' write a record to Microfiche file                S01382
+      *                                                                   S01382
+     C           EAMEDM    IFEQ 'M'                                       S01382
+     C                     EXSR WMICRO                                    S01382
+     C                     ELSE                                           S01382
+      *                                                                   S01382
+      * else if medium is 'O' write a record to Optical disk file         S01382
+      *                                                                   S01382
+     C           EAMEDM    IFEQ 'O'                                       S01382
+     C                     EXSR WOPTIC                                    S01382
+     C                     ELSE                                           S01382
+      *                                                                   S01382
+      * else if medium is 'B' write a record to both the Microfiche       S01382
+      * and the Optical disk files                                        S01382
+      *                                                                   S01382
+     C           EAMEDM    IFEQ 'B'                                       S01382
+     C                     EXSR WMICRO                                    S01382
+     C                     EXSR WOPTIC                                    S01382
+     C                     END                                            S01382
+     C                     END                                            S01382
+     C                     END                                            S01382
+      *                                                                   S01382
+      * If medium is 'M' copy SPLF into Microfiche  file
+      * Else, if medium is 'O' copy SPLF into Optical  file
+      * Else, if medium is 'B' copy SPLF into Optical and Microfiche file S01382
+      *                                                                   S01382
+     C***********          MOVE 'MAFICDPD'@TFILE                          S01382
+     C***********EAMEDM    IFEQ 'O'                                       S01382
+     C***********          MOVE 'MAOPTDPD'@TFILE                          S01382
+     C***********          END                                            S01382
+      ***********                                                         S01382
+      **execute CPYSPLF                                                   S01382
+     C***********          CALL 'QCMDEXC'              50                 S01382
+     C***********          PARM           QCMD                            S01382
+     C***********          PARM 150       QLNGTH 155                      S01382
+      *                                                                   S01382
+      * If medium is 'M' or 'B'                                           S01382
+      *                                                                   S01382
+     C           EAMEDM    IFEQ 'M'                                       S01382
+     C           EAMEDM    OREQ 'B'                                       S01382
+     C                     MOVEL'MAFICDPD'@TFILE                          S01382
+     C                     MOVEL*BLANKS   @TOMBR                          S01382
+     C                     MOVEL'*FIRST'  @TOMBR                          S01382
+      *                                                                   S01382
+      * execute CPYSPLF                                                   S01382
+      *                                                                   S01382
+     C                     CALL 'QCMDEXC'              50                 S01382
+     C                     PARM           QCMD                            S01382
+     C                     PARM 150       QLNGTH 155                      S01382
+     C                     END                                            S01382
+      *                                                                   S01382
+      * If medium is 'O' or 'B', use srhive id as file member             S01382
+      *                                                                   S01382
+     C           EAMEDM    IFEQ 'O'                                       S01382
+     C           EAMEDM    OREQ 'B'                                       S01382
+     C                     MOVEL'MAOPTDPD'@TFILE                          S01382
+     C                     MOVEL*BLANKS   @TOMBR                          S01382
+     C                     MOVELP1ARID    @TOMBR                          S01382
+      *                                                                   S01382
+      * execute CPYSPLF                                                   S01382
+      *                                                                   S01382
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MA0610CCP1                                           S01408
+     C*                                                                   S01408
+     C                     CALL 'QCMDEXC'              50                 S01382
+     C                     PARM           QCMD                            S01382
+     C                     PARM 150       QLNGTH 155                      S01382
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MA0610CCP2                                           S01408
+     C*                                                                   S01408
+     C                     END                                            S01382
+     C/COPY WNCPYSRC,MAH00004
+      *
+     C                     END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INIT - initialisation process                                 *
+      *        CALLED BY MAINLINE                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      * Set on *IN20 to execute INIT once
+      *
+     C                     SETON                     20
+      *
+      *  ACCESS LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      *  Access: DTAARA/RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      * Accept input parameter 'archive id'
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P1ARID 10
+      *
+      * Chain MAARCHL1 using input parameter 'archive id' as key
+      *
+     C           P1ARID    CHAINMAARCHL1             1010
+      *
+      * DB Error if record not found
+      *
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'MAARCHL1'DBFILE
+     C                     MOVE 'MA0610'  DBPGM
+     C                     MOVE P1ARID    DBKEY
+     C                     Z-ADD1         DBASE
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C/COPY WNCPYSRC,MAH00005
+      *
+      * Remove following coding and place into subroutine WMICRO          S01382
+      **If medium is 'M' write a record to Microfiche  file               S01382
+      **Else,if*medium*is*'O'*write*a*record*to*Optical**file       LN1073S01382
+     C***********EAMEDM    IFEQ 'M'                                       S01382
+     C***********          MOVE *ALL'\'   HMFICH                          S01382
+     C***********          MOVE '*HDR*'   MARTP5                          S01382
+     C***********          MOVE P1ARID    MAARID                          S01382
+     C***********          MOVE EAADSC    MAADSC                          S01382
+     C***********          MOVE EADEPT    MADEPT                          S01382
+     C***********          MOVE EAAOTQ    MARNAM                          S01382
+     C***********          MOVE @DATA     MAADAT                          S01382
+     C***********          MOVE @NDATA    MAMDAT                          S01382
+     C***********          MOVE *BLANKS   MAPFTX                          S01382
+     C***********          MOVE *BLANKS   MARSFX                          S01382
+     C***********          MOVELHMFICH    DETDS                           S01382
+     C***********          WRITEMAFICDD0                                  S01382
+     C***********          CLOSEMAFICDPD                                  S01382
+      ***********                                                         S01382
+     C***********          END                                      LN1073S01382
+      ***********                                                   LN1073S01382
+      * Remove following coding. Optical disk processing is now done in   S01382
+      * subroutine WOPTIC                                                 S01382
+      **If medium is 'O' write a record to Optical Disk file        LN1073S01382
+     C***********         ELSE                                      LN1073S01382
+      ***********                                                         S01382
+     C***********EAMEDM    IFEQ 'O'                                 LN1073S01382
+     C***********          MOVE *ALL'\'   HODISK                          S01382
+     C***********          MOVE '*HDR*'   M1RTP5                    E29281S01382
+     C***********          MOVE '1*$*$'   M1RTP5                    E29281S01382
+     C***********          MOVE P1ARID    M1ARID                          S01382
+     C***********          MOVE EAADSC    M1ADSC                          S01382
+     C***********          MOVE EADEPT    M1DEPT                          S01382
+     C***********          MOVE EAAOTQ    M1RNAM                          S01382
+     C***********          MOVE @DATA     M1ADAT                          S01382
+     C***********          MOVE @NDATA    M1MDAT                          S01382
+     C***********          MOVE *BLANKS   M1PFTX                          S01382
+     C***********          MOVE *BLANKS   M1RSFX                          S01382
+     C***********          MOVE *BLANKS   M1FMTP                          S01382
+     C***********          MOVE *BLANKS   M1PLEN                          S01382
+     C***********          MOVE *BLANKS   M1LPI                           S01382
+     C***********          MOVELHODISK    DETDS                           S01382
+     C***********          WRITEMAOPTDD0                                  S01382
+     C***********          CLOSEMAOPTDPD                                  S01382
+     C***********          END                                            S01382
+      *
+     C                     ENDSR
+     C/EJECT
+      ********************************************************************S01382
+      *                                                                   S01382
+      * WMICRO -  WRITE A RECORD TO MICROFICHE FILE                       S01382
+      *                                                                   S01382
+      *      CALLED BY :  MAIN PROCESSING                                 S01382
+      *                                                                   S01382
+      *      CALLS     :                                                  S01382
+      *                                                                   S01382
+      ***********************************************************         S01382
+      *                                                                   S01382
+     C           WMICRO    BEGSR                                          S01382
+      *                                                                   S01382
+      * Write only one header record for microfiche                       S01382
+      *                                                                   S01382
+     C           *IN21     IFEQ '0'                                       S01382
+     C                     MOVE *ALL'\'   HMFICH                          S01382
+     C                     MOVE '*HDR*'   MARTP5                          S01382
+     C                     MOVE P1ARID    MAARID                          S01382
+     C                     MOVE EAADSC    MAADSC                          S01382
+     C                     MOVE EADEPT    MADEPT                          S01382
+     C                     MOVE EAAOTQ    MARNAM                          S01382
+     C                     MOVE @DATA     MAADAT                          S01382
+     C                     MOVE @NDATA    MAMDAT                          S01382
+     C                     MOVE *BLANKS   MAPFTX                          S01382
+     C                     MOVE *BLANKS   MARSFX                          S01382
+     C                     MOVELHMFICH    DETDS                           S01382
+     C                     WRITEMAFICDD0                                  S01382
+     C                     CLOSEMAFICDPD                                  S01382
+     C                     MOVE '1'       *IN21                           S01382
+     C                     END                                            S01382
+      *                                                                   S01382
+     C                     ENDSR                                          S01382
+      *                                                                   S01382
+     C/EJECT                                                              S01382
+      ***********************************************************         S01382
+      *                                                                   S01382
+      * WOPTIC -  WRITE A RECORD TO OPTICAL DISK                          S01382
+      *                                                                   S01382
+      *      CALLED BY :  MAIN PROCESSING                                 S01382
+      *                                                                   S01382
+      *      CALLS     :  MA0640 - CREATE OPTICAL DISK REPORT HEADER      S01382
+      *                   MAC0660- WRITE HEADER RECORDS TO ARCHIVE        S01382
+      *                                                                   S01382
+      ***********************************************************         S01382
+      *                                                                   S01382
+     C           WOPTIC    BEGSR                                          S01382
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MA0610CCBU                                           S01408
+     C*                                                                   S01408
+      *                                                                   S01382
+      * Create optical disk header                                        S01382
+      *                                                                   S01382
+     C                     MOVEL*BLANKS   HEADER                          S01382
+     C                     MOVEL*BLANKS   @ERROR  1                       S01382
+     C                     MOVEL'OUTQ'    OUTPUT                          S01382
+     C                     MOVELIFILE     REPORT                          S01382
+     C                     MOVELIUSER     USERID                          S01382
+     C                     MOVELIJOB      JOBNAM                          S01382
+     C                     MOVELIJBNBR    JOBNBR                          S01382
+     C                     MOVELISLNBR    SPLFNO                          S01382
+     C                     MOVEL*BLANKS   RPTLVL                          S01382
+     C                     MOVEL*BLANKS   ENTITY                          S01382
+     C                     MOVEL*BLANKS   RSEQNO                          S01382
+     C                     MOVEL*BLANKS   PRTFNM                          S01382
+     C/COPY WNCPYSRC,MAH00009
+      *                                                                                      BUG5869
+      ** Assign entity as held by RCF                                                        BUG5869
+      *                                                                                      BUG5869
+     C           KSFNO1    KLIST                                                             BUG5869
+     C                     KFLD           D6RSFX                                             BUG5869
+     C                     KFLD           D6SFNO                                             BUG5869
+      *                                                                                      BUG5869
+      ** Entity needs to be found...                                                         BUG5869
+      *                                                                                      BUG5869
+     C           RPTLVL    IFEQ *BLANKS                                                      BUG5869
+     C           ENTITY    ANDEQ*BLANKS                                                      BUG5869
+     C                     MOVELIFILE     D6RSFX                                             BUG5869
+     C           ' ':'0'   XLATESPLFNO    D6SFNO                                             BUG5869
+     C           KSFNO1    SETLLFCYFNOJ1                                                     BUG5869
+      *                                                                                      BUG5869
+      ** Find unique spool file (from name and job)                                          BUG5869
+      *                                                                                      BUG5869
+     C           *IN81     DOUEQ*OFF                                                         BUG5869
+     C           D5JBNM    ANDEQJOBNAM                                                       BUG5869
+     C           D5JUSR    ANDEQUSERID                                                       BUG5869
+     C           D5JBNB    ANDEQJOBNBR                                                       BUG5869
+     C           *IN81     OREQ *ON                                                          BUG5869
+     C           KSFNO1    READEFCYFNOJ1                 81                                  BUG5869
+     C                     ENDDO                                                             BUG5869
+     C           *IN81     IFEQ *ON                                                          BUG5869
+     C                     MOVELIFILE     D6RSFX                                             BUG5869
+     C           ' ':'0'   XLATESPLFNO    D6SFNO                                             BUG5869
+     C           KSFNO1    SETLLFCSFNOJ1                                                     BUG5869
+      *                                                                                      BUG5869
+      ** Find unique spool file (from name and job)                                          BUG5869
+      *                                                                                      BUG5869
+     C           *IN81     DOUEQ*OFF                                                         BUG5869
+     C           D5JBNM    ANDEQJOBNAM                                                       BUG5869
+     C           D5JUSR    ANDEQUSERID                                                       BUG5869
+     C           D5JBNB    ANDEQJOBNBR                                                       BUG5869
+     C           *IN81     OREQ *ON                                                          BUG5869
+     C           KSFNO1    READEFCSFNOJ1                 81                                  BUG5869
+     C                     ENDDO                                                             BUG5869
+     C                     ENDIF                                                             BUG5869
+      *                                                                                      BUG5869
+      ** If found...                                                                         BUG5869
+      *                                                                                      BUG5869
+     C           *IN81     IFEQ *OFF                                                         BUG5869
+      *                                                                                      BUG5869
+      ** Identify report level                                                               BUG5869
+      *                                                                                      BUG5869
+     C                     MOVELD5LVL     RPTLVL                                             BUG5869
+      *                                                                                      BUG5869
+      ** For branch level, identify entity                                                   BUG5869
+      *                                                                                      BUG5869
+     C           RPTLVL    IFEQ 'B'                                                          BUG5869
+     C                     MOVELD6XETY    ENTITY                                             BUG5869
+     C                     ENDIF                                                             BUG5869
+     C                     ENDIF                                                             BUG5869
+     C                     ENDIF                                                             BUG5869
+      *                                                                                      BUG5869
+     C                     CALL 'MA0640'                                  S01382
+     C                     PARM           HEADER                          S01382
+     C                     PARM           @ERROR                          S01382
+      *                                                                   S01382
+     C           @ERROR    IFEQ 'Y'                                       S01382
+     C                     EXSR *PSSR                                     S01382
+     C                     END                                            S01382
+      *                                                                   S01382
+      * Obtain header string using archive id as file member for MAOPTDPD S01382
+      *                                                                   S01382
+     C                     MOVEL'MAOPTDPD'PFILE  10                       S01382
+     C                     CALL 'MAC0660'                                 S01382
+     C                     PARM           PFILE                           S01382
+     C                     PARM           P1ARID                          S01382
+     C                     PARM           HEADER                          S01382
+      *                                                                   S01382
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MA0610CCAU                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR                                          S01382
+      *                                                                   S01382
+      /EJECT                                                              S01382
+      *****************************************************************   S01382
+      *                                                               *   S01382
+      * *PSSR  - Program exception error routine                      *   S01382
+      *          Called automatically if a program error occurs,      *   S01382
+      *          or directly by the program code using EXSR.          *   S01382
+      *          This subroutine DUMPs the program just once.         *   S01382
+      *                                                               *   S01382
+      * Called by: (**calling routines**)                             *   S01382
+      *                                                               *   S01382
+      * Calls: None                                                   *   S01382
+      *                                                               *   S01382
+      *****************************************************************   S01382
+     C           *PSSR     BEGSR                           ** *PSSR SR ** S01382
+      *                                                                   S01382
+     C           @RUN      IFEQ *BLANK                                    S01382
+     C                     MOVE 'Y'       @RUN    1                       S01382
+     C                     DUMP                                           S01382
+      *                                                                   S01382
+     C                     END                                            S01382
+      *                                                                   S01382
+     C                     SETON                     U7U8LR               S01382
+     C                     RETRN                                          S01382
+      *                                                                   S01382
+     C                     ENDSR                                          S01382
+      ********************************************************************S01382
+      /EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**
+CPYSPLF FILE(          )   TOFILE(          )   JOB(      /*N/          )
+   SPLNBR(    )   MBROPT(*ADD)      CTLCHAR(*FCFC)   TOMBR(          )

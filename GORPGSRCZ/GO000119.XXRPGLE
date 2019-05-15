@@ -1,0 +1,159 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CCB023
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GO000119 - Global Processing data dowload, Spot Rates        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CCB023  *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSC041  *CREATE    Date 26Nov09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  CSC041 - 4-Eyes Checking Gaps (Applied BUG23875)             *
+      *                                                               *
+      *****************************************************************
+      **
+      ** +--------------------------------------+
+      ** ¦ Files                                ¦
+      ** ¦ =====                                ¦
+      ** +--------------------------------------+
+      *
+     FGPSRWIPL  IF   E           K DISK    INFSR(*PSSR)
+     FGPZONEL2  IF   E           K DISK    INFSR(*PSSR)
+     FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
+      **
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+     D                 DS
+     D  CountN                 1      5  0
+     D  CountA                 1      5
+      *
+      * Program Status Data Structure
+     D/COPY ZACPYSRC,PSDS
+      *
+      * Midas Local Data Area for database error reporting
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+      * The following fields are defined in the external file:
+      *                                     134 141 DBFile
+      *                                     142 170 DBKey
+      *                                     171 180 DBPgm
+      *                                     181 1830DBase
+      *                                     184 193 DBMod
+      *                                     194 203 DBProc
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D @RUN            S              1
+     D Value           S             50
+      *
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      /COPY GOCPYSRC,GOUPD_PARM
+      *
+      ** Get Zone Name from system ID.
+ 
+     C     System_ID     CHAIN     GPZONED0                           90
+ 
+      ** Unauthorised Customer Exchange
+ 
+     C                   IF        Key_Desc = 'UnauthSpotRates'
+ 
+     C                   EXSR      UpdateCount
+ 
+     C                   ENDIF
+ 
+     C                   IF        %OPEN(GPDWNLL0)
+     C                   CLOSE     GPDWNLL0
+     C                   ENDIF
+ 
+     C/COPY GOCPYSRC,GOUPD_DWNL
+ 
+     C     ENDPGM        TAG
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * UpdateCount - This does the read of the file containing       *
+      *               unauthorised customer exchange updates the      *
+      *               count accordingly.                              *
+      *                                                               *
+      * Called by: *MAIN                                              *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     UpdateCount   BEGSR
+ 
+      ** If the Midas phase is not Input Cycle then set data to blank.
+ 
+     C                   IF        MidasPhase <> 'A'
+     C                   EVAL      Value = *blanks
+     C                   ELSE
+ 
+     C                   EVAL      CountN = 0
+ 
+     C     *LOVAL        SETLL     T@MSWIP
+     C                   READ      T@MSWIP                                01
+ 
+     C                   DOW       *IN01 = *OFF
+     C                   IF        MSWZONE = ZOZONE
+     C                   EVAL      CountN = CountN + 1
+     C                   ENDIF
+     C                   READ      T@MSWIP                                01
+     C                   ENDDO
+ 
+     C                   EVAL      Value = CountA
+ 
+     C                   ENDIF
+ 
+     C     UpdateCountE  ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      *****************************************************************

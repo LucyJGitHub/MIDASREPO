@@ -1,0 +1,294 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO RE Shadow balances')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  AOMEMSR0 - Shadow balances                                   *
+      *                                                               *
+      *  Function:  This program access the 2 MEMOS logicals,         *
+      *             MEMOSL1 - GL - CNUM/CCY/ACOD/ACSQ/BRCA            *
+      *             MEMOSL2 - RE - ACNO                               *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB002             Date 12Jul96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CCB002 - COB Performance Enhancements                        *
+      *           Access now via access object                        *
+      *           Accesses MEMOSL1/MEMOSL2 via option passed.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * ID F  C  H  L     FUNCTION OF INDICATORS
+      *
+      *       01       Open File MEMOSL1
+      *       02       Open File MEMOSL2
+      *       90       File error
+      *       91       Open error
+      *       92       Close error
+      *       93       Empty File
+      *       94       End of File
+      *       95       No Record Found
+      *       96       Option Error
+      *       97       No Selection
+      *       98       Call Error
+      *       99       Send Message Error
+      *
+      ************************************************************
+      /EJECT
+      ************************************************************
+     FMEMOSL1 IF  E           K        DISK                           UC
+      *
+      ** General Ledger Format                                            S01168
+      *
+     FMEMOSL2 IF  E           K        DISK                           UC
+     F            MEMOSMDF                          KRENAME@MEMOSOL
+      *
+      ** Retail Format
+      *
+      ************************************************************
+      /EJECT
+      ****************************************************************
+     E                    @MG     1   1 50
+     E                    CPY@    1   1 80               Copyright     array
+      *
+      ** Array containing Copyright statement
+      *
+      /EJECT
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ID@FMT     E DSMEMOS
+      *
+      ** MEMOS - RE Shadow balances
+      *
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IP@FMT     E DSDSFDY                                                 S01230
+      *
+      ************************************************************
+      /EJECT
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@RETL 100       I:Retail key
+     C**********           PARM           P@CNUM  60       I:Key field 1                      CSD027
+     C                     PARM           P@CNUM  6        I:Key field 1                      CSD027
+     C                     PARM           P@CUCD  3        I:Key field 2
+     C**********           PARM           P@ACCD  40       I:Key field 3                      CGL029
+     C                     PARM           P@ACCD 100                                          CGL029
+     C                     PARM           P@ACSQ  20       I:Key field 4
+     C                     PARM           P@BRCA  3        I:Key field 5  S01117
+     C                     PARM           P@FMT            O:OUTPUT
+      *****************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           K@L0      KLIST
+     C                     KFLD           P@CNUM
+     C                     KFLD           P@CUCD
+     C                     KFLD           P@ACCD
+     C                     KFLD           P@ACSQ
+     C                     KFLD           P@BRCA                          S01117
+      *
+     C           P@OPTN    IFEQ '*SAME   '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+      *
+      *MAIN
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+     C                     SETOF                     50     Key indicators
+      *
+      * Check key to determine file to use :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF KEYED ACCESS
+     C           P@OPTN    OREQ '*VERIFY'                  IF KEYED ACCESS
+      *                    ¦
+     C           P@RETL    IFNE *ZEROS                     IF RETAIL KEY
+     C                     SETON                     50      Retail ind.
+     C                     END                             FI
+      *                    ¦
+     C********** P@CNUM    IFNE *ZEROS                     IF FULL ACCOUNT                    CSD027
+     C           P@CNUM    IFNE *BLANKS                    IF FULL ACCOUNT                    CSD027
+     C           P@CUCD    ANDNE*BLANK                      AND
+     C           P@ACCD    ANDNE*ZEROS                      AND
+     C           P@ACSQ    ANDNE*ZEROS                      AND
+     C           P@BRCA    ANDNE*BLANK                      AND           S01117
+     C                     SETOF                     50      Full a/c ind.
+     C                     ELSE                            EL
+     C           *IN50     CABEQ'0'       T@SKIP         97  No keys given
+     C                     END                             FI
+      *                    ¦
+     C                     ELSE                            EL NOT KEYED
+     C                     SETOF                     50      Full a/c seq.
+     C                     END                             FI
+      *
+      * First call - open files :
+      *
+     C           *IN50     IFEQ '0'                        IF FULL ACCOUNT
+     C           *IN01     ANDEQ'0'                        AND FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN MEMOSL1                91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI
+      *
+     C           *IN50     IFEQ '1'                        IF RETAIL
+     C           *IN02     ANDEQ'0'                        AND FIRST TIME
+     C                     SETON                     02      Set ind.
+     C                     OPEN MEMOSL2                91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI
+      *
+      * Last call - close files and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                  IF 6 FREE PROGRAM
+     C   01                CLOSEMEMOSL1                92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C   02                CLOSEMEMOSL2                92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 6
+      *
+      * Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 FIRST RECORD
+     C           *LOVAL    SETLLMEMOSMDF             9390    Set file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 3
+      *
+      * Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 4 NEXT RECORD
+     C                     READ MEMOSMDF               9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 4
+      *
+      * Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '                  IF 5 LAST RECORD
+     C           *HIVAL    SETGTMEMOSMDF               90    Set file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 5
+      *
+      * Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '                  IF 6 PREV.RECORD
+     C                     READPMEMOSMDF               9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 6
+      *
+      * Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF 7 KEYED ACCESS
+     C           P@OPTN    OREQ '*VERIFY'                   OR            S01230
+     C  N50      K@L0      CHAINMEMOSMDF             9590    Get record
+     C   50      P@RETL    CHAIN@MEMOSOL             9590    Get record
+     C           *IN95     CABEQ'1'       T@SKIP             No record found
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 7
+      *
+     C           P@OPTN    IFNE '*KEY   '                  IF 8 NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                   AND NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '                   AND
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parameter error
+     C                     END                             FI 8
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No record found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*KEY   ' P@RTCD           Invalid key
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MESSAGE
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No record found
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1008' P@MGID             Invalid key
+     C                     CALL 'ZASNMG'                     <SEND MESSAGE>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGM       P@PGNM 10          I:Program name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Message ID
+     C                     PARM *BLANK    P@MSGF 10          I:Message file
+     C                     PARM *BLANK    P@MGKY  4          O:Message key
+     C                     PARM           P@MGDA 50          I:Message data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Message type
+     C                     END                             FI 9
+      * Caller Requests DB Error Handling                                S01230
+      *                                                                  S01230
+     C           W@RTCD    IFEQ 'DBERR'
+     C           P@RTCD    ANDNE*BLANK
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+      *
+     C           P@OPTN    IFNE '*VERIFY'
+     C           P@OPTN    ANDNE'*FREE  '                                 S01168
+     C           P@RTCD    ANDNE'*OPTION'
+     C                     MOVELD@FMT     P@FMT
+     C                     END
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+MEMOS   AOMEMSR0  RE SHADOW BALANCES
+**  CPY@
+(c) Finastra International Limited 2001

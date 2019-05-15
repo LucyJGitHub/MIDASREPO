@@ -1,0 +1,291 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_CLFCLT - Facility Details                                           */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. CLE168             Date 26Feb18                        */
+/*       Prev Amend No. MD046248           Date 27Oct17                        */
+/*                      CLE164             Date 18Aug14                        */
+/*                      CLE134             Date 01Aug12                        */
+/*                      AR944695           Date 30Mar12                        */
+/*                      CLE147             Date 29Sep11                        */
+/*                      CER049             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      258813             Date 19Nov10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 05Jun08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CAP185             Date 21Apr06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 10Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      CLE041             Date 11Oct04                        */
+/*                      BUG3644 *CREATE    Date 12Jul04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE168 - Allow Debit of Blocked Account (Recompile)                   */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)                 */
+/*                (Recompile)                                                  */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       AR944695 - Facility cannot be viewed on facilities enquiry            */
+/*                  enquiry (Child:AR946992)                                   */
+/*       CLE147 - Aggregate Facility                                           */
+/*       CER049 - Stamp Tax (Recompile)                                        */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       258813 - MP 1.4 SP04 Fix Incorporation - Applied fix for GEMS258813   */
+/*                The Total Current Exposure field displays the drawn amount   */
+/*                for the current rundate (OAM2) which causes discrepancies    */
+/*                in the Transactions by Facility Enquiry screen. The correct  */
+/*                value for this field is in CEXP which is the current exposure*/
+/*                The fix is to change the FCTEXP source from OAM2 to CEXP     */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       BG18886 - Replace non-standard codes. (Recompile)                     */
+/*       CAP185 - MQ Series Interface (Recompile)                              */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       CLE106 - Syndications Manager (Recompile)                             */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       CLE041  - Collateralised Lending Phase 2B (Recompile)                 */
+/*       BUG3644 - Serious Error in Collateralised Lending                     */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  FCZONE,                                                                       :
+  FCFBRC,                                                                       :
+  FCFCUS ,                                                                      :
+  PADFCFCUS ,                                                                   :
+  FCFTYP ,                                                                      :
+  PADFCFTYP ,                                                                   :
+  FCFSEQ ,                                                                      :
+  PADFCFSEQ ,                                                                   :
+  FCRECI ,                                                                      :
+  FCDTAP ,                                                                      :
+  FCDTEX ,                                                                      :
+  FCFCCY ,                                                                      :
+  FCFAMT ,                                                                      :
+  FCOVPC ,                                                                      :
+  FCRVCR ,                                                                      :
+  FCMCSI ,                                                                      :
+  FCMBFC ,                                                                      :
+  FCMCCY ,                                                                      :
+  FCSYIN ,                                                                      :
+  FCTRCA ,                                                                      :
+  FCCANM ,                                                                      :
+  FCCAFT ,                                                                      :
+  FCCAFN ,                                                                      :
+  FCPRTR ,                                                                      :
+  FCPMFC ,                                                                      :
+  FCPMFT ,                                                                      :
+  FCPMFN ,                                                                      :
+  FCPTFR ,                                                                      :
+  FCRLTV ,                                                                      :
+  FCLTVA ,                                                                      :
+  FCLTVW ,                                                                      :
+  FCALTV ,                                                                      :
+  FCOMDL ,                                                                      :
+  FCFXMT ,                                                                      :
+  FCSTC ,                                                                       :
+  FCACOF ,                                                                      :
+  FCLAID ,                                                                      :
+  FCPOWF ,                                                                      :
+  FCPISC ,                                                                      :
+  FCDCEA ,                                                                      :
+  FCCGRP ,                                                                      :
+  FCLADT ,                                                                      :
+  FCXLVL ,                                                                      :
+  FCXCLV ,                                                                      :
+  FCXCMI ,                                                                      :
+  FCTEXP ,                                                                      :
+**FCTOFF*)**********************************************************************:             CLE147
+  FCTOFF ,                                                                      :             CLE147
+  CRNM ,                                                                        :             CLE147
+  CRTN ,                                                                        :             CLE147
+  FCNM )                                                                        :             CLE147
+  AS                                                                            :
+  SELECT                                                                        :
+  SDBRCHPD.A8ZONE                                                               :
+  ,FCLTYFM.BRCA                                                                 :
+  ,FCLTYFM.CNUM                                                                 :
+**,DIGITS(FCLTYFM.CNUM)*********************************************************:             CSD027
+  ,       FCLTYFM.CNUM                                                          :             CSD027
+  ,FCLTYFM.FACT                                                                 :
+  ,DIGITS(FCLTYFM.FACT)                                                         :
+  ,FCLTYFM.FCNO                                                                 :
+  ,DIGITS(FCLTYFM.FCNO)                                                         :
+  ,FCLTYFM.RECI                                                                 :
+  ,DTAP                                                                         :
+  ,DTEX                                                                         :
+  ,FCCY                                                                         :
+  ,FAMT                                                                         :
+  ,OVPC                                                                         :
+  ,RVCR                                                                         :
+  ,MCSI                                                                         :
+  ,MBFC                                                                         :
+  ,MCCY                                                                         :
+  ,SYIN                                                                         :
+  ,TRCA                                                                         :
+  ,CANM                                                                         :
+  ,CAFT                                                                         :
+  ,CAFN                                                                         :
+  ,PRTR                                                                         :
+  ,PMFC                                                                         :
+  ,PMFT                                                                         :
+  ,PMFN                                                                         :
+  ,FCXPOR                                                                       :
+  ,FCXLVR                                                                       :
+  ,FCXLVA                                                                       :
+  ,FCXLVW                                                                       :
+  ,FCXALV                                                                       :
+  ,FCXOML                                                                       :
+  ,FCXMST                                                                       :
+  ,FCXSTC                                                                       :
+  ,ACOF                                                                         :
+  ,LAID                                                                         :
+  ,FCXPWF                                                                       :
+  ,FCXPIS                                                                       :
+  ,FCXDEA                                                                       :
+  ,FCXCGP                                                                       :
+  ,FCLTYFM.AVLD                                                                 :
+  ,LEFCLTQD.FCXLVL                                                              :
+  ,LEFCLTQD.FCXCLV                                                              :
+  ,LEFCLTQD.FCXCMI                                                              :
+**,FCLTYFN.OAM2*****************************************************************:             258813
+  ,FCLTYFN.CEXP                                                                 :             258813
+  ,LEFCLTQD.FCXOF2                                                              :
+  ,SDCUSTPD.BBCRNM                                                              :             CLE147
+  ,SDCUSTPD.BBCRTN                                                              :             CLE147
+  ,SDFACTPD.AMFCNM                                                              :             CLE147
+  FROM                                                                          :
+  GZFCLTYFM FCLTYFM                                                             :
+  , GZLEFCLTQD LEFCLTQD                                                         :
+  , GZFCLTYFN FCLTYFN                                                           :
+  , GZSDBRCHPD SDBRCHPD                                                         :
+  , GZSDCUSTPD SDCUSTPD                                                         :             CLE147
+  , GZSDFACTPD SDFACTPD                                                         :             CLE147
+  WHERE                                                                         :
+  SDBRCHPD.A8BRCD = FCLTYFM.BRCA                                                :
+  AND FCLTYFM.BRCA = FCLTYFN.ZZ003                                              :
+  AND FCLTYFM.CNUM = FCLTYFN.CNUM                                               :
+  AND FCLTYFM.FACT = FCLTYFN.FACT                                               :
+  AND FCLTYFM.FCNO = FCLTYFN.FCNO                                               :
+  AND FCLTYFM.BRCA = LEFCLTQD.FCXBRC                                            :
+**AND*DIGITS(FCLTYFM.CNUM)*=*LEFCLTQD.FCXFCU************************************:             CSD027
+  AND        FCLTYFM.CNUM  = LEFCLTQD.FCXFCU                                    :             CSD027
+  AND DIGITS(FCLTYFM.FACT) = LEFCLTQD.FCXFTP                                    :
+  AND DIGITS(FCLTYFM.FCNO) = LEFCLTQD.FCXFNO                                    :
+**AND*(FCLTYFM.RECI*=*'D'*OR*FCLTYFM.RECI*=*'E');*******************************:             CLE147
+  AND (FCLTYFM.RECI = 'D' OR FCLTYFM.RECI = 'E')                                :             CLE147
+  AND FCLTYFM.CNUM = SDCUSTPD.BBCUST                                            :             CLE147
+**AND*FCLTYFM.BRCA*=*SDCUSTPD.BBBRCD********************************************:    CLE147 AR944695
+  AND FCLTYFM.FACT = SDFACTPD.AMFCTY                                            :             CLE147
+  AND SDBRCHPD.A8ZONE = SDFACTPD.AMZONE;                                        :             CLE147
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  ( FCZONE IS 'Zone' ,                                                          :
+  FCFBRC IS 'Branch' ,                                                          :
+  FCFCUS IS 'Customer            Number' ,                                      :
+  FCFTYP IS 'Facil               Type' ,                                        :
+  FCFSEQ IS 'Fac                 No' ,                                          :
+  FCRECI IS 'Rec                 Id' ,                                          :
+  FCDTAP IS 'Date                Apprvd' ,                                      :
+  FCDTEX IS 'Expiry              Date' ,                                        :
+  FCFCCY IS 'Facil               Curr' ,                                        :
+  FCFAMT IS 'Faclty              Amount' ,                                      :
+  FCOVPC IS 'Ovline              P/cent' ,                                      :
+  FCRVCR IS 'Rev                 Crd                 Ind' ,                     :
+  FCMCSI IS 'Mlt                 Cus                 Ind' ,                     :
+  FCMBFC IS 'Mul                 Bra                 Ind' ,                     :
+  FCMCCY IS 'Mlt                 Cur                 Ind' ,                     :
+  FCSYIN IS 'Synd                Ind' ,                                         :
+  FCTRCA IS 'Tranche/            Credit' ,                                      :
+  FCCANM IS 'Cred Agree          Customer' ,                                    :
+  FCCAFT IS 'Cred Agree          Fac Type' ,                                    :
+  FCCAFN IS 'Cred Agree          Fac No.' ,                                     :
+  FCPRTR IS 'Part                Fac?' ,                                        :
+  FCPMFC IS 'Prime Fac           Customer' ,                                    :
+  FCPMFT IS 'Prime Fac           Type' ,                                        :
+  FCPMFN IS 'Prime Fac           Number' ,                                      :
+  FCPTFR IS 'Portfolio' ,                                                       :
+  FCRLTV IS 'Required            Loan to Value       Ratio' ,                   :
+  FCLTVA IS 'Loan to Value       Ratio               Alert Level' ,             :
+  FCLTVW IS 'Loan to Value       Ratio               Warning Level' ,           :
+  FCALTV IS 'Advance             Loan to Value       Ratio' ,                   :
+  FCOMDL IS 'Overall Margin      Dealing Limit' ,                               :
+  FCFXMT IS 'FX                  Margin              Type' ,                    :
+  FCSTC IS 'Subject             to                  Call' ,                     :
+  FCACOF IS 'Acc                 Off' ,                                         :
+  FCLAID IS 'Loan                Administrator       ID' ,                      :
+  FCPOWF IS 'Percentage over     Required LTV        for First Call' ,          :
+  FCPISC IS 'Percentage          Increment for       Subsequent Call' ,         :
+  FCDCEA IS 'Drawdown            Cannot Exceed       Available' ,               :
+  FCCGRP IS 'Customer            Group' ,                                       :
+  FCLADT IS 'Last                Availability        Date' ,                    :
+  FCXLVL IS 'LTV                 Level' ,                                       :
+  FCXCLV IS 'Current             LTV' ,                                         :
+  FCXCMI IS 'Collateral          Call Made           Indicator' ) ;             :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  ( FCZONE TEXT IS 'Zone' ,                                                     :
+  FCFBRC TEXT IS 'Branch Code - Alpha' ,                                        :
+  FCFCUS TEXT IS 'Customer number' ,                                            :
+  FCFTYP TEXT IS 'Facility type' ,                                              :
+  FCFSEQ TEXT IS 'Facility number' ,                                            :
+  FCRECI TEXT IS 'Record Id' ,                                                  :
+  FCDTAP TEXT IS 'Date approved' ,                                              :
+  FCDTEX TEXT IS 'Expiry date' ,                                                :
+  FCFCCY TEXT IS 'Facility currency' ,                                          :
+  FCFAMT TEXT IS 'Facility amount' ,                                            :
+  FCOVPC TEXT IS 'Overline percentage' ,                                        :
+  FCRVCR TEXT IS 'Revolving credit indicator' ,                                 :
+  FCMCSI TEXT IS 'Multi-customer indicator' ,                                   :
+  FCMBFC TEXT IS 'Multibranch Facility Ind' ,                                   :
+  FCMCCY TEXT IS 'Multi-currency indicator' ,                                   :
+  FCSYIN TEXT IS 'Syndication Indicator' ,                                      :
+  FCTRCA TEXT IS 'Tranche/Credit Agreement Ind.' ,                              :
+  FCCANM TEXT IS 'Credit Agreement Customer' ,                                  :
+  FCCAFT TEXT IS 'Credit Agreement Facility Type' ,                             :
+  FCCAFN TEXT IS 'Credit Agreement Facility No.' ,                              :
+  FCPRTR TEXT IS 'Participant Facility Ind.' ,                                  :
+  FCPMFC TEXT IS 'Prime Facility Customer' ,                                    :
+  FCPMFT TEXT IS 'Prime Facility Type' ,                                        :
+  FCPMFN TEXT IS 'Prime Facility Number' ,                                      :
+  FCPTFR TEXT IS 'Portfolio' ,                                                  :
+  FCRLTV TEXT IS 'Required Loan to Value Ratio' ,                               :
+  FCLTVA TEXT IS 'Loan to Value Ratio Alert Level' ,                            :
+  FCLTVW TEXT IS 'Loan to Value Warning Level' ,                                :
+  FCALTV TEXT IS 'Advance Loan to Value Ratio' ,                                :
+  FCOMDL TEXT IS 'Overall Margin Dealing Limit' ,                               :
+  FCFXMT TEXT IS 'FX Margin Type' ,                                             :
+  FCSTC TEXT IS 'Subject to Call' ,                                             :
+  FCACOF TEXT IS 'Account officer' ,                                            :
+  FCLAID TEXT IS 'Loan Administrator ID' ,                                      :
+  FCPOWF TEXT IS 'Percentage over Required LTV for First Call' ,                :
+  FCPISC TEXT IS 'Percentage Increment for Subsequent Call' ,                   :
+  FCDCEA TEXT IS 'Drawdown Cannot Exceed Available' ,                           :
+  FCCGRP TEXT IS 'Customer Group' ,                                             :
+  FCLADT TEXT IS 'Last Availability Date' ,                                     :
+  FCXLVL TEXT IS 'LTV Level' ,                                                  :
+  FCXCLV TEXT IS 'Current LTV' ,                                                :
+  FCXCMI TEXT IS 'Collateral Call Made Indicator' ) ;                           :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE Facility Enquiry                         ';                     :
+                                                                                :

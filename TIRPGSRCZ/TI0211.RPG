@@ -1,0 +1,153 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT(' Midas TI Check ICIFINISH status')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - TI Module                                            *
+      *                                                               *
+      *  TI0211 - Check ICIFINISH status.                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2014                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 259977 *CREATE     Date 19Aug14               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  259977 - Check ICIFINISH status. Applied fix 239542          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCBCOMSL0IF  E           K        DISK
+     F                                              KINFSR COMSSR
+      *  COB components by name and sequence number.
+      *  -------------------------------------------
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *           FUNCTION OF INDICATORS                              *
+      *           ----------------------                              *
+      *  10       Record not found on LF/CBCOMSL0.                    *
+      *  20       Loop prevention indicator for LF/CBCOMSL0.          *
+      *  U7       DB error.                                           *
+      *  U8       DB error.                                           *
+      *  LR       Last record indicator.                              *
+      *                                                               *
+      *---------------------------------------------------------------*
+     E                    CPY@    1   1 80
+      *
+     I              'ICIFINISH '          C         C@CNAM
+     I              '00001'               C         C@CSEQ
+      /EJECT
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Local data area.
+      *
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Main process                                                 *
+      *                                                               *
+      *---------------------------------------------------------------*
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Entry parameter list and key list to access components file.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@STAT  1
+      *
+     C           CMSKEY    KLIST
+     C                     KFLD           P@CNAM
+     C                     KFLD           PACSEQ
+      *
+     C                     MOVE C@CNAM    P@CNAM 10
+     C                     MOVE C@CSEQ    PACSEQ  5
+      *
+      ** Read record.
+      *
+     C           CMSKEY    CHAINCBCOMSL0             10
+      *
+     C           *IN10     IFEQ '0'
+      *
+      ** Return status.
+     C                     MOVE DHCSTS    P@STAT
+      *                                                                   CCB009
+     C                     ELSE
+      *
+      ** DB error.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CMPL0'   DBFILE
+     C                     MOVELP@CNAM    KEY    15
+     C                     MOVE PACSEQ    KEY
+     C                     MOVELKEY       DBKEY            ***************
+     C                     MOVE 'CB0160'  DBPGM            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *---------------------------------------------------------------*
+      *  Index to subroutines.                                        *
+      *                                                               *
+      *  COMSSR - file exception/error subroutine.                    *
+      *  *PSSR  - program exception/error subroutine.                 *
+      *                                                               *
+      *---------------------------------------------------------------*
+      /SPACE 3
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  COMSSR subroutine - in the event of a file exception error , *
+      *                      for LF/CBCOMSL0 , this subroutine will   *
+      *                      produce a dump.                          *
+      *                                                               *
+      *  Calls subroutine : *PSSR                                     *
+      *  Called from : main process                                   *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           COMSSR    BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CMPL0'   DBFILE
+     C                     MOVELP@CNAM    KEY
+     C                     MOVE PACSEQ    KEY
+     C                     MOVE KEY       DBKEY            ***************
+     C                     MOVE 'CB0160'  DBPGM            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      /EJECT
+      *
+     C           *PSSR     BEGSR
+      *
+     C           *IN20     IFEQ '0'
+     C                     MOVE '1'       *IN20
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@
+(c) Finastra International Limited 2014

@@ -1,0 +1,112 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE PDCL process - Suspended Fees')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Customer Lending Module                         */
+/*                                                                   */
+/*       LEC000137 - PDCL process - calculated suspended fees        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1073035          Date 28Dec12              */
+/*                      AR724089           Date 01Aug12              */
+/*                      CLE134   *CREATE   Date 01Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1073035 - Error in adding QMQM library because it         */
+/*                   already exist                                   */
+/*       AR724089 - Several performance issues in COB component      */
+/*                  LEC0459. Move the override of ACPO1 onto this    */
+/*                  program. (Child: AR724090)                       */
+/*       CLE134 - Past Due Call Loan Processing                      */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&CNAM &CSEQ &APOS)
+ 
+/** Declare the variables for rerun checking */
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&APOS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1) VALUE('Y')
+ 
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2012')
+ 
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/** Start Commitment Control */
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&FLAG) +
+                           VALUE('N'))
+ 
+             IF         COND(&APOS *EQ ' ') THEN(CHGVAR +
+                           VAR(&APOS) VALUE('1'))
+ 
+             SNDPGMMSG  MSG('Fee Accruals and Account Key +
+                           Generation') TOMSGQ(MRUNQ)
+ 
+/** Check the current status of this component */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+             ENDDO
+ 
+/** Set to busy */
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+                                                                                        /*AR724089*/
+             IF         COND(&APOS *EQ '5') THEN(DO)                                    /*AR724089*/
+                  OVRDBF    FILE(ACPO1) TOFILE(ACPO5)                                   /*AR724089*/
+             ENDDO                                                                      /*AR724089*/
+ 
+             CALL       PGM(LE000137) PARM(&APOS &CNAM &RTCD)
+                                                                                        /*AR724089*/
+             IF         COND(&APOS *EQ '5') THEN(DO)                                    /*AR724089*/
+                  DLTOVR    FILE(ACPO1)                                                 /*AR724089*/
+                  MONMSG    MSGID(CPF0000)                                              /*AR724089*/
+             ENDDO                                                                      /*AR724089*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG  MSG('Job terminated, database in +
+                             error.') TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(DBERR)
+             ENDDO
+ 
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+               SNDPGMMSG  MSG('Job terminated, database in error.') +
+                             TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(DBERR)
+             ENDDO
+ 
+/** Set Component flag */
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             COMMIT
+             GOTO       CMDLBL(END)
+ 
+DBERR:       SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+END:
+/**********  CALL       GOC0100 'GZCLOANCL'                                            /*AR1073035*/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited')
+ 
+ENDPGM

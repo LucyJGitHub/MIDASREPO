@@ -1,0 +1,494 @@
+     H        1                                                           S01157
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL TM/FRA Stacked enquiry control')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - TREASURY MANAGEMENT / FRA / IRS
+     F*                                                               *
+     F* DL3100 - TM / FRA STACKED ENQUIRY CONTROL                     *
+     F*                                                               *
+     F*     Function: This is the control program for all Treasury    *
+     F*     (I/C)     Management and FRA/IRS enquiries called from    *
+     F*               the SPF menu.                                   *
+     F*                                                               *
+     F*     Called by: TMC0311 - TM Enquiry control                   *
+     F*                                                               *
+     F*     Calls    : LE0190  - Customer Lending details enquiry     *
+     F*     (directly) TM3380  - Futures & Options details enquiry    *
+     F*                                                               *
+     F*                All other TM, FRA/IRS enquiries are called by  *
+     F*                means of an array.                             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 110523             Date 20Jan97               *
+      *                 E26595             Date 06Sep91               *
+     F*                  S01194                 DATE 26FEB91          *
+     F*                  S01280                 DATE 16OCT90          *
+     F*                  E20774                 DATE 15MAR90          *
+     F*                  LN0226                 DATE 05JUN90          *
+     F*                  S01117                 DATE 26MAR90          *
+     F*                  S01157                 DATE 06/10/88         *   S01157
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+     F*     110523 - Recompiled over changed DLMSY1PP & DLMSY2PP and  *
+     F*              the logicals built over them.                    *
+     F*     E26595 - S01280 uses @OPT in position 17 to 19 in @PRAM   *
+     F*              which is already used by the FRA/IRS enquiry     *
+     F*              programs. Change to position 50 onwards.         *
+     F*                                                               *
+     F*     S01194 - Remove table file overrides for R10              *
+     F*                                                               *
+     F*     S01280 - Include FRA,IRS,FUTURES and CUSTOMER LENDING     *
+     F*              modules.                                         *
+     F*                                                               *
+     F*     E20774 - REPLACE QCAEXEC WITH QCMDEXC                     *   E20774
+     F*                                                               *
+     F*     LN0226 - INCORPORATE FURTHER CHANGES MADE FOR             *
+     F*              R10 - FRA/IRS.  S01117, S01194, S01157 ETC.      *
+     F*                                                               *
+     F*     S01117 - MULTI-BRANCHING CHANGES                          *
+     F*              CHANGE NAME OF PROG TO REFLECT TM/FRA PROCESSING *
+     F*                                                               *
+     F*     S01157 - FRA/IRS Enhancements                             *
+     F*              Add fra/irs enquiries stack to array             *
+     F*              and open all files used in FRA stack             *
+     F*                                                               *
+     F*                                                               *
+     F****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                                   S01157
+     F** FILES USED IN FRA/IRS ENQUIRY PROGRAMS BUT OPENED HERE           S01157
+     F*                                                                   S01157
+     F*DLMSB1L*IF**E***********K   DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*DLMSM1L*IF**E***********K   DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*DLMSB2L*IF**E***********K   DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*DLMSM2L*IF**E***********K   DISK      KINFSR *PSSR      UC  S01157 S01117
+     FDLMSY1L IF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     FDLMSY2L IF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     FDLMSY3L IF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     F            DLMSY1P0                          KRENAMEDLMSY3P0       S01117
+     FDLMSY4L IF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     F            DLMSY2P0                          KRENAMEDLMSY4P0       S01117
+     FDLMST1L IF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     FDLMST2L IF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     FDLMST3L IF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     F            DLMST1P0                          KRENAMEDLMST3P0       S01117
+     FDLMST4L IF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     F            DLMST2P0                          KRENAMEDLMST4P0       S01117
+     FDLDSMBL IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     FDLDLDGL1IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F            DEALSDGF                          KRENAMEFMT1           S01157
+     FDLDLDGL2IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F            DEALSDGF                          KRENAMEFMT2           S01157
+     FDLDLDGL3IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F            DEALSDGF                          KRENAMEFMT3           S01157
+     FDLDLDGL4IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F            DEALSDGF                          KRENAMEFMT4           S01157
+     FDLDLDGL5IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F            DEALSDGF                          KRENAMEFMT5           S01157
+     FDLDLDGL6IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F            DEALSDGF                          KRENAMEFMT6           S01157
+     FDLDLDGL7IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F            DEALSDGF                          KRENAMEFMT7           S01157
+     FDLDLDGL8IF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F            DEALSDGF                          KRENAMEFMT8           S01157
+     FFDMNTHLLIF  E           K        DISK         KINFSR *PSSR      UC  S01157
+     F*FDCCYTLLIF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*BOOKD***IF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*DLTB70LLIF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*FDBRNCLLIF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*************TABLETRF***               KRENAMETABLE1         S01157 S01117
+     F*FDBSNCLLIF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*************TABLETRF***               KRENAMETABLETSF       S01157 S01117
+     F*FDICDRLLIF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*FDUSSILLIF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*FDBRKRLLIF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*FDBSRTLLIF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*CLINT***IF**E**********K    DISK      KINFSR *PSSR      UC  S01157 S01117
+     F*
+     F*
+     E** COMPILE TIME ARRAY FOR COPYRIGHT STATEMENT
+     E                    CPY@    1   1 80
+     E**  ARRAY FOR PROGRAM STACK                                      IOD
+     E******************  @PSTK   1   8  8                                S01157
+     E**********          @PSTK   1  14  8                         S01157 S01280
+     E                    @PSTK   1  18  8                                S01280
+     E*
+     E****ARRAY*FOR*CALL*TO*QCAEXEC***                                    E20774
+     E****ARRAY*FOR*CALL*TO*QCMDEXC***                             E20774 S01194
+     E**********          @QCA    1   1 19                                S01194
+     E****************************************************************
+     I*                                                                   S01157
+     IDBERR1      DS                            256                       S01157
+     I*                                                                   S01157
+     I** DATA STRUCTURE FOR DATABASE ERROR HANDLING IN LDA                S01157
+     I*                                                                   S01157
+     I                                      134 141 DBFIL1                S01157
+     I                                      142 170 DBKEY1                S01157
+     I                                      171 180 DBPGM1                S01157
+     I                                      181 183 DBASE1                S01157
+     C*                                                                   S01157
+     I*                                                                   S01157
+     I           UDS                                                      S01157
+     I*                                                                   S01157
+     I** DATA STRUCTURE FOR DATABASE ERROR HANDLING IN *LDA               S01157
+     I*                                                                   S01157
+     I                                      134 141 DBFIL2                S01157
+     I                                      142 170 DBKEY2                S01157
+     I                                      171 180 DBPGM2                S01157
+     I                                      181 183 DBASE2                S01157
+     I            DS                                                      S01280
+      * Data structure for detail option parameter.                       S01280
+      * blanks = DL0170, LEN = LE0190, FUT = FF0150.                      S01280
+     I                                       11  160@DLNO                 S01280
+     I*****************                      17  19 @OPT            S01280E26595
+     I*****************                      20  20 @LKNA           S01280E26595
+     I*****************                      21  21 @LKLD           S01280E26595
+     I*****************                      22  22 @LKLEN          S01280E26595
+     I*****************                      23  23 @LKFRA          S01280E26595
+     I*****************                      24  24 @LKIRS          S01280E26595
+     I*****************                      25  25 @LKFUT          S01280E26595
+     I                                       50  52 @OPT                  E26595
+     I                                       53  53 @LKNA                 E26595
+     I                                       54  54 @LKLD                 E26595
+     I                                       55  55 @LKLEN                E26595
+     I                                       56  56 @LKFRA                E26595
+     I                                       57  57 @LKIRS                E26595
+     I                                       58  58 @LKFUT                E26595
+     I                                        1 256 @PRAM                 S01280
+     C*                                                                   S01157
+     C**  MAIN PROCESSING
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR #A
+     C*
+     C                     EXSR #B
+     C*
+     C                     EXSR #C
+     C*
+     E****************************************************************
+     C*
+     C**  INITIAL SUBROUTINE
+     C*
+     C           #A        BEGSR
+     C*
+     C**********           Z-ADD19        QCALEN 155               S01166 S01194
+     C**********           CALL 'QCAEXEC'                          S01166 S01194
+     C**********           PARM           @QCA,1                   S01166 S01194
+     C**********           PARM           QCALEN                   S01166 S01194
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @PGID   8
+     C*                                                                   S01157
+     C** IF AN FRA ENQUIRY OPEN ALL THE FILES USED IN THAT STACK          S01157
+     C*                                                                   S01157
+     C           @PGID     IFEQ 'DL1902'                                  S01157
+     C           @PGID     OREQ 'DL1905'                                  S01157
+     C           @PGID     OREQ 'DL1909'                                  S01157
+     C*********************OPEN DLMSB1L                            S01157 S01117
+     C*********************OPEN DLMSM1L                            S01157 S01117
+     C*********************OPEN DLMSB2L                            S01157 S01117
+     C*********************OPEN DLMSM2L                            S01157 S01117
+     C                     OPEN DLMSY1L                                   S01117
+     C                     OPEN DLMSY2L                                   S01117
+     C                     OPEN DLMSY3L                                   S01117
+     C                     OPEN DLMSY4L                                   S01117
+     C                     OPEN DLMST1L                                   S01117
+     C                     OPEN DLMST2L                                   S01117
+     C                     OPEN DLMST3L                                   S01117
+     C                     OPEN DLMST4L                                   S01117
+     C                     OPEN DLDSMBL                                   S01157
+     C                     OPEN DLDLDGL1                                  S01157
+     C                     OPEN DLDLDGL2                                  S01157
+     C                     OPEN DLDLDGL3                                  S01157
+     C                     OPEN DLDLDGL4                                  S01157
+     C                     OPEN DLDLDGL5                                  S01157
+     C                     OPEN DLDLDGL6                                  S01157
+     C                     OPEN DLDLDGL7                                  S01157
+     C                     OPEN DLDLDGL8                                  S01157
+     C                     OPEN FDMNTHLL                                  S01157
+     C*********************OPEN FDCCYTLL                           S01157 S01117
+     C*********************OPEN BOOKD                              S01157 S01117
+     C*********************OPEN DLTB70LL                           S01157 S01117
+     C*********************OPEN FDBRNCLL                           S01157 S01117
+     C*********************OPEN FDBSNCLL                           S01157 S01117
+     C*********************OPEN FDICDRLL                           S01157 S01117
+     C*********************OPEN FDUSSILL                           S01157 S01117
+     C*********************OPEN FDBRKRLL                           S01157 S01117
+     C*********************OPEN FDBSRTLL                           S01157 S01117
+     C*********************OPEN CLINT                              S01157 S01117
+     C*                                                                   S01157
+     C                     END                                            S01157
+     C*
+     C**  SET INITIAL POSITION IN PROGRAM STACK
+     C*
+     C                     Z-ADD1         @X      20
+     C           @PGID     LOKUP@PSTK,@X                 15
+     C*
+     C           #A9       ENDSR
+     C*****************************************************************
+     C***
+     C**  MAIN SUBROUTINE
+     C*
+     C           #B        BEGSR
+     C*
+     C**  RESET TERMINATION PARAMETER
+     C*
+     C                     MOVE *BLANK    @TERM
+     C*
+     C**  CALL ENQUIRY
+     C*
+     C           *IN10     DOUEQ'1'
+      *                                                                   S01280
+      *   If @X = 5 or 11 Call LE0190.                                    S01280
+     C           @X        IFEQ 5                          B*2            S01280
+     C           @X        OREQ 11                         **2            S01280
+      *                                                                   S01280
+      * Initialise LE Return Code                                         S01280
+      *                                                                   S01280
+     C                     MOVE *BLANK    @TERM                           S01280
+      * Pack field before passing as parm.                                S01280
+     C                     Z-ADD@DLNO     @DEAL   60                      S01280
+      * Call LE0190.                                                      S01280
+     C                     CALL 'LE0190'                                  S01280
+     C                     PARM           @DEAL                           S01280
+     C                     PARM           @TERM                           S01280
+      * If exit requested.                                 B**3           S01280
+     C           @TERM     IFEQ 'Q'                                       S01280
+     C                     MOVE '1'       *IN10                           S01280
+     C                     END                             E**3           S01280
+      *                                                                   S01280
+     C                     END                             E*2            S01280
+      *                                                                   S01280
+      *   If @X = 6 or 12 Call TM3380.                                    S01280
+     C           @X        IFEQ 6                          B*2            S01280
+     C           @X        OREQ 12                         **2            S01280
+      * Pack field before passing as parm.                                S01280
+     C                     Z-ADD@DLNO     @DEAL   60                      S01280
+      * Move blanks @TERM.                                                S01280
+     C                     MOVE *BLANK    @TERM                           S01280
+      * Call TM3380.                                                      S01280
+     C                     CALL 'TM3380'                                  S01280
+     C                     PARM           @DEAL                           S01280
+     C                     PARM           @TERM                           S01280
+      *                                                                   S01280
+     C                     END                             E*2            S01280
+      *                                                                   S01280
+      * Do not call using the array,if array coding superceeded           S01280
+      * (LE0190 TM3380)                                                   S01280
+     C           @X        IFNE 5                                         S01280
+     C           @X        ANDNE6                                         S01280
+     C           @X        ANDNE11                                        S01280
+     C           @X        ANDNE12                                        S01280
+     C                     CALL @PSTK,@X
+     C                     PARM           @TERM   1
+     C**********           PARM           @PRAM 256                       S01280
+     C           @PRAM     PARM           @PRAM 256                       S01280
+     C                     END                                            S01280
+     C*
+     C**  SUMMARY REQUESTED
+     C*
+     C           @TERM     IFEQ 'U'                        B**2
+      *                                                                   S01280
+     C           @OPT      IFEQ '   '                      B**3           S01280
+     C                     SUB  1         @X
+     C                     END                             E**3           S01280
+      *                                                                   S01280
+     C           @OPT      IFEQ 'LEN'                      B**3           S01280
+     C                     SUB  2         @X                              S01280
+     C                     END                             E**3           S01280
+      *                                                                   S01280
+     C           @OPT      IFEQ 'FUT'                      B**3           S01280
+     C                     SUB  3         @X                              S01280
+     C                     END                             E**3           S01280
+      *                                                                   S01280
+     C                     END                             E**2
+     C*
+     C*
+     C**  DETAIL REQUESTED
+     C*
+     C           @TERM     IFEQ 'D'                        B**2
+      *                                                                   S01280
+     C           @OPT      IFEQ '   '                      B**3           S01280
+     C                     ADD  1         @X
+     C                     END                             E**3           S01280
+      *                                                                   S01280
+     C           @OPT      IFEQ 'LEN'                      B**3           S01280
+     C                     ADD  2         @X                              S01280
+     C                     END                             E**3           S01280
+      *                                                                   S01280
+     C           @OPT      IFEQ 'FUT'                      B**3           S01280
+     C                     ADD  3         @X                              S01280
+     C                     END                             E**3           S01280
+      *                                                                   S01280
+     C                     END                             E**2
+      *                                                                   S01117
+      ** Jump to FRA Daily Deals requested                                S01117
+     C           @TERM     IFEQ 'J'                                       S01117
+     C                     ADD  2         @X                              S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+      ** Hop to FRA Monthly Summary requested                             S01117
+     C           @TERM     IFEQ 'H'                                       S01117
+     C                     SUB  2         @X                              S01117
+     C                     END                                            S01117
+     C*
+     C**  ENQUIRY ENDED IN ERROR
+     C*
+     C           @TERM     IFEQ 'E'
+     C                     SETON                     10
+     C*********************EXSR #ERR                                      S01157
+     C                     GOTO #B9                                       S01157
+     C                     END
+     C*
+     C**  EXIT REQUESTED FROM ENQUIRIES
+     C*
+     C           @TERM     IFEQ 'Q'
+     C                     SETON                     10
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #B9       ENDSR
+     C*****************************************************************
+     C*
+     C**  TERMINATION SUBROUTINE
+     C*
+     C           #C        BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C           #C9       ENDSR
+     C*****************************************************************
+     C*
+     C**   ERROR SUBROUTINE
+     C*
+     C***********#ERR      BEGSR                                          S01157
+     C           *PSSR     BEGSR                                          S01157
+     C*
+     C** IF NOT ALREADY BEEN THROUGH *PSSR THEN PROCESS ERROR             S01157
+     C** ELSE JUST RETURN                                                 S01157
+     C*                                                                   S01157
+     C           @BEEN     IFNE 'Y'                        B1             S01157
+     C*                                                                   S01157
+     C** SET ALREADY-BEEN-THROUGH-*PSSR INDICATOR TO YES                  S01157
+     C*                                                                   S01157
+     C                     MOVE 'Y'       @BEEN   1        *1             S01157
+     C*                                                                   S01157
+     C** SET UP TERMINATION PARAMETER, TURN ON ERROR SWITCHES,            S01157
+     C** TURN ON ERROR SWITCHES, SET ON LR AND DUMP                       S01157
+     C*                                                                   S01157
+     C                     MOVE '1'       *INU7            *1             S01157
+     C                     MOVE '1'       *INU8            *1             S01157
+     C                     MOVE '1'       *INLR            *1             S01157
+     C*
+     C                     DUMP
+     C*                                                                   S01157
+     C** MOVE DATABASE ERROR DETAILS INTO LDA                             S01157
+     C*                                                                   S01157
+     C           *NAMVAR   DEFN LDA       @LDA  256        *1             S01157
+     C           *LOCK     IN   @LDA                       *1             S01157
+     C                     MOVEL'DL3100'  DBPGM1           *1             S01157
+     C                     MOVELDBERR1    @LDA             *1             S01157
+     C                     OUT  @LDA                       *1             S01157
+     C*                                                                   S01157
+     C** MOVE DATABASE ERROR DETAILS INTO *LDA                            S01157
+     C*                                                                   S01157
+     C                     MOVEL'DL3100'  DBPGM2           *1             S01157
+     C*                                                                   S01157
+     C                     END                             E1             S01157
+     C*
+     C*****TERMINATE*THE*PROGRAM***                                       S01157
+     C******************** MOVE '1'       *INLR                           S01157
+     C*                                                                   S01157
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************   S01157
+     C*                                                                   S01157
+     C** DUMMY SUBROUTINE (NEVER CALLED) TO ALLOW PROGRAM COMPILATION     S01157
+     C*                                                                   S01157
+     C           #D        BEGSR                                          S01157
+     C*                                                                   S01157
+     C** READ ALL THE FILES USED IN THE FRA/IRS STACK                     S01157
+     C*                                                                   S01157
+     C*********************READ DLMSB1L                  80        S01157 S01117
+     C*********************READ DLMSM1L                  80        S01157 S01117
+     C*********************READ DLMSB2L                  80        S01157 S01117
+     C*********************READ DLMSM2L                  80        S01157 S01117
+     C                     READ DLMSY1L                  80               S01117
+     C                     READ DLMSY2L                  80               S01117
+     C                     READ DLMSY3L                  80               S01117
+     C                     READ DLMSY4L                  80               S01117
+     C                     READ DLMST1L                  80               S01117
+     C                     READ DLMST2L                  80               S01117
+     C                     READ DLMST3L                  80               S01117
+     C                     READ DLMST4L                  80               S01117
+     C                     READ DLDSMBL                  80               S01157
+     C                     READ DLDLDGL1                 80               S01157
+     C                     READ DLDLDGL2                 80               S01157
+     C                     READ DLDLDGL3                 80               S01157
+     C                     READ DLDLDGL4                 80               S01157
+     C                     READ DLDLDGL5                 80               S01157
+     C                     READ DLDLDGL6                 80               S01157
+     C                     READ DLDLDGL7                 80               S01157
+     C                     READ DLDLDGL8                 80               S01157
+     C*                                                                   S01157
+     C                     READ FDMNTHLL                 80               S01157
+     C*********************READ FDCCYTLL                 80        S01157 S01117
+     C*********************READ BOOKD                    80        S01157 S01117
+     C*********************READ DLTB70LL                 80        S01157 S01117
+     C*********************READ FDBRNCLL                 80        S01157 S01117
+     C*********************READ FDBSNCLL                 80        S01157 S01117
+     C*********************READ FDICDRLL                 80        S01157 S01117
+     C*********************READ FDUSSILL                 80        S01157 S01117
+     C*********************READ FDBRKRLL                 80        S01157 S01117
+     C*********************READ FDBSRTLL                 80        S01157 S01117
+     C*********************READ CLINT                    80        S01157 S01117
+     C*                                                                   S01157
+     C           #D9       ENDSR                                          S01157
+     C*****************************************************************   S01157
+      * Deleted array moved to enable compile                             S01194
+      ***CL*CMD*IN*CALL*QCMDEXC*-*@QCA*****                        E20774 S01194
+      ***OVRDBF*TABLE*TABDLI***************                               S01194
+**  CPY@  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** PROGRAM STACK ARRAY - @PSTK
+TM3110
+TM3120
+TM3130
+DL0170
+LE0190                                                                    S01280
+TM3380                                                                    S01280
+TM3180
+TM3190
+TM3200
+DL0170
+LE0190                                                                    S01280
+TM3380                                                                    S01280
+DL1909
+DL1905
+DL1902
+DL0170
+DL1912
+DL0170

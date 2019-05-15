@@ -1,0 +1,675 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Subset RTALM Extract Parameters')
+     F*****************************************************************
+     F*                                                               *
+     F*             Midas Midas/Q Module                      *
+     F*                                                               *
+     F*     MQ553X - MIDAS/Q SUBSET EXTRACT PARAMETERS                *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG3179            Date . 14jUN0              *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 XXXXXX             Date . DdmMMY              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*     BUG3179 - Recompile due to changes is MQ553XDF            *
+     F*     XXXXXX -                                                  *
+     F*                                                               *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FMQ553XDFCF  E                    WORKSTN
+     F*
+      /EJECT
+     F********************************************************************
+     F*                                                                  *
+     F* SUBROUTINES                                                      *
+     F*                                                                  *
+     F*    ERROR  - ERROR PROCESSING                                     *
+     F*    FINAL  - END OF PROGRAM PROCESSING                            *
+     F*    INIT   - INITIAL PROCESSING                                   *
+     F*    MAIN   - MAIN PROCESSING                                      *
+     F*    SCREEN - SET UP DETAILS FOR SCREEN                            *
+     F*    UPDATE - UPDATE DATA AREA MQSEL                               *
+     F*    VALID  - VALIDATE SCREEN INPUT                                *
+     F*                                                                  *
+     F*    ZDATE1 - VALIDATE AND CONVERT DATE FROM DDMMYY FORMAT TO DAY  *
+     F*             NUMBER                                               *
+     F*    ZDATE2 - CONVERT DAY NUMBER TO DDMMMYY FORMAT                 *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F* INDICATORS                                                       *
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*       01 - 08    DISPLAY TEXTS 1 - 8                             *
+     F*       30         GENERAL ERROR IN VALIDATION                     *
+     F*       31 - 38    ERROR IN SELECTION FIELDS 1 - 8                 *
+     F*       39         ERROR IN EXTRACT FREQUENCY                      *
+     F*       40         ERROR IN BASE DAY                               *
+     F*       41         ERROR IN DATE OF NEXT RUN                       *
+     F*       42         ERROR IN RUN TODAY FLAG                         *
+     F*       60         ERROR IN ACCESSING DATA AREA                    *
+     F*                                                                  *
+     F********************************************************************
+      /EJECT
+     F/COPY WNCPYSRC,MQ553XF001
+     E                    STX         8 20               SCREEN TEXTS
+     E                    SSL         8  1               SCREEN SELECTIONS
+     E                    SSM         8  2               MODULE IDS
+     E                    TXT     1   8 20               MODULE TEXTS
+     E                    ERR     1   5 79               ERROR MESSAGES
+     E/COPY WNCPYSRC,MQ553XE001
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+     E*
+     IMQSEL     E DSMQSEL
+     I* MIDAS Q SELECTION DATA AREA
+     I*
+     ILDA        UDS                            256
+     I* LOCAL DATA AREA
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I/COPY WNCPYSRC,MQ553XI001
+     I*
+     I            DS
+     I* SCREEN TEXTS
+     I                                        1 160 STX
+     I                                        1  20 STXT1
+     I                                       21  40 STXT2
+     I                                       41  60 STXT3
+     I                                       61  80 STXT4
+     I                                       81 100 STXT5
+     I                                      101 120 STXT6
+     I                                      121 140 STXT7
+     I                                      141 160 STXT8
+     I*
+     I            DS
+     I* SCREEN SELECTIONS
+     I                                        1   8 SSL
+     I                                        1   1 SSEL1
+     I                                        2   2 SSEL2
+     I                                        3   3 SSEL3
+     I                                        4   4 SSEL4
+     I                                        5   5 SSEL5
+     I                                        6   6 SSEL6
+     I                                        7   7 SSEL7
+     I                                        8   8 SSEL8
+     I/COPY WNCPYSRC,MQ553XI002
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* BANK DETAILS
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I* MODULE DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+      /EJECT
+     C********************************************************************
+     C*
+     C**  EXECUTE INITIAL PROCESSING
+     C                     EXSR INIT
+     C*
+     C**  EXECUTE MAIN PROCESSING
+     C                     EXSR MAIN
+     C*
+     C**  EXECUTE END OF PROGRAM PROCESSING
+     C                     EXSR FINAL
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    MAIN - MAIN PROCESSING                                        *
+     C*                                                                  *
+     C*    CALLED BY:                                                    *
+     C*    CALLS:     SCREEN - SET UP DETAILS FOR SCREEN                 *
+     C*               VALID  - VALIDATE SCREEN INPUT                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C**  SET UP DETAILS FOR SCREEN
+     C                     EXSR SCREEN
+     C*
+     C**  DISPLAY SCREEN
+     C                     EXFMTMQ553XF0
+     C*
+     C**  VALIDATE SCREEN INPUT
+     C                     EXSR VALID
+     C*
+     C**  DO WHILE INPUT INVALID
+     C           *IN30     DOWEQ'1'
+     C*
+     C**  DISPLAY SCREEN
+     C                     EXFMTMQ553XF0
+     C*
+     C**  VALIDATE SCREEN INPUT
+     C                     EXSR VALID
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    SCREEN - SET UP DETAILS FOR SCREEN                            *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*    CALLS:     ZDATE2 - CONVERT DAY NUMBER TO DDMMYY FORMAT       *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           SCREEN    BEGSR
+     C/COPY WNCPYSRC,MQ553XC001
+     C*
+     C**  SET UP TEXTS FOR SCREEN DISPLAY
+     C                     Z-ADD1         X       10
+     C/COPY WNCPYSRC,MQ553XC002
+     C                     SETOF                     010203
+     C                     SETOF                     040506
+     C                     SETOF                     0708
+     C*
+     C**  FOREIGN EXCHANGE
+     C           BGDLFX    IFEQ 'Y'
+     C                     MOVELTXT,1     STX,X
+     C                     MOVE SLFX      SSL,X
+     C                     MOVE 'FX'      SSM,X
+     C                     MOVE '1'       *IN,X
+     C                     ADD  1         X
+     C                     ELSE
+     C                     MOVE 'N'       SLFX
+     C                     END
+     C*
+     C**  MONEY MARKET
+     C           BGDLMM    IFEQ 'Y'
+     C                     MOVELTXT,2     STX,X
+     C                     MOVE SLMM      SSL,X
+     C                     MOVE 'MM'      SSM,X
+     C                     MOVE '1'       *IN,X
+     C                     ADD  1         X
+     C                     ELSE
+     C                     MOVE 'N'       SLMM
+     C                     END
+     C*
+     C**  FRA/IRS
+     C           BGFIIN    IFEQ 'Y'
+     C                     MOVELTXT,3     STX,X
+     C                     MOVE SLFI      SSL,X
+     C                     MOVE 'FI'      SSM,X
+     C                     MOVE '1'       *IN,X
+     C                     ADD  1         X
+     C                     ELSE
+     C                     MOVE 'N'       SLFI
+     C                     END
+     C*
+     C**  GENERAL LEDGER
+     C           BGSDGL    IFEQ 'Y'
+     C                     MOVELTXT,4     STX,X
+     C                     MOVE SLGL      SSL,X
+     C                     MOVE 'GL'      SSM,X
+     C                     MOVE '1'       *IN,X
+     C                     ADD  1         X
+     C                     ELSE
+     C                     MOVE 'N'       SLGL
+     C                     END
+     C*
+     C**  RETAIL
+     C           BGRTBN    IFEQ 'Y'
+     C                     MOVELTXT,5     STX,X
+     C                     MOVE SLRE      SSL,X
+     C                     MOVE 'RE'      SSM,X
+     C                     MOVE '1'       *IN,X
+     C                     ADD  1         X
+     C                     ELSE
+     C                     MOVE 'N'       SLRE
+     C                     END
+     C*
+     C**  CUSTOMER LENDING
+     C           BGCSLN    IFEQ 'Y'
+     C                     MOVELTXT,6     STX,X
+     C                     MOVE SLLE      SSL,X
+     C                     MOVE 'LE'      SSM,X
+     C                     MOVE '1'       *IN,X
+     C                     ADD  1         X
+     C                     ELSE
+     C                     MOVE 'N'       SLLE
+     C                     END
+     C*
+     C**  FUTURES AND OPTIONS
+     C           BGFUOP    IFEQ 'Y'
+     C                     MOVELTXT,7     STX,X
+     C                     MOVE SLFF      SSL,X
+     C                     MOVE 'FF'      SSM,X
+     C                     MOVE '1'       *IN,X
+     C                     ADD  1         X
+     C                     ELSE
+     C                     MOVE 'N'       SLFF
+     C                     END
+     C*
+     C**  SECURITIES TRADING
+     C           BGSECS    IFEQ 'Y'
+     C                     MOVELTXT,8     STX,X
+     C                     MOVE SLSE      SSL,X
+     C                     MOVE 'SE'      SSM,X
+     C                     MOVE '1'       *IN,X
+     C                     ELSE
+     C                     MOVE 'N'       SLSE
+     C                     END
+     C/COPY WNCPYSRC,MQ553XC003
+     C*
+     C**  SET UP OTHER SCREEN DETAILS
+     C*
+     C**  EXTRACT FREQUENCY
+     C                     MOVE EXFQ      SFREQ
+     C*
+     C**  BASE DAY
+     C                     MOVE BSDY      SBSDY
+     C*
+     C**  NEXT RUN DATE
+     C                     MOVE NRUN      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SNRUN
+     C*
+     C**  RUN TODAY?
+     C                     MOVE RNTD      SRNTD
+     C/COPY WNCPYSRC,MQ553XC004
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    VALID - VALIDATE SCREEN INPUT                                 *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*    CALLS:     ZDATE1 - VALIDATE AND CONVERT DATE IN DDMMYY       *
+     C*                        FORMAT TO DAY NUMBER                      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           VALID     BEGSR
+     C*
+     C**  INITIALISE ERROR MESSAGE FIELD TO BLANK AND SET OFF ERROR
+     C**  INDICATORS
+     C                     MOVE *BLANKS   MSG    79
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     363738
+     C                     SETOF                     394041
+     C                     SETOF                     42
+     C/COPY WNCPYSRC,MQ553XC005
+     C*
+     C**  IF F3 TAKEN, EXIT THIS PROGRAM
+     C           *INKC     IFEQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C**  VALIDATE MODULE SELECTION FIELDS
+     C*
+     C**  IF TEXT 1 IS NOT BLANK, SELECTION FIELD 1 MUST BE 'Y' OR 'N'
+     C           STXT1     IFNE *BLANKS
+     C           SSEL1     IFNE 'Y'
+     C           SSEL1     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3031
+     C                     END
+     C                     END
+     C*
+     C**  IF TEXT 2 IS NOT BLANK, SELECTION FIELD 2 MUST BE 'Y' OR 'N'
+     C           STXT2     IFNE *BLANKS
+     C           SSEL2     IFNE 'Y'
+     C           SSEL2     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3032
+     C                     END
+     C                     END
+     C*
+     C**  IF TEXT 3 IS NOT BLANK, SELECTION FIELD 3 MUST BE 'Y' OR 'N'
+     C           STXT3     IFNE *BLANKS
+     C           SSEL3     IFNE 'Y'
+     C           SSEL3     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3033
+     C                     END
+     C                     END
+     C*
+     C**  IF TEXT 4 IS NOT BLANK, SELECTION FIELD 4 MUST BE 'Y' OR 'N'
+     C           STXT4     IFNE *BLANKS
+     C           SSEL4     IFNE 'Y'
+     C           SSEL4     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3034
+     C                     END
+     C                     END
+     C*
+     C**  IF TEXT 5 IS NOT BLANK, SELECTION FIELD 5 MUST BE 'Y' OR 'N'
+     C           STXT5     IFNE *BLANKS
+     C           SSEL5     IFNE 'Y'
+     C           SSEL5     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3035
+     C                     END
+     C                     END
+     C*
+     C**  IF TEXT 6 IS NOT BLANK, SELECTION FIELD 6 MUST BE 'Y' OR 'N'
+     C           STXT6     IFNE *BLANKS
+     C           SSEL6     IFNE 'Y'
+     C           SSEL6     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3036
+     C                     END
+     C                     END
+     C*
+     C**  IF TEXT 7 IS NOT BLANK, SELECTION FIELD 7 MUST BE 'Y' OR 'N'
+     C           STXT7     IFNE *BLANKS
+     C           SSEL7     IFNE 'Y'
+     C           SSEL7     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3037
+     C                     END
+     C                     END
+     C*
+     C**  IF TEXT 8 IS NOT BLANK, SELECTION FIELD 8 MUST BE 'Y' OR 'N'
+     C           STXT8     IFNE *BLANKS
+     C           SSEL8     IFNE 'Y'
+     C           SSEL8     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3038
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,MQ553XC006
+     C*
+     C**  IF EVERYTHING STILL VALID, VALIDATE EXTRACT FREQUENCY
+     C           *IN30     IFEQ '0'
+     C*
+     C**  EXTRACT FREQUENCY MUST BE 'D', 'W' OR 'M'
+     C           SFREQ     IFNE 'D'
+     C           SFREQ     ANDNE'W'
+     C           SFREQ     ANDNE'M'
+     C                     MOVELERR,2     MSG
+     C                     SETON                     3039
+     C                     END
+     C                     END
+     C*
+     C**  IF EVERYTHING STILL VALID, VALIDATE BASE DAY
+     C           *IN30     IFEQ '0'
+     C*
+     C**  IF FREQUENCY IS MONTHLY
+     C           SFREQ     IFEQ 'M'
+     C*
+     C**  BASE DAY MUST NOT BE BLANK
+     C           SBSDY     IFEQ *BLANKS
+     C                     MOVELERR,3     MSG
+     C                     SETON                     3040
+     C                     END
+     C*
+     C**  BASE DAY MUST BE BETWEEN 1 AND 31
+     C                     MOVE SBSDY     NBSDY   20
+     C           NBSDY     IFLT 1
+     C           NBSDY     ORGT 31
+     C                     MOVELERR,3     MSG
+     C                     SETON                     3040
+     C                     END
+     C*
+     C**  FOR OTHER FREQUENCIES, BASE DAY MUST NOT BE ENTERED
+     C                     ELSE
+     C           SBSDY     IFNE *BLANKS
+     C                     MOVELERR,4     MSG
+     C                     SETON                     3040
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  IF EVERYTHING STILL VALID, VALIDATE DATE OF NEXT RUN
+     C           *IN30     IFEQ '0'
+     C*
+     C**  NEXT RUN DATE MUST BE A DATE NOT BEFORE TODAY
+     C                     MOVE SNRUN     ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '1'
+     C           ZDAYNO    ORLT BJRDNB
+     C                     MOVELERR,5     MSG
+     C                     SETON                     3041
+     C                     END
+     C                     END
+     C*
+     C**  IF EVERYTHING STILL VALID, VALIDATE RUN TODAY FLAG
+     C           *IN30     IFEQ '0'
+     C*
+     C**  IF RUN TODAY FLAG IS BLANK, DEFAULT IT TO 'N'
+     C           SRNTD     IFEQ *BLANK
+     C                     MOVE 'N'       SRNTD
+     C                     END
+     C*
+     C**  RUN TODAY FLAG MUST BE 'Y' OR 'N'
+     C           SRNTD     IFNE 'Y'
+     C           SRNTD     ANDNE'N'
+     C                     MOVELERR,1     MSG
+     C                     SETON                     3042
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,MQ553XC007
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    UPDATE - UPDATE DATA AREA MQSEL                               *
+     C*                                                                  *
+     C*    CALLED BY: FINAL - END OF PROGRAM PROCESSING                  *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           UPDATE    BEGSR
+     C*
+     C**  UPDATE MODULE SELECTION FIELDS
+     C                     Z-ADDX         Z       20
+     C                     Z-ADD1         X
+     C*
+     C           X         DOWLEZ
+     C*
+     C           SSM,X     IFEQ 'FX'
+     C                     MOVE SSL,X     SLFX
+     C                     END
+     C*
+     C           SSM,X     IFEQ 'MM'
+     C                     MOVE SSL,X     SLMM
+     C                     END
+     C*
+     C           SSM,X     IFEQ 'FI'
+     C                     MOVE SSL,X     SLFI
+     C                     END
+     C*
+     C           SSM,X     IFEQ 'GL'
+     C                     MOVE SSL,X     SLGL
+     C                     END
+     C*
+     C           SSM,X     IFEQ 'RE'
+     C                     MOVE SSL,X     SLRE
+     C                     END
+     C*
+     C           SSM,X     IFEQ 'LE'
+     C                     MOVE SSL,X     SLLE
+     C                     END
+     C*
+     C           SSM,X     IFEQ 'FF'
+     C                     MOVE SSL,X     SLFF
+     C                     END
+     C*
+     C           SSM,X     IFEQ 'SE'
+     C                     MOVE SSL,X     SLSE
+     C                     END
+     C/COPY WNCPYSRC,MQ553XC008
+     C*
+     C                     ADD  1         X
+     C                     END
+     C/COPY WNCPYSRC,MQ553XC009
+     C*
+     C**  UPDATE EXTRACT FREQUENCY
+     C                     MOVE SFREQ     EXFQ
+     C*
+     C**  UPDATE BASE DAY
+     C                     MOVE SBSDY     BSDY
+     C*
+     C**  UPDATE DATE OF NEXT RUN
+     C                     MOVE ZDAYNO    NRUN
+     C*
+     C**  UPDATE RUN TODAY FLAG
+     C*
+     C**  IF NEXT RUN DATE IS LESS THAN DATE OF NEXT WORKING DAY, SET
+     C**  RUN TODAY FLAG TO 'N'
+     C                     MOVE NRUN      NNRUN   50
+     C           NNRUN     IFLT BJDNWD
+     C                     MOVE 'N'       RNTD
+     C                     ELSE
+     C                     MOVE SRNTD     RNTD
+     C                     END
+     C/COPY WNCPYSRC,MQ553XC010
+     C*
+     C**  UPDATE DATA AREA
+     C                     OUT  MQSEL
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    INIT - INITIAL PROCESSING                                     *
+     C*                                                                  *
+     C*    CALLED BY:                                                    *
+     C*    CALLS:     ERROR  - ERROR PROCESSING                          *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  ACCESS DATA AREA MQSEL
+     C           *NAMVAR   DEFN           MQSEL
+     C           *LOCK     IN   MQSEL                  60
+     C*
+     C**  IF ERROR HAS OCCURRED ON ACCESSING DATA AREA, EXECUTE ERROR
+     C**  PROCESSING SUBROUTINE
+     C           *IN60     IFEQ '1'
+     C                     EXSR ERROR
+     C                     END
+     C*
+     C**  ACCESS BANK DETAILS FOR RUN DATE
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  CHECK SYSTEM DATE FORMAT
+     C           BJDFIN    COMP 'M'                      98
+     C*
+     C**  ACCESS MODULES FILE TO DETERMINE WHICH MODULES ARE SWITCHED
+     C**  ON
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C**  INITIALISE ALL SCREEN FIELDS TO BLANK
+     C                     MOVEA*BLANKS   STX
+     C                     MOVEA*BLANKS   SSL
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FINAL - END OF PROGRAM PROCESSING                             *
+     C*                                                                  *
+     C*    CALLED BY:                                                    *
+     C*    CALLS:     UPDATE - UPDATE DATA AREA MQSEL                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FINAL     BEGSR
+     C*
+     C**  UPDATE DATA AREA MQSEL
+     C                     EXSR UPDATE
+     C*
+     C**  TERMINATE PROGRAM
+     C                     SETON                     LR
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    ERROR - ERROR PROCESSING                                      *
+     C*                                                                  *
+     C*    CALLED BY: INIT - INITIAL PROCESSING                          *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ERROR     BEGSR
+     C*
+     C**  SET ON SWITCH TO INDICATE THAT DATA AREA IS LOCKED BY ANOTHER
+     C**  USER
+     C                     SETON                     U7
+     C*
+     C**  TERMINATE PROGRAM
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*                                                                  *
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+** TXT
+Foreign Exchange:
+Money Market:
+FRA/IRS:
+General Ledger:
+Retail:
+Customer Lending:
+Futures and Options:
+Securities Trading:
+**   ERR  - ERROR MESSAGES
+ Enter 'Y' or 'N'
+ Enter 'D' for Daily, 'W' for Weekly, 'M' for Monthly
+ Enter a number between 1 and 31 to define the day in the month
+ The Base Day may only be entered if the Extract Frequency is 'M'
+ Enter a valid date which is not before today
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

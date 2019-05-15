@@ -1,0 +1,104 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CGL061A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC4303 - Balance Statements - End Process                  */
+/*                                                                   */
+/*       (c) Misys Banking Systems Ltd. 2006                         */
+/*                                                                   */
+/*       Last Amend No. CGL061A *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. 252651             DATE 07Feb08              */
+/*                      CGL061  *Create    Date 27Jun06              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CGL061A - Statements Task Split Processing                  */
+/*       252651 - COB Error - GLC4302                                */
+/*       CGL061 - Multi-streaming GL Statements - Task Split         */
+/*                  (End Proc)                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('STMTSERVE')
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                /*252651*/
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+/* Send message to MRUNQ */
+             SNDPGMMSG  MSG('GLC4303 - Balance Statements +
+                           - End Proc') TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                      /*252651*/
+             CHGVAR     VAR(&DTAQLIBL) VALUE(&SYSID *CAT 'DPLIB')                /*252651*/
+                                                                                 /*252651*/
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(GLSTAMPD) RTNMBR(&MEMBER)
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('END')
+ 
+/* Send message data to data queue */
+ 
+ LOOP:       CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(GLSTAMPD) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&SNDDTAQ)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(RCVDTAQ))
+ 
+/* Loop for all members in driving file */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)
+             GOTO       CMDLBL(LOOP)
+ 
+/* Wait for data queue entry */
+ 
+ RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If message = FINISH, terminate the program */
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(DO)
+             GOTO       CMDLBL(RCVDTAQ)
+             ENDDO
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GLC4303 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+ 
+             ENDPGM

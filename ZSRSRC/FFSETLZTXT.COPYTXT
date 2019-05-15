@@ -1,0 +1,177 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+  FF STANDARD SUBROUTINE - FFSETL
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+  1. To determine from Input Settlement Details the account and whether
+  Memos or Prono processing is required.
+  2. To validate input Settlement A/c: if Account Type is 'R' for
+  Retail, then the account must exist and be open.
+ 
+    Note - requires the following files to be accessed prior to process
+ 
+      PF-TABTB11  PF-TABTB20 PF-TABTB40 PF-TABTB80 PF-TABLETR
+ 
+    Process accesses the following files
+ 
+      PF-TABTE10  PF-TABLETL LF-ACNUM LF-ACCNT
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC FFSETLZ1 should be included in 'I' specs
+   /COPY ZSRSRC FFSETLZ2 should be included in 'C' specs (key lists)
+   /COPY ZSRSRC FFSETLZ3 should be included in 'C' specs (initialise)
+   /COPY ZSRSRC FFSETLZ4 should be included in the Subroutine section
+    of the 'C' specs
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+   Input:
+   ~~~~~
+                        FFBRCD  (3,0S) BRANCH CODE
+                        FFCBCD  (6,0S) CUSTOMER/BROKER CODE
+                        FFBRKI    (1A) BROKER INDICATOR  (Y or N)
+                        FFSETP  (2,0S) SETTLEMENT TYPE
+                        FFSETA   (12A) SETTLEMENT ACCOUNT
+                        FFCCY     (3A) CURRENCY
+                        FFDASQ  (2,0S) DEFAULT A/C SEQUENCE (= Start
+                                        A/c Seq for the Branch off
+                                        PF/TABLETR if Multibranching;
+                                        otherwise 01)
+   Procedure:
+   ~~~~~~~~~
+ 1. - Determine the output Customer Number, Account Code and Account
+        Sequence
+ 
+ 2. - If the input Settlement Type is 01 02 07 08 or 12,
+ 
+   2a.- If Settlement A/c not blank, access the nostro record on
+        PF-TABLETL using the first 2 bytes of the input Settlement A/c
+        field as the nostro code combined with the input currency.
+        - If record found
+          - The output Customer Number and Account Code come
+            from the nostro record, or zero if record not found.
+          - The output A/c Sequence is the input Default A/c Seq.
+          - The output Nostro Number is from the nostro record if
+            found, otherwise is set to '00'
+        - Else,
+          - The output fields are set to zero
+ 
+        - Set the PRONO Update Indicator to 'Y'
+ 
+   2b.- If Settlement A/c blank, set above output fields to zero
+ 
+ 3. - If the input Settlement Type is 03
+ 
+   3a.- The output Customer Number is the input Branch Internal Cust
+        Number ( BICN ) of the branch involved
+ 
+   3b.- The output Account Code is the compensating suspense account
+        code ( CSAC ) off PF-TABTB40
+ 
+   3c.- The output Account Sequence is the input Default Account
+        Sequence
+ 
+ 4. - If the input Settlement Type is 04
+ 
+   4a.- The output Customer Number is the input Customer/Broker code
+ 
+   4b.- The output Account Code is the the default current account code
+        ( CADC ) off PF-TABTB20
+ 
+   4c.- The output Account Sequence is the input Default Account Seq.
+ 
+ 5. - If the input Settlement Type is 05
+ 
+   5a.- The output Customer Number is bytes 1 to 6 on the input Settle-
+        ment Account
+ 
+   5b.- The output Account Code is bytes 7 to 10 on the input Settle-
+        ment Account
+ 
+   5c.- The output Account Sequence is bytes 11 to 12 on the input
+        Settlement Account
+ 
+ 6. - If the input Settlement Type is 06
+ 
+   6a.- The output Customer Number is the input Branch Internal Cust.
+        Number ( BICN ) of the branch involved
+ 
+   6b.- The output Account Code is the computer suspense account code
+        ( COMS ) on PF-TABTB20
+ 
+   6c.- The output Account Sequence is the input Default Account Seq.
+ 
+ 7. - If the input Settlement Type is 14
+ 
+   7a.- Access the account on LF-ACNUM using the first 10 characters in
+        the input Settlement account as the retail account number
+ 
+   7b.- The output Customer Number is the customer number off the
+        account
+ 
+   7c.- The output Account Code is the Account Code off the account
+ 
+   7d.- The output Account Sequence is the Account Sequence off the
+        account
+ 
+ 8. - If the input Settlement Type is 15
+ 
+   8a.- The output Customer Number is the input Customer/Broker code
+ 
+   8b.- If input Broker Indicator is 'Y' - The Account Code is
+        the Financial Futures default broker account code ( DFBA ) off
+        PF-TABTB80
+ 
+   8c.- Else, Account Code is the Financial Futures default customer
+        account code ( DFCA ) off PF-TABTB80
+ 
+   8d.- The output Account Sequence is the input Default Account Seq.
+ 
+ 9. - Access the account code off PF-TABTE10 using the output Account
+      Code
+ 
+10.- If the account type ( ATYP ) on PF-TABTE10 for this account code
+     is 'R' for retail
+ 
+  10a.- Access the settlement account itself off LF-ACCNT using the
+        output Customer Number, input Currency, output Account Code and
+        Account Sequence as key
+ 
+  10b.- If the account exists on LF-ACCNT and the record ID is not '*'
+        and the account status is not 'C' (for closed) - Set the MEMOS
+        Update/Validation indicator to 'Y'
+ 
+  10c.- Else, Set the MEMOS Update/Validation Indicator to 'E'
+ 
+11.- Else, Set the MEMOS Update/Validation Indicator to 'N'
+ 
+ 
+   Outputs
+   ~~~~~~~             FFCNUM  (6,0S) CUSTOMER NUMBER
+                       FFACOD  (4,0S) ACCOUNT CODE
+                       FFACSQ  (2,0S) ACCOUNT SEQUENCE
+                       FFNOSN  (2,0S) NOSTRO NUMBER to access LF/PRONOM
+                       FFMIND    (1A) MEMOS UPDATE/VALIDATION INDICATOR
+                       FFPIND    (1A) PRONO UPDATE INDICATOR
+                       *IN89     (1A) CHAIN FAIL IND.
+ 

@@ -1,0 +1,339 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP CMPDBA validity checker')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000005V - Validity checker for CMPDBA                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CPK025  *CREATE    Date 25May06              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK025 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BASE &COMP &TYPE &MISSFILE)
+ 
+             DCL        VAR(&BASE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&COMP) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(58)
+             DCL        VAR(&MISSFILE) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&BASEFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BASEFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMPFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMPFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TYPE1) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TYPE2) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TYPE3) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TYPE4) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TYPE5) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TYPE6) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TYPE7) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TYPE8) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&MULTI) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NBRTYPE) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&NBRTYPEB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LENGTH) TYPE(*DEC) LEN(3 0) VALUE(10)
+             DCL        VAR(&STARTPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3 0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+CHECK1:
+/* Check that the file/library combination for BASE and COMP are not */
+/*  identical.                                                       */
+             IF         COND(&BASE *EQ &COMP) THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             Base and Comparison file/library are +
+                             identical.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Break down the parameters for the libraries. */
+             CHGVAR     VAR(&BASEFILE) VALUE(%SST(&BASE 1 10))
+             CHGVAR     VAR(&BASEFILEL) VALUE(%SST(&BASE 11 10))
+             CHGVAR     VAR(&COMPFILE) VALUE(%SST(&COMP 1 10))
+             CHGVAR     VAR(&COMPFILEL) VALUE(%SST(&COMP 11 10))
+ 
+CHECK2:
+/* Check that the Comparison file and library are not both equal to */
+/*  *BASEFILE.                                                      */
+             IF         COND(&COMPFILE *EQ '*BASEFILE' *AND +
+                          &COMPFILEL *EQ '*BASEFILE') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             Base and Comparison file/library are +
+                             identical.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Check if the Base file is generic or *ALL by scanning the field for '*'. */
+             CALL       PGM(QCLSCAN) PARM(&BASEFILE &LENGTH +
+                          &STARTPOS '*' &PATLEN '0' '0' '' &RESULT)
+             IF         COND(&RESULT *GT 0) THEN(DO)
+                CHGVAR     VAR(&MULTI) VALUE(*YES)
+             ENDDO
+ 
+CHECK3:
+/* If the Base file is generic or *ALL then the Comparison file must be */
+/*  *BASEFILE.                                                          */
+             IF         COND(&MULTI *EQ '*YES' *AND &COMPFILE *NE +
+                          '*BASEFILE') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                             the Base file is generic or *ALL then the +
+                             Comparison file must be *BASEFILE.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* If the Comparison file or library is *BASEFILE then change the values to */
+/*  those of the Base file and library.                                     */
+             IF         COND(&COMPFILE *EQ '*BASEFILE') THEN(DO)
+                CHGVAR     VAR(&COMPFILE) VALUE(&BASEFILE)
+             ENDDO
+             IF         COND(&COMPFILEL *EQ '*BASEFILE') THEN(DO)
+                CHGVAR     VAR(&COMPFILEL) VALUE(&BASEFILEL)
+             ENDDO
+ 
+CHECK4:
+/* Check that the Comparison file/library combination is not now equal */
+/*  to the Base file/library combination.                              */
+             IF         COND(&COMPFILE *EQ &BASEFILE *AND &COMPFILEL +
+                          *EQ &BASEFILEL) THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             Base and Comparison file/library are +
+                             identical.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+CHECK5:
+/* If the Base file is generic or *ALL then the Base library can not be */
+/*  *LIBL.                                                              */
+             IF         COND(&MULTI *EQ '*YES' *AND &BASEFILEL *EQ +
+                          '*LIBL') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             Base library can not be *LIBL if the Base +
+                             file is generic or *ALL.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+CHECK6:
+/* If the Base file is generic or *ALL then the Base library must exist. */
+             IF         COND(&MULTI *EQ '*YES') THEN(DO)
+                CHKOBJ     OBJ(&BASEFILEL) OBJTYPE(*LIB) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Library' *BCAT &BASEFILEL +
+                             *BCAT 'does not exist.') TOPGMQ(*PRV (* +
+                             *NONE *NONE)) MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Correct authority to' *BCAT +
+                             &BASEFILEL *BCAT 'does not exist.') +
+                             MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+CHECK7:
+/* If the Base file is generic or *ALL then the Comparison library can not */
+/*  be *LIBL.                                                              */
+             IF         COND(&MULTI *EQ '*YES' *AND &COMPFILEL *EQ +
+                          '*LIBL') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             Comparison library can not be *LIBL if +
+                             the Base file is generic or *ALL.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+CHECK8:
+/* If the Base file is generic or *ALL then the Comparison library must exist. */
+             IF         COND(&MULTI *EQ '*YES') THEN(DO)
+                CHKOBJ     OBJ(&COMPFILEL) OBJTYPE(*LIB) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Library' *BCAT &COMPFILEL +
+                             *BCAT 'does not exist.') TOPGMQ(*PRV (* +
+                             *NONE *NONE)) MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Correct authority to' *BCAT +
+                             &COMPFILEL *BCAT 'does not exist.') +
+                             MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK9:
+/* If the Base file is not generic or *ALL then check that the combination */
+/*  of Base file and library exists and that the user has authority.       */
+             IF         COND(&MULTI *NE '*YES') THEN(DO)
+                CHKOBJ     OBJ(&BASEFILEL/&BASEFILE) OBJTYPE(*FILE) +
+                             AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                                combination of' *BCAT &BASEFILEL *TCAT +
+                                '/' *TCAT &BASEFILE *BCAT 'does not +
+                                exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Correct authority to' *BCAT +
+                                &BASEFILEL *TCAT '/' *TCAT &BASEFILE +
+                                *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK10:
+/* If the Base file is not generic or *ALL then check that the combination */
+/*  of Comparison file and library exists and that the user has authority. */
+             IF         COND(&MULTI *NE '*YES') THEN(DO)
+                CHKOBJ     OBJ(&COMPFILEL/&COMPFILE) OBJTYPE(*FILE) +
+                             AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                                combination of' *BCAT &COMPFILEL *TCAT +
+                                '/' *TCAT &COMPFILE *BCAT 'does not +
+                                exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Correct authority to' *BCAT +
+                                &COMPFILEL *TCAT '/' *TCAT &COMPFILE +
+                                *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+/* Build up the comparison types. */
+             CHGVAR     VAR(&NBRTYPEB) VALUE(%SST(&TYPE 1 2))
+             CHGVAR     VAR(&NBRTYPE) VALUE(%BIN(&NBRTYPEB))
+ 
+             IF         COND(&NBRTYPE *GE 1) THEN(DO)
+                CHGVAR     VAR(&TYPE1) VALUE(%SST(&TYPE 3 7))
+             ENDDO
+             IF         COND(&NBRTYPE *GE 2) THEN(DO)
+                CHGVAR     VAR(&TYPE2) VALUE(%SST(&TYPE 10 7))
+             ENDDO
+             IF         COND(&NBRTYPE *GE 3) THEN(DO)
+                CHGVAR     VAR(&TYPE3) VALUE(%SST(&TYPE 17 7))
+             ENDDO
+             IF         COND(&NBRTYPE *GE 4) THEN(DO)
+                CHGVAR     VAR(&TYPE4) VALUE(%SST(&TYPE 24 7))
+             ENDDO
+             IF         COND(&NBRTYPE *GE 5) THEN(DO)
+                CHGVAR     VAR(&TYPE5) VALUE(%SST(&TYPE 31 7))
+             ENDDO
+             IF         COND(&NBRTYPE *GE 6) THEN(DO)
+                CHGVAR     VAR(&TYPE6) VALUE(%SST(&TYPE 38 7))
+             ENDDO
+             IF         COND(&NBRTYPE *GE 7) THEN(DO)
+                CHGVAR     VAR(&TYPE7) VALUE(%SST(&TYPE 45 7))
+             ENDDO
+             IF         COND(&NBRTYPE *GE 8) THEN(DO)
+                CHGVAR     VAR(&TYPE8) VALUE(%SST(&TYPE 52 7))
+             ENDDO
+ 
+CHECK11:
+/* Check that the same comparison type has not entered twice. */
+             IF         COND(&TYPE1 *NE ' ') THEN(DO)
+                IF         COND(&TYPE1 *EQ &TYPE2 *OR &TYPE1 *EQ &TYPE3 +
+                             *OR &TYPE1 *EQ &TYPE4 *OR &TYPE1 *EQ +
+                             &TYPE5 *OR &TYPE1 *EQ &TYPE6 *OR &TYPE1 +
+                             *EQ &TYPE7 *OR &TYPE1 *EQ &TYPE8) THEN(DO)
+                   GOTO       CMDLBL(TYPE_ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&TYPE2 *NE ' ') THEN(DO)
+                IF         COND(&TYPE2 *EQ &TYPE3 *OR &TYPE2 *EQ &TYPE4 +
+                             *OR &TYPE2 *EQ &TYPE5 *OR &TYPE2 *EQ +
+                             &TYPE6 *OR &TYPE2 *EQ &TYPE7 *OR &TYPE2 +
+                             *EQ &TYPE8) THEN(DO)
+                   GOTO       CMDLBL(TYPE_ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&TYPE3 *NE ' ') THEN(DO)
+                IF         COND(&TYPE3 *EQ &TYPE4 *OR &TYPE3 *EQ &TYPE5 +
+                             *OR &TYPE3 *EQ &TYPE6 *OR &TYPE3 *EQ +
+                             &TYPE7 *OR &TYPE3 *EQ &TYPE8) THEN(DO)
+                   GOTO       CMDLBL(TYPE_ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&TYPE4 *NE ' ') THEN(DO)
+                IF         COND(&TYPE4 *EQ &TYPE5 *OR &TYPE4 *EQ &TYPE6 +
+                             *OR &TYPE4 *EQ &TYPE7 *OR &TYPE4 *EQ +
+                             &TYPE8) THEN(DO)
+                   GOTO       CMDLBL(TYPE_ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&TYPE5 *NE ' ') THEN(DO)
+                IF         COND(&TYPE5 *EQ &TYPE6 *OR &TYPE5 *EQ &TYPE7 +
+                             *OR &TYPE5 *EQ &TYPE8) THEN(DO)
+                   GOTO       CMDLBL(TYPE_ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&TYPE6 *NE ' ') THEN(DO)
+                IF         COND(&TYPE6 *EQ &TYPE7 *OR &TYPE6 *EQ +
+                             &TYPE8) THEN(DO)
+                   GOTO       CMDLBL(TYPE_ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&TYPE7 *NE ' ') THEN(DO)
+                IF         COND(&TYPE7 *EQ &TYPE8) THEN(DO)
+                   GOTO       CMDLBL(TYPE_ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+TYPE_ERROR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000One +
+                          or more comparison types have been +
+                          entered more than once.') MSGTYPE(*DIAG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             GOTO       CMDLBL(ERROR)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+ENDPGM:
+ 
+             ENDPGM

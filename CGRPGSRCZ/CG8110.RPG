@@ -1,0 +1,971 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Display layout identifiers list.')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                  *
+     F*                                                               *
+     F*  CG8110  - - - - Display layouts for a group set.             *
+     F*                                                               *
+     F*  Function:   - - This program displays a screen which         *
+     F*                   lists layouts associated with the           *
+     F*                   repeating path named in the LDA, and        *
+     F*                   allows the user to select a layout          *
+     F*                   or one of the planes within a layout        *
+     F*                   (where the plane is valid for the           *
+     F*                   specified starting point).                  *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 086246             Date 31MAR95               *
+      *                 S01522             Date 22FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  086246 - If non-repeating structure then all planes          *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  03 -- F3 (Exit).                                             *
+     F*  12 -- F12 (Previous).                                        *
+     F*  25 -- Display SFLEND in message subfile.                     *
+     F*  29 -- Valid command key pressed.                             *
+     F*  31 -- Protect the selection box on the subfile.              *
+     F*  32 -- Invalid "position to" value entered.                   *
+     F*  61 -- "Position to" value found.                             *
+     F*  80 -- Clear subfile.                                         *
+     F*  81 -- Display subfile control record.                        *
+     F*  82 -- Display subfile record.                                *
+     F*  90 -- Error detected.                                        *
+     F*  91 -- EOF detected in CGPTYPL2.                              *
+     F*  92 -- EOF detected in CGLAYOL4.                              *
+     F*  93 -- EOF detected in CGPDECL2.                              *
+     F*  94 -- EOF detected in CGPASCL1.                              *
+     F*  95 -- EOF detected in subfile.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*  SRSHOW -- Display layout identifiers list.                   *
+     F*  SRPOS  -- Handle a "position to" value.                      *
+     F*  SRSEL  -- Search for a marked subfile line.                  *
+     F*  SRIZSF -- Initialise the subfile.                            *
+     F*  SRLDAR -- Load the array of layout identifiers.              *
+     F*  SRITEM -- Handle each print item type / subtype.             *
+     F*  SRLDSF -- Load the subfile.                                  *
+     F*  SRLAYO -- Read records from the layouts file.                *
+     F*  SRTEXT -- Retrieve command keys text.                        *
+     F*  SRSNMS -- Send a message to the program's queue.             *
+     F*  SREXPG -- Program exit processing.                           *
+     F*  SRINIT -- Provide initialisation and definitions.            *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,CG8110FPG
+     F*===================================================================
+     FCG8110DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE #SFLRCD
+     F                                              KINFDS INFODS
+     F                                              KINFSR SRFILE
+     F* Window display file
+     F*-------------------------------------------------------------------
+     FCGPDECL1IF  E           K        DISK         KINFSR SRFILE
+     F* Plane declarations by layout and plane names
+     F*-------------------------------------------------------------------
+     FCGPDECL2IF  E           K        DISK         KINFSR SRFILE
+     F* Plane declarations by layout and repeating path
+     F*-------------------------------------------------------------------
+     FCGPASCL1IF  E           K        DISK         KINFSR SRFILE
+     F* Plane associations by layout and plane
+     F*-------------------------------------------------------------------
+     FCGLAYOL1IF  E           K        DISK         KINFSR SRFILE
+     F* Layouts by layout ID
+     F*-------------------------------------------------------------------
+     FCGLAYOL4IF  E           K        DISK         KINFSR SRFILE
+     F* Layouts by print item type and subtype
+     F*-------------------------------------------------------------------
+     FCGPTYPL2IF  E           K        DISK         KINFSR SRFILE
+     F* Print item types and subtypes by group set
+     F*-------------------------------------------------------------------
+     FCGPTYPL1IF  E           K        DISK         KINFSR SRFILE         086246
+     F* Print item types and subtypes    Retrieval Index                  086246
+     F*-------------------------------------------------------------------086246
+     FCGGSETL1IF  E           K        DISK         KINFSR SRFILE         086246
+     F* Group Sets                       Retrieval Index                  086246
+     F*-------------------------------------------------------------------086246
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    LAY      5000 10  A            Layouts selected.
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CG8110EPG
+     E*
+     E*-------------------------------------------------------------------
+     I/EJECT
+     I*-------------------------------------------------------------------
+     I@PDECL1
+     I*
+     I              LPLAYO                          L1LAYO
+     I              LPPLAN                          L1PLAN
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CG8110IPG
+     I*
+     I* Copied-in data structures
+     I*
+     I*...................................................................
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error processing data structures
+     I*
+     I*...................................................................
+     IRUNDAT    E DSRUNDAT
+     I*
+     I* RUNDAT data area
+     I*
+     I*...................................................................
+     IINFODS    E DSY2I#DSP
+     I*
+     I* Display file information data structure
+     I*
+     I*...................................................................
+     IBIGLDA    E DSCGLDA
+     I*
+     I* Local data area
+     I*
+     I*...................................................................
+     I* Job date and time:
+     I*
+     IJBDTTM      DS
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     I*...................................................................
+     I* Message translation fields:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0LAYO 10
+     C                     PARM           P0PLAN 10
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     Z-ADD1         Q
+     C                     MOVEL'@Main@'  @STK,Q
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* Display the list of layouts and planes:
+     C*
+     C           *IN03     DOUEQ*ON
+     C           *IN12     OREQ *ON
+     C           P0LAYO    ORNE *BLANKS
+     C                     EXSR SRSHOW
+     C                     ENDDO
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C* Exit:
+     C                     EXSR SREXPG
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSHOW displays the list of layouts.               **
+     C********************************************************************
+     C           SRSHOW    BEGSR                           * S R S H O W *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSHOW'  @STK,Q
+     C*
+     C* Update the screen time:
+     C*
+     C                     TIME           ##TME
+     C*
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT
+     C                     EXFMT#SFLCTL
+     C*
+     C* Update the job time:
+     C*
+     C                     Z-ADD##TME     ##JTM
+     C*
+     C* Clear messages from the program's message queue:
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C* If not F3 (exit) or F12 (previous),
+     C*  test for selection:
+     C*
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           RRN       ANDGT*ZERO
+     C           #2PLAN    IFNE *BLANKS
+     C           #2PLAN    ANDNE##SAVE
+     C                     EXSR SRPOS
+     C                     ELSE
+     C                     EXSR SRSEL
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           EXSHOW    TAG                             <<<=== EXSHOW
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRPOS handles a display repositioning entry.       **
+     C********************************************************************
+     C           SRPOS     BEGSR                           * S R P O S   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPOS '  @STK,Q
+     C*
+     C                     SETOF                     32
+     C                     Z-ADD1         @P      50
+     C*
+     C* Seek the "Position to:" value:
+     C*
+     C           #2PLAN    LOKUPLAY,@P               61  61
+     C           *IN61     IFEQ *OFF
+     C                     MOVE 'CGD1697' ZAMSID
+     C                     MOVEL#2PLAN    ZAMSDA    P
+     C                     EXSR SRSNMS
+     C                     SETON                     32
+     C                     ELSE
+     C*
+     C* Save the "Position to:" value;
+     C*  clear the subfile;
+     C*  reload the subfile:
+     C*
+     C                     MOVE #2PLAN    ##SAVE
+     C                     EXSR SRIZSF
+     C*
+     C                     ENDIF
+     C*
+     C           EXPOS     TAG                             <<<=== EXPOS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSEL handles record selection.                    **
+     C********************************************************************
+     C           SRSEL     BEGSR                           * S R S E L   *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSEL '  @STK,Q
+     C*
+     C* Clear RRN and count of marked lines:
+     C*
+     C                     Z-ADD*ZERO     RRN
+     C                     Z-ADD*ZERO     #MARKS
+     C*
+     C* Read the subfile, looking for marked lines. If one marked line
+     C*  is found, move the layout ID to the entry parameter list:
+     C*
+     C           RRN       DOUEQ##RRMX
+     C           #MARKS    ORGE 2
+     C           *IN95     OREQ *ON
+     C                     ADD  1         RRN
+     C           RRN       CHAIN#SFLRCD              95
+     C           *IN95     IFEQ *OFF
+     C           #1SEL     ANDNE*BLANK
+     C                     ADD  1         #MARKS
+     C                     MOVEL#1LAYO    P0LAYO
+     C                     MOVEL#1TPLN    P0PLAN
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C* If more than one selected, tell the user:
+     C*
+     C           #MARKS    IFGT 1
+     C                     MOVE 'CGD1690' ZAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C* Reset RRN:
+     C                     Z-ADD##RRMX    RRN
+     C*
+     C           EXSEL     TAG                             <<<=== EXSEL
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRIZSF initialises the subfile.                    **
+     C********************************************************************
+     C           SRIZSF    BEGSR                           * S R I Z S F *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRIZSF'  @STK,Q
+     C*
+     C* Clear the subfile:
+     C                     SETOF                     8182
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+     C                     SETON                     81
+     C*
+     C* Reset RRN and top RRN:
+     C*
+     C                     Z-ADD*ZERO     RRN     50
+     C                     Z-ADD*ZERO     ##RRMX  50
+     C*
+     C* /Copy point for subfile control initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8110DISC
+     C*
+     C           @P        DO   @L        @M      50
+     C                     MOVE LAY,@M    LYLAYO
+     C                     EXSR SRLAYO
+     C                     ENDDO
+     C*
+     C* Set the subfile display indicator:
+     C*
+     C                     Z-ADDRRN       ##RRMX
+     C           RRN       IFGT *ZERO
+     C                     SETON                     82
+     C                     ENDIF
+     C*
+     C           EXIZSF    TAG                             <<<=== EXIZSF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRLDAR loads the layouts array.                    **
+     C********************************************************************
+     C           SRLDAR    BEGSR                           * S R L D A R *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRLDAR'  @STK,Q
+     C*
+     C* Reset subfile record number:
+     C*
+     C                     Z-ADD*ZERO     ##SFRC
+     C*
+     C* Get print item types and subtypes for the current group set:
+     C*
+     C           #@GRPS    SETLLCGPTYPL2
+     C           *IN91     DOUEQ*ON
+     C           #@GRPS    READECGPTYPL2                 91
+     C           *IN91     IFEQ *OFF
+     C*
+     C                     EXSR SRITEM
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXLDAR    TAG                             <<<=== EXLDAR
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRITEM handles a print item type and subtype.      **
+     C********************************************************************
+     C           SRITEM    BEGSR                           * S R I T E M *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRITEM'  @STK,Q
+     C*
+     C* Get layout IDs for each print item type and subtype:
+     C*
+     C           KKLAYO    SETLLCGLAYOL4
+     C           *IN92     DOUEQ*ON
+     C           KKLAYO    READECGLAYOL4                 92
+     C           *IN92     IFEQ *OFF
+     C*
+     C* Omit the current layout:
+     C*
+     C           LYLAYO    ANDNE#@LAYO
+     C*
+     C* Add the layout to the array if space:
+     C*
+     C           @L        ANDLT50000
+     C                     ADD  1         @L
+     C                     MOVE LYLAYO    LAY,@L
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C* Sort the array:
+     C*
+     C           @L        IFGT *ZERO
+     C                     SORTALAY
+     C                     ENDIF
+     C*
+     C           EXITEM    TAG                             <<<=== EXITEM
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRLAYO provides layout details.                    **
+     C********************************************************************
+     C           SRLAYO    BEGSR                           * S R L A Y O *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRLAYO'  @STK,Q
+     C*
+     C* If not the first layout, leave a blank line:
+     C*
+     C           RRN       IFGT *ZERO
+     C                     SETON                     31      Protect
+     C                     MOVE *BLANK    #1SEL
+     C                     MOVE *BLANKS   #1LAYO
+     C                     MOVE *BLANKS   #1TPLN
+     C                     MOVE *BLANKS   #1DESC
+     C                     MOVE *BLANKS   #1PLAN
+     C                     MOVE 'B'       #1LTYP
+     C                     ADD  1         RRN
+     C                     WRITE#SFLRCD
+     C                     ENDIF
+     C*
+     C* Move layout details:
+     C*
+     C                     SETOF                     31      Unprotect
+     C                     MOVE *BLANK    #1SEL
+     C                     MOVE LYLAYO    #1LAYO
+     C                     MOVE *BLANKS   #1TPLN
+     C           LYLAYO    CHAINCGLAYOL1             92
+     C                     MOVE LYDESC    #1DESC
+     C                     MOVE *BLANKS   #1PLAN
+     C                     MOVE 'L'       #1LTYP
+     C                     ADD  1         RRN
+     C                     WRITE#SFLRCD
+     C*
+     C           ##SFRC    IFEQ *ZERO
+     C                     Z-ADDRRN       ##SFRC
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Find plane details for the current layout:
+     C*
+      *                                                                   086246
+      * If Non-repeating set allow selection of all planes                086246
+      *                                                                   086246
+     C           ##NRPT    IFEQ 'Y'                                       086246
+     C                     EXSR SRPLA1                                    086246
+     C                     ELSE                                           086246
+     C           KKPDEC    SETLLCGPDECL2
+     C           *IN93     DOUEQ*ON
+     C           KKPDEC    READECGPDECL2                 93
+     C           *IN93     IFEQ *OFF
+     C*
+     C* Move plane details:
+     C*
+     C                     EXSR SRPLAN
+     C*
+     C                     ENDIF
+     C                     ENDDO
+      *                                                                   086246
+     C                     ENDIF                                          086246
+      *                                                                   086246
+     C*
+     C           EXLAYO    TAG                             <<<=== EXLAYO
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRPLAN provides plane details.                     **
+     C********************************************************************
+     C           SRPLAN    BEGSR                           * S R P L A N *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPLAN'  @STK,Q
+     C*
+     C           KKPASC    SETLLCGPASCL1
+     C           *IN94     DOUEQ*ON
+     C           KKPASC    READECGPASCL1                 94
+     C           *IN94     IFEQ *OFF
+     C*
+     C                     MOVE *BLANKS   #1DESC
+     C           KKPLOW    CHAINCGPDECL1             96
+     C           *IN96     IFEQ *OFF
+     C                     MOVE LPDESC    #1DESC
+     C                     ENDIF
+     C*
+     C                     SETOF                     31       Unprotect
+     C                     MOVE *BLANK    #1SEL
+     C                     MOVE BALAYO    #1LAYO
+     C                     MOVE BATPLN    #1TPLN
+     C                     MOVE BAPLAN    #1PLAN
+     C                     MOVE 'P'       #1LTYP
+     C                     ADD  1         RRN
+     C                     WRITE#SFLRCD
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXPLAN    TAG                             <<<=== EXPLAN
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+      *                                                                   086246
+     C********************************************************************086246
+     C**  Subroutine SRPLA1 provides plane details.                     **086246
+     C********************************************************************086246
+     C           SRPLA1    BEGSR                           * S R P L A N *086246
+      *                                                                   086246
+      * Add subroutine name to stack:                                     086246
+      *                                                                   086246
+     C                     ADD  1         Q                               086246
+     C                     MOVEL'SRPLA1'  @STK,Q                          086246
+      *                                                                   086246
+     C           LYLAYO    SETLL@PDECL1                                   086246
+     C           *IN94     DOUEQ*ON                                       086246
+     C           LYLAYO    READE@PDECL1                  94               086246
+     C           *IN94     IFEQ *OFF                                      086246
+      *                                                                   086246
+      * Write Sub-file record                                             086246
+      *                                                                   086246
+     C                     SETOF                     31       Unprotect   086246
+     C                     MOVE *BLANK    #1SEL                           086246
+     C                     MOVE L1LAYO    #1LAYO                          086246
+     C                     MOVELL1PLAN    #1TPLN                          086246
+     C                     MOVE L1PLAN    #1PLAN                          086246
+     C                     MOVE LPDESC    #1DESC                          086246
+     C                     MOVE 'P'       #1LTYP                          086246
+     C                     ADD  1         RRN                             086246
+     C                     WRITE#SFLRCD                                   086246
+      *                                                                   086246
+     C                     ENDIF                                          086246
+     C                     ENDDO                                          086246
+      *                                                                   086246
+     C           EXPLA1    TAG                             <<<=== EXPLA1  086246
+      *                                                                   086246
+      * Unwind subroutine stack:                                          086246
+      *                                                                   086246
+     C                     MOVE *BLANKS   @STK,Q                          086246
+     C                     SUB  1         Q                               086246
+     C*                                                                   086246
+     C                     ENDSR                                          086246
+     C********************************************************************086246
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRTEXT retrieves heading and function key texts.   **
+     C********************************************************************
+     C           SRTEXT    BEGSR                           * S R T E X T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRTEXT'  @STK,Q
+     C*
+     C* Heading text:
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1691' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##ONAM
+     C*
+     C* Instructions:
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1692' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##INST
+     C*
+     C* Column headings:
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1693' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##COLS
+     C*
+     C* Function keys:
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1694' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CMD
+     C*
+     C           EXTEXT    TAG                             <<<=== EXTEXT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSNMS sends a message to the program's queue.     **
+     C********************************************************************
+     C           SRSNMS    BEGSR                           * S R S N M S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSNMS'  @STK,Q
+     C*
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVE ##PGM     ZAPGMQ
+     C                     ENDIF
+     C*
+     C* If no message file specified, use default:
+     C*
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVE ZADFMF    ZAMSGF
+     C                     ENDIF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+     C*
+     C* Clear all fields after use:
+     C*
+     C                     MOVE *BLANKS   ZAPGMQ
+     C                     MOVE *BLANKS   ZAPGRL
+     C                     MOVE *BLANKS   ZAMSID
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVE *BLANKS   ZAMSTP
+     C*
+     C           EXSNMS    TAG                             <<<=== EXSNMS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXPG exits the program.                          **
+     C********************************************************************
+     C           SREXPG    BEGSR                           * S R E X P G *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXPG'  @STK,Q
+     C* F3:
+     C           *IN03     IFEQ *ON
+     C                     MOVE 'Y2U9999' P0RTN
+     C                     ENDIF
+     C* F12:
+     C           *IN12     IFEQ *ON
+     C                     MOVE 'USR0790' P0RTN
+     C                     ENDIF
+     C*
+     C* /Copy point for exit processing:
+     C*
+     C/COPY WNCPYSRC,CG8110DEPP
+     C*
+     C* Copy any undisplayed messages to the caller:
+     C*
+     C                     CALL 'Y2CPMSC'
+     C                     PARM           ##PGM
+     C*
+     C           EXEXPG    TAG                             <<<=== EXEXPG
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     RETRN                           Return.
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation.                    **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Clear error return code and returned data:
+     C*
+     C                     MOVE *BLANKS   P0RTN
+     C                     MOVE *BLANKS   P0LAYO
+     C                     MOVE *BLANKS   P0PLAN
+     C*
+     C* Get the local data area (*LDA):
+     C*
+     C           *NAMVAR   DEFN *LDA      BIGLDA
+     C                     IN   BIGLDA
+     C*
+     C* Reset "marked records" counter:
+     C*
+     C                     Z-ADD*ZERO     #MARKS  10
+     C*
+     C* Set job date and time and the screen time:
+     C*
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+     C                     Z-ADD##JTM     ##TME   60
+     C*
+     C* Define the default message file:
+     C*
+     C                     MOVEL'CGUSRMSG'ZADFMF 10
+     C*
+     C* Move the copyright parameter:
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Get the run-date:
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C                     MOVELAGMRDT    ##MRDT  7        Midas Run date
+     C*
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CG8110DCPG
+     C*
+     C* Clear position control values:
+     C*
+     C                     MOVE *BLANKS   #2PLAN
+     C                     MOVE *BLANKS   ##SAVE 10
+     C*
+     C* Get the command-key text:
+     C*
+     C                     EXSR SRTEXT
+      *                                                                   086246
+      * Get Layout Information for current layout                         086246
+      *                                                                   086246
+     C           #@LAYO    CHAIN@LAYOL1              70                   086246
+      *                                                                   086246
+      * Get Print Item Type Information                                   086246
+      *                                                                   086246
+     C           KPTYP     KLIST                                          086246
+     C                     KFLD           LYPTYP                          086246
+     C                     KFLD           LYPSTP                          086246
+     C           KPTYP     CHAIN@PTYPL1              70                   086246
+      *                                                                   086246
+      * Get Get Group Set Information                                     086246
+      *                                                                   086246
+     C           ITGRPS    CHAIN@GSETL1              70                   086246
+      *                                                                   086246
+      * Set non-repeating flag                                            086246
+      *                                                                   086246
+     C                     MOVEL*BLANKS   ##NRPT  1                       086246
+     C           GSMREC    IFEQ 'N'                                       086246
+     C                     MOVEL'Y'       ##NRPT                          086246
+     C                     ENDIF                                          086246
+      *                                                                   086246
+      * Define new key list of selecting planes                           086246
+      *                                                                   086246
+     C           KKPDE2    KLIST                                          086246
+     C                     KFLD           LYLAYO                          086246
+      *                                                                   086246
+     C*
+     C* Fill the layouts array with 9s for sorting;
+     C*  reset the counter:
+     C*
+     C                     MOVE *ALL'9'   LAY
+     C                     Z-ADD*ZERO     @L      50
+     C*
+     C* Set start point:
+     C                     Z-ADD1         @P
+     C*
+     C* Load the array:
+     C                     EXSR SRLDAR
+     C*
+     C* Clear and load the subfile:
+     C*
+     C                     EXSR SRIZSF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* CGPDECL1:
+     C           KKPLOW    KLIST
+     C                     KFLD           LPLAYO
+     C                     KFLD           BATPLN
+     C* CGPDECL2:
+     C           KKPDEC    KLIST
+     C                     KFLD           LYLAYO
+     C                     KFLD           #@RPTH
+     C*
+     C* CGLAYOL4:
+     C           KKLAYO    KLIST
+     C                     KFLD           ITPTYP
+     C                     KFLD           ITPSTP
+     C*
+     C* CGPASCL1:
+     C           KKPASC    KLIST
+     C                     KFLD           LPLAYO
+     C                     KFLD           LPPLAN
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculation specifications:
+     C*
+     C/COPY WNCPYSRC,CG8110CPG
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     C* /Copy point for output:
+     C*
+     O/COPY WNCPYSRC,CG8110DOPG
+     C*
+     O********************************************************************
+** CPY@ -- Copyright text.
+(c) Finastra International Limited 2001

@@ -1,0 +1,1261 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Extended settlements receipts extract')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG4975 - Extended Settlements - Receipts Extract Program     *
+     F*                                                               *
+     F*  Function:  This program produces the Extended Settlements    *
+     F*             Receipts Extract.                                 *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG9646            Date 20Dec05               *
+      *                 BUG7773            Date 30Jun05               *
+      *                 BUG7326            Date 26May05               *
+      *                 BUG5775            Date 03Feb05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4.01 -------------------------------------------*
+     F*                 CCG015             Date 15Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 088111             Date 25May95               *
+     F*                 088004             DATE 18MAY95               *
+     F*                 087351             DATE 10MAY95               *
+     F*                 087000             DATE 19APR95               *
+     F*                 086379             DATE 18APR95               *
+     F*                 085775             DATE 05APR95               *
+     F*                 S01522             DATE 15MAR95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9646- Changes in CGPACKE causes programs not to compile   *
+      *  BUG7773 - cater for 10 digit a/c code on partials            *
+      *  BUG7326 - Error in confos. Unable to handle 10-digit         *
+      *            account codes in settlement accounts.              *
+      *  BUG5775- Dbase error 15 in CG4980. Parm mismatch (CGL029)    *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CCG015 - Correspondence Manager Phase 1                      *
+     F*  088111 - Correct fill of Ordering Cust. and Institution      *
+     F*           Correct fill of correspondent type                  *
+     F*  088004 - Correct R1PRIM definition                           *
+     F*  087351 - Other Receipt details being bypassed when receipt   *
+     F*           settlement details of 00 or blanks.                 *
+     F*  087000 - Extend X-S processing to cater for sett.  method 04 *
+     F*  086379 - Field wrongly initialised.                          *
+     F*  085775 - Change customer report town from 10A to 35A         *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*                                                               *
+     F*  99   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 5
+     E/COPY CGCPYSRC,CGPACKE
+     E/COPY CGCPYSRC,SRERRE
+     E**  Number Arrays
+     E                    ##W        20  1
+     E                    ##NUMA     29  1
+     E*
+     E* ##GRP = Group/RDE Number               ##RDEA = RDE + Attributes
+     E*
+     E/COPY WNCPYSRC,CG4975E001
+     E                    ##GRP   1  15 10   ##RDEA 22
+     E/COPY WNCPYSRC,CG4975E002
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     I*
+     I            DS
+     I                                    B   1   20##OSEQ
+     I**  Convert Ouput Sequence between Numeric and Binary
+     I*
+     I            DS
+     I                                        1  10 ##GRPX
+     I                                        1   6 ##GRPS
+     I                                        7  100##RDEN
+     I**  Look-up string for RDE definition Array
+     I*
+     I##SDS       DS
+     I**********                              15120 ##S                                      BUG9646
+     I                                        15632 ##S                                      BUG9646
+     I**  Packed data string.
+     I*
+     I            DS
+     I                                        1  20 ##W
+     I                                        1  200##WNUM
+     I##SRDT      DS                         20
+      **  DS to store subroutine specific data.
+      **  - Saved Path
+     I                                        1  70 ##SPAT
+     I/COPY CGCPYSRC,CGPACKI
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I            DS
+      *
+      * Data Structure redefining Address fields
+      *
+     I                                        1 210 ADDRSS
+     I                                        1  35 ADCHK1
+     I                                       36  70 ADCHK2
+     I                                       71 105 ADCHK3
+     I                                      106 140 ADCHK4
+     I                                      141 175 ADCHK5
+     I                                      176 210 ADCHK6
+      *                                                                   088111
+      ** To remove 3 leading zeros.                                       088111
+     I            DS                                                      088111
+     I                                        1   30W#ZERO                088111
+     I**********                              4   90W#CUST                             088111 CSD027
+     I**********                              1   90RMV0                               088111 CSD027
+     I                                        4   9 W#CUST                                    CSD027
+     I                                        1   9 RMV0                                      CSD027
+     IW8FT        DS                            256
+      *
+      * Address data structure
+      *
+      * Currency
+     I                                        1   3 W8CCY
+      * Settlement Type
+     I                                        4   5 W8STMT
+      * Mandatory Text - convert BIC identifiers
+     I                                        6   6 W8MTXT
+      * Message Tag
+     I                                        7  11 W8MTAG
+      * Construct of data in field
+     I                                       12  12 W8TYPE
+      * Number of Lines available
+     I                                       13  140W8NLIN
+      * Network and Message Type
+     I                                       15  20 W8NWRK
+     I                                       21  23 W8MTPY
+      * Calling Program
+     I                                       24  33 W8CPGM
+      * Action *PRINT/*ENQ/*MSG GEN
+     I                                       34  41 W8ACT
+      * Critical reporting - Database error if 'Y'
+      * If no BIC directory and BIC entered no error
+     I                                       42  42 W8CRIT
+      * Force Midas Address - where possible
+     I                                       43  43 W8MADD
+      * If Retail get first address from account
+     I                                       44  44 W8RTAD
+      * Alternative Address
+     I                                       45  45 W8ALTN
+      * Address type selected in W0MSG
+     I                                       46  46 W8ADTP
+      * Customer number
+     I**********                             47  520W0CNUM                                    CSD027
+     I                                       47  52 W0CNUM                                    CSD027
+      * Retail Account number
+     I                                       53  620W0ACNO
+      * Currency
+     I                                       63  65 W#CCY
+      * Account Code
+     I***************************************66  690W0ACOD                                   BUG7326
+     I                                       66  690QQACOD                                   BUG7326
+      * Account Sequence
+     I                                       70  710W0ACSQ
+      * Account Name
+     I                                       72 101 W0ANAM
+      * Branch
+     I                                      102 104 W0BRCA
+      * Customer name
+     I                                      105 124 W0CRNM
+      * Customer SWIFT I.D
+     I                                      125 136 W0CSID
+      * Customer account line
+     I                                      137 171 W0ACLN
+      * Customer report town
+     I************                          172 181 W0RTWN                085775
+     I                                      172 206 W0RTWN                085775
+     I                                      207 2160W0ACOD                                   BUG7326
+      /EJECT
+      *
+     IP1PARM      DS                            256
+      * Receipt - Settlement method
+     I                                        1   20P1RSTM
+      * Receipt - Our Nostro
+     I****************************************3  14 P1RONS                                   BUG5775
+     I                                        3  14 P1ROQQ                                   BUG5775
+      * Receipt - Intermidiary bank no
+     I                                       15  25 P1RIBN
+      * Receipt - Intermidiary account no
+     I                                       26  60 P1RIBA
+      * Receipt - Ordering bank No
+     I**********                             61  690P1ROBN                                    CSD027
+     I                                       61  69 P1ROBN                                    CSD027
+      * Receipt - Ordering customer no
+     I**********                             70  780P1ROCN                                    CSD027
+     I                                       70  78 P1ROCN                                    CSD027
+      * Branch
+     I                                       79  81 P1BRCH
+      * Currency
+     I                                       82  84 P1CCY
+      *                                                                   087000
+      ** 087000 - include additional details to allow determination       087000
+      ** of prime retail account for settlement method 04.                087000
+     I                                       85  90 R1CNUM                087000
+     I***************************************91  94 R1ACCD                087000             BUG7326
+     I*************                          91  94 R1PRIM          087000088004
+     I                                       85  94 R1PRIM                088004
+     I                                       91 100 R1ACCD                                   BUG7326
+     I                                      101 118 P1RONS                                   BUG5775
+     I/COPY WNCPYSRC,CG4975I001
+      *
+      **
+     IP3PARM      DS                            256
+      * Output Sequence
+     I                                        1   90P1OSEQ
+      * UDC item number
+     I                                       10  170P1ITEM
+      * This bind level
+     I                                       18  250P1TBIN
+      * Previous bind level
+     I                                       26  330P1PBIN
+      *
+     I***##ACNO******DS*****************************18                                       BUG7326
+     I##ACNO      DS                             24                                          BUG7326
+      * Customer number
+     I**********                              1   60##CNUM                                    CSD027
+     I                                        1   6 ##CNUM                                    CSD027
+      * Currency
+     I                                        7   9 ##CCY
+      * Account Code
+     I**************                         10  130##ACOD                086379
+     I**************                         10  13 ##ACOD                086379             BUG7326
+     I                                       10  19 ##ACOD                086379             BUG7326
+      * Account Sequence
+     I**************                         14  150##ACSQ                086379
+     I**************                         14  15 ##ACSQ                086379             BUG7326
+     I                                       20  21 ##ACSQ                086379             BUG7326
+      * Branch
+     I**************                         16  18 ##BRCA                                   BUG7326
+     I                                       22  24 ##BRCA                                   BUG7326
+     IW0FMT     E DSCGUDTAPD
+      **  Record format of PF/CGUDTAPD for use as a parameter
+      *
+     ISCSARD    E DSSCSARDPD                                              CCG015
+      ** MIDAS Switchable Features Accessed Via Access Program            CCG015
+      *                                                                   CCG015
+     IDSSDY     E DSDSSDY                                                 CCG015
+      **  Second DS for access programs, long data structure              CCG015
+      *                                                                   CCG015
+     I/COPY CGCPYSRC,SRERRI
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRMAIN - Main processing                       *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           P1PARM
+     C                     PARM           P2PARM140        Path
+     C                     PARM           W0CMT   3
+     C                     PARM           P3PARM
+     C                     PARM           ##REFR                          CCG015
+     C                     PARM           P@ICR                           CCG015
+     C                     PARM           ##MAST                          CCG015
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      **  Main processing
+     C                     EXSR SRMAIN
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      *
+      **  Do not process if settlement type blank or 00.
+     C           P1RSTM    IFEQ 00
+     C           P1RSTM    OREQ *ZEROS
+     C/COPY WNCPYSRC,CG4975C004
+      *                                                                   087351
+      **  Other receipt details                                           087351
+     C                     EXSR RECMOD                                    087351
+      *                                                                   087351
+      **  Reset output sequence for calling program.                      087351
+     C           ##OSEQ    ADD  1         P1OSEQ                          087351
+     C                     GOTO EXMAIN
+     C                     ENDIF
+      *
+      **  Pay Destination
+     C                     EXSR DESTIN
+      *
+      **  Ordering Customer
+     C                     EXSR O@CUST
+      *
+      **  Ordering Institution
+     C                     EXSR O@INST
+      *
+      **  Intermidiary Institution
+     C                     EXSR INTERM
+      *
+      **  Other receipt details
+     C                     EXSR RECMOD
+     C/COPY WNCPYSRC,CG4975C001
+      *
+      **  Reset output sequence for calling program.
+     C           ##OSEQ    ADD  1         P1OSEQ
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  CORDTA                                         *
+      * Function    :  Correspondent data                             *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           CORDTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'CORDTA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Set up Path.
+     C                     MOVEL'\CORDTA' ##PNAM  7
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+     C                     EXSR PSHGRS                                    CCG015
+      *
+      **  Correspondent type.
+     C***********          MOVELW8ADTP    ##D,1                           088111
+     C                     MOVELWTYPE     ##D,1                           088111
+      *
+      **  Customer.
+     C                     MOVELW0CNUM    ##D,2
+      *
+      **  Customer name.
+     C                     MOVELW0CRNM    ##D,3
+      *
+      **  Customer town.
+     C                     MOVELW0RTWN    ##D,4
+      *
+      **  Account line.
+     C                     MOVELW0ACLN    ##D,5
+      *
+      **  Retail account no.
+     C                     MOVELW0ACNO    ##D,6
+      *
+      **  Midas account number.
+     C                     CLEAR##ACNO
+     C**********           Z-ADDW0CNUM    ##CNUM                                              CSD027
+     C                     MOVE W0CNUM    ##CNUM                                              CSD027
+     C                     MOVELW#CCY     ##CCY
+     C***********          Z-ADDW0ACOD    ##ACOD                          086379
+     C***********          Z-ADDW0ACSQ    ##ACSQ                          086379
+     C           W0ACOD    IFEQ *ZEROS                                    086379
+     C                     MOVE *BLANKS   ##ACOD                          086379
+     C                     ELSE                                           086379
+     C                     MOVELW0ACOD    ##ACOD                          086379
+     C                     ENDIF                                          086379
+     C           W0ACSQ    IFEQ *ZEROS                                    086379
+     C                     MOVE *BLANKS   ##ACSQ                          086379
+     C                     ELSE                                           086379
+     C                     MOVELW0ACSQ    ##ACSQ                          086379
+     C                     ENDIF                                          086379
+     C                     MOVELW0BRCA    ##BRCA
+     C                     MOVEL##ACNO    ##D,7
+      *
+      **  Account name.
+     C                     MOVELW0ANAM    ##D,8
+      *
+      **  SWIFT ID.
+     C                     MOVELW0CSID    ##D,9
+      *
+      **  Address line 1.
+     C                     MOVELCNA1      ##D,10
+      *
+      **  Address line 2.
+     C                     MOVELCNA2      ##D,11
+      *
+      **  Address line 3.
+     C                     MOVELCNA3      ##D,12
+      *
+      **  Address line 3.
+     C                     MOVELCNA4      ##D,13
+      *
+      *................................................................
+      *
+     C           EXRDTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     EXSR POPGRS                                    CCG015
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  DESTIN                                         *
+      * Function    :  Pay Destination                                *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           DESTIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'DESTIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\DESTIN' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+     C                     EXSR PSHGRS                                    CCG015
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL'CORDTA'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *                                                                   087000
+      ** If settlement method is 04 (prime retail account), substitute    087000
+      ** prime retail account for nostro details.                         087000
+     C           P1RSTM    IFEQ 04                                        087000
+     C           P1RONS    ANDEQ*BLANK                                    087000
+     C                     MOVELR1PRIM    P1RONS                          087000
+     C                     MOVE '01'      P1RONS                          087000
+     C                     ENDIF                                          087000
+      *
+     C                     MOVE *BLANKS   WPTY1
+     C                     MOVELP1RONS    WPTY1
+     C                     MOVELP1BRCH    W0BRCA
+      *
+     C           ' '       CHEKRP1RONS    ##NUM   20
+      *
+     C                     SELEC
+     C           ##NUM     WHEQ 2
+     C                     MOVEL'N'       WTYPE   1
+     C           ##NUM     WHEQ 10
+     C                     MOVEL'R'       WTYPE
+     C*********  ##NUM     WHEQ 12                                                           BUG7773
+     C           ##NUM     WHEQ 18                                                           BUG7773
+     C                     MOVEL'P'       WTYPE
+     C                     ENDSL
+      *
+      **  Format settlement party subroutine.
+     C                     EXSR SRTPSR
+      *
+     C                     EXSR CORDTA
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXSTIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     EXSR POPGRS                                    CCG015
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  O@CUST                                         *
+      * Function    :  Ordering Customer                              *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           O@CUST    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'O_CUST'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\O_CUST' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+     C                     EXSR PSHGRS                                    CCG015
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL'CORDTA'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+     C                     MOVE *BLANKS   WPTY1
+     C                     MOVE *BLANKS   WPTY2
+      *
+     C***********P1ROCN    IFEQ *ZEROS                                    088111
+     C********** P1ROCN    IFNE *ZEROS                                                 088111 CSD027
+     C           P1ROCN    IFNE *BLANKS                                                       CSD027
+      *
+     C***********P1ROBN    IFNE *ZEROS                                    088111
+     C***********          MOVELP1ROBN    WPTY1                           088111
+     C***********          ENDIF                                          088111
+      ***********                                                         088111
+     C***********          ELSE                                           088111
+     C***********          MOVELP1ROCN    WPTY1                           088111
+     C**********           Z-ADDP1ROCN    RMV0                                         088111 CSD027
+     C                     MOVE P1ROCN    RMV0                                                CSD027
+     C                     MOVELW#CUST    WPTY1                           088111
+      *
+     C***********P1ROBN    IFNE *ZEROS                                    088111
+     C***********          MOVELP1ROBN    WPTY2                           088111
+     C***********          ENDIF                                          088111
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL'X'       WTYPE
+      *
+     C           WPTY1     IFEQ *BLANKS
+     C           WPTY2     ANDEQ*BLANKS
+     C                     GOTO EXCUST
+     C                     ENDIF
+      *
+      **  Format settlement party subroutine.
+     C                     EXSR SRTPSR
+      *
+     C                     EXSR CORDTA
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXCUST    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     EXSR POPGRS                                    CCG015
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  O@INST                                         *
+      * Function    :  Ordering Institution                           *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           O@INST    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'O_INST'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\O_INST' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+     C                     EXSR PSHGRS                                    CCG015
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL'CORDTA'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+     C                     MOVE *BLANKS   WPTY1
+     C                     MOVE *BLANKS   WPTY2
+      *
+     C***********P1ROCN    IFEQ *ZEROS                                    088111
+      *
+     C           P1ROBN    IFNE *ZEROS
+     C***********          MOVELP1ROBN    WPTY1                           088111
+     C**********           Z-ADDP1ROBN    RMV0                                         088111 CSD027
+     C                     MOVE P1ROBN    RMV0                                                CSD027
+     C                     MOVELW#CUST    WPTY1                           088111
+     C                     ENDIF
+      *
+     C***********          ELSE                                           088111
+     C***********          MOVELP1ROCN    WPTY1                           088111
+      ***********                                                         088111
+     C***********P1ROBN    IFNE *ZEROS                                    088111
+     C***********          MOVELP1ROBN    WPTY2                           088111
+     C***********          ENDIF                                          088111
+      ***********                                                         088111
+     C***********          ENDIF                                          088111
+      *
+     C                     MOVEL'X'       WTYPE
+      *
+     C           WPTY1     IFEQ *BLANKS
+     C           WPTY2     ANDEQ*BLANKS
+     C                     GOTO EXINST
+     C                     ENDIF
+      *
+      **  Format settlement party subroutine.
+     C                     EXSR SRTPSR
+      *
+     C                     EXSR CORDTA
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXINST    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     EXSR POPGRS                                    CCG015
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  INTERM                                         *
+      * Function    :  Intermediary Institution                       *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           INTERM    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'INTERM'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\INTERM' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+     C                     EXSR PSHGRS                                    CCG015
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL'CORDTA'  ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+     C                     MOVE *BLANKS   WPTY1
+     C                     MOVE *BLANKS   WPTY2
+      *
+     C           P1RIBA    IFEQ *BLANKS
+      *
+     C           P1RIBN    IFNE *BLANKS
+     C                     MOVELP1RIBN    WPTY1
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVELP1RIBA    WPTY1
+      *
+     C           P1RIBN    IFNE *BLANKS
+     C                     MOVELP1RIBN    WPTY2
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL'X'       WTYPE
+      *
+     C           WPTY1     IFEQ *BLANKS
+     C           WPTY2     ANDEQ*BLANKS
+     C                     GOTO EXTERM
+     C                     ENDIF
+      *
+      **  Format settlement party subroutine.
+     C                     EXSR SRTPSR
+      *
+     C/COPY WNCPYSRC,CG4975C005
+     C                     EXSR CORDTA
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXTERM    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     EXSR POPGRS                                    CCG015
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  RECMOD                                         *
+      * Function    :  Other receipt details                          *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           RECMOD    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'RECMOD'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\RECMOD' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+     C                     EXSR PSHGRS                                    CCG015
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      **  Settlement method
+     C                     MOVELP1RSTM    ##D,1
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXCMOD    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     EXSR POPGRS                                    CCG015
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRTPSR                                         *
+      * Function    :  Format Settlement Party Subroutine             *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :  -                                              *
+      *****************************************************************
+     C           SRTPSR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRTPSR'  @STK,Q
+      *
+      *................................................................
+      *
+      * Use FT0315 to format text for D address type
+      *
+      *  Set up general parameters
+      *
+     C           *LIKE     DEFN ADCHK1    WPTY1
+     C           *LIKE     DEFN ADCHK1    WPTY2
+      *
+     C                     CLEARW8FT
+     C                     MOVEL*BLANKS   W8STMT
+     C                     MOVELP1CCY     W8CCY
+     C                     MOVELP1BRCH    W0BRCA                          087000
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*MSG  '  W8ACT
+     C                     Z-ADD5         W8NLIN
+     C                     MOVEL'Y'       W8MADD
+     C                     MOVEL'Y'       W8MTXT
+      *
+      *  Format data to be translated
+      *
+     C                     MOVELWTYPE     W8TYPE
+     C                     MOVEL*BLANKS   W8LINS
+     C                     MOVELWPTY1     ADCHK1
+     C                     MOVELWPTY2     ADCHK2
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'CG4980'               3030
+     C                     PARM           W8RTN   7
+     C                     PARM           W8FT
+     C                     PARM           W8LINS256
+     C                     PARM           W8RPT 256
+     C                     PARM           W8MSG 256
+     C                     PARM           W8SCR 256
+      *
+      *  Check if database error occurred
+      *
+     C           *IN30     IFEQ '1'
+     C           W8RTN     ORNE *BLANKS
+     C                     MOVEL'CG4980  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 11 *
+     C                     Z-ADD11        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVEL'0'       *IN30
+     C                     MOVELW8MSG     ADDRSS
+     C                     MOVELADCHK1    CNA1   35
+     C                     MOVELADCHK2    CNA2   35
+     C                     MOVELADCHK3    CNA3   35
+     C                     MOVELADCHK4    CNA4   35
+      *
+      *
+      *................................................................
+      *
+     C           EXTPSR    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRRRDE                                         *
+      * Function    :  Retrieve RDE information for RDEs in group set *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+     C           SRRRDE    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRRDE'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Reset
+     C                     MOVEL*BLANK    ##R
+     C                     MOVEL*BLANK    ##D
+     C                     MOVEL*BLANK    ##S
+      *
+      **  Get information about next 20 RDEs in group set from compile
+      **  time arrays
+     C                     Z-ADD0         #1
+     C           *IN99     DOUEQ'0'
+     C           #1        OREQ 20
+     C                     Z-ADD1         #2
+     C           ##GRPX    LOKUP##GRP,#2                 99*
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         #1
+     C                     MOVEL##RDEA,#2 ##R,#1
+     C                     ADD  1         ##RDEN
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXRRDE    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRADTA                                         *
+      * Function    :  Accumulate RDEs and associated data for output *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG3999 - Format and Pack Data                  *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRADTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRADTA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Reformat RDE data
+      *
+     C                     EXSR SRRFMN
+      *
+      **  Pack RDEs and associated data into data string
+     C                     CLEAR##SDS
+      *                                                                   CCG015
+      ** Set-up Action Code parameter W0ACT                               CCG015
+      *                                                                   CCG015
+     C           CCG015    IFEQ 'Y'                                       CCG015
+     C                     MOVE '*NEWARR 'W0ACT                           CCG015
+     C                     MOVELS#PATH    W0SPAT                          CCG015
+     C                     ELSE                                           CCG015
+     C                     MOVE '*PACK   'W0ACT                           CCG015
+     C                     MOVEL*BLANKS   W0SPAT                          CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C                     CALL 'CG3999'
+     C                     PARM *BLANK    ##RTCD
+     C*********************PARM '*PACK   'W0ACT                           CCG015
+     C                     PARM           W0ACT                           CCG015
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+     C                     PARM           W0SPAT 70                       CCG015
+     C                     PARM           ##RN                            CCG015
+     C                     PARM           ##DN                            CCG015
+     C                     PARM           ##FM                            CCG015
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'CG3999  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 15 *
+     C                     Z-ADD15        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *                                                                   CCG015
+      ** Write a XML record for RDE.                                      CCG015
+      *                                                                   CCG015
+     C                     EXSR WRTRDE                                    CCG015
+      *
+      **  Initialise Write Format Parameter.
+     C                     CLEARW0FMT
+      *
+      **  Set up Control Information.
+     C                     Z-ADD##ITEM    DEITEM
+     C                     ADD  1         ##OSEQ
+     C                     Z-ADD##OSEQ    DEOSEQ
+     C                     Z-ADDP1PBIN    DEPBIN
+     C                     Z-ADDP1TBIN    DETBIN
+     C                     MOVE 'FR'      DEFSLI
+     C                     MOVE *BLANKS   W0PATH
+     C                     MOVELS#PATH    W0PATH
+      *
+      **  Append Data from pack routine.
+     C           W0FMT     CAT  ##SDS:0   W0FMT
+      *
+      *................................................................
+      *
+     C           EXADTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRRFMN                                         *
+      * Function    :  Reformat RDE data                              *
+      *                                                               *
+      * Called by   :  SRADTA                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRRFMN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFMN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Loop through RDE's and data
+      *
+     C                     Z-ADD0         #1
+     C           #1        DOUEQ20
+     C                     ADD  1         #1
+     C                     MOVEL##R,#1    R#DEFN
+     C                     MOVEL##D,#1    R#DATA
+      *
+      ** If data present and RDE is edited
+      *
+     C           R#DATA    IFNE *BLANK
+     C           ##RDEC    ANDNE*BLANK
+      *
+      * Reformat Amount
+     C                     Z-ADD1         #2
+     C           *BLANK    LOKUP##NUMA,#2                99*
+     C                     Z-ADD20        #3
+     C                     Z-ADD0         ##WNUM
+     C           #2        DOWGT1
+     C           #2        ANDLE20
+     C           #3        ANDGT1
+     C                     SUB  1         #2
+     C                     MOVEL##NUMA,#2 ##W,#3
+     C                     SUB  1         #3
+     C                     ENDDO
+      *
+      * Sign the amount
+     C           ##SIGN    IFEQ '-'
+     C                     Z-SUB##WNUM    ##NUMB
+     C                     ELSE
+     C                     Z-ADD##WNUM    ##NUMB
+     C                     END
+      *
+      * Default Edit Type
+     C           ##EDTT    IFEQ *BLANK
+     C                     MOVEL##RDET    ##EDTT
+     C                     END
+      *
+      * Default Decimal Places
+     C           ##DCPA    IFEQ *BLANK
+     C                     MOVEL##RDED    ##DCPA
+     C                     END
+      * New RDE data
+     C                     MOVELR#DATA    ##D,#1
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXRFMN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRODTA                                         *
+      * Function    :  Output Accumulated data to PF/CGUDTAPD         *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG9020 - Output Data to CGUDTAPD               *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRODTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRODTA'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Run CG9020 only if switchable feature CCG015 is *OFF.            CCG015
+      *                                                                   CCG015
+     C           CCG015    IFEQ 'N'                                       CCG015
+      *                                                                   CCG015
+      **  Output PF/CGUDTAPD Record.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD  7
+     C                     PARM '*WRITE  'W0ACT
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM *BLANK    W0TITL  7
+     C                     PARM *BLANK    W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'CG9020  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 16 *
+     C                     Z-ADD16        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C                     ENDIF                                          CCG015
+      *................................................................
+      *
+     C           EXODTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##W050  50
+     C                     Z-ADD*ZEROS    ##W150 150
+     C                     Z-ADD*ZEROS    #1      60
+     C                     Z-ADD*ZEROS    #2      60
+     C                     Z-ADD*ZEROS    #3      60
+     C                     MOVE *BLANKS   S#PATH256
+     C           *LIKE     DEFN P1ITEM    ##ITEM
+     C                     Z-ADDP1ITEM    ##ITEM
+     C                     Z-ADDP1OSEQ    ##OSEQ
+      *
+      **  Set up Path.
+     C           S#PATH    CAT  P2PARM:0  S#PATH
+      *
+      **  Store Path
+     C           1         OCUR ##SRDT
+     C                     MOVELS#PATH    ##SPAT
+     C/COPY WNCPYSRC,CG4975C002
+      *                                                                   CCG015
+      ** Access SAR details file to determine if CCG015 is installed.     CCG015
+      *                                                                   CCG015
+     C                     CALL 'AOSARDR0'                                CCG015
+     C                     PARM *BLANKS   PRTCD   7                       CCG015
+     C                     PARM '*VERIFY' POPTN   7                       CCG015
+     C                     PARM 'CCG015'  PSARD   6                       CCG015
+     C           SCSARD    PARM SCSARD    DSSDY                           CCG015
+      *                                                                   CCG015
+      ** Database Error                                                   CCG015
+      *                                                                   CCG015
+     C           PRTCD     IFNE *BLANK                                    CCG015
+     C           PRTCD     ANDNE'*NRF   '                                 CCG015
+     C                     MOVEL'SCSARDPD'W0FILE           ************   CCG015
+     C                     MOVEL'*CALL'   W0KEY            * DBERR 17 *   CCG015
+     C                     Z-ADD17        W0ERNB           ************   CCG015
+     C                     MOVEL'MEM5003' W0MSGD                          CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     END                                            CCG015
+      *                                                                   CCG015
+     C                     MOVEL'N'       CCG015  1                       CCG015
+     C           PRTCD     IFEQ *BLANK                                    CCG015
+     C                     MOVEL'Y'       CCG015                          CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+      ** Initialise XML increment                                         CCG015
+      *                                                                   CCG015
+     C                     EXSR INIXML                                    CCG015
+      *
+     C           EXINZ     TAG
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/COPY WNCPYSRC,CG4975C003
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     C/SPACE 5                                                            CCG015
+     C/COPY CGCPYSRC,CGNWEX                                               CCG015
+** ##GRP/##RDE
+CORDTA0001 COR_TYPE                      Information Type
+CORDTA0002 COR_CUST                      Customer
+CORDTA0003 COR_CUSNAM                    Customer Name
+CORDTA0004 COR_CUSTWN                    Customer Town
+CORDTA0005 COR_AC_LIN                    Account line
+CORDTA0006 COR_RET_NO                    Retail AC No.
+CORDTA0007 COR_ACCT                      Midas Account Identifier
+CORDTA0008 COR_AC_NAM                    Account name
+CORDTA0009 COR_SWIFT                     SWIFT ID
+CORDTA0010 COR_ADDR_1                    Address line 1
+CORDTA0011 COR_ADDR_2                    Address line 2
+CORDTA0012 COR_ADDR_3                    Address line 3
+CORDTA0013 COR_ADDR_4                    Address line 4
+CORDTA0014 COR_ADDR_5                    Address line 5
+RECMOD0001 SETTLE MOD                    Settlement Method
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

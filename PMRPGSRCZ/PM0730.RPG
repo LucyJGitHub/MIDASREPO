@@ -1,0 +1,820 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM - Investment Policy Details Enquiry')         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM0730 - PM INVESTMENT POLICY DETAILS ENQUIRY                *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 29Jul96               *
+     F*                 085817             Date 13Mar95               *
+     F*                 081370             Date 09Jan95               *
+     F*                 S01486             DATE 08JUL94               *
+     F*                 SA9108             DATE 06NOV91               *
+     F*                 049421             DATE 22JAN93               *
+     F*                 S01313             DATE 06NOV92               *
+     F*                 049467             DATE 28JAN93               *
+     F*                 B07822             DATE 22MAY91               *
+     F*                 R05678             DATE 14MAR91               *
+     F*                 R05659             DATE 11MAR91               *
+     F*                 000066             DATE 30JAN91               *
+     F*                 R01155             DATE 10JAN91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           Just Recompiled because of PM File(s) changes       *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  081370 - SUBFILE NOT CLEARED CAUSES DISPLAY PROBLEMS         *
+     F*  S01486 - Portfolio Management Upgrade                        *
+     F*  SA9108 - POOL SECURITIES TRANSACTIONS (ONLY RECOMPILED       *
+     F*           FOR DTAARA/LDA)                                     *
+     F*  049421 - HEADER BOX STANDARDISATION                          *
+     F*  S01313 - CHANGED FOR PORTFOLIO PERFORMANCE                   *
+     F*  049467 - RECOMPILED FOR RELEASE 3 PTF 02                     *
+     F*  B07822 - DISPLAY PORTFOLIO VALUE USING AMOUNT FROM DTAARA/*LDA*
+     F*  R05678 - OUTPUT VALUE OF PORTFOLIO AT TOP OF REPORT ONLY     *
+     F*  R05659 - INSTRUMENT LINE NOT DISPLAYED SECOND PROGRAM CALL   *
+     F*  000066 - REMOVE DATABASE ERROR IF NO POLICY DETAILS          *
+     F*  R01155 - WRITE BLANK LINE TO SUBFILE TO AVOID DEVICE ERROR   *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+      * BANK INVESTMENT POLICY DETAILS - PREFIX: PS
+     F****PMBIPNPPIF  E           K        DISK                           S01486
+     FPMBIPNPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F*
+      **INVESTMENT*POLICIES*EXCEPTIONS*-*PREFIX:*QV                       S01486
+      * INVESTMENT POLICIES EXCEPTIONS - PREFIX: GI                       S01486
+     F****PMIVPEPPIF  E           K        DISK                           S01486
+     FPMIVPEPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** DISPLAY FILE - PREFIX: DD
+     F****PM0730DDCF  E                    WORKSTN                        S01486
+     FPM0730DFCF  E                    WORKSTN                            S01486
+     F                                        RRN   KSFILE PM0730E1
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       20         SFL - EXCEPTION RECORD: REVERSE IMAGE
+     F*       21         SFL - POLICY TITLE: HIGHLIGHT
+     F*       25         SFL - INITIALIZE
+     F*       26         SFL - SUBFILE END
+     F*       27         BANK INVESTMENT POLICY DEFINED
+     F*       28         PORTFOLIO INVESTMENT POLICY DEFINED
+     F*       29         NO INVESTMENT POLICY DEFINED
+     F*
+     F*       71         FILE OPERATIONS INDICATOR
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  ..
+     F*       ..  22  23  24  ..  ..  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  70
+     F*       ..  72  73  74  75  76  77  78  79  80
+     F*       81  82  83  84  85  86  87  88  89  90
+     F*       91  92  93  94  95  96  97  98  99
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     E*
+     E** ZSEDIT Arrays
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E*
+     E** Display Narratives
+     E********************NAR     1   6 28                                R05678
+     E                    NAR     1   4 28                                R05678
+     E** ZSEDIT Data Structure
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*
+     I** External format for Group Data Area
+     I****WWLDA     E DSPMLDAPP                                           S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     I****WWGDA     E DSPMGRDAPP                                          S01486
+     I*
+     I** Program Status Data Structure for WS/User ID's
+     IPSDS       SDS
+     I**********                            244 253 WSID                  S01486
+     I**********                            254 263 USID                  S01486
+     I                                      244 253 WKSTN                 S01486
+     I                                      254 263 USER                  S01486
+     I*
+     I** Data Structure to display Portfolio Currency
+     IDDPTCY      DS                              5
+     I                                        2   4 WWPTCY
+     I*
+     I** Data Structure to format Policy title
+     IWWPTIT      DS                             76
+     I**************                          2  20 WWPNAM                R05678
+     I**************                         26  53 WWPVAL                R05678
+     I**************                         55  75 WWPAMT                R05678
+     I                                       26  53 WWPNAM                R05678
+     I*
+     I** Data Structure to format Policy exceptions
+     IWWPEXC      DS                             76
+     I                                        4   5 WWGCO1
+     I                                        9  11 WWICO1
+     I                                       14  33 WWINA1
+     I                                       36  36 WW1011
+     I                                       37  37 WW0111
+     I                                       36  39 WWMIN1
+     I                                       43  43 WW1021
+     I                                       44  44 WW0121
+     I                                       43  46 WWMAX1
+     I                                       49  49 WW1031
+     I                                       50  50 WW0131
+     I                                       52  52 WWDECP
+     I                                       53  53 WWDECV
+     I                                       49  54 WWACTR
+     I                                       55  75 WWIAMT
+     I*
+     I** Data Structure to format Policy details
+     IWWPDET      DS                             76
+     I                                        8   9 WWGCO2
+     I                                       20  22 WWICO2
+     I                                       33  52 WWINA2
+     I                                       65  65 WW1012
+     I                                       66  66 WW0112
+     I                                       65  68 WWMIN2
+     I                                       72  72 WW1022
+     I                                       73  73 WW0122
+     I                                       72  75 WWMAX2
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -  CHIEF PROGRAM                                        *
+      * #INIT    -  INITIALIZE - ACCESS STANDING DATA                    *
+      * #P01     -  FILL SUBFILE                                         *
+      * #W01     -  DISPLAY INVESTMENT POLICIES EXCEPTION SCREEN         *
+      * #W02     -  DISPLAY INVESTMENT POLICIES DETAILS SCREEN           *
+      * ZSEDIT   -                                                       *R00300
+      * *PSSR    -  DATABASE ERROR                                       *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*                    PROGRAM START
+     C********************************************************************
+     C*
+     C                     EXSR #INIT
+     C********** KPMIV     SETLLPMIVPEPP                                  S01486
+     C**********           READ PMIVPEPP                 71               S01486
+     C           KPMIV     SETLLPMIVPEPD                                  S01486
+     C                     READ PMIVPEPD                 71               S01486
+      *
+     C***TO PROCESS DATABASE ERRORS
+     C***        *IN71     IFEQ '1'                        **************
+     C***                  MOVE 'PMIVPEPP'QMFILE           * DBERROR 01 *
+     C***                  MOVELQMCNUM    QMKEY            **************
+     C***                  MOVE QMPTF1    QMKEY
+     C***                  Z-ADD1         QMERRN
+     C***                  EXSR *PSSR
+     C***                  END
+     C*
+     C** INITIALIZE SFLEND INDICATOR
+     C                     MOVE '0'       *IN26
+     C*
+     C** FILL SUBFILE
+     C********** QVCNUM    DOWEQQMCNUM                     -B1            S01486
+     C********** QVPTFR    ANDEQQMPTF1                                    S01486
+     C           GICNUM    DOWEQQMCNUM                     -B1            S01486
+     C           GIPTFR    ANDEQQMPTF1                                    S01486
+     C           *IN71     ANDEQ'0'
+     C                     EXSR #P01
+     C**********           READ PMIVPEPP                 71               S01486
+     C                     READ PMIVPEPD                 71               S01486
+     C                     END
+     C*                                                                   R01155
+     C** IF NO POLICY DETAILS TO REPORT WRITE BLANK LINE ON SCREEN        R01155
+     C           RRN       IFEQ 1                                         R01155
+     C                     MOVE *BLANKS   DDDETL                          R01155
+     C                     WRITEPM0730E1                                  R01155
+     C                     ADD  1         RRN                             R01155
+     C                     MOVE '0'       *IN27                           R01155
+     C                     MOVE '0'       *IN28                           R01155
+     C                     MOVE '1'       *IN29                           R01155
+     C                     ELSE                                           R01155
+     C           DDPOLC    IFEQ *BLANKS                                   R01155
+     C                     MOVE '0'       *IN27                           R01155
+     C                     MOVE '1'       *IN28                           R01155
+     C                     MOVE '0'       *IN29                           R01155
+     C                     END                                            R01155
+     C                     END                                            R01155
+     C*
+     C                     MOVE '1'       *IN26
+     C*
+     C           *INKC     DOWEQ'0'                        -B1
+     C           *INKL     ANDEQ'0'
+      *
+      ** DISPLAY DETAILS ACCORDING TO CALLING PROGRAM
+     C           WWCPGM    IFEQ 'PM0630'
+     C                     MOVE '1'       *IN60                           B07822
+     C                     EXSR #W01
+     C                     ELSE
+     C                     MOVE '0'       *IN60                           B07822
+     C                     EXSR #W02
+     C                     END
+      *
+      ** F3 TAKEN
+     C           *INKC     IFEQ '1'                        -B2
+      *
+      ** SET ENQUIRIES TERMINATING TO 'Y'
+     C                     MOVE 'Y'       QMENQT
+      *
+      ***WRITE*DETAILS*ON *GDA                                            S01486
+      ** WRITE DETAILS ON *LDA                                            S01486
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+      *
+      ** TO END GROUP JOBS
+     C**********           CALL 'PMC1020'                                 S01486
+     C                     END                             -E2
+      *
+     C                     END                             -E1
+      *
+     C                     RETRN
+      *
+     C********************************************************************
+      /EJECT
+      **************************************************************************
+     C           #INIT     BEGSR                           **INIT BSR**
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WWCPGM  6
+      *
+     C** RETRIEVE DATA FROM DTTAARA/*LDA
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+      *
+     C                     MOVE '0'       *INKL
+      *
+     C** CLEAR SUBFILE
+     C                     MOVE '1'       *IN25                           081370
+     C                     Z-ADD1         RRN     30                      081370
+     C                     WRITEPM0730C1                                  081370
+     C                     MOVE '0'       *IN25                           081370
+      *
+      ***DEFINE*KEY*FOR*PF/PMIVPEPP                                       S01486
+      ** DEFINE KEY FOR PF/PMIVPEPD                                       S01486
+     C           KPMIV     KLIST
+     C                     KFLD           QMCNUM
+     C                     KFLD           QMPTF1
+     C**********           KFLD           QVPCOD                          S01486
+     C**********           KFLD           QVICOD                          S01486
+     C**********           KFLD           QVGCOD                          S01486
+     C**********           MOVE *LOVAL    QVPCOD                          S01486
+     C**********           MOVE *LOVAL    QVICOD                          S01486
+     C**********           MOVE *LOVAL    QVGCOD                          S01486
+     C                     KFLD           GIPCOD                          S01486
+     C                     KFLD           GIICOD                          S01486
+     C                     KFLD           GIGCOD                          S01486
+     C                     MOVE *LOVAL    GIPCOD                          S01486
+     C                     MOVE *LOVAL    GIICOD                          S01486
+     C                     MOVE *LOVAL    GIGCOD                          S01486
+      *
+      ** DEFINE WORK FIELDS
+     C********** *LIKE     DEFN QVPCOD    WWPCOD                          S01486
+     C           *LIKE     DEFN GIPCOD    WWPCOD                          S01486
+      *
+      ** GET BANK INVESTMENT POLICY NARRATIVE
+     C           QMPOLC    IFNE *BLANKS
+     C********** QMPOLC    CHAINPMBIPNPP             71                   S01486
+     C           QMPOLC    CHAINPMBIPNPD             71                   S01496
+     C                     END
+      *
+     C                     Z-ADD0         WWPCOD                          R05659
+     C                     SETOF                     2021                 R05659
+      *
+      ** CALLING PROGRAM IS PM0630
+     C           WWCPGM    IFEQ 'PM0630'                   B2
+     C***********          Z-ADDQVCAMT    ZFLD15                          B07822
+     C           QMTVPS    IFEQ 'T'                                       B07822
+     C                     Z-ADDQMPMVT    ZFLD15                          B07822
+     C                     ELSE                                           B07822
+     C                     Z-ADDQMPMVV    ZFLD15                          B07822
+     C                     END                                            B07822
+     C*                                                                   B07822
+     C                     Z-ADDQMPCDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDVALU
+     C                     END                             E2
+      *
+     C                     ENDSR                           **INIT ESR**
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                                  *R00824
+      * #P01     -  FILL SUBFILE                                         *
+      *                                                                  *R00824
+      * SUBROUTINE CALLS:                                                *R00824
+      * ZSEDIT   -                                                       *R00824
+      *                                                                  *R00824
+      * SUBROUTINE CALLED FROM:                                          *R00824
+      *                                                                  *R00824
+      * ROUTINE USES VARIABLES:                                          *R00824
+      *                                                                  *R00824
+      ********************************************************************R00824
+     C           #P01      BEGSR                           **P01  BSR**
+      *
+      ** INITIALISE DATA STRUCTURES
+     C                     MOVE *BLANKS   WWPTIT
+     C                     MOVE *BLANKS   WWPEXC
+     C                     MOVE *BLANKS   WWPDET
+      *
+      ** RESET INDICATOR FOR EXCEPTION
+     C                     MOVE '0'       *IN20
+      *
+      ** FORMAT POLICY TITLE
+      *  -------------------
+     C********** QVPCOD    IFNE WWPCOD                     B1             S01486
+     C           GIPCOD    IFNE WWPCOD                     B1             S01486
+      *
+      ** INSTRUMENT POLICY
+     C********** QVPCOD    IFEQ 1                          B2             S01486
+     C           GIPCOD    IFEQ 1                          B2             S01486
+     C                     MOVELNAR,1     WWPNAM
+      *
+     C***********WWCPGM    IFEQ 'PM0630'                   B3             R05678
+     C***********          MOVE NAR,2     WWPVAL                          R05678
+     C***********          END                             E3             R05678
+      *
+     C                     END                             E2
+      *
+      ** CURRENCY POLICY
+     C********** QVPCOD    IFEQ 2                          B2             S01486
+     C           GIPCOD    IFEQ 2                          B2             S01486
+     C***********          MOVELNAR,3     WWPNAM                          R05678
+     C                     MOVELNAR,2     WWPNAM                          R05678
+      *
+     C***********WWCPGM    IFEQ 'PM0630'                   B3             R05678
+     C***********          MOVE NAR,2     WWPVAL                          R05678
+     C***********          END                             E3             R05678
+      *
+     C                     END                             E2
+      *
+      ** COUNTRY POLICY
+     C********** QVPCOD    IFEQ 3                          B2             S01486
+     C           GIPCOD    IFEQ 3                          B2             S01486
+     C***********          MOVELNAR,4     WWPNAM                          R05678
+     C                     MOVELNAR,3     WWPNAM                          R05678
+      *
+     C***********WWCPGM    IFEQ 'PM0630'                   B3             R05678
+     C***********          MOVE NAR,5     WWPVAL                          R05678
+     C***********          END                             E3             R05678
+      *
+     C                     END                             E2
+      *
+      ** INDUSTRY POLICY
+     C********** QVPCOD    IFEQ 4                          B2             S01486
+     C           GIPCOD    IFEQ 4                          B2             S01486
+     C***********          MOVELNAR,6     WWPNAM                          R05678
+     C                     MOVELNAR,4     WWPNAM                          R05678
+      *
+     C***********WWCPGM    IFEQ 'PM0630'                   B3             R05678
+     C***********          MOVE NAR,5     WWPVAL                          R05678
+     C***********          END                             E3             R05678
+      *
+     C                     END                             E2
+      *
+      ** WRITE POLICY TITLE TO SUBFILE
+     C                     MOVE '1'       *IN21
+     C                     MOVE WWPTIT    DDDETL
+     C                     WRITEPM0730E1
+     C                     ADD  1         RRN
+     C                     MOVE '0'       *IN21
+     C**********           MOVE QVPCOD    WWPCOD                          S01486
+     C                     MOVE GIPCOD    WWPCOD                          S01486
+     C                     END                             E1
+      *
+      ** SET INDICATOR FOR EXCEPTION
+     C********** QVXPTN    IFEQ 'Y'                        B1             S01486
+     C           GIXPTN    IFEQ 'Y'                        B1             S01486
+     C           WWCPGM    ANDEQ'PM0630'
+     C                     MOVE '1'       *IN20
+     C                     END                             E1
+      *
+      ** FORMAT DETAILS
+      *  --------------
+      ** CALLING PROGRAM IS PM0630
+     C           WWCPGM    IFEQ 'PM0630'                   B1
+     C**********           MOVELQVGCOD    WWGCO1                          S01486
+     C**********           MOVELQVICOD    WWICO1                          S01486
+     C**********           MOVELQVINAR    WWINA1                          S01486
+     C                     MOVELGIGCOD    WWGCO1                          S01486
+     C                     MOVELGIICOD    WWICO1                          S01486
+     C                     MOVELGIINAR    WWINA1                          S01486
+      *
+      ** FORMAT MINIMUM PERCENTAGE
+     C**********           MOVELQVMINR    WWMIN1                          S01486
+     C                     MOVELGIMINR    WWMIN1                          S01486
+     C                     MOVE '%'       WWMIN1
+      *
+     C********** QVMINR    IFLT 100                        B2             S01486
+     C           GIMINR    IFLT 100                        B2             S01486
+     C                     MOVE *BLANKS   WW1011
+     C                     END                             E2
+      *
+     C********** QVMINR    IFLT 10                         B2             S01486
+     C           GIMINR    IFLT 10                         B2             S01486
+     C                     MOVE *BLANKS   WW0111
+     C                     END                             E2
+      *                                                                   R01155
+     C********** QVMINR    IFEQ 0                          B2      R01155 S01486
+     C********** QVMAXR    ANDEQ0                                  R01155 S01486
+     C           GIMINR    IFEQ 0                          B2             S01486
+     C           GIMAXR    ANDEQ0                                         S01486
+     C                     MOVE *BLANKS   WWMIN1                          R01155
+     C                     END                             E2             R01155
+      *
+      ** FORMAT MAXIMUM PERCENTAGE
+     C**********           MOVELQVMAXR    WWMAX1                          S01486
+     C                     MOVELGIMAXR    WWMAX1                          S01486
+     C                     MOVE '%'       WWMAX1
+      *
+     C********** QVMAXR    IFLT 100                        B2             S01486
+     C           GIMAXR    IFLT 100                        B2             S01486
+     C                     MOVE *BLANKS   WW1021
+     C                     END                             E2
+      *
+     C********** QVMAXR    IFLT 10                         B2             S01486
+     C           GIMAXR    IFLT 10                         B2             S01486
+     C                     MOVE *BLANKS   WW0121
+     C                     END                             E2
+      *                                                                   B07822
+     C********** QVMAXR    IFEQ 0                                  B07822 S01486
+     C********** QVMINR    ANDEQ100                                B07822 S01486
+     C           GIMAXR    IFEQ 0                                         S01486
+     C           GIMINR    ANDEQ100                                       S01486
+     C                     MOVE *BLANKS   WWMAX1                          B07822
+     C                     END                                            B07822
+      *
+      ** REVERSE SIGN OF ACTUAL PERCENTAGE IF NEGATIVE
+     C********** QVACTR    IFLT 0                          B2             S01486
+     C********** QVACTR    ANDNE-999.9                                    S01486
+     C           GIACTR    IFLT 0                          B2             S01486
+     C           GIACTR    ANDNE-999.9                                    S01486
+     C**********           Z-SUBQVACTR    QVACTR                          S01486
+     C                     Z-SUBGIACTR    GIACTR                          S01486
+     C                     MOVE 'Y'       WWNGVE  1
+     C                     ELSE                            X2
+     C                     MOVE 'N'       WWNGVE  1
+     C                     END                             E2
+      *
+      ** FORMAT ACTUAL PERCENTAGE
+     C********** QVACTR    IFEQ -999.9                     B2             S01486
+     C           GIACTR    IFEQ -999.9                     B2             S01486
+     C                     MOVE *ALL'*'   WWACTR
+     C                     ELSE                            X2
+     C**********           MOVELQVACTR    WWACTR                          S01486
+     C                     MOVELGIACTR    WWACTR                          S01486
+     C                     MOVE '%'       WWACTR
+     C                     MOVE WWDECP    WWDECV
+     C                     MOVE '.'       WWDECP
+      *
+     C********** QVACTR    IFLT 100                        B3             S01486
+     C           GIACTR    IFLT 100                        B3             S01486
+     C                     MOVE *BLANKS   WW1031
+     C                     END                             E3
+      *
+     C********** QVACTR    IFLT 10                         B3             S01486
+     C           GIACTR    IFLT 10                         B3             S01486
+     C                     MOVE *BLANKS   WW0131
+     C                     END                             E3
+      *
+     C                     END                             E2
+      *
+      ** FORMAT AMOUNT IN INVESTMENT
+     C**********           Z-ADDQVIAMT    ZFLD15                          S01486
+     C                     Z-ADDGIIAMT    ZFLD15                          S01486
+     C                     Z-ADDQMPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWIAMT
+      *
+     C           WWNGVE    IFEQ 'Y'                        B2
+     C                     MOVEL'-'       WWIAMT
+     C                     END                             E2
+      *
+      ** WRITE POLICY DETAILS TO SUBFILE
+     C                     MOVE WWPEXC    DDDETL
+     C                     WRITEPM0730E1
+     C                     ADD  1         RRN
+      *
+      ** CALLING PROGRAM IS PM0720
+     C                     ELSE                            X1
+     C**********           MOVELQVGCOD    WWGCO2                          S01486
+     C**********           MOVELQVICOD    WWICO2                          S01486
+     C**********           MOVELQVINAR    WWINA2                          S01486
+     C                     MOVELGIGCOD    WWGCO2                          S01486
+     C                     MOVELGIICOD    WWICO2                          S01486
+     C                     MOVELGIINAR    WWINA2                          S01486
+      *
+      ** FORMAT MINIMUM PERCENTAGE
+     C**********           MOVELQVMINR    WWMIN2                          S01486
+     C                     MOVELGIMINR    WWMIN2                          S01486
+     C                     MOVE '%'       WWMIN2
+      *
+     C********** QVMINR    IFLT 100                        B2             S01486
+     C           GIMINR    IFLT 100                        B2             S01486
+     C                     MOVE *BLANKS   WW1012
+     C                     END                             E2
+      *
+     C********** QVMINR    IFLT 10                         B2             S01486
+     C           GIMINR    IFLT 10                         B2             S01486
+     C                     MOVE *BLANKS   WW0112
+     C                     END                             E2
+      *                                                                   R01155
+     C********** QVMINR    IFEQ 0                          B2      R01155 S01486
+     C********** QVMAXR    ANDEQ0                                  R01155 S01486
+     C           GIMINR    IFEQ 0                          B2             S01486
+     C           GIMAXR    ANDEQ0                                         S01486
+     C                     MOVE *BLANKS   WWMIN2                          R01155
+     C                     END                             E2             R01155
+      *
+      ** FORMAT MAXIMUM PERCENTAGE
+     C**********           MOVELQVMAXR    WWMAX2                          S01486
+     C                     MOVELGIMAXR    WWMAX2                          S01486
+     C                     MOVE '%'       WWMAX2
+      *
+     C********** QVMAXR    IFLT 100                        B2             S01486
+     C           GIMAXR    IFLT 100                        B2             S01486
+     C                     MOVE *BLANKS   WW1022
+     C                     END                             E2
+      *
+     C********** QVMAXR    IFLT 10                         B2             S01486
+     C           GIMAXR    IFLT 10                         B2             S01486
+     C                     MOVE *BLANKS   WW0122
+     C                     END                             E2
+      *                                                                   B07822
+     C********** QVMAXR    IFEQ 0                                  B07822 S01486
+     C********** QVMINR    ANDEQ100                                B07822 S01486
+     C           GIMAXR    IFEQ 0                                         S01486
+     C           GIMINR    ANDEQ100                                       S01486
+     C                     MOVE *BLANKS   WWMAX2                          B07822
+     C                     END                                            B07822
+      *
+      ** WRITE POLICY DETAILS TO SUBFILE
+     C                     MOVE WWPDET    DDDETL
+     C                     WRITEPM0730E1
+     C                     ADD  1         RRN
+     C                     END                             E1
+      *
+     C                     ENDSR                           **P01  ESR**
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                                  *R00824
+      * #W01     - DISPLAY INVESTMENT POLICIES EXCEPTION SCREEN          *R00824
+      *                                                                  *R00824
+      * SUBROUTINE CALLS:                                                *R00824
+      *                                                                  *R00824
+      * SUBROUTINE CALLED FROM:                                          *R00824
+      * MAIN     -                                                       *R00824
+      *                                                                  *R00824
+      * ROUTINE USES VARIABLES:                                          *R00824
+      *                                                                  *R00824
+      ********************************************************************R00824
+     C           #W01      BEGSR                           **W01  BSR**
+      *
+     C                     MOVE QMRUNA    DDRUNA
+     C                     MOVE QMCNUM    DDCNUM
+     C                     MOVE QMCRNM    DDCRNM
+     C                     MOVE QMPTF1    DDPTF1
+     C                     MOVE QMPTFN    DDPTFN
+     C*
+     C           QMPOLC    IFNE *BLANKS                                   R01155
+     C                     MOVE '1'       *IN27                           R01155
+     C                     MOVE '0'       *IN28                           R01155
+     C                     MOVE '0'       *IN29                           R01155
+     C                     MOVE QMPOLC    DDPOLC
+     C                     MOVE PSPOLN    DDPOLN
+     C                     END                                            R01155
+     C                     MOVEL'('       DDPTCY
+     C                     MOVE QMPTCY    WWPTCY
+     C                     MOVE ')'       DDPTCY
+     C                     MOVE QMPTCY    DDPTC1                          R05678
+     C                     WRITEPM0730F1
+     C                     WRITEPM0730F2
+     C                     EXFMTPM0730C1
+      *
+     C                     ENDSR                           **W01  ESR**
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                                  *R00824
+      * #W02     - DISPLAY INVESTMENT POLICIES DETAILS SCREEN            *R00824
+      *                                                                  *R00824
+      * SUBROUTINE CALLS:                                                *R00824
+      *                                                                  *R00824
+      * SUBROUTINE CALLED FROM:                                          *R00824
+      * MAIN     -                                                       *R00824
+      *                                                                  *R00824
+      * ROUTINE USES VARIABLES:                                          *R00824
+      *                                                                  *R00824
+      ********************************************************************R00824
+     C           #W02      BEGSR                           **W02  BSR**
+      *
+     C                     MOVE QMRUNA    DDRUNA
+     C                     MOVE QMCNUM    DDCNUM
+     C                     MOVE QMCRNM    DDCRNM
+     C                     MOVE QMPTF1    DDPTF1
+     C                     MOVE QMPTFN    DDPTFN
+     C                     MOVE QMPOLC    DDPOLC
+     C                     MOVE PSPOLN    DDPOLN
+     C                     WRITEPM0730F1
+     C                     WRITEPM0730F3
+     C                     EXFMTPM0730C1
+      *
+     C                     ENDSR                           **W02  ESR**
+     C********************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                                 *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a     *
+     C** numeric field and to blank out leading zeros (optionaly         *
+     C** inserting commas).                                              *
+     C**     Input fields:   ZFLD15 15/0                                 *
+     C**                     ZDECS  1/0                                  *
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *
+     C**                                                                 *
+     C**     Arrays:         ZS1    15/1/0                               *
+     C**                     ZS2    21/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT21 21                                   *
+     C**                                                                 *
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C           *PSSR     BEGSR                           **PSSR BSR**
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'Y'       QMENQT
+     C                     MOVEL'PM0730'  QMPGM
+     C*
+     C***UPDATE *GDA                                                      S01486
+     C** UPDATE *LDA                                                      S01486
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C*
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR                           **PSSR ESR**
+     C*****************************************************************
+**   NAR  - DISPLAY NARRATIVES
+***  Instrument Policy  ***
+ ***  Currency Policy  ***
+ ***  Country Policy  ****
+ ***  Industry Policy  ***

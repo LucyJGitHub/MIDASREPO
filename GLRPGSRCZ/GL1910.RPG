@@ -1,0 +1,1525 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Adjust. to Accrued Cust. Serv. Fees')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1910 - Customer Service Fees -  Accruals Adjustments       *
+      *           Maintenance                                         *
+      *                                                               *
+      *  Function:  This program shows details of fees accrued to     *
+      *  date and any outstanding adjustments.                        *
+      *                                                               *
+      *  Called By: GLC1910 - GL Adjustments to Accrued Fees Control  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+      *
+     FGL1910DFCF  E                    WORKSTN      KINFDS INFDS
+      **  Adjustment to Accrual Customer Maintenance
+      *
+     F                                        #0SFRNKSFILE GL1910S0
+      *
+     FGLCHRGL3IF  E           K        DISK         KINFSR *PSSR
+      **  Customer Fees Charges
+      *
+     FGLCHRGL6IF  E           K        DISK         KINFSR *PSSR
+     F            GLCHRGD0                          KRENAMEGLCHRGD6
+      **  Customer Fees Charges
+      *
+     FPMPORTPDIF  E           K        DISK         KINFSR *PSSR
+      **  Portfolio Details
+      *
+     FSDCFTPL0IF  E           K        DISK         KINFSR *PSSR
+      **  Fee types details
+      *
+     FGLFEACL0UF  E           K        DISK         KINFSR *PSSR
+      **   Adjustments To Accrual Customer Fee
+      *
+     F            GLFEACD0                          KRENAMEGLFEACZ0
+     F                                              KINFDS FEACDS
+     F                                              KCOMIT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - F3 Exit                                               *
+      *   05  - F5 Refresh                                            *
+      *   10  - F10 Confirm Delete                                    *
+      *   12  - F12 Previous                                          *
+      *   15  - End of File indicator for READ command                *
+      *   27  - Rolldown                                              *
+      *   28  - Subfile Display indicator                             *
+      *   29  - Subfile Clear indicator                               *
+      *   31  - Subfile Reset Modified Tags Indicator                 *
+      *   32  - Display 'DELETED' text                                *
+      *   35  - Enable rollup indicator                               *
+      *   36  - F10 = Delete to display                               *
+      *   37  - Subfile End indicator                                 *
+      *   38  - Outstanding Adjustment protect indicator              *
+      *   39  - Selection Field protect indicator                     *
+      *   45  - Branch Code protect/non-display indicator             *
+      *   51  - Amend                                                 *
+      *   52  - Delete                                                *
+      *   53  - Enquiry                                               *
+      *   63  - Branch Code Reverse Image & Posn Cursor Indicator     *
+      *   64  - Outstanding Adjustments Reverse Image and Position    *
+      *         Cursor Indicator                                      *
+      *   65  - Outstanding Adjustments Sign Reverse Image and        *
+      *         Position Cursor Indicator                             *
+      *   66 - Settlement CCY indicator                               *
+      *   80 - Validation error indicator                             *
+      *   81 - No error in validation found indicator                 *
+      *   84 - Validation error indicator                             *
+      *   85 - Chain 'Not Found' indicator                            *
+      *   86 - Error during UPDAT indicator                           *
+      *   87 - End of file indicator                                  *
+      *   88 - Chain 'Not Found' indicator                            *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRSELR - Selection of records to write to subfile on first   *
+      *           screen                                              *
+      *  SRWSBF - Write record to subfile on first screen             *
+      *  SRWBLK - Write blank record to subfile on first screen       *
+      *  SRVAL1 - Validate selection entered and key pressed          *
+      *  SRVAL2 - Validate selection entered and key pressed          *
+      *  SRVAL3 - Validate selection entered and key pressed on       *
+      *           second screen                                       *
+      *  SRTNLU - Retrieve/Update transaction number of last update   *
+      *  SRAUTH - Check if user is authorized to use action code      *
+      *  SRBCAC - Check user's authority                              *
+      *  SRSNMS - Send message to program's message queue             *
+      *  SRCHKM - Check if a message is sent to the message queue     *
+      *  SRCLRM - Clear program message queue                         *
+      *                                                               *
+      *  *INSZR - Initialisation routine
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      **  Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZPOWERZ1
+      /EJECT
+     IZMUSER      DS                             17
+      **  Data area ZMUSER
+      *
+     I                                       11  13 USRBCH
+      *
+     IFEACDS      DS
+      **  File information data strucutre
+      *
+     I                                     *STATUS  STATUS
+      *
+     ILDA       E DSLDA                         256
+      **  Local data area for database error details
+      *
+     IPSDS       SDS
+      **  Program status data structure
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I            DS
+     I                                        1   6 #0CUST
+     I                                        7  10 #0PTFR
+     I                                       11  12 #0FETP
+     I                                        1  12 WWCUFE
+      *
+     I            DS                              6
+     I                                        1   20WWDAY
+     I                                        3   40WWMNTH
+     I                                        5   60WWYEAR
+     I                                        1   60ZDATE
+      *
+     IDSDATE      DS                              8
+     I                                        1   2 S2DAY
+     I                                        4   5 S2MNTH
+     I                                        7   8 S2YEAR
+      *
+     I***CHSEAC*     DS                             18                                        CGL029
+     ICHSEAC      DS                             24                                           CGL029
+     I                                       10  12 CHSTCU
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Data structure for customer details
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External DS for Bank details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Branch details
+     I              QQDFAC                          QQDFAX                                    CGL029
+      *
+     IINFDS     E DSY2I#DSP
+      **  Data structure for Screen management @#SFRC : Subfile Record
+      *
+     IDNATN       DS                              5
+      **  Data Area for Update Processing
+      *
+     I                                        1   50FNATN
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data structure
+      *
+      /EJECT
+      *****************************************************************
+      *                      M A I N L I N E S                        *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *OFF      *IN84
+      *
+      **  If branch code is blank retrieve the user branch
+      *
+     C           #0BRCA    IFEQ *BLANKS
+     C                     MOVE USRBCH    #0BRCA
+     C                     ENDIF
+      *
+      **  Check message queue
+      *
+     C                     EXSR SRCHKM
+      *
+      **  If F5 key is pressed on first screen
+      **  Clear the input fields
+      *
+     C           *INKE     IFEQ *ON
+     C                     MOVE *BLANKS   #0RCUS
+     C                     MOVE *BLANKS   #0RPTF
+     C                     MOVE USRBCH    #0BRCA
+     C                     ENDIF
+      *
+      **  Validate the input fields and the key entered
+      *
+     C           *IN86     IFEQ *OFF
+     C           *INKC     ANDEQ*OFF
+     C                     EXSR SRVAL2
+     C                     ENDIF
+     C                     MOVE *OFF      *IN86
+      *
+      **  If no error found, select subroutine to write records to sub file
+      *
+     C           *INKC     IFEQ *OFF
+     C           *IN80     IFEQ *OFF
+     C           *INKE     OREQ *ON
+     C                     EXSR SRSELR
+     C                     MOVE *ON       *IN84
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Save the input fields
+      *
+     C                     MOVE #0RCUS    WSCUST
+     C                     MOVE #0RPTF    WSPTFR
+     C                     MOVE #0BRCA    WSBRCA
+      *
+      **  If subfile is empty, display no record display file
+      *
+     C           #0SFRN    IFEQ 0
+      *
+      **  No data to display
+      *
+     C                     MOVEL'CSF9132' ZAMSID
+     C                     EXSR SRSNMS
+     C                     EXSR SRWBLK
+     C                     ELSE
+     C                     MOVE *ON       *IN28
+     C                     ENDIF
+      *
+      **  If no error in selection fields and roll-up key is not
+      **  pressed, check for changed selection field and validate
+      *
+     C           *IN27     IFEQ *OFF
+     C           *INKC     ANDEQ*OFF
+     C                     READCGL1910S0                 15
+      *
+      **  Do while changed records are found
+      *
+     C           *IN15     DOWEQ*OFF
+      *
+      **  Validate input and access user authorities
+      *
+     C                     EXSR SRVAL1
+      *
+      **  If no error on validation, read next
+      *
+     C           *IN81     IFEQ *OFF
+     C                     READCGL1910S0                 15
+     C                     ELSE
+     C                     MOVE *ON       *IN15
+     C                     ENDIF
+     C                     ENDDO
+      *
+      **  If no error on validation, reload the subfile
+      *
+     C           *IN81     IFEQ *OFF
+     C           *IN84     ANDEQ*OFF
+     C                     EXSR SRSELR
+      *
+      **  If subfile is empty, display no record display file
+      *
+     C           #0SFRN    IFEQ 0
+     C                     MOVEL'CSF9132' ZAMSID
+     C                     EXSR SRSNMS
+     C                     EXSR SRWBLK
+     C                     ELSE
+     C                     MOVE *ON       *IN28
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Display the subfile and read the input from the user
+      *
+     C           *INKC     IFEQ *OFF
+     C                     WRITEGL1910F0
+     C                     WRITE#MSGCTL
+     C                     EXFMTGL1910C0
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *  SRSELR - SR to select records to write to subfile on first   *
+      *           screen.                                             *
+      * Called by: Main processing                                    *
+      *****************************************************************
+      *
+     C           SRSELR    BEGSR
+      *
+      **  If Roll-up key is not pressed, clear the subfile
+      *
+     C           *IN27     IFEQ *OFF
+     C                     MOVE *ON       *IN29
+     C                     MOVE *ON       *IN35
+     C                     MOVE *BLANKS   #0SELE
+     C                     WRITEGL1910C0
+     C                     MOVE *OFF      *IN29
+     C                     MOVE *OFF      *IN35
+     C                     MOVE *ZEROS    #0SFRN
+      *
+      **  Position first Customer Fees
+      *
+     C                     MOVEL#0BRCA    KBRCA     P
+     C                     MOVEL#0RCUS    KCUST     P
+     C                     MOVEL#0RPTF    KPTFR     P
+     C           KWKEY2    SETLLGLFEACL0             87
+      *
+     C                     ELSE
+     C                     Z-ADDWRRNS1    #0SFRN
+     C                     ENDIF
+      *
+      **  Read the next Adjustment To Accrual Customer Fees
+      *
+     C                     READ GLFEACL0            N    87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ*OFF
+     C           WCTR      ANDLT12
+      *
+      **  Validate if record read is the same as key
+      *
+     C           F6BRCA    IFEQ KBRCA
+     C           KCUST     IFNE *BLANKS
+     C           F6CNUM    ANDEQKCUST
+     C                     ENDIF
+     C           KPTFR     IFNE *BLANKS
+     C           F6PTFR    ANDEQKPTFR
+     C                     ENDIF
+      *
+      **  Write record to subfile
+      *
+     C                     EXSR SRWSBF
+     C                     ENDIF
+      *
+      **  If subfile not full then read the next Adjustment To Accrual
+      **  Customer
+      *
+     C           WCTR      IFLT 12
+     C                     READ GLFEACL0            N    87
+     C                     ENDIF
+     C                     ENDDO
+      *
+      **  If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *ON       *IN35
+      *
+      **  If not, check if last record from GLFEACL0 was already read
+      *
+     C                     ELSE
+     C                     READ GLFEACL0            N    87
+     C           *IN87     IFEQ *ON
+     C                     MOVE *ON       *IN37
+     C                     MOVE *OFF      *IN35
+     C                     ELSE
+     C                     READPGLFEACL0            N    87
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRWSBF - SR to write record to subfile on first screen       *
+      *  ------                                                       *
+      * Called by: SRSELR                                             *
+      * Calls: AOCURRR0                                               *
+      *****************************************************************
+      *
+     C           SRWSBF    BEGSR
+      *
+      **  Initialize the Adjustment record fields in first subfile
+      **  record field
+      *
+     C                     MOVE *OFF      *IN56
+     C                     MOVE *BLANK    #0TYPE
+      *
+      ** Flagged as deleted '*'
+      *
+     C           F6RECI    IFEQ '*'
+     C                     MOVE *ON       *IN56
+     C                     MOVE 'D'       #0TYPE
+     C                     ENDIF
+     C                     MOVE *BLANKS   #0SELE
+     C                     MOVELF6CNUM    #0CUST
+     C                     MOVELF6PTFR    #0PTFR
+     C                     MOVELF6FETP    #0FETP
+     C                     MOVELF6CHGR    #0CHGR
+     C                     MOVELF6ACCY    #0CCCY
+     C                     MOVELF6FRPE    #0FRPE
+     C                     MOVELF6TOPE    #0TOPE
+      *
+      **  Retrieve the decimal places with Fee Charging Currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #0CCCY    PCKEY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     Z-ADDA6NBDP    #0DECE
+     C                     Z-ADDA6SPRT    #0SPRT
+     C                     MOVE A6MDIN    #0MDIN
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE    P      * DB ERROR 002*
+     C                     MOVEL#0CCCY    DBKEY     P      ***************
+     C                     MOVEL'GL1910'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Edit Fee Accrued to Date : System Accrued + Manual Accrued Posted
+      **  Keep accruals amount posted in Hidden subfile fields
+      *
+     C                     Z-ADDF6ACDT    #0HACD
+     C                     Z-ADDF6MACP    #0HMAC
+      *
+     C           F6ACDT    ADD  F6MACP    #0ACD2
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE #0ACD2    ZFIELD
+     C                     MOVE #0DECE    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   #0ACDT
+     C                     MOVE ZFIELD    #0ACDT
+      *
+      **  Edit Adjustment amount to do
+      *
+     C                     Z-ADDF6OTAJ    #0OTA2
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE F6OTAJ    ZFIELD
+     C                     MOVE #0DECE    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #0OTAJ
+      *
+     C                     MOVE F6OTSG    #0OTSG
+      *
+     C                     ADD  1         #0SFRN
+     C                     ADD  1         WCTR
+     C                     Z-ADD#0SFRN    WRRNS1
+      *
+      **  Write record to subfile
+      *
+     C                     WRITEGL1910S0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRWBLK - SR to write blank record to subfile on first screen *
+      *  ------                                                       *
+      * Called by: Main processing                                    *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           SRWBLK    BEGSR
+      *
+     C                     MOVE *ON       *IN28
+     C                     MOVE *ON       *IN39
+     C                     MOVE *BLANKS   #0SELE
+     C                     MOVE *BLANKS   #0CUST
+     C                     MOVE *BLANKS   #0PTFR
+     C                     MOVE *BLANKS   #0FETP
+     C                     MOVE *BLANKS   #0CHGR
+     C                     MOVE *BLANKS   #0CCCY
+     C                     MOVE *BLANKS   #0ACDT
+     C                     MOVE *BLANKS   #0OTAJ
+     C                     MOVE *BLANKS   #0OTSG
+     C                     Z-ADD0         WCTR
+     C           WCTR      DOWLT12
+     C                     ADD  1         #0SFRN
+     C                     ADD  1         WCTR
+     C                     Z-ADD#0SFRN    WRRNS1
+      *
+      **  Write record to subfile
+      *
+     C                     WRITEGL1910S0
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN39
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRVAL1 - SR to validate selection entered and key pressed    *
+      *  ----                                                         *
+      *  Called by: Main processing                                   *
+      *  Calls: AOCUSTR0  AOCURRR0                                    *
+      *****************************************************************
+      *
+     C           SRVAL1    BEGSR
+      *
+     C                     MOVE *OFF      *IN81
+      *
+     C           #0SELE    IFNE ' '
+      *
+      **  Check that action is valid
+      **  Action code must be equal to A,D,E
+      *
+     C           #0SELE    IFEQ 'A'
+     C           #0SELE    OREQ 'D'
+     C           #0SELE    OREQ 'E'
+      *
+      **  Check if user is authorised to the action code
+      *
+     C                     MOVE #0SELE    ZACTN   1
+     C                     EXSR SRBCAC
+      *
+      **  The user is authorize to the action code
+      *
+     C           PERR      IFEQ *ZEROS
+      *
+     C           #0SELE    IFEQ 'A'
+     C           #0TYPE    ANDEQ'D'
+     C           #0SELE    OREQ 'D'
+     C           #0TYPE    ANDEQ'D'
+      *
+      **  Customer Fee is deleted, Amend/Delete isn't allowed.
+      *
+     C                     MOVEL'CSF9104' ZAMSID
+     C           #0SELE    IFEQ 'A'
+     C                     MOVEL'Amend'   ZAMSDA    P
+     C                     ELSE
+     C                     MOVEL'Delete'  ZAMSDA    P
+     C                     ENDIF
+     C                     EXSR SRSNMS
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN81
+     C                     GOTO EXTV01
+     C                     ENDIF
+      *
+      **  Amend is not allowed if accruals is stopped for
+      **  fees applied to customer
+      *
+     C           #0SELE    IFEQ 'A'
+      *
+      **   Read GLCHRGPD file, if present Check STATUS
+      *
+     C                     MOVE #0CUST    KKCNUM
+     C                     MOVE #0PTFR    KKPTFR
+     C                     MOVE #0FETP    KKFETP
+     C           KACAC     CHAINGLCHRGL6             85
+     C           *IN85     IFEQ *OFF
+     C           CHSTAT    ANDEQ'S'
+      *
+      **  Accruals adjustment aren't allowed when Customer/Portfolio
+      **  Fee Accrual is stopped.
+      *
+     C                     MOVEL'CSF9131' ZAMSID
+     C                     EXSR SRSNMS
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN81
+     C                     GOTO EXTV01
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN38
+     C                     MOVE *OFF      *IN36
+     C                     MOVE *OFF      *IN32
+     C           #0SELE    IFEQ 'D'
+     C                     MOVE *ON       *IN38
+     C                     MOVE *ON       *IN36
+     C                     ENDIF
+      *
+     C           #0SELE    IFEQ 'E'
+     C                     MOVE *ON       *IN38
+     C           #0TYPE    IFEQ 'D'
+     C                     MOVE *ON       *IN32
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Setup second screen's fields from subfile fields
+      *
+     C                     MOVE #0BRCA    #1BRCA
+     C                     MOVE #0CUST    #1CUST
+     C                     MOVE #0PTFR    #1PTFR
+     C                     MOVE #0FETP    #1FETP
+     C                     MOVE #0CHGR    #1CHGR
+     C                     MOVE #1FETP    KFETP
+     C                     MOVE #1CHGR    KCHGR
+     C           KFETP     CAT  KCHGR:1   WKWFEE  5
+      *
+      **  Read Fee Details for narrative
+      *
+     C           KWFEE     CHAINSDCFTPL0             88
+     C           *IN88     IFEQ *ON
+     C                     MOVE *BLANKS   KCHGR
+     C           KWFEE     CHAINSDCFTPL0             88
+     C           *IN88     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'SDCFTPPD'DBFILE    P      * DB ERROR 003*
+     C                     MOVELWKWFEE    DBKEY     P      ***************
+     C                     MOVEL'GL1910'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE F1NARR    #1NARR
+     C                     MOVE #0ACDT    #1ACTD
+     C                     MOVE #0OTAJ    #1OTAJ
+     C                     MOVE #0OTSG    #1OTSG
+     C                     MOVE #0CCCY    #1CCCY
+     C                     MOVE #0CCCY    #1ACCY
+      *
+      **  Fill Fee period :
+      *
+     C                     MOVEL'  /  /  'DSDATE
+     C                     Z-ADD#0FRPE    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ *OFF
+     C                     MOVE WWDAY     S2DAY
+     C                     MOVE WWMNTH    S2MNTH
+     C                     MOVE WWYEAR    S2YEAR
+     C                     ENDIF
+     C                     MOVELDSDATE    #1FRPE
+      *
+     C                     MOVEL'  /  /  'DSDATE
+     C                     Z-ADD#0TOPE    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ *OFF
+     C                     MOVE WWDAY     S2DAY
+     C                     MOVE WWMNTH    S2MNTH
+     C                     MOVE WWYEAR    S2YEAR
+     C                     ENDIF
+     C                     MOVELDSDATE    #1TOPE
+      *
+      **  Retrieve the Settlement Currency with the Customer Extension
+      **  File or Portfolio Extension File
+      *
+     C                     MOVE *BLANKS   #1SCCY
+     C                     MOVE *BLANKS   PNPTFR
+      *
+     C           #0PTFR    IFEQ *BLANKS
+     C                     MOVE #0CUST    KCUST
+     C           KCUST     CHAINGLCHRGL3             89
+     C           *IN89     IFEQ *OFF
+     C                     MOVE CHSTCU    #1SCCY
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE #0CUST    KCUST
+     C                     MOVE #0PTFR    KPTFR
+     C           KWCUPF    CHAINGLCHRGL3             89
+     C           *IN89     IFEQ *OFF
+     C                     MOVE CHSTCU    #1SCCY
+     C                     ENDIF
+     C                     MOVEL#0CUST    KNCUST
+     C           KNCUPF    CHAINPMPORTPD             89
+     C           *IN89     IFEQ *OFF
+     C                     MOVE PNPTFN    #1PTFN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM           PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #0CUST    PKEY1  10
+     C                     PARM           PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     MOVELBBCRNM    #1CRNM    P
+      *
+      **  Display System Accruals amount
+      **          Manual Accruals Posted amount
+      **          Accrued to date Amount
+      **          Amount to settle in Charging Ccy
+      **          Amount To settle in Settl. Ccy
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #0HACD    ZFIELD
+     C                     MOVE #0DECE    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1ACTD
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C           #0HMAC    IFLT 0
+     C                     Z-SUB#0HMAC    WWAMNT 150
+     C                     MOVE '-'       #1MACS
+     C                     ELSE
+     C                     Z-ADD#0HMAC    WWAMNT
+     C                     MOVE '+'       #1MACS
+     C                     ENDIF
+     C                     MOVE WWAMNT    ZFIELD
+     C                     MOVE #0DECE    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1MACP
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #0ACD2    ZFIELD
+     C                     MOVE #0DECE    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1TOTA
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #0OTSG    #1OTSG
+     C                     Z-ADD#0OTA2    WWAMNT
+     C                     MOVE WWAMNT    ZFIELD
+     C                     MOVE #0DECE    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1OTAJ
+      *
+     C                     MOVE #1OTAJ    #1OTA2
+     C                     MOVE #1OTSG    #1OTS2
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C           #1OTS2    IFEQ '+'
+     C           #0ACD2    ADD  #0OTA2    WWAMNT
+     C                     ELSE
+     C           #1OTS2    IFEQ '-'
+     C           #0ACD2    SUB  #0OTA2    WWAMNT
+     C                     ELSE
+     C                     Z-ADD#0ACD2    WWAMNT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE WWAMNT    ZFIELD
+     C                     MOVE #0DECE    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1STCH
+     C                     MOVE #0CCCY    #1HCCY
+      *
+      **  Convert amount in Settlement CCY
+      *
+     C                     Z-ADDWWAMNT    ZAMTF
+     C                     Z-ADD#0SPRT    ZRATEF
+     C                     MOVE #0DECE    ZCDPF
+     C                     MOVE #0MDIN    ZMDINF
+     C                     MOVE #1CCCY    ZCCYF
+      *
+      **  If Settlement currency is found, then
+      *
+     C                     MOVE *OFF      *IN66
+      *
+     C           #1SCCY    IFNE *BLANKS
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           #1SCCY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   #1SCCY
+     C                     ELSE
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVE A6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+     C                     EXSR ZCCYCN
+      *
+      **  Edit Amount in Settlement CCY
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE ZAMTT     ZFIELD
+     C                     MOVE ZCDPT     ZADEC
+     C                     EXSR ZEDIT
+     C           *IN99     IFEQ *OFF
+     C                     MOVE ZFIELD    #1STST    P
+     C                     ENDIF
+     C                     MOVE *ON       *IN66
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WFIRST  1
+     C                     MOVE 'Y'       WWERR   1
+     C                     MOVE *OFF      *INKC
+     C                     MOVE *OFF      *INKJ
+     C                     MOVE *OFF      *INKL
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKJ     ANDEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           WWERR     ANDEQ'Y'
+      *
+      **  Check message queue
+      *
+     C                     EXSR SRCHKM
+      *
+     C                     MOVE 'N'       WWERR   1
+     C           *INKC     IFEQ *OFF
+     C           *INKJ     ANDEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           #0SELE    ANDEQ'D'
+     C           WFIRST    ANDEQ'N'
+     C                     MOVEL'CSF9101' ZAMSID
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       WWERR
+     C                     ENDIF
+     C                     MOVE 'N'       WFIRST
+      *
+     C           #0SELE    IFEQ 'A'
+     C                     EXSR SRVAL3
+     C                     ENDIF
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITEGL1910F2
+     C                     EXFMTGL1910F1
+      *
+      **  If new selection is entered, show new fields
+      *
+     C           #1OTAJ    IFNE #1OTA2
+     C           #1OTSG    ORNE #1OTS2
+     C                     MOVE 'Y'       WWERR
+     C                     ENDIF
+      *
+      **  If Action is Delete and user presses enter
+      *
+     C           #0SELE    IFEQ 'D'
+     C           *INKJ     ANDEQ*OFF
+     C                     MOVE 'Y'       WWERR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN38
+     C                     EXSR SRCHKM
+      *
+      **  If enter is pressed, write to the file
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           #0SELE    ANDEQ'A'
+      *
+     C                     MOVE #0BRCA    KBRCA
+     C                     MOVE #0CUST    KCUST
+     C                     MOVE #0PTFR    KPTFR
+     C                     MOVE #0FETP    KFETP
+     C           KWKEY0    CHAINGLFEACL0             86
+     C                     EXSR SRTNLU
+     C                     Z-ADDWWDSTN    F6TNLU
+     C                     Z-ADDBJRDNB    F6LCD
+     C                     TIME           F6LCTM
+     C                     MOVE 'A'       F6CHTP
+     C                     Z-ADDWWOTAJ    #0OTA2
+     C                     MOVEL#1OTAJ    #0OTAJ
+     C                     MOVEL#1OTSG    #0OTSG
+     C                     Z-ADDWWOTAJ    F6OTAJ
+     C                     MOVE #1OTSG    F6OTSG
+      *
+     C                     UPDATGLFEACZ0               86
+      *
+     C           *IN86     IFEQ *ON
+     C           STATUS    IFNE 01218
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE 'GLFEACPD'DBFILE    P      * DB ERROR 005*
+     C                     MOVELWWCUFE    DBKEY     P      ***************
+     C                     MOVEL'GL1910'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVEL'CSF9011' ZAMSID
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       WWERR
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     COMIT
+     C                     ENDIF
+     C                     MOVE *BLANKS   #0SELE
+     C                     ENDIF
+      *
+     C           *INKJ     IFEQ *ON
+     C                     MOVE #0BRCA    KBRCA
+     C                     MOVE #0CUST    KCUST
+     C                     MOVE #0PTFR    KPTFR
+     C                     MOVE #0FETP    KFETP
+      *
+     C           KWKEY0    CHAINGLFEACZ0             86
+      *
+     C           *IN86     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVE 'GLFEACPD'DBFILE    P      * DB ERROR 001*
+     C                     MOVELWWCUFE    DBKEY     P      ***************
+     C                     MOVEL'GL1910'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Delete record
+      *
+     C                     MOVE '*'       F6RECI
+     C                     MOVE 'D'       F6CHTP
+     C                     Z-ADDBJRDNB    F6LCD
+     C                     UPDATGLFEACZ0               86
+      *
+     C           *IN86     IFEQ *ON
+     C           STATUS    IFNE 01218
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVE 'GLFEACPD'DBFILE    P      * DB ERROR 006*
+     C                     MOVELWWCUFE    DBKEY     P      ***************
+     C                     MOVEL'GL1910'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVEL'CSF9011' ZAMSID
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       WWERR
+     C                     ENDIF
+     C                     ELSE
+     C                     COMIT
+     C                     ENDIF
+     C                     MOVE *BLANKS   #0SELE
+     C                     ELSE
+     C                     MOVE *BLANKS   #0SELE
+     C                     ENDIF
+     C                     ELSE
+      *
+      **  Not authorized to the action code
+      *
+     C                     MOVEL'CSF9006' ZAMSID
+     C                     EXSR SRSNMS
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  Action code is not valid
+      *
+     C                     MOVEL'CSF9094' ZAMSID
+     C                     EXSR SRSNMS
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EXTV01    TAG
+      *
+     C                     UPDATGL1910S0
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN60
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRVAL2 - SR to validate selection entered and key pressed    *
+      *  ----                                                         *
+      *  Called by: Main processing                                   *
+      *  Calls: AOBRCHR0  ZVBBU                                       *
+      *****************************************************************
+      *
+     C           SRVAL2    BEGSR
+      *
+      ** If no Branch code entered then get the default Branch code
+      *
+     C                     MOVE *OFF      *IN63
+     C           #0BRCA    IFNE *BLANKS
+      *
+     C                     MOVE #0BRCA    PDSNB
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM           PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PDSNB   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN63
+     C                     MOVE *ON       *IN80
+      *
+      **  Branch code not found. '?' for list.
+      *
+     C                     MOVEL'CSF9133' ZAMSID
+     C                     EXSR SRSNMS
+      *
+     C                     ELSE
+     C                     MOVELA8BRCD    #0BRCA
+      *
+      **  Check if user is authorised to the Branch code
+      *
+     C                     CALL 'ZVBBU'
+     C                     PARM #0BRCA    ZBRCDS  3
+     C                     PARM           PERR    10
+      *
+     C           PERR      IFNE *ZEROS
+     C                     MOVE *ON       *IN63
+     C                     MOVE *ON       *IN80
+      *
+      **  User is not Authorised to the Branch code
+      *
+     C                     MOVEL'CSF9134' ZAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *
+      **  User is not Authorised to the Action code
+      *
+     C                     EXSR SRAUTH
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           #0RCUS    IFNE WSCUST
+     C           #0RPTF    ORNE WSPTFR
+     C           #0BRCA    ORNE WSBRCA
+      *
+     C           *IN27     IFEQ *ON
+     C                     MOVE *OFF      *IN27
+     C                     MOVE *ON       *IN80
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **   Access customer details
+      *
+     C           #0RCUS    IFNE *BLANKS
+     C                     MOVEL#0RCUS    PKEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PKEY1
+     C                     PARM *BLANKS   PKYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           PKEY1     IFNE *BLANKS
+     C                     MOVELPKEY1     #0RCUS
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ '*NOSEL '
+     C                     MOVE *ON       *IN61
+     C                     MOVEL'CSF9807' ZAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE *OFF      *IN61
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  No new selection entered.  Show the first screen display file
+      **  without clearing the subfile
+      *
+     C           #0RCUS    IFEQ WSCUST
+     C           #0RPTF    ANDEQWSPTFR
+     C           #0BRCA    ANDEQWSBRCA
+     C           *IN27     ANDEQ*OFF
+     C                     MOVE *ON       *IN80
+     C                     Z-ADD1         #0SFRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRVAL3 - SR to validate selection entered and key pressed    *
+      *  ----   On second Screen                                      *
+      *  Called by: SRVAL1                                            *
+      *  Calls: None                                                  *
+      *****************************************************************
+      *
+     C           SRVAL3    BEGSR
+      *
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN65
+      *
+      **  Check if the Adjustment Amount is numeric
+      *
+     C           #1OTAJ    IFEQ *BLANKS
+     C                     Z-ADD*ZERO     WWOTAJ 150
+     C                     MOVE '0'       #1OTAJ
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE #1OTAJ    ZFIELD    P
+     C                     Z-ADD#0DECE    ZADEC
+     C           15        SUB  ZADEC     ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'Y'       WWERR
+     C                     MOVE *ON       *IN64
+      *
+      **  Not numeric
+      *
+     C                     MOVEL'CSF9103' ZAMSID
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    WWOTAJ
+     C                     Z-ADD#0DECE    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   #1OTAJ
+     C                     MOVE ZFIELD    #1OTAJ
+     C                     ENDIF
+      *
+     C           #1OTSG    IFEQ '-'
+     C           WWOTAJ    ANDGT#0ACD2
+     C                     MOVE 'Y'       WWERR
+     C                     MOVE *ON       *IN64
+     C                     MOVE *ON       *IN65
+      *
+      **  Adjustment Amount must not be greater than Fee Accrued to
+      **  Date if sign is '-'.
+      *
+     C                     MOVEL'CSF9113' ZAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+     C           #1OTSG    IFNE '+'
+     C           #1OTSG    ANDNE'-'
+     C           #1OTSG    ANDNE*BLANK
+     C           #1OTSG    ORNE *BLANK
+     C           WWOTAJ    ANDEQ*ZERO
+     C           #1OTSG    OREQ *BLANK
+     C           WWOTAJ    ANDNE*ZERO
+     C                     MOVE 'Y'       WWERR
+     C                     MOVE *ON       *IN65
+      *
+      **  Adjustment Sign must be '+' or '-'.
+      *
+     C                     MOVEL'CSF9102' ZAMSID
+     C                     EXSR SRSNMS
+     C                     ENDIF
+      *
+      **  Convert in the Settlement amount
+      *
+     C           *IN64     IFEQ *OFF
+     C           *IN65     ANDEQ*OFF
+     C           #1OTSG    IFEQ '+'
+     C           #0ACD2    ADD  WWOTAJ    ZAMTF
+     C                     ELSE
+     C           #1OTSG    IFEQ '-'
+     C           #0ACD2    SUB  WWOTAJ    ZAMTF
+     C                     ELSE
+     C                     Z-ADD#0ACD2    ZAMTF
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVE #1OTAJ    #1OTA2
+     C                     MOVE #1OTSG    #1OTS2
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE ZAMTF     ZFIELD
+     C                     MOVE ZCDPF     ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1STCH
+      *
+      **  If Settlement Currency is found, then convert to Settle
+      **  Amount
+      *
+     C                     MOVE *OFF      *IN66
+      *
+     C           #1SCCY    IFNE *BLANKS
+      *
+     C                     EXSR ZCCYCN
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE ZAMTT     ZFIELD
+     C                     MOVE ZCDPT     ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1STST
+     C                     MOVE *ON       *IN66
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  SRTNLU    - Retrieve/Update Trans No. Of Last Update         *
+      *  ------                                                       *
+      *  Calls     - None                                             *
+      *  Called by - SRVAL1                                           *
+      *****************************************************************
+     C           SRTNLU    BEGSR
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRAUTH - Check if the user is authorised to the action code  *
+      *  ------                                                       *
+      *  Called by: SRINIT - SRVAL1                                   *
+      *  Calls: SRBCAC                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUTH    BEGSR
+      *
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN52
+     C                     MOVE *OFF      *IN53
+      *
+     C                     MOVE 'A'       ZACTN   1
+     C                     EXSR SRBCAC
+      *
+     C           PERR      IFEQ *ZEROS
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+      *
+      **  Check if the user is authorised to the action code 'D'
+      *
+     C                     MOVE 'D'       ZACTN   1
+     C                     EXSR SRBCAC
+      *
+     C           PERR      IFEQ *ZEROS
+     C                     MOVE *ON       *IN52
+     C                     ENDIF
+      *
+     C                     MOVE 'E'       ZACTN   1
+     C                     EXSR SRBCAC
+      *
+     C           PERR      IFEQ *ZEROS
+     C                     MOVE *ON       *IN53
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRBCAC - Check user's authority                              *
+      *  ------                                                       *
+      *  Called by: SRAUTH                                            *
+      *  Calls: ZVACTU - ZVACTBU                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBCAC    BEGSR
+      *
+     C           BJSBRC    IFNE *BLANKS
+     C                     CALL 'ZVACTU'
+     C                     PARM ZACTN     PZACTN  1
+     C                     PARM           PERR    10
+      *
+     C                     ELSE
+     C                     CALL 'ZVACTBU'
+     C                     PARM ZACTN     PZACTN
+     C                     PARM USRBCH    PZBR    3
+     C                     PARM           PERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRSNMS - Send message to program's message queue             *
+      *  ------                                                       *
+      *  Calls: SNDERMSG                                              *
+      *****************************************************************
+      *
+     C           SRSNMS    BEGSR
+      *
+     C                     MOVE *ON       *IN40
+      *
+     C                     CALL 'SNDERMSG'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRCHKM - Check if a message is sent to the message queue     *
+      *  ------   and clear the message queue                         *
+      *  Calls: SRCLRM                                                *
+      *****************************************************************
+      *
+     C           SRCHKM    BEGSR
+      *
+     C           *IN40     IFEQ *ON
+      *
+      **  Clear program message queue
+      *
+     C                     EXSR SRCLRM
+      *
+     C                     MOVE *ON       *IN34
+     C                     WRITE#MSGCTL
+     C                     MOVE *OFF      *IN40
+     C                     MOVE *OFF      *IN34
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRCLRM - Clear program messages queue                        *
+      *  ------                                                       *
+      *  Calls: CLRERMSG                                              *
+      *****************************************************************
+      *
+     C           SRCLRM    BEGSR
+      *
+     C                     CALL 'CLRERMSG'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+     C                     MOVE *ON       *IN40
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   *INZSR - SR for initial processing                          *
+      *   ------                                                      *
+      *   Called by: Main processing                                  *
+      *   Calls: AOBANKR0                                             *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Obtain default message file.
+      *
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      *
+      **  Get Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVE 'SDBANKPD'DBFILE    P      * DB ERROR 004*
+     C                     MOVEL'*FIRST ' DBKEY     P      ***************
+     C                     MOVEL'GL1910'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFNE 'D'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     ENDIF
+      *
+      **  Initialize working fields and key
+      *
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     Z-ADD*ZERO     WRRNS1  40
+     C                     MOVE *BLANKS   WSCUST  6
+     C                     MOVE *BLANKS   WSPTFR  4
+     C                     MOVE *BLANKS   WSBRCA  3
+      *
+     C           KWKEY0    KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KCUST   6
+     C                     KFLD           KPTFR   4
+     C                     KFLD           KFETP   2
+      *
+     C           KWKEY2    KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCUST
+     C                     KFLD           KPTFR
+      *
+     C           KWFEE     KLIST
+     C                     KFLD           KFETP
+     C                     KFLD           KCHGR   2
+      *
+     C           KWCUPF    KLIST
+     C                     KFLD           KCUST
+     C                     KFLD           KPTFR
+      *
+     C           KNCUPF    KLIST
+     C**********           KFLD           KNCUST  60                                          CSD027
+     C                     KFLD           KNCUST  6                                           CSD027
+     C                     KFLD           KPTFR
+      *
+     C           KACAC     KLIST
+     C                     KFLD           KKCNUM  6
+     C                     KFLD           KKPTFR  4
+     C                     KFLD           KKFETP  2
+      *
+     C                     MOVE *OFF      *IN35
+     C                     MOVE *OFF      *IN40
+     C                     MOVE *ON       *IN86
+      *
+      **  Check if the user is authorised to the action code
+      *
+     C                     EXSR SRAUTH
+      *
+      **  Initialise header screen
+      *
+     C                     MOVELUSER      #0USER
+     C                     MOVELBJMRDT    #0RUNA
+     C                     MOVELWSID      #0WSID
+      *
+      **  Check the multibranching
+      *
+     C           BJSBRC    IFNE *BLANKS
+      *
+      **  If not multibranch, use Single Branch Code
+      *
+     C                     MOVE BJSBRC    #0BRCA
+     C                     MOVE *ON       *IN45
+     C                     ELSE
+      *
+      **  If multibranch, use User Branch Code Default
+      *
+     C                     MOVE USRBCH    #0BRCA
+     C                     END
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+      **  Clear screen message file
+      *
+     C                     EXSR SRCLRM
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  ------                                                       *
+      *  Calls: DBERRCTL                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           PRUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       PRUN    1
+     C                     ROLBK
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZCCYCN
+      *
+      **  Arrays
+      *
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

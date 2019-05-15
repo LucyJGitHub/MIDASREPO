@@ -1,0 +1,1323 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG MT5xx Message Cancellation')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE GENERATION                                   *
+      *                                                               *
+      *   MG9510 - MESSAGE CANCELLATION PROCESSING                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 184413             Date 17Aug01               *
+      *                 136343             Date 08Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+      *                   113352           DATE 13FEB97               *
+      *                   089115           DATE 19AUG96               *
+      *                   CSW003           DATE 20NOV95               *
+      *                   101301           DATE 28MAR96               *
+      *                   CSW095           DATE 10APR95               *
+      *                   074376           DATE 08AUG94               *
+      *                   S01401           DATE 17JUN93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  184413 - Initialise Today's work flag (TODY) to *blanks.     *
+      *  136343 - Include checking for default status of message in   *
+      *           customer details.                                   *
+      *   CDL008 -  Continuous Linked Settlement (Recompiled MGOREFPD)*
+      *   141572 - Setup CINDV (century flag) SVDT ( value date).     *
+      *   113352 - Set-up CIND (Century flag)  to correct year2000    *
+      *            display problem.                                   *
+      *   089115 - Use Date and Type passed from SE187n for field 11S *
+      *            if it would otherwise be blank.                    *
+      *   CSW003 - MT5xx Message Generation - Phase 2                 *
+      *   101301 - Invalid branch code defined as numeric. It should  *
+      *            be Alpha.                                          *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Ensure that the MTn92 generate does not exceed     *
+      *            2,000 characters.                                  *
+      *   074376 - Tag ':11:' changed to ':11S:'                      *
+      *   S01401 - WRITTEN FOR MT5XX MESSAGES GENERATION              *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     F*
+     FMGOREFL0UF  E           K        DISK         KCOMIT       A
+     F                                              KINFSR *PSSR
+     FMGOREFL1IF  F     406 16AI     9 DISK
+     FSDBANKPDIF  E                    DISK         KINFSR *PSSR
+     FSDMGMEPDIF  E                    DISK         KINFSR *PSSR
+     F*
+     FMGOMSGLAIF  E           K        DISK         KINFSR *PSSR
+     F            MGOMSGD0                          KRENAMEMGMSGLA
+     FMGOMSGPDO   E           K        DISK         KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+     F/COPY WNCPYSRC,MG9510F001
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     E                    CPY@    1   1 80               copyright
+     E                    DSR        15  3               msg dflt sts rls.136343
+     E                    @WRK       50  1               concatenation field
+     E*
+     E**  Arrays used in SWFA subroutine
+     E                    NUMB       15  1
+     E                    NUMY       15  1
+     E                    NUMX        4  1
+     E                    NUMO       17  1
+     E*
+     E**  Arrays used in AMTC subroutine
+     E                    SAMT       17  1
+     E                    NUM        15  1
+     E                    DEC         4  1
+     E*
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+      *
+     IMGOREFL1NS
+     I                                        9  24 TRNHDR
+     I                                      208 214 RELD
+      *                                                                   136343
+     ISDCUST    E DSSDCUSTPD                                              136343
+      **  External Data structure for customer details.                   136343
+      *                                                                   136343
+     I*
+     I** DATA STRUCTURE FOR SPLITTING PARAMETER @TNUM
+     I            DS
+     I                                        1  16 WWTNUM
+     I                                        4   9 WT0409
+     I                                        1   9 WT0109
+     I*
+     I** DATA STRUCTURE FOR FORMATTING WWTRN
+     I            DS
+     I                                        1  16 WWTRN
+     I                                        1   9 WW0109
+     I                                       10  160WW1016
+     I** DATA STRUCTURE FOR CONSTRUCTING DATA FIELD FOR REPORT
+     IWWRDAT      DS                         50
+     I                                        1   8 WR0108
+     I                                        1   3 WR0103
+     I                                        9  28 WR0928
+     I*
+     I** DATA STRUCTURE TO SPLIT DATE
+     I            DS
+     I                                        1   6 @RDATE
+     I                                        1   2 WWYEAR
+     I                                        3   4 WWMNTH
+     I                                        5   6 WWDAY
+     I*
+     I** DATA STRUCTURE TO BUILD DATE
+     I            DS
+     I                                        1   8 WRDATE
+     I                                        1   2 WRYEAR
+     I I            '/'                       3   3 WRSL1
+     I                                        4   5 WRMNTH
+     I I            '/'                       6   6 WRSL2
+     I                                        7   8 WRDAY
+     I*
+     I** DATA STRUCTURE FOR CRLF CONTROL CHARACTER
+     ICRLFDS      DS                              2
+     I                                        1   2 CTRC
+     I                                        1   1 WWCR
+     I                                        2   2 WWLF
+     I*
+     I** DATA STRUCTURE FOR DBERROR ON CALL TO MG5900
+     IDBERR       DS                             20
+     I                                        1   2 WW0102
+     I                                        3  17 WW0317
+     I*
+     I** MULTIPLE OCCURRENCE DATA STRUCTURE
+     IMULT        DS                        200
+     I                                        1   5 FTAG
+     I                                        6  55 FDAT
+     I*
+     I** DATA STRUCTURE FOR PRINTING OF MT592
+     I@DATP       DS                        200
+     I                                        1  16 DTRNO
+     I                                       17  32 DRELR
+     I                                       33  40 DRELD
+     I                                       41  46 DNWRK
+      *                                                                   136343
+     IDSSDY     E DSDSSDY                                                 136343
+      **  Long data structure for access programs                         136343
+      *                                                                   136343
+     I*
+     I**  Local data area
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I* DATA STRUCTURE FOR CANCELLATION
+     ICANDS       DS                             50
+     I*************************************** 1   30CCBRCA                101301
+     I                                        1   3 CCBRCA                101301
+     I                                        4   50CCSMTH
+     I                                        6  11 CCDEST
+     I                                       12  17 A8BICN
+     I                                       18  29 A8BTID
+     I                                       30  31 CCSBTP
+     I                                    P  32  340CCSVDT
+     I                                       35  40 CCMTRN
+     I                                       41  43 CCCUR
+     I                                    P  44  460CCTDDT                089115
+     I                                       47  49 CCMTYP                089115
+     I** DATA STRUCTURE FOR DBERROR
+     IDBERR1      DS                             26
+     I                                        1   6 @SNDR
+     I                                        7  18 @SCSD
+     I                                       19  24 @DEST
+     I                                       25  26 @SETP
+     I*
+     I*
+     I*****************************************************************
+     I/EJECT
+     C*****************************************************************
+     C*                          NOTES                                *
+     C*                                                               *
+     C* Single Messages                                               *
+     C* 1.  A message is 'deleted' when the message status field on   *
+     C*     the reference field (MGST, PF/MGOREFPD), is equal to      *
+     C*     'DLTD'.                                                   *
+     C*                                                               *
+     C* Multiple Messages (MT554, MT580)                              *
+     C* 2.  The message status field of the header record on the      *
+     C*     message reference file (PF/MGOREFPD), contains the        *
+     C*     status for the multiple message. This status is then      *
+     C*     the status for all parts within the multiple message.     *
+     C*                                                               *
+     C*     If the message status field (MGST, PF/MGOREFPD), of the   *
+     C*     header record contains the value 'DLTD' the whole         *
+     C*     message is deleted, (i.e. all parts are deleted).         *
+     C*                                                               *
+     C*     To delete a message part from the multiple message, the   *
+     C*     message is descibed as 'part deleted'. The reference      *
+     C*     record for the message part being deleted has the         *
+     C*     'part deleted' field (PTST, PF/MGOREFPD), set to 'D'.     *
+     C*     The header record message status (MGST, PF/MGOREFPD),     *
+     C*     is then set to 'AMND', to indicate the multiple message   *
+     C*     has been 'amended'.                                       *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                   Index to subroutines                        *
+     C*  main process                                                 *
+     C*  INIT    Initial processing                                   *
+     C*  CANCEL  CREATE CANCELLATION MESSAGE                          *
+     C*  TRAN    RETRIEVE AND UPDATE LSWS FOR TRN                     *
+     C*  TYPE    Determine type of message being deleted              *
+     C*  PARTPS  DETERMINE POSITION OF PART TO BE CANCELLED           *
+     C*  MSGCAN  CANCEL MULTIPLE MESSAGE                              *
+     C*  SINGLE  CANCEL SINGLE MESSAGE                                *
+     C*  OMSG    WRITE THE MESSAGE TO PF/MGOMSGPD                     *
+     C*  OREF    WRITE THE MESSAGE TO PF/MGOREFL0                     *
+     C*  OREF2   PREPARE FIELDS FOR OUTPUT IF NO RECORD FOUND         *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* Main Process                                                  *
+     C* Calls    INIT, CANCEL                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**  Receive the Transaction Reference Number and
+     C**  RETURN CODE
+     C           *ENTRY    PLIST
+     C                     PARM           @TNUM  16
+     C                     PARM           @PROG   2
+     C                     PARM           @MODI   2
+     C                     PARM           @TTYP   2
+     C                     PARM           @RTNC   1
+     C                     PARM           @DATP  46        DATA TO PRINT
+     C                     PARM           CANDS  50
+     C                     PARM           CSW003  1                       CSW003
+     C*
+     C**  Initial processing
+     C                     EXSR INIT
+     C*
+     C**  Use the parameter @TNUM to access the message we are deleting
+     C           @TNUM     CHAINMGOREFL0             05
+     C*
+     C**  Error message not found
+     C***        *IN05     IFEQ '1'
+     C***        *LOCK     IN   LDA
+     C***                  MOVE '001'     DBASE            * * * * * * * *
+     C***                  MOVEL@TNUM     DBKEY            *  DBERR 001  *
+     C***                  MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C***                  OUT  LDA
+     C***                  EXSR *PSSR
+     C***                  END
+     C*
+     C** IF MESSAGE NOT ALREADY CANCELLED
+     C           CARQ      IFNE 'Y'
+     C*
+     C** IF MTPY EQUALS '510', '520', '521', '522', '523',
+     C** '554' OR '580'
+     C** OR NO RECORD FOUND ON MGOREFL0
+     C           MTPY      IFEQ '510'
+     C           MTPY      OREQ '520'
+     C           MTPY      OREQ '521'
+     C           MTPY      OREQ '522'
+     C           MTPY      OREQ '523'
+     C           MTPY      OREQ '554'
+     C           MTPY      OREQ '580'
+     C           *IN05     OREQ '1'
+     C*
+     C** CREATE CANCELLATION MESSAGE
+     C                     EXSR CANCEL
+     C                     END
+     C*                                                                   089115
+     C** If irrelevant message read, seton *IN05 and create cancellation  089115
+     C           MTPY      IFEQ '510'                                     089115
+     C           CCMTYP    ANDNE'510'                                     089115
+     C                     SETON                       05                 089115
+     C                     EXSR CANCEL                                    089115
+     C                     END                                            089115
+     C*
+     C** COMIT ALL FILE CHANGES
+     C                     COMIT
+     C*
+     C** SET FLAG FOR MESSAGE SUCCESSFULLY DELETED
+     C                     MOVE 'Y'       WWFLAG
+     C                     END
+     C/COPY WNCPYSRC,MG9510C001
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   INIT - inital process                                       *
+     C*   Called by - main process                                    *
+     C*   Calls     -                                                 *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Set up LDA for database error processing
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MG9510'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+     C*
+     C** ACCESS SDBANKPD FOR BANK DETAILS
+     C           1         SETLLSDBANKPD
+     C                     READ SDBANKPD                 06
+     C*
+     C** IF RECORD NOT FOUND OR LAST CHANGE TYPE = 'D'
+     C           *IN06     IFEQ '1'
+     C           BJTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL*BLANKS   DBKEY            *  DBERR 002  *
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,MG9510C002
+     C*
+     C** ACCESS SDMGMEPD FOR MESSAGE GENERATION & MESSAGE MANAGEMENT
+     C           1         SETLLSDMGMEPD
+     C                     READ SDMGMEPD                 09
+     C*
+     C** IF RECORD NOT FOUND OR LAST CHANGE TYPE = 'D'
+     C           *IN09     IFEQ '1'
+     C           ENTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE '020'     DBASE            * * * * * * * *
+     C                     MOVEL*BLANKS   DBKEY            *  DBERR 020  *
+     C                     MOVEL'SDMGMEPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** INITIALISE FLAG FOR MESSAGE SUCCESSFULLY DELETED
+     C                     MOVE 'N'       WWFLAG  1
+     C*
+     C** CLEAR MULTIPLE OCCURENCE DATA STRUCTURE
+     C                     Z-ADD1         X       30
+     C           X         OCUR MULT
+     C*
+     C           X         DOWLE200
+     C           MULT      ANDNE*BLANKS
+     C                     MOVE *BLANKS   MULT
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     END
+     C*
+     C** SET CRLF CONTROL CHARACTER
+     C                     MOVE *LOVAL    CTRC
+     C                     BITON'457'     WWCR
+     C                     BITON'257'     WWLF
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   CANCEL - CREATE CANCELLATION MESSAGE                        *
+     C*   Called by   Main process                                    *
+     C*   Calls       - TRAN, ZM0085, TYPE, PARTPS, MSGCAN, SINGLE,   *
+     C*                 OMSG, *PSSR, OREF                             *
+     C*****************************************************************
+     C*
+     C           CANCEL    BEGSR
+     C*
+     C** RETRIEVE AND UPDATE LSWS FOR TRN
+     C                     EXSR TRAN
+     C*
+     C** SET INDEX OF MULT. OCCUR DATA STRUCTURE TO 1
+     C                     Z-ADD1         X
+     C           X         OCUR MULT
+     C*
+     C** FORMAT TAG AND DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C                     MOVEL':20: '   FTAG
+     C                     MOVELWWTRN     FDAT
+     C*
+     C** FORMAT FIELD FOR REPORT
+     C                     MOVELWWTRN     DTRNO
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCUR DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C*
+     C** FORMAT TAG AND DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C                     MOVEL':21: '   FTAG
+     C                     MOVEL@TNUM     FDAT
+     C*
+     C** FORMAT FIELD FOR REPORT
+     C                     MOVEL@TNUM     DRELR
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCUR DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C***********                                                         089115
+     C***FORMAT*OTHER*FIELDS ONLY IF RECORD HAS BEEN FOUND ON MGOREFL0    089115
+     C************IN05     IFEQ '0'                                       089115
+     C*
+     C** FORMAT TAG AND DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C******************** MOVEL':11: '   FTAG                            074376
+     C                     MOVEL':11S:'   FTAG                            074376
+     C           *IN05     IFEQ '0'                                       089115
+     C                     MOVELMTPY      FDAT
+     C                     ELSE                                           089115
+     C                     MOVELCCMTYP    FDAT                            089115
+     C                     END                                            089115
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCUR DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C*
+     C** CONVERT MESSAGE RELEASE DATE TO SWIFT FORMAT
+      *
+      ** For part of multiple message access header for release date
+     C           TRNF      IFNE *BLANKS
+     C           *IN05     ANDEQ'0'                                       089115
+     C           TRNF      CHAINMGOREFL1             11
+     C                     END
+      *
+     C           *IN05     IFEQ '0'                                       089115
+     C                     MOVE RELD      @RELD   7
+     C           RELD      IFEQ *BLANKS
+     C                     MOVE BJMRDT    @RELD
+     C                     END
+     C                     MOVE *BLANKS   @RDATE  6
+     C*
+     C                     CALL 'ZM0085'               20
+     C                     PARM           @RELD
+     C                     PARM           @RDATE
+     C*
+     C** IF PROGRAM NOT FOUND
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 003  *
+     C                     MOVEL'ZM0085'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   089115
+     C                     ELSE                                           089115
+     C*                                                                   089115
+     C** Convert Trade Date to YYMMDD for Message Generation date.        089115
+     C                     CALL 'ZM0060'               15                 089115
+     C                     PARM CCTDDT    ZMDAY                           089115
+     C                     PARM           @RDATE                          089115
+     C*                                                                   089115
+     C** Program ended in error                                           089115
+     C*                                                                   089115
+     C           *IN15     IFEQ '1'                                       089115
+     C           *LOCK     IN   LDA                                       089115
+     C                     MOVE '016'     DBASE              *************089115
+     C                     MOVEL'       ' DBKEY              * DBERR 016 *089115
+     C                     MOVEL'ZM0060'  DBFILE             *************089115
+     C                     OUT  LDA                                       089115
+     C                     EXSR *PSSR                                     089115
+     C                     END                                            089115
+     C                     END                                            089115
+     C*
+     C** IF @RDATE NOT BLANK
+     C           @RDATE    IFNE *BLANKS
+     C*
+     C** FORMAT DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C                     MOVEL@RDATE    FDAT
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL'999999'  FDAT
+     C                     END
+     C*
+     C** FORMAT DATA FIELD OF MULT OCCURENCE DATA STRUCTURE FOR REPORT
+     C                     MOVE *BLANKS   WWRDAT
+     C                     MOVELWWYEAR    WRYEAR
+     C                     MOVELWWMNTH    WRMNTH
+     C                     MOVELWWDAY     WRDAY
+     C                     MOVELWRDATE    DRELD
+     C*                                                                   089115
+     C** Format other fields only if message has been found on MGOREFL0   089115
+     C           *IN05     IFEQ '0'                                       089115
+     C*
+     C** DETERMINE IF MESSAGE IS SINGLE OR MULTIPLE
+     C                     EXSR TYPE
+     C*
+     C** IF MTPY EQUALS '554'
+     C           MTPY      IFEQ '554'
+     C           MTPY      OREQ '580'
+     C*
+     C** DETERMINE POSITION OF PART TO BE CANCELLED
+     C                     EXSR PARTPS
+     C                     END
+     C*
+     C** IF MESSAGE TO BE CANCELLED IS A MULTIPLE MESSAGE
+     C           MMEG      IFEQ 'Y'
+     C*
+     C** CANCEL MULTIPLE MESSAGE
+     C                     EXSR MSGCAN
+     C*
+     C                     ELSE
+     C*
+     C** CANCEL SINGLE MESSAGE
+     C                     EXSR SINGLE
+     C                     END
+     C*
+     C                     END
+     C*
+     C** WRITE THE MESSAGE TO LF/MGOREFL0
+     C                     EXSR OREF
+     C*
+     C** WRITE THE MESSAGE TO PF/MGOMSGPD
+     C                     EXSR OMSG
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   TRAN    - RETRIEVE AND UPDATE LSWS FOR TRN                  *
+     C*   Called by   CANCEL                                          *
+     C*   Calls       MG5900, *PSSR                                   *
+     C*****************************************************************
+     C*
+     C           TRAN      BEGSR
+     C*
+     C** IF @TTYP EQUALS 'TR', 'DM' OR 'PS'
+     C           @TTYP     IFEQ 'TR'
+     C           @TTYP     OREQ 'TS'                                      CSW003
+     C           @TTYP     OREQ 'DM'
+     C           @TTYP     OREQ 'DN'                                      CSW003
+     C           @TTYP     OREQ 'PS'
+     C*
+     C** UPDATE SEQUENCE NUMBERS ON TRANSACTION RECORD
+     C*
+     C** FORMAT @TRAN AS FOLLOWS
+     C** CHARS 1-6 TO POSITIONS 4-9 OF @TNUM
+     C** CHARS 7-13 TO BLANKS
+     C** CHARS 14-15 TO @TTYP
+     C                     MOVEL@TNUM     WWTNUM
+     C                     MOVE *BLANKS   WWFL06  6
+     C                     MOVE *BLANKS   WWTRAN 15
+     C                     MOVELWT0409    WWFL06
+     C                     MOVELWWFL06    WWTRAN
+     C                     MOVE @TTYP     WWTRAN
+     C*
+     C                     CALL 'MG5900'               21
+     C                     PARM           @MODI
+     C                     PARM WWTRAN    @TRAN  15
+     C                     PARM           @PROG
+     C                     PARM 'U'       @MODE   1
+     C                     PARM *ZEROS    @LSWS   70
+     C                     PARM *BLANKS   @ERCD   1
+     C                     PARM           CSW003                          CSW003
+     C*
+     C** IF PROGRAM MG5900 NOT FOUND
+     C           *IN21     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 004  *
+     C                     MOVEL'MG5900'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF ERROR DURING PROGRAM
+     C           @ERCD     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL@MODI     WW0102
+     C                     MOVEL@TRAN     WW0317
+     C                     MOVE '005'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 005  *
+     C                     MOVELDBERR     DBKEY            * * * * * * * *
+     C                     MOVEL'MG5900'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** FORMAT WWTRN VALUE
+     C                     MOVELWT0109    WW0109
+     C           @LSWS     IFEQ 9999999
+     C                     Z-ADD1         WW1016
+     C*
+     C                     ELSE
+     C*
+     C           @LSWS     ADD  1         WW1016
+     C                     END
+     C*
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   TYPE - DETERMINE IF MESSAGE IS SINGLE OR MULTIPLE           *
+     C*   Called by   CANCEL                                          *
+     C*   Calls       *PSSR                                           *
+     C*****************************************************************
+     C*
+     C           TYPE      BEGSR
+     C*
+     C** INITIALISE MULTIPLE MESSAGE FLAG
+     C                     MOVE 'N'       MMEG    1
+     C*
+     C**  The message being deleted is part of a multiple and
+     C**  is part-deleted from the multiple message (PF/MGOREFPD)
+     C           TRNF      IFNE *BLANKS
+     C           TRNM      ORNE *BLANKS
+     C*
+     C**  IF MTPY IS NOT '554' OR '580' THEN ERROR
+     C           MTPY      IFNE '554'
+     C           MTPY      ANDNE'580'
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVELTRNO      DBKEY            *  DBERR 006  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE 'Y'       MMEG
+     C*
+     C**  The header TRN is the TRN of the message being deleted
+     C           TRNF      IFEQ *BLANKS
+     C                     MOVEL@TNUM     WWHEAD 16
+     C*
+     C**  The header TRN is the 'TRN of the first part' (TRNF)
+     C                     ELSE
+     C*
+     C                     MOVELTRNF      WWHEAD
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVEL@TNUM     WWHEAD 16
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   PARTPS - DETERMINE POSITION OF PART TO BE CANCELLED         *
+     C*   Called by   CANCEL                                          *
+     C*   Calls       *PSSR                                           *
+     C*****************************************************************
+     C*
+     C           PARTPS    BEGSR
+     C*
+     C** Access the next part of the multiple message
+     C           WWHEAD    CHAINMGOREFL0             05
+     C*
+     C**  Next part not found
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '007'     DBASE            * * * * * * * *
+     C                     MOVELWWHEAD    DBKEY            *  DBERR 007  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  INITIALISE PARTS READ COUNTER
+     C                     Z-ADD1         WWREAD  20
+     C                     MOVE 'N'       PARTFO  1
+     C*
+     C**  IF TRNO EQUALS @TNUM
+     C           TRNO      IFEQ @TNUM
+     C*
+     C**  INITIALISE PART POSITION WITHIN MULTIPLE
+     C                     Z-ADD1         WWPTPS  20
+     C* PART HAS BEEN FOUND
+     C                     MOVE 'Y'       PARTFO
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD0         WWPTPS
+     C                     END
+     C*
+     C**  Check until no more parts or 2 live parts have been found
+     C           MTPY      IFEQ '580'
+     C*
+     C           TRNM      DOWNE*BLANKS
+     C           *IN05     ANDEQ'0'
+     C           PARTFO    ANDEQ'N'
+     C*
+     C**  Access the next part of the multiple message
+     C           TRNM      CHAINMGOREFL0             05
+     C*
+     C**  Next part not found
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '008'     DBASE            * * * * * * * *
+     C                     MOVELTRNM      DBKEY            *  DBERR 008  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  ADD 1 TO PARTS READ COUNTER
+     C                     ADD  1         WWREAD
+     C*
+     C** IF TRNO EQUALS @TNUM
+     C           TRNO      IFEQ @TNUM
+     C*
+     C** SET PART POSITION WITHIN MULTIPLE TO PARTS READ COUNTER
+     C                     Z-ADDWWREAD    WWPTPS
+     C* PART HAS BEEN FOUND
+     C                     MOVE 'Y'       PARTFO
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** ACCESS LF/MGOREFL0 USING KEY OF @TNUM
+     C           @TNUM     CHAINMGOREFL0             05
+     C*
+     C**  Next part not found
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '009'     DBASE            * * * * * * * *
+     C                     MOVEL@TNUM     DBKEY            *  DBERR 009  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   MSGCAN - CANCEL MULTIPLE MESSAGE                            *
+     C*   Called by   CANCEL                                          *
+     C*   Calls       *PSSR                                           *
+     C*****************************************************************
+     C*
+     C           MSGCAN    BEGSR
+     C*
+     C** ACCESS LF/MGOMSGLA WITH KEY OF WWHEAD
+     C           WWHEAD    CHAINMGMSGLA              07
+     C*
+     C           *IN07     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '010'     DBASE            * * * * * * * *
+     C                     MOVELWWHEAD    DBKEY            *  DBERR 010  *
+     C                     MOVEL'MGOMSGLA'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF MTPY EQUALS '580'
+     C           MTPY      IFEQ '580'
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCUR DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C*
+     C** FORMAT TAG AND DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C                     MOVELMTAG      FTAG
+     C                     MOVELMFLD      FDAT
+     C*
+     C                     ELSE
+     C*
+     C** IF MTPY EQUALS '554'
+     C           MTPY      IFEQ '554'
+     C*
+     C** WHILE MTAG IS NOT ':20: '
+     C           MTAG      DOWNE':20: '
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCUR DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C*
+     C** FORMAT TAG AND DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C                     MOVELMTAG      FTAG
+     C                     MOVELMFLD      FDAT
+     C*
+     C** READ NEXT RECORD FROM LF/MGOMSGLA
+     C                     READ MGMSGLA                  07
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVE 'N'       FOUND
+     C                     Z-ADD0         WWFL23  20
+     C*
+     C** READ THROUGH THE MULTIPLE MESSAGE RECORDS TO FIND THE
+     C** PART BEING CANCELED
+     C           WWHEAD    DOWEQTRNO
+     C           *IN07     ANDEQ'0'
+     C           FOUND     ANDEQ'N'
+     C*
+     C**  For MT554, part found when Field :20: contains the
+     C**  TRN of the message we are deleting.
+     C           MTPY      IFEQ '554'
+     C           MTAG      ANDEQ':20: '
+     C                     MOVELMFLD      @FLD   16
+     C*
+     C           @FLD      IFEQ @TNUM
+     C*
+     C**  For this part of the multiple message, flag as part deleted
+     C           MTAG      DOUEQ':20: '
+     C           *IN07     OREQ '1'
+     C           WWHEAD    ORNE TRNO
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCUR DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C*
+     C** FORMAT TAG AND DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C                     MOVELMTAG      FTAG
+     C                     MOVELMFLD      FDAT
+     C*
+     C** READ NEXT RECORD FROM LF/MGOMSGLA
+     C                     READ MGMSGLA                  07
+     C                     END
+     C*
+     C**  Message-part flagged as part deleted
+     C                     MOVE 'Y'       FOUND   1
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  For MT580, part found when part position within multiple on
+     C**  the reference file is equal to the number of field :23:'s
+     C**  we have read within the message on the data file
+     C           MTPY      IFEQ '580'
+     C           MTAG      ANDEQ':23: '
+     C                     ADD  1         WWFL23
+     C*
+     C           WWFL23    IFEQ WWPTPS
+     C*
+     C**  For this part of the multiple message, flag as part deleted
+     C           MTAG      DOUEQ':23: '
+     C           *IN07     OREQ '1'
+     C           WWHEAD    ORNE TRNO
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCUR DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C*
+     C** FORMAT TAG AND DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C                     MOVELMTAG      FTAG
+     C                     MOVELMFLD      FDAT
+     C*
+     C** READ NEXT RECORD FROM PF/MGOMSGLA
+     C                     READ MGMSGLA                  07
+     C                     END
+     C*
+     C**  Message-part flagged as part deleted
+     C                     MOVE 'Y'       FOUND
+     C                     END
+     C*
+     C                     END
+     C*
+     C** READ NEXT RECORD FROM PF/MGOMSGLA
+     C                     READ MGMSGLA                  07
+     C                     END
+     C*
+     C** IF FOUND EQUALS 'N'
+     C           FOUND     IFEQ 'N'
+     C           *LOCK     IN   LDA
+     C                     MOVE '011'     DBASE            * * * * * * * *
+     C                     MOVELTRNO      DBKEY            *  DBERR 011  *
+     C                     MOVEL'MGOMSGLA'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   SINGLE - CANCEL SINGLE MESSAGE                              *
+     C*   Called by   CANCEL                                          *
+     C*   Calls       *PSSR                                           *
+     C*****************************************************************
+     C*
+     C           SINGLE    BEGSR
+     C*
+     C** ACCESS LF/MGOMSGLA WITH KEY OF @TNUM
+     C           @TNUM     CHAINMGMSGLA              07
+     C*
+     C           *IN07     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '012'     DBASE            * * * * * * * *
+     C                     MOVEL@TNUM     DBKEY            *  DBERR 012  *
+     C                     MOVEL'MGOMSGLA'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADD1         COUNT   20                      CSW095
+     C** WHILE TRNO EQUALS @TNUM AND NOT EOF
+      ** Ensure that the MTn92 does not exceed 2,000 characters.          CSW095
+     C           TRNO      DOWEQ@TNUM
+     C           *IN07     ANDEQ'0'
+     C           COUNT     ANDLE30                                        CSW095
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCUR DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C*
+     C** FORMAT TAG AND DATA FIELD OF MULT. OCCUR DATA STRUCTURE
+     C                     MOVELMTAG      FTAG
+     C                     MOVELMFLD      FDAT
+     C*
+     C** READ NEXT RECORD FROM PF/MGOMSGLA
+     C                     READ MGMSGLA                  07
+     C                     ADD  1         COUNT                           CSW095
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   OREF   - WRITE THE MESSAGE TO LF/MGOREFL0                   *
+     C*   Called by   CANCEL                                          *
+     C*   Calls       *PSSR                                           *
+     C*****************************************************************
+     C*
+     C           OREF      BEGSR
+     C*
+     C** ACCESS LF/MGOREFL0 WITH KEY OF @TNUM
+     C           @TNUM     CHAINMGOREFL0             05
+     C***        *IN05     IFEQ '1'
+     C***        *LOCK     IN   LDA
+     C***                  MOVE '013'     DBASE            * * * * * * * *
+     C***                  MOVEL@TNUM     DBKEY            *  DBERR 013  *
+     C***                  MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C***                  MOVEL'MG9510'  DBPGM
+     C***                  OUT  LDA
+     C***                  EXSR *PSSR
+     C***                  END
+     C*
+     C** UPDATE THE MESSAGE TO BE CANCELLED IF RECORD FOUND
+     C           *IN05     IFEQ '0'
+     C                     MOVE 'Y'       CARQ
+     C                     MOVELBJMRDT    LADT
+     C                     TIME           LATM
+     C                     UPDATMGOREFD0
+     C                     ELSE
+     C* FILL EXTRA FIELDS IF NO RECORD FOUND ON MGOREFL0
+     C                     EXSR OREF2
+     C                     END
+     C*
+     C** FORMAT NEW RECORD AND WRITE IT TO THE FILE
+     C                     MOVELWWTRN     TRNO
+     C                     MOVE *BLANKS   TRNF
+     C                     MOVE *BLANKS   TRNM
+     C                     MOVEL'592'     MTPY
+     C                     TIME           LATM
+      *
+      **  Convert run date to YYMMDD, for Message Generation Date
+     C                     CALL 'ZM0060'               15
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZSDATE  6
+      *
+      ** Program ended in error.
+      *
+     C           *IN15     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '009'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 009 *
+     C                     MOVEL'ZM0060'  DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVE ZSDATE    MGDE
+      *                                                                   113352
+      ** Set-up Message Generation  Century flag                          113352
+      *                                                                   113352
+     C                     MOVELMGDE      YY      20                      113352
+     C           YY        IFLT 72                                        113352
+     C                     MOVE '2'       CIND                            113352
+     C                     ELSE                                           113352
+     C                     MOVE '1'       CIND                            113352
+     C                     ENDIF                                          113352
+     C                     TIME           MGTM
+     C                     MOVELBJMRDT    LADT
+      *                                                                   136343
+      ** Access SDCUSTPD for the destination customer details.            136343
+      *                                                                   136343
+     C                     MOVE *BLANKS   @KEY1                           136343
+     C                     MOVELDECN      @KEY1                           136343
+     C                     CALL 'AOCUSTR0'                                136343
+     C                     PARM '*MSG   ' @RTCD   7                       136343
+     C                     PARM '*KEY   ' @OPTN   7                       136343
+     C                     PARM           @KEY1  10                       136343
+     C                     PARM *BLANKS   @KYST   7                       136343
+     C           SDCUST    PARM SDCUST    DSSDY                           136343
+      *                                                                   136343
+      ** Customer record not found - Error                                136343
+      *                                                                   136343
+     C           @RTCD     IFNE *BLANKS                                   136343
+     C           *LOCK     IN   LDA                                       136343
+     C                     MOVE '027'     DBASE              * * * * * * *136343
+     C                     MOVEL@KEY1     DBKEY              * DBERR 027 *136343
+     C                     MOVEL'SDCUSTPD'DBFILE             * * * * * * *136343
+     C                     OUT  LDA                                       136343
+     C                     EXSR *PSSR                                     136343
+     C                     END                                            136343
+      *                                                                   136343
+      ** Check default status on customer record                          136343
+      *                                                                   136343
+     C                     MOVE BBDS01    DSR,1                           136343
+     C                     MOVE BBDS02    DSR,2                           136343
+     C                     MOVE BBDS03    DSR,3                           136343
+     C                     MOVE BBDS04    DSR,4                           136343
+     C                     MOVE BBDS05    DSR,5                           136343
+     C                     MOVE BBDS06    DSR,6                           136343
+     C                     MOVE BBDS07    DSR,7                           136343
+     C                     MOVE BBDS08    DSR,8                           136343
+     C                     MOVE BBDS09    DSR,9                           136343
+     C                     MOVE BBDS10    DSR,10                          136343
+     C                     MOVE BBDS11    DSR,11                          136343
+     C                     MOVE BBDS12    DSR,12                          136343
+     C                     MOVE BBDS13    DSR,13                          136343
+     C                     MOVE BBDS14    DSR,14                          136343
+     C                     MOVE BBDS15    DSR,15                          136343
+      *                                                                   136343
+     C                     MOVELMTPY      W@MTPY  3                       136343
+     C           W@MTPY    LOKUPDSR                      50               136343
+     C           *IN50     IFEQ '0'                                       136343
+     C                     MOVE '*'       W@MTPY                          136343
+     C           W@MTPY    LOKUPDSR                      50               136343
+     C                     ENDIF                                          136343
+     C           *IN50     IFEQ '0'                                       136343
+     C                     MOVE '**'      W@MTPY                          136343
+     C           W@MTPY    LOKUPDSR                      50               136343
+     C                     ENDIF                                          136343
+     C           *IN50     IFEQ '0'                                       136343
+     C                     MOVE '***'     W@MTPY                          136343
+     C           W@MTPY    LOKUPDSR                      50               136343
+     C                     ENDIF                                          136343
+      *                                                                   136343
+     C           *IN50     IFEQ '1'                                       136343
+     C                     MOVEL'2'       MGSG                            136343
+     C                     MOVEL'RSND'    MGST                            136343
+     C                     ELSE                                           136343
+     C                     MOVEL'CRTD'    MGST
+     C                     MOVE '1'       MGSG
+     C                     END                                            136343
+     C                     MOVE *BLANKS   CARQ
+     C                     MOVE NWRK      DNWRK
+     C                     MOVE *BLANKS   TODY                            184413
+     C/COPY WNCPYSRC,MG9510C003
+     C*
+     C                     WRITEMGOREFD0               05
+     C*
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '014'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 014  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   OMSG   - WRITE THE MESSAGE TO PF/MGOMSGPD                   *
+     C*   Called by   CANCEL                                          *
+     C*   Calls       NONE                                            *
+     C*****************************************************************
+     C*
+     C           OMSG      BEGSR
+     C*
+     C** INITIALISE INDEX TO MULT. OCCURENCE DATA STRUCTURE
+     C                     Z-ADD1         X
+     C           X         OCUR MULT
+     C*
+     C** DO WHILE FDAT IS NOT BLANK
+     C           FDAT      DOWNE*BLANKS
+     C*
+     C** FORMAT NEW RECORD AND WRITE IT TO THE FILE
+     C                     MOVELFTAG      MTAG
+     C                     MOVELFDAT      MFLD
+     C                     MOVELWWTRN     TRNO
+     C                     MOVE *BLANKS   PTDL
+     C*
+     C                     WRITEMGOMSGD0               08
+     C*
+     C           *IN08     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '015'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 015  *
+     C                     MOVEL'MGOMSGPD'DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** ADD 1 TO INDEX OF MULT. OCCURENCE DATA STRUCTURE
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   OREF2  - PREPARE THE FIELDS IF NO RECORD ON MGOREFPD        *
+     C*   Called by   OREF                                            *
+     C*   Calls       NONE                                            *
+     C*****************************************************************
+     C*
+     C           OREF2     BEGSR
+     C*
+     C**   DETERMINE NETWORK ROUTING AND ADDRESSES
+     C                     MOVE A8BICN    @SNDR   6
+     C                     MOVE A8BTID    @SCSD  12
+     C                     MOVE CCDEST    @DEST   6
+     C                     MOVELCCSMTH    @SETP   2
+     C                     MOVE *BLANKS   @NWSN  20
+     C                     MOVE *BLANKS   @NWDS  22
+     C                     MOVE *BLANKS   @NWRK   6
+     C                     MOVE *BLANKS   @ERRC   1
+     C                     MOVE *BLANKS   @SRNM  20
+     C                     MOVE *BLANKS   @SRTN  10
+     C                     MOVE *BLANKS   @DRNM  20
+     C                     MOVE *BLANKS   @DRTN  10
+     C*
+     C                     CALL 'ZM1100'               23
+     C                     PARM           @SNDR
+     C                     PARM           @SCSD
+     C                     PARM           @DEST
+     C                     PARM           @SETP
+     C                     PARM           @NWSN
+     C                     PARM           @NWDS
+     C                     PARM           @NWRK
+     C                     PARM           @ERRC
+     C                     PARM           @SRNM
+     C                     PARM           @SRTN
+     C                     PARM           @DRNM
+     C                     PARM           @DRTN
+     C*
+     C** IF PROGRAM ZM1100 NOT FOUND
+     C           *IN23     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '021'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 021  *
+     C                     MOVEL'ZM1100'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF ERROR DURING CALLED PROGRAM
+     C           @ERRC     IFEQ 'S'
+     C           *LOCK     IN   LDA
+     C                     MOVE '022'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 022  *
+     C                     MOVELDBERR1    DBKEY            * * * * * * * *
+     C                     MOVEL'ZM1100'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF ERROR DURING CALLED PROGRAM
+     C           @ERRC     IFEQ 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE '023'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 023  *
+     C                     MOVELDBERR1    DBKEY            * * * * * * * *
+     C                     MOVEL'ZM1100'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C                     MOVEL@MODI     MODI
+     C                     MOVELCCMTRN    MTRN
+     C                     MOVELCCCUR     CCY
+     C                     MOVEL@TTYP     TNTP
+     C                     MOVELCCSBTP    SBTP
+     C                     MOVEL@NWRK     NWRK
+     C                     MOVELA8BICN    SECN
+     C                     MOVEL@NWSN     NWSN
+     C                     MOVE CCDEST    DECN
+     C                     MOVEL@NWDS     NWDS
+     C                     MOVEL'N'       MPRY
+     C                     MOVELCCBRCA    BRCA
+     C                     MOVEL'Y'       TSKS
+     C** MESSAGE GENERATION DATE
+     C                     MOVE BJRDNB    ZMDAY   50
+     C                     MOVE *BLANKS   ZSDATE  6
+     C*
+     C                     CALL 'ZM0060'               22
+     C                     PARM           ZMDAY
+     C                     PARM           ZSDATE
+     C*
+     C** IF PROGRAM NOT FOUND
+     C           *IN22     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '024'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 024  *
+     C                     MOVEL'ZM0060'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** SET MESSAGE GEN. DATE TO OUTPUT FIELD
+     C                     MOVELZSDATE    MGDE
+     C** MESSAGE VALUE DATE
+     C                     MOVE CCSVDT    ZMDAY   50
+     C                     MOVE *BLANKS   ZSDATE  6
+     C*
+     C                     CALL 'ZM0060'               22
+     C                     PARM           ZMDAY
+     C                     PARM           ZSDATE
+     C*
+     C** IF PROGRAM NOT FOUND
+     C           *IN22     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '025'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 025  *
+     C                     MOVEL'ZM0060'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** SET MESSAGE GEN. DATE TO OUTPUT FIELD
+     C                     MOVELZSDATE    SVDT
+      *                                                                   141572
+      ** Setup century indicator CINDV for value date SVDT                141572
+     C           SVDT      IFEQ *BLANK                                    141572
+     C                     MOVE *BLANK    CINDV                           141572
+     C                     ELSE                                           141572
+     C                     MOVELSVDT      YY      20                      141572
+     C           YY        IFLT 72                                        141572
+     C                     MOVE '2'       CINDV                           141572
+     C                     ELSE                                           141572
+     C                     MOVE '1'       CINDV                           141572
+     C                     ENDIF                                          141572
+     C                     ENDIF                                          141572
+     C*
+     C** CONVERT HISTORY RETENTION DATE TO SWIFT FORMAT
+     C           CCSVDT    ADD  ENDSMN    ZMDAY
+     C                     MOVE *BLANKS   ZSDATE
+     C*
+     C                     CALL 'ZM0060'               22
+     C                     PARM           ZMDAY
+     C                     PARM           ZSDATE
+     C*
+     C** IF PROGRAM NOT FOUND
+     C           *IN22     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '026'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 026  *
+     C                     MOVEL'ZM0060'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** SET HISTORY RETENTION DATE HRDT TO ZSDATE
+     C                     MOVELZSDATE    HRDT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/COPY WNCPYSRC,MG9510C004
+     C/EJECT
+     C*****************************************************************
+     C*   *PSSR - error handling                                      *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     ROLBK
+     C                     DUMP
+     C                     MOVE 'Y'       @RTNC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+      *
+** CPY@   Object Copyright
+(c) Finastra International Limited 2001

@@ -1,0 +1,1780 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Trade Number Ranges Maintenance')
+/*OVRF*: OVRDBF TRNORX TRNOR                                        : *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module
+     F*                                                                  *
+     F*   FF0170  -  TRADE NUMBER RANGES MAINTENANCE                     *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG12220           Date 18Oct06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAAA03             Date 11Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 104633             Date 08Jul96               *
+      *                  S01199             Date 27Feb90              *
+     F*                  S01117             DATE 18JAN90                 *
+     F*                  E18003             DATE 02/06/89                *
+     F*                  E15877             DATE 12/12/88                *
+     F*                  S01179             DATE 23/09/88                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG12220 - Function Keys not functioning properly            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing changes.                                  *
+     A*   104633 - GUI Amendments to DSPF with non-standard footers   *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   E18003  -  WHEN TRYING TO INPUT A TRADE NUMBER RANGE, ERROR    *
+     F*              OCCURS SAYING RANGE OVERLAPS AN EXISTING RANGE.     *
+     F*   E15877  -  TRADE NUMBER RANGE FIELD IS INCORRECTLY             *
+     F*              HIGHLIGHTED WHEN ERRONEOUS RANGE IS ENTERED.        *
+     F*   S01179  -  AS400 CONVERSION.                                   *
+     F*              THE KEYWORD RTGAID IS NO LONGER SUPPORTED ON THE    *
+     F*              AS400 AND COMMAND KEYS AND INDICATORS HAVE BEEN     *
+     F*              USED TO REPLACE THIS IN THE DISPLAY FILE.TO DISRUPT *
+     F*              THE STRUCTURE OF THE PROGRAM AS LITTLE AS POSSIBLE, *
+     F*              A NEW SUBROUTINE - ASCHGS - HAS BEEN CODED. THIS    *
+     F*              MOVES THE VALUES WHICH WOULD HAVE BEEN PASSED TO    *
+     F*              THE PROGRAM (VIA RTGAID) INTO THE AID FIELD,        *
+     F*              DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.   *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*     OVRDBF     FILE(TRNORX) TOFILE(TRNOR)                        *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FTRNOR   UF  E           K        DISK         KCOMIT       A
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+     FTRNORA  UF  E                    DISK         KCOMIT
+     FTRNOR1  IF  E           K        DISK
+     F            TRNORDF                           KRENAMETRNORDF1
+     F*ABFF***IF* E           K        DISK                               S01117
+     F**ICD*1*****TABTB10F**************************KIGNORE***************S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB20F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTB80F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     FFF0170DFCF  E                    WORKSTN      KINFDS SCRDS
+     F                                        RRN   KSFILE FF0170S0
+     FTRNORX  IF  E           K        DISK
+     F            TRNORDF                           KRENAMETRNORDFX
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         S/FF0170C0  SFLDSP
+     F*       02         S/FF0170C0  SFLDSPCTL
+     F*       03         S/FF0170C0  SFLEND
+     F*       04         S/FF0170C0  ROLLDOWN NOT ALLOWED
+     F*       05         S/FF0170F1  PROTECT/NON-DISPLAY ON LOCATION
+     F*       06         S/FF0170F0  PROTECT FIELDS
+     F*
+     F*       10         START  SCREEN
+     F*       11         REVIEW SCREEN
+     F*       12         UPDATE SCREEN
+     F*
+     F*       15         INDICATOR USED ON WRITE/UPDATE OPS TO CONDITION
+     F*                                    CALL OF INFSR
+     F*
+     F*       21         S/FF0170F1  ERROR-ACTN
+     F*       22         S/FF0170F1  ERROR-TRNR
+     F*
+     F*       23         S/FF0170F2  DISABLE COMMAND 4/5
+     F*
+     F*       25         ROLLUP                                           S01179
+     F*       26         ROLLDOWN                                         S01179
+     F********27*********HELP                                       S01179S01199
+     F*                                                                   S01179
+     F*       30         S/FF0170F0  POSITION CURSOR
+     F*       31         S/FF0170F0  ERROR-FNOR
+     F*       32         S/FF0170F0  ERROR-LNOR
+     F*       33         S/FF0170F0  ERROR-TRDS
+     F*
+     F*       50         VLDCMDKY INDICATOR FOR DISPLAY FILE              S01179
+     F*                                                                   S01179
+     F*       60         ADD RECORD
+     F*
+     F*       98         DATF = MMDDYY
+     F*       99         WORK
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       'AID' VALUES USED
+     F*
+     F*       01         CA3                                              S01179
+     F*       04         CA10                                             S01179
+     F*       05         CA12                                             S01179
+     F*       RA         ENTER PRESSED
+     F*       UP         ROLLUP
+     F*       DN         ROLLDOWN
+     F*       HP         HELP PRESSED
+     E                    CPY@    1   1 80
+     E*
+     E                    DET       256  1
+     E** ARRAY FOR COMMIT TEXT
+     E*
+     E                    ERR        19  4
+     E** ARRAY FOR ERROR MESSAGES
+     E*
+     E                    INF     1  12 76
+     E** ARRAY FOR INFORMATION MESSAGES
+     E*
+     E                    PK          2  1
+     E** ARRAY TO CHECK WHETHER PAGK IS NUMERIC
+     E*
+     ITRNORDF1
+     I*
+     I** TRADE NUMBER RANGES KEYED ON FIRST TRADE NUMBER IN RANGE
+     I*
+     I              TRNR                            TRNRX
+     I              FNOR                            FNORX
+     I              LNOR                            LNORX
+     I              TRDS                            TRDSX
+     I              TNBF                            TNBFX
+     ISCRCTL      DS
+     I*
+     I** KEY FIELDS (TAKEN FROM 'KEY' PORTION OF SCREEN)
+     I*
+     I                                        1   1 REVW
+     I                                        2   2 ACTN
+     I                                        3 004 INPK
+     I                                        3 004 STRNR
+     I                                      005 006 PK
+     I                                      005 006 PAGK
+     I                                      005 006 PTRNRA
+     I*
+     IDETREC    E DSTRNORD
+     I*
+     I** DATA STRUCTURE FOR INITIALISING A RECORD
+     I*
+     I              TRNR                            TRNRX
+     I*
+     I*DETS******E DSFF0170DF                                             S01179
+     IDETS        DS                                                      S01179
+     I*
+     I** DATA STRUCTURE FOR SCREEN DETAIL OUTPUT TO CMTTXT
+     I                                        1   6 SFNOR                 S01179
+     I                                        7  12 SLNOR                 S01179
+     I                                       13  47 STRDS                 S01179
+     I*
+     ISCRMSG      DS                          1 152
+     I*
+     I** DATA STRUCTURE FOR ERROR MESSAGES TO SCREEN
+     I*
+     I                                        1  76 ERR
+     I                                        1  76 ERRMSG
+     I                                       77 152 INFMSG
+     I*
+     ISCRDS       DS
+     I*
+     I** DISPLAY FORMAT STATUS DATA STRUCTURE
+     I*
+     I                                      287 288 AID
+     IINFDS       DS
+     I*
+     I** DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     I                                     *STATUS  STATUS
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      **                                                                  S01117
+     IZMUSER      DS                             17                       S01117
+      ** DATA AREA OF MENU USER                                           S01117
+     I                                       11  13 USRBCH                S01117
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I**   DATA STRUCTURE FOR ZTNLU1
+     I*
+     ICMTTXT      DS
+     I*
+     I** DATA STRUCTURE FOR SETUP OF COMMIT TEXT
+     I*
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+     I                                       51 306 DET
+     I*
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*================================================================
+     C*
+     C** CALCULATION SPECIFICATIONS:KEY LISTS
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO TRNOR FILE
+     C*
+     C           TRNORK    KLIST
+     C                     KFLD           TRNR
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO TRNOR FILE (BY 1ST IN RANGE)
+     C*
+     C*******    TRNR1K    KLIST                                          E15877
+     C*******              KFLD           LNOR                            E15877
+     C           *LIKE     DEFN FNORX     TRNR1K                          E15877
+     C*================================================================
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR INIT
+     C*
+     C** D O    U N T I L   C K 3   O R   E R R O R        -  S T A R T
+     C*
+     C           AID       DOUEQ'01'
+     C           *INU7     OREQ '1'
+     C*
+     C           *IN10     CASEQ'1'       START
+     C*
+     C           *IN11     CASEQ'1'       REVIEW
+     C*
+     C           *IN12     CASEQ'1'       UPDATE
+     C*
+     C                     END
+     C                     END
+     C*
+     C** D O    U N T I L   C K 3   O R   E R R O R        -  E N D
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     SETON                         LR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+     C*================================================================
+      ** INDEX OF SUBROUTINES
+      **
+      ** INIT              INITIALISATION OF STANDARD FIELDS,
+      **                   ACCESS OF STANDING DATA
+      **
+      ** START             OUTPUT AND PROCESS KEY FIELDS SCREEN
+      **
+      ** REVIEW            PROCESS SUBFILE SELECTION SCREEN
+      **
+      ** UPDATE            PROCESS DETAIL SCREEN AND UPDATE FILE
+      **
+      ** VALIDK            VALIDATE KEY FIELDS
+      **
+      ** VALIDD            VALIDATE DETAIL SCREEN
+      **
+      ** DEFLTS            FORMAT DEFAULT FIELD VALUES
+      **
+      ** INITRC            INITIALISE ALL FILE FIELDS TO ZERO/BLANK
+      **
+      ** TRSFS             FORMAT RECORD FIELDS FOR SCREEN
+      **
+      ** UPDFLS            UPDATE FILE RECORDS
+      **
+      ** UPDOWS            PROCESS UPDATE BY ANOTHER WORKSTATION
+      **
+      ** ZTNLU1            ACCESS DATAAREA FOR NEXT TRANSACTION NO.
+      **
+      ** INFSR             FILE ERROR HANDLING S/R
+      **
+      ** *PSSR             PRODUCE ERROR DUMP                             S01117
+      **                                                                  S01117
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** INIT S/R - TO INITIALISE STATIC FIELDS AND ACCESS STANDING DATA
+      ** CALLED ONCE AT START OF PROGRAM FROM MAIN LINE
+      ** CALLS NO OTHER ROUTINES
+      **
+     C*================================================================
+     C*
+     C           INIT      BEGSR                           ** INIT  BSR **
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL*BLANK    DBPGM                           S01117
+     C                     MOVEL*BLANK    DBFILE                          S01117
+     C                     MOVEL*BLANK    DBKEY                           S01117
+     C                     Z-ADD*ZERO     DBASE                           S01117
+     C                     MOVEL'FF0170'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C** PREPARE COMIT TEXT
+     C*
+     C                     MOVEL'FF'      MDID
+     C                     MOVEL'FF0170'  PGMN
+     C                     MOVELWSID      WSIDX
+     C                     MOVELUSID      USIDX
+     C*
+     C** HELP PROGRAM PARAMETER
+     C*
+     C                     MOVEL'FF0170'  HBPGM   8
+     C                     MOVEL*BLANK    WBLNK   1
+     C*
+     C** FOR HIGH INTENSITY SCREEN ATTRIBUTE
+     C*
+     C                     BITOF'01234567'HI      1
+     C                     BITON'267'     HI
+     C                     MOVELHI        INF,8
+     C                     MOVELHI        INF,9
+     C                     MOVELHI        INF,10
+     C                     MOVELHI        INF,11
+     C                     MOVELHI        INF,12
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT & ZMUSER                                  S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   RUNDT                                     S01117
+     C                     IN   ZMUSER                                    S01117
+     C*
+     C***GET*INSTALLATION*CONTROL*DATA*RECORD*1***************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 99               S01117
+     C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01117
+     C************IN99     IFEQ '0'                                       S01117
+     C***********                                                         S01117
+     C***IF*FOUND*CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.*************S01117
+     C***********                                                         S01117
+     C*                                                                   S01117
+     C** CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY                       S01117
+     C*                                                                   S01117
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C*                                                                   S01117
+     C***********          ELSE                                           S01117
+     C***********                                                         S01117
+     C***OTHERWISE*DB*ERROR***********************************************S01117
+     C***********                                                         S01117
+     C***********          SETON                     U7U8  ***************S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABFF'   DBFILE           ***************S01117
+     C***********          MOVEL'01'      ZTABKY 12                       S01117
+     C***********          MOVE '10'      ZTABKY                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          END                                            S01117
+     C*
+     C** PROCEED TO START SCREEN UNLESS DATABASE ERRPR
+     C*
+     C           *INU7     IFNE '1'
+     C                     MOVEA'1'       *IN,10
+     C                     END
+     C*
+     C           XTINIT    ENDSR                           ** XTINIT ESR**
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** START S/R TO OUTPUT AND PROCESS KEY FIELDS SCREEN
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS: VALIDK TO VALIDATE KEY FIELDS IF ENTERED
+      **
+     C*===================================================================
+     C*
+     C           START     BEGSR                           ** START BSR **
+     C*
+     C** INITIALISE SCREEN DATA
+     C*
+     C                     MOVEA'0'       *IN,10
+     C                     MOVEA'001'     *IN,21
+     C                     MOVEL*BLANK    SCRCTL
+     C                     MOVELINF,1     INFMSG
+     C*
+     C** CLEAR WHOLE SCREEN
+     C*
+     C                     WRITEFF0170F3
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  S T A R T
+     C*
+     C           *IN10     DOUEQ'1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** S T A R T   S C R E E N     O U T P U T           -  S T A R T
+     C*
+     C**********           WRITEFF0170F1                                                      CAAA03
+     C                     WRITEFF0170F2
+     C                     WRITEFF0170F1                                                      CAAA03
+     C                     READ FF0170F1                 99
+     C                     MOVELERRMSG    HERCD 160
+     C                     MOVELWBLNK     HERCD
+     C                     MOVEL*BLANK    SCRMSG
+     C*
+     C** S T A R T   S C R E E N     O U T P U T           -  E N D
+     C*
+     C** C K 3 , H E L P , O R  E N T E R   P R E S S E D  -  S T A R T
+     C*
+     C** Call S/R to move values into AID                                 S01179
+     C*                                                                   S01179
+     C                     EXSR ASCHGS                                    S01179
+     C*                                                                   S01179
+     C** CK3 - TERMINATE
+     C*
+     C           AID       IFEQ '01'
+     C                     MOVEA'1'       *IN,10
+     C*
+     C** HELP - CALL HELP PROGRAM
+     C*
+     C**********           ELSE                                           S01199
+     C********** AID       IFEQ 'HP'                                      S01199
+     C**********           MOVELHERCD     ERRMSG                          S01199
+     C********** ERR,1     IFNE *BLANK                                    S01199
+     C**********           MOVELHI        ERRMSG                          S01199
+     C**********           END                                            S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C*
+     C** ENTER TAKEN VALIDATE KEY INPUT
+     C*
+     C                     ELSE
+     C                     EXSR VALIDK
+     C*
+     C** D E T E R M I N E    S C R E E N   C H A N G E    -  S T A R T
+     C*
+     C** IF NO ERRORS, DETERMINE NEXT SCREEN
+     C*
+     C           SCRMSG    IFEQ *BLANK
+     C*
+     C**  - IF KEY FIELD IS BLANK, NEXT SCREEN IS REVIEW SCREEN
+     C*
+     C           STRNR     IFEQ *BLANK
+     C                     MOVEA'1'       *IN,11
+     C*
+     C**  - OTHERWISE, DISPLAY REQUESTED DETAIL SCREEN AS PER KEY INPUT
+     C*
+     C                     ELSE
+     C                     MOVEA'1'       *IN,12
+     C                     END
+     C*
+     C           ACTN      IFEQ 'D'                                                         BUG12220
+     C                     MOVE *ON       *IN23                                             BUG12220
+     C                     ELSE                                                             BUG12220
+     C                     SETOF                     23
+     C                     ENDIF                                                            BUG12220
+     C*
+     C                     END
+     C*
+     C** D E T E R M I N E    S C R E E N   C H A N G E    -  E N D
+     C*
+     C                     END
+     C                     END
+     C*
+     C** C K 3 , H E L P , O R  E N T E R   P R E S S E D  -  E N D
+     C*
+     C**********           END                                            S01199
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  E N D
+     C*
+     C           XTSTAR    ENDSR                           ** XTSTAR ESR**
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** REVIEW S/R TO PROCESS SUBFILE SELECTION SCREEN
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS: VALIDK TO VALIDATE KEY FIELDS IF SUBFILE RECORD SELECTED
+      **
+     C*================================================================
+     C*
+     C           REVIEW    BEGSR                           ** REVIEW BSR**
+     C*
+     C                     MOVEA'0'       *IN,11
+     C*
+     C** SET PROCESSING FLAG TO FORCE SUBFILE REBUILD
+     C*
+     C                     MOVEL'RA'      AID
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  S T A R T
+     C*
+     C           *IN10     DOUEQ'1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** I F  R O L L   U P / D O W N   O R   E N T E R   P R E S S E D
+     C*
+     C** R E B U I L D   S U B F I L E                     -  S T A R T
+     C*
+     C                     MOVELINF,2     INFMSG
+     C           AID       IFEQ 'DN'
+     C           AID       OREQ 'UP'
+     C           AID       OREQ 'RA'
+     C*
+     C** WRITE CONTROL RECORD
+     C*
+     C                     MOVEA'000'     *IN,1
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITEFF0170C0
+     C                     MOVEA'1'       *IN,4
+     C*
+     C** SET FILE POINTER - PAGE BACK
+     C*
+     C           AID       IFEQ 'DN'
+     C                     Z-ADD*ZERO     TRNR
+     C                     MOVEL*ZERO     PPAGK 002
+     C           TRNORK    SETLLTRNORX
+     C*
+     C** OTHERWISE        - PAGE FORWARD
+     C*
+     C                     ELSE
+     C*
+     C** CHECK THAT PAGK IS NUMERIC (BLANKS ARE TRANSLATED TO ZEROES)
+     C*
+     C                     DO   2         X       10
+     C                     TESTN          PK,X       99
+     C           *IN,99    IFEQ '0'
+     C                     MOVEL'0'       PK,X
+     C                     END
+     C                     END
+     C*
+     C                     MOVELPAGK      TRNR
+     C                     MOVELPAGK      PPAGK
+     C           TRNORK    SETLLTRNORX
+     C                     END
+     C*
+     C** READ IN DETAILS-FILL UP SUBFILE
+     C*
+     C*
+     C           RRN       DOUEQ18
+     C           *IN,03    OREQ '1'
+     C*
+     C** READ DETAILS UNTIL SUBFILE PAGE IS FULL
+     C*
+     C                     READ TRNORX                   03
+     C           *IN,03    IFEQ '0'
+     C*
+     C** IF RECORD IS DELETED, FLAG IT AS SO ON SCREEN
+     C*
+     C           RECI      IFEQ '*'
+     C                     MOVEL'D'       STAT    1
+     C                     ELSE
+     C                     MOVEL*BLANK    STAT
+     C                     END
+     C*
+     C                     ADD  1         RRN     40     04
+     C*
+     C                     WRITEFF0170S0
+     C*
+     C** RECORD NOW WRITTEN TO SUBFILE
+     C*
+     C                     END
+     C*
+     C** PAGE NOW FULL (OR EOF)
+     C*
+     C                     END
+     C*
+     C** READ ONE MORE RECORD FOR NEXT SCREEN
+     C*
+     C           *IN,03    IFEQ '0'
+     C                     READ TRNORX                   03
+     C                     MOVELTRNR      STRNR
+     C                     END
+     C*
+     C** IF NOT EOF SET NEXT 'REVIEW FROM' KEY ELSE SET IT TO BLANK
+     C*
+     C           *IN,03    IFEQ '0'
+     C                     MOVELINPK      PAGK
+     C                     ELSE
+     C                     MOVEL*ZERO     PAGK
+     C                     END
+     C*
+     C** FOR SUBFILE CONTROL
+     C*
+     C           *IN,4     IFEQ '1'
+     C                     MOVEA'010'     *IN,1
+     C                     MOVELINF,3     INFMSG
+     C                     ELSE
+     C                     MOVEA'11'      *IN,1
+     C                     END
+     C                     END
+     C*
+     C** R E B U I L D   S U B F I L E     -     E N D
+     C*
+     C** R E V I E W   S C R E E N     O U T P U T         -  S T A R T
+     C*
+     C**********           WRITEFF0170C0                                                      CAAA03
+     C                     WRITEFF0170F2
+     C                     WRITEFF0170C0                                                      CAAA03
+     C                     READ FF0170C0                 99
+     C                     MOVELERRMSG    HERCD
+     C                     MOVELWBLNK     HERCD
+     C                     MOVEL*BLANK    SCRMSG
+     C                     MOVEL*BLANK    REVW
+     C*
+     C** R E V I E W   S C R E E N     O U T P U T         -  E N D
+     C*
+     C** C K 3 , C K12 , H E L P , R E C O R D  S E L E C T-  S T A R T
+     C*
+     C** Call S/R to move values into AID                                 S01179
+     C*                                                                   S01179
+     C                     EXSR ASCHGS                                    S01179
+     C*                                                                   S01179
+     C** CK3 - TERMINATE
+     C*
+     C           AID       IFEQ '01'
+     C                     MOVEA'1'       *IN,11
+     C*
+     C** CK12- INITIAL SCREEN
+     C*
+     C                     ELSE
+     C           AID       IFEQ '05'
+     C                     MOVEA'1'       *IN,10
+     C*
+     C** HELP - CALL HELP PROGRAM
+     C*
+     C**********           ELSE                                           S01199
+     C********** AID       IFEQ 'HP'                                      S01199
+     C**********           MOVELHERCD     ERRMSG                          S01199
+     C********** ERR,1     IFNE *BLANK                                    S01199
+     C**********           MOVELHI        ERRMSG                          S01199
+     C**********           END                                            S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C*
+     C** ENTER PRESSED, PROCESS RECORD SELECTION
+     C*
+     C                     ELSE
+     C                     MOVEA'1'       *IN,99
+     C           *IN,04    IFEQ '0'
+     C                     READCFF0170S0                 99
+     C                     END
+     C*
+     C** R E C O R D   S E L E C T   V A L I D A T I O N   -  S T A R T
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVELTRNR      STRNR
+     C                     EXSR VALIDK
+     C*
+     C** NO ERRORS, UPDATE SCREEN CAN BE PROCESSED NEXT
+     C*
+     C           SCRMSG    IFEQ *BLANK
+     C                     MOVEA'1'       *IN,12
+     C                     MOVEL'Y'       REVW
+     C           ACTN      IFEQ 'D'                                                         BUG12220
+     C                     MOVE *ON       *IN23                                             BUG12220
+     C                     ELSE                                                             BUG12220
+     C                     MOVE *OFF      *IN23                                             BUG12220
+     C                     ENDIF                                                            BUG12220
+     C                     END
+     C                     END
+     C*
+     C** R E C O R D   S E L E C T   V A L I D A T I O N   -  E N D
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** C K 3 , C K12 , H E L P , R E C O R D  S E L E C T - E N D
+     C*
+     C**********           END                                            S01199
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N   - S T A R T
+     C*
+     C           XTREVI    ENDSR                           ** XTREVI ESR**
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** UPDATE S/R TO PROCESS DETAIL SCREEN AND UPDATE FILE
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS: VALIDD, UPDFLS, INITRC, TRSFS, DEFLTS
+      **
+     C*===================================================================
+     C*
+     C           UPDATE    BEGSR                           ** UPDATE BSR**
+     C*
+     C** SET SCREEN INDICATORS - PROTECT KEY, SET OFF ERROR INDS,
+     C** POSITION CURSOR
+     C*
+     C                     MOVEA'1'       *IN,5
+     C                     MOVEA'0'       *IN,12
+     C                     MOVEA'1000'    *IN,30
+     C*
+     C** ACCESS FILE RECORD FOR OLD TNLU TO CHECK AT UPDATE TIME
+     C** IF NO RECORD PRESENTLY ON FILE, ZEROISE STORED TNLU
+     C*
+     C                     Z-ADD*ZERO     STNLU   50
+     C           TRNORK    CHAINTRNORX               99
+     C           *IN,99    IFEQ '0'
+     C                     Z-ADDTNLU      STNLU
+     C                     END
+     C*
+     C** IF INSERT (NEW OR OVER DELETED RECORD)
+     C** INITIALIZE ALL FIELDS ON THE RECORD (IE ZEROIZE/BLANK OUT)
+     C*
+     C           ACTN      IFEQ 'I'
+     C                     EXSR INITRC
+     C                     END
+     C*
+     C** IF DELETED RECORD-ENQUIRY ONLY (RECI IS SET TO BLANK FOR INSERTS)
+     C*
+     C           RECI      IFEQ '*'
+     C                     MOVEL'E'       ACTN
+     C                     MOVEL'DELETED' DELT    7
+     C                     ELSE
+     C                     MOVEL*BLANK    DELT
+     C                     END
+     C*
+     C** FOR ROLLUP/ROLLDOWN UPDATE CURRENT TRADE NUMBER RANGE
+     C*
+     C                     MOVELTRNR      STRNR
+     C*
+     C** TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+     C*
+     C                     EXSR TRSFS
+     C*
+     C** SET UP DEFAULTS (DONE ON BLANK FIELDS)
+     C*
+     C                     EXSR DEFLTS
+     C*
+     C** IF DELETE/ENQUIRY PROTECT FIELD INPUT ON S/FF0170F0
+     C*
+     C           ACTN      IFEQ 'D'
+     C           ACTN      OREQ 'E'
+     C                     MOVEA'1'       *IN,6
+     C                     END
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  S T A R T
+     C*
+     C           *IN10     DOUEQ'1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** L O A D    U  P    I N F O M E S S A G E S        -  S T A R T
+     C*
+     C           INFMSG    IFEQ *BLANK
+     C           ACTN      IFEQ 'I'
+     C                     MOVELINF,4     INFMSG
+     C                     END
+     C           ACTN      IFEQ 'A'
+     C                     MOVELINF,5     INFMSG
+     C                     END
+     C           ACTN      IFEQ 'E'
+     C                     MOVELINF,6     INFMSG
+     C                     END
+     C           ACTN      IFEQ 'D'
+     C                     MOVELINF,7     INFMSG
+     C                     END
+     C                     END
+     C*
+     C** L O A D    U  P    I N F O M E S S A G E S        -  E N D
+     C*
+     C** D E T A I L   S C R E E N     O U T P U T         -  S T A R T
+     C*
+     C                     WRITEFF0170F1                                                      CAAA03
+     C**********           WRITEFF0170F0
+     C                     WRITEFF0170F2
+     C                     WRITEFF0170F0                                                      CAAA03
+     C                     READ FF0170F0                 99
+     C                     MOVELERRMSG    HERCD
+     C                     MOVELWBLNK     HERCD
+     C                     MOVEL*BLANK    SCRMSG
+     C*
+     C** D E T A I L   S C R E E N     O U T P U T         -  E N D
+     C*
+     C** C K 3 , C K12 , H E L P , R O L L U P / D O W N   -  S T A R T
+     C*
+     C** Call S/R to move values into AID                                 S01179
+     C*                                                                   S01179
+     C                     EXSR ASCHGS                                    S01179
+     C*                                                                   S01179
+     C** CK3 - TERMINATE
+     C*
+     C           AID       IFEQ '01'
+     C                     MOVEA'1'       *IN,12
+     C*
+     C** CK12- INITIAL SCREEN
+     C*
+     C                     ELSE
+     C           AID       IFEQ '05'
+     C                     MOVEA'1'       *IN,10
+     C*
+     C** HELP - CALL HELP PROGRAM
+     C*
+     C**********           ELSE                                           S01199
+     C********** AID       IFEQ 'HP'                                      S01199
+     C**********           MOVELHERCD     ERRMSG                          S01199
+     C********** ERR,1     IFNE *BLANK                                    S01199
+     C**********           MOVELHI        ERRMSG                          S01199
+     C**********           END                                            S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C*
+     C** PAGE FORWARD TAKEN, READ NEXT RECORD
+     C*
+     C                     ELSE
+     C           AID       IFEQ 'UP'
+     C           ACTN      ANDNE'I'
+     C                     READ TRNORX                   12
+     C*
+     C** CHANGE MESSAGE IF END OF FILE REACHED - NO ROLL FWD
+     C*
+     C           *IN,12    IFEQ '1'
+     C                     MOVELINF,8     INFMSG
+     C                     ELSE
+     C                     MOVEA'1'       *IN,12
+     C                     END
+     C*
+     C** PAGE BACK TAKEN, READ PREVIOUS RECORD
+     C*
+     C                     ELSE
+     C           AID       IFEQ 'DN'
+     C           ACTN      ANDNE'I'
+     C                     READPTRNORX                   12
+     C*
+     C** CHANGE MESSAGE IF BEGINNING OF FILE REACHED - NO ROLL BACK
+     C*
+     C           *IN,12    IFEQ '1'
+     C                     MOVELINF,9     INFMSG
+     C                     ELSE
+     C                     MOVEA'1'       *IN,12
+     C                     END
+     C*
+     C** NOT CK3,CK12,HELP,ROLLUP,ROLLDOWN
+     C*
+     C                     ELSE
+     C*
+     C** V A L I D A T E   D E T A I L   S C R E E N   I N P U T
+     C*
+     C                     EXSR VALIDD
+     C*
+     C** N O    D E T A I L   S C R E E N    E R R O R S   -  S T A R T
+     C*
+     C           SCRMSG    IFEQ *BLANK
+     C           AID       ANDEQ'RA'
+     C*
+     C**FOR REC.ADVANCE DETERMINE WHAT SCREEN TO RETURN TO -  S T A R T
+     C*
+     C           REVW      IFEQ 'Y'
+     C                     MOVELPPAGK     PAGK
+     C                     MOVEA'1'       *IN,11
+     C                     ELSE
+     C                     MOVEA'1'       *IN,10
+     C                     END
+     C*
+     C**FOR REC.ADVANCE DETERMINE WHAT SCREEN TO RETURN TO -  E N D
+     C*
+     C**     U  P  D  A  T  E      F  I  L  E  S
+     C*
+     C           ACTN      IFEQ 'I'
+     C           ACTN      OREQ 'A'
+     C           ACTN      OREQ 'D'
+     C                     EXSR UPDFLS
+     C                     END
+     C*
+     C** N O    D E T A I L   S C R E E N    E R R O R S   -  E N D
+     C*
+     C                     END
+     C*
+     C** C K 3 , C K12 , H E L P , R O L L U P / D O W N   -  E N D
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C**********           END                                            S01199
+     C                     END
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  E N D
+     C*
+     C                     END
+     C*
+     C** RESET PROTECT/NON-DISPLAY INDS
+     C*
+     C                     MOVEA'00'      *IN,5
+     C*
+     C           XTUPDT    ENDSR                           ** XTUPDA ESR**
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **           ****** AS400 CONVERSION ******                         S01179
+      **                                                                  S01179
+      ** ASCHGS S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD AID,        S01179
+      ** DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.                S01179
+      ** CALLED FROM UPDATE                                               S01179
+      **                                                                  S01179
+     C*================================================================   S01179
+     C*                                                                   S01179
+     C           ASCHGS    BEGSR                                          S01179
+     C*                                                                   S01179
+     C* If ENTER pressed, the VLDCMDKEY indicator will be off             S01179
+     C*                                                                   S01179
+     C           *IN50     IFEQ '0'                                       S01179
+     C                     MOVE 'RA'      AID                             S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If F3                                                             S01179
+     C*                                                                   S01179
+     C           *INKC     IFEQ '1'                                       S01179
+     C                     MOVE '01'      AID                             S01179
+     C                     MOVE '0'       *INKC                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If F10                                                            S01179
+     C*                                                                   S01179
+     C           *INKJ     IFEQ '1'                                       S01179
+     C                     MOVE '04'      AID                             S01179
+     C                     MOVE '0'       *INKJ                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If F12                                                            S01179
+     C*                                                                   S01179
+     C           *INKL     IFEQ '1'                                       S01179
+     C                     MOVE '05'      AID                             S01179
+     C                     MOVE '0'       *INKL                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If ROLLUP pressed                                                 S01179
+     C*                                                                   S01179
+     C           *IN25     IFEQ '1'                                       S01179
+     C                     MOVE 'UP'      AID                             S01179
+     C                     MOVE '0'       *IN25                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If ROLLDOWN pressed                                               S01179
+     C*                                                                   S01179
+     C           *IN26     IFEQ '1'                                       S01179
+     C                     MOVE 'DN'      AID                             S01179
+     C                     MOVE '0'       *IN26                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If HELP key pressed                                               S01179
+     C*                                                                   S01179
+     C********** *IN27     IFEQ '1'                                 S01179S01199
+     C**********           MOVE 'HP'      AID                       S01179S01199
+     C**********           MOVE '0'       *IN27                     S01179S01199
+     C**********           END                                      S01179S01199
+     C*                                                                   S01179
+     C                     ENDSR                                          S01179
+     C*================================================================
+      /EJECT
+     C*================================================================
+      ** VALIDK S/R TO VALIDATE KEY FIELDS
+      ** CALLED FROM S/R START, REVIEW
+      ** CALLS NO OTHER S/R'S
+      **
+     C*================================================================
+     C*
+     C           VALIDK    BEGSR                           ** VALIDK BSR**
+     C*
+     C** RESET ERROR INDICATORS
+     C** SET ERROR ARRAY COUNTER TO ZERO
+     C** RESET SPF ERROR VARIABLE                                         S01117
+     C*
+     C                     MOVEA'00'      *IN,21
+     C                     Z-ADD*ZERO     EC      40
+     C                     MOVE ' '       SPFERR  1                       S01117
+     C*
+     C** A C T I O N    C O D E    I N P U T - MUST BE BLANK,I,A,E,D
+     C*
+     C           ACTN      IFNE *BLANK
+     C           ACTN      ANDNE'I'
+     C           ACTN      ANDNE'A'
+     C           ACTN      ANDNE'E'
+     C           ACTN      ANDNE'D'
+     C                     ADD  1         EC         21
+     C                     MOVEL' 100'    ERR,EC
+     C                     END
+     C*                                                                   S01117
+     C**   VALIDATE ACTION CODE FOR THIS USER                             S01117
+     C*                                                                   S01117
+     C           ACTN      IFEQ 'I'                                       S01117
+     C           ACTN      OREQ 'A'                                       S01117
+     C           ACTN      OREQ 'E'                                       S01117
+     C           ACTN      OREQ 'D'                                       S01117
+     C*                                                                   S01117
+     C**   IF SINGLE BRANCH ENVIRONMENT                                   S01117
+     C*                                                                   S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM ACTN      @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         EC         21                   S01117
+     C                     MOVE 'Y'       SPFERR                          S01117
+     C                     MOVE ' 303'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C**   IF MULTIBRANCHING ENVIRONMENT                                  S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM ACTN      @ZACTN  1                       S01117
+     C                     PARM USRBCH    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         EC         21                   S01117
+     C                     MOVE 'Y'       SPFERR                          S01117
+     C                     MOVE ' 304'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C**    IF ACTN = ' ' & KEY NOT INPUT, REVIEW SCREEN WILL BE DISPLAYEDS01117
+     C**    THEREFORE, SET ACTN = 'E' FOR SPF VALIDATION.                 S01117
+     C*                                                                   S01117
+     C           ACTN      IFEQ *BLANK                                    S01117
+     C           STRNR     ANDEQ*BLANK                                    S01117
+     C*                                                                   S01117
+     C**    WHEN SINGLE BRANCH                                            S01117
+     C*                                                                   S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM 'E'       @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         EC         21                   S01117
+     C                     MOVE 'Y'       SPFERR                          S01117
+     C                     MOVEL' 303'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C** WHEN MULTI-BRANCH                                                S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM 'E'       @ZACTN  1                       S01117
+     C                     PARM USRBCH    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         EC         21                   S01117
+     C                     MOVE 'Y'       SPFERR                          S01117
+     C                     MOVEL' 304'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C** IF SPF CHECKING PASS, CONTINUE PROCESSING                        S01117
+     C*                                                                   S01117
+     C           SPFERR    IFEQ ' '                                       S01117
+     C*
+     C** A C T I O N    C O D E    I N P U T - CHECK KEY FIELDS
+     C*
+     C           *IN,21    IFNE '1'
+     C*
+     C           ACTN      IFNE *BLANK
+     C*
+     C** VALIDATE TRADE NUMBER RANGE CODE IS NUMERIC & NON-ZERO
+     C*
+     C                     MOVELSTRNR     WRK3A   3
+     C                     MOVE '0'       WRK3A
+     C                     TESTN          WRK3A      99
+     C*
+     C           *IN99     IFEQ '0'
+     C           WRK3A     OREQ '000'
+     C                     ADD  1         EC         22
+     C                     MOVEL' 106'    ERR,EC
+     C                     ELSE
+     C                     MOVELSTRNR     TRNR
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** ACTION CODE BLANK BUT KEY INPUT
+     C*
+     C           STRNR     IFNE *BLANK
+     C*
+     C                     ADD  1         EC         21
+     C                     MOVEL' 102'    ERR,EC
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C** N O   E R R O R  O N  K E Y  F I E L D S
+     C*
+     C           *IN,22    IFNE '1'
+     C*
+     C** A C T I O N    C O D E    I
+     C*
+     C           ACTN      IFEQ 'I'
+     C           TRNORK    CHAINTRNORX               99
+     C  N99      RECI      COMP '*'                      99
+     C           *IN99     IFEQ '0'
+     C           STRNR     OREQ *BLANK
+     C                     ADD  1         EC         22
+     C                     MOVEL' 103'    ERR,EC
+     C                     END
+     C*
+     C** A C T I O N    C O D E    A , D
+     C*
+     C                     ELSE
+     C           ACTN      IFEQ 'A'
+     C           ACTN      OREQ 'D'
+     C           TRNORK    CHAINTRNORX               99
+     C  N99      RECI      COMP '*'                      99
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         EC         22
+     C                     MOVEL' 104'    ERR,EC
+     C                     END
+     C*
+     C** A C T I O N    C O D E    E
+     C*
+     C                     ELSE
+     C           ACTN      IFEQ 'E'
+     C           TRNORK    CHAINTRNORX               99
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         EC         22
+     C                     MOVEL' 105'    ERR,EC
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END                                            S01117
+     C*
+     C** ERROR ON SCREEN SO HIGHLIGHT ERROR CODES
+     C*
+     C           EC        IFNE *ZERO
+     C                     MOVELHI        ERRMSG
+     C                     MOVEL*BLANK    AID
+     C                     END
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** VALIDD S/R - TO VALIDATE DETAIL SCREEN
+      ** CALLED FROM UPDATE S/R
+      ** CALLS: DEFLTS
+      **
+     C*================================================================
+     C*
+     C           VALIDD    BEGSR                           ** VALIDD BSR**
+     C*
+     C** RESET SCREEN ERROR INDICATORS
+     C*
+     C                     MOVEA'0000'    *IN,30
+     C*
+     C** SET ERROR COUNT TO ZERO
+     C*
+     C                     Z-ADD*ZERO     EC
+     C*
+     C** ENTER KEY PRESSSED
+     C*
+     C           AID       IFEQ 'RA'
+     C*
+     C** ACTION = I OR A
+     C*
+     C           ACTN      IFEQ 'I'
+     C           ACTN      OREQ 'A'
+     C*
+     C** DO DEFAULTS
+     C*
+     C                     EXSR DEFLTS
+     C*
+     C** VALIDATION OF FIELDS FOR INSERT/AMEND
+     C*
+     C** FIRST NUMBER IN RANGE
+     C*
+     C** CHECK THAT SFNOR IS NUMERIC
+     C*
+     C                     MOVELSFNOR     WRK7A   7
+     C                     MOVE '0'       WRK7A
+     C                     TESTN          WRK7A      99
+     C*
+     C           *IN99     IFEQ '0'
+     C           SFNOR     OREQ '000000'
+     C                     MOVEL'1'       *IN,30
+     C                     ADD  1         EC         31
+     C                     MOVEL' 200'    ERR,EC
+     C                     ELSE
+     C                     MOVELSFNOR     FNOR
+     C                     END
+     C*
+     C** LAST NUMBER IN RANGE
+     C*
+     C** CHECK THAT SLNOR IS NUMERIC
+     C*
+     C                     MOVELSLNOR     WRK7A   7
+     C                     MOVE '0'       WRK7A
+     C                     TESTN          WRK7A      99
+     C*
+     C           *IN99     IFEQ '0'
+     C           SLNOR     OREQ '000000'
+     C                     ADD  1         EC         32
+     C                     MOVEL' 201'    ERR,EC
+     C                     ELSE
+     C                     MOVELSLNOR     LNOR
+     C                     END                             **
+     C*
+     C** LAST NUMBER IN RANGE CANT BE LESS THAN/= FIRST NUMBER IN RANGE
+     C*
+     C           *IN31     IFEQ '0'
+     C           *IN32     ANDEQ'0'
+     C           LNOR      ANDLEFNOR
+     C                     ADD  1         EC         32
+     C                     MOVEL' 202'    ERR,EC
+     C                     END
+     C*
+     C** FIRST NUMBER IN RANGE/LAST NUMBER IN RANGE
+     C** CHECK THAT THERE ARE NO OVERLAPPING RANGES ON LF/TRNOR1
+     C*
+     C           *IN31     IFEQ '0'
+     C           *IN32     ANDEQ'0'
+     C*
+     C***READ*FORWARD*FIRST                                               E15877
+     C****                                                                E15877
+     C****       TRNR1K    SETLLTRNOR1                                    E15877
+     C****                 READ TRNOR1                   99               E15877
+     C****       *IN99     IFEQ '0'                                       E15877
+     C****       TRNR      ANDEQTRNRX                                     E15877
+     C****                 READ TRNOR1                   99               E15877
+     C****                 END                                            E15877
+     C****       *IN99     IFEQ '0'                                       E15877
+     C****       FNORX     ANDEQLNOR                                      E15877
+     C****                 ADD  1         EC         32                   E15877
+     C****                 MOVEL' 203'    ERR,EC                          E15877
+     C****                 END                                            E15877
+     C****                                                                E15877
+     C***THEN*READ*BACK                                                   E15877
+     C****                                                                E15877
+     C****       TRNR1K    SETLLTRNOR1                                    E15877
+     C****                 READPTRNOR1                   99               E15877
+     C****       *IN99     IFEQ '0'                                       E15877
+     C****       TRNR      ANDEQTRNRX                                     E15877
+     C****                 READPTRNOR1                   99               E15877
+     C****                 END                                            E15877
+     C****       *IN99     IFEQ '0'                                       E15877
+     C****       LNORX     ANDGEFNOR                                      E15877
+     C****                 MOVEL'1'       *IN,30                          E15877
+     C****                 ADD  1         EC         31                   E15877
+     C****                 MOVEL' 203'    ERR,EC                          E15877
+     C****                 END                                            E15877
+     C****                 END                                            E15877
+     C*                                                                   E15877
+     C                     Z-ADDLNOR      TRNR1K                          E15877
+     C           TRNR1K    SETGTTRNOR1                                    E15877
+     C                     READPTRNOR1                   99               E15877
+     C*                                                                   E18003
+     C**  IF ACTION IS AMEND                                              E18003
+     C*                                                                   E18003
+     C           ACTN      IFEQ 'A'                                       E18003
+     C           *IN99     IFEQ '0'                                       E15877
+     C           TRNRX     ANDNETRNR                                      E15877
+     C           FNORX     ANDLELNOR                                      E15877
+     C                     ADD  1         EC         32                   E15877
+     C                     MOVEL' 203'    ERR,EC                          E15877
+     C                     ELSE                                           E15877
+     C                     READPTRNOR1                   99               E15877
+     C           *IN99     IFEQ '0'                                       E15877
+     C           TRNRX     ANDNETRNR                                      E15877
+     C           FNOR      ANDLELNORX                                     E15877
+     C                     ADD  1         EC         31                   E15877
+     C                     MOVEL' 203'    ERR,EC                          E15877
+     C                     END                                            E15877
+     C                     END                                            E15877
+     C*                                                                   E18003
+     C**  ELSE ACTION IS INSERT                                           E18003
+     C*                                                                   E18003
+     C                     ELSE                                           E18003
+     C           *IN99     IFEQ '0'                                       E18003
+     C           LNOR      ANDLEFNORX                                     E18003
+     C                     ADD  1         EC         32                   E18003
+     C                     MOVEL' 203'    ERR,EC                          E18003
+     C                     ELSE                                           E18003
+     C                     READPTRNOR1                   99               E18003
+     C           *IN99     IFEQ '0'                                       E18003
+     C           FNOR      ANDLELNORX                                     E18003
+     C                     ADD  1         EC         31                   E18003
+     C                     MOVEL' 203'    ERR,EC                          E18003
+     C                     END                                            E18003
+     C*                                                                   E18003
+     C**  IF BEGINNING OF FILE DETECTED                                   E18003
+     C*                                                                   E18003
+     C           *IN99     IFEQ '1'                                       E18003
+     C                     READ TRNOR1                   99               E18003
+     C           FNOR      IFLE LNORX                                     E18003
+     C                     ADD  1         EC         31                   E18003
+     C                     MOVEL' 203'    ERR,EC                          E18003
+     C                     END                                            E18003
+     C                     END                                            E18003
+     C*                                                                   E18003
+     C                     END                                            E18003
+     C                     END                                            E18003
+     C*                                                                   E15877
+     C           *IN31     IFEQ '0'                                       E18003
+     C                     Z-ADDFNOR      TRNR1K                          E15877
+     C           TRNR1K    SETLLTRNOR1                                    E15877
+     C                     READPTRNOR1                   99               E15877
+     C           *IN99     IFEQ '0'                                       E15877
+     C           TRNRX     ANDNETRNR                                      E15877
+     C           LNORX     ANDGEFNOR                                      E15877
+     C                     ADD  1         EC         31                   E15877
+     C           *IN32     IFNE '1'                                       E18003
+     C                     MOVEL' 203'    ERR,EC                          E15877
+     C                     END                                            E18003
+     C                     END                                            E15877
+     C                     END                                            E18003
+     C                     END                                            E15877
+     C*                                                                   E18003
+     C** ENSURE THAT INPUT RANGE IS NOT CONTAINED ENTIRELY WITHIN         E18003
+     C** ANOTHER RANGE                                                    E18003
+     C*                                                                   E18003
+     C           ACTN      IFEQ 'I'                                       E18003
+     C           *IN31     ANDEQ'0'                                       E18003
+     C           *IN32     ANDEQ'0'                                       E18003
+     C           TRNR1K    SETLLTRNOR1                                    E18003
+     C                     READ TRNOR1                   99               E18003
+     C           *IN99     IFEQ '0'                                       E18003
+     C           FNOR      ANDGEFNORX                                     E18003
+     C           LNOR      ANDLELNORX                                     E18003
+     C                     ADD  1         EC         31                   E18003
+     C                     MOVE '1'       *IN32                           E18003
+     C                     MOVEL' 203'    ERR,EC                          E18003
+     C                     END                                            E18003
+     C                     END                                            E18003
+     C*                                                                   E18003
+     C** TRADE NUMBER RANGE DESCRIPTION
+     C*
+     C                     MOVELSTRDS     TRDS
+     C           TRDS      IFEQ *BLANK
+     C                     ADD  1         EC         33
+     C                     MOVEL' 204'    ERR,EC
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** IF ACTION=D WITH ENTER PRESSED THEN ERROR                         -
+     C*
+     C           ACTN      IFEQ 'D'
+     C                     MOVELINF,10    INFMSG
+     C                     END
+     C                     END
+     C                     ELSE
+     C*
+     C** IF COMMAND 4 TAKEN
+     C*
+     C           AID       IFEQ '04'
+     C*
+     C** COMMAND 4 TAKEN CORRECTLY WHEN ACTION IS D-FORCE 'RECORD ADVANCE'
+     C*
+     C           ACTN      IFEQ 'D'
+     C                     MOVEL'RA'      AID
+     C*
+     C** COMMAND 4 TAKEN INCORRECTLY WHEN ACTION IS NOT D-HENCE ERROR
+     C*
+     C                     ELSE
+     C                     MOVELINF,11    INFMSG
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C** ERROR ON SCREEN SO HIGHLIGHT ERROR CODES
+     C*
+     C           EC        IFNE *ZERO
+     C                     MOVELHI        ERRMSG
+     C                     END
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** DEFLTS S/R TO FORMAT DEFAULT FIELD VALUES FOR INSERT SCREEN ETC
+      ** CALLED FROM UPDATE; VALIDD
+      ** CALLS NO OTHER S/R'S
+      **
+     C*================================================================
+     C           DEFLTS    BEGSR                           ** DEFLTS BSR**
+     C*
+     C** DEFAULTS FOR RECORD
+     C*
+     C** THERE ARE NO DEFAULTS FOR RECORD
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** INITRC S/R TO INITIALISE ALL FILE FIELDS TO ZERO/BLANK
+      ** CALLED FROM UPDATE; UPDFLS
+      ** CALLS NO OTHER S/R'S
+      **
+     C*================================================================
+     C*
+     C           INITRC    BEGSR                           ** INITRC BSR**
+     C*
+     C** INITIALIZE ALL DATA ON RECORD DEFINED IN DETREC (KEY EXCLUDED)
+     C*
+     C                     MOVEL*BLANK    DETREC
+     C                     Z-ADD*ZERO     FNOR
+     C                     Z-ADD*ZERO     LNOR
+     C                     Z-ADD*ZERO     TNBF
+     C                     Z-ADD*ZERO     LCD
+     C                     Z-ADD*ZERO     TNLU
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** TRSFS S/R TO FORMAT RECORD FIELDS FOR SCREEN
+      ** CALLED FROM UPDATE
+      ** CALLS NO OTHER S/R'S
+      **
+     C*================================================================
+     C*
+     C           TRSFS     BEGSR                           ** TRSFS BSR **
+     C*
+     C** TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+     C*
+     C** TRANSLATE FNOR
+     C*
+     C           FNOR      IFNE *ZERO
+     C                     MOVELFNOR      SFNOR
+     C                     ELSE
+     C                     MOVEL*BLANK    SFNOR
+     C                     END
+     C*
+     C** TRANSLATE LNOR
+     C*
+     C           LNOR      IFNE *ZERO
+     C                     MOVELLNOR      SLNOR
+     C                     ELSE
+     C                     MOVEL*BLANK    SLNOR
+     C                     END
+     C*
+     C** TRANSLATE TRDS
+     C*
+     C                     MOVELTRDS      STRDS
+     C*
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** UPDFLS S/R TO UPDATE FILE RECORDS
+      ** CALLED FROM UPDATE
+      ** CALLS INITRC; ZTNLU1; INFSR;VALIDD
+      **
+     C*================================================================
+     C           UPDFLS    BEGSR                           ** UPDFLS BSR**
+     C*
+     C** U P D A T E   F I L E S
+     C*
+     C** INITIALIZE ALL FIELDS ON THE RECORD (IE ZEROIZE/BLANK OUT)
+     C*
+     C                     EXSR INITRC
+     C*
+     C** RETRIEVE NEXT TRANSACTION NUMBER
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C** INITIALISE ERROR BAND
+     C*
+     C                     MOVEL*BLANK    INFMSG
+     C*
+     C**               I  N  S  E  R  T  S                 -  S T A R T
+     C*
+     C           ACTN      IFEQ 'I'
+     C           TRNORK    CHAINTRNORDF              60
+     C           TNLU      IFNE STNLU
+     C                     EXSR UPDOWS
+     C*
+     C** IF NO PROCESSING OCCURRED EXIT TO SUPPRESS AUDIT UPDATE
+     C*
+     C                     GOTO XTUPDF
+     C*
+     C                     ELSE
+     C*
+     C** TRANSLATE RECORD DETAILS FROM SCREEN LAYOUT TO FILE LAYOUT
+     C*
+     C                     EXSR VALIDD
+     C                     MOVEL'D'       RECI
+     C                     Z-ADDRUND      LCD
+     C                     MOVEL'I'       CHTP
+     C                     MOVELNATN      TNLU
+     C                     END
+     C   60                WRITETRNORDF                15
+     C*
+     C** TEST FOR UPDATE BY ANOTHER W/S, OR A TERMINAL ERROR
+     C*
+     C           *IN15     IFEQ '1'
+     C           STATUS    ANDEQ01021
+     C           TRNORK    CHAINTRNORX               15
+     C           *IN15     IFEQ '0'
+     C                     EXSR UPDOWS
+     C                     GOTO XTUPDF
+     C                     END
+     C                     END
+     C           *IN15     IFEQ '1'
+     C                     EXSR INFSR
+     C                     END
+     C*
+     C  N60                UPDATTRNORDF
+     C                     ELSE
+     C*
+     C**               I  N  S  E  R  T  S                 -  E N D
+     C*
+     C**               A  M  E  N  D  S                    -  S T A R T
+     C*
+     C           ACTN      IFEQ 'A'
+     C           TRNORK    CHAINTRNORDF              60
+     C           TNLU      IFNE STNLU
+     C                     EXSR UPDOWS
+     C*
+     C** IF NO PROCESSING OCCURRED EXIT TO SUPPRESS AUDIT UPDATE
+     C*
+     C                     GOTO XTUPDF
+     C*
+     C                     ELSE
+     C*
+     C** TRANSLATE RECORD DETAILS FROM SCREEN LAYOUT TO FILE LAYOUT
+     C*
+     C                     EXSR VALIDD
+     C                     Z-ADDRUND      LCD
+     C                     MOVEL'A'       CHTP
+     C                     MOVELNATN      TNLU
+     C                     END
+     C  N60                UPDATTRNORDF
+     C                     ELSE
+     C*
+     C**               A  M  E  N  D  S                    -  E N D
+     C*
+     C**               D  E  L  E  T  E  S                 -  S T A R T
+     C*
+     C           ACTN      IFEQ 'D'
+     C           TRNORK    CHAINTRNORDF              60
+     C           TNLU      IFNE STNLU
+     C                     EXSR UPDOWS
+     C*
+     C** IF NO PROCESSING OCCURRED EXIT TO SUPPRESS AUDIT UPDATE
+     C*
+     C                     GOTO XTUPDF
+     C*
+     C                     ELSE
+     C                     MOVEL'*'       RECI
+     C                     Z-ADDRUND      LCD
+     C                     MOVEL'D'       CHTP
+     C                     MOVELNATN      TNLU
+     C                     END
+     C  N60                UPDATTRNORDF
+     C                     END
+     C*
+     C**               D  E  L  E  T  E  S                 -  E N D
+     C*
+     C                     END
+     C                     END
+     C*
+     C** GET AUDIT RECORD
+     C*
+     C           1         CHAINTRNORAF              99
+     C*
+     C** UPDATE AUDIT RECORD IF FOUND
+     C*
+     C           *IN99     IFEQ '0'
+     C*
+     C** FOR INSERT, UPDATE LIVE RECORDS INSERTED TODAY, AND NO. OF LIVE
+     C** RECORDS
+     C*
+     C           ACTN      IFEQ 'I'
+     C                     ADD  1         NINS
+     C                     ADD  1         NORE
+     C                     END
+     C*
+     C** FOR AMENDS, UPDATE NO. OF RECORDS AMENDED TODAY
+     C*
+     C           ACTN      IFEQ 'A'
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C** FOR DELETIONS, UPDATE NO. DELETIONS TODAY, AND NO. OF LIVE RECS
+     C*
+     C           ACTN      IFEQ 'D'
+     C                     ADD  1         NDEL
+     C                     SUB  1         NORE
+     C                     END
+     C*
+     C** FORMAT COMIT TEXT
+     C*
+     C                     TIME           MTIME
+     C                     MOVELACTN      ACTNX
+     C                     MOVEASCRCTL    DET,01
+     C                     MOVEADETS      DET,05
+     C*
+     C** UPDATE AUDIT RECORD
+     C*
+     C                     UPDATTRNORAF
+     C*
+     C** C  O  M  I  T
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C** AUDIT RECORD NOT FOUND: DATABASE ERROR
+     C*
+     C                     ELSE
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+     C                     MOVEL'TRNOR'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C           XTUPDF    ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** UPDOWS S/R TO PROCESS UPDATE BY ANOTHER WORKSTATION
+      ** CALLED FROM UPDFLS
+      ** CALLS NO OTHER S/R'S
+      **
+     C*================================================================
+     C           UPDOWS    BEGSR                           ** UPDOWS BSR**
+     C**
+     C                     ROLBK
+     C**
+     C**   SET UP NEXT SCREEN TO BE DISPLAYED:
+     C**   IF RECORD IS LIVE, ALLOW AMEND PROCESSING;
+     C**
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'A'       ACTN
+     C                     ELSE
+     C**
+     C**   IF RECORD HAS BEEN DELETED, ALLOW ENQUIRY
+     C**
+     C                     MOVEL'E'       ACTN
+     C                     END
+     C**
+     C**   SET SCREEN PROCESSOR TO UPDATE AND MOVE UPDATE MESSAGE TO ERROR
+     C**
+     C                     MOVEA'001'     *IN,10
+     C                     MOVELINF,12    INFMSG
+     C**
+     C                     ENDSR
+     C**
+     C*================================================================
+      /EJECT
+     C** ZTNLU1 SUBROUTINE
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C*
+      /EJECT
+     C*================================================================
+     C**
+     C**   FILE EXEPTION/ERROR HANDLING SUBROUTINE
+     C**
+     C           INFSR     BEGSR
+     C**
+     C** ROLL BACK CHANGES AND CANCEL PROGRAM
+     C**
+     C                     ROLBK
+     C                     MOVE '*CANCL'  EXTTAG  6
+     C**
+     C                     ENDSREXTTAG
+     C*================================================================
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+      * /104633/ Change
+      * INF,7  DELETION F3:F10 to delete this record:F12:Rollup:Rolldown:help
+      * INF,10 F10 is reqiured
+      * INF,11 F10 is not reqiured
+**  CPY@
+(c) Finastra International Limited 2001
+** INF
+ Enter:Action Code I,A,D,E and selection:Review from point:F3:Help
+ Enter:Review from point:Action Code A,D,E:F3:F12:Rollup:Rolldown:     Help
+ No Records Found: Enter Review from point; F3; F12; Help
+ INSERTION Enter:F3:F12:Help
+ AMENDMENT Enter:F3:F12:Rollup:Rolldown:Help
+ ENQUIRY Enter:F3:F12:Rollup:Rolldown:Help
+ DELETION F3:F10=Delete record:F12:Rollup:Rolldown:Help
+ Rollup is not possible
+ Rolldown is not possible
+ F10=Confirm
+ 
+ Record has been updated by another workstation

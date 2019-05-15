@@ -1,0 +1,429 @@
+      *****************************************************************
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 10Mar06               *
+      *  Prev Amend No. BUG4470            Date 01Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 201732             Date 24Jan02               *
+      *                 198870             Date 12Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 194978             Date 28Jun01               *
+      *                 194682             Date 21Jun01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 166612             Date 16Oct00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 120880             Date 05Aug97               *
+      *                 CRT002  *CREATE    DATE  1DEC95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Change Customer Number to alpha.                    *
+      *  BUG4470- BOI cashier error 26. Use Cust. Name & Address 1 as *
+      *           the customer name in the transaction slips.         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  201732 - DB err when reversing 2 successive ret a/c transfers*
+      *           also add branch key field for chain on REIAC        *
+      *           Also remove check on *IN22                          *
+      *  198870 - If terminal error, on retail account transfer, don't*
+      *           REIAC as a/c details are not set up.If terminal err *
+      *           on forwarded record don't pass host ref back to     *
+      *           to cashier if Error exists on a forwarded record.   *
+      *           Pad uncleared funds field with leading zeros for    *
+      *           correct format for cashier - THIS NEEDS SUBROUTINE  *
+      *           PAD TO BE IN THE PROGRAM.  Correct db error in ret  *
+      *           a/c transfer. Applies 194391,198408,197835, 198448  *
+      *  194978 - Error in reversing Exchange Cash transaction '0JI'  *
+      *           (Cashier).                                          *
+      *  194682 - Avoind machine error, MCH3601 (Pointer not set for  *
+      *           location referenced.), to occur. Pass correct para- *
+      *           meter to AOCUSTR0.                                  *
+      *  166612 - Set up terminal error message correctly, additional *
+      *           to 163583.                                          *
+      *  120880 - Store and Forward Function.                         *
+      *  CRT002 - RBA Interface.                                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *            MOVDET - Move Details to Send to Outgoing DataQ    *
+      *                                                               *
+      * CALLS      PAD    - Pad field with zeros                      *    198870
+      *                   -                                           *
+      *                                                               *
+      * CALLED BY  DSPINL - Display Initial Screen                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MOVDET    BEGSR                           ** MOVDET **
+      *
+      **  Credit accnt key list
+      *
+     C           KCACNT    KLIST
+     C**********           KFLD           @CNUM2  60                                          CSD027
+     C                     KFLD           @CNUM2  6                                           CSD027
+     C                     KFLD           @CCY2   3
+     C**********           KFLD           @ACOD2  40                                          CGL029
+     C                     KFLD           @ACOD2 100                                          CGL029
+     C                     KFLD           @ACSQ2  20
+     C                     KFLD           @BRCA2  3                                           201732
+      *
+      **  Message Type, workstation id, and Host Message Id.
+      *
+     C                     MOVELRAMSTY    RBMSTY
+     C                     MOVEL*BLANKS   RBHMSI
+      *
+      **  Terminal or Warning Errors Exist.
+      *
+     C           @TI       IFGT 0
+     C           @WI       ORGT 0
+      *
+      ** Convert warning messages to Cashier Format
+      *
+     C                     MOVEA*BLANKS   WMS1
+     C                     MOVEA*BLANKS   WMS2
+     C                     MOVEASMSG1     WMS1
+     C                     Z-ADD1         X
+      *
+     C           WMS1,X    DOWNE*BLANKS
+     C           X         ANDLE7
+      *
+     C           WMS1,X    LOKUPTABC1     TABC2          25
+      *
+      **  Assign msg id '0150' for no sufficient funds for Cashier to
+      **  display avail. balance window.
+      *
+     C           WMS1,X    IFEQ 'N.S.F.'
+     C                     MOVE '0150'    RBHMSI
+     C                     ENDIF
+      *
+     C           *IN25     IFEQ '1'
+     C                     MOVELTABC2     WMS2,X
+     C                     ELSE
+     C                     MOVEL'CDNF'    WMS2,X
+     C                     END
+     C                     ADD  1         X
+      *
+     C                     END
+      *
+     C                     SUB  1         X
+     C                     MOVE X         WWNUM
+     C                     MOVELWHSMS     RBHSMS
+      *
+     C           @TI       IFGT 0                                         166612
+     C                     MOVEL'E'       RBHMSS                          166612
+     C                     ELSE                                           166612
+     C                     MOVEL'W'       RBHMSS
+     C                     ENDIF                                          166612
+      *                                                                   166612
+     C                     MOVEL'1'       RBAEFL
+      *                                                                   120880
+     C           WFWST     IFEQ 'Y'                                       120880
+     C                     MOVEL'S'       RBFPSF                          120880
+     C                     ENDIF                                          120880
+      *
+     C                     ENDIF
+      *
+      **  Errors exist before detail screen appears.
+      *
+     C           *IN69     IFEQ '1'
+     C********** *IN22     ANDEQ'0'                                                           201732
+     C                     MOVEL'E'       RBHMSS
+     C                     MOVEL'1'       RBAEFL
+      *                                                                   120880
+     C           WFWST     IFEQ 'Y'                                       120880
+     C                     MOVEL'E'       RBFPSF                          120880
+     C                     ENDIF                                          120880
+      *                                                                   120880
+     C********** PFNCD     IFEQ '00A'                                                         194978
+     C           @FNCD     IFEQ '00A'                                                         194978
+     C           @RBAE     ANDEQ'2'
+     C                     MOVEL'2'       RBAEFL
+     C                     ENDIF
+     C                     MOVE @MSGID    RBHMSI
+     C                     MOVEL*BLANKS   WUMSGD 78
+     C                     MOVEL'N'       WSUCM
+      *
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    RBHSMS
+      *
+     C                     ENDIF
+      *
+      **  Valid record received.
+      *
+     C           *IN69     IFEQ '0'
+      *
+      **  If no posting was made against suspense
+      **  and transaction is account related                                                  194978
+     C           WSUS      IFNE 'Y'
+     C           @FNCD     ANDNE'0JI'                                                         194978
+     C           @FNCD     ANDNE'0JS'                                                         194978
+     C           @FNCD     ANDNE'0JX'                                                         194978
+     C           @FNCD     ANDNE'0JT'                                                         194978
+     C           @FNCD     ANDNE'0JV'                                                         194978
+     C           @FNCD     ANDNE'0JA'                                                         194978
+      *
+      **  Retrieve Passbook Indicator.
+      *
+     C                     OPEN REIAC
+     C           KLACNT    CHAINREIAC                80
+     C                     CLOSEREIAC
+      *
+     C           *IN80     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     MOVELPBKU      RBPBI1
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'REIAC'   DBFILE           ***************
+     C                     Z-ADD30        DBASE            ** DB ERR 30 **
+     C                     MOVEL@ACCN     DBKEY            ***************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Retrieve Customer Shortname.
+      *
+     C                     MOVELCNUM      @@CNUM
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @@CNUM    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C********** SDCUST    PARM SDCUST    DSFDY                                               194682
+     C           SDCUST    PARM SDCUST    DSSDY                                               194682
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELBBCSSN    RBASN1
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD31        DBASE            ** DB ERR 31 **
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     MOVELCNUM      DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Check function code                                                                 194978
+     C********** PFNCD     IFEQ '00A'                                                         194978
+     C           @FNCD     IFEQ '00A'                                                         194978
+     C           @TI       ANDNE1                                                             198870
+      *
+      **  If no posting was made against suspense
+      *
+     C           WSUS      IFNE 'Y'
+      *
+      ** Retrieve Passbook Indicator (credit side)
+      *
+     C           PFNCD     IFEQ '0JD'                                                         198870
+     C********** @CNUM2    ANDEQ*ZEROS                                                  198870201732
+     C           @CCY2     ANDEQ*BLANKS                                                       198870
+     C********** @ACOD2    ANDEQ*ZEROS                                                  198870201732
+     C********** @ACSQ2    ANDEQ*ZEROS                                                  198870201732
+     C**********           Z-ADD@@CUSN    @CNUM2                                       198870 CSD027
+     C                     MOVEL@@CUSN    @CNUM2                                              CSD027
+     C                     MOVE @@CCY     @CCY2                                               198870
+     C                     Z-ADD@@ACOD    @ACOD2                                              198870
+     C                     Z-ADD@@ACSQ    @ACSQ2                                              198870
+     C                     MOVE @@BRCA    @BRCA2                                              201732
+     C                     ELSE                                                               198870
+     C**********           Z-ADD0         @@CUSN  60                                   198870 CSD027
+     C                     MOVE *BLANKS   @@CUSN  6                                           CSD027
+     C                     MOVE *BLANKS   @@CCY   3                                           198870
+     C**********           Z-ADD0         @@ACOD  40                                   198870 CGL029
+     C                     Z-ADD0         @@ACOD 100                                          CGL029
+     C                     Z-ADD0         @@ACSQ  20                                          198870
+     C                     MOVE *BLANKS   @@BRCA  3                                           201732
+     C                     MOVE @BRCAC    @BRCAC  3                                           201732
+     C                     MOVE @BRCAC    @BRCA2                                              201732
+     C                     ENDIF                                                              198870
+      *                                                                                       201732
+     C                     OPEN REIAC
+     C           KCACNT    CHAINREIAC                80
+     C                     CLOSEREIAC
+      *
+     C           *IN80     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     MOVELPBKU      RBPBI2
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'REIAC'   DBFILE           ***************
+     C                     Z-ADD32        DBASE            ** DB ERR 32 **
+     C                     MOVEL@ACCN     DBKEY            ***************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *                                                                                       198870
+      ** Reset Chain back to debit a/c                                                        198870
+      *                                                                                       198870
+     C                     OPEN REIAC                                                         198870
+     C           KLACNT    CHAINREIAC                80                                       198870
+     C                     CLOSEREIAC                                                         198870
+      *                                                                                       198870
+     C           *IN80     IFEQ '0'                                                           198870
+     C           RECI      ANDEQ'D'                                                           198870
+     C                     MOVELPBKU      RBPBI1                                              198870
+     C                     ELSE                                                               198870
+     C           *LOCK     IN   LDA                                                           198870
+     C                     MOVEL'REIAC'   DBFILE           ***************                    198870
+     C                     Z-ADD30        DBASE            ** DB ERR 30 **                    198870
+     C                     MOVEL@ACCN     DBKEY            ***************                    198870
+     C                     EXSR DBERR                                                         198870
+     C                     ENDIF                                                              198870
+      *
+      **  Retrieve Customer Shortname (credit side)
+      *
+     C                     MOVEL@CNUM2    @@CNUM
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @@CNUM    @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C********** SDCUST    PARM SDCUST    DSFDY                                               194682
+     C           SDCUST    PARM SDCUST    DSSDY                                               194682
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELBBCSSN    RBASN2
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD33        DBASE            ** DB ERR 33 **
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     MOVEL@CNUM2    DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Account Name.
+      *
+     C**********           MOVELANAM      RBCCNM                                             BUG4470
+     C                     MOVELBBCNA1    RBCCNM                                             BUG4470
+      *
+      **  Uncleared Funds.
+      *
+     C                     MOVEL*ZEROS    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RBCAUF
+     C                     MOVE *BLANKS   WFIELD 16                                           198870
+     C                     MOVE RBCAUF    WFIELD                                              198870
+     C                     EXSR PAD                                                           198870
+     C                     MOVEARTE       RBCAUF                                              198870
+     C                     MOVEA*BLANKS   RTE                                                 198870
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Completed Severity.  Transaction Reference should be comprised
+      **  of the Teller Id and Transaction Number.
+      *
+     C           @TI       IFEQ 0
+     C           @WI       ANDEQ0
+     C                     MOVEL'C'       RBHMSS
+      *                                                                   120880
+     C           WFWST     IFEQ 'Y'                                       120880
+     C                     MOVEL'Y'       RBFPSF                          120880
+     C                     MOVEL*BLANK    RBHMSS                          120880
+     C                     ENDIF                                          120880
+      *                                                                   120880
+     C                     ENDIF
+      *
+     C           @TI       IFEQ 0                                                             198870
+     C                     MOVELD@TLID    @WRK8   8
+     C                     MOVE @NATN     @WRK8
+     C                     MOVEL@WRK8     RBTRN1
+     C                     MOVEL'Y'       WSUCM
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     TIME           WTMDS
+     C           WTHR      CAT  ':'       WA
+     C           WTMN      CAT  ':'       WB
+     C           WA        CAT  WB        WC
+     C           WC        CAT  WTSS      WCMTM
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    @RBAE   1
+      *
+     C                     MOVEL'DS'      WSTAT
+     C                     TIME           WTMDS
+     C           WTHR      CAT  ':'       WA
+     C           WTMN      CAT  ':'       WB
+     C           WA        CAT  WB        WC
+     C           WC        CAT  WTSS      WSTTM
+     C                     MOVELD@TLBC    WBRCA
+      *
+      **  Account Name.
+      *
+      **  And an account is involved                                                          194978
+     C           @FNCD     IFNE '0JI'                                                         194978
+     C           @FNCD     ANDNE'0JS'                                                         194978
+     C           @FNCD     ANDNE'0JX'                                                         194978
+     C           @FNCD     ANDNE'0JT'                                                         194978
+     C           @FNCD     ANDNE'0JV'                                                         194978
+     C           @FNCD     ANDNE'0JA'                                                         194978
+     C**********           MOVELANAM      RBDCNM                                             BUG4470
+     C                     MOVELBBCNA1    RBDCNM                                             BUG4470
+      *
+      **  Uncleared Funds.
+      *
+     C                     MOVEL*ZEROS    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RBDAUF
+     C                     MOVE *BLANKS   WFIELD                                              198870
+     C                     MOVE RBDAUF    WFIELD                                              198870
+     C                     EXSR PAD                                                           198870
+     C                     MOVEARTE       RBDAUF                                              198870
+     C                     MOVEA*BLANKS   RTE                                                 198870
+     C                     ENDIF                                                              194978
+      *
+      **  Timestamp.
+      *
+     C           *LOCK     IN   CITFTS
+     C                     Z-ADD0         WNSN    20
+     C                     MOVE WNNSS     WNSN
+     C                     ADD  1         WNSN
+      *
+     C                     MOVE *BLANKS   WNNSS
+     C                     MOVE WNSN      WNNSS
+     C                     OUT  CITFTS
+      *
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C           @@RTN     IFEQ '0'
+     C                     MOVE @@VDT     WCDAT   7
+     C                     END
+     C           @@YR      IFGE 2000
+     C                     MOVEL'1'       WCDAT
+     C                     ELSE
+     C                     MOVEL'0'       WCDAT
+     C                     END
+      *
+     C                     TIME           WTIME   60
+     C                     MOVE WTIME     WTIMEC  6
+      *
+     C           WCDAT     CAT  WTIMEC    WDT13  13
+     C           WDT13     CAT  WNNSS     RBDTMS
+      *
+      **  Uncleared Funds Flag.
+      *
+     C                     MOVEL'N'       RBFTBC
+      *
+      **  Move fields from Incoming Request Message - REPOII
+      **  to Outgoing Response Message - REPOIO
+      *
+     C                     MOVELWMAC1     RBEACN
+     C                     MOVELRACCY1    RBCCY1
+     C                     MOVELRACCY2    RBCCY2
+     C                     MOVELRATRA1    RBAMT1
+     C                     MOVELRAVLD1    RBVDAT
+     C                     MOVELRARFLN    RBREF
+     C                     MOVELRANRL1    RBNAR1
+     C           RASP1     CAT  RASPCD    WORK5   5
+     C                     MOVELWORK5     RBSPNO
+      *
+     C                     ENDSR
+      *****************************************************************

@@ -1,0 +1,2412 @@
+     H        1
+     F********************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO On-line update of IRS position files')        *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Access Objects Module                                   *
+     F*                                                                  *
+     F*     AOOUSWU0 - On-line Update of Interest Rate Swap Positions    *
+     F*                files                                             *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                         *
+      *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *      
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 CLE134             Date 01Aug12               *
+      *                 263666             Date 01Feb10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 03Mar10               *
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247544             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG5519            Date 22Feb05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 TDA101             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 217684             Date 12May03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 209676             Date 09Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP055             Date 13Mar02               *
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 182370             Date 05Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CIR003             Date 13Sep00               *
+      *                 CIR006             Date 12Sep00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 182090             Date 19Jun00               *
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 151336             Date 05Jan99               *
+      *                 CEU003             Date 05Nov97               *
+     F*                 110518             Date 12May97                  *
+     F*                 CSW005             Date 18Jul96                  *
+     F*                 106074             DATE 18JUL96                  *
+     F*                 105694             DATE 11JUL96                  *
+     F*                 CIR001  *CREATE    DATE 01NOV95                  *
+     F*                 CIR002  *CREATE    DATE 01NOV95                  *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *      
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
+      *           processing as amended by 242286.  (Recompile)       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG5519 - Pojections for principal exchange are not          *
+      *            generated. Settlement details are not populated.   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  TDA101 - After and Before image data structure (Z#AST        *
+      *           and Z#BST) used in program is short FRA/IRS         *
+      *           transaction.  (Recompile)                           *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  209676 - If buy-out details had already been entered, gene-  *
+      *           rate projections for the exchange of principal on   *
+      *           buy-out value date.                                 *
+      *  CAP055 - APIs for FRA/IRS Caps/Collars/Floors                *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  182370 - Incorrect calculation of number of days for calcu-  *
+      *           lation basis 6. Amended /COPY such that for calcu-  *
+      *           lation basis 6, the number of days per year is      *
+      *           equal to 366 when the year in question is a leap    *
+      *           year, and 365 days/year for non-leap years. Calcu-  *
+      *           lation was made so that processing would be in-line *
+      *           with that of /COPY ZINTDY.                          *
+      *  CIR003 - Principal Exchange on Cross Currencies IRS.         *
+      *  CIR006 - FRA/IRS Amortisation of Caps/Collars/Floors &       *
+      *           Individual Compounding Swaps.                       *
+      *  182090 - FRA/IRS Business Day Conventions                    *
+      *         - Fixed the locking error for DLOLCFPD in DL2900 when *
+      *           a record is bypassed in this program because the    *
+      *           cash flow amounts on both sides have been met       *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to ZCBDYS changes                    *
+     F*  151336 - Wrong update of RSACMTPD when settlement currency      *
+     F*           entered for 'RS' and 'RX' deals and 'CIR001' *ON.      *
+     F*  CEU003 - EMU Dealing Settlement Ccy conversion.                 *
+     F*  110518 - Should use record 2 for OLPOS update not 1.            *
+     F*  CSW005 - MT34n and MT36n Message Generation. This program       *
+     F*  106074 - Calculate the tax payable and output to PF/DLOLCFPD.   *
+     F*           has been amended to update the cash-flow records       *
+     F*           with the amounts calculated so that they can be        *
+     F*           read in by other processes.                            *
+     F*  105694 - Allow for accrued interest already calculated.         *
+     F*           Added for CSW005 - MT34n and MT36n Message             *
+     F*           Generation for FRA/IRSs.                               *
+     F*  CIR001 - Interest Rate Calendars                                *
+     F*  CIR002 - Compunding of Interest                                 *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*****************************************************************
+     FDLPCSCL0IF  E           K        DISK                               CIR003
+     FDLOLACPDIF  E           K        DISK
+     F*DLOLCFPDIF*E***********K        DISK                               CSW005
+     FDLOLCFPDUF  E           K        DISK                               CSW005
+     F/COPY WNCPYSRC,AOOUSWU0F1
+     E/SPACE 5
+     E                    ZF29   14  32  5 0
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/SPACE 5
+     E*
+     E/COPY WNCPYSRC,AOOUSWU0E1
+     E**  (Posting) Naratives
+     E**********          ##NAR   1   3 30                                CIR003
+     E**********          ##NAR   1   6 30                                             CIR003 CAP055
+     E                    ##NAR   1   7 30                                                    CAP055
+     E*
+     E/COPY WNCPYSRC,AOOUSWU0E2
+     E*  Subroutine stack
+     E                    @STK       20 10
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E/COPY WNCPYSRC,AOOUSWU0E3
+     E/COPY ZSRSRC,ZDATE9Z1                                               182370
+     E/COPY ZSRSRC,ZDAT10Z1                                               182370
+     I/SPACE 5
+     ISCSARD    E DSSCSARDPD                                              CIR002
+     I** SAR Details Accessed via access program                          CIR002
+     I*                                                                   CIR002
+     IDSFDY     E DSDSFDY                                                 CIR002
+     ISDDEAL    E DSSDDEALPD                                              106074
+     I* Dealing details accessed via access program                       106074
+     I***SDGELR*   E DSSDGELRPD                                                    MD035545 MD047993
+     I**GENERAL*LEDGER*DETAILS*ACCESSED*VIA*ACCESS*PROGRAM**********               MD035545 MD047993
+     I**********    QQACCD                          ACCDQQ                         MD035545 MD047993
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     I*
+     IZ#WSTS    E DSZ#WST                                                 CIR003
+     IZ#XSTS    E DSZ#XST                                                 CIR003
+     IZ#YSTS    E DSZ#YST                                                 CIR003
+     IZ#ZSTS    E DSZ#ZST                                                 CIR003
+     ISETIN     E DSDLGXSTPD                                              CIR003
+      *                                                                   CIR003
+     I/COPY WNCPYSRC,AOOUSWU0I1
+     IIRDEAL    E DSDEALSDG
+     I              LCD                             ##LCD                 ?
+     I*
+     I##PAYD      DS
+     I                                        1   1 ##PAY
+     I                                        2   3 ##PAYM
+     I**********                              4  15 ##PAYA                                    CGL029
+     I**********                             16  18 ##PAYB                                    CGL029
+     I                                        4  21 ##PAYA                                    CGL029
+     I                                       22  24 ##PAYB                                    CGL029
+     I##RECD      DS
+     I                                        1   1 ##REC
+     I                                        2   3 ##RECM
+     I**********                              4  15 ##RECA                                    CGL029
+     I**********                             16  18 ##RECB                                    CGL029
+     I                                        4  21 ##RECA                                    CGL029
+     I                                       22  24 ##RECB                                    CGL029
+     I##SETD      DS
+      * pay/receive (P/R)
+     I                                        1   1 ##PYRC
+      * settlement method
+     I                                        2   3 ##SETM
+      * settlement account
+     I**********                              4  15 ##SETA                                    CGL029
+     I                                        4  21 ##SETA                                    CGL029
+     I                                        4   5 ##NOSN
+     I                                        4  13 ##ACNO
+     I                                        4   9 ##CNUM
+     I**********                             10  13 ##ACOD                                    CGL029
+     I**********                             14  15 ##ACSQ                                    CGL029
+     I                                       10  19 ##ACOD                                    CGL029
+     I                                       20  21 ##ACSQ                                    CGL029
+      * settlement branch
+     I**********                             16  18 ##BRCA                                    CGL029
+     I                                       22  24 ##BRCA                                    CGL029
+      *
+      *  Calling parameter data structure for AOSPOSU0
+      *
+     IC#DTA       DS                            256
+      *  Account type N=nostro nbr F=Full nostro G=General Ledger
+      *               P=Partial Ledger R= Retail Number  X= no settlement
+     I                                        1   1 C#ATYP
+      *               Full General Ledger - CNUM/CCY/ACOD/ACSQ
+     I                                        2  19 C#ACCT
+     I**********                              2   70C#CNU1                                    CSD027
+     I                                        2   7 C#CNU1                                    CSD027
+     I                                        8  10 C#CCY1
+     I**********                             11  140C#ACO1                                    CGL029
+     I                                       15  160C#ACS1
+     I                                       17  19 C#BRC1
+      *               Nostro number
+     I                                        2   30C#NOSN
+      *               Full Nostro - CCY/NOSN
+     I                                        2   6 C#NOS
+      *               Retail Number
+     I                                        2  110C#ACNO
+      *               Partial Account - CNUM/ACOD/ACSQ
+     I**********                              2   70C#CNUM                                    CSD027
+     I                                        2   7 C#CNUM                                    CSD027
+     I**********                              8  110C#ACOD                                    CGL029
+     I                                       12  130C#ACSQ
+      *               Branch of account if Partial                      '
+     I                                       14  16 C#BRCA
+      *               OLPOS Incoming/Outgoing Indicator 'I' or 'O' or ' '
+      *                     ' ' no OLPOS update
+     I                                       24  24 C#IO
+      *               Currency of transaction
+     I                                       25  27 C#CCY
+      *               Transaction Type
+     I                                       28  29 C#TRYP
+      *               Transaction Narrative
+     I                                       30  59 C#NARR
+      *               Cheque Number
+     I                                       60  670C#CHQN
+      *               FT transaction reference
+     I                                       68  82 C#PREF
+      *               DL/LE/GL/RE transaction reference
+     I                                       83  88 C#TRN
+      *               Movement amount
+     I                                    P  89  960C#AMT
+      *               Processing indicators Not blank = no update
+      *                                     ' ' = Update
+      *               Prono update indicator
+     I                                       97  97 C#PRON
+      *               Olpos update indicator
+     I                                       98  98 C#OLPS
+      *               Memos update indicator
+     I                                       99  99 C#MEMS
+      *               Rsacmtpd write indicator
+     I                                      100 100 C#RSAC
+      *               Module
+     I                                      101 102 C#MOD
+      *               Olpos record number to update
+      *                     '01' for FX
+      *                     '02' for Interest movements
+      *                     '03' for MM loans and deposits
+     I                                      103 104 C#OLRC
+      *               FT Memos ledger balance override
+      *                        'Y' update ledger balance irrespective of
+      *                        posting date
+     I                                      105 105 C#FTOV
+      *               Value date and posting date
+     I                                    P 106 1080C#VDAT
+     I                                    P 109 1110C#PSTD
+      *               Override posting date correction
+      *                        for forward valued items
+      *                        'Y' prevents date being changed
+     I                                      112 112 C#PSTO
+      *               Indicator to show if removal allowed Y, N or " "
+     I                                      113 113 C#RPST
+      *               Removal set number
+     I                                      114 1160C#RPNB
+      *               Removal type "C" = Credit entries
+      *                            "D" = Debit entries
+     I                                      117 117 C#RTYP
+      *               Booking branch
+     I                                      118 120 C#BBRN
+     I                                      121 1300C#ACO1                                    CGL029
+     I                                      131 1400C#ACOD                                    CGL029
+      *               Other Transaction Reference                                             CAP204
+     I                                      141 160 C#OTR1                                    CAP204
+      *                                                                                       CAP205
+      ** Movement type                                                                        CAP205
+      *                                                                                       CAP205
+     I                                      161 161 C#MTYP                                    CAP205
+      *                                                                                       CLE134
+      ** Exception Reference Id/Number                                                        CLE134
+      *                                                                                       CLE134
+     I                                      162 164 C#XRFI                                    CLE134
+     I                                      165 1740C#XRFN                                    CLE134
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      *                                                                   182370
+      ** Data structure for subroutine ZCBDYS                             182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT1                182370
+     I                                        1   40ZZYYA                 182370
+     I                                        5   60ZZMMA                 182370
+     I                                        7   80ZZDDA                 182370
+      *                                                                   182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT2                182370
+     I                                        1   40ZZYYB                 182370
+     I                                        5   60ZZMMB                 182370
+     I                                        7   80ZZDDB                 182370
+      *                                                                   182370
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     I/COPY ZSRSRC,ZINTDYZ1
+     I/COPY ZSRSRC,ZDATE9Z2                                               182370
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS                          CIR003
+     C                     PARM           Z#XSTS                          CIR003
+     C                     PARM           Z#YSTS                          CIR003
+     C                     PARM           Z#ZSTS                          CIR003
+     C/COPY WNCPYSRC,AOOUSWU0C1
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      *  Main processing
+     C                     EXSR SRMAIN
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Clear down all shadow postings in store (within AOSPOSU0)
+      *
+     C                     EXSR SRCLR
+      *
+     C                     MOVELZ#BSTS    #BRCID  1
+     C                     MOVELZ#ASTS    #ARCID  1
+      *
+      ** Generate 'BEFORE STATUS' account movements
+      ** (if not insertion, when #BRCID will be blank)
+      *
+     C           #BRCID    IFNE *BLANK
+      *
+     C                     MOVEL'YES'     ##REVI  3
+      *
+      ** Set up IRS deal data structure.
+     C                     MOVELZ#BSTS    IRDEAL
+     C                     MOVEL'B'       ##BEAF  1
+     C                     EXSR SRIRSW
+      *
+     C                     END
+      *
+      ** Generate 'AFTER STATUS' account movements
+      ** (if not deletion, when CHTP will be 'R')
+      *
+     C                     MOVEL*BLANK    ##REVI
+      *
+      ** Set up IRS deal data structure.
+     C                     MOVELZ#ASTS    IRDEAL
+     C           CHTP      IFNE 'R'
+     C                     MOVEL'A'       ##BEAF
+     C                     EXSR SRIRSW
+     C                     END
+      *
+      ** Update database with shadow postings in store (within AOSPOSU0)
+      *
+     C                     EXSR SRUPD
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRIRSW                                         *
+      * Function    :  Interest Rate Swap Deal Processing             *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  AOSPOSU0 - On-line Positions Update            *
+      *****************************************************************
+     C           SRIRSW    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRIRSW'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialize work fields
+      *
+     C                     Z-ADD*ZERO     ##VDAT  50       * event val dte
+     C                     MOVEL*BLANK    ##CCY   3        * event currency
+     C                     Z-ADD*ZERO     ##AMT  150       * event amount
+     C                     MOVEL*BLANK    ##NARR 30        * narrative
+      *
+      **  Store pay and receive settlement methods, accounts & branches
+      *
+     C                     MOVELPSETM     ##PAYM           * pay method
+     C                     MOVELUPACC     ##PAYA           * pay account
+     C                     MOVELPOBR      ##PAYB           * pay branch
+     C                     MOVELRSETM     ##RECM           * rec method
+     C                     MOVELURACC     ##RECA           * rec account
+     C                     MOVELROBR      ##RECB           * rec branch
+      *
+      **  Store basic deal details
+      *
+     C                     MOVELDTYP      ##TRYP  2        * deal type
+     C                     MOVELDLNO      ##TRN   6        * transact no.
+     C                     MOVELBRCA      ##BBRN  3        * booking branc
+      *                                                                                       CAP055
+      ** Generate Premium movement for Caps, Collars and Floors                               CAP055
+      *                                                                                       CAP055
+     C           DTYP      IFEQ 'RR'                                                          CAP055
+     C           CIR006    ANDEQ'N'                                                           CAP055
+     C           DTYP      OREQ 'RP'                                                          CAP055
+     C           CIR006    ANDEQ'N'                                                           CAP055
+     C           DTYP      OREQ 'RF'                                                          CAP055
+     C           CIR006    ANDEQ'N'                                                           CAP055
+      *                                                                                       CAP055
+     C           UPPR      IFNE *BLANK                                                        CAP055
+     C           UPFE      ANDNE*ZERO                                                         CAP055
+     C                     Z-ADDUPVD      ##VDAT                                              CAP055
+     C                     Z-ADDUPFE      ##AMT                                               CAP055
+      *                                                                                       CAP055
+      ** Pass movement to write program (with appropriate instructions)                       CAP055
+      *                                                                                       CAP055
+     C           UPPR      IFEQ 'P'                                                           CAP055
+     C                     MOVELUCUCY     ##CCY                                               CAP055
+     C                     MOVEL##PAYD    ##SETD                                              CAP055
+     C                     ELSE                                                               CAP055
+     C                     MOVELTCUCY     ##CCY                                               CAP055
+     C                     MOVEL##RECD    ##SETD                                              CAP055
+     C                     END                                                                CAP055
+     C                     Z-ADD001       ##RPNB                                              CAP055
+     C                     MOVEL##NAR,7   ##NARR                                              CAP055
+      *                                                                                       CAP055
+      ** Replace currency and convert movement amount to settlement                           CAP055
+      ** currency equivalent.                                                                 CAP055
+      *                                                                                       CAP055
+     C                     EXSR P01                                                           CAP055
+      *                                                                                       CAP055
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP  1                                           CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                                        CAP055
+     C                     ENDIF                                                              CAP055
+     C                     GOTO EXIRSW                                                        CAP055
+     C                     ENDIF                                                              CAP055
+      *
+      ** Generate up-front fee movement
+      ** ==============================
+      *
+     C           UPPR      IFNE *BLANK
+     C           UPFE      ANDNE*ZERO
+     C                     Z-ADDUPVD      ##VDAT
+     C                     Z-ADDUPFE      ##AMT
+      *
+      ** Pass movement to write program (with appropriate instructions)
+      *
+     C           UPPR      IFEQ 'P'
+     C                     MOVELUCUCY     ##CCY
+     C                     MOVEL##PAYD    ##SETD           * Pay details
+     C                     ELSE
+     C                     MOVELTCUCY     ##CCY
+     C                     MOVEL##RECD    ##SETD           * Rec details
+     C                     END
+     C                     Z-ADD001       ##RPNB           * 1=Up front fees
+     C                     MOVEL##NAR,1   ##NARR
+      *                                                                   CEU003
+      ** Replace currency and convert movement amount to settlement       CEU003
+      ** currency equivalent.                                             CEU003
+      *                                                                   CEU003
+     C                     EXSR P01                                       CEU003
+      *                                                                   CEU003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE
+     C                     END
+      *
+      ** Generate buy-out movement
+      ** =========================
+      *
+     C           BAPR      IFNE *BLANK
+     C           BOAM      ANDNE*ZERO
+     C                     Z-ADDBOVD      ##VDAT
+     C                     Z-ADDBOAM      ##AMT
+      *
+      ** Pass movement to write program (with appropriate instructions)
+      *
+     C           BAPR      IFEQ 'P'
+     C                     MOVELUCUCY     ##CCY
+     C                     MOVEL##PAYD    ##SETD           * Pay details
+     C                     ELSE
+     C                     MOVELTCUCY     ##CCY
+     C                     MOVEL##RECD    ##SETD           * Rec details
+     C                     END
+     C                     Z-ADD002       ##RPNB           * 2=buy-out
+     C                     MOVEL##NAR,2   ##NARR
+      *                                                                   CEU003
+      ** Replace currency and convert movement amount to settlement       CEU003
+      ** currency equivalent.                                             CEU003
+      *                                                                   CEU003
+     C                     EXSR P01                                       CEU003
+      *                                                                   CEU003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE
+     C                     END
+      *
+      ** Generate interest account movement
+      ** ==================================
+      *
+      ** Read cashflow events
+      *
+     C                     Z-ADD*ZERO     ##AMT
+     C                     MOVEL*BLANKS   UCHK                            CSW005
+     C                     MOVEL*BLANKS   TCHK                            CSW005
+      *
+     C***********##BEAF    SETLLDLOLCFD0                                  CSW005
+     C***********##BEAF    READEDLOLCFD0                 99*              CSW005
+     C           KDLOL     SETLLDLOLCFD0                                  CSW005
+     C           KDLOL     READEDLOLCFD0                 99               CSW005
+     C  N99                Z-ADDCFPYDT    ##VDAT
+     C  N99                MOVELCFCCY     ##CCY
+      *
+      ** Do while not end of file
+      *
+     C           *IN99     DOWEQ'0'
+      *
+      ** On change of date or currency
+      *
+     C           CFPYDT    IFNE ##VDAT
+     C           ##AMT     ANDNE*ZERO
+     C           CFCCY     ORNE ##CCY
+     C           ##AMT     ANDNE*ZERO
+     C/COPY WNCPYSRC,AOOUSWU0K2
+      *
+      ** Pass movement to write program (with appropriate instructions)
+      *
+     C           ##AMT     IFLT *ZERO
+     C                     MOVEL##PAYD    ##SETD           * Pay details
+     C                     Z-SUB##AMT     ##AMT
+     C                     ELSE
+     C                     MOVEL##RECD    ##SETD           * Rec details
+     C                     END
+     C                     Z-ADD003       ##RPNB  30       * 3=Interest
+     C                     MOVEL##NAR,3   ##NARR
+     C/COPY WNCPYSRC,AOOUSWU0K1
+      *                                                                   CEU003
+      ** Replace currency and convert movement amount to settlement       CEU003
+      ** currency equivalent.                                             CEU003
+      *                                                                   CEU003
+     C                     EXSR P01                                       CEU003
+      *                                                                   CEU003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE
+     C                     Z-ADD*ZERO     ##AMT
+     C                     END
+      *
+      ** If unknown cashflow determine it
+      *
+     C           CFAMNT    IFEQ *ZERO
+     C                     EXSR SRDETC
+      *
+      ***If*still*zero,*then*no*further*cash*payments*can*be*inferred**** CSW005
+      ***(rate*is*zero,*so*even*payment*on*other*side*must*be*ignored)*** CSW005
+      ******************************************************************* CSW005
+     C***********CFAMNT    CABEQ*ZERO     EXIRSW                          CSW005
+      *                                                                   CSW005
+     C           CFAMNT    IFEQ *ZERO                                     CSW005
+      *                                                                   CSW005
+      ** If cash flow amounts = zero for both sides have been met,        CSW005
+      ** then no further cash payments can be inferred, else              CSW005
+      ** continue on until this condition is met or there are             CSW005
+      ** no more records to process.                                      CSW005
+      *                                                                   CSW005
+     C           TCHK      IFEQ 'Y'                                       CSW005
+     C           UCHK      ANDEQ'Y'                                       CSW005
+     C/COPY WNCPYSRC,AOOUSWU0C5
+     C                     EXCPT                                          182090
+     C                     GOTO EXIRSW                                    CSW005
+     C/COPY WNCPYSRC,AOOUSWU0C6
+     C                     ELSE                                           CSW005
+     C           CFOTIN    IFEQ 'U'                                       CSW005
+     C                     MOVEL'Y'       UCHK    1                       CSW005
+     C                     ELSE                                           CSW005
+     C                     MOVEL'Y'       TCHK    1                       CSW005
+     C                     ENDIF                                          CSW005
+     C                     GOTO NXTRCD                                    CSW005
+     C                     ENDIF                                          CSW005
+      *                                                                   CSW005
+     C                     ENDIF                                          CSW005
+      *                                                                   CSW005
+     C                     END
+      *
+      ** If interest is capitalised and paid on maturity, maintain
+      **   total of interest paid/received until maturity.
+      *
+     C           CFINPM    IFEQ 'C'
+     C           CFINPM    OREQ 'A'                                       CIR006
+     C           CIR006    ANDEQ'Y'                                       CIR006
+      *
+     C           CFPYDT    IFEQ MDAT
+      *
+     C           CFOTIN    IFEQ 'U'
+     C           UIPRD     ADD  CFAMNT    CFAMNT
+     C                     ELSE
+     C           TIPRD     ADD  CFAMNT    CFAMNT
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           CFOTIN    IFEQ 'U'
+     C                     ADD  CFAMNT    UIPRD
+     C                     ELSE
+     C                     ADD  CFAMNT    TIPRD
+     C                     END
+      *
+     C                     Z-ADD0         CFAMNT
+      *
+     C                     END
+      *
+     C                     END
+      *                                                                   106074
+      ** Calculate the tax payable and deduct this from the cash-flow     106074
+      **   amount.                                                        106074
+      *                                                                   106074
+     C           CFOTIN    IFEQ 'U'                                       106074
+     C           TAXI      ANDEQ'Y'                                       106074
+      *                                                                   106074
+     C           CFAMNT    MULT BNHKTR    W#WK01 309                      106074
+     C           W#WK01    DIV  100       CFTAXA    H                     106074
+     C           CFAMNT    SUB  CFTAXA    CFAMNT                          106074
+      *                                                                   106074
+     C                     ELSE                                           106074
+     C                     Z-ADD*ZERO     CFTAXA                          106074
+     C                     ENDIF                                          106074
+      *                                                                   CSW005
+      ** Update the cash-flow record with the amount calculated.          CSW005
+      *                                                                   CSW005
+     C                     UPDATDLOLCFD0                                  CSW005
+      *                                                                   CSW005
+     C           NXTRCD    TAG                                            CSW005
+      *
+      ** If interest is capitalized into principal, then ignore
+      *
+     C           CFINPM    IFEQ 'K'
+     C           CFINPM    OREQ 'I'                                       CIR006
+     C           CIR006    ANDEQ'Y'                                       CIR006
+     C                     Z-ADD*ZERO     CFAMNT
+     C                     END
+      *
+      ** Sign cashflow
+      *
+     C           CFOTIN    IFEQ 'U'
+     C                     Z-SUBCFAMNT    CFAMNT
+     C                     END
+      *
+      ** Cashflow Payment Date, Currency & Amount
+      *
+     C                     Z-ADDCFPYDT    ##VDAT
+     C                     MOVELCFCCY     ##CCY
+     C                     ADD  CFAMNT    ##AMT
+     C/COPY WNCPYSRC,AOOUSWU0K3
+      *
+      ** Read cashflow events
+      *
+     C***********##BEAF    READEDLOLCFD0                 99*              CSW005
+     C           KDLOL     READEDLOLCFD0                 99               CSW005
+     C                     END
+      *
+      ** Final payment
+      *
+     C           ##AMT     IFNE *ZERO
+      *
+      ** Pass movement to write program (with appropriate instructions)
+      *
+     C           ##AMT     IFLT *ZERO
+     C                     MOVEL##PAYD    ##SETD           * Pay details
+     C                     Z-SUB##AMT     ##AMT
+     C                     ELSE
+     C                     MOVEL##RECD    ##SETD           * Rec details
+     C                     END
+     C                     Z-ADD003       ##RPNB  30       * 3=Interest
+     C                     MOVEL##NAR,3   ##NARR
+     C/COPY WNCPYSRC,AOOUSWU0C9
+      *                                                                   CEU003
+      ** Replace currency and convert movement amount to settlement       CEU003
+      ** currency equivalent.                                             CEU003
+      *                                                                   CEU003
+     C                     EXSR P01                                       CEU003
+      *                                                                   CEU003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE
+     C                     END
+      *
+     C/COPY WNCPYSRC,AOOUSWU0C2
+      *................................................................
+      *
+     C           EXIRSW    TAG
+      *                                                                   CIR003
+      ** Generate principal exchange movement                             CIR003
+      ** ====================================                             CIR003
+      *                                                                   CIR003
+     C                     MOVE 'N'       WFLAG1  1                       CIR003
+      *                                                                   CIR003
+      **  If CIR003 is On, set up values for on-line updates.             CIR003
+      *                                                                   CIR003
+     C           CIR003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'Y'       WFLAG1                          CIR003
+      *                                                                   CIR003
+      ** Principal Exchange on Value Date, use receipt settlement for     CIR003
+      ** our side and pay settlement for their side.                      CIR003
+      *                                                                   CIR003
+     C           VDEI      IFEQ 'Y'                                       CIR003
+     C                     MOVE VDAT      ##VDAT                          CIR003
+      *                                                                   CIR003
+     C           ##BEAF    IFEQ 'B'                                       CIR003
+     C                     MOVELZ#WSTS    SETIN                           CIR003
+     C                     ELSE                                           CIR003
+     C                     MOVELZ#YSTS    SETIN                           CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C                     MOVE UPAMT     ##AMT                           CIR003
+     C                     MOVE UCUCY     ##CCY                           CIR003
+     C                     MOVE 'R'       ##PYRC                          CIR003
+      *                                                                                      BUG5519
+      ** Ensure that correct settlement details                                              BUG5519
+      *                                                                                      BUG5519
+     C           RXRSTM    IFEQ 00                                                           BUG5519
+     C           RXRSTM    OREQ 01                                                           BUG5519
+     C           RXRSTM    OREQ 02                                                           BUG5519
+     C           RXRSTM    OREQ 03                                                           BUG5519
+     C           RXRSTM    OREQ 04                                                           BUG5519
+     C           RXRSTM    OREQ 05                                                           BUG5519
+     C           RXRSTM    OREQ 06                                                           BUG5519
+     C           RXRSTM    OREQ 07                                                           BUG5519
+     C           RXRSTM    OREQ 08                                                           BUG5519
+     C           RXRSTM    OREQ 09                                                           BUG5519
+     C           RXRSTM    OREQ 12                                                           BUG5519
+     C           RXRSTM    OREQ 14                                                           BUG5519
+     C                     MOVE RXRSTM    ##SETM                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE RSTM      ##SETM                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *
+     C           RXRONS    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXRONS    ##SETA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE RONS      ##SETA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXROBR    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXROBR    ##BRCA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE ROBR      ##BRCA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C                     MOVE '004'     ##RPNB                          CIR003
+     C                     MOVE ##NAR,4   ##NARR                          CIR003
+      *                                                                   CIR003
+      ** Replace currency and convert movement amount to settlement       CIR003
+      ** currency equivalent.                                             CIR003
+      *                                                                   CIR003
+     C           CEU003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'V'       WEVFLG  1                       CIR003
+     C                     EXSR SRCNVT                                    CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                    CIR003
+      *                                                                   CIR003
+     C                     MOVE TPAMT     ##AMT                           CIR003
+     C                     MOVE TCUCY     ##CCY                           CIR003
+     C                     MOVE 'P'       ##PYRC                          CIR003
+      *                                                                                      BUG5519
+      ** Ensure that correct settlement details                                              BUG5519
+      *                                                                                      BUG5519
+     C           RXPSTM    IFEQ 00                                                           BUG5519
+     C           RXPSTM    OREQ 01                                                           BUG5519
+     C           RXPSTM    OREQ 02                                                           BUG5519
+     C           RXPSTM    OREQ 03                                                           BUG5519
+     C           RXPSTM    OREQ 04                                                           BUG5519
+     C           RXPSTM    OREQ 05                                                           BUG5519
+     C           RXPSTM    OREQ 06                                                           BUG5519
+     C           RXPSTM    OREQ 07                                                           BUG5519
+     C           RXPSTM    OREQ 08                                                           BUG5519
+     C           RXPSTM    OREQ 09                                                           BUG5519
+     C           RXPSTM    OREQ 12                                                           BUG5519
+     C           RXPSTM    OREQ 14                                                           BUG5519
+     C                     MOVE RXPSTM    ##SETM                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE PSTM      ##SETM                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXPONS    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXPONS    ##SETA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE PONS      ##SETA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *
+     C           RXPOBR    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXPOBR    ##BRCA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE POBR      ##BRCA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+     C                     MOVE '004'     ##RPNB                          CIR003
+     C                     MOVE ##NAR,4   ##NARR                          CIR003
+      *                                                                   CIR003
+      ** Replace currency and convert movement amount to settlement       CIR003
+      ** currency equivalent.                                             CIR003
+      *                                                                   CIR003
+     C           CEU003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'V'       WEVFLG  1                       CIR003
+     C                     EXSR SRCNVT                                    CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                    CIR003
+      *                                                                   CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+      ** Principal Exchange on Maturity date, use pay settlement for      CIR003
+      ** our side and receipt settlement for their side.                  CIR003
+      *                                                                   CIR003
+     C           MDEI      IFEQ 'Y'                                       CIR003
+      *                                                                                       209676
+     C           CIR003    IFEQ 'Y'                                                           209676
+     C           BOVD      ANDNE*ZEROS                                                        209676
+     C                     MOVE BOVD      ##VDAT                                              209676
+     C                     ELSE                                                               209676
+     C                     MOVE MDAT      ##VDAT                          CIR003
+     C                     ENDIF                                                              209676
+      *                                                                   CIR003
+     C           ##BEAF    IFEQ 'B'                                       CIR003
+     C                     MOVELZ#XSTS    SETIN                           CIR003
+     C                     ELSE                                           CIR003
+     C                     MOVELZ#ZSTS    SETIN                           CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C                     MOVE UPAMT     ##AMT                           CIR003
+     C                     MOVE UCUCY     ##CCY                           CIR003
+     C                     MOVE 'P'       ##PYRC                          CIR003
+      *                                                                                      BUG5519
+      ** Ensure that correct settlement details                                              BUG5519
+      *                                                                                      BUG5519
+     C           RXPSTM    IFEQ 00                                                           BUG5519
+     C           RXPSTM    OREQ 01                                                           BUG5519
+     C           RXPSTM    OREQ 02                                                           BUG5519
+     C           RXPSTM    OREQ 03                                                           BUG5519
+     C           RXPSTM    OREQ 04                                                           BUG5519
+     C           RXPSTM    OREQ 05                                                           BUG5519
+     C           RXPSTM    OREQ 06                                                           BUG5519
+     C           RXPSTM    OREQ 07                                                           BUG5519
+     C           RXPSTM    OREQ 08                                                           BUG5519
+     C           RXPSTM    OREQ 09                                                           BUG5519
+     C           RXPSTM    OREQ 12                                                           BUG5519
+     C           RXPSTM    OREQ 14                                                           BUG5519
+     C                     MOVE RXPSTM    ##SETM                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE PSTM      ##SETM                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXPONS    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXPONS    ##SETA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE PONS      ##SETA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXPOBR    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXPOBR    ##BRCA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE POBR      ##BRCA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C                     MOVE '004'     ##RPNB                          CIR003
+     C                     MOVE ##NAR,4   ##NARR                          CIR003
+      *                                                                   CIR003
+      ** Replace currency and convert movement amount to settlement       CIR003
+      ** currency equivalent.                                             CIR003
+      *                                                                   CIR003
+     C           CEU003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'M'       WEVFLG                          CIR003
+     C                     EXSR SRCNVT                                    CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                    CIR003
+      *                                                                   CIR003
+     C                     MOVE TPAMT     ##AMT                           CIR003
+     C                     MOVE TCUCY     ##CCY                           CIR003
+     C                     MOVE 'R'       ##PYRC                          CIR003
+      *                                                                                      BUG5519
+      ** Ensure that correct settlement details                                              BUG5519
+      *                                                                                      BUG5519
+     C           RXRSTM    IFEQ 00                                                           BUG5519
+     C           RXRSTM    OREQ 01                                                           BUG5519
+     C           RXRSTM    OREQ 02                                                           BUG5519
+     C           RXRSTM    OREQ 03                                                           BUG5519
+     C           RXRSTM    OREQ 04                                                           BUG5519
+     C           RXRSTM    OREQ 05                                                           BUG5519
+     C           RXRSTM    OREQ 06                                                           BUG5519
+     C           RXRSTM    OREQ 07                                                           BUG5519
+     C           RXRSTM    OREQ 08                                                           BUG5519
+     C           RXRSTM    OREQ 09                                                           BUG5519
+     C           RXRSTM    OREQ 12                                                           BUG5519
+     C           RXRSTM    OREQ 14                                                           BUG5519
+     C                     MOVE RXRSTM    ##SETM                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE RSTM      ##SETM                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXRONS    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXRONS    ##SETA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE RONS      ##SETA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXROBR    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXROBR    ##BRCA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE ROBR      ##BRCA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C                     MOVE '004'     ##RPNB                          CIR003
+     C                     MOVE ##NAR,4   ##NARR                          CIR003
+      *                                                                   CIR003
+      ** Replace currency and convert movement amount to settlement       CIR003
+      ** currency equivalent.                                             CIR003
+      *                                                                   CIR003
+     C           CEU003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'M'       WEVFLG                          CIR003
+     C                     EXSR SRCNVT                                    CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                    CIR003
+      *                                                                   CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+      ** Principal change on "our" side.                                  CIR003
+      *                                                                   CIR003
+     C           PDEI      IFEQ 'Y'                                       CIR003
+     C           UNPCD     ANDNE*ZERO                                     CIR003
+      *                                                                   CIR003
+     C                     MOVE DLNO      KDLNO                           CIR003
+     C                     MOVE 'U'       KOTIN                           CIR003
+     C                     Z-ADDUPAMT     WUPAMT 150                      CIR003
+     C           KDLPC     SETLLDLPCSCL0                                  CIR003
+      *                                                                   CIR003
+     C           *IN99     DOUEQ'1'                                       CIR003
+     C           KDLPC     READEDLPCSCL0                 99               CIR003
+      *                                                                   CIR003
+      ** Principal Increase behaves as though exchanging on Value Date    CIR003
+      ** i.e. receipt settlement for 'our' side and pay for 'their' side. CIR003
+      *                                                                   CIR003
+     C           *IN99     IFEQ '0'                                       CIR003
+     C           WUPAMT    ANDLTPAMT                                      CIR003
+     C           PMTP      ANDNE'Y'                                       CIR003
+      *                                                                   CIR003
+     C           ##BEAF    IFEQ 'B'                                       CIR003
+     C                     MOVELZ#WSTS    SETIN                           CIR003
+     C                     ELSE                                           CIR003
+     C                     MOVELZ#YSTS    SETIN                           CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C                     MOVE PRDT      ##VDAT                          CIR003
+     C           PAMT      SUB  WUPAMT    ##AMT                           CIR003
+     C                     MOVE UCUCY     ##CCY                           CIR003
+     C                     MOVE 'R'       ##PYRC                          CIR003
+      *                                                                                      BUG5519
+      ** Ensure that correct settlement details                                              BUG5519
+      *                                                                                      BUG5519
+     C           RXRSTM    IFEQ 00                                                           BUG5519
+     C           RXRSTM    OREQ 01                                                           BUG5519
+     C           RXRSTM    OREQ 02                                                           BUG5519
+     C           RXRSTM    OREQ 03                                                           BUG5519
+     C           RXRSTM    OREQ 04                                                           BUG5519
+     C           RXRSTM    OREQ 05                                                           BUG5519
+     C           RXRSTM    OREQ 06                                                           BUG5519
+     C           RXRSTM    OREQ 07                                                           BUG5519
+     C           RXRSTM    OREQ 08                                                           BUG5519
+     C           RXRSTM    OREQ 09                                                           BUG5519
+     C           RXRSTM    OREQ 12                                                           BUG5519
+     C           RXRSTM    OREQ 14                                                           BUG5519
+     C                     MOVE RXRSTM    ##SETM                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE RSTM      ##SETM                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXRONS    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXRONS    ##SETA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE RONS      ##SETA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXROBR    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXROBR    ##BRCA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE ROBR      ##BRCA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C                     MOVE '004'     ##RPNB                          CIR003
+     C                     MOVE ##NAR,5   ##NARR                          CIR003
+      *                                                                   CIR003
+      ** Replace currency and convert movement amount to settlement       CIR003
+      ** currency equivalent.                                             CIR003
+      *                                                                   CIR003
+     C           CEU003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'V'       WEVFLG                          CIR003
+     C                     EXSR SRCNVT                                    CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                    CIR003
+      *                                                                   CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           *IN99     IFEQ '0'                                       CIR003
+     C           WUPAMT    ANDGTPAMT                                      CIR003
+     C           PMTP      ANDNE'Y'                                       CIR003
+      *                                                                   CIR003
+     C           ##BEAF    IFEQ 'B'                                       CIR003
+     C                     MOVELZ#XSTS    SETIN                           CIR003
+     C                     ELSE                                           CIR003
+     C                     MOVELZ#ZSTS    SETIN                           CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C                     MOVE PRDT      ##VDAT                          CIR003
+     C           WUPAMT    SUB  PAMT      ##AMT                           CIR003
+     C                     MOVE UCUCY     ##CCY                           CIR003
+     C                     MOVE 'P'       ##PYRC                          CIR003
+      *                                                                                      BUG5519
+      ** Ensure that correct settlement details                                              BUG5519
+      *                                                                                      BUG5519
+     C           RXPSTM    IFEQ 00                                                           BUG5519
+     C           RXPSTM    OREQ 01                                                           BUG5519
+     C           RXPSTM    OREQ 02                                                           BUG5519
+     C           RXPSTM    OREQ 03                                                           BUG5519
+     C           RXPSTM    OREQ 04                                                           BUG5519
+     C           RXPSTM    OREQ 05                                                           BUG5519
+     C           RXPSTM    OREQ 06                                                           BUG5519
+     C           RXPSTM    OREQ 07                                                           BUG5519
+     C           RXPSTM    OREQ 08                                                           BUG5519
+     C           RXPSTM    OREQ 09                                                           BUG5519
+     C           RXPSTM    OREQ 12                                                           BUG5519
+     C           RXPSTM    OREQ 14                                                           BUG5519
+     C                     MOVE RXPSTM    ##SETM                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE PSTM      ##SETM                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXPONS    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXPONS    ##SETA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE PONS      ##SETA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXPOBR    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXPOBR    ##BRCA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE POBR      ##BRCA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C                     MOVE '004'     ##RPNB                          CIR003
+     C                     MOVE ##NAR,6   ##NARR                          CIR003
+      *                                                                   CIR003
+      ** Replace currency and convert movement amount to settlement       CIR003
+      ** currency equivalent.                                             CIR003
+      *                                                                   CIR003
+     C           CEU003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'M'       WEVFLG                          CIR003
+     C                     EXSR SRCNVT                                    CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                    CIR003
+      *                                                                   CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+      ** Use the new principal amount                                     CIR003
+      *                                                                   CIR003
+     C                     Z-ADDPAMT      WUPAMT                          CIR003
+      *                                                                   CIR003
+     C                     ENDDO                                          CIR003
+      *                                                                   CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+      ** Principal change on "their" side.                                CIR003
+      *                                                                   CIR003
+     C           PDEI      IFEQ 'Y'                                       CIR003
+     C           TNPCD     ANDNE*ZERO                                     CIR003
+      *                                                                   CIR003
+     C                     MOVE DLNO      KDLNO                           CIR003
+     C                     MOVE 'T'       KOTIN                           CIR003
+     C                     Z-ADDTPAMT     WTPAMT 150                      CIR003
+     C           KDLPC     SETLLDLPCSCL0                                  CIR003
+      *                                                                   CIR003
+     C           *IN99     DOUEQ'1'                                       CIR003
+     C           KDLPC     READEDLPCSCL0                 99               CIR003
+      *                                                                   CIR003
+      ** Principal Increase behaves as though exchanging on Value Date    CIR003
+      ** i.e. receipt settlement for 'our' side and pay for 'their' side. CIR003
+      *                                                                   CIR003
+     C           *IN99     IFEQ '0'                                       CIR003
+     C           WTPAMT    ANDLTPAMT                                      CIR003
+     C           PMTP      ANDNE'Y'                                       CIR003
+      *                                                                   CIR003
+     C           ##BEAF    IFEQ 'B'                                       CIR003
+     C                     MOVELZ#WSTS    SETIN                           CIR003
+     C                     ELSE                                           CIR003
+     C                     MOVELZ#YSTS    SETIN                           CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C                     MOVE PRDT      ##VDAT                          CIR003
+     C           PAMT      SUB  WTPAMT    ##AMT                           CIR003
+     C                     MOVE TCUCY     ##CCY                           CIR003
+     C                     MOVE 'P'       ##PYRC                          CIR003
+      *                                                                                      BUG5519
+      ** Ensure that correct settlement details                                              BUG5519
+      *                                                                                      BUG5519
+     C           RXPSTM    IFEQ 00                                                           BUG5519
+     C           RXPSTM    OREQ 01                                                           BUG5519
+     C           RXPSTM    OREQ 02                                                           BUG5519
+     C           RXPSTM    OREQ 03                                                           BUG5519
+     C           RXPSTM    OREQ 04                                                           BUG5519
+     C           RXPSTM    OREQ 05                                                           BUG5519
+     C           RXPSTM    OREQ 06                                                           BUG5519
+     C           RXPSTM    OREQ 07                                                           BUG5519
+     C           RXPSTM    OREQ 08                                                           BUG5519
+     C           RXPSTM    OREQ 09                                                           BUG5519
+     C           RXPSTM    OREQ 12                                                           BUG5519
+     C           RXPSTM    OREQ 14                                                           BUG5519
+     C                     MOVE RXPSTM    ##SETM                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE PSTM      ##SETM                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXPONS    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXPONS    ##SETA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE PONS      ##SETA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXPOBR    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXPOBR    ##BRCA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE POBR      ##BRCA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C                     MOVE '004'     ##RPNB                          CIR003
+     C                     MOVE ##NAR,5   ##NARR                          CIR003
+      *                                                                   CIR003
+      ** Replace currency and convert movement amount to settlement       CIR003
+      ** currency equivalent.                                             CIR003
+      *                                                                   CIR003
+     C           CEU003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'V'       WEVFLG                          CIR003
+     C                     EXSR SRCNVT                                    CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                    CIR003
+      *                                                                   CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+      ** Principal Decrease behaves as though exchanging on Maturity Date CIR003
+      ** i.e. pay settlement for 'our' side and receipt for 'their' side. CIR003
+      *                                                                   CIR003
+     C           *IN99     IFEQ '0'                                       CIR003
+     C           WTPAMT    ANDGTPAMT                                      CIR003
+     C           PMTP      ANDNE'Y'                                       CIR003
+      *                                                                   CIR003
+     C           ##BEAF    IFEQ 'B'                                       CIR003
+     C                     MOVELZ#XSTS    SETIN                           CIR003
+     C                     ELSE                                           CIR003
+     C                     MOVELZ#ZSTS    SETIN                           CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C                     MOVE PRDT      ##VDAT                          CIR003
+     C           WTPAMT    SUB  PAMT      ##AMT                           CIR003
+     C                     MOVE TCUCY     ##CCY                           CIR003
+     C                     MOVE 'R'       ##PYRC                          CIR003
+      *                                                                                      BUG5519
+      ** Ensure that correct settlement details                                              BUG5519
+      *                                                                                      BUG5519
+     C           RXRSTM    IFEQ 00                                                           BUG5519
+     C           RXRSTM    OREQ 01                                                           BUG5519
+     C           RXRSTM    OREQ 02                                                           BUG5519
+     C           RXRSTM    OREQ 03                                                           BUG5519
+     C           RXRSTM    OREQ 04                                                           BUG5519
+     C           RXRSTM    OREQ 05                                                           BUG5519
+     C           RXRSTM    OREQ 06                                                           BUG5519
+     C           RXRSTM    OREQ 07                                                           BUG5519
+     C           RXRSTM    OREQ 08                                                           BUG5519
+     C           RXRSTM    OREQ 09                                                           BUG5519
+     C           RXRSTM    OREQ 12                                                           BUG5519
+     C           RXRSTM    OREQ 14                                                           BUG5519
+     C                     MOVE RXRSTM    ##SETM                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE RSTM      ##SETM                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXRONS    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXRONS    ##SETA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE RONS      ##SETA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C           RXROBR    IFNE *BLANKS                                                      BUG5519
+     C                     MOVE RXROBR    ##BRCA                          CIR003
+     C                     ELSE                                                              BUG5519
+     C                     MOVE ROBR      ##BRCA                                             BUG5519
+     C                     ENDIF                                                             BUG5519
+      *                                                                                      BUG5519
+     C                     MOVE '004'     ##RPNB                          CIR003
+     C                     MOVE ##NAR,6   ##NARR                          CIR003
+      *                                                                   CIR003
+      ** Replace currency and convert movement amount to settlement       CIR003
+      ** currency equivalent.                                             CIR003
+      *                                                                   CIR003
+     C           CEU003    IFEQ 'Y'                                       CIR003
+     C                     MOVE 'M'       WEVFLG                          CIR003
+     C                     EXSR SRCNVT                                    CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       ##MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE                                    CIR003
+      *                                                                   CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+      ** Use the new principal amount                                     CIR003
+      *                                                                   CIR003
+     C                     Z-ADDPAMT      WTPAMT                          CIR003
+      *                                                                   CIR003
+     C                     ENDDO                                          CIR003
+      *                                                                   CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C                     MOVE 'N'       WFLAG1                          CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C/COPY WNCPYSRC,AOOUSWU0C8
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 5
+     C/COPY WNCPYSRC,AOOUSWU0C7
+      *****************************************************************
+      * Subroutine  :  SRMOVE                                         *
+      * Function    :  Pass Movement To Write Program                 *
+      *                                                               *
+      * Called by   :  Various                                        *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRMOVE    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRMOVE'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Bypass if no amount to post
+      *
+     C           ##AMT     CABEQ*ZERO     EXMOVE
+      *
+      ** Determine account movement settlement details
+      *
+     C                     CLEARC#DTA
+      *
+     C           ##SETM    IFEQ '01'
+     C           ##SETM    OREQ '02'
+     C           ##SETM    OREQ '07'
+     C           ##SETM    OREQ '08'
+     C           ##SETM    OREQ '12'
+     C                     MOVEL'N'       C#ATYP
+     C                     MOVEL##NOSN    C#NOSN
+     C                     ELSE
+     C           ##SETM    IFEQ '14'
+     C                     MOVEL'R'       C#ATYP
+     C                     MOVEL##ACNO    C#ACNO
+     C                     ELSE
+     C           ##SETM    IFEQ '04'
+     C           ##SETM    OREQ '05'
+     C                     MOVEL'P'       C#ATYP
+     C                     MOVEL##CNUM    C#CNUM
+     C                     MOVEL##ACOD    C#ACOD
+     C                     MOVEL##ACSQ    C#ACSQ
+     C                     MOVEL##BRCA    C#BRCA
+     C                     END
+     C                     END
+     C                     END
+      *
+      * OLPOS Incoming/Outgoing Indicator 'I' or 'O'
+     C           ##PYRC    IFEQ 'P'
+     C                     MOVEL'O'       C#IO             * outgoing
+     C                     ELSE
+     C                     MOVEL'I'       C#IO             * incoming
+     C                     END
+      *
+      * Currency of transaction
+     C                     MOVEL##CCY     C#CCY
+      *
+      * Transaction type
+     C                     MOVEL##TRYP    C#TRYP
+      * Transaction Narrative
+     C                     MOVEL##NARR    C#NARR
+     C           ##REVI    IFEQ 'YES'
+     C                     MOVE '*'       C#NARR
+     C                     END
+      *
+      * DL/LE/GL/RE transaction reference
+     C                     MOVEL##TRN     C#TRN
+      *
+      * Movement amount
+     C           ##PYRC    IFEQ 'P'
+     C           ##REVI    ANDNE'YES'
+     C           ##PYRC    OREQ 'R'
+     C           ##REVI    ANDEQ'YES'
+     C                     Z-SUB##AMT     C#AMT            * pay ie credit
+     C                     ELSE
+     C                     Z-ADD##AMT     C#AMT            * rec ie debit
+     C                     END
+      *
+      * Module
+     C                     MOVEL'DL'      C#MOD
+      *
+      * Olpos record number to update
+      * '01' for FX
+      * '02' for Interest movements
+      * '03' for MM loans and deposits
+     C******************** MOVE '01'      C#OLRC                          110518
+     C           CIR003    IFEQ 'Y'                                       CIR003
+     C           WFLAG1    ANDEQ'Y'                                       CIR003
+     C                     MOVE '01'      C#OLRC                          CIR003
+     C                     ELSE                                           CIR003
+     C                     MOVE '02'      C#OLRC                          110518
+     C                     ENDIF                                          CIR003
+      *
+      * Value date and posting date
+     C                     Z-ADD##VDAT    C#VDAT
+     C                     Z-ADD##VDAT    C#PSTD
+      *
+      * Indicator to show if removal allowed Y, N or " "
+     C                     MOVEL'Y'       C#RPST
+      *
+      * Removal set number
+     C                     Z-ADD##RPNB    C#RPNB
+      *
+      * Removal type "C" = Credit entries
+      *              "D" = Debit entries
+     C                     MOVEL'C'       C#RTYP
+      *
+      * Booking branch
+     C                     MOVEL##BBRN    C#BBRN
+      *
+      *  If settlement details are present
+      *  AOSPOSU0 will be called to update PRONO, MEMOS, RSACMTPD, OLPOS
+      *
+      *  OTHERWISE
+      *
+      *  If no settlement details are present
+      *  AOSPOSU0 will be called to only update OLPOS
+      *
+     C           C#ATYP    IFEQ *BLANK
+      *
+      * Set account type indicator to signify no settlement
+     C                     MOVEL'X'       C#ATYP
+      *
+      * Set update indicators for no update
+     C                     MOVE 'N'       C#PRON
+     C                     MOVE 'N'       C#MEMS
+     C                     MOVE 'N'       C#RSAC
+     C                     END
+      *                                                                                       CAP205
+      ** Set C#MTYP to ##MTYP                                                                 CAP205
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL##MTYP    C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE  8
+     C                     MOVEL'AOSPOSU0'W0KEY  29
+     C                     Z-ADD902       W0ERNB  30
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+     C           EXMOVE    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRDETC                                         *
+      * Function    :  Determine Cashflow amount                      *
+      *                                                               *
+      * Called by   :  Various                                        *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRDETC    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETC'  @STK,Q
+      *
+      *................................................................
+      *                                                                   105694
+      **  If the interest accrual control date is after the cash-flow     105694
+      **    start date, calulate the interest to the control date. Then   105694
+      **    use the rest of this routine to calculate the interest        105694
+      **    from there to the end date.                                   105694
+      *                                                                   105694
+     C           CFOTIN    IFEQ 'U'                                       105694
+      *                                                                   105694
+     C           UIACD     IFGT CFSLIP                                    105694
+     C                     Z-ADDUIACD     ##IACD  50                      105694
+     C           UAITC     SUB  UIPRD     ##TOTI 150                      105694
+     C                     ELSE                                           105694
+     C                     Z-ADDCFSLIP    ##IACD                          105694
+     C                     Z-ADD*ZERO     ##TOTI                          105694
+     C                     ENDIF                                          105694
+      *                                                                   105694
+     C                     ELSE                                           105694
+      *                                                                   105694
+     C           TIACD     IFGT CFSLIP                                    105694
+     C                     Z-ADDTIACD     ##IACD                          105694
+     C           TAITC     SUB  TIPRD     ##TOTI                          105694
+     C                     ELSE                                           105694
+     C                     Z-ADDCFSLIP    ##IACD                          105694
+     C                     Z-ADD*ZERO     ##TOTI                          105694
+     C                     ENDIF                                          105694
+      *                                                                   105694
+     C                     ENDIF                                          105694
+      *
+      ** DETERMINE PRINCIPAL & RATE AS AT LAST INTEREST PAYMENT DATE
+      *
+     C                     MOVELCFBEAF    ACBEAF
+     C                     Z-ADDCFDLNO    ACDLNO
+     C                     MOVE CFOTIN    ACOTIN
+     C                     Z-ADDCFSLIP    ACPRDT
+     C           DLOLAK    SETGTDLOLACD0
+     C           DLOLAP    REDPEDLOLACD0                 99*
+      *
+     C           *IN99     IFEQ '1'
+     C           DLOLAK    SETLLDLOLACD0
+     C           DLOLAP    READEDLOLACD0                 99*
+     C                     END
+      *
+      ** SET PRINCIPAL & RATE AS AT LAST INTEREST PAYMENT DATE
+      ** AND DATE INTEREST CALCULATED TO
+      *
+     C                     Z-ADDACPCPL    ##PCPL 150
+     C                     Z-ADDACEINR    ##EINR 117
+     C                     MOVELACRTTP    ##RTTP  1
+      **********                                                          105694
+     C**********           Z-ADDCFSLIP    ##IACD  50                      105694
+      **********                                                          105694
+      ***RESET*TOTAL INTEREST                                             105694
+      **********                                                          105694
+     C**********           Z-ADD*ZERO     ##TOTI 150                      105694
+      *
+      ** REPOSITION POINTER TO AFTER RECORD JUST READ
+      *
+     C           DLOLAK    SETGTDLOLACD0
+      *
+      ** READ FROM THE DEAL ACTIVITY FILE
+      *
+     C           DLOLAP    READEDLOLACD0                 99*
+      *
+      ** READ UP TO CASHFLOW NEXT INTEREST PAYMENT DATE
+      *
+     C           *IN99     DOWEQ'0'
+     C           ACPRDT    ANDLTCFNIPD
+      *
+      ** CALCULATE INTEREST FROM LAST DATE TO DEAL ACTIVITY DATE.
+      ** RATE USED IS EFFECTIVE INTEREST RATE OFF DEAL ACTIVITY
+      *
+     C                     Z-ADD##PCPL    ZDLAMT
+      *                                                                   CIR002
+      ** If CIR002 is switched on, add unsettled interest to principal.   CIR002
+      *                                                                   CIR002
+     C           CIR002    IFEQ 'Y'                                       CIR002
+      *                                                                   CIR002
+      ** If CIR006 is On, consider only int. proc. methods A,I & L.       CIR002
+      *                                                                   CIR002
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           CFINPM    ANDEQ'A'                                       CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           CFINPM    ANDEQ'I'                                       CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           CFINPM    ANDEQ'L'                                       CIR006
+      *                                                                   CIR006
+     C/COPY WNCPYSRC,AOOUSWU0K5
+      *                                                                   CIR002
+     C           ACOTIN    IFEQ 'U'                                       CIR002
+     C                     ADD  OUSI      ZDLAMT                          CIR002
+     C                     ADD  OUSA      ZDLAMT                          CIR002
+     C                     ELSE                                           CIR002
+     C                     ADD  TUSI      ZDLAMT                          CIR002
+     C                     ADD  TUSA      ZDLAMT                          CIR002
+     C                     END                                            CIR002
+      *                                                                   CIR002
+     C                     END                                            CIR002
+      *                                                                   CIR002
+     C                     Z-ADD##EINR    ZDLRAT
+     C                     Z-ADD##IACD    ZCBSDT
+     C                     Z-ADDACPRDT    ZCBEDT
+     C                     MOVELCFINCL    ZCBCBS
+     C           CFINPM    IFNE 'Y'
+     C                     EXSR ZDLINT                     * DISC./INT.
+     C                     ELSE
+     C                     EXSR SRCIYD                     * YIELD
+     C                     END
+      *
+     C                     ADD  ZDLOUT    ##TOTI
+      *
+      ** SET PRINCIPAL & RATE
+      ** AND DATE INTEREST CALCULATED TO
+      *
+     C                     Z-ADDACPCPL    ##PCPL
+     C                     Z-ADDACEINR    ##EINR
+     C                     MOVELACRTTP    ##RTTP
+     C                     Z-ADDACPRDT    ##IACD
+      *
+      ** READ FROM THE DEAL ACTIVITY FILE
+      *
+     C           DLOLAP    READEDLOLACD0                 99*
+     C                     END
+      *
+      ** CALCULATE INTEREST FROM LAST DATE TO NEXT INTEREST PAYMENT DATE
+      ** RATE USED IS EFFECTIVE INTEREST RATE OFF DEAL ACTIVITY FILE.
+      *
+     C           ##IACD    IFLT CFNIPD
+     C                     Z-ADD##PCPL    ZDLAMT
+      *                                                                   CIR002
+      ** If CIR002 is switched on, add unsettled interest to principal.   CIR002
+      *                                                                   CIR002
+     C           CIR002    IFEQ 'Y'                                       CIR002
+      *                                                                   CIR006
+      ** If CIR006 is On, consider only int. proc. methods A,I & L.       CIR006
+      *                                                                   CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           CFINPM    ANDEQ'A'                                       CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           CFINPM    ANDEQ'I'                                       CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           CFINPM    ANDEQ'L'                                       CIR006
+      *                                                                   CIR006
+     C/COPY WNCPYSRC,AOOUSWU0K6
+      *                                                                   CIR002
+     C           CFOTIN    IFEQ 'U'                                       CIR002
+     C                     ADD  OUSI      ZDLAMT                          CIR002
+     C                     ADD  OUSA      ZDLAMT                          CIR002
+     C                     ELSE                                           CIR002
+     C                     ADD  TUSI      ZDLAMT                          CIR002
+     C                     ADD  TUSA      ZDLAMT                          CIR002
+     C                     END                                            CIR002
+      *                                                                   CIR002
+     C                     END                                            CIR002
+      *                                                                   CIR002
+     C                     Z-ADD##EINR    ZDLRAT
+     C                     Z-ADD##IACD    ZCBSDT
+     C                     Z-ADDCFNIPD    ZCBEDT
+     C                     MOVELCFINCL    ZCBCBS
+     C           CFINPM    IFNE 'Y'
+     C                     EXSR ZDLINT                     * DISC./INT.
+     C                     ELSE
+     C                     EXSR SRCIYD                     * YIELD
+     C                     END
+     C                     ADD  ZDLOUT    ##TOTI
+     C                     END
+      *
+      ** SET CASHFLOW AMOUNT
+      *
+     C                     Z-ADD##TOTI    CFAMNT
+      *                                                                   CIR002
+      ** If CIR002 is switched on, zeroise the unsettled interest         CIR002
+      **   once it has been used.                                         CIR002
+      *                                                                   CIR002
+     C           CIR002    IFEQ 'Y'                                       CIR002
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C/COPY WNCPYSRC,AOOUSWU0K7
+      *                                                                   CIR002
+     C           CFOTIN    IFEQ 'U'                                       CIR002
+     C                     Z-ADD0         OUSI                            CIR002
+     C                     Z-ADD0         OUSA                            CIR002
+     C                     ELSE                                           CIR002
+     C                     Z-ADD0         TUSI                            CIR002
+     C                     Z-ADD0         TUSA                            CIR002
+     C                     END                                            CIR002
+      *                                                                   CIR002
+     C                     END                                            CIR002
+      *                                                                   CIR002
+      *
+      *................................................................
+      *
+     C           EXDETC    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRCIYD                                         *
+      * Function    :  Calculate Interest on a Yield Basis            *
+      *                                                               *
+      * Called by   :  Various                                        *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRCIYD    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRCIYD'  @STK,Q
+      *
+      *................................................................
+      *
+      * INITIALIZE FIELDS
+      *
+     C                     Z-ADDZDLAMT    ZDLAMT
+     C                     Z-ADDZDLRAT    ZDLRAT
+     C                     Z-ADD*ZERO     ZDLOUT
+      *
+      * FIND NO. OF DAYS IN PERIOD AND YEAR
+      *
+     C                     EXSR ZCBDYS
+      *
+      ** INTEREST = PRINCIPAL ( 1 - 1 / ( 1 + RATE X NUMBER OF DAYS/360))
+      **       I.E. PRINCIPAL ( 1 - 360 / ( 360 + RATE X NUMBER OF DAYS))
+      *
+     C           ZCBDIV    MULT 100       ZIWRK3  50
+      *
+     C           ZCBDAY    MULT ZDLRAT    ZIWRK4 157
+     C                     ADD  ZIWRK3    ZIWRK4
+      *
+     C           ZIWRK4    IFNE *ZERO
+     C           ZIWRK3    DIV  ZIWRK4    ZIWRK5 159H
+     C           1         SUB  ZIWRK5    ZIWRK5
+     C           ZDLAMT    MULT ZIWRK5    ZDLOUT    H
+     C                     END
+      *
+      *................................................................
+      *
+     C           EXCIYD    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+      *****************************************************************   CIR003
+      * Subroutine  :  SRCNVT                                         *   CIR003
+      * Function    :  Determine settlement currency and convert      *   CIR003
+      *                amount.                                        *   CIR003
+      *                                                               *   CIR003
+      * Called by   :  SR/SRIRSW                                      *   CIR003
+      * Calls       :  PGM/EU0200                                     *   CIR003
+      *****************************************************************   CIR003
+     C           SRCNVT    BEGSR                                          CIR003
+      ** Set up subroutine stack name                                     CIR003
+     C                     ADD  1         Q                               CIR003
+     C                     MOVEL'SRCNVT'  @STK,Q                          CIR003
+      ** If Event is Value Date/Principal Increase, check if settlement   CIR003
+      ** currency is entered, call PGM/EU0200.                            CIR003
+     C           WEVFLG    IFEQ 'V'                                       CIR003
+     C           RSCY      IFNE UCUCY                                     CIR003
+     C           RSCY      ANDNE*BLANKS                                   CIR003
+     C           ##PYRC    ANDEQ'R'                                       CIR003
+     C                     MOVE UCUCY     ##CCY                           CIR003
+     C                     CALL 'EU0200'               90                 CIR003
+     C                     PARM *BLANKS   P#RTCD                          CIR003
+     C                     PARM ##AMT     P#FRAM                          CIR003
+     C                     PARM ##CCY     P#FRCY                          CIR003
+     C                     PARM RSCY      P#TOCY                          CIR003
+     C                     PARM *ZEROS    P#OUTA                          CIR003
+     C                     PARM *ZEROS    P#INTA                          CIR003
+     C                     PARM *ZEROS    P#EXRT                          CIR003
+     C                     PARM *BLANKS   P#MDIN                          CIR003
+     C           *IN90     IFEQ '1'                                       CIR003
+     C           P#RTCD    ORNE *BLANKS                                   CIR003
+     C                     MOVEL'*CALL   'W0FILE  8                       CIR003
+     C                     MOVEL'EU0200  'W0KEY  29                       CIR003
+     C                     Z-ADD911       W0ERNB                          CIR003
+     C                     EXSR SRERR                                     CIR003
+     C                     ELSE                                           CIR003
+     C                     Z-ADDP#OUTA    ##AMT                           CIR003
+     C                     MOVE RSCY      ##CCY                           CIR003
+     C                     ENDIF                                          CIR003
+     C                     ENDIF                                          CIR003
+     C           PSCY      IFNE TCUCY                                     CIR003
+     C           PSCY      ANDNE*BLANKS                                   CIR003
+     C           ##PYRC    ANDEQ'P'                                       CIR003
+     C                     MOVE TCUCY     ##CCY                           CIR003
+     C                     CALL 'EU0200'               90                 CIR003
+     C                     PARM *BLANKS   P#RTCD                          CIR003
+     C                     PARM ##AMT     P#FRAM                          CIR003
+     C                     PARM ##CCY     P#FRCY                          CIR003
+     C                     PARM PSCY      P#TOCY                          CIR003
+     C                     PARM *ZEROS    P#OUTA                          CIR003
+     C                     PARM *ZEROS    P#INTA                          CIR003
+     C                     PARM *ZEROS    P#EXRT                          CIR003
+     C                     PARM *BLANKS   P#MDIN                          CIR003
+     C           *IN90     IFEQ '1'                                       CIR003
+     C           P#RTCD    ORNE *BLANKS                                   CIR003
+     C                     MOVEL'*CALL   'W0FILE  8                       CIR003
+     C                     MOVEL'EU0200  'W0KEY  29                       CIR003
+     C                     Z-ADD912       W0ERNB                          CIR003
+     C                     EXSR SRERR                                     CIR003
+     C                     ELSE                                           CIR003
+     C                     Z-ADDP#OUTA    ##AMT                           CIR003
+     C                     MOVE PSCY      ##CCY                           CIR003
+     C                     ENDIF                                          CIR003
+     C                     ENDIF                                          CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+      ** If Event is Maturity Date/Principal Decrease, check if settle-   CIR003
+      ** ment currency is entered, call PGM/EU0200.                       CIR003
+      *                                                                   CIR003
+     C           WEVFLG    IFEQ 'M'                                       CIR003
+     C           RSCY      IFNE TCUCY                                     CIR003
+     C           RSCY      ANDNE*BLANKS                                   CIR003
+     C           ##PYRC    ANDEQ'R'                                       CIR003
+     C                     MOVE TCUCY     ##CCY                           CIR003
+     C                     CALL 'EU0200'               90                 CIR003
+     C                     PARM *BLANKS   P#RTCD                          CIR003
+     C                     PARM ##AMT     P#FRAM                          CIR003
+     C                     PARM ##CCY     P#FRCY                          CIR003
+     C                     PARM RSCY      P#TOCY                          CIR003
+     C                     PARM *ZEROS    P#OUTA                          CIR003
+     C                     PARM *ZEROS    P#INTA                          CIR003
+     C                     PARM *ZEROS    P#EXRT                          CIR003
+     C                     PARM *BLANKS   P#MDIN                          CIR003
+     C           *IN90     IFEQ '1'                                       CIR003
+     C           P#RTCD    ORNE *BLANKS                                   CIR003
+     C                     MOVEL'*CALL   'W0FILE  8                       CIR003
+     C                     MOVEL'EU0200  'W0KEY  29                       CIR003
+     C                     Z-ADD913       W0ERNB                          CIR003
+     C                     EXSR SRERR                                     CIR003
+     C                     ELSE                                           CIR003
+     C                     Z-ADDP#OUTA    ##AMT                           CIR003
+     C                     MOVE RSCY      ##CCY                           CIR003
+     C                     ENDIF                                          CIR003
+     C                     ENDIF                                          CIR003
+     C           PSCY      IFNE UCUCY                                     CIR003
+     C           PSCY      ANDNE*BLANKS                                   CIR003
+     C           ##PYRC    ANDEQ'P'                                       CIR003
+     C                     MOVE UCUCY     ##CCY                           CIR003
+     C                     CALL 'EU0200'               90                 CIR003
+     C                     PARM *BLANKS   P#RTCD                          CIR003
+     C                     PARM ##AMT     P#FRAM                          CIR003
+     C                     PARM ##CCY     P#FRCY                          CIR003
+     C                     PARM PSCY      P#TOCY                          CIR003
+     C                     PARM *ZEROS    P#OUTA                          CIR003
+     C                     PARM *ZEROS    P#INTA                          CIR003
+     C                     PARM *ZEROS    P#EXRT                          CIR003
+     C                     PARM *BLANKS   P#MDIN                          CIR003
+     C           *IN90     IFEQ '1'                                       CIR003
+     C           P#RTCD    ORNE *BLANKS                                   CIR003
+     C                     MOVEL'*CALL   'W0FILE  8                       CIR003
+     C                     MOVEL'EU0200  'W0KEY  29                       CIR003
+     C                     Z-ADD914       W0ERNB                          CIR003
+     C                     EXSR SRERR                                     CIR003
+     C                     ELSE                                           CIR003
+     C                     Z-ADDP#OUTA    ##AMT                           CIR003
+     C                     MOVE PSCY      ##CCY                           CIR003
+     C                     ENDIF                                          CIR003
+     C                     ENDIF                                          CIR003
+     C                     ENDIF                                          CIR003
+      *................................................................   CIR003
+     C           EXCNVT    TAG                                            CIR003
+      **  Unwind subroutine stack name                                    CIR003
+     C                     MOVEA*BLANKS   @STK,Q                          CIR003
+     C                     SUB  1         Q                               CIR003
+     C                     ENDSR                                          CIR003
+     C********************************************************************CIR003
+     C/SPACE 5                                                            CIR003
+      *****************************************************************
+      *                                                               *
+      *  SRUPD    : Update database with shadow postings in store     *
+      *                                                               *
+      *  CALLED BY: Various                                           *
+      *                                                               *
+      *  CALLS    : SRERR - Report errors                             *
+      *                                                               *
+      *****************************************************************
+     C           SRUPD     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRUPD'   @STK,Q
+      *
+      *................................................................
+      *
+      *  Call AOSPOSU0 to update database
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*UPDATE 'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD903       W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXUPD     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRCLR    : Clear all postings in store                       *
+      *                                                               *
+      *  CALLED BY: UPDATE - Update database                          *
+      *                                                               *
+      *  CALLS    : SRERR - Report errors                             *
+      *                                                               *
+      *****************************************************************
+     C           SRCLR     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCLR'   @STK,Q
+      *
+      *................................................................
+      *
+      *  Clear arrays in AOSPOSU0
+      *
+     C                     CLEARC#DTA
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*CLEAR  'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD901       W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCLR     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5                                                            CEU003
+      *****************************************************************   CEU003
+      * Subroutine  :  P01                                            *   CEU003
+      * Function    :  Determine settlement currency and convert      *   CEU003
+      *                amount.                                        *   CEU003
+      *                                                               *   CEU003
+      * Called by   :  SRIRSW                                         *   CEU003
+      * Calls       :  PGM/EU0200                                     *   CEU003
+      *****************************************************************   CEU003
+     C           P01       BEGSR                                          CEU003
+      *                                                                   CEU003
+      ** Check if CEU003 is ON.                                           CEU003
+      *                                                                   CEU003
+     C           CEU003    IFEQ 'Y'                                       CEU003
+      *                                                                   CEU003
+      ** Single currency swaps                                            CEU003
+      *                                                                   CEU003
+     C           DTYP      IFEQ 'RS'                                      151336
+     C           PSCY      ANDNE*BLANKS                                   151336
+     C           PSCY      ANDNEUCUCY                                     151336
+     C                     MOVE UCUCY     ##CCY                           151336
+     C                     ENDIF                                          151336
+      *                                                                   151336
+     C           DTYP      IFEQ 'RR'                                                          CAP055
+     C           DTYP      OREQ 'RF'                                                          CAP055
+     C           DTYP      OREQ 'RP'                                                          CAP055
+     C           PSCY      IFNE *BLANKS                                                       CAP055
+     C           PSCY      ANDNEUCUCY                                                         CAP055
+     C                     MOVE UCUCY     ##CCY                                               CAP055
+     C                     ENDIF                                                              CAP055
+     C                     ENDIF                                                              CAP055
+      *                                                                                       CAP055
+     C           DTYP      IFEQ 'RS'                                      CEU003
+     C           DTYP      OREQ 'RR'                                                          CAP055
+     C           DTYP      OREQ 'RF'                                                          CAP055
+     C           DTYP      OREQ 'RP'                                                          CAP055
+     C           PSCY      IFNE ##CCY                                     CEU003
+     C           PSCY      ANDNE*BLANKS                                   CEU003
+      *                                                                   CEU003
+     C                     CALL 'EU0200'               90                 CEU003
+     C                     PARM *BLANKS   P#RTCD  7                       CEU003
+     C                     PARM ##AMT     P#FRAM 183                      CEU003
+     C                     PARM ##CCY     P#FRCY  3                       CEU003
+     C                     PARM PSCY      P#TOCY  3                       CEU003
+     C                     PARM *ZEROS    P#OUTA 150                      CEU003
+     C                     PARM *ZEROS    P#INTA 183                      CEU003
+     C                     PARM *ZEROS    P#EXRT 159                      CEU003
+     C                     PARM *BLANKS   P#MDIN  1                       CEU003
+      *                                                                   CEU003
+     C           *IN90     IFEQ '1'                                       CEU003
+     C           P#RTCD    ORNE *BLANKS                                   CEU003
+     C                     MOVEL'*CALL   'W0FILE  8                       CEU003
+     C                     MOVEL'EU0200  'W0KEY  29                       CEU003
+     C                     Z-ADD906       W0ERNB  30                      CEU003
+     C                     EXSR SRERR                                     CEU003
+      *                                                                   CEU003
+     C                     ELSE                                           CEU003
+      *                                                                   CEU003
+     C                     Z-ADDP#OUTA    ##AMT                           CEU003
+     C                     MOVE PSCY      ##CCY                           CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+     C                     ENDIF                                          CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+      ** Cross currency swaps                                             CEU003
+      *                                                                   CEU003
+     C           DTYP      IFEQ 'RX'                                      CEU003
+      *                                                                   CEU003
+      ** Event currency is equal to 'Our Currency'                        CEU003
+      *                                                                   CEU003
+     C           UCUCY     IFEQ ##CCY                                     CEU003
+      *                                                                   CEU003
+     C           DTYP      IFEQ 'RX'                                      151336
+     C           PSCY      ANDNE*BLANKS                                   151336
+     C           PSCY      ANDNEUCUCY                                     151336
+     C                     MOVE UCUCY     ##CCY                           151336
+     C                     ENDIF                                          151336
+      *                                                                   151336
+     C           PSCY      IFNE ##CCY                                     CEU003
+     C           PSCY      ANDNE*BLANKS                                   CEU003
+      *                                                                   CEU003
+     C                     CALL 'EU0200'               90                 CEU003
+     C                     PARM *BLANKS   P#RTCD  7                       CEU003
+     C                     PARM ##AMT     P#FRAM 183                      CEU003
+     C                     PARM ##CCY     P#FRCY  3                       CEU003
+     C                     PARM PSCY      P#TOCY  3                       CEU003
+     C                     PARM *ZEROS    P#OUTA 150                      CEU003
+     C                     PARM *ZEROS    P#INTA 183                      CEU003
+     C                     PARM *ZEROS    P#EXRT 159                      CEU003
+     C                     PARM *BLANKS   P#MDIN  1                       CEU003
+      *                                                                   CEU003
+     C           *IN90     IFEQ '1'                                       CEU003
+     C           P#RTCD    ORNE *BLANKS                                   CEU003
+     C                     MOVEL'*CALL   'W0FILE  8                       CEU003
+     C                     MOVEL'EU0200  'W0KEY  29                       CEU003
+     C                     Z-ADD907       W0ERNB  30                      CEU003
+     C                     EXSR SRERR                                     CEU003
+      *                                                                   CEU003
+     C                     ELSE                                           CEU003
+      *                                                                   CEU003
+     C                     Z-ADDP#OUTA    ##AMT                           CEU003
+     C                     MOVE PSCY      ##CCY                           CEU003
+     C                     ENDIF                                          CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+     C                     ELSE                                           CEU003
+      *                                                                   CEU003
+      ** Event currency is equal to 'Their Currency'                      CEU003
+      *                                                                   CEU003
+     C           DTYP      IFEQ 'RX'                                      151336
+     C           RSCY      ANDNE*BLANKS                                   151336
+     C           RSCY      ANDNETCUCY                                     151336
+     C                     MOVE TCUCY     ##CCY                           151336
+     C                     ENDIF                                          151336
+      *                                                                   151336
+     C           RSCY      IFNE ##CCY                                     CEU003
+     C           RSCY      ANDNE*BLANKS                                   CEU003
+      *                                                                   CEU003
+     C                     CALL 'EU0200'               90                 CEU003
+     C                     PARM *BLANKS   P#RTCD  7                       CEU003
+     C                     PARM ##AMT     P#FRAM 183                      CEU003
+     C                     PARM ##CCY     P#FRCY  3                       CEU003
+     C                     PARM RSCY      P#TOCY  3                       CEU003
+     C                     PARM *ZEROS    P#OUTA 150                      CEU003
+     C                     PARM *ZEROS    P#INTA 183                      CEU003
+     C                     PARM *ZEROS    P#EXRT 159                      CEU003
+     C                     PARM *BLANKS   P#MDIN  1                       CEU003
+      *                                                                   CEU003
+     C           *IN90     IFEQ '1'                                       CEU003
+     C           P#RTCD    ORNE *BLANKS                                   CEU003
+     C                     MOVEL'*CALL   'W0FILE  8                       CEU003
+     C                     MOVEL'EU0200  'W0KEY  29                       CEU003
+     C                     Z-ADD908       W0ERNB  30                      CEU003
+     C                     EXSR SRERR                                     CEU003
+      *                                                                   CEU003
+     C                     ELSE                                           CEU003
+      *                                                                   CEU003
+     C                     Z-ADDP#OUTA    ##AMT                           CEU003
+     C                     MOVE RSCY      ##CCY                           CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+     C                     ENDIF                                          CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+     C                     ENDSR                                          CEU003
+      *****************************************************************   CEU003
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: Various                                           *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRERR     BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' ##RTCD
+     C                     RETRN
+      *
+     C           EXERR     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     MOVEL'P'       ##PAY
+     C                     MOVEL'R'       ##REC
+     C                     MOVEL*BLANKS   R#RTN   7
+      *
+      ** Key lists
+      *
+     C           DLOLAK    KLIST
+     C                     KFLD           ACBEAF
+     C                     KFLD           ACDLNO
+     C                     KFLD           ACOTIN
+     C                     KFLD           ACPRDT
+     C*
+     C           DLOLAP    KLIST
+     C                     KFLD           ACBEAF
+     C                     KFLD           ACDLNO
+     C                     KFLD           ACOTIN
+     C*                                                                   CSW005
+     C           KDLOL     KLIST                                          CSW005
+     C                     KFLD           ##BEAF                          CSW005
+     C                     KFLD           DLNO                            CSW005
+      *
+     C           KDLPC     KLIST                                          CIR003
+     C                     KFLD           KDLNO   60                      CIR003
+     C                     KFLD           KOTIN   1                       CIR003
+      *                                                                   CIR003
+      **  Set Date Format Indicator
+      *
+     C                     MOVE '0'       *IN98
+      *                                                                   CIR002
+      ** Access AO/AOSARDR0 to determine if Compounding of Interest       CIR002
+      **   required.                                                      CIR002
+      *                                                                   CIR002
+     C                     CALL 'AOSARDR0'                                CIR002
+     C                     PARM *BLANKS   @RTCD   7                       CIR002
+     C                     PARM '*VERIFY' @OPTN   7                       CIR002
+     C                     PARM 'CIR002'  @SARD   6                       CIR002
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR002
+      *                                                                   CIR002
+     C           @RTCD     IFNE *BLANKS                                   CIR002
+     C           @RTCD     ANDNE'*NRF   '                                 CIR002
+     C                     MOVEL'SCSARDPD'W0FILE                          CIR002
+     C                     MOVEL'CIR002'  W0KEY                           CIR002
+     C                     Z-ADD904       W0ERNB                          CIR002
+     C                     EXSR SRERR                                     CIR002
+     C                     END                                            CIR002
+      *                                                                   CIR002
+     C           @RTCD     IFEQ *BLANKS                                   CIR002
+     C                     MOVEL'Y'       CIR002  1                       CIR002
+     C                     ELSE                                           CIR002
+     C                     MOVEL'N'       CIR002                          CIR002
+     C                     END                                            CIR002
+     C/COPY WNCPYSRC,AOOUSWU0K8
+      *                                                                   106074
+      * Call Access prog. for Tax rate.                                   106074
+      *                                                                   106074
+     C**********           CALL 'AODEALR0'                                106074              CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD                           106074
+     C                     PARM '*FIRST ' @OPTN                           106074
+     C********** SDDEAL    PARM SDDEAL    DSFDY                           106074              CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *                                                                   106074
+      * Handle database error                                             106074
+     C           @RTCD     IFNE *BLANKS                                   106074
+     C                     MOVEL'SDDEALPD'W0FILE                          106074
+     C                     MOVEL'*FIRST'  W0KEY                           106074
+     C                     Z-ADD905       W0ERNB                          106074
+     C                     EXSR SRERR                                     106074
+     C                     END                                            106074
+      *                                                                   CEU003
+      ** Check if CEU003 is switched *ON.                                 CEU003
+      *                                                                   CEU003
+     C                     CALL 'AOSARDR0'                                CEU003
+     C                     PARM *BLANKS   @RTCD   7                       CEU003
+     C                     PARM '*VERIFY' @OPTN   7                       CEU003
+     C                     PARM 'CEU003'  @SARD   6                       CEU003
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU003
+      *                                                                   CEU003
+     C           @RTCD     IFEQ *BLANKS                                   CEU003
+     C                     MOVE 'Y'       CEU003  1                       CEU003
+     C                     ELSE                                           CEU003
+     C                     MOVE 'N'       CEU003                          CEU003
+     C                     END                                            CEU003
+      *                                                                   CIR003
+      **  Determine if CIR003 is Installed.                               CIR003
+      *                                                                   CIR003
+     C                     CALL 'AOSARDR0'                                CIR003
+     C                     PARM *BLANKS   @RTCD   7                       CIR003
+     C                     PARM '*VERIFY' @OPTN   7                       CIR003
+     C                     PARM 'CIR003'  @SARD   6                       CIR003
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR003
+      *                                                                   CIR003
+     C           @RTCD     IFNE *BLANKS                                   CIR003
+     C           @RTCD     ANDNE'*NRF   '                                 CIR003
+     C                     MOVEL'SCSARDPD'W0FILE                          CIR003
+     C                     MOVEL'CIR003'  W0KEY                           CIR003
+     C                     Z-ADD909       W0ERNB                          CIR003
+     C                     EXSR SRERR                                     CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR003
+     C           @RTCD     IFEQ *BLANKS                                   CIR003
+     C                     MOVEL'Y'       CIR003  1                       CIR003
+     C                     ELSE                                           CIR003
+     C                     MOVEL'N'       CIR003                          CIR003
+     C                     ENDIF                                          CIR003
+      *                                                                   CIR006
+      **  Determine if CIR006 is Installed.                               CIR006
+      *                                                                   CIR006
+     C                     CALL 'AOSARDR0'                                CIR006
+     C                     PARM *BLANKS   @RTCD   7                       CIR006
+     C                     PARM '*VERIFY' @OPTN   7                       CIR006
+     C                     PARM 'CIR006'  @SARD   6                       CIR006
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR006
+      *                                                                   CIR006
+     C           @RTCD     IFNE *BLANKS                                   CIR006
+     C           @RTCD     ANDNE'*NRF   '                                 CIR006
+     C                     MOVEL'SCSARDPD'W0FILE                          CIR006
+     C                     MOVEL'CIR006'  W0KEY                           CIR006
+     C                     Z-ADD910       W0ERNB                          CIR006
+     C                     EXSR SRERR                                     CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C           @RTCD     IFEQ *BLANKS                                   CIR006
+     C                     MOVEL'Y'       CIR006  1                       CIR006
+     C                     ELSE                                           CIR006
+     C                     MOVEL'N'       CIR006                          CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                                       CAP205
+      **  Determine if CAP205 is Installed.                                                   CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  @SARD                                               CAP205
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFNE *BLANKS                                                       CAP205
+     C           @RTCD     ANDNE'*NRF   '                                                     CAP205
+     C                     MOVEL'SCSARDPD'W0FILE                                              CAP205
+     C                     MOVEL'CAP205'  W0KEY                                               CAP205
+     C                     Z-ADD915       W0ERNB                                              CAP205
+     C                     EXSR SRERR                                                         CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVEL'Y'       CAP205  1                                           CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVEL'N'       CAP205                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *****************************************************************            MD035545 MD047993
+      ***Call*access*program*for*General*Ledger*details.***************            MD035545 MD047993
+      *****************************************************************            MD035545 MD047993
+     C**********           CALL 'AOGELRR1'                                         MD035545 MD047993
+     C**********           PARM '*MSG   ' @RTCD   7                                MD035545 MD047993
+     C**********           PARM '*FIRST ' @OPTN   7                                MD035545 MD047993
+     C********** SDGELR    PARM SDGELR    DSSDY                                    MD035545 MD047993
+      *                                                                            MD035545 MD047993
+     C********** @RTCD     IFNE *BLANK                                             MD035545 MD047993
+     C**********           MOVEL'SDGELRPD'DBFILE                                   MD035545 MD047993
+     C**********           MOVEL'062'     DBASE                                    MD035545 MD047993
+     C**********           MOVEL@OPTN     DBKEY                                    MD035545 MD047993
+     C**********           EXSR SRERR                                              MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+      *                                                                                     MD035545
+      ** Retrieve system value setting                                                      MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   W0RTCD  7                                         MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'                             MD035545
+      *                                                                                     MD035545
+     C           W0RTCD    IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+      *                                                                   CEU003
+     C/COPY WNCPYSRC,AOOUSWU0C3
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+     C/COPY WNCPYSRC,AOOUSWU0K4
+     C/COPY ZSRSRC,ZDATE2Z2
+      /SPACE 5
+     C/COPY ZSRSRC,ZDLINTZ1
+      /SPACE 5
+     C/COPY ZSRSRC,ZCBDYSZ1
+     C/SPACE 5
+     C/COPY WNCPYSRC,AOOUSWU0C4
+     C/COPY ZSRSRC,ZDATE9Z3                                               182370
+     C/COPY ZSRSRC,ZDAT10Z2                                               182370
+      * Release DLOLCFPD record                                           182090
+     ODLOLCFD0E                                                           182090
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** ##NAR  **      NARRATIVES
+UP FRONT FEE
+BUY OUT
+INTEREST
+PRINCIPAL                                                                 CIR003
+PRINCIPAL INCREASE                                                        CIR003
+PRINCIPAL DECREASE                                                        CIR003
+PREMIUM                                                                                       CAP055
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+     X/COPY WNCPYSRC,AOOUSWU0X1
+     X/COPY ZSRSRC,ZDATE9Z4                                               182370

@@ -1,0 +1,2136 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Validate Generic Posting Interface Batch')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Generic Posting Interface                            *
+      *                                                               *
+      *  GL1721 - Validate Posting Batch                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2006                      *
+      *                                                               *
+      *  Last Amend No. MD033917           Date 19Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD032075           Date 23Jun15               *
+      *                 MD032027           Date 22Jan15               *
+      *                 CGL160             Date 19Aug14               *
+      *                 MD028365           Date 19Aug14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 248076             Date 29May07               *
+      *                 248075             Date 29May07               *
+      *                 248073             Date 29May07               *
+      *                 247803             Date 16May07               *
+      *                 246863B (Reopen)   Date 30Apr07               *
+      *                 247239             Date 23Apr07               *
+      *                 247241             Date 23Apr07               *
+      *                 247240             Date 23Apr07               *
+      *                 247235             Date 23Apr07               *
+      *                 246863A (Reopen)   Date 23Apr07               *
+      *                 246910             Date 05Apr07               *
+      *                 246864             Date 04Apr07               *
+      *                 246863             Date 04Apr07               *
+      *                 246862             Date 04Apr07               *
+      *                 246859             Date 04Apr07               *
+      *                 243160             Date 19Oct06               *
+      *                 242869             Date 09Oct06               *
+      *                 242462             Date 19Sep06               *
+      *                 242455             Date 19Sep06               *
+      *                 242103             Date 11Sep06               *
+      *                 242109             Date 11Sep06               *
+      *                 CGL047 *Create     Date 30Jun06               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD033917 - Non retail account with blank transaction type    *
+      *             reflected as having an Unpaid Item error          *
+      *           - Applied for MD-49653.                             *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD032075 - Component GLC1722 failed with database error at   *
+      *             DBASE 5.                                          *
+      *           - Make sure that BTIBCA (Branch) is not empty to    *
+      *             prevent database error and failure of GLC1722     *
+      *             component.                                        *
+      *           - For valid postings where Retail Number is given,  *
+      *             include CCY in report to format posting amount    *
+      *             correctly                                         *
+      *  MD032027 - Fix on Stopped and Presented Cheques issue(CGL160)*
+      *  CGL160 - Cheque Details Upload via Generic Posting Interface *
+      *  MD028365 - CGL047 - Generic Postings interface Audit report  *
+      *             GL1721AU missing control totals DR and CR         *
+      *  248076 - Narrative Code validation errors.                   *
+      *  248075 - Default Posting and Value Dates.                    *
+      *  248073 - DR/CR Flag Check against Retail Transaction Type.   *
+      *  247803 - Wrong error message printed when validating branch. *
+      *  246863B - When posting to Suspense, Customer is blank.       *
+      *  247239 - Items posted to suspense still generate shadow      *
+      *           postings.                                           *
+      *  247241 - Check for Blocked Accounts (if this is required).   *
+      *  247240 - Suspense Posting should have no Retail Trans Type.  *
+      *  247235 - DACO check should apply to all account types.       *
+      *  246863A- Value Date beyond Forward Value Period must use     *
+      *           Retail ICD figure for Retail A/Cs and G/L ICD       *
+      *           for non-Retail Accounts if CGL010 is enabled.       *
+      *  246910 - Posting to Suspense not done if posting/value date  *
+      *           before date account opened.                         *
+      *  246864 - Transaction Type set for Non-Retail Accounts.       *
+      *  246863 - Value Date allowed beyond Forward Value Period.     *
+      *  246862 - Value Date allowed beyond Back Value Period.        *
+      *  246859 - Forward Value Date allowed even if CGL010 is not    *
+      *           enabled.                                            *
+      *  243160 - Retail Account Branch checked against wrong field.  *
+      *  242869 - Leave gap between Retail Account Number and Posting *
+      *           Date                                                *
+      *  242462 - Incorrect number of postings in error on GL1721AU   *
+      *  242455 - Incorrect spool information on call of ZSFILE       *
+      *  242103 - Suppress leading zeroes on postings control totals  *
+      *           Add space between Dr Cr and Trans.type in PRTF      *
+      *           Dates should not be Midas Day numbers and amounts   *
+      *           should be formatted for decimal places.             *
+      *  242109 - If set up to post to suspense and invalid postings  *
+      *           allow return message to outgoing dtaq               *
+      *  CGL047 - Generic Postings Interface                          *
+      *                                                               *
+      *****************************************************************
+     FGLPCHKPDIF  E           K        DISK
+     FGLPCHKPAIF  E                    DISK
+     FGLGPICL0IF  E           K        DISK
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNUMF
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTABF                          KRENAMEACCNTF
+     F            ACCNTACF                          KIGNORE
+     FSDACODL1IF  E           K        DISK
+     FSDRETRL1IF  E           K        DISK
+     FSDPRFCL1IF  E           K        DISK
+     FSDBRCHL1IF  E           K        DISK
+     FSDBOOKL1IF  E           K        DISK
+     FSDCUSTL5IF  E           K        DISK
+     FSDCURRL1IF  E           K        DISK
+     FSDNARRL1IF  E           K        DISK                                                   248076
+     FGL1721AUO   E             99     PRINTER      KINFDS SPOOLU     UC
+     FGL1721P1O   E             98     PRINTER      KINFDS SPOOL1     UC
+     FGL1721P2O   E             97     PRINTER      KINFDS SPOOL2     UC
+     FGL1721P3O   E             96     PRINTER      KINFDS SPOOL3     UC                      CGL160
+     FGLICHKPDO   E                    DISK
+     FSTOPCL0 IF  E           K        DISK                           UC                      CGL160
+     F            STOPCSDF                          KRENAME@STPL0                             CGL160
+      ** Midas RE Stopped cheques items detail (CNUM¦CCY¦ACOD¦ACSQ)                           CGL160
+      **                                                                                      CGL160
+     FSTOPCL1 IF  E           K        DISK                           UC                      CGL160
+     F            STOPCSDF                          KRENAME@STPL1                             CGL160
+      ** Midas RE Stopped cheques items detail (ACNO)                                         CGL160
+      **                                                                                      CGL160
+     FCHQBKL1 IF  E           K        DISK                           UC                      CGL160
+      ** Midas RE Cheque Book file - Retreival                                                CGL160
+      **                                                                                      CGL160
+     FCHQBKL3 UF  E           K        DISK                           UC                      CGL160
+     F            CHQBKPHF                          KIGNORE                                   CGL160
+     F            CHQBKPDF                          KRENAMECHQBK                              CGL160
+     F            CHQBKPTF                          KIGNORE                                   CGL160
+      ** Midas RE Cheque Book file - Update                                                   CGL160
+      **                                                                                      CGL160
+     FGLACNTL3IF  E           K        DISK                                                   CGL160
+      ** Midas GL Account Master Extension File (Available Balances)                          CGL160
+      **                                                                                      CGL160
+     FGLACNXL2UF  E           K        DISK                                                   CGL160
+     F            GLACNTD0                          KRENAMEGLACNX2                            CGL160
+      ** Midas GL Account Master Extension File (Available Balances)                          CGL160
+      **                                                                                      CGL160
+     E                    WAR        20  1                                                    CGL160
+      ** Array for use in Cheque Book details retreival and update                            CGL160
+      *                                                                                       CGL160
+     E                    REF        10 40                                                    CGL160
+      ** Array to hold Referral Messages                                                      CGL160
+      *                                                                                       CGL160
+      *
+     IACNUMF
+     I              RECI                            ANRECI
+      *
+     IACCNTF
+     I              RECI                            ACRECI
+      *                                                                                     MD032027
+     I@STPL1                                                                                MD032027
+     I              RECI                            STRECI                                  MD032027
+      *
+     ILDA         DS                            256
+      *  Local data area for database error details
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IRUNDAT      DS                             13
+      *  RUNDAT data area for system run date.
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SUCP                                      242103
+     I                                       12  12 DTFF                                      242103
+     I                                       13  13 MBIN                                      242103
+      *
+     IDNATN       DS                              5                                           CGL160
+     I                                        1   50FNATN                                     CGL160
+     I            DS
+      *  Account file key for database error reporting
+     I                                        1  24 ACKEY
+     I                                        1   6 BTCUST
+     I                                        7   9 BTCYCD
+     I                                       10  19 BTACCD
+     I                                       20  21 BTACSN
+     I                                       22  24 BTIBCA
+      *
+     I            DS
+      *  Input data stream fields for validation
+     I                                        1 256 INDATA
+     I                                       41  45 BTRUND
+     I                                       46  60 BTNRCA
+     I                                       46  600BTNRCD
+     I                                       61  780BTCAMT
+     I                                       61  78 BTCAMA
+     I                                       79  960BTDAMT
+     I                                       79  96 BTDAMA
+      *
+     I            DS
+      *  OUTPUT data stream fields.
+     I                                        1 256 OTDATA
+     I                                        1   5 OTRUND
+     I                                        6  20 OTNRCA
+     I                                       21  38 OTCAMA
+     I                                       39  56 OTDAMA
+     I                                       57  74 OTHREA
+      *
+     ISCSARD    E DSSCSARDPD
+      **  Data structure for switchable feature
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  Generla Ledger ICD
+      *
+     ISDRETL    E DSSDRETLPD                                                                 246863A
+     I              QQACCD                          QQACCX                                   246863A
+      **  Retail ICD                                                                         246863A
+      *                                                                                      246863A
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *                                                                                       242103
+     IUUSDY     E DSDSSDY                                                                     242103
+      *                                                                                       242103
+      ** 800 Byte Data Structure for Incoming Data from Access Program                        242103
+      *                                                                                       242103
+     ID@CURR    E DSSDCURRPD                                                                  242103
+      *                                                                                       242103
+      *  Currency Codes DS for assigning data from Access                                     242103
+      *
+     ID@NOST    E DSSDNOSTPD                                                                  CGL160
+     I              QQACCD                          QQACC2                                    CGL160
+      *                                                                                       CGL160
+      *  Nostro Codes DS for assigning data from Access                                       CGL160
+      *                                                                                       CGL160
+     ISPOOL1      DS
+     I** File information data structure
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOL2      DS
+     I** File information data structure
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     ISPOOL3      DS                                                                          CGL160
+     I** File information data structure                                                      CGL160
+     I                                       83  92 SFILE3                                    CGL160
+     I                                    B 123 1240SFNUM3                                    CGL160
+      *
+     ISPOOLU      DS
+     I** File information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I              'Retail Account no do-C         NAR02
+     I              'es not exist or clos-
+     I              'ed'
+      *
+     I              'Account code is not -C         NAR03
+     I              'found'
+      *
+     I              'Retail account does -C         NAR04
+     I              'not exist or is -
+     I              'closed'
+      *
+     I              'Posted to suspense - C         NAR04A
+     I              'account'
+      *
+     I              'Customer does not ex-C         NAR05
+     I              'ist'
+      *
+     I              'Currency does not ex-C         NAR06
+     I              'ist'
+      *
+     I              'Branch does not exis-C         NAR07
+     I              't'
+      *
+     I              'Retail transaction t-C         NAR08
+     I              'ype is incorrect'
+      *
+     I              'Amount is zero or ne-C         NAR09
+     I              'gative'
+      *
+     I              'Debit/Credit Indicat-C         NAR10
+     I              'or is not D or C'
+      *
+     I              'Posting/Value date i-C         NAR11
+     I              's invalid'
+      *
+     I              'Profit centre is inv-C         NAR12
+     I              'alid'
+      *
+     I********      'Profit centre is val-C         NAR13                                     247803
+     I********      'is but branch is inv-                                                    247803
+     I********      'alid'                                                                    247803
+      *                                                                                       247803
+     I              'Booking branch does -C         NAR13                                     247803
+     I              'not exist'                                                               247803
+      *                                                                                       247803
+     I              'Book Code is invalid'C         NAR14
+      *
+     I              'Number of records do-C         NAR15
+     I              ' not agree'
+      *
+     I              'Debit Hash totals do-C         NAR16
+     I              ' not agree'
+      *
+     I              'Credit Hash totals d-C         NAR17
+     I              'o not agree'
+      *
+     I              'Hash Totals of retai-C         NAR18
+     I              'l accounts do not ag-
+     I              'ree'
+      *
+     I              'Posting ignored due -C         NAR19
+     I              'to previous errors'
+      *
+     I              'File Control Error'  C         NAR20
+      *
+     I              'Interface date does -C         NAR21
+     I              'not agree with syst-
+     I              'em run date'
+      *
+     I              'Posting/value date - C         NAR22
+     I              'is before date that -
+     I              'account was opened'
+      *
+     I              'Branch differs -     C         NAR23
+     I              'from branch of -
+     I              'retail account'
+      *
+     I              'Customer differs -   C         NAR24
+     I              'from customer of -
+     I              'retail account'
+      *
+     I              'Currency code diffe- C         NAR25
+     I              'rs from currency of -
+     I              'retail account'
+      *
+     I              'Account code differ- C         NAR26
+     I              's from account code-
+     I              ' of retail account'
+      *
+     I              'Account seq. differ- C         NAR27
+     I              's from account seq.-
+     I              ' of retail account'
+      *                                                                                       246863
+     I              'Value Date is beyond-C         NAR28                                     246863
+     I              ' forward value perio-                                                    246863
+     I              'd'                                                                       246863
+      *                                                                                       246862
+     I              'Value Date is earlie-C         NAR29                                     246862
+     I              'r than back value pe-                                                    246862
+     I              'riod'                                                                    246862
+      *                                                                                       246859
+     I              'Forward Value Date n-C         NAR30                                     246859
+     I              'ot permitted for non-                                                    246859
+     I              '-retail account'                                                         246859
+      *                                                                                       247241
+     I              'Retail account is -  C         NAR31                                     247241
+     I              'blocked'                                                                 247241
+      *                                                                                       248073
+     I              'DR/CR indicator does-C         NAR32                                     248073
+     I              ' not match Retail -                                                      248073
+     I              'Transaction Type'                                                        248073
+      *                                                                                       248076
+     I              'Narrative Code and - C         NAR33                                     248076
+     I              'Posting Narrative -                                                      248076
+     I              'are both blank'                                                          248076
+      *                                                                                       248076
+     I              'Narrative Code does -C         NAR34                                     248076
+     I              'not exist on the -                                                       248076
+     I              'Narrative Codes -                                                        248076
+     I              'table'                                                                   248076
+      *
+     I              'Retail account is -  C         NAR35                                     CGL160
+     I              'inactive'                                                                CGL160
+      *                                                                                       CGL160
+     I              'Retail account is -  C         NAR36                                     CGL160
+     I              'refer Debits'                                                            CGL160
+      *                                                                                       CGL160
+     I              'Retail account is -  C         NAR37                                     CGL160
+     I              'refer Credits'                                                           CGL160
+      *                                                                                       CGL160
+     I              'Retail account is -  C         NAR38                                     CGL160
+     I              'Bankrupt/Bad Debt'                                                       CGL160
+      *                                                                                       CGL160
+     I              'Retail account has - C         NAR39                                     CGL160
+     I              'Insufficient Funds'                                                      CGL160
+      *                                                                                       CGL160
+     I              'Cheque Stopped'      C         NAR40                                     CGL160
+      *                                                                                       CGL160
+     I              'Error Accessing -    C         NAR41                                     CGL160
+     I              'Stopped Cheque table'                                                    CGL160
+      *                                                                                       CGL160
+     I              'Cheque Out of -      C         NAR42                                     CGL160
+     I              'Range'                                                                   CGL160
+      *                                                                                       CGL160
+     I              'Cheque Presented'    C         NAR43                                     CGL160
+      *                                                                                       CGL160
+     I              'Cheque Not expect-   C         NAR44                                     CGL160
+     I              'ed for this Account'                                                     CGL160
+      *                                                                                       CGL160
+     I              'Unpaid Item'         C         NAR45                                     CGL160
+      *                                                                                       CGL160
+     I              'CGL047DftTranType'   C         DFTTTY                                    CRE020
+     I              'BlockAcCheck'        C         C#BLKA                                    247241
+      *
+      **********************************************************************************************
+      /EJECT
+      **********************************************************************************************
+      *
+      *  Program entry parameter list.
+     C           *ENTRY    PLIST
+     C                     PARM           RTNCDE  7
+     C                     PARM           INPDTA256
+     C                     PARM           OUTDTA256
+     C                     PARM           P@SARN  6
+     C                     PARM           P@DESC 30
+      *
+     C                     MOVE *BLANKS   RTNCDE
+      *
+      *  Key list for general ledger accounts file.
+     C           ACCKEY    KLIST
+     C                     KFLD           B$CUST
+     C                     KFLD           BTCYCD
+     C                     KFLD           B$ACCD
+     C                     KFLD           B$ACSN
+     C                     KFLD           BTIBCA
+      *
+      *  Key lists for Cheque Books file                                                      CGL160
+     C           KCHQBK    KLIST                                                              CGL160
+     C                     KFLD           KACNO  100                                          CGL160
+     C                     KFLD           KGCIN   10                                          CGL160
+     C                     KFLD           KSCQN   80                                          CGL160
+      *                                                                                       CGL160
+     C           KCHQB2    KLIST                                                              CGL160
+     C                     KFLD           KACNO                                               CGL160
+     C                     KFLD           KGCIN                                               CGL160
+      *                                                                                       CGL160
+      **  Define LDA and RUNDAT as data areas.
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+      *
+      **  Move input data stream into data structure.
+     C                     MOVE INPDTA    INDATA
+      *
+      ** Initialise work fields for aduit and detail reports
+     C                     Z-ADD0         PSTERR
+     C                     Z-ADD0         PSTDBT                                            MD028365
+     C                     Z-ADD0         PSTCRT                                            MD028365
+      *
+      **  Retrieve system run day number.
+     C                     IN   RUNDAT
+      *
+      **  Move run day number to an alpha field.
+      **  Move date format flag to a work field.                                              242103
+     C                     MOVE RUND      RUNDA   5
+     C                     MOVE DTFF      WUDTFF                                              242103
+      *
+      **  Check input date if not blank
+     C           BTRUND    IFNE '     '                    B1
+     C           BTRUND    ANDNERUNDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE            ***************
+     C                     MOVEL'RUN DATE'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'RUN DATE'DBKEY            ***************
+     C                     MOVEL'GL1721'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+      **  Read a record from GLPCHKPD                                                         242462
+     C                     READ GLPCHKD0                 70                                   242462
+      *
+      **  Read through file GLPCHKPD
+     C************IN01     DOWEQ*OFF                       B1                                 242462
+     C           *IN70     DOWEQ*OFF                       B1                                 242462
+      *
+      ****Read a record from GLPCHKPD                                                         242462
+     C******************** READ GLPCHKD0                 01                                   242462
+      *
+      ****If a record was read,                                                               242462
+     C************IN01     IFEQ *OFF                       B2                                 242462
+      *
+      **  Increment the count of records read,
+     C                     ADD  1         RECCOU 150
+      *
+      **  Reset report indicator flag
+     C                     MOVE *OFF      *IN50
+      *
+      **  Initialise error flag field
+     C                     MOVE *BLANKS   ERRCHK  1
+      * Initialise counter for Referral Message array and blank                               CGL160
+      * Referral array                                                                        CGL160
+     C                     Z-ADD0         RA      10                                          CGL160
+     C                     MOVEA*BLANKS   REF                                                 CGL160
+      *                                                                                       CGL160
+      *
+      **  Accumulate hash debit/credit posting amounts
+     C           BTDCIN    IFEQ 'D'                        B3
+     C                     ADD  BTPTAM    DRHASH 180
+     C                     ADD  BTPTAM    PSTDBT 180                                        MD028365
+     C                     ENDIF                           E3
+     C           BTDCIN    IFEQ 'C'                        B3
+     C                     ADD  BTPTAM    CRHASH 180
+     C                     ADD  BTPTAM    PSTCRT 180                                        MD028365
+     C                     ENDIF                           E3
+      *
+      * If Nostro Code defined, access Nosto table to retreive the                            CGL160
+      * full GL account details                                                               CGL160
+     C           BTNNBI    IFNE *BLANKS                                                       CGL160
+     C                     CALL 'AONOSTR0'                                                    CGL160
+     C                     PARM *BLANKS   UUAPRC                                              CGL160
+     C                     PARM '*KEY'    UUAPOP                                              CGL160
+     C                     PARM *BLANKS   UUCUST  6                                           CGL160
+     C                     PARM BTCYCD    UUCYCD  3                                           CGL160
+     C                     PARM *BLANKS   UUACCD 10                                           CGL160
+     C                     PARM *BLANKS   UUACSN  2                                           CGL160
+     C                     PARM BTNNBI    UUNONB  2                                           CGL160
+     C                     PARM *BLANKS   UUBRCD  3                                           CGL160
+     C                     PARM *BLANKS   UUCSSN 10                                           CGL160
+     C                     PARM *BLANKS   UUPNOI  1                                           CGL160
+     C           D@NOST    PARM *BLANKS   UUSDY                                               CGL160
+      *                                                                                       CGL160
+     C           UUAPRC    IFEQ *BLANKS                                                       CGL160
+     C                     MOVE A7CUST    BTCUST                                              CGL160
+     C                     MOVE A7ACSN    BTACSN                                              CGL160
+     C                     MOVE A7ACCD    BTACCD                                              CGL160
+     C                     MOVE A7BRCD    BTIBCA                                              CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+      ** Calculate numeric values of customer number, account code and account sequence.
+     C                     MOVE BTCUST    B$CUST  6
+     C                     MOVE BTACCD    B$ACCD 100
+     C                     MOVE BTACSN    B$ACSN  20
+      *                                                                                       248075
+      ** Default dates if necessary                                                           248075
+     C           BTPTDT    IFEQ *ZERO                                                         248075
+     C                     Z-ADDBJRDNB    BTPTDT                                              248075
+     C                     ENDIF                                                              248075
+      *                                                                                       248075
+     C           BTVLDT    IFEQ *ZERO                                                         248075
+     C                     Z-ADDBJRDNB    BTVLDT                                              248075
+     C                     ENDIF                                                              248075
+      *                                                                                       242103
+      ** Format dates for report                                                              242103
+     C                     EXSR DTSUBR                                                        242103
+      *                                                                                       242103
+      ** Format posting amount                                                                242103
+     C                     EXSR AMSUBR                                                        242103
+      *
+      ** Validate details on posting received
+     C                     EXSR VALDTL
+      *
+      **  If record is valid then report details
+     C           VALID     IFEQ 'Y'
+     C           GPRPTI    ANDNE'N'
+     C           *IN97     IFEQ *ON
+     C                     WRITEGL1721H2
+     C                     MOVE *OFF      *IN97
+     C                     ENDIF
+     C                     WRITEGL1721D2
+      *                                                                                       CGL160
+      * If any referral conditions for this posting, output the details                       CGL160
+      * on P2 report and P3 report                                                            CGL160
+     C           REF,1     IFNE *BLANKS                                                       CGL160
+      *                                                                                       CGL160
+     C           *IN96     IFEQ *ON                                                           CGL160
+     C           REFER     ANDEQ'Y'                                                           CGL160
+     C                     WRITEGL1721H3                                                      CGL160
+     C                     MOVE *OFF      *IN96                                               CGL160
+     C                     ENDIF                                                              CGL160
+     C           REFER     IFEQ 'Y'                                                           CGL160
+     C                     WRITEGL1721D3                                                      CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C                     Z-ADD1         RA                                                  CGL160
+     C           REF,RA    DOUEQ*BLANKS                                                       CGL160
+      *                                                                                       CGL160
+     C                     MOVELREF,RA    RFNAR                                               CGL160
+     C           *IN97     IFEQ *ON                                                           CGL160
+     C                     WRITEGL1721H2                                                      CGL160
+     C                     MOVE *OFF      *IN97                                               CGL160
+     C                     ENDIF                                                              CGL160
+     C                     WRITEGL1721R2                                                      CGL160
+      *                                                                                       CGL160
+     C           *IN96     IFEQ *ON                                                           CGL160
+     C           REFER     ANDEQ'Y'                                                           CGL160
+     C                     WRITEGL1721H3                                                      CGL160
+     C                     MOVE *OFF      *IN96                                               CGL160
+     C                     ENDIF                                                              CGL160
+     C           REFER     IFEQ 'Y'                                                           CGL160
+     C                     WRITEGL1721R3                                                      CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     ENDDO                                                              CGL160
+      *                                                                                       CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           BTVLDT    IFEQ RUND                                                          CGL160
+     C           BTVLDT    ORLT RUND                                                          CGL160
+     C           FAIL      ANDEQ'N'                                                           CGL160
+      *                                                                                       CGL160
+     C           KACNX2    KLIST                                                              CGL160
+     C                     KFLD           KCNUM                                               CGL160
+     C                     KFLD           KCCY                                                CGL160
+     C                     KFLD           KACOD                                               CGL160
+     C                     KFLD           KACSQ                                               CGL160
+     C                     KFLD           KBRCA                                               CGL160
+      *                                                                                       CGL160
+     C                     MOVE CNUM      KCNUM                                               CGL160
+     C                     MOVE CCY       KCCY                                                CGL160
+     C                     MOVE ACOD      KACOD                                               CGL160
+     C                     MOVE ACSQ      KACSQ                                               CGL160
+     C                     MOVE BRCA      KBRCA                                               CGL160
+     C           KACNX2    CHAINGLACNXL2             90                                       CGL160
+     C           *IN90     IFEQ *OFF                       B2                                 CGL160
+     C           BTDCIN    IFEQ 'D'                                                           CGL160
+     C                     ADD  BTPTAM    F1BAV0                                              CGL160
+     C                     ADD  BTPTAM    F1AVA0                                              CGL160
+     C                     ELSE                                                               CGL160
+     C                     SUB  BTPTAM    F1BAV0                                              CGL160
+     C                     SUB  BTPTAM    F1AVA0                                              CGL160
+     C                     ENDIF                                                              CGL160
+     C                     UPDATGLACNX2                                                       CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C                     ENDIF
+      *
+      * If Details Valid and Cheque Number on incoming details,                               CGL160
+      * update Cheque Book file                                                               CGL160
+     C           VALID     IFEQ 'Y'                                                           CGL160
+     C           BTCQNB    ANDNE*BLANKS                                                       CGL160
+     C           BTDCIN    ANDEQ'D'                                                           CGL160
+      *                                                                                       CGL160
+     C                     MOVE BTCQNB    KSCQN                                               CGL160
+     C                     Z-ADD0         KGCIN                                               CGL160
+     C           BTRACN    IFEQ 0                                                             CGL160
+     C                     MOVE ACNO      KACNO                                               CGL160
+     C                     ELSE                                                               CGL160
+     C                     MOVE BTRACN    KACNO                                               CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C                     OPEN CHQBKL3                                                       CGL160
+     C           KCHQBK    SETGTCHQBK                                                         CGL160
+     C           KCHQB2    REDPECHQBK                    43                                   CGL160
+      *                                                                                       CGL160
+     C           SCQN      IFLE KSCQN                                                         CGL160
+     C           KSCQN     ANDLEECQN                                                          CGL160
+     C           *IN43     ANDEQ*OFF                                                          CGL160
+      *                                                                                       CGL160
+     C                     Z-ADDKSCQN     WSCQN                                               CGL160
+     C           WSCQN     SUB  SCQN      WOFSET                                              CGL160
+     C           WOFSET    DIV  8         WI                                                  CGL160
+     C                     MVR            WBITN                                               CGL160
+     C           WI        ADD  1         WI                                                  CGL160
+      *                                                                                       CGL160
+      ** Set the correct bit representing the cheque number presented                         CGL160
+      *                                                                                       CGL160
+     C                     MOVEACQPS      WAR                                                 CGL160
+     C                     SELEC                                                              CGL160
+     C           WBITN     WHEQ 0                                                             CGL160
+     C                     BITON'0'       WAR,WI                                              CGL160
+     C           WBITN     WHEQ 1                                                             CGL160
+     C                     BITON'1'       WAR,WI                                              CGL160
+     C           WBITN     WHEQ 2                                                             CGL160
+     C                     BITON'2'       WAR,WI                                              CGL160
+     C           WBITN     WHEQ 3                                                             CGL160
+     C                     BITON'3'       WAR,WI                                              CGL160
+     C           WBITN     WHEQ 4                                                             CGL160
+     C                     BITON'4'       WAR,WI                                              CGL160
+     C           WBITN     WHEQ 5                                                             CGL160
+     C                     BITON'5'       WAR,WI                                              CGL160
+     C           WBITN     WHEQ 6                                                             CGL160
+     C                     BITON'6'       WAR,WI                                              CGL160
+     C           WBITN     WHEQ 7                                                             CGL160
+     C                     BITON'7'       WAR,WI                                              CGL160
+     C                     ENDSL                                                              CGL160
+      *                                                                                       CGL160
+     C                     MOVEAWAR       CQPS                                                CGL160
+      *                                                                                       CGL160
+      ** Generate next trnsaction number                                                      CGL160
+     C           *NAMVAR   DEFN MNATN     DNATN                                               CGL160
+     C           *LOCK     IN   DNATN                                                         CGL160
+     C                     MOVE FNATN     WNATN   50                                          CGL160
+     C                     MOVE FNATN     WWRK5   50                                          CGL160
+     C           WWRK5     ADD  1         WWRK5                                               CGL160
+     C                     MOVE WWRK5     FNATN                                               CGL160
+     C                     OUT  DNATN                                                         CGL160
+      *                                                                                       CGL160
+     C                     MOVELWNATN     TNLU                                                CGL160
+     C                     MOVE 'A'       CHTP                                                CGL160
+     C                     MOVE BJRDNB    LCD                                                 CGL160
+     C                     UPDATCHQBK                                                         CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C                     CLOSECHQBKL3                                                       CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+      **  Write a record to interim check file if fail flag is not Y
+     C           FAIL      IFNE 'Y'
+     C                     MOVE P@SARN    BTSARN
+      *                                                                                       247240
+      **  If posting to Suspense, ensure that Retail Transaction Type is not filled           247240
+      **  Also ensure that other fields are reset correctly for Suspense posting              247239
+     C           SUSP      IFEQ 'Y'                                                           247240
+     C                     MOVEL*BLANKS   BTTRTY                                              247240
+     C                     Z-ADDBJRDNB    BTPTDT                                              247239
+     C                     Z-ADDBJRDNB    BTVLDT                                              247239
+     C                     MOVEL'G'       BTACTY                                              247239
+     C                     Z-ADD*ZERO     BTRACN                                              247239
+     C                     ENDIF                                                              247240
+     C                     WRITEGLICHKD0
+     C                     ENDIF
+      *
+     C******************** ENDIF                           E2                                 242462
+      *
+      ** Accumulate no. of records in error
+     C********** ERRCHK    IFNE *BLANKS                                                       242462
+     C           ERRCHK    IFEQ 'Y'                                                           242462
+     C                     ADD  1         PSTERR
+     C                     ENDIF
+      **  Read a record from GLPCHKPD                                                         242462
+     C                     READ GLPCHKD0                 70                                   242462
+      *
+     C                     ENDDO                           E1
+      *
+      **  Termination Processing
+     C                     EXSR SRTERM
+      *
+      /EJECT
+      **********************************************************************************************
+      *  SR. VALDTL - Validate Details on Incoming Posting Record      OUND.
+      **********************************************************************************************
+     C           VALDTL    BEGSR
+      *
+      **  Set valid flag and fail flag
+     C                     MOVE 'Y'       VALID   1
+     C                     MOVE 'N'       FAIL    1
+     C                     MOVE 'N'       SUSP    1
+     C                     MOVE 'N'       UNPAID  1                                           CGL160
+      *
+      * If transaction type matches that defined for Unpaid Items, reject                     CGL160
+     C           BTTRTY    IFEQ GPUITT                                                        CGL160
+     C           BTACTY    ANDEQ'R'                                                         MD033917
+     C                     MOVELNAR45     ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     MOVEL'Y'       UNPAID                                              CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     GOTO VALEND                                                        CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+      **  If retail account no. entered validate retail account
+     C           BTRACN    IFNE 0                          B1
+      *
+     C           BTRACN    CHAINACNUMF               02
+     C           *IN02     IFEQ *ON                        B2
+     C           ANRECI    ORNE 'D'
+      *                                                                                       CGL160
+      * Post to suspense if this is what is defined for the file being processed              CGL160
+     C           GPSUSP    IFNE 'Y'                                                           CGL160
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR02     ERNAR
+     C                     EXSR RPTERR
+     C                     ELSE                                                               CGL160
+     C                     MOVELNAR02     ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C           SUSP      IFNE 'Y'                                                           CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ELSE                            X2
+      *
+      **  If branch entered must not be different from a/c
+     C********   BTBCBH    IFNE *BLANKS                    B3                                 243160
+     C********   BTBCBH    ANDNEBRCA                                                          243160
+     C           BTIBCA    IFNE *BLANKS                    B3                                 243160
+     C           BTIBCA    ANDNEBRCA                                                          243160
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR23     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E3
+      *
+      **  If customer entered must not be different from a/c
+     C           BTCUST    IFNE *BLANKS                    B3
+     C           BTCUST    ANDNECNUM
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR24     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E3
+      *                                                                                     MD032075
+     C           BTCYCD    IFEQ *BLANKS                                                     MD032075
+     C                     MOVELCCY       BTCYCD                                            MD032075
+     C                     ENDIF                                                            MD032075
+      *
+      **  If currency code entered must not be different from a/c
+     C           BTCYCD    IFNE *BLANKS                    B3
+     C           BTCYCD    ANDNECCY
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR25     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E3
+      *
+      **  If account code entered must not be different from a/c
+     C                     MOVE BTACCD    ##ACCD 100
+     C           BTACCD    IFNE *BLANKS                    B3
+     C           ##ACCD    ANDNE0
+     C           ##ACCD    ANDNEACOD
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR26     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E3
+      *
+      **  If account seq. entered must not be different from a/c
+     C                     MOVE BTACSN    ##ACSN  20
+     C           BTACSN    IFNE *BLANKS                    B3
+     C           ##ACSN    ANDNE0
+     C           ##ACSN    ANDNEACSQ
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR27     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C                     ELSE                            X1
+      *
+      **  Validate settlement branch code
+     C           BTIBCA    CHAIN@A8REB0              07
+     C           *IN07     IFEQ *ON                        B2
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR07     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E2
+      *
+      **  Validate customer
+     C           BTCUST    CHAIN@CUSTFT              09
+     C           *IN09     IFEQ *ON                        B2
+     C                     MOVE 'Y'       SUSP    1
+     C                     MOVELNAR05     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E2
+      *
+      **  Validate currency code
+     C           BTCYCD    CHAIN@A6REA3              10
+     C           *IN10     IFEQ *ON                        B2
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR06     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E2
+      *
+      **  Validate account code
+     C                     MOVE *BLANKS   A5ACTY
+     C           BTACCD    CHAIN@A5REA6              03
+     C           *IN03     IFEQ *ON                        B2
+     C                     MOVE 'Y'       SUSP    1
+     C                     MOVELNAR03     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E2
+      *
+      **  Check if account exists if branch & currency are valid
+     C           *IN07     IFEQ *OFF                       B2
+     C           *IN10     ANDEQ*OFF
+      *
+      ** Check account exists
+     C           ACCKEY    CHAINACCNT                04
+      *
+      ** Account is a retail account that does not exist
+     C           A5ACTY    IFEQ 'R'                        B3
+     C           *IN04     IFEQ *ON                        B4
+     C           ACRECI    ORNE 'D'
+     C                     MOVE 'Y'       SUSP    1
+     C                     MOVELNAR04     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+      *
+      **  Post to suspense if ICD flagged & account not found if
+      **   - Account code is retail     or
+      **   - Account code is invalid    or
+      **   - Customer is invalid
+     C           SUSP      IFEQ 'Y'                        B3
+     C           GPSUSP    IFEQ 'Y'                        B4
+     C                     EXSR PRSUSP                                                       246863B
+     C********             MOVE A8BICN    BTCUST                                             246863B
+     C********             MOVE BKACCD    BTACCD                                             246863B
+     C********             MOVE '01'      BTACSN                                             246863B
+     C                     MOVELNAR04A    ERNAR
+     C                     EXSR RPTERR
+     C                     ELSE                            X4
+     C                     MOVE 'Y'       FAIL
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF                           E1
+      *
+      ** Validate transaction type
+      ** Only validate transaction type for Retail Accounts                                   246864
+     C           ATYP      IFEQ 'R'                        B1
+     C           BTTRTY    IFNE '     '                    B1
+     C           BTTRTY    CHAIN@A1RECX              05
+     C           *IN05     IFEQ *ON                        B2
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR08     ERNAR
+     C                     EXSR RPTERR
+      *                                                                                       248073
+      ** Validate DR/CR Indicator for Transaction Type against that for Posting               248073
+     C                     ELSE                                                               248073
+     C           A1DCIN    IFEQ 'C'                                                           248073
+     C           BTDCIN    ANDEQ'D'                                                           248073
+     C           A1DCIN    OREQ 'D'                                                           248073
+     C           BTDCIN    ANDEQ'C'                                                           248073
+     C                     MOVE 'Y'       FAIL                                                248073
+     C                     MOVELNAR32     ERNAR                                               248073
+     C                     EXSR RPTERR                                                        248073
+     C                     ENDIF                                                              248073
+     C                     ENDIF                           E2
+     C                     ELSE
+     C                     MOVE ##TRTY    BTTRTY
+     C                     ENDIF                           E1
+     C                     ENDIF                                                              246864
+      *
+      ** Validate posting amount
+     C                     EXSR AMSUBR                                                      MD032075
+     C           BTPTAM    IFLE 0                          B1
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR09     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E1
+      *
+      **  If debit/credit indicator is not 'D' or 'C',
+     C           BTDCIN    IFNE 'C'                        B1
+     C           BTDCIN    ANDNE'D'
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR10     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E1
+      *
+      **  If posting date or value date is invalid,
+     C           BTPTDT    IFLE 0                          B1
+     C           BTVLDT    ORLE 0
+     C                     MOVELNAR11     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E1
+      *
+      **  If posting date or value date before date account opened
+     C********   ATYP      IFEQ 'R'                        B1                                 247235
+     C           BTPTDT    IFLT DACO                       B2
+     C           BTVLDT    ORLT DACO
+     C                     MOVELNAR22     ERNAR
+     C                     EXSR RPTERR
+     C           GPSUSP    IFEQ 'Y'                        B3
+     C           SUSP      IFNE 'Y'
+     C                     MOVEL'Y'       SUSP                                                246910
+     C                     EXSR PRSUSP                                                       246863B
+     C********             MOVE A8BICN    BTCUST                                      246910 246863B
+     C********             MOVE BKACCD    BTACCD                                      246910 246863B
+     C********             MOVE '01'      BTACSN                                      246910 246863B
+     C                     MOVELNAR04A    ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'Y'       FAIL
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+     C********             ENDIF                           E1                                 247235
+      *                                                                                       246863
+      **  Check that value date is not after Latest Forward Value Date                        246863
+     C********   BTVLDT    IFGT WKFVDT                     B1                         246863 246863A
+     C           BTVLDT    IFGT WKFVDR                     B1                                246863A
+     C           ATYP      ANDEQ'R'                                                          246863A
+     C           BTVLDT    ORGT WKFVDG                                                       246863A
+     C           ATYP      ANDNE'R'                                                          246863A
+     C           CGL010    ANDEQ'Y'                                                          246863A
+     C                     MOVELNAR28     ERNAR                                               246863
+     C                     EXSR RPTERR                                                        246863
+     C           GPSUSP    IFEQ 'Y'                        B2                                 246863
+     C           SUSP      IFNE 'Y'                                                           246863
+     C                     MOVEL'Y'       SUSP                                                246863
+     C                     EXSR PRSUSP                                                       246863B
+     C********             MOVE A8BICN    BTCUST                                      246863 246863B
+     C********             MOVE BKACCD    BTACCD                                      246863 246863B
+     C********             MOVE '01'      BTACSN                                      246863 246863B
+     C                     MOVELNAR04A    ERNAR                                               246863
+     C                     EXSR RPTERR                                                        246863
+     C                     ENDIF                                                              246863
+     C                     ELSE                                                               246863
+     C                     MOVE 'Y'       FAIL                                                246863
+     C                     ENDIF                           E2                                 246863
+     C                     ENDIF                           E1                                 246863
+      *                                                                                       246862
+      **  Check that value date is not before Earliest Back Value Date                        246862
+     C           BTVLDT    IFLT WKBVDT                     B1                                 246862
+     C                     MOVELNAR29     ERNAR                                               246862
+     C                     EXSR RPTERR                                                        246862
+     C           GPSUSP    IFEQ 'Y'                        B2                                 246862
+     C           SUSP      IFNE 'Y'                                                           246862
+     C                     MOVEL'Y'       SUSP                                                246862
+     C                     EXSR PRSUSP                                                       246863B
+     C********             MOVE A8BICN    BTCUST                                      246862 246863B
+     C********             MOVE BKACCD    BTACCD                                      246862 246863B
+     C********             MOVE '01'      BTACSN                                      246862 246863B
+     C                     MOVELNAR04A    ERNAR                                               246862
+     C                     EXSR RPTERR                                                        246862
+     C                     ENDIF                                                              246862
+     C                     ELSE                                                               246862
+     C                     MOVE 'Y'       FAIL                                                246862
+     C                     ENDIF                           E2                                 246862
+     C                     ENDIF                           E1                                 246862
+      *                                                                                       246859
+      **  Check that value date is not forward for non-retail account if CGL010 not enabled   246859
+     C           ATYP      IFNE 'R'                        B1                                 246859
+     C           CGL010    ANDNE'Y'                                                           246859
+     C           BTVLDT    ANDGTBJRDNB                                                        246859
+     C                     MOVELNAR30     ERNAR                                               246859
+     C                     EXSR RPTERR                                                        246859
+     C           GPSUSP    IFEQ 'Y'                        B2                                 246859
+     C           SUSP      IFNE 'Y'                                                           246859
+     C                     MOVEL'Y'       SUSP                                                246859
+     C                     EXSR PRSUSP                                                       246863B
+     C********             MOVE A8BICN    BTCUST                                      246859 246863B
+     C********             MOVE BKACCD    BTACCD                                      246859 246863B
+     C********             MOVE '01'      BTACSN                                      246859 246863B
+     C                     MOVELNAR04A    ERNAR                                               246859
+     C                     EXSR RPTERR                                                        246859
+     C                     ENDIF                                                              246859
+     C                     ELSE                                                               246859
+     C                     MOVE 'Y'       FAIL                                                246859
+     C                     ENDIF                           E2                                 246859
+     C                     ENDIF                           E1                                 246859
+      *                                                                                       247241
+      **  Check that Retail Account is not blocked if this check is required                  247241
+      ** If Blocked A/C validation flag is blank, check should only occur if                  CGL160
+      ** setting of system value (WKBLKA) is 'Y'.                                             CGL160
+      ** If Blocked Account validation flag is 'S' post to suspense, if 'R'                   CGL160
+      ** do not post to suspense, only refer.                                                 CGL160
+     C           ATYP      IFEQ 'R'                        B1                                 247241
+     C           WKBLKA    ANDEQ'Y'                                                           247241
+     C           GPBLAC    ANDEQ' '                                                           CGL160
+     C           ATYP      OREQ 'R'                                                           CGL160
+     C           GPBLAC    ANDEQ'R'                                                           CGL160
+     C           ATYP      OREQ 'R'                                                           CGL160
+     C           GPBLAC    ANDEQ'S'                                                           CGL160
+      *                                                                                       247241
+     C           BTDCIN    IFEQ 'D'                                                           247241
+     C                     TESTB'2'       RETB           90                                   247241
+     C                     ELSE                                                               247241
+     C                     TESTB'3'       RETB           90                                   247241
+     C                     ENDIF                                                              247241
+      *                                                                                       247241
+     C           *IN90     IFEQ *ON                        B2                                 247241
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPBLAC    IFEQ 'S'                                                           CGL160
+     C           GPBLAC    OREQ ' '                                                           CGL160
+     C                     MOVELNAR31     ERNAR                                               247241
+     C                     EXSR RPTERR                                                        247241
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR31     REF,RA                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           GPSUSP    IFEQ 'Y'                        B3                                 247241
+     C           GPBLAC    ANDEQ' '                                                           CGL160
+     C           GPBLAC    OREQ 'S'                                                           CGL160
+     C           SUSP      IFNE 'Y'                                                           247241
+     C                     MOVEL'Y'       SUSP                                                247241
+     C                     EXSR PRSUSP                                                       246863B
+     C********             MOVE A8BICN    BTCUST                                      247241 246863B
+     C********             MOVE BKACCD    BTACCD                                      247241 246863B
+     C********             MOVE '01'      BTACSN                                      247241 246863B
+     C                     MOVELNAR04A    ERNAR                                               247241
+     C                     EXSR RPTERR                                                        247241
+     C                     ENDIF                                                              247241
+     C                     ELSE                                                               247241
+      * If error flagged as referral don't fail                                               CGL160
+     C           GPBLAC    IFNE 'R'                                                           CGL160
+     C                     MOVE 'Y'       FAIL                                                247241
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E3                                 247241
+     C                     ENDIF                           E2                                 247241
+     C                     ENDIF                           E1                                 247241
+      *
+      ** Perform Inactive Account Validation if applicable                                    CGL160
+      ** If Inactive Account validation flag is 'S' post to suspense, if 'R'                  CGL160
+      ** do not post to suspense, but highlight as a referral on the report                   CGL160
+     C           ATYP      IFEQ 'R'                        B1                                 CGL160
+     C           GPINAC    ANDEQ'R'                                                           CGL160
+     C           ATYP      OREQ 'R'                                                           CGL160
+     C           GPINAC    ANDEQ'S'                                                           CGL160
+      *                                                                                       CGL160
+     C                     TESTB'4'       RETB           90                                   CGL160
+      *                                                                                       CGL160
+     C           *IN90     IFEQ *ON                        B2                                 CGL160
+      *                                                                                       CGL160
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPINAC    IFEQ 'S'                        B3                                 CGL160
+     C                     MOVELNAR35     ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR35     REF,RA                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           GPINAC    IFEQ 'S'                        B3                                 CGL160
+     C           SUSP      IFNE 'Y'                                                           CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E3                                 CGL160
+     C                     ENDIF                           E2                                 CGL160
+     C                     ENDIF                           E1                                 CGL160
+      *                                                                                       CGL160
+      ** Perform Refer Dr/Cr Validation if applicable                                         CGL160
+      ** If Refer Dr/Cr validation flag is 'S' post to suspense, if 'R'                       CGL160
+      ** do not post to suspense, but highlight as a referral on the report                   CGL160
+     C           ATYP      IFEQ 'R'                        B1                                 CGL160
+     C           GPRFAC    ANDEQ'R'                                                           CGL160
+     C           ATYP      OREQ 'R'                                                           CGL160
+     C           GPRFAC    ANDEQ'S'                                                           CGL160
+      *                                                                                       CGL160
+     C           BTDCIN    IFEQ 'D'                                                           CGL160
+     C                     TESTB'0'       RETB           90                                   CGL160
+     C                     ELSE                                                               CGL160
+     C                     TESTB'1'       RETB           90                                   CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           *IN90     IFEQ *ON                        B2                                 CGL160
+      *                                                                                       CGL160
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPRFAC    IFEQ 'S'                        B3                                 CGL160
+     C           BTDCIN    IFEQ 'D'                                                           CGL160
+     C                     MOVELNAR36     ERNAR                                               CGL160
+     C                     ELSE                                                               CGL160
+     C                     MOVELNAR37     ERNAR                                               CGL160
+     C                     ENDIF                                                              CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ELSE                                                               CGL160
+     C           BTDCIN    IFEQ 'D'                                                           CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR36     REF,RA                                              CGL160
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR37     REF,RA                                              CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           GPRFAC    IFEQ 'S'                        B3                                 CGL160
+     C           SUSP      IFNE 'Y'                                                           CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E3                                 CGL160
+     C                     ENDIF                           E2                                 CGL160
+     C                     ENDIF                           E1                                 CGL160
+      *                                                                                       CGL160
+      ** Perform Bankrupt Validation if applicable                                            CGL160
+      ** If Bankrupt Account validation flag is 'S' post to suspense, if 'R'                  CGL160
+      ** do not post to suspense, but highlight as a referral on the report                   CGL160
+     C           ATYP      IFEQ 'R'                        B1                                 CGL160
+     C           GPBKAC    ANDEQ'R'                                                           CGL160
+     C           ATYP      OREQ 'R'                                                           CGL160
+     C           GPBKAC    ANDEQ'S'                                                           CGL160
+      *                                                                                       CGL160
+     C                     TESTB'6'       RETB           90                                   CGL160
+      *                                                                                       CGL160
+     C           *IN90     IFEQ *ON                        B2                                 CGL160
+      *                                                                                       CGL160
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPBKAC    IFEQ 'S'                        B3                                 CGL160
+     C                     MOVELNAR38     ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR38     REF,RA                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           GPBKAC    IFEQ 'S'                        B3                                 CGL160
+     C           SUSP      IFNE 'Y'                                                           CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E3                                 CGL160
+     C                     ENDIF                           E2                                 CGL160
+     C                     ENDIF                           E1                                 CGL160
+      *                                                                                       CGL160
+      ** Perform Insufficient Funds validation if applicable                                  CGL160
+      ** If Insufficient Funds validation flag is 'S' post to suspense, if 'R'                CGL160
+      ** do not post to suspense, only refer.                                                 CGL160
+     C           BTDCIN    IFEQ 'D'                        B1                                 CGL160
+     C           ATYP      ANDEQ'R'                                                           CGL160
+     C           GPNSF     ANDEQ'R'                                                           CGL160
+     C           BTDCIN    OREQ 'D'                                                           CGL160
+     C           ATYP      ANDEQ'R'                                                           CGL160
+     C           GPNSF     ANDEQ'S'                                                           CGL160
+      *                                                                                       CGL160
+     C           KACNT     KLIST                                                              CGL160
+     C                     KFLD           KCNUM   6                                           CGL160
+     C                     KFLD           KCCY    3                                           CGL160
+     C                     KFLD           KACOD  100                                          CGL160
+     C                     KFLD           KACSQ   20                                          CGL160
+     C                     KFLD           KBRCA   3                                           CGL160
+      *                                                                                       CGL160
+     C                     MOVE CNUM      KCNUM                                               CGL160
+     C                     MOVE CCY       KCCY                                                CGL160
+     C                     MOVE ACOD      KACOD                                               CGL160
+     C                     MOVE ACSQ      KACSQ                                               CGL160
+     C                     MOVE BRCA      KBRCA                                               CGL160
+     C           KACNT     CHAINGLACNTL3             90                                       CGL160
+     C           *IN90     IFEQ *OFF                       B2                                 CGL160
+     C           F1IABC    ANDEQ'Y'                                                           CGL160
+     C           F1AVA0    MULT -1        F1AVA0                                              CGL160
+     C           BTPTAM    IFGT F1AVA0                     B3                                 CGL160
+      *                                                                                       CGL160
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPNSF     IFEQ 'S'                        B4                                 CGL160
+     C                     MOVELNAR39     ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR39     REF,RA                                              CGL160
+     C                     ENDIF                           E4                                 CGL160
+      *                                                                                       CGL160
+     C           GPNSF     IFEQ 'S'                        B4                                 CGL160
+     C           SUSP      IFNE 'Y'                        E5                                 CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                           E5                                 CGL160
+     C                     ENDIF                           E4                                 CGL160
+     C                     ENDIF                           E3                                 CGL160
+     C                     ENDIF                           E2                                 CGL160
+     C                     ENDIF                           E1                                 CGL160
+      *                                                                                       CGL160
+      **  Default booking branch to settlement branch if blank
+     C           BTBCBH    IFEQ *BLANKS                    B1
+     C                     MOVE BTIBCA    BTBCBH
+     C                     ENDIF                           E1
+      *
+      **  Validate booking branch
+     C           BTBCBH    CHAIN@A8REB0              07
+     C           *IN07     IFEQ *ON                        B1
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR13     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E1
+      *
+      **  Validate profit centre
+     C           BTPRCN    IFNE '    '                     B1
+     C           BTPRCN    CHAIN@DSREHC              06
+     C           *IN06     IFEQ *ON                        B2
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR12     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      **  Validate book code
+     C           BTBKCD    IFNE '  '                       B1
+     C           BTBKCD    CHAIN@BDREDK              08
+     C           *IN08     IFEQ *ON                        B2
+     C                     MOVE 'Y'       FAIL
+     C                     MOVELNAR14     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *                                                                                       248076
+      **  Validate that narrative code or text is provided                                    248076
+     C           BTNVCD    IFEQ '  '                       B1                                 248076
+     C           BTNRDC    ANDEQ'  '                                                          248076
+     C                     MOVE 'Y'       FAIL                                                248076
+     C                     MOVELNAR33     ERNAR                                               248076
+     C                     EXSR RPTERR                                                        248076
+     C                     ENDIF                           E1                                 248076
+      *                                                                                       248076
+      **  If noth narrative code and text is provided, blank the narrative code               248076
+     C           BTNVCD    IFNE '  '                       B1                                 248076
+     C           BTNRDC    ANDNE'  '                                                          248076
+     C                     MOVEL*BLANKS   BTNVCD                                              248076
+     C                     ENDIF                           E1                                 248076
+      *                                                                                       248076
+      **  Validate narrative code if entered                                                  248076
+     C           BTNVCD    IFNE '  '                       B1                                 248076
+     C           BTNVCD    CHAIN@ALREC0              08                                       248076
+     C           *IN08     IFEQ *ON                        B2                                 248076
+     C                     MOVE 'Y'       FAIL                                                248076
+     C                     MOVELNAR34     ERNAR                                               248076
+     C                     EXSR RPTERR                                                        248076
+     C                     ENDIF                           E2                                 248076
+     C                     ENDIF                           E1                                 248076
+      *
+      ** Cheque Number exists and transaction is a debit, check for                           CGL160
+      ** Stopped Cheque, Presented Cheque and Cheque Out of Range                             CGL160
+     C           BTCQNB    IFNE *BLANKS                    B1                                 CGL160
+     C           BTDCIN    ANDEQ'D'                                                           CGL160
+      *                                                                                       CGL160
+      ** If Cheque Stopped validation flag is 'S' post to suspense, if 'R'                    CGL160
+      ** do not post to suspense, but highlight as a referral on the report                   CGL160
+     C           ATYP      IFEQ 'R'                        B2                                 CGL160
+      *                                                                                       CGL160
+      * Validate whether cheque is stopped                                                    CGL160
+     C           GPCQST    IFEQ 'R'                        B3                                 CGL160
+     C           GPCQST    OREQ 'S'                                                           CGL160
+      *                                                                                       CGL160
+      * Key fields for STOPCL0 logical file                                                   CGL160
+     C           K@L0      KLIST                                                              CGL160
+     C                     KFLD           BTCUST                                              CGL160
+     C                     KFLD           BTCYCD                                              CGL160
+     C                     KFLD           B@ACCD                                              CGL160
+     C                     KFLD           B@ACSN                                              CGL160
+     C                     KFLD           BTBCBH                                              CGL160
+     C                     MOVE BTACCD    B@ACCD 100                                          CGL160
+     C                     MOVE BTACSN    B@ACSN  20                                          CGL160
+      *                                                                                       CGL160
+      * Check Stopped Cheques database file using Retail Account                              CGL160
+     C                     MOVE '0'       RECFND  1                                         MD032027
+     C                     OPEN STOPCL1                                                       CGL160
+     C                     OPEN STOPCL0                                                       CGL160
+     C           BTRACN    IFNE 0                                                             CGL160
+     C           BTRACN    SETLL@STPL1               909103                                   CGL160
+     C           BTRACN    READE@STPL1                   89                                 MD032027
+     C           RECFND    DOWEQ'0'                                                         MD032027
+     C           *IN89     ANDNE'1'                                                         MD032027
+     C                     MOVE BTCQNB    @CQNB   80                                        MD032027
+      * compare Transaction Cheque number from the STOPCSD's From Cheque Number             MD032027
+     C           TCHQ      IFEQ *ZEROS                                                      MD032027
+     C           @CQNB     ANDEQFCHQ                                                        MD032027
+     C                     MOVE '1'       RECFND                                            MD032027
+     C                     GOTO CHKFND                                                        CGL160
+     C                     ENDIF                                                            MD032027
+      * compare Transaction Cheque number if within the Stopped Cheque Range                MD032027
+     C           TCHQ      IFGT *ZEROS                                                      MD032027
+     C           @CQNB     ANDGEFCHQ                                                        MD032027
+     C           @CQNB     ANDLETCHQ                                                        MD032027
+     C                     MOVE '1'       RECFND                                            MD032027
+     C                     GOTO CHKFND                                                      MD032027
+     C                     ENDIF                                                            MD032027
+     C           BTRACN    READE@STPL1                   89                                 MD032027
+     C                     ENDDO                                                            MD032027
+     C                     ENDIF                                                              CGL160
+      * checking of stopped cheques using the customer, currency, account code,             MD032027
+      *   account sequence an d ues using the customer, currency, account code,             MD032027
+     C           BTCUST    IFNE *BLANKS                                                       CGL160
+     C           BTCYCD    ANDNE*BLANKS                                                       CGL160
+     C           BTACCD    ANDNE*BLANKS                                                       CGL160
+     C           BTACSN    ANDNE*BLANKS                                                       CGL160
+     C           BTBCBH    ANDNE*BLANKS                                                       CGL160
+     C           K@L0      SETLL@STPL0               909103                                   CGL160
+     C           K@L0      READE@STPL0                   89                                 MD032027
+     C           RECFND    DOWEQ'0'                                                         MD032027
+     C           *IN89     ANDNE'1'                                                         MD032027
+     C                     MOVE BTCQNB    @CQNB   80                                        MD032027
+      * compare Transaction Cheque number from the STOPCSD's From Cheque Number             MD032027
+     C           TCHQ      IFEQ *ZEROS                                                      MD032027
+     C           @CQNB     ANDEQFCHQ                                                        MD032027
+     C                     MOVE '1'       RECFND                                            MD032027
+     C                     GOTO CHKFND                                                      MD032027
+     C                     ENDIF                                                            MD032027
+      * compare Transaction Cheque number if within the Stopped Cheque Range                MD032027
+     C           TCHQ      IFGT *ZEROS                                                      MD032027
+     C           @CQNB     ANDGEFCHQ                                                        MD032027
+     C           @CQNB     ANDLETCHQ                                                        MD032027
+     C                     MOVE '1'       RECFND                                            MD032027
+     C                     GOTO CHKFND                                                      MD032027
+     C                     ENDIF                                                            MD032027
+     C           K@L0      READE@STPL0                   89                                 MD032027
+     C                     ENDDO                                                            MD032027
+     C                     ENDIF                                                              CGL160
+     C           CHKFND    TAG                                                                CGL160
+     C           RECFND    IFNE '1'                                                         MD032027
+     C                     SETOF                     03                                     MD032027
+     C                     ENDIF                                                            MD032027
+     C   90                MOVE *BLANKS   PRTCD   7        No record                          CGL160
+     C   89                MOVE *BLANKS   PRTCD   7        No record                        MD032027
+     C   91                MOVEL'*ERROR'  PRTCD     P      Error on File                      CGL160
+     C********** RECI      IFEQ 'D'                                                  CGL160 MD032027
+     C           STRECI    IFEQ 'D'                                                         MD032027
+     C   03                MOVEL'*STOP'   PRTCD     P      Record Found                       CGL160
+     C                     ELSE                                                               CGL160
+     C   03                MOVE *BLANKS   PRTCD            Deleted/Not Found                  CGL160
+     C                     ENDIF                                                              CGL160
+     C                     CLOSESTOPCL1                                                       CGL160
+     C                     CLOSESTOPCL0                                                       CGL160
+     C           PRTCD     IFNE *BLANKS                    B4                                 CGL160
+      *                                                                                       CGL160
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPCQST    IFEQ 'S'                        B5                                 CGL160
+     C           PRTCD     IFEQ '*STOP'                                                       CGL160
+     C                     MOVELNAR40     ERNAR                                               CGL160
+     C                     ELSE                                                               CGL160
+     C                     MOVELNAR41     ERNAR                                               CGL160
+     C                     ENDIF                                                              CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C           PRTCD     IFEQ '*STOP'                                                       CGL160
+     C                     MOVELNAR40     REF,RA                                              CGL160
+     C                     ELSE                                                               CGL160
+     C                     MOVELNAR41     REF,RA                                              CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           GPCQST    IFEQ 'S'                        B5                                 CGL160
+     C           SUSP      IFNE 'Y'                                                           CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E5                                 CGL160
+     C                     ENDIF                           E4                                 CGL160
+     C                     ENDIF                           E3                                 CGL160
+      *                                                                                       CGL160
+      * Validate whether Cheque is out of range or presented                                  CGL160
+     C                     MOVE BTRACN    KACNO                                               CGL160
+     C                     Z-ADD0         KGCIN                                               CGL160
+     C                     MOVE BTCQNB    KSCQN                                               CGL160
+     C                     Z-ADD*ZERO     WI      10                                          CGL160
+      *                                                                                       CGL160
+     C                     OPEN CHQBKL1                                                       CGL160
+     C           KCHQBK    CHAINCHQBKPDF             43                                       CGL160
+     C           *IN43     IFEQ *ON                                                           CGL160
+     C           KCHQB2    CHAINCHQBKPDF             43                                       CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           *IN43     IFEQ *OFF                       B3                                 CGL160
+     C           RECID     ANDEQ'D'                                                           CGL160
+      *                                                                                       CGL160
+      ** Cheque is not in the range expected for the retail account                           CGL160
+      ** If Cheque Range validation flag is 'S' post to suspense, if 'R'                      CGL160
+      ** do not post to suspense, but highlight as a referral on the report                   CGL160
+      *                                                                                       CGL160
+     C           KSCQN     IFLT SCQN                       B4                               MD032027
+     C           KSCQN     ORGT ECQN                       B4                               MD032027
+     C           GPCQRG    IFEQ 'S'                                                           CGL160
+     C           GPCQRG    OREQ 'R'                                                           CGL160
+     C********** KSCQN     ANDLTSCQN                       B4                        CGL160 MD032027
+     C********** KSCQN     ORGT ECQN                       B4                        CGL160 MD032027
+      *                                                                                       CGL160
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPCQRG    IFEQ 'S'                        B5                                 CGL160
+     C                     MOVELNAR42     ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR42     REF,RA                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           GPCQRG    IFEQ 'S'                        B5                                 CGL160
+     C           SUSP      IFNE 'Y'                                                           CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E5                                 CGL160
+     C                     ENDIF                                                            MD032027
+      *                                                                                       CGL160
+     C                     ELSE                            X4                                 CGL160
+      *                                                                                       CGL160
+      ** Validate if Cheque has already been presented                                        CGL160
+      *                                                                                       CGL160
+     C                     Z-ADDKSCQN     WSCQN   80                                          CGL160
+     C           WSCQN     SUB  SCQN      WOFSET  80                                          CGL160
+     C           WOFSET    DIV  8         WI                                                  CGL160
+     C                     MVR            WBITN   10                                          CGL160
+     C           WI        ADD  1         WI                                                  CGL160
+      *                                                                                       CGL160
+      ** Test corresponding bit-position of element for cheque presented                      CGL160
+      *                                                                                       CGL160
+     C                     MOVEACQPS      WAR                                                 CGL160
+     C                     SELEC                                                              CGL160
+     C           WBITN     WHEQ 0                                                             CGL160
+     C                     TESTB'0'       WAR,WI         43                                   CGL160
+     C           WBITN     WHEQ 1                                                             CGL160
+     C                     TESTB'1'       WAR,WI         43                                   CGL160
+     C           WBITN     WHEQ 2                                                             CGL160
+     C                     TESTB'2'       WAR,WI         43                                   CGL160
+     C           WBITN     WHEQ 3                                                             CGL160
+     C                     TESTB'3'       WAR,WI         43                                   CGL160
+     C           WBITN     WHEQ 4                                                             CGL160
+     C                     TESTB'4'       WAR,WI         43                                   CGL160
+     C           WBITN     WHEQ 5                                                             CGL160
+     C                     TESTB'5'       WAR,WI         43                                   CGL160
+     C           WBITN     WHEQ 6                                                             CGL160
+     C                     TESTB'6'       WAR,WI         43                                   CGL160
+     C           WBITN     WHEQ 7                                                             CGL160
+     C                     TESTB'7'       WAR,WI         43                                   CGL160
+     C                     ENDSL                                                              CGL160
+      *                                                                                       CGL160
+      ** If bit is set, this is a duplicate                                                   CGL160
+      ** If Cheque Presented validation flag is 'S' post to suspense, if 'R'                  CGL160
+      ** do not post to suspense, but highlight as a referral on the report                   CGL160
+      *                                                                                       CGL160
+     C           *IN43     IFEQ *ON                                                           CGL160
+     C           GPCQPR    ANDEQ'S'                                                           CGL160
+     C           *IN43     OREQ *ON                                                           CGL160
+     C           GPCQPR    ANDEQ'R'                                                           CGL160
+      *                                                                                       CGL160
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPCQPR    IFEQ 'S'                        B5                                 CGL160
+     C                     MOVELNAR43     ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR43     REF,RA                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           GPCQPR    IFEQ 'S'                        B5                                 CGL160
+     C           SUSP      IFNE 'Y'                                                           CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E5                                 CGL160
+      *                                                                                       CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E4                                 CGL160
+      *                                                                                       CGL160
+     C                     ELSE                            X3                                 CGL160
+      ** No cheque is expected for the retail account                                         CGL160
+     C           GPCQNX    IFEQ 'S'                        B4                                 CGL160
+     C           GPCQNX    OREQ 'R'                                                           CGL160
+      *                                                                                       CGL160
+      * If flag indicates post to suspense, output error message on                           CGL160
+      * GL1721P1 report, otherwise save error message in arrray                               CGL160
+      * for output as a referral                                                              CGL160
+     C           GPCQNX    IFEQ 'S'                        B5                                 CGL160
+     C                     MOVELNAR44     ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ELSE                                                               CGL160
+     C                     ADD  1         RA                                                  CGL160
+     C                     MOVELNAR44     REF,RA                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C           GPCQNX    IFEQ 'S'                        B5                                 CGL160
+     C           SUSP      IFNE 'Y'                                                           CGL160
+     C                     MOVEL'Y'       SUSP                                                CGL160
+     C                     EXSR PRSUSP                                                        CGL160
+     C                     MOVELNAR04A    ERNAR                                               CGL160
+     C                     EXSR RPTERR                                                        CGL160
+     C                     ENDIF                                                              CGL160
+     C                     ENDIF                           E5                                 CGL160
+      *                                                                                       CGL160
+     C                     ENDIF                           E4                                 CGL160
+      *                                                                                       CGL160
+     C                     ENDIF                           E3                                 CGL160
+     C                     CLOSECHQBKL1                                                       CGL160
+      *                                                                                       CGL160
+     C                     ENDIF                           E2                                 CGL160
+      *                                                                                       CGL160
+     C                     ENDIF                           E1                                 CGL160
+      *                                                                                       CGL160
+      **  Report posting is not to be posted
+     C           FAIL      IFEQ 'Y'
+     C                     MOVELNAR19     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF
+      *
+     C           VALEND    TAG                                                                CGL160
+     C                     ENDSR
+      *
+      **************************************************************************************MD032027
+      /EJECT                                                                                MD032027
+      **************************************************************************************MD032027
+      *  SR/STOPV - Validate Stopped Cheques                                                MD032027
+      **************************************************************************************MD032027
+      *                                                                                     MD032027
+     C           STOPV     BEGSR                                                            MD032027
+      *                                                                                     MD032027
+      ** Compare Cheque Number of the transaction as against the Stopped Cheque File        MD032027
+     C                     MOVE BTCQNB    @CQNB   80                                        MD032027
+     C           TCHQ      IFEQ *ZEROS                                                      MD032027
+     C           @CQNB     ANDEQFCHQ                                                        MD032027
+     C                     MOVEL'*STOP'   PRTCD     P                                       MD032027
+     C                     ENDIF                                                            MD032027
+      *                                                                                     MD032027
+      ** Verify if Cheque Number is with the range of Stopped cheques                       MD032027
+     C           TCHQ      IFGT *ZEROS                                                      MD032027
+     C           @CQNB     ANDGEFCHQ                                                        MD032027
+     C           @CQNB     ANDLETCHQ                                                        MD032027
+     C                     MOVEL'*STOP'   PRTCD     P                                       MD032027
+     C                     ENDIF                                                            MD032027
+      *                                                                                     MD032027
+      ** Compare Cheque Amount if Cheque Numbers are not nst the Stopped Cheque File        MD032027
+      *                                                                                     MD032027
+     C                     ENDSR                                                            MD032027
+      *                                                                                     MD032027
+      **********************************************************************************************
+      /EJECT
+      **********************************************************************************************
+      *  SR/RPTERR - To Produce Audit and details reports for failures OUND.
+      **********************************************************************************************
+     C           RPTERR    BEGSR
+      *
+      **  Report batch item details if not already reported
+     C           ERRCHK    IFEQ *BLANKS
+     C           *IN98     IFEQ *ON
+     C                     WRITEGL1721H1
+     C                     MOVE *OFF      *IN98
+     C                     ENDIF
+     C                     WRITEGL1721D1
+     C                     ENDIF
+      *
+      ** Report error details
+     C                     WRITEGL1721E1
+     C                     MOVE *BLANKS   ERNAR
+      *
+      **  Set report indicator flag
+     C                     MOVE *ON       *IN50
+      *
+      **  Set error check flag
+     C                     MOVE 'Y'       ERRCHK
+      *
+      ** Set valid flag to invalid
+     C                     MOVE 'N'       VALID
+      *
+     C                     ENDSR
+      *
+      **********************************************************************************************
+      /EJECT
+      **********************************************************************************************
+      *  SRTERM - Termination Processing                               OUND.
+      **********************************************************************************************
+     C           SRTERM    BEGSR
+      *
+      **  Output data
+      ****if*no*errors*or errors and post to suspense on interface control record
+      **  If a dataq is specified, the message will be sent as long as the return code        242109
+      **  was not in error, in which case, if the Invalid flag on the control record is 'Y'   242109
+      **  an abnormal ending to GLC1721 will occur.                                           242109
+     C***********PSTERR    IFEQ 0                                                             242109
+     C                     CLEAROUTDTA
+     C                     MOVE BTRUND    OTRUND
+     C                     MOVE BTNRCA    OTNRCA
+     C                     MOVE BTCAMA    OTCAMA
+     C                     MOVE BTDAMA    OTDAMA
+     C                     MOVELOTDATA    OUTDTA
+     C************         ENDIF                                                              242109
+      *
+      **  Set flag to terminate processing if required
+     C           PSTERR    IFGT 0
+     C           GPINVL    ANDEQ'Y'
+     C                     MOVE '*ERRORS' RTNCDE
+     C                     ENDIF
+      *
+      ** Read file control record if it exists
+     C                     READ GLPCHKPA                 90
+      *
+      **  Reset error checkindicator
+     C                     MOVE 'N'       ERRCHK
+      *
+      ** If the no. of records in the input is not blank & does
+      ** not agree with the no. calculated, terminate with error.
+     C           BTNRCA    IFNE *BLANKS
+     C           BTNRCD    ANDNE0
+     C           BTNRCD    ANDNERECCOU
+     C           ERRCHK    IFEQ 'N'
+     C                     MOVELNAR20     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF
+     C                     MOVELNAR15     ERNAR
+     C                     EXSR RPTERR
+     C                     MOVE '*ERRORS' RTNCDE
+     C                     ENDIF
+      *
+      ** If date passed and is not run date terminate with error
+     C           BTRUNA    IFNE *BLANKS
+     C           BTRUNA    ANDNERUNA
+     C           ERRCHK    IFEQ 'N'
+     C                     MOVELNAR20     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF
+     C                     MOVELNAR21     ERNAR
+     C                     EXSR RPTERR
+     C                     MOVE '*ERRORS' RTNCDE
+     C                     ENDIF
+      *
+      *  If the hash total of debit records from the input does
+      *  not agree with the value calculated, terminate with error.
+     C           BTDAMA    IFNE *BLANKS
+     C           BTDAMT    ANDNE0
+     C           BTDAMT    ANDNEDRHASH
+     C           ERRCHK    IFEQ 'N'
+     C                     MOVELNAR20     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF
+     C                     MOVELNAR16     ERNAR
+     C                     EXSR RPTERR
+     C                     MOVE '*ERRORS' RTNCDE
+     C                     ENDIF
+      *
+      *  If the hash total of credit records from the input does
+      *  not agree with the value calculated, terminate with error.
+     C           BTCAMA    IFNE *BLANKS
+     C           BTCAMT    ANDNE0
+     C           BTCAMT    ANDNECRHASH
+     C           ERRCHK    IFEQ 'N'
+     C                     MOVELNAR20     ERNAR
+     C                     EXSR RPTERR
+     C                     ENDIF
+     C                     MOVELNAR17     ERNAR
+     C                     EXSR RPTERR
+     C                     MOVE '*ERRORS' RTNCDE
+     C                     ENDIF
+      *
+      **  Output End of Reprt
+     C                     WRITEGL1721T1
+     C           GPRPTI    IFNE 'N'
+     C                     WRITEGL1721T2
+     C                     ENDIF
+      *
+     C           REF,1     IFNE *BLANKS                                                       CGL160
+     C           REFER     ANDEQ'Y'                                                           CGL160
+     C                     WRITEGL1721T3                                                      CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+      **  Output audit report details
+     C                     MOVE RECCOU    PSTCT
+     C                     WRITEGL1721AH
+     C                     WRITEGL1721AE
+      *
+      **  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      **********************************************************************************************
+      /EJECT                                                                                  242103
+     CSR         DTSUBR    BEGSR                                                              242103
+      *================================================================                       242103
+      * Setup Dates                                                                           242103
+      *                                                                                       242103
+     C           BTPTDT    IFNE *ZERO                      *IF                                242103
+      * Midas Conv. Day to Date - Standard functions  *                                       242103
+     C                     CALL 'ZDATE2'               90  Midas Conv. Day                    242103
+     C                     PARM BTPTDT    WQ0001  50       Runday Number                      242103
+     C                     PARM WUDTFF    WQ0002  1        Date Format fla                    242103
+     C           WUDTNF    PARM *ZERO     WQ0003  60       Date (numeric f                    242103
+     C           WUDDCD    PARM *BLANK    WQ0004  7        Midas Run Date                     242103
+      *                                                                                       242103
+      *                                                                                       242103
+      * Output Postg Date (print) - Standard functions  *                                     242103
+     C                     MOVE *BLANKS   XRPDTP                                              242103
+     C                     MOVELWUDDCD    XRPDTP                                              242103
+     C                     END                             *FI                                242103
+      *                                                                                       242103
+      *                                                                                       242103
+     C           BTVLDT    IFNE *ZERO                      *IF                                242103
+      * Midas Conv. Day to Date - Standard functions  *                                       242103
+     C                     CALL 'ZDATE2'               90  Midas Conv. Day                    242103
+     C                     PARM BTVLDT    WQ0001  50       Runday Number                      242103
+     C                     PARM WUDTFF    WQ0002  1        Date Format fla                    242103
+     C           WUDTNF    PARM *ZERO     WQ0003  60       Date (numeric f                    242103
+     C           WUDDCD    PARM *BLANK    WQ0004  7        Midas Run Date                     242103
+      *                                                                                       242103
+      *                                                                                       242103
+      * Output Value Date (print) - Standard functions  *                                     242103
+     C                     MOVE *BLANKS   XRVDTP                                              242103
+     C                     MOVELWUDDCD    XRVDTP                                              242103
+     C                     END                             *FI                                242103
+      *                                                                                       242103
+      *                                                                                       242103
+      *================================================================                       242103
+     CSR         DTEXIT    ENDSR                                                              242103
+      /EJECT                                                                                  242103
+     CSR         AMSUBR    BEGSR                                                              242103
+      *================================================================                       242103
+      * Setup Formatted Posting Amount                                                        242103
+      *================================================================                       242103
+      *CASE:     DB1.Currency code is Blank                                                   242103
+     C           BTCYCD    IFEQ *BLANK                     *IF                                242103
+     C                     Z-ADD*ZERO     WUNBDP           Number of Decim                    242103
+     C                     ELSE                                                               242103
+      *CASE:     *OTHERWISE                                                                   242103
+      * Access Currency. - Currency Codes  *                                                  242103
+     C*                                                                                       242103
+     C*  Access Currency codes file for the following fields                                  242103
+     C*  Currency Name, Number of decimal places, Nostro Shortname                            242103
+     C*                                                                                       242103
+     C                     MOVELBTCYCD    UUCYCD                                              242103
+     C                     CALL 'AOCURRR0'                                                    242103
+     C           WURETC    PARM WURETC    UUAPRC  7        B:Return Cd                        242103
+     C                     PARM '*KEY'    UUAPOP  7        I:Option                           242103
+     C                     PARM           UUCYCD  3        I:Currency Code                    242103
+     C           D@CURR    PARM *BLANK    UUSDY            O:Format                           242103
+      *                                                                                       242103
+      * Assign work field to file field values.                                               242103
+      *                                                                                       242103
+     C                     MOVELA6CYCD    XRCYCD  3        Currency Code                      242103
+     C                     MOVELA6CYNM    WUCYNM           Currency Name                      242103
+     C                     MOVELA6NBDP    WUNBDP           No. Decimal Places                 242103
+     C*                                                                                       242103
+     C                     END                             *FI                                242103
+      * Format amount (short) - Standard functions  *                                         242103
+     C                     Z-ADDBTPTAM    ULVALU           Value                              242103
+      *                                                                                       242103
+     C                     CALL 'GL0135U'              90  <FORMAT AMOUNT>                    242103
+     C                     PARM           ULVALU 150       I:Value                            242103
+     C                     PARM WUNBDP    ULDECP  10       I:Decimal place                    242103
+     C                     PARM 'J'       ULEDIT  1        I:IBM Edit code                    242103
+     C                     PARM *BLANK    ULCHQP  1        I:Cheque prtct.                    242103
+     C                     PARM           ULRSLF 23        O:Formatted                        242103
+      *                                                                                       242103
+     C                     MOVE ULRSLF    XRPAMP           Formatted data                     242103
+      *                                                                                       242103
+      *================================================================                       242103
+     CSR         AMEXIT    ENDSR                                                              242103
+      /EJECT                                                                                 246863B
+      ************************************************************************************   246863B
+      *  SR. PRSUSP - Process Suspense Posting                                               246863B
+      ************************************************************************************   246863B
+     C           PRSUSP    BEGSR                                                             246863B
+      *                                                                                      246863B
+      ** Obtain Branch Details                                                               246863B
+     C           BTIBCA    IFNE *BLANKS                                                      2468638
+     C                     MOVELBTIBCA    KBRCA   3                                          246863B
+     C                     ELSE                                                              246863B
+     C                     MOVELBRCA      KBRCA                                              246863B
+     C                     MOVELBRCA      BTIBCA    P                                         CGL160
+     C                     ENDIF                                                             246863B
+      *                                                                                      246863B
+     C           KBRCA     CHAIN@A8REB0              07                                      246863B
+     C           *IN07     IFEQ *ON                                                          246863B
+     C           *LOCK     IN   LDA                                                          246863B
+     C                     MOVE '004'     DBASE              * * * * * * *                   246863B
+     C                     MOVELKBRCA     DBKEY              * DBERR 004 *                   246863B
+     C                     MOVEL'SDBRCHPD'DBFILE             * * * * * * *                   246863B
+     C                     OUT  LDA                                                          246863B
+     C                     EXSR *PSSR                                                        246863B
+     C                     ENDIF                                                             246863B
+      *                                                                                      246863B
+      ** Setup Suspense Account fields                                                       246863B
+     C                     MOVE A8BICN    BTCUST                                             246863B
+     C                     MOVE BKACCD    BTACCD                                             246863B
+      *                                                                                       CGL160
+      * If Rejected Item Account Code is specified, post to this account                      CGL160
+      * and not computer suspense                                                             CGL160
+     C           GPRIAC    IFNE *BLANKS                                                       CGL160
+     C           UNPAID    ANDNE'Y'                                                           CGL160
+     C                     MOVE GPRIAC    BTACCD                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+      * If Unpaid Item and Unpaid Item Account code is specified, post to                     CGL160
+      * this account and not computer suspense                                                CGL160
+     C           GPUIAC    IFNE *BLANKS                                                       CGL160
+     C           UNPAID    ANDEQ'Y'                                                           CGL160
+     C                     MOVE GPRIAC    BTACCD                                              CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+     C                     MOVE '01'      BTACSN                                             246863B
+      *                                                                                      246863B
+     C                     ENDSR                                                             246863B
+      /EJECT
+      **********************************************************************************************
+      *  *INZSR - Initialisation Routine                               OUND.
+      **********************************************************************************************
+     C           *INZSR    BEGSR
+      *
+      **  Access SDBANKPD for report title
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If no record is found on sdbankpd.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 001 *
+     C                     MOVEL'SDBANKPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                                       246862
+      **  Derive Earliest Back Value Date                                                     246862
+     C           BJRDNB    SUB  BJBVPD    WKBVDT  50                                          246862
+      *
+      **  Access SDGELRPD for General Ledger Details
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ** Record not found on SDGELRPD
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 002 *
+     C                     MOVEL'SDGELRPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                                       246863
+      ****Derive*Latest*Forward*Value*Date*****                                       246863 246863A
+     C********   BJRDNB    ADD  BKNDFV    WKFVDT  50                                  246863 246863A
+      **  Derive Latest Forward Value Date for G/L Accounts                                  246863A
+     C           BJRDNB    ADD  BKNDFV    WKFVDG  50                                         246863A
+      *                                                                                      246863A
+      **  Access SDRETLPD for Retail ICD Details                                             246863A
+     C                     CALL 'AORETLR0'                                                   246863A
+     C                     PARM *BLANKS   @RTCD                                              246863A
+     C                     PARM '*FIRST ' @OPTN                                              246863A
+     C           SDRETL    PARM SDRETL    DSFDY                                              246863A
+      *                                                                                      246863A
+      ** Record not found on SDRETLPD                                                        246863A
+     C           @RTCD     IFNE *BLANKS                                                      246863A
+     C           *LOCK     IN   LDA                                                          246863A
+     C                     MOVE '003'     DBASE              * * * * * * *                   246863A
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 003 *                   246863A
+     C                     MOVEL'SDRETLPD'DBFILE             * * * * * * *                   246863A
+     C                     OUT  LDA                                                          246863A
+     C                     EXSR *PSSR                                                        246863A
+     C                     END                                                               246863A
+      *                                                                                      246863A
+      **  Derive Latest Forward Value Date for Retail Accounts                               246863A
+     C           BJRDNB    ADD  BMNDFV    WKFVDR  50                                         246863A
+      *
+      **  Get interface control record
+     C           P@SARN    CHAINGLGPICL0             90
+      *
+      ** Initialise reprot fields
+     C                     MOVE P@DESC    ##DESC
+      *
+      ** Open reports
+     C                     OPEN GL1721AU
+     C                     OPEN GL1721P1
+      *
+      **  Open report of valid items if required
+     C           GPRPTI    IFNE 'N'
+      *
+     C                     OPEN GL1721P2
+      *
+      **  Record printer file for RCF
+     C******************** Z-ADDSFNUMU    ZSNUM   60                                          242455
+     C                     Z-ADDSFNUM2    ZSNUM   60                                          242455
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANK    @PARM   3
+     C*******************  PARM           SFILEU                                              242455
+     C                     PARM           SFILE2                                              242455
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  Output report headers
+     C                     WRITEGL1721H2
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   REFER   1                                           CGL160
+      **  Open report of referred items if required                                           CGL160
+     C           GPBLAC    IFEQ 'R'                                                           CGL160
+     C           GPINAC    OREQ 'R'                                                           CGL160
+     C           GPRFAC    OREQ 'R'                                                           CGL160
+     C           GPBKAC    OREQ 'R'                                                           CGL160
+     C           GPNSF     OREQ 'R'                                                           CGL160
+     C           GPCQST    OREQ 'R'                                                           CGL160
+     C           GPCQRG    OREQ 'R'                                                           CGL160
+     C           GPCQPR    OREQ 'R'                                                           CGL160
+     C           GPCQNX    OREQ 'R'                                                           CGL160
+      *                                                                                       CGL160
+     C                     OPEN GL1721P3                                                      CGL160
+      *                                                                                       CGL160
+     C                     MOVEL'Y'       REFER     P                                         CGL160
+      *                                                                                       CGL160
+      **  Record printer file for RCF                                                         CGL160
+     C                     Z-ADDSFNUM3    ZSNUM   60                                          CGL160
+     C                     CALL 'ZSFILE'                                                      CGL160
+     C                     PARM           SEQ     5                                           CGL160
+     C                     PARM *BLANK    @PARM   3                                           CGL160
+     C                     PARM           SFILE3                                              CGL160
+     C                     PARM           ZSNUM                                               CGL160
+     C                     PARM           ZSERR   1                                           CGL160
+      *                                                                                       CGL160
+      **  Output report headers                                                               CGL160
+     C                     WRITEGL1721H3                                                      CGL160
+      *                                                                                       CGL160
+     C                     ENDIF                                                              CGL160
+      *                                                                                       CGL160
+      **  Record printer file for RCF
+     C                     Z-ADDSFNUM1    ZSNUM   60                      S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    @PARM   3                       S01117
+     C                     PARM           SFILE1                          S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+      *
+      **  Record printer file for RCF
+     C*******************  Z-ADDSFNUM2    ZSNUM   60                                          242455
+     C                     Z-ADDSFNUMU    ZSNUM   60                                          242455
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANK    @PARM   3
+     C******************** PARM           SFILE2                                              242455
+     C                     PARM           SFILEU                                              242455
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  Output report headers
+     C                     WRITEGL1721H1
+      *                                                                                       246859
+      ** Check if feature CGL010 is active                                                    246859
+      *                                                                                       246859
+     C                     CALL 'AOSARDR0'                                                    246859
+     C                     PARM '       ' @RTCD   7                                           246859
+     C                     PARM '*VERIFY' @OPTN   7                                           246859
+     C                     PARM 'CGL010'  @SARD   6                                           246859
+     C*                                                                                       246859
+     C           @RTCD     IFEQ *BLANKS                                                       246859
+     C                     MOVE 'Y'       CGL010  1                                           246859
+     C                     ELSE                                                               246859
+     C                     MOVE 'N'       CGL010                                              246859
+     C                     ENDIF                                                              246859
+      *                                                                                       CRE020
+     C                     CALL 'AOSVALR0'                                                    CRE020
+     C                     PARM *BLANKS   PRTCDE  7                                           CRE020
+     C                     PARM DFTTTY    PSV01  20                                           CRE020
+     C                     PARM           PCS01 200                                           CRE020
+     C                     PARM           PSV02  20                                           CRE020
+     C                     PARM           PCS02 200                                           CRE020
+     C                     PARM           PSV03  20                                           CRE020
+     C                     PARM           PCS03 200                                           CRE020
+     C                     PARM           PSV04  20                                           CRE020
+     C                     PARM           PCS04 200                                           CRE020
+     C                     PARM           PSV05  20                                           CRE020
+     C                     PARM           PCS05 200                                           CRE020
+     C                     PARM           PSV06  20                                           CRE020
+     C                     PARM           PCS06 200                                           CRE020
+     C                     PARM           PSV07  20                                           CRE020
+     C                     PARM           PCS07 200                                           CRE020
+     C                     PARM           PSV08  20                                           CRE020
+     C                     PARM           PCS08 200                                           CRE020
+     C                     PARM           PSV09  20                                           CRE020
+     C                     PARM           PCS09 200                                           CRE020
+     C                     PARM           PSV10  20                                           CRE020
+     C                     PARM           PCS10 200                                           CRE020
+      *                                                                                       CRE020
+     C           PRTCDE    IFEQ *BLANKS                                                       CRE020
+     C                     MOVELPCS01     ##TRTY  5                                           CRE020
+     C                     ELSE                                                               CRE020
+     C                     MOVEL'92000'   ##TRTY  5                                           CRE020
+     C                     ENDIF                                                              CRE020
+      *                                                                                       247241
+      ** Retrieve System Value to determine whether to check for Blocked Accounts             247241
+     C                     CALL 'AOSVALR0'                                                    247241
+     C                     PARM *BLANKS   PRTCDE  7                                           247241
+     C                     PARM C#BLKA    PSV01  20                                           247241
+     C                     PARM           PCS01 200                                           247241
+     C                     PARM           PSV02  20                                           247241
+     C                     PARM           PCS02 200                                           247241
+     C                     PARM           PSV03  20                                           247241
+     C                     PARM           PCS03 200                                           247241
+     C                     PARM           PSV04  20                                           247241
+     C                     PARM           PCS04 200                                           247241
+     C                     PARM           PSV05  20                                           247241
+     C                     PARM           PCS05 200                                           247241
+     C                     PARM           PSV06  20                                           247241
+     C                     PARM           PCS06 200                                           247241
+     C                     PARM           PSV07  20                                           247241
+     C                     PARM           PCS07 200                                           247241
+     C                     PARM           PSV08  20                                           247241
+     C                     PARM           PCS08 200                                           247241
+     C                     PARM           PSV09  20                                           247241
+     C                     PARM           PCS09 200                                           247241
+     C                     PARM           PSV10  20                                           247241
+     C                     PARM           PCS10 200                                           247241
+      *                                                                                       247241
+     C           PRTCDE    IFEQ *BLANKS                                                       247241
+     C                     MOVELPCS01     WKBLKA  1                                           247241
+     C                     ENDIF                                                              247241
+      * Define work field Midas Run Date                                                      242103
+     C                     MOVEL*BLANK    WUDDCD  7                                           242103
+      * Define work field Date (numeric format)                                               242103
+     C                     Z-ADD*ZERO     WUDTNF  60                                          242103
+      * Define work field Access Pgm Return Code                                              242103
+     C                     MOVEL*BLANK    WURETC  7                                           242103
+      * Define work field Number of Decimal Places                                            242103
+     C                     Z-ADD*ZERO     WUNBDP  10                                          242103
+      * Define work field Currency Name                                                       242103
+     C                     MOVEL*BLANK    WUCYNM 14                                           242103
+      * Define work field Nostro Shortname                                                    242103
+     C                     MOVEL*BLANK    WUNOSN 10                                           242103
+      * Define work field Date Format flag                                                    242103
+     C                     MOVEL*BLANK    WUDTFF  1                                           242103
+      * Define work field Date (numeric format)                                               242103
+     C                     Z-ADD*ZERO     WUDTNF  60                                          242103
+      * Define work field Midas Run Date                                                      242103
+     C                     MOVEL*BLANK    WUDDCD  7                                           242103
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *   *PSSR - Rrror Handling  Routine                             *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************

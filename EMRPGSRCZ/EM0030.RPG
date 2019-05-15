@@ -1,0 +1,702 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Sub-Line Type Maintenance')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Exposure Management Module                           *
+      *                                                               *
+      *  EM0030 - Maintain Trade Finance Sub-Limit Types              *
+      *                                                               *
+      *  Function:  This program is a maintenance function over       *
+      *  Trade Finance Sub-Limit Types EXTFSLPD.  This will allow     *
+      *  the insertion, display, amendment and deletion of sub-       *
+      *  limit types.                                                 *
+      *  If a sub-limit type is DELETED, this will remove all         *
+      *  records for this type from files :                           *
+      *  EMTFSAPD - Trade Finance Sub-Type Totals                     *
+      *  EMTFEXPD - Trade Finance posting records                     *
+      *                                                               *
+      *  Called By:        - Menu option                              *
+      *                                                               *
+      *  Calls: ZA0250   - Clear program subfile message queue        *
+      *         AOMMODR0 - Access module details                      *
+      *         AOSARDR0 - Access SAR details file                    *
+      *         AOCREPT  - Access program (General ledger)            *
+      *         ZVACTU   - Validate action codes                      *
+      *         ZVACTBU  - Validate action codes for branch           *
+      *         DBERRCTL - Error processing                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *                 CTI007             Date 31Mar14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002  *CREATE    Date 19AUG98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *  CTI007 - Trade Finance BF Midas 2.2 Exposure Management      *
+      *           (Recomplie)                                         *
+      *  CTI002 - Trade Innovation Phase II  *CREATE                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      * 01-05         Error Indicators                                *
+      *    30         sfldsp                                          *
+      *    31         sflclr                                          *
+      *   N31         sfldspctl                                       *
+      *    32         sflend                                          *
+      *    33         Readc of Subfile Record                         *
+      *    34         Sflnxtchg                                       *
+      *    40         Display Message Subfile                         *
+      *    41         Controls display of STRCD for add / display     *
+      *    42         Controls display of STRCD for add / display     *
+      *    43         Error on field SFLSEL                           *
+      *    80-89      General Chain indicators                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  INIT   - Initial processing                                  *
+      *  CHKAM1 - Determine first non zero amount                     *
+      *  CCYDET - Get currency details                                *
+      *  CHKRAT - Check and calculate rate                            *
+      *  DLVAMT - Deliver amounts                                     *
+      *  CHKDUP - Check duplicate currencies                          *
+      *  DLVAM1 - Delivery amount (first 2 currencies)                *
+      *  DLVAM2 - Delivery amount (second 2 currencies)               *
+      *  TRNAMT - Transaction amount                                  *
+      *  CONVRT - Calls EU0200                                        *
+      *  SNDMSG - send messages                                       *
+      *  #XRATE - Calculate cross rates                               *
+      *  RETURN - Set return parms and return                         *
+      *  *PSSR  - Error processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      * Display File
+     FEM0030FMCF  E                    WORKSTN
+     F                                        SFLRRNKSFILE SLSFL
+     F                                              KINFSR *PSSR
+      *
+      * Trade Finance Sub-Type file
+     FEMTFSLL0UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      * Sub-Limit Totals
+     FEMTFSAL0UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      * Sub Limit Details
+     FEMTFEXL2UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+     FEMTFCBL1UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      * -------------------------------------------------------------------
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     E                    CH     26  26  1  A
+      * -------------------------------------------------------------------
+     IZMUSER      DS                             17
+     I                                       11  13 BRAN
+      **  Data Area To Access User Branch
+      *
+      * -------------------------------------------------------------------
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+      * -------------------------------------------------------------------
+     IMSGDS       DS
+     I I            ' '                       1   7 MSGID
+     I I            'EMUSRMSG'                8  17 MSGF
+     I I            '*LIBL'                  18  27 MSGLIB
+     I I            ' '                      28 283 MSGDTA
+     I I            '*PRV'                  284 288 MSGREL
+      * -------------------------------------------------------------------
+      /SPACE 3
+     ILDA       E DS
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IIPSDS      SDS
+     I                                        1  10 #PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      ***  Program status data structure
+      *
+      * -------------------------------------------------------------------
+      * MODULE DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDMMOD    E DSSDMMODPD
+      *
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+     I*
+      * -------------------------------------------------------------------
+      *                         MAIN ROUTINE
+      * -------------------------------------------------------------------
+      *
+      * As there will only ever be 26 records (max) in the file EMTFSLPD
+      * and the subfile has been defined as having a maximum of 26
+      * records anyway, read the whole file and load into subfile.
+      *
+     C                     EXSR CLR@SF
+     C                     EXSR LOADSF
+      * -------------------------------------------------------------------
+      *
+      * Process Subfile
+     C           *INKC     DOWEQ*OFF
+     C********** @RET      ANDNE'Y'                                                         MD030956
+      *
+     C                     WRITEMSGCTL
+     C                     WRITESLTRL
+     C                     EXFMTSLCTL
+      *
+     C                     CALL 'ZA0250'
+      *
+      * Add Record
+     C           *IN09     IFEQ *ON
+     C                     EXSR ADDRCD
+     C                     EXSR CLR@SF
+     C                     EXSR LOADSF
+     C                     ENDIF
+      *
+      * Sfldsp = 30.  ie records exist, then can process
+     C           *IN30     IFEQ *ON
+     C                     EXSR PRC@SF
+     C                     ENDIF
+      *
+      * End *INKC
+     C                     ENDDO
+      * -------------------------------------------------------------------
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      * -------------------------------------------------------------------
+      * Subroutine *INZSR
+      * Initialisation Subroutine
+      * -------------------------------------------------------------------
+     C           *INZSR    BEGSR
+      *
+      * Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Define Work Variables
+     C           *LIKE     DEFN *IN30     ERRCDE
+     C           *LIKE     DEFN SFLSEL    @ZACTN
+     C           *LIKE     DEFN BRAN      @ZBR
+     C                     Z-ADD*ZERO     @ERR    10
+      *
+     C           *NAMVAR   DEFN           LDA   256
+      *
+      * Get user details
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C                     UNLCKZMUSER
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     UNLCKRUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      * Initialise LDA field.
+     C                     MOVEL'EM0030'  DBPGM
+      *
+      * Both Trade Innovation and feature CTI002 must be on.
+      ** Access MIDAS Modules details via access program
+      *  (database error handling done in access program)
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      **  Check for data base error.
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERROR 003 *
+     C                     MOVEL'*FIRST ' DBKEY  29
+     C                     Z-ADD3         DBASE
+     C                     SETON                     99
+     C                     ENDIF
+      *
+      ** Access SAR details file to determine if CTI002 is switched ON
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CTI002'  PSARD   6
+     C                     MOVE 'N'       CTI002  1
+      *
+      ** If core feature is switched ON, set on indicator that will
+      ** condition the rest of the processing
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CTI002
+     C                     ELSE
+      *
+      ** else, database error (return code other than *NRF)
+      *
+     C           PRTCD     IFNE '*NRF   '
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SCSARDPD'DBFILE           *DB ERROR 004 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Check to see if Trade Innovation installed and CTI002
+      *
+     C********** BGN3ST    IFNE 'Y'                                                         MD030956
+     C********** CTI002    ORNE 'Y'                                                         MD030956
+     C**********           MOVE 'Y'       @RET    1                                         MD030956
+     C**********           ENDIF                                                            MD030956
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CLR@SF
+      * Clear Subfile
+      * -------------------------------------------------------------------
+     C           CLR@SF    BEGSR
+      * Clear Subfile
+     C                     SETON                       3031
+     C                     WRITESLCTL
+     C                     SETOF                       3031
+      *
+      * Reset SFLRRN
+     C                     Z-ADD0         SFLRRN
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine LOADSF
+      * Load Subfile
+      * -------------------------------------------------------------------
+     C           LOADSF    BEGSR
+      *
+     C                     SETOF                         32
+     C           *LOVAL    SETLLEMTFSLL0
+      *
+      * Read Records into Subfile
+     C                     READ EMTFSLL0                 32
+     C           *IN32     DOWEQ'0'
+     C                     ADD  1         SFLRRN
+     C                     MOVELSLTYPE    #TYPE
+     C                     MOVELSLDESC    #DESC
+      *
+      * Get limit details by summing data for sub-limit ALL accounts
+     C                     EXSR GETLIM
+      *
+     C                     WRITESLSFL
+     C                     READ EMTFSLL0                 32
+     C                     ENDDO
+      *
+      * Compare SFLRRN with 0 to see if there is anything to display
+      *
+     C           SFLRRN    IFGT 0
+     C                     MOVE *ON       *IN30
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine PRC@SF
+      * Process Subfile Requests
+      * -------------------------------------------------------------------
+     C           PRC@SF    BEGSR
+      *
+      * Read subfile for any subfile select records
+      *
+     C                     SETOF                         33
+     C                     READCSLSFL                    33
+     C           *IN33     DOWEQ*OFF
+      *
+     C                     SETOF                         43
+     C                     SETOF                       1012
+     C                     SELEC
+      * Change current record
+     C           SFLSEL    WHEQ 'A'
+      * Check that user authorised to menu
+     C                     EXSR CHKMNU
+     C           @ERR      IFEQ *ZEROS
+     C                     EXSR CHGRCD
+     C                     ENDIF
+      *
+     C           SFLSEL    WHEQ 'D'
+     C                     EXSR CHKMNU
+     C           @ERR      IFEQ *ZEROS
+      * Set on flag to reload sub file
+     C                     MOVEL'Y'       WFDEL
+     C                     EXSR DLTALL
+     C                     ENDIF
+      *
+     C           SFLSEL    WHEQ 'E'
+     C                     EXSR CHKMNU
+     C           @ERR      IFEQ *ZEROS
+     C                     SETON                         41
+     C           *IN12     DOWEQ*OFF
+     C                     EXFMTSLRCD
+     C                     ENDDO
+     C                     MOVEL*BLANK    SFLSEL
+     C                     ENDIF
+      *
+      * If subfile select != A,D,E then Error Message
+      *
+     C                     OTHER
+     C           SFLSEL    IFNE *BLANK
+     C                     MOVELSFLSEL    MSGDTA
+     C                     MOVEL'EMT0004' MSGID
+     C                     SETON                     43
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSL
+      * Sflnxtchg
+     C                     SETON                         34
+     C           SFLRRN    CHAINSLSFL                80
+     C                     UPDATSLSFL
+      *
+     C                     READCSLSFL                    33
+     C                     ENDDO
+      *
+     C           WFDEL     IFEQ 'Y'
+     C                     MOVEL'N'       WFDEL   1
+     C                     EXSR CLR@SF
+     C                     EXSR LOADSF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CHGRCD
+      * Change Record
+      * -------------------------------------------------------------------
+     C           CHGRCD    BEGSR
+      *
+     C                     SETON                         42
+     C                     SETOF                         41
+      *
+      * Loop until F10 or F12 pressed
+     C           *IN10     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     EXFMTSLRCD
+      *
+      * Set off error code
+     C                     MOVEL'N'       ERRCDE
+     C                     EXSR CHKDSC
+      *
+      * If no errors and confirmed, update
+     C           ERRCDE    IFEQ 'N'
+     C           *IN10     ANDEQ*ON
+      *
+     C           #TYPE     CHAINEMTFSLL0             97
+     C           *IN97     IFEQ '0'                        OK
+     C                     MOVEL#DESC     SLDESC
+     C                     UPDATEMTFSL                 77
+      * Now commit
+     C           *IN77     IFEQ *OFF
+     C                     COMIT
+     C                     ELSE
+     C                     ROLBK
+     C                     ENDIF
+      *
+     C           *IN77     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'EMTFSLPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Update Subfile Select record
+      *
+     C           SFLRRN    CHAINSLSFL                80
+     C                     MOVEL*BLANK    SFLSEL
+     C                     MOVELSLDESC    #DESC
+     C                     UPDATSLSFL
+      *
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine SNDMSG
+      * Send Program Message
+      * -------------------------------------------------------------------
+     C           SNDMSG    BEGSR
+      *
+      * Only write message if requested
+      *
+     C           MSGID     IFNE *BLANKS
+     C                     CALL 'AOCREPT'
+     C                     PARM           MSGID
+     C                     PARM           MSGF
+     C                     PARM           MSGLIB
+     C                     PARM           MSGDTA
+     C                     PARM '*SAME'   MSGREL
+     C                     PARM           #PGM
+     C                     PARM *BLANK    FTMSGQ 10
+     C                     PARM *BLANK    FTMSGT  7
+     C                     ENDIF
+      *
+      * Reset message Id
+      *
+     C                     RESETMSGDS
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine ADDRCD
+      * Add Record
+      * -------------------------------------------------------------------
+     C           ADDRCD    BEGSR
+      *
+     C                     SETOF                       4142
+     C                     SETOF                       1012
+      *
+     C                     MOVE *BLANKS   #TYPE
+     C                     MOVE *BLANKS   #DESC
+     C                     MOVE *BLANKS   SLTYPE
+     C                     MOVE *BLANKS   SLDESC
+     C                     Z-ADD0         SLEXP
+      *
+     C           *IN12     DOWEQ*OFF
+     C           *IN10     ANDEQ*OFF
+      *
+     C                     EXFMTSLRCD
+      *
+     C           *IN10     IFEQ '1'
+     C                     MOVEL'N'       ERRCDE
+     C                     EXSR CHKDSC
+     C                     EXSR CHKEXS
+     C                     EXSR CHKA2Z
+     C           ERRCDE    IFEQ 'N'
+     C                     MOVEL#TYPE     SLTYPE
+     C                     MOVEL#DESC     SLDESC
+     C                     WRITEEMTFSL                 77
+      * Now commit
+     C           *IN77     IFEQ *OFF
+     C                     COMIT
+     C                     ELSE
+     C                     ROLBK
+     C                     ENDIF
+      *
+     C           *IN77     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'EMTFSLPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CHKDSC
+      * Check Description
+      * -------------------------------------------------------------------
+     C           CHKDSC    BEGSR
+      *
+      * Check that details are correct
+      * Description cannot be Blank
+     C           #DESC     IFEQ *BLANK
+     C                     MOVEL'EMT0002' MSGID
+     C                     EXSR SNDMSG
+     C                     MOVEL'Y'       ERRCDE
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CHKEXS
+      * Check Exists
+      * -------------------------------------------------------------------
+     C           CHKEXS    BEGSR
+     C           #TYPE     CHAINEMTFSLL0             97
+     C           *IN97     IFEQ '0'                        Found
+     C                     MOVEL'EMT0003' MSGID
+     C                     MOVEL#TYPE     MSGDTA
+     C                     EXSR SNDMSG
+     C                     MOVEL'Y'       ERRCDE
+     C                     ENDIF
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CHKA2Z
+      * Check that type is A-Z only
+      * -------------------------------------------------------------------
+     C           CHKA2Z    BEGSR
+      *                                                                ----
+     C                     MOVE *OFF      *IN97
+     C                     Z-ADD1         X       10
+     C           #TYPE     LOKUPCH,X                     97
+     C           *IN97     IFEQ '0'                        ! FOUND
+     C                     MOVEL'Y'       ERRCDE
+     C                     MOVEL'EMT0006' MSGID
+     C                     MOVEL#TYPE     MSGDTA
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *                                                                ----
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine DLTALL
+      * Delete ALL records from EMTFSAL0 and EMTFEXL1 where deleted
+      * type
+      * -------------------------------------------------------------------
+     C           DLTALL    BEGSR
+      *
+     C                     SETOF                       1012
+     C           *IN10     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+     C                     EXFMTDLTRCD
+     C           *IN10     IFEQ *ON
+      *
+      * Reade to EMTFSAL0 with #TYPE
+     C                     MOVE *OFF      *IN97
+     C           #TYPE     SETLLEMTFSAL0                 97
+     C           #TYPE     READEEMTFSAL0                 97
+     C           *IN97     DOWEQ'0'
+      *
+      * Delete customer balances
+     C                     SETOF                     96
+     C           *IN96     DOWEQ'0'
+     C           SAACOD    DELETEMTFCBL1             96
+     C                     ENDDO
+      *
+      * Delete all records from EMTFEXL0 for account code
+     C                     SETOF                     96
+     C           *IN96     DOWEQ'0'
+     C           SAACOD    DELETEMTFEXL2             96
+     C                     ENDDO
+      *
+      * Now delete from EMTFSAL0
+     C                     DELETEMTFSAL0
+      *
+      *
+     C           #TYPE     READEEMTFSAL0                 97
+     C                     ENDDO
+      *
+      * Now delete type itself
+     C           #TYPE     CHAINEMTFSLL0             97
+     C                     DELETEMTFSLL0
+      *
+     C                     ENDIF                           F10
+      *
+     C                     COMIT
+      *
+     C                     ENDDO                           F10 / F12
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine DLTALL
+      * Delete ALL records from EMTFSAL0 and EMTFEXL1 where deleted
+      * type
+      * -------------------------------------------------------------------
+     C           GETLIM    BEGSR
+      *
+      * For a sub-line type (SLTYPE), sum all limits and move into
+      * display field (SALIM -> #LIMIT)
+     C                     Z-ADD0         #LIMIT
+     C           SLTYPE    SETLLEMTFSAL0
+      *
+     C           SLTYPE    READEEMTFSAL0                 22
+     C           *IN22     DOWEQ*OFF                       record found
+     C                     ADD  SALIM     #LIMIT
+     C           SLTYPE    READEEMTFSAL0                 22
+     C                     ENDDO
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * CHKMNU
+      *  Check menu item action codes.
+      * -------------------------------------------------------------------
+     C           CHKMNU    BEGSR
+      *
+      *  Validate action codes
+      *  IF SINGLE BRANCH ENVIRONMENT
+      *
+     C           AGMBIN    IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM SFLSEL    @ZACTN
+     C                     PARM           @ERR
+     C                     ELSE
+      *
+      ** IF MULTIBRANCHING ENVIRONMENT
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM SFLSEL    @ZACTN
+     C                     PARM BRAN      @ZBR
+     C                     PARM           @ERR
+      *
+     C                     ENDIF
+      *
+     C           @ERR      IFNE *ZEROS
+      * Send error message
+     C                     MOVELSFLSEL    MSGDTA
+     C                     MOVEL'EMT0046' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      * -------------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDSR
+      * -------------------------------------------------------------------
+**  CPY@
+(c) Finastra International Limited 2001
+** CH ARRAY FOR A-Z
+ABCDEFGHIJKLMNOPQRSTUVWXYZ

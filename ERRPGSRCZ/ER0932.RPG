@@ -1,0 +1,803 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('MIDAS ABS ER Maturing Collateral Report')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ER0932 - ER Maturing Collateral Report                       *
+      *                                                               *
+      *  Function:  This program shows details of all transactions    *
+      *             which are used as collateral and are due to       *
+      *             mature within the period defined by the           *
+      *             Collatearl Reviewal Days in Advance (found on     *
+      *             the LMI I.C.D.)                                   *
+      *                                                               *
+      *  (phase(s)) Call during Close of Business                     *
+      *                                                               *
+      *  Called By: RPG/ERC0932 - ER Maturing Collateral Report       *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX008             Date 19Jul00               *
+      *                 ULX008             Date 23Mar00               *
+      *                 ULX008             Date 23Mar00               *
+      *                 ULX012             Date 15Dec98               *
+      *                 ULX004             Date 21Jan97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompile)                                         *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX008 - "Commissariat aux Bourses" - Change control C       *
+      *           Recompiled due to changes in PF/ERLUICPD            *
+      *  ULX008 - "Commissariat aux Bourses" - Change control A       *
+      *           Recompiled due to changes in PF/ERLUICPD            *
+      *  ULX008 - CSSF Statutory Reporting - Commissariat aux Bourses *
+      *           Recompiled due to changes in PF/ERLUICPD            *
+      *  ULX012 - Guarantees and Collateral Management enhancements   *
+      *           Recompile over changed file ERLUICPD                *
+      *  ULX004 - CAPITAL ADEQUACY                                    *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *  ===========================================                  *
+      *                                                               *
+      *  *IN87  -  Test for output 'No detail'                        *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+     FERGUEXPDIF  E           K        DISK         KINFSR *PSSR
+      * ER Guarantees & Collateral Extract File
+      *
+     FERLUICL1IF  E           K        DISK         KINFSR *PSSR
+      * Luxembourg I.C.D. File
+      *
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDAF                          KIGNORE
+      * Deals transactions File
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      * Securities details File
+      *
+     FER0932AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      * ER Maturing Collateral Report - Prtf
+      *
+     FER0932P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      * ER Maturing Collateral Audit - Prtf
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+     I*
+     ISPOOL1      DS
+     I**  File Information Data Structure - P1 report
+     I*
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     ISPOOLU      DS
+     I**  File Information Data Structure - AU report
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *****************************************************************
+      ** Local data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      ** Data Area giving Installation Control Details
+     IRUNDAT    E DSRUNDAT
+      *****************************************************************
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Customer Details
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** External DS for Branch Details
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CER001
+      *
+      ** External DS for Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** External DS for Company Details
+     ISDCOMP    E DSSDCOMPPD
+      *
+      ** External DS for Account Officer Details
+     ISDACOF    E DSSDACOFPD
+      *
+     IRTSBYR      DS
+     I                                        1   3 WWCSBA
+     I                                        4  13 WWCSSC
+     I                                        1  10 WWSESN
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** Execute initial processing
+     C                     EXSR INIT
+      *
+      ** Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      **  Output Audit Report and End Program.
+     C                     EXSR AUDIT
+      *
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR
+      *
+      ** Read first record from File.
+     C                     READ ERGUEXPD                 89
+      *
+      ** Do while not End of File.
+     C           *IN89     DOWEQ'0'                        - B1
+      *
+      * Change of Company : Access Company code details via access program
+      *
+     C           WCOMP     IFNE RTCOMP                     - B2
+      *
+     C                     CALL 'AOCOMPR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTCOMP    @KEY1   3
+     C           SDCOMP    PARM SDCOMP    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B3
+     C                     Z-ADD1         WWBASE           ****************
+     C                     MOVEL'SDCOMPPD'WWBFIL           * DB ERROR 001 *
+     C                     MOVELRTCOMP    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E3
+      *
+     C                     MOVEL*BLANKS   RCMCD
+     C                     MOVEL*BLANKS   RCMNM
+     C                     MOVELRTCOMP    RCMCD            Company code
+     C                     MOVELAPCMNM    RCMNM            Company name
+      *
+     C                     MOVELRTCOMP    WCOMP
+     C                     MOVE *ON       *IN45                    Print Break
+      *
+     C                     END                             - E2
+      *
+      * Change of Branch : Access Branch details via access program
+      *                    Open Printer file
+      *
+     C           WBRCA     IFNE RTBRCA                     - B2
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTBRCA    @KEY2   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B3
+     C                     Z-ADD2         WWBASE           ****************
+     C                     MOVEL'SDBRCHPD'WWBFIL           * DB ERROR 002 *
+     C                     MOVELRTBRCA    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E3
+      *
+     C                     MOVEL*BLANKS   RBRCA
+     C                     MOVEL*BLANKS   RBRNM
+     C                     MOVELRTBRCA    RBRCA            Branch code
+     C                     MOVELA8BRNM    RBRNM            Branch name
+      *
+      * Break on branch (Not first time)
+     C           *IN46     IFEQ *ON                        - B3
+     C                     EXSR AUDIT
+     C                     END                             - E3
+      *
+     C           WBRCA     IFNE *BLANKS                    - B3
+     C                     CLOSEER0932P1
+     C                     END                             - E3
+      *
+     C                     OPEN ER0932P1
+      *
+      * Ensure Report Spool File recorded by RCF
+      *
+     C                     MOVE RTBRCA    SENTY
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     MOVELSFILE1    SFILE
+      *
+     C                     EXSR SRZSFL
+      *
+      * Zeroise counter of records read for the branch
+      *
+     C                     Z-ADD0         WNBREC
+      *
+     C                     MOVELRTBRCA    WBRCA
+     C                     MOVE *ON       *IN45                    Print Break
+     C                     MOVE *ON       *IN46                    Print Break
+      *
+     C                     END                             - E2
+      *
+      * Change of Acc. Off : Access Account Officer details via access program
+      *
+     C           WACOF     IFNE RTACOF                     - B2
+      *
+     C           RTACOF    IFNE *BLANKS                                   ULX004
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTACOF    @KEY    2
+     C           SDACOF    PARM SDACOF    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B3
+     C                     Z-ADD3         WWBASE           ****************
+     C                     MOVEL'SDACOFPD'WWBFIL           * DB ERROR 003 *
+     C                     MOVELRTACOF    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E3
+      *
+     C                     MOVEL*BLANKS   RACOC
+     C                     MOVEL*BLANKS   RACON
+     C                     MOVELRTACOF    RACOC            Account officer code
+     C                     MOVELAZACON    RACON            Account officer name
+      *                                                                   ULX004
+     C                     ELSE                                           ULX004
+     C                     MOVEL*BLANKS   RACOC            A/c Officer    ULX004
+     C           'No detai'CAT  'ls found'RACON     P                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     MOVELRTACOF    WACOF
+     C                     MOVE *ON       *IN45                    Print Break
+      *
+     C                     END                             - E2
+      *
+      ** If Secured by indicator equal  'D' (Deposits)
+     C           RTSBYI    IFEQ 'D'                        - B2
+      *
+      ** Access to Deals File
+     C                     MOVELRTSBYR    K1SBYR  60
+      *
+     C           K1SBYR    CHAINDEALS                86
+     C           *IN86     IFEQ '1'                        - B3
+     C                     Z-ADD007       WWBASE           ****************
+     C                     MOVEL'DEALS   'WWBFIL           * DB ERROR 007 *
+     C                     MOVELRTSBYI    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E3
+      *
+      ** Test Maturity date
+     C           MDAT      IFNE *ZEROS                     - B3
+     C           MDAT      IFLE WWCORD                     - B4
+     C                     MOVE MDAT      MDATE   50
+     C                     EXSR SRDET
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+      *
+     C                     ENDIF                           - E2
+      *
+      ** If Secured by indicator equal  'C' (Customer Position)
+      ** If Secured by indicator equal  'N' (Nominals)
+     C           RTSBYI    IFEQ 'C'                        - B2
+     C           RTSBYI    OREQ 'N'
+      *
+      ** Access to Securities File
+      *
+     C           RTSBYI    IFEQ 'C'                        - B3
+     C                     MOVELWWCSSC    K2SBYR 10
+     C                     ELSE                            - X3
+     C                     MOVELWWSESN    K2SBYR 10
+     C                     ENDIF                           - E3
+      *
+     C           K2SBYR    CHAINSECTY                86
+     C           *IN86     IFEQ '1'                        - B3
+     C                     Z-ADD008       WWBASE           ****************
+     C                     MOVEL'SECTY   'WWBFIL           * DB ERROR 008 *
+     C                     MOVELRTSBYR    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E3
+      *
+      ** Test Maturity date
+     C           MATY      IFNE 0                          - B3
+     C           MATY      ANDNE99999                      - B3
+     C           MATY      IFLE WWCORD                     - B4
+     C                     MOVE MATY      MDATE
+     C                     EXSR SRDET
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+      *
+     C                     END                             - E2
+      *
+     C                     READ ERGUEXPD                 89
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRDET
+      *****************************************************************
+      *                                                               *
+      *  SRDET  - Prepare Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           SRDET     BEGSR
+      *
+      * Clear detail
+      *
+     C                     CLEARDETAIL
+      *
+      * Given by Number
+      *
+     C                     MOVE RTGVBY    GVBY    6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM GVBY      @KEY3  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C           @KYST     OREQ '*ERROR '
+     C                     Z-ADD4         WWBASE           ****************
+     C                     MOVEL'SDCUSTPD'WWBFIL           * DB ERROR 004 *
+     C                     MOVE RTGVBY    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C                     MOVELBBCSSN    RGRTN            Customer
+      *
+      * Receiving Customer Number
+      *
+     C                     MOVE RTRCUS    RCUS    6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RCUS      @KEY3  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C           @KYST     OREQ '*ERROR '
+     C                     Z-ADD4         WWBASE           ****************
+     C                     MOVEL'SDCUSTPD'WWBFIL           * DB ERROR 004 *
+     C                     MOVE RTRCUS    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C                     MOVELBBCSSN    RRRTN            Customer
+      *
+     C                     MOVELRTSBYI    RSBYI
+     C                     MOVELRTSBYR    RSBYR
+      *
+     C                     MOVELRTUTSI    RUTSI            Used to secure ind
+     C                     MOVELRTUTSR    RUTSR            Used to secure ref
+      *
+      ** Retrieve number of decimal places to format Used to secure amount
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTUTSC    @KEY2   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B2
+     C                     Z-ADD006       WWBASE           ****************
+     C                     MOVEL'SDCURRPD'WWBFIL           * DB ERROR 006 *
+     C                     MOVELRTUTSC    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE RTUTSA    ZFLD15           Used to Secure Amt
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RUTSA
+      *
+      ** Retrieve number of decimal places to format Guarantee Amount
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTGCCY    @KEY2   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C                     Z-ADD008       WWBASE           ****************
+     C                     MOVEL'SDCURRPD'WWBFIL           * DB ERROR 008 *
+     C                     MOVELRTGCCY    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE RTGAMT    ZFLD15           Secured by amount
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RGAMT
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE RTGPER    ZFLD15           Guarantee Percentage
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RGPER
+      *
+     C                     MOVE MDATE     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RMATY
+      *
+     C                     MOVELRTGCCY    RGCCY
+     C                     MOVELRTUTSC    RUTSC
+      *
+      *
+      *  Output report detail
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C           *IN45     OREQ *ON
+     C                     WRITEHEADER
+     C                     WRITESUBHEAD
+     C                     MOVE *OFF      *IN45
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+      * Incremnet number of records
+     C                     ADD  1         WNBREC
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+      * No record in file
+      *
+     C           WNBREC    IFEQ *ZEROS                     - B1
+     C*
+     C                     WRITEHEADAU
+      *
+     C                     WRITENODTLS
+      *
+     C                     WRITEDTRAIL
+      *
+     C                     ELSE                            - X1
+      *
+      * Write end of report on ER0932P1 and ER0932AU
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD7         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER
+     C                     WRITESUBHEAD
+     C                     ENDIF
+      *
+     C                     WRITEENDP1
+      *
+      * Close file ER0932P1 and write ER0932AU for end of file
+      *
+     C           *IN89     IFEQ *ON                        - B2
+     C                     CLOSEER0932P1
+     C                     END                             - E2
+      *
+     C                     WRITEHEADAU
+      *
+     C                     WRITEDTRAIL
+      *
+     C                     END                             - E1
+      *
+      ** End Program and Return.
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT     - Subroutine to do Program Initialisation.          *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      * Receive parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+      *
+      * Initialise Level break title indicators
+      *
+     C                     MOVEA'0000'    *IN,39
+      *
+      * By System
+      *
+     C           @RLEV     IFEQ 'S'                        - B1
+     C                     MOVE *ON       *IN39
+     C                     END                             - E1
+      *
+      * By Company
+      *
+     C           @RLEV     IFEQ 'C'                        - B1
+     C                     MOVE *ON       *IN40
+     C                     END                             - E1
+      *
+      * By Branch
+      *
+     C           @RLEV     IFEQ 'B'                        - B1
+     C                     MOVE *ON       *IN41
+     C                     END                             - E1
+      *
+      * By Account Officer
+      *
+     C           @RLEV     IFEQ 'A'                        - B1
+     C                     MOVE *ON       *IN42
+     C                     END                             - E1
+      *
+      * Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Redefine data error fields
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Access Bank details via access program
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C           @RTCD     IFNE *BLANK                     - B1
+     C                     Z-ADD1         WWBASE           ****************
+     C                     MOVEL'SDBANKPD'WWBFIL           * DB ERROR 001 *
+     C                     MOVEL'BANK'    WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)  MMDDYY (*IN98 on)
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ** Access to Luxembourg I.C.D.
+     C           'LU'      CHAINERLUICL1             86
+     C           *IN86     IFEQ '1'                        - B2
+     C                     Z-ADD002       WWBASE           ****************
+     C                     MOVEL'ERLUICL1'WWBFIL           * DB ERROR 002 *
+     C                     MOVEL'LU'      WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+      ** Calculate Midas Run Date + Collateral Reviewal Days
+     C                     Z-ADD0         WWCORD  50
+     C           BJRDNB    ADD  VPCORD    WWCORD
+      *
+      * Initialise working fields and first cycle indicator
+      *
+     C                     MOVE 'J'       ZECODE  1
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ** Report Work fields.
+     C                     MOVEL*BLANKS   WCOMP   3
+     C                     MOVEL*BLANKS   WBRCA   3
+     C                     MOVEL*BLANKS   WACOF   2
+      *
+     C                     Z-ADD0         WNBREC  50
+      *
+      * Setup indicators
+     C                     MOVE *OFF      *IN45                    Print Break
+     C                     MOVE *OFF      *IN46
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C* SRZSFL - Subroutine to call ZSFILE
+     C*****************************************************************
+     C*
+     C           SRZSFL    BEGSR
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     END
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+      ***  Print error message:
+      *
+     C                     WRITEHEADAU
+      *
+     C                     WRITEDBERROR
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/ZSEDIT
+      *****************************************************************
+     C/COPY ZSRSRC,ZSEDITZ3
+      *****************************************************************
+      /TITLE SR/ZDATE1
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      * Convert Day number to date
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2005
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

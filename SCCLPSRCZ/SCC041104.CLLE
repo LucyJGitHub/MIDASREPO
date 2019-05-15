@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input cycle initiation - C')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC041104 - Input Cycle Initiation DL                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 09Jul13              */
+/*                      CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD021155 - COB Restructure Phase 1 remnants                 */
+/*                - Component Split of SCC041104                     */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DLTEMP) TYPE(*CHAR) LEN(256)
+/**********  DCL        VAR(&MEM) TYPE(*CHAR) LEN(50) */                                /*MD021155*/
+/**********  DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ') */                     /*MD021155*/
+/**********  DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ') */               /*MD021155*/
+/**********  DCL        VAR(&SDMMOD) TYPE(*CHAR) LEN(128) */                            /*MD021155*/
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**********  CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &SDMMOD) */                      /*MD021155*/
+ 
+/**Database*error**/                                                                    /*MD021155*/
+ 
+/**********  IF         COND(&RTCD *NE '       ') THEN(DO) */                           /*MD021155*/
+/**********      SNDPGMMSG  MSG('Error on access to ICD file + */                       /*MD021155*/
+/**********                 AOMMODPD') TOMSGQ(MOPERQ) */                                /*MD021155*/
+/**********      GOTO       CMDLBL(ABNOR) */                                            /*MD021155*/
+/**********  ENDDO */                                                                   /*MD021155*/
+ 
+             RTVDTAARA  DTAARA(DLTEMP *ALL) RTNVAR(&DLTEMP)
+             RTVDTAARA  DTAARA(DLSTAT *ALL) RTNVAR(&DLSTAT)
+             CHGVAR     VAR(&DLSTAT) VALUE(&DLTEMP)
+             CHGVAR     VAR(%SUBSTRING(&DLSTAT 6 2)) VALUE('NN')
+             CHGDTAARA  DTAARA(DLSTAT *ALL) VALUE(&DLSTAT)
+ 
+/**FRA/IRS**/                                                                           /*MD021155*/
+ 
+/**********  IF         COND((%SST(&SDMMOD 47 1)) *EQ 'Y') THEN(DO) */                  /*MD021155*/
+/**********     CALL       PGM(DLC1913) */                                              /*MD021155*/
+/**********     IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO + */                  /*MD021155*/
+/**********                CMDLBL(DBETAG)) */                                           /*MD021155*/
+/**********  ENDDO */                                                                   /*MD021155*/
+ 
+/* Successful completion */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/**Database*error*processing**/                                                         /*MD021155*/
+ 
+DBETAG:
+ 
+/**Retrieve*database*error*information*from*LDA**/                                      /*MD021155*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO) */                             /*MD021155*/
+/**********    RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM) */                          /*MD021155*/
+/**********    SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) + */                  /*MD021155*/
+/**********               TOMSGQ(MOPERQ) */                                             /*MD021155*/
+/**********  ENDDO */                                                                   /*MD021155*/
+ 
+/* Abnormal error processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('SCC041104 ENDED ABNORMALLY') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

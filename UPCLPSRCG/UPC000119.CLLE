@@ -1,0 +1,88 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Change subsystem routing entries')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000119 - Change subsystem routing entries                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. CUP041   *REWRITE  Date 27May14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG27240           Date 12Mar10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CUP025 *CREATE     Date 27Nov03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       BUG27240- Applied CPK029 file locking fix                   */
+/*       CPK029 - Stop lock on file.                                 */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CUP025 - MidasPlus Bridge changes.                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PFX &RTNFLAG)
+ 
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&SUBSYSTEM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Set up subsystem name. */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&SUBSYSTEM) VALUE('XM' *TCAT &PFX *TCAT +
+                             'GSBS')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&SUBSYSTEM) VALUE('XM' *TCAT &PFX *TCAT +
+                             'SBS')
+             ENDDO
+ 
+/* Display subsystem description to print; the subsystem should have been */
+/*  renamed at this point but try the original name if unsuccessful.      */
+             DSPSBSD    SBSD(&SUBSYSTEM) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF1692) EXEC(DO)
+                CHGVAR     VAR(&SUBSYSTEM) VALUE(%SST(&SUBSYSTEM 2 9))
+                DSPSBSD    SBSD(&SUBSYSTEM) OUTPUT(*PRINT)
+             ENDDO
+ 
+/* Create physical file to receive subsystem data. */
+             DLTF       FILE(QTEMP/UPSBSD)
+             MONMSG     MSGID(CPF0000)
+             CRTPF      FILE(QTEMP/UPSBSD) RCDLEN(132) TEXT('Midas +
+                          subsystem description - from spool file')
+ 
+/* Copy spool file to physical file. */
+             CPYSPLF    FILE(QPRTSBSD) TOFILE(QTEMP/UPSBSD) +
+                          SPLNBR(*LAST)
+ 
+/* Call program to process file and change routing entries. */
+             CALL       PGM(UP000119) PARM(&SUBSYSTEM &ERROR)
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ 
+END:
+             ENDPGM

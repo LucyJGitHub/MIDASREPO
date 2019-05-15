@@ -1,0 +1,491 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Chart of Accounts Report')
+      ********************************************************************
+      *                                                                  *
+      *  Midas - General Ledger Module                                *
+      *                                                                  *
+      *     GL0035 - Chart of Accounts Report                            *
+      *                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CSD005             Date 24Feb99               *
+      *                 CTI002             Date 23/09/98              *
+      *                    097172             DATE 19FEB98               *
+      *                    082746             DATE 08MAR95               *
+      *                    RT0091             DATE 13MAY91               *
+      *                                                                  *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *      CTI002 - Recompiled : File SDACODPD changed
+      *  MD046248 - Finastra Rebranding                               *
+      *      CSD005 - Switchable feature- if account narrative feature   *
+      *               is active the current account description shall    *
+      *               be replaced with the account narrative.            *
+      *      097172 - Some account code doesn't appear in GL0035P1       *
+      *      082746 - Print Account Code text as set up in Account Codes *
+      *               File, instead of changing non-title account codes  *
+      *               to lower case, as this confuses clients, especially*
+      *               when it changes 'UK' to 'uk' - client can enter    *
+      *               account code text in lower case if he wishes and   *
+      *               it will be printed as it on the file.              *
+      *      RT0091 - Recompiled over changed PRTF/GL0035P1              *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+      *  C R E A T I O N     P A R A M E T E R S                         *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+     FSDACODL0IF  E           K        DISK
+     FGL0035P1O   E             99     PRINTER      KINFDS SPOOL
+     FGL0035AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      *                                                                  *
+      ********************************************************************
+      *
+      *               Function of Indicators
+      *
+      ********************************************************************
+      *
+      *       10      END OF FILE - LF/SDACODL0
+      *       20      END OF FILE - PF/SDBANKPD
+      *       30      ACCOUNT SECTION EXISTS IN ARRAY TABA
+      *       40      ACCOUNT TYPE EXISTS IN ARRAY TABC
+      *       50      CAPITAL LETTER EXISTS IN ARRAY ALPHBT
+      *       60      TITLE ONLY INDICATOR
+      *       70      LAST RECORD ON PAGE IS TITLE ONLY RECORD
+      *               OUTPUT AT START OF NEXT PAGE
+      *       99      OVERFLOW INDICATOR
+      *                                                               *
+      *  73      Conditions field for switchable feature Account      *   CSD005
+      *          Narrative                                            *   CSD005
+      *
+      ********************************************************************
+      *
+     E                    TABA    1   9  2   TABB   14
+     E** Account Section Conversion Table
+     E*
+     E                    TABC    1   5  1   TABD   29
+     E** Account Type Conversion Table
+     E*
+     E************        ALPHBT 26  26  1                                082746
+     E************        ACCN       25  1                                082746
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright Array
+     E/EJECT
+     I************DS                                                      082746
+     I************                            1  25 ACCN                  082746
+     I************                            1  25 A5ACCN                082746
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*  Data structure for compilation - copyright insertion
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 152 1530SFLIN
+     I** P1 printer file information data structure
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I** AU printer file information data structure
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+      *
+     ISCSARD    E DSSCSARDPD                                              CSD005
+      * Switchable Features File Details                                  CSD005
+      *                                                                   CSD005
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** Local Data Area
+     I*
+     I****************************************************************
+     I/EJECT
+     C*
+     C** Start Main Processing
+     C*
+     C** Receive entry parameter
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5        RPT SEQ NO.
+     C*
+     C** Define Local Data Area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0035'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DBERROR 001 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Ensure totals spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C** Call ZSFILE for GL0035P1
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY    3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C** If error in ZSFILE, exit via DBERR subroutine
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     END
+      *                                                                   CSD005
+      *** Use access program AOSARDR0 to retrieve switchable features     CSD005
+      *                                                                   CSD005
+     C                     CALL 'AOSARDR0'                                CSD005
+     C                     PARM *BLANKS   @RTCD   7                       CSD005
+     C                     PARM '*VERIFY' @OPTN   7                       CSD005
+     C                     PARM 'CSD005'  @KEY    6                       CSD005
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD005
+      *                                                                   CSD005
+      *** Switch on Account Narrative feature if appropriate              CSD005
+      *                                                                   CSD005
+     C                     SELEC                                          CSD005
+     C           @RTCD     WHEQ *BLANK                                    CSD005
+     C                     MOVE *ON       *IN73                           CSD005
+     C           @RTCD     WHEQ '*NRF'                                    CSD005
+     C                     MOVE *OFF      *IN73                           CSD005
+     C                     OTHER                                          CSD005
+      *                                                                   CSD005
+      *** If error in access program, exit via *PSSR subroutine           CSD005
+      *                                                                   CSD005
+     C           *LOCK     IN   LDA                                       CSD005
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CSD005
+     C                     Z-ADD002       DBASE             *DBERROR 002* CSD005
+     C                     MOVEL@OPTN     DBKEY             ************* CSD005
+     C                     SETON                     U7U8LR               CSD005
+     C                     OUT  LDA                                       CSD005
+     C                     EXSR DBERR                                     CSD005
+     C                     ENDSL                                          CSD005
+      *
+     C*
+     C**   Read File SDACODL0
+     C*
+     C                     READ @A5UPA7                  10
+     C*
+     C**   Print page headings and details
+     C*
+     C                     WRITEPAGHDG
+     C                     WRITECHTHDG
+     C                     WRITEDETHDG
+     C*
+     C** Set Line Counter
+     C*
+     C                     Z-ADD8         LNCNT   30
+     C*
+     C** If indicator 10 is Off continue processing else output
+     C** No Records format.
+     C*
+     C           *IN10     IFEQ '0'
+     C*
+     C** Do While Not Last Record
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C                     EXSR SUB01
+     C************         EXSR SUB02                                     082746
+     C*
+     C** If the Title Only indicator is on, move Account Code and
+     C** Account Title into the output fields and also move them into
+     C** work fields for use at time of overflow.
+     C*
+     C           A5TOIN    IFEQ 'Y'
+     C                     SETON                     60
+     C                     MOVELA5ACCD    ACCD
+     C                     MOVELA5ACCN    ACCNO
+     C                     MOVELA5ACCD    ACCODE
+     C           *IN73     IFEQ *OFF                                      CSD005
+     C                     MOVELA5ACCN    TITLE
+     C                     ELSE                                           CSD005
+     C                     MOVELA5NARR    TITLEN                          CSD005
+     C                     ENDIF                                          CSD005
+     C                     MOVE *BLANK    ACTYPE
+     C*
+     C** Move the Account Section text into the output field and the
+     C** work field for use at time of overflow. If the Account Section
+     C** is invalid leave the output field blank.
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE TABB      ACSC
+     C                     MOVE TABB      ACSC1
+     C                     ELSE
+     C                     MOVE *BLANK    ACSC
+     C                     MOVE *BLANK    ACSC1
+     C                     END
+     C*
+     C** If the Title Only indicator is off, move Account Code and
+     C** Account Title into the output fields.
+     C*
+     C                     ELSE
+     C                     MOVE A5ACCD    ACCODE
+     C***********          MOVEAACCN,1    TITLE1 25                       082746
+     C                     MOVELA5ACCN    TITLE1 25                       082746
+     C           *IN73     IFEQ *OFF                                      CSD005
+     C                     MOVE TITLE1    TITLE
+     C                     ELSE                                           CSD005
+     C                     MOVE A5NARR    TITLEN                          CSD005
+     C                     ENDIF                                          CSD005
+     C*
+     C** Move the Account Section and Account Type texts into the
+     C** output fields. If either is invalid, leave the output field
+     C** blank.
+     C*
+     C           *IN40     IFEQ '1'
+     C                     MOVE TABD      ACTYPE
+     C                     ELSE
+     C                     MOVE *BLANK    ACTYPE
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE TABB      ACSC
+     C                     ELSE
+     C                     MOVE *BLANK    ACSC
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If last line of page is a Title Only record, set on indicator
+     C** to output record at the start of the next page.
+     C*
+     C           LNCNT     IFEQ 57
+     C           A5TOIN    ANDEQ'Y'
+     C           LNCNT     OREQ 58
+     C           A5TOIN    ANDEQ'Y'
+     C                     SETON                     70
+     C                     END
+     C*
+     C** Write details except for condition where last
+     C** record is a Title Only record.
+     C*
+     C           *IN70     IFEQ '0'
+     C                     WRITEDETFMT
+     C                     END
+     C*
+     C** Increase line count for each record output.
+     C*
+     C           *IN70     IFEQ '0'
+     C           *IN60     IFEQ '1'
+     C                     ADD  2         LNCNT
+     C                     ELSE
+     C                     ADD  1         LNCNT
+     C                     END
+     C                     END
+     C*********************SETOF                     60                   097172
+     C*
+     C** Reset output fields to blank.
+     C*
+     C                     MOVE *BLANK    ACCODE
+     C                     MOVE *BLANK    TITLE
+     C                     MOVE *BLANK    ACTYPE
+     C                     MOVE *BLANK    ACSC
+     C*
+     C** Read file SDACODL0.
+     C*
+     C                     READ @A5UPA7                  10
+     C*
+     C** Check for Overflow. Check for last record being a Title Only
+     C** record. Print page headings and details.
+     C*
+     C           *IN99     IFEQ '1'
+     C           *IN70     OREQ '1'
+     C                     WRITEPAGHDG
+     C                     WRITECHTHDG
+     C                     WRITEDETHDG
+     C*
+     C** To continue with records of same type at start of next
+     C** page, then rewrite the last Title Only record stored
+     C** in work fields.
+     C*
+     C           A5TOIN    IFNE 'Y'
+     C           *IN60     OREQ '1'                                       097172
+     C                     WRITEDETFMT1
+     C                     END
+     C*
+     C** Reset Line Counter
+     C*
+     C                     Z-ADD10        LNCNT
+     C*
+     C                     SETOF                     99
+     C                     SETOF                     70
+     C                     END
+     C                     SETOF                     60                   097172
+     C                     END
+     C*
+     C** End of Report
+     C*
+     C                     WRITEENDFMT
+     C                     ELSE
+     C*
+     C** No Records to Report.
+     C*
+     C                     WRITENORECFMT
+     C                     END
+     C                     SETON                     LR
+     C*
+     C** End of Main Processing
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*           INDEX TO SUBROUTINES
+     C*
+     C*      1.   SUB01 - Retrieve text for account section and type.
+     C*******2.***SUB02 - Convert account title to lower case.            082746
+     C*      3.   DBERR - Database error processing.
+     C*
+     C********************************************************************
+     C*
+     C********************************************************************
+     C**
+     C** SUB01 Subroutine to retrieve a text field for output for
+     C**       both the account section and the account type fields
+     C**       using a compile time array.
+     C**
+     C**   CALLED BY : Main Processing
+     C**
+     C**   CALLS     : None
+     C*
+     C           SUB01     BEGSR
+     C                     SETOF                     3040
+     C           A5ACSC    LOKUPTABA      TABB           30
+     C           A5ACTY    LOKUPTABC      TABD           40
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*EJECT******                                                        082746
+     C********************************************************************082746
+     C************                                                        082746
+     C***SUB02*Subroutine to convert the account title to lower           082746
+     C*********case when the title only indicator is not on. The          082746
+     C*********first letter is left as upper case.                        082746
+     C************                                                        082746
+     C****CALLED*BY : Main Processing                                     082746
+     C************                                                        082746
+     C****CALLS***  : None                                                082746
+     C************                                                        082746
+     C***********SUB02     BEGSR                                          082746
+     C***********A5TOIN    IFNE 'Y'                                       082746
+     C************         MOVE 02        X       20                      082746
+     C***********X         DOWLE25                                        082746
+     C***********ACCN,X    LOKUPALPHBT                   50               082746
+     C************IN50     IFEQ '1'                                       082746
+     C************         BITOF'1'       ACCN,X                          082746
+     C************         END                                            082746
+     C************         ADD  1         X                               082746
+     C************         END                                            082746
+     C************         END                                            082746
+     C************         ENDSR                                          082746
+     C************                                                        082746
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DBERR - Database error processing Subroutine
+     C**
+     C**  CALLED BY : Main Processing
+     C**
+     C**  CALLS     : None
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** Release the LDA
+     C*
+     C                     OUT  LDA
+     C*
+     C** Open file GL0035AU
+     C*
+     C                     OPEN GL0035AU
+     C*
+     C** Ensure totals spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM
+     C*
+     C** Call ZSFILE for GL0035AU
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+     C*
+     C* Write Report Headings
+     C*
+     C                     WRITEGL0035AH
+     C*
+     C** Write out error text
+     C*
+     C                     WRITEGL0035AE
+     C*
+     C** Set on database error indicators and exit program
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+      ****** ABCDEFGHIJKLMNOPQRSTUVWXYZ                        Removed by 082746
+**   Account Section Conversion
+ASAssets
+LILiabilities
+INIncome
+EXExpenditure
+COControl
+MEMemoranda
+TRTrade Accounts
+CNContingents
+ITInternal
+**   Account Type Conversion
+CContingent & Suspense Account
+DCustomer Account
+GGeneral Ledger Account
+NNostro Account
+RRetail Account
+**  CPY@
+(c) Finastra International Limited 2001

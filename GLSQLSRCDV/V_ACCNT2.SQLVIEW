@@ -1,0 +1,117 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - General Ledger Module                                         */
+/*                                                                             */
+/*       V_ACCNT2 - Midas GL Accounts master detail (Join) View                */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CDL094             Date 30May14                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CRE075             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER047             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 02Jun08                        */
+/*                      CRE026             Date 24May06                        */
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD027             Date 08Dec05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      CGL014  *CREATE    Date 20Oct03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CDL094 - Enhance  Receive Settlement Instructions                     */
+/*                (Recompile)                                                  */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CRE075 - Effective Date for Retail Accounts (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER047 - German Features LF037-00 Reporting §24c KWG                  */
+/*                (Recompile)                                                  */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       CRE026 - Consumer Banking (Recompile)                                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       CGL014 - Collaterals Processing                                       */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (RECI ,                                                                       :
+   ACST ,                                                                       :
+   BRCA ,                                                                       :
+   PADCNUM ,                                                                    :
+   CNUM ,                                                                       :
+   CCY ,                                                                        :
+   PADACOD ,                                                                    :
+   ACOD ,                                                                       :
+   PADACSQ ,                                                                    :
+   ACSQ ,                                                                       :
+   PADACNO ,                                                                    :
+   ACNO ,                                                                       :
+   NONB ,                                                                       :
+   ATYP ,                                                                       :
+   ANAM ,                                                                       :
+   PRFC ,                                                                       :
+   RETB ,                                                                       :
+   ODSC ,                                                                       :
+   CLBL ,                                                                       :
+   SINGACCN ,                                                                   :
+   MULTACCN )                                                                   :
+   AS                                                                           :
+***SELECT***RECI,***ACST,***BRCA,***DIGITS(CNUM)*AS*PADCNUM,***CNUM,***CCY,*****:             CSD027
+   SELECT   RECI,   ACST,   BRCA,          CNUM  AS PADCNUM,   CNUM,   CCY,     :             CSD027
+   DIGITS(ACOD) AS PADACOD,   ACOD,   DIGITS(ACSQ) AS PADACSQ,   ACSQ,          :
+   DIGITS(ACNO) AS PADACNO,   ACNO,   CASE WHEN A7NONB IS NULL THEN '00' ELSE   :
+   A7NONB END AS NONB, ATYP,   ANAM,   PRFC,   RETB,   ODSC,   CLBL,            :
+***DIGITS(CNUM)**CCY**DIGITS(ACOD)**DIGITS(ACSQ)*AS*SINGACCN,*******************:             CSD027
+***BRCA**DIGITS(CNUM)**CCY**DIGITS(ACOD)**DIGITS(ACSQ)*AS*MULTACCN**************:             CSD027
+***FROM*ACCNTAB*LEFT*JOIN*SDNOSTPD***ON*BRCA*=*A7BRCD*AND*CNUM*=*INT(A7CUST)****:             CSD027
+**********CNUM **CCY**DIGITS(ACOD)**DIGITS(ACSQ) AS SINGACCN,                   :     CSD027 BG18886
+***BRCA**       CNUM **CCY**DIGITS(ACOD)**DIGITS(ACSQ) AS MULTACCN              :     CSD027 BG18886
+      CNUM CONCAT CCY CONCAT DIGITS(ACOD) CONCAT DIGITS(ACSQ) AS SINGACCN,      :     CSD027 BG18886
+   BRCA CONCAT CNUM CONCAT CCY CONCAT DIGITS(ACOD)                              :     CSD027 BG18886
+      CONCAT DIGITS(ACSQ) AS MULTACCN                                           :     CSD027 BG18886
+   FROM ACCNTAB LEFT JOIN SDNOSTPD   ON BRCA = A7BRCD AND CNUM =     A7CUST     :             CSD027
+   AND CCY = A7CYCD AND ACOD =INT(A7ACCD)   AND ACSQ = A7ACSN ;                 :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+   ( RECI IS 'Rec                 Id' ,                                         :
+    ACST IS 'Acc                 St' ,                                          :
+    BRCA IS 'Brch                Code' ,                                        :
+    CNUM IS 'Customer            Number' ,                                      :
+    CCY IS 'Curr                Code' ,                                         :
+    ACOD IS 'Acc.                Code' ,                                        :
+    ACSQ IS 'A/c                 Seq                 No.' ,                     :
+    ACNO IS 'Retail              Account             Number' ,                  :
+    ATYP IS 'Acc                 Typ' ,                                         :
+    ANAM IS 'Account             Name' ,                                        :
+    PRFC IS 'Profit              Centre' ,                                      :
+    RETB IS 'Ret                 Ind' ,                                         :
+    ODSC IS 'Odr                 Sec' ,                                         :
+    CLBL IS 'Cleared             Balance' ) ;                                   :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+   ( RECI TEXT IS 'Record Id' ,                                                 :
+    ACST TEXT IS 'Account status' ,                                             :
+    BRCA TEXT IS 'Branch Code - Alpha' ,                                        :
+    CNUM TEXT IS 'Customer number' ,                                            :
+    CCY TEXT IS 'Currency code' ,                                               :
+    ACOD TEXT IS 'Account code' ,                                               :
+    ACSQ TEXT IS 'Account sequence number' ,                                    :
+    ACNO TEXT IS 'Retail account number' ,                                      :
+    ATYP TEXT IS 'Account type' ,                                               :
+    ANAM TEXT IS 'Account name' ,                                               :
+    PRFC TEXT IS 'Profit centre' ,                                              :
+    RETB TEXT IS 'Retail indicators' ,                                          :
+    ODSC TEXT IS 'Overdraft secured' ,                                          :
+    CLBL TEXT IS 'Cleared balance' ) ;                                          :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GL Accounts master detail                   ';                     :
+                                                                                :

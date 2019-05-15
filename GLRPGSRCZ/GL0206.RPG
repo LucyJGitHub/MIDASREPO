@@ -1,0 +1,263 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Account Codes installation utility')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0206 - Account Codes installation utility                  *
+      *                                                               *
+      *  Function - Update WHT Extension file if WHT Feature is ON,   *
+      *             or update WHT Main file if switch is OFF.         *
+      *             All amendments sent to printer report.            *
+      *                                                               *
+      *  (c) Finastra International Limited 2006                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL013  *CREATE    Date 08Jun06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL013 - Tiered Withholding Tax                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Function of Indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     65 - PRINT REPORT OVERFLOW INDICATOR                      *
+      *                                                               *
+      *     80 - NO RECORD FOUND ON SDACOAL0                          *
+      *     81 - CHAIN TO SDACODL0 FAILED                             *
+      *                                                               *
+      *     90 - NO RECORD FOUND ON SDACODL1                          *
+      *     91 - CHAIN TO SDACOAL0 FAILED                             *
+      *                                                               *
+      *     U7 - ERROR PROCEESING INDICATORS                          *
+      *     U8 - ERROR PROCESSING INDICATORS                          *
+      *     LR - LAST RECORD INDICATOR                                *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     FSDACODL1IF  E           K        DISK
+      * RTV : Midas SD Account codes retrieval
+      *
+     FSDACODL0UF  E           K        DISK
+      * Account codes update file
+      *
+     FSDACOAL0UF  E           K        DISK                      A
+      * Account code extension file
+      *
+     FGL0206P1O   E             65     PRINTER
+      * Account code extension report file
+      *
+     FGL0206AUO   E                    PRINTER
+      * Account code extension audit file
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E* Description     : Copyright notice for inclusion in all ACT programs
+     E*
+     E                    CPY@    1   1 80               ACT Copyright array
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     I              'Run Date & User Repo-C         BANK
+     I              'rt Title'
+      ** Database Error Reference descriptive text for AOBANK failure
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #EENIT - Perform initial processing.                         *
+      *  #EEMAN - Perform main processing via mode 1, 2 or 3.         *
+      *  #EEUP1 - Update A/C Codes Extension File & print report.     *
+      *  #EEUP2 - Update A/C Main File & print report.                *
+      *  #EEND  - Commit files and exit program.                      *
+      *                                                               *
+      *****************************************************************
+      *     C O N T R O L      M O D U L E                            *
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+     C                     EXSR #EEINT
+     C                     EXSR #EEMAN
+     C                     EXSR #EEEND
+      *
+      *****************************************************************
+      * #EEMAN - Main Subroutine                                      *
+      * Called by: - Control.                                         *
+      *****************************************************************
+     C           #EEMAN    BEGSR
+      *
+      ** Print report header
+     C                     WRITEHEADER
+      *
+      ** If Tiered Withhilding Tax Feature is switched ON.
+     C           MODE      IFEQ '1'
+     C           MODE      OREQ '2'
+     C                     WRITESUB1
+     C                     EXSR #EEUP1
+     C                     ENDIF
+      *
+      ** If Tiered Withhilding Tax Feature is switched OFF.
+     C           MODE      IFEQ '3'
+     C                     WRITESUB2
+     C                     EXSR #EEUP2
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * #EEEND - Exit program                                         *
+      * Called by: - Control.                                         *
+      *****************************************************************
+     C           #EEEND    BEGSR
+      *
+      ** Print report footer
+     C                     WRITEFOOTER
+      *
+      ** Exit program
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      * #EEUP1 - Print before and after field values for WHT Retail & *
+      *          and Corporate A/C Codes                              *
+      * Called by: - Main Subroutine.                                 *
+      *****************************************************************
+     C           #EEUP1    BEGSR
+      *
+      ** Read main file
+     C                     READ SDACODL1                 90
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Check for corresponding records on extension file.
+      ** If no record exists, write a new record.
+     C           A5ACCD    CHAINSDACODDA             91
+     C           *IN91     IFEQ *ON
+     C                     MOVE A5ACCD    EACOD
+     C                     MOVE A5WTAC    EACRE
+     C                     MOVE A5WTAC    EACCO
+     C                     WRITESDACODDA
+     C                     ENDIF
+      *
+      ** Print amendment if main file value is not equal to zero
+     C           A5WTAC    IFNE *BLANK
+     C                     MOVE A5ACCD    XRACCD
+     C                     MOVE A5WTAC    XRWTAC
+     C                     MOVE A5WTAC    XRWTRA
+     C                     MOVE A5WTAC    XRWTCA
+     C                     WRITEDET1
+     C                     ENDIF
+      *
+     C                     READ SDACODL1                 90
+      *
+      ** Overflow indicator
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADER
+     C                     WRITESUB1
+     C                     SETOF                     65
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDSR
+      *****************************************************************
+      * #EEUP2 - WHT Update to main file and print amendments made to *
+      *          main file, if Tiered WHT switchable feature not inst-*
+      *          alled.                                               *
+      * Called by: - Main Subroutine.                                 *
+      *****************************************************************
+     C           #EEUP2    BEGSR
+      *
+      ** Read extension file
+     C                     READ SDACOAL0                 80
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Update main file WHT A/C code with Retail A/C code
+     C           EACOD     CHAINSDACODL0             81
+     C           *IN81     IFEQ *OFF
+     C                     MOVE EACRE     A5WTAC
+     C                     UPDAT@A5UPA7
+      ** Print amended records
+     C           EACRE     IFNE *BLANK
+     C                     MOVE EACOD     XRACCD
+     C                     MOVE EACRE     XRWTRC
+     C                     MOVE A5WTAC    XRWHTA
+     C                     WRITEDET2
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Overflow indicator
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADER
+     C                     WRITESUB2
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+     C                     READ SDACOAL0                 80
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * #EEINT - Initial processing                                   *
+      * Called by: - Control Module.                                  *
+      *****************************************************************
+      *
+     C           #EEINT    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Retrieve Run Date & User Report Title via AOBANKR0
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error occured, terminate the program
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELBANK      DBKEY
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'GL0206'  DBPGM
+      *
+      ** Print database error audit
+     C           MODE      IFEQ '3'
+     C                     WRITEDBHED2
+     C                     ELSE
+     C                     WRITEDBHED1
+     C                     ENDIF
+     C                     WRITEDBERR
+     C                     ENDIF
+      *
+      ** Switch off overflow indicator
+     C                     MOVE *OFF      *IN65
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** CPY@ - Object copyright
+(c) Finastra International Limited 2006

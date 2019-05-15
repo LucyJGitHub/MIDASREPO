@@ -1,0 +1,738 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI Forwarded Exceptions Report')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4300 - CI Forwarding Exceptions Report                     *
+      *                                                               *
+      *  Function:  This program will produce a report providing      *
+      *             details of the transactions forwarded by cashier  *
+      *             to Midas that have exceptions.  i.e. warning or   *
+      *             terminal errors.  Program can be run on request   *
+      *             during input cycle or during COB.                 *
+      *                                                               *
+      *  Called By: REC4300 - CI Forwarding Exceptions print          *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1096838          Date 20Mar13               *
+      *                 CCB023             Date 06Aug12               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRT008  *CREATE    Date 18Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1096838 - Database Error in SDSBNKTD                       *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CRT008 - Forward Report Enhancements                         *
+      *                                                               *
+      *****************************************************************
+     FREFWDEL0IF  E           K        DISK
+     FRE4300AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FRE4300P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   36  - Midas Generated Auto Reversal                         *
+      *   37  - Multibranching ON                                     *
+      *   38  - System status: COB (off) Input Cycle (on)             *
+      *   40  - Suspense indicator                                    *
+      *   89  - End of File                                           *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     I/SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *                                     134 141 DBFILE
+      *                                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *                                                                                       CCB020
+      ** Constant for calling program CBC001001                                               CCB020
+      *                                                                                       CCB020
+     I              'CBC001001'           C         PGNME                                     CCB020
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for RE4300P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for RE4300AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     I***SDBANK    E DSSDBANKPD                                                               CCB023
+     I***SDSBNK    E DSSDSBNKTD                                                     CCB023 AR1096838
+     ISDBANK    E DSSDBANKPD                                                               AR1096838
+      ***  External data structure for Bank Details
+     ISDBRCH    E DSSDBRCHPD
+      ***  External data structure for Branch Details
+     IDSFDY     E DSDSFDY
+      *** Short Data Structure - used as parameter to access programs
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+     C**********           PARM           PMPHAS  1                                           CCB020
+      *                                                                                       CCB020
+      ** Call program CBC001001 to check Midas System Phase                                   CCB020
+      ** Return value is *YES (i.e. system is in COB) or *NO                                  CCB020
+      *                                                                                       CCB020
+     C                     CALL PGNME                                                         CCB020
+     C                     PARM           COBST   4                                           CCB020
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'RE4300'  DBPGM
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C**********           CALL 'AOBANKR0'                                                    CCB023
+     C**********           PARM '*MSG   ' WRTCD   7                                           CCB023
+     C**********           PARM '*FIRST ' WOPTN   7                                           CCB023
+     C********** SDBANK    PARM SDBANK    DSFDY                                               CCB023
+     C**********           CALL 'AOSBNKR0'                                          CCB023 AR1096838
+     C**********           PARM *BLANKS   WRTCD   7                                 CCB023 AR1096838
+     C**********           PARM '*FIRST ' WOPTN   7                                 CCB023 AR1096838
+     C********** SDSBNK    PARM SDSBNK    DSFDY                                     CCB023 AR1096838
+     C                     CALL 'AOBANKR0'                                                 AR1096838
+     C                     PARM '*MSG   ' WRTCD   7                                        AR1096838
+     C                     PARM '*FIRST ' WOPTN   7                                        AR1096838
+     C           SDBANK    PARM SDBANK    DSFDY                                            AR1096838
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C**********           MOVE 'SDBANKPD'DBFILE           ***************                    CCB023
+     C**********           MOVE 'SDSBNKTD'DBFILE                                    CCB023 AR1096838
+     C                     MOVE 'SDBANKPD'DBFILE           ***************                 AR1096838
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      **   Setup inputcycle/COB indicator
+      *
+     C********** PMPHAS    IFEQ 'A'                                                           CCB020
+     C           COBST     IFEQ '*NO'                                                         CCB020
+     C                     SETON                     38
+     C                     ENDIF
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     SETON                     37
+     C                     END
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE *BLANKS   POPEN1  1
+     C                     MOVE *BLANKS   SVBRCA  3
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  REPORT - Process Report Lines                                *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ** Depending on the parameter passed to the program
+      ** Position the file pointer and read the first record
+      *
+     C           PENT      IFEQ *BLANK
+     C           PENT      OREQ 'ALL'
+     C           *LOVAL    SETLLREFWDED0
+     C                     READ REFWDED0                 89
+     C                     ELSE
+     C           PENT      SETLLREFWDED0
+     C           PENT      READEREFWDED0                 89
+     C                     ENDIF
+      *
+      ***  If End of Records, (*IN89), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN89     IFEQ *ON
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  Do while not at the end of File.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C                     READ REFWDEL0                 89
+      *
+      *** If Parameter Branch (PBRCA) is not equal to Branch Read
+      ***     (Done when processing a specific branch)
+      *
+     C           PENT      IFNE 'ALL'
+     C           PENT      ANDNE*BLANK
+     C           PENT      ANDNEFWBRCA
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ***  End of Do Until End of Valid Records.
+      *
+     C                     ENDDO
+      *
+      ***  Write final records and Totals to Report.
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR                           *** REPORT ***
+      *
+      ** Clear all fields on the report
+      *
+     C                     MOVE *BLANKS   PBRCA
+     C                     MOVE *BLANKS   PTELD
+     C                     Z-ADD*ZEROS    PTRNO
+     C                     MOVE *BLANKS   PDESC
+     C                     MOVE *BLANKS   PACNO
+     C                     MOVE *BLANKS   PCCY1
+     C                     MOVE *BLANKS   PEXRT
+     C                     MOVE *BLANKS   PAMT1
+     C                     MOVE *BLANKS   PCHAM
+     C                     MOVE *BLANKS   PVLDT
+     C                     MOVE *BLANKS   PCRTN
+     C                     MOVE *BLANKS   PDSC2
+     C                     MOVE *BLANKS   PACN2
+     C                     MOVE *BLANKS   PCCY2
+     C                     MOVE *BLANKS   PCVAM
+     C                     MOVE *BLANKS   PCHA2
+     C                     MOVE *BLANKS   PPRFC
+      *
+      ** If there is a change in branch then create a new report
+      *
+     C           FWBRCA    IFNE SVBRCA
+     C                     EXSR CHGBR
+     C                     ENDIF
+      *
+      ** Move fields from REFWDEL0 to output fields ready for print
+      *
+     C                     MOVE FWBRCA    PBRCA
+     C                     MOVE FWTBID    PTELD
+     C                     MOVE FWTBTN    PTRNO
+     C                     MOVE FWDESC    PDESC
+      *
+      ** If transaction is to be posted to suspense a/c, inform user
+      *
+     C                     MOVE *OFF      *IN40
+     C           FWSUSP    IFEQ 'Y'
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+      *
+      ** Inform user if transaction was not written
+      *
+     C                     MOVEL*BLANKS   W#HMSS  1
+     C                     MOVE *OFF      *IN39
+     C                     MOVELFWMSGD    W#HMSS
+     C                     MOVE *OFF      *IN36
+     C           W#HMSS    IFEQ 'E'
+     C                     MOVE *ON       *IN39
+     C                     ELSE
+      *
+      ** If transaction is a Midas Generated Auto Reversal, inform user
+      *
+     C                     MOVE 'Auto'    FIELD1  4
+     C           FIELD1    SCAN FWDESC    RESULT  20     36
+     C                     ENDIF
+      *
+      * For x-ccy, non a/c transfer transaction, put a/c number
+      * next to the account ccy.
+      *
+     C           FWCCY2    IFNE *BLANKS
+     C           FWACN2    ANDEQ*ZEROS
+     C                     MOVE FWACNO    PACN2
+     C                     MOVE *BLANKS   PACNO
+     C                     ELSE
+     C                     MOVE FWACNO    PACNO
+      *
+     C           FWACN2    IFNE *ZEROS
+     C                     MOVE FWACN2    PACN2
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Blank out account number if no a/c number is required.
+      *
+     C           FWACNO    IFEQ *ZEROS
+     C                     MOVE *BLANKS   PACNO
+     C                     ENDIF
+     C           FWACN2    IFEQ *ZEROS
+     C                     MOVE *BLANKS   PACN2
+     C                     ENDIF
+      *
+      ** Put charge in correct place
+      *
+     C           PACN2     IFNE *BLANKS
+     C           PACNO     ANDEQ*BLANKS
+     C                     MOVE FWCHAM    PCHA2
+     C                     ELSE
+     C                     MOVE FWCHAM    PCHAM
+     C                     ENDIF
+      *
+     C                     MOVE FWCCY1    PCCY1
+     C                     MOVE FWCCY2    PCCY2
+     C                     MOVE FWAMT1    PAMT1
+     C                     MOVE FWCVAM    PCVAM
+     C                     MOVE FWEXRT    PEXRT
+     C                     MOVE FWVLDT    PVLDT
+      *
+     C                     MOVE FWCRTN    PCRTN
+     C                     MOVE FWPRFC    PPRFC
+     C                     MOVE FWMSGD    PHSMS
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *****************************************************************
+     C/TITLE SR/CHGBR
+      *****************************************************************
+      *                                                               *
+      *  CHGBR - Change in Branch Processing.                         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : RCFP1 - RCF Processing for P1 Report              *
+      *             AOBRCHR0 Access Program                           *
+      *                                                               *
+      *****************************************************************
+      *****************************************************************
+      *
+     C           CHGBR     BEGSR                           *** CHGBR ***
+      *
+      ** Check that sufficient lines exist on the current page, if not
+      ** then start a new page
+      *
+     C           POPEN1    IFEQ 'Y'
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     WRITEDTLHDR
+     C                     ENDIF
+      *
+      ** Write Trailer record for the end of this branch
+      *
+     C                     WRITETRAILP1
+      *
+      ** Close Printer file
+      *
+     C                     CLOSERE4300P1
+     C                     MOVE 'N'       POPEN1
+     C                     ENDIF
+      *
+      *** Call access program for Branch Details, Branch Name
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM           FWBRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELFWBRCA    DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVEL'RE4300'  DBPGM            * DBERR 03 *
+     C                     Z-ADD003       DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      ***
+      ****Move*Branch Code & Name to report - Heading & trailer
+      **
+     C***********          MOVELA8BRCA    RBRCA     P
+     C***********          MOVELA8BRNM    RDESC     P
+      *
+      ** Open Printer file
+      *
+     C           POPEN1    IFNE 'Y'
+     C                     OPEN RE4300P1
+     C                     MOVE 'Y'       POPEN1
+     C                     ENDIF
+      *
+      ** RCF Processing for printer file
+      *
+     C                     EXSR RCFP1
+      *
+      ** Write Report Header and detail header
+      *
+     C                     WRITEHEADP1
+     C                     WRITEDTLHDR
+      *
+      ** Save current branch name
+      *
+     C                     MOVE FWBRCA    SVBRCA
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR                           *** WP1REC ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     WRITEDTLHDR
+     C                     ENDIF
+      *
+      ***  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ***  Write out Total Format.
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Close Printer Files
+      *
+     C           POPEN1    IFEQ 'Y'
+     C                     CLOSERE4300P1
+     C                     MOVE 'N'       POPEN1
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(c) Finastra International Limited 2002
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

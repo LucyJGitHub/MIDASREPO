@@ -1,0 +1,818 @@
+0001 H                                                                    LE3010
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Interest Accruals Report')                       *
+0003 F*                                                                  *LE3010
+0002 F********************************************************************LE3010
+0003 F*                                                                  *LE3010
+0004 F*            Midas  CUSTOMER LENDING MODULE                        *LE3010
+0005 F*                                                                  *LE3010
+0006 F*       LE3010 - INTEREST ACCRUALS REPORT                          *LE3010
+0007 F*                                                                  *LE3010
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                                  *LE3010
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+0010 F*                                                                  *LE3010
+0011 F*                                                                  *LE3010
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *                                                               *
+0012 F********************************************************************LE3010
+0011 F*                                                                  *LE3010
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F*SLACX***IP**F*****128  1AI     1 DISK                                           LE3010 CLE042
+     FSLACX   IP  F     132  1AI     1 DISK                                                   CLE042
+0014 F***TABLE** IF  F      96 12AI     2 DISK                                         LE3010 CGL029
+     FTABLE   IF  F     144 12AI     2 DISK                                                   CGL029
+0015 F***CLINT** IF  F     256  7AI     2 DISK                                         LE3010 CER020
+     FCLINT   IF  F     264  7AI     2 DISK                                                   CER020
+0016 FLE3010P1O   F     132     OF     PRINTER                            S01124
+     F*
+0017 F* ID F  C  H  L    FUNCTION OF INDICATORS                           LE3010
+0018 F* 01            SLACX - HEADER                                      LE3010
+0019 F* 02                  - DETAIL                                      LE3010
+0020 F* 03                  - TRAILER                                     LE3010
+0021 F*    20         INTEREST TO ACCRUE 0                                LE3010
+0022 F*    21         W/T ACCRUED 0                                       LE3010
+0023 F*    22         W/T TO ACCRUE 0                                     LE3010
+0024 F*       23      BOTH W/T FIELDS 0                                   LE3010
+0025 F*       24      BOTH LT/WT TOTAL FIELDS 0                           LE3010
+0026 F*       25      BOTH CCY/WT TOTAL FIELDS 0                          LE3010
+0027 F*    26         ACCRUAL TO DATE 0                                   LE3010
+0028 F*    27         PART. SOLD LOAN REF. GREATER THAN 0                 LE3010
+0029 F*       28      LOAN HAS PARTS. SOLD                                LE3010
+0030 F*       29      BOTH LN/WT FIELDS 0                                 LE3010
+0031 F*       30      OUTPUT HEADINGS IF NO DETS TO REP OR D/B ERR IN F/C LE3010
+0032 F*       31      OUTPUT CUST. NO. AND NAME ON L2 OR OF               LE3010
+0033 F*       35      WORK INDICATOR                                      LE3010
+0034 F*       40      FIRST CYCLE                                         LE3010
+0035 F*       60-63   CURRENCY DECIMAL PLACES 0-3                         LE3010
+0036 F*       90-99   STANDARD SUBROUTINES                                LE3010
+0037 F*       U7,U8   STANDARD MIDAS USAGE                                LE3010
+0038 F*             L1 - LOAN REF. CHANGE                                 LE3010
+0039 F*             L2 - CUSTOMER CHANGE                                  LE3010
+0040 F*             L3 - LOAN TYPE/SUB TYPE CHANGE                        LE3010
+0041 F*             L4 - CURRENCY CHANGE                                  LE3010
+0042 F*             L5 - BRANCH CHANGE                                    LE3010
+0043 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYLE3010
+0044 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYLE3010
+0045 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY LE3010
+0046 I**                                                                  LE3010
+0047 I**   SORTED INTEREST ACCRUALS EXTRACT                               LE3010
+0048 I**                                                                  LE3010
+0049 ISLACX   NS  01   1 CH                                               LE3010
+0050 I                                        1   1 RECI                  LE3010
+0051 I                                    P   6   80TDAT                  LE3010
+0052 I        NS  02   1 CD                                               LE3010
+0053 I                                        1   1 RECI                  LE3010
+0054 I                                        2   40BRCD  L5              LE3010
+0055 I                                        5   7 CCY   L4              LE3010
+0056 I                                        8   9 LTYP                  LE3010
+0057 I                                       10  11 SUTP                  LE3010
+0058 I**                                                                  LE3010
+0059 I                                        8  11 LTSTP L3              LE3010
+0060 I**                                                                  LE3010
+0061 I                                       12  130PTYP                  LE3010
+0062 I**********                             14  190CNUM  L2                           LE3010 CSD027
+0062 I                                       14  19 CNUM  L2                                  CSD027
+0063 I**********                             20  250LNRF  L1                           LE3010 CLE148
+     I                                       20  25 LNRF  L1                                  CLE148
+0064 I                                    P  26  280ACFR                  LE3010
+0065 I                                    P  29  310ACTO            26    LE3010
+0066 I                                    P  32  377INTR                  LE3010
+0067 I                                    P  38  440CPAM                  LE3010
+0068 I                                    P  45  510AMAD                  LE3010
+0069 I                                    P  52  580AMTA            20    LE3010
+0070 I                                    P  59  650WTAD            21    LE3010
+0071 I                                    P  66  720WTTA            22    LE3010
+0072 I**********                             73  780PSLN        27                     LE3010 CLE148
+     I                                       73  78 PSLN                                      CLE148
+     I                                      129 132 CLAS  L3                                  CLE042
+0073 I        NS  03   1 CT                                               LE3010
+0074 I                                        1   1 RECI                  LE3010
+0075 I                                    P   2   40NORE                  LE3010
+0076 I        NS                                                          LE3010
+0077 I*                                                                   LE3010
+0078 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               LE3010
+0079 I*                                                                   LE3010
+0080 ITABLE   NS       2 C0   3 C1  12 C1                                 LE3010
+0081 I       AND      13 C0                                               LE3010
+0082 I                                        1   1 RECI                  LE3010
+0083 I                                       12  130RCDE                  LE3010
+0084 I                                       14  66 TITL                  LE3010
+0085 I                                       67  67 DATF                  LE3010
+0086 I                                       68  700DFBR                  LE3010
+0087 I                                       74  74 MODI1                 LE3010
+0088 I                                       75  75 MODI2                 LE3010
+0089 I                                       76  76 MODI3                 LE3010
+0090 I                                    P  77  790RUND                  LE3010
+0091 I                                       80  86 RUNA                  LE3010
+0092 I                                       87  870SFLG                  LE3010
+0093 I*    TABLE FILE - CURRENCIES RECORD 1.                              LE3010
+0094 I*                                                                   LE3010
+0095 I        NS       2 C2   3 C0  13 C1                                 LE3010
+0096 I                                        1   1 RECI                  LE3010
+0097 I                                       13  130SREC                  LE3010
+0098 I                                       14  27 CCNM                  LE3010
+0099 I                                    P  28  348SPOT                  LE3010
+0100 I                                       35  37 CCYS                  LE3010
+0101 I                                       38  380CDP                   LE3010
+0102 I                                       39  390TNOT                  LE3010
+0103 I                                       40  40 DCCY                  LE3010
+0104 I                                       41  44 SRC1                  LE3010
+0105 I                                       45  48 SRC2                  LE3010
+0106 I**********                             49  520TACC                               LE3010 CGL029
+0107 I**********                             53  560TEQV                               LE3010 CGL029
+0108 I**********                             57  600SWQV                               LE3010 CGL029
+0109 I**********                             61  640TAC4                               LE3010 CGL029
+0110 I**********                             65  680TAC5                               LE3010 CGL029
+0111 I**********                             69  69 HIND                               LE3010 CGL029
+0112 I**********                          P  70  768PART                               LE3010 CGL029
+0113 I**********                             77  780SSNO                               LE3010 CGL029
+0114 I**********                          P  79  858ERLC                               LE3010 CGL029
+     I                                       49  580TACC                                      CGL029
+     I                                       59  680TEQV                                      CGL029
+     I                                       69  780SWQV                                      CGL029
+     I                                       79  880TAC4                                      CGL029
+     I                                       89  980TAC5                                      CGL029
+     I                                       99  99 HIND                                      CGL029
+     I                                    P 100 1068PART                                      CGL029
+     I                                      107 1080SSNO                                      CGL029
+     I                                    P 109 1158ERLC                                      CGL029
+0115 I*                                                                   LE3010
+0116 I*    LOAN TYPE / SUB TYPE                                           LE3010
+0117 I*                                                                   LE3010
+0118 I********NS*******2*C4***3*C3************                                         LE3010 CLE042
+0119 I****************************************1   1 RECI                               LE3010 CLE042
+0120 I****************************************2   30RECT                               LE3010 CLE042
+0121 I***************************************10  11 LTYP                               LE3010 CLE042
+0122 I***************************************12  13 SUTP                               LE3010 CLE042
+0123 I***************************************14  43 LNARR                              LE3010 CLE042
+0124 I***************************************44  450PTYP                               LE3010 CLE042
+0125 I************************************P**90  920LCD                                LE3010 CLE042
+0126 I***************************************93  93 CHTP                               LE3010 CLE042
+0127 I************************************P**94  960TNLU                               LE3010 CLE042
+0128 I        NS                                                          LE3010
+0129 I*                                                                   LE3010
+0130 I*** CLIENT FILE - CUSTOMER STANDING DATA RECORD                     LE3010
+0131 I*                                                                   LE3010
+0132 ICLINT   NS       1 CD   8 CA                                        LE3010
+0133 I                                        1   1 RECI                  LE3010
+0134 I**********                              2   70CNUM                               LE3010 CSD027
+0134 I                                        2   7 CNUM                                      CSD027
+0135 I                                        8   8 RCDT                  LE3010
+0136 I                                        9  28 CRNM                  LE3010
+0137 I                                       29  38 CTWN                  LE3010
+0138 I                                       39  48 CSNM                  LE3010
+0139 I                                       49  56 CASK                  LE3010
+0140 I                                       57  68 TELX                  LE3010
+0141 I                                       69  80 CSID                  LE3010
+0142 I                                       81  82 ACOC                  LE3010
+0143 I                                       83  83 CBSI                  LE3010
+0144 I                                       84  85 CCTZ                  LE3010
+0145 I                                       86  87 CLOC                  LE3010
+0146 I**********                             88  930CPAR                               LE3010 CSD027
+0146 I                                       88  93 CPAR                                      CSD027
+0147 I* USE BRCD FROM PRIMARY FILE                                        LE3010
+0148 I*                                      94  960BRCD                  LE3010
+0149 I                                       97  980LINS                  LE3010
+0150 I                                       99 1010LIND                  LE3010
+0151 I                                    P 102 1040DASU                  LE3010
+0152 I                                    P 105 1070CDIC                  LE3010
+0153 I                                    P 108 1100DADE                  LE3010
+0154 I                                      111 111 CMIN                  LE3010
+0155 I                                      112 112 CTYP                  LE3010
+0156 I                                      113 124 TELF                  LE3010
+0157 I                                      125 133 CHID                  LE3010
+0158 I                                      134 136 CHAB                  LE3010
+0159 I                                    P 250 2520LCD                   LE3010
+0160 I                                      253 253 CHTP                  LE3010
+0161 I                                    P 254 2560TNLU                  LE3010
+     I                                      257 257 CUGRP                                     CER020
+     I                                      258 261 CAB2                                      CER020
+     I                                      262 264 LOIC                                      CER020
+0162 I*                                                                   LE3010
+0163 I***  CLIENT FILE - CATCHALL                                         LE3010
+0164 I*                                                                   LE3010
+0165 I        NS                                                          LE3010
+0166 I**                                                                  LE3010
+0167 I**   DATA STRUCTURES - KEY TO CURRENCY RECORDS                      LE3010
+0168 I**                                                                  LE3010
+0169 I            DS                                                      LE3010
+0170 I                                        1  12 CCYKEY                LE3010
+0171 I                                        9  11 CCY                   LE3010
+0172 I****************************************                                         LE3010 CLE042
+0173 I*****KEY*TO*LOAN*TYPE/SUB*TYPE*RECORDS**                                         LE3010 CLE042
+0174 I****************************************                                         LE3010 CLE042
+0175 I************DS**************************                                         LE3010 CLE042
+0176 I****************************************1  12 LOKEY                              LE3010 CLE042
+0177 I****************************************9  12 LTSTP                              LE3010 CLE042
+     I* LOAN TYPES/SUB TYPES                                                                  CLE042
+     ISDLOAN    E DSSDLOANPD                                                                  CLE042
+     I              AYLNTD                          LNARR                                     CLE042
+     I              AYLNPT                          PTYP                                      CLE042
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                    CLE042
+     IDSFDY     E DSDSFDY                                                                     CLE042
+0178 I**   LOCAL DATA AREA FOR DATABASE ERROR IDENTIFICATION              LE3010
+0179 ILDA        UDS                            256                       LE3010
+0180 I                                      134 138 DBFILE                LE3010
+0181 I                                      139 167 DBKEY                 LE3010
+0182 I                                      168 175 DBPGM                 LE3010
+0183 I                                      176 1770DBASE                 LE3010
+      *                                                                                       CLE148
+     C           *IN02     IFEQ *ON                                                           CLE148
+     C           PSLN      IFNE *BLANKS                                                       CLE148
+     C                     MOVE *ON       *IN27                                               CLE148
+     C                     ELSE                                                               CLE148
+     C                     MOVE *OFF      *IN27                                               CLE148
+     C                     ENDIF                                                              CLE148
+     C                     ENDIF                                                              CLE148
+      *                                                                                       CLE148
+0184 C**                                                                  LE3010
+0185 C**   FIRST CYCLE                                                    LE3010
+0186 C**                                                                  LE3010
+0187 C   40                GOTO ENDFC                                     LE3010
+0188 C                     SETON                     4030                 LE3010
+0189 C**                                                                  LE3010
+0190 C                     EXSR ZSYSTM                                    LE3010
+0191 C   99                SETON                     U7U8LR               LE3010
+0192 C   99                MOVE 'TABLE'   DBFILE                          LE3010
+0193 C   99                MOVELZTABKY    DBKEY                           LE3010
+0194 C   99                Z-ADD1         DBASE            DBASE 1        LE3010
+0195 C   99                GOTO END                                       LE3010
+0196 C**                                                                  LE3010
+0197 C**   CONVERT TITLE DATE                                             LE3010
+0198 C**                                                                  LE3010
+0199 C                     Z-ADDTDAT      ZDAYNO                          LE3010
+0200 C                     EXSR ZDATE2                                    LE3010
+0201 C                     MOVE ZADATE    TDATA   7                       LE3010
+0202 C**                                                                  LE3010
+0203 C**   SET UP KEY FIELDS                                              LE3010
+0204 C**                                                                  LE3010
+0205 C                     MOVE 'A'       CLIKEY  7                       LE3010
+0206 C                     MOVEL'20'      CCYKEY                          LE3010
+0207 C                     MOVE '1'       CCYKEY                          LE3010
+0208 C*********************MOVEL'43'      LOKEY                                        LE3010 CLE042
+0209 C**                                                                  LE3010
+0210 C                     Z-ADD1         COUNT   50                      LE3010
+0211 C           ENDFC     TAG                             ** ENDFC TAG **LE3010
+0212 C**                                                                  LE3010
+0213 C**   MAIN PROCESSING                                                LE3010
+0214 C**                                                                  LE3010
+0215 C  N02                GOTO END                                       LE3010
+0216 C           COUNT     ADD  1         COUNT                           LE3010
+0217 C                     SETOF                     30                   LE3010
+0218 C**                                                                  LE3010
+0219 C**   CHANGE OF CURRENCY - INIT. FIELDS, CHAIN FOR DP'S              LE3010
+0220 C**                                                                  LE3010
+0221 C   L4                Z-ADD0         CCYPR  130                      LE3010
+0222 C   L4                Z-ADD0         CCYIAD 130                      LE3010
+0223 C   L4                Z-ADD0         CCYITA 130                      LE3010
+0224 C   L4                Z-ADD0         CCYWAD 130                      LE3010
+0225 C   L4                Z-ADD0         CCYWTA 130                      LE3010
+0226 C**                                                                  LE3010
+0227 C   L4                SETOF                     99                   LE3010
+0228 C   L4      CCYKEY    CHAINTABLE                99                   LE3010
+0229 C   L4N99   RECI      COMP 'D'                  9999                 LE3010
+0230 C   L4 99             SETON                     U7U8LR               LE3010
+0231 C   L4 99             MOVE 'TABLE'   DBFILE                          LE3010
+0232 C   L4 99             MOVELCCYKEY    DBKEY                           LE3010
+0233 C   L4 99             Z-ADD2         DBASE            DBASE 2        LE3010
+0234 C   L4 99             GOTO END                                       LE3010
+0235 C**                                                                  LE3010
+0236 C   L4      CDP       COMP 1                      6061               LE3010
+0237 C   L4      CDP       COMP 2                    63  62               LE3010
+0238 C**                                                                  LE3010
+0239 C**   CHANGE OF LOAN TYPE/SUB TYPE - INIT. FIELDS,CHAIN FOR NAME     LE3010
+0240 C**                                                                  LE3010
+0241 C   L3                Z-ADD0         LTPR   130                      LE3010
+0242 C   L3                Z-ADD0         LTIAD  130                      LE3010
+0243 C   L3                Z-ADD0         LTITA  130                      LE3010
+0244 C   L3                Z-ADD0         LTWAD  130                      LE3010
+0245 C   L3                Z-ADD0         LTWTA  130                      LE3010
+0246 C**                                                                  LE3010
+0247 C***L3****************SETOF                     99                                LE3010 CLE042
+0248 C***L3******LOKEY*****CHAINTABLE                99                                LE3010 CLE042
+0249 C***L3N99***RECI******COMP 'D'                  9999                              LE3010 CLE042
+0250 C***L3*99*************SETON                     U7U8LR                            LE3010 CLE042
+0251 C***L3*99*************MOVE 'TABLE'   DBFILE                                       LE3010 CLE042
+0252 C***L3*99*************MOVELLOKEY     DBKEY                                        LE3010 CLE042
+0253 C***L3*99*************Z-ADD3         DBASE            DBASE 3                     LE3010 CLE042
+0254 C***L3*99*************GOTO END                                                    LE3010 CLE042
+     C   L3                CALL 'AOLOANR0'                                                    CLE042
+     C                     PARM '*MSG  '  @RTCD   7                                           CLE042
+     C                     PARM '*KEY'    @OPTN   7                                           CLE042
+     C                     PARM LTYP      @LNTY   2                                           CLE042
+     C                     PARM SUTP      @LNST   2                                           CLE042
+     C                     PARM CLAS      @LNCL   4                                           CLE042
+     C           SDLOAN    PARM SDLOAN    DSFDY                                               CLE042
+     C   L3      @RTCD     IFNE *BLANKS                                                       CLE042
+     C                     SETON                     U7U8LR                                   CLE042
+     C                     MOVE 'SDLOANPD'DBFILE                                              CLE042
+     C                     MOVELLTYP      DBKEY                                               CLE042
+     C                     CAT  SUTP:1    DBKEY                                               CLE042
+     C                     CAT  CLAS:1    DBKEY                                               CLE042
+     C                     Z-ADD3         DBASE            DBASE 3                            CLE042
+     C                     GOTO END                                                           CLE042
+     C                     END                                                                CLE042
+0255 C**                                                                  LE3010
+0256 C**   CHANGE OF CUSTOMER - CHAIN TO CLIENT FILE                      LE3010
+0257 C**                                                                  LE3010
+0258 C   L2                SETOF                     99                   LE3010
+0259 C   L2                MOVELCNUM      CLIKEY                          LE3010
+0260 C   L2      CLIKEY    CHAINCLINT                99                   LE3010
+0261 C   L2N99   RECI      COMP 'D'                  9999                 LE3010
+0262 C   L2 99             SETON                     U7U8LR               LE3010
+0263 C   L2 99             MOVE 'CLINT'   DBFILE                          LE3010
+0264 C   L2 99             MOVELCLIKEY    DBKEY                           LE3010
+0265 C   L2 99             Z-ADD4         DBASE            DBASE 4        LE3010
+0266 C   L2 99             GOTO END                                       LE3010
+0267 C**                                                                  LE3010
+0268 C**   CHANGE OF LOAN REF. - INIT. FIELDS AND IND.S                   LE3010
+0269 C**                                                                  LE3010
+0270 C   L1                Z-ADDCPAM      LNPR   130                      LE3010
+0271 C   L1                Z-ADDAMAD      LNIAD  130                      LE3010
+0272 C   L1                Z-ADDAMTA      LNITA  130                      LE3010
+0273 C   L1                Z-ADDWTAD      LNWAD  130                      LE3010
+0274 C   L1                Z-ADDWTTA      LNWTA  130                      LE3010
+0275 C   L1                SETOF                     28                   LE3010
+0276 C**                                                                  LE3010
+0277 C**   IF PART. SOLD SUBTRACT AMOUNTS FROM ORIG. LOAN ACCUMULATORS    LE3010
+0278 C**                                                                  LE3010
+0279 C   27                SETON                     28                   LE3010
+0280 C   27      LNPR      SUB  CPAM      LNPR                            LE3010
+0281 C   27      LNIAD     SUB  AMAD      LNIAD                           LE3010
+0282 C   27      LNITA     SUB  AMTA      LNITA                           LE3010
+0283 C   27      LNWAD     SUB  WTAD      LNWAD                           LE3010
+0284 C   27      LNWTA     SUB  WTTA      LNWTA                           LE3010
+0285 C**                                                                  LE3010
+0286 C**   IF PART. SOLD REVERSE SIGN OF AMOUNTS                          LE3010
+0287 C**                                                                  LE3010
+0288 C   27                Z-SUBCPAM      CPAM                            LE3010
+0289 C   27                Z-SUBAMAD      AMAD                            LE3010
+0290 C   27                Z-SUBAMTA      AMTA                            LE3010
+0291 C   27                Z-SUBWTAD      WTAD                            LE3010
+0292 C   27                Z-SUBWTTA      WTTA                            LE3010
+0293 C**                                                                  LE3010
+0294 C**   CONVERT DATES                                                  LE3010
+0295 C**                                                                  LE3010
+0296 C                     Z-ADDACFR      ZDAYNO                          LE3010
+0297 C                     EXSR ZDATE2                                    LE3010
+0298 C                     MOVE ZADATE    ACFRA   7                       LE3010
+0299 C**                                                                  LE3010
+0300 C  N26                Z-ADDACTO      ZDAYNO                          LE3010
+0301 C  N26                EXSR ZDATE2                                    LE3010
+0302 C  N26                MOVE ZADATE    ACTOA   7                       LE3010
+0303 C   26                MOVE 'CALL   ' ACTOA                           LE3010
+0304 C                     SETOF                     2331                 LE3010
+0305 C   21 22             SETON                     23                   LE3010
+0306 C**                                                                  LE3010
+0307 C   OF                                                               LE3010
+0308 COR L2                SETON                     31                   LE3010
+0309 C           END       TAG                             ** END TAG ****LE3010
+0310 C**                                                                  LE3010
+0311 C**   LEVEL BREAKS                                                   LE3010
+0312 C**                                                                  LE3010
+0313 C**                                                                  LE3010
+0314 C**   ADD AMOUNTS INTO ACCUMULATORS                                  LE3010
+0315 C**   - PRINCIPAL                                                    LE3010
+0316 CL1         CCYPR     ADD  LNPR      CCYPR                           LE3010
+0317 CL1         LTPR      ADD  LNPR      LTPR                            LE3010
+0318 C**   - INTEREST ACCRUED TO DATE                                     LE3010
+0319 CL1         CCYIAD    ADD  LNIAD     CCYIAD                          LE3010
+0320 CL1         LTIAD     ADD  LNIAD     LTIAD                           LE3010
+0321 C**   - INTEREST TO ACCRUE                                           LE3010
+0322 CL1         CCYITA    ADD  LNITA     CCYITA                          LE3010
+0323 CL1         LTITA     ADD  LNITA     LTITA                           LE3010
+0324 C**   - WITHHOLDING TAX ACCRUED TO DATE                              LE3010
+0325 CL1         CCYWAD    ADD  LNWAD     CCYWAD                          LE3010
+0326 CL1         LTWAD     ADD  LNWAD     LTWAD                           LE3010
+0327 C**   - WITHHOLDING TAX TO ACCRUE                                    LE3010
+0328 CL1         CCYWTA    ADD  LNWTA     CCYWTA                          LE3010
+0329 CL1         LTWTA     ADD  LNWTA     LTWTA                           LE3010
+0330 C**                                                                  LE3010
+0331 CL1                   SETOF                     29                   LE3010
+0332 CL1 28      LNWAD     COMP 0                        29               LE3010
+0333 CL1 28 29   LNWTA     COMP 0                        29               LE3010
+0334 C**                                                                  LE3010
+0335 CL3         LTWAD     COMP 0                        24               LE3010
+0336 CL3 24      LTWTA     COMP 0                        24               LE3010
+0337 C**                                                                  LE3010
+0338 CL4         CCYWAD    COMP 0                        25               LE3010
+0339 CL4 25      CCYWTA    COMP 0                        25               LE3010
+0340 C**                                                                  LE3010
+0341 C**   LAST RECORD CALCS                                              LE3010
+0342 C**                                                                  LE3010
+0343 CLR         COUNT     ADD  1         COUNT                           LE3010
+0344 CLR U7                MOVE 'LE3010'  DBPGM                           LE3010
+0345 CLRNU8      COUNT     COMP NORE                 U8U8                 LE3010
+0346 C********************************************************************LE3010
+0347 C**                                                                  LE3010
+0348 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.            LE3010
+0349 C**                                                                  LE3010
+0350 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.         LE3010
+0351 C**                                                                  LE3010
+0352 C           ZDATE2    BEGSR                           *** ZDATE2 *** LE3010
+0353 C**                                                                  LE3010
+0354 C**   CLEAR DATE FIELDS.                                             LE3010
+0355 C                     Z-ADD0         ZDATE   60                      LE3010
+0356 C                     MOVEL'       ' ZADATE  7                       LE3010
+0357 C**                                                                  LE3010
+0358 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.                        LE3010
+0359 C                     Z-ADDZDAYNO    ZDAYNO  50                      LE3010
+0360 C**                                                                  LE3010
+0361 C**   DETERMINE YEAR NUMBER.                                         LE3010
+0362 C**                                                                  LE3010
+0363 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.                    LE3010
+0364 C           ZDAYNO    SUB  1         ZDAYN1  50   99                 LE3010
+0365 C   99                GOTO ZDEND2                                    LE3010
+0366 C**                                                                  LE3010
+0367 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.             LE3010
+0368 C           ZDAYN1    DIV  1461      ZLYR    20                      LE3010
+0369 C                     MVR            ZDAYN1           SAVE REMAINING LE3010
+0370 C**                                                   DAYS           LE3010
+0371 C**   CALCULATE NUMBER OF REMAINING YEARS.                           LE3010
+0372 C                     Z-ADD1         ZWRK2   20                      LE3010
+0373 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *LE3010
+0374 C           ZDAYN1    COMP ZYDY,ZWRK2             90                 LE3010
+0375 C  N90      ZWRK2     ADD  1         ZWRK2                           LE3010
+0376 C  N90                GOTO ZDTAG1                                    LE3010
+0377 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON LE3010
+0378 C**                                                                  LE3010
+0379 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.                  LE3010
+0380 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          LE3010
+0381 C**                                                                  LE3010
+0382 C**   CALCULATE ACTUAL YEAR NUMBER.                                  LE3010
+0383 C           ZLYR      MULT 4         ZWRK3   30                      LE3010
+0384 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972   LE3010
+0385 C                     Z-ADDZWRK3     ZYEAR   20                      LE3010
+0386 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           LE3010
+0387 C**                                                                  LE3010
+0388 C**   DETERMINE MONTH NUMBER.                                        LE3010
+0389 C**                                                                  LE3010
+0390 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.         LE3010
+0391 C                     SETOF                     9293                 LE3010
+0392 C   91      ZDAYN1    COMP 59                     9293               LE3010
+0393 C   91N92   ZDAYN1    SUB  1         ZDAYN1                          LE3010
+0394 C**                                                                  LE3010
+0395 C**   CALCULATE MONTH NUMBER.                                        LE3010
+0396 C                     Z-ADD2         ZWRK2                           LE3010
+0397 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *LE3010
+0398 C           ZDAYN1    COMP ZMDY,ZWRK2             94                 LE3010
+0399 C  N94      ZWRK2     ADD  1         ZWRK2                           LE3010
+0400 C  N94                GOTO ZDTAG2                                    LE3010
+0401 C           ZWRK2     SUB  1         ZWRK2                           LE3010
+0402 C**                                                                  LE3010
+0403 C                     Z-ADDZWRK2     ZMTH    20       MONTH          LE3010
+0404 C**                                                                  LE3010
+0405 C**   DETERMINE DAY OF MONTH.                                        LE3010
+0406 C**                                                                  LE3010
+0407 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.                          LE3010
+0408 C           ZDAYN1    ADD  1         ZDAYN1                          LE3010
+0409 C**                                                                  LE3010
+0410 C**   CALCULATE DAY OF MONTH.                                        LE3010
+0411 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            LE3010
+0412 C**                                                                  LE3010
+0413 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.       LE3010
+0414 C   93      ZDAY      ADD  1         ZDAY                            LE3010
+0415 C**                                                                  LE3010
+0416 C**   FORMAT DATE, DDMMYY OR MMDDYY.                                 LE3010
+0417 C  N98                MOVELZDAY      ZWRK4   40                      LE3010
+0418 C   98                MOVE ZDAY      ZWRK4                           LE3010
+0419 C  N98                MOVE ZMTH      ZWRK4                           LE3010
+0420 C   98                MOVELZMTH      ZWRK4                           LE3010
+0421 C                     MOVELZWRK4     ZDATE                           LE3010
+0422 C                     MOVE ZYEAR     ZDATE                           LE3010
+0423 C**                                                                  LE3010
+0424 C**   FORMAT ALPHA DATE, DDMMMYY.                                    LE3010
+0425 C           ZDAY      COMP 10                     95                 LE3010
+0426 C                     MOVELZDAY      ZWRK5   5                       LE3010
+0427 C   95                MOVEL' '       ZWRK5                           LE3010
+0428 C                     MOVE ZMNM,ZMTH ZWRK5                           LE3010
+0429 C                     MOVELZWRK5     ZADATE                          LE3010
+0430 C                     MOVE ZYEAR     ZADATE                          LE3010
+0431 C**                                                                  LE3010
+0432 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*LE3010
+0433 C**                                                                  LE3010
+0434 C**                                                                  LE3010
+0435 C********************************************************************LE3010
+0436 C********************************************************************LE3010
+0437 C**                                                                  LE3010
+0438 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   LE3010
+0439 C**                                                                  LE3010
+0440 C           ZSYSTM    BEGSR                           *** ZSYSTM *** LE3010
+0441 C**                                                                  LE3010
+0442 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    LE3010
+0443 C                     MOVEL'01      'ZTABKY 12                       LE3010
+0444 C                     MOVE '  10'    ZTABKY                          LE3010
+0445 C**                                                                  LE3010
+0446 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   LE3010
+0447 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED LE3010
+0448 C**                                                                  LE3010
+0449 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    LE3010
+0450 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  LE3010
+0451 C**                                                                  LE3010
+0452 C                     ENDSR                                          LE3010
+0453 C**                                                                  LE3010
+0454 C**                                                                  LE3010
+0455 C********************************************************************LE3010
+0456 O**                                                                  LE3010
+0457 O**   CUSTOMER LENDING INTEREST ACCRUALS REPORT                      LE3010
+0458 O**                                                                  LE3010
+0459 OLE3010P1D   03   L5                                                 S01124
+0460 O       OR        OFNL5                                              LE3010
+0461 O                                   22 'REFERENCE LE3010'            LE3010
+0462 O                         TITL      89                               LE3010
+0463 O                                  104 'DATE'                        LE3010
+0464 O                         RUNA     112                               LE3010
+0465 O                                  122 'PAGE'                        LE3010
+0466 O                         PAGE  Z  127                               LE3010
+0467 O        D   05   L5                                                 LE3010
+0468 O       OR        OFNL5                                              LE3010
+0469 O                                   12 'BRANCH'                      LE3010
+0470 O                         BRCD      16                               LE3010
+0471 O                                   56 'CUSTOMER LENDING INTERES'    LE3010
+0472 O                                   68 'T ACCRUALS -'                LE3010
+0473 O                                   90 'UP TO AND EXCLUDING -'       LE3010
+0474 O                         TDATA     98                               LE3010
+0475 O        D   06   L5                                                 LE3010
+0476 O       OR        OFNL5                                              LE3010
+0477 O                                   56 '------------------------'    LE3010
+0478 O                                   68 '-------------'               LE3010
+0479 O                                   91 '-----------------------'     LE3010
+0480 O                                   98 '-------'                     LE3010
+0481 O        D   09   L5                                                 LE3010
+0482 O       OR        OFNL5                                              LE3010
+0483 O                                   13 'CUSTOMER'                    LE3010
+0484 O                                   52 'LOAN   ACCRUAL PERIOD'       LE3010
+0485 O                                   72 'RATE       CCY'              LE3010
+0486 O                                  104 'PRINCIPAL    ACCRUED TO'     LE3010
+0487 O                                  128 'DATE          TO ACCRUE'     LE3010
+0488 O        D   10   L5                                                 LE3010
+0489 O       OR        OFNL5                                              LE3010
+0490 O                                   50 'NUMBER   FROM     TO'        LE3010
+0491 O        D   12   L5                                                 LE3010
+0492 O       OR        OFNL5                                              LE3010
+0493 O                         LNARR     35                               LE3010
+0494 O        D 2      L3NL5NOF                                           LE3010
+0495 O                         LNARR     35                               LE3010
+0496 O**                                                                  LE3010
+0497 O**   DETAIL LINE 1                                                  LE3010
+0498 O**                                                                  LE3010
+0499 O        D 2      02NU7 31                                           LE3010
+0500 O       OR 1      02NU7N31                                           LE3010
+0501 O                   N27 31CNUM       7                               LE3010
+0502 O                   N27 31CRNM      28                               LE3010
+0503 O                       27          28 'PART. SOLD'                  LE3010
+0504 O                       27PSLN      36                               LE3010
+0505 O                      N27LNRF      36                               LE3010
+0506 O                         ACFRA     45                               LE3010
+0507 O                         ACTOA     53                               LE3010
+0508 O                         INTR      67 '  0 .       -'               LE3010
+0509 O                         CCY       72                               LE3010
+0510 O                       60CPAM      91 ' ,   ,   ,   , 0 -'          LE3010
+0511 O                       61CPAM      91 '   ,   ,   , 0 . -'          LE3010
+0512 O                       62CPAM      91 '  ,   ,   , 0 .  -'          LE3010
+0513 O                       63CPAM      91 ' ,   ,   , 0 .   -'          LE3010
+0514 O**                                                                  LE3010
+0515 O                       60AMAD     110 ' ,   ,   ,   , 0 -'          LE3010
+0516 O                       61AMAD     110 '   ,   ,   , 0 . -'          LE3010
+0517 O                       62AMAD     110 '  ,   ,   , 0 .  -'          LE3010
+0518 O                       63AMAD     110 ' ,   ,   , 0 .   -'          LE3010
+0519 O**                                                                  LE3010
+0520 O                   N20 60AMTA     129 ' ,   ,   ,   , 0 -'          LE3010
+0521 O                   N20 61AMTA     129 '   ,   ,   , 0 . -'          LE3010
+0522 O                   N20 62AMTA     129 '  ,   ,   , 0 .  -'          LE3010
+0523 O                   N20 63AMTA     129 ' ,   ,   , 0 .   -'          LE3010
+0524 O**                                                                  LE3010
+0525 O**   DETAIL LINE 2                                                  LE3010
+0526 O**                                                                  LE3010
+0527 O        D 1      02N23NU7                                           LE3010
+0528 O                   N21 60WTAD     110 ' ,   ,   ,   , 0 -'          LE3010
+0529 O                   N21 61WTAD     110 '   ,   ,   , 0 . -'          LE3010
+0530 O                   N21 62WTAD     110 '  ,   ,   , 0 .  -'          LE3010
+0531 O                   N21 63WTAD     110 ' ,   ,   , 0 .   -'          LE3010
+0532 O**                                                                  LE3010
+0533 O                   N22 60WTTA     129 ' ,   ,   ,   , 0 -'          LE3010
+0534 O                   N22 61WTTA     129 '   ,   ,   , 0 . -'          LE3010
+0535 O                   N22 62WTTA     129 '  ,   ,   , 0 .  -'          LE3010
+0536 O                   N22 63WTTA     129 ' ,   ,   , 0 .   -'          LE3010
+0537 O                                  132 'W/T'                         LE3010
+0538 O**                                                                  LE3010
+0539 O**   NET TOTAL LINE FOR LOAN WITH PARTS. SOLD - 1                   LE3010
+0540 O**                                                                  LE3010
+0541 O        T 1      L1NU7N30                                           LE3010
+0542 O       AND       28N29                                              LE3010
+0543 O       OR 11     L1NU7N30                                           LE3010
+0544 O       AND       28 29                                              LE3010
+0545 O                                   68 'LOAN NET TOTAL'              LE3010
+0546 O                       60LNPR      91 ' ,   ,   ,   , 0 -'          LE3010
+0547 O                       61LNPR      91 '   ,   ,   , 0 . -'          LE3010
+0548 O                       62LNPR      91 '  ,   ,   , 0 .  -'          LE3010
+0549 O                       63LNPR      91 ' ,   ,   , 0 .   -'          LE3010
+0550 O**                                                                  LE3010
+0551 O                       60LNIAD    110 ' ,   ,   ,   , 0 -'          LE3010
+0552 O                       61LNIAD    110 '   ,   ,   , 0 . -'          LE3010
+0553 O                       62LNIAD    110 '  ,   ,   , 0 .  -'          LE3010
+0554 O                       63LNIAD    110 ' ,   ,   , 0 .   -'          LE3010
+0555 O**                                                                  LE3010
+0556 O                       60LNITA    129 ' ,   ,   ,   , 0 -'          LE3010
+0557 O                       61LNITA    129 '   ,   ,   , 0 . -'          LE3010
+0558 O                       62LNITA    129 '  ,   ,   , 0 .  -'          LE3010
+0559 O                       63LNITA    129 ' ,   ,   , 0 .   -'          LE3010
+0560 O**                                                                  LE3010
+0561 O**   NET TOTAL LINE FOR LOAN WITH PARTS. SOLD - 2                   LE3010
+0562 O**                                                                  LE3010
+0563 O        T 11     L1NU7N30                                           LE3010
+0564 O       AND       28N29                                              LE3010
+0565 O                       60LNWAD    110 ' ,   ,   ,   , 0 -'          LE3010
+0566 O                       61LNWAD    110 '   ,   ,   , 0 . -'          LE3010
+0567 O                       62LNWAD    110 '  ,   ,   , 0 .  -'          LE3010
+0568 O                       63LNWAD    110 ' ,   ,   , 0 .   -'          LE3010
+0569 O**                                                                  LE3010
+0570 O                       60LNWTA    129 ' ,   ,   ,   , 0 -'          LE3010
+0571 O                       61LNWTA    129 '   ,   ,   , 0 . -'          LE3010
+0572 O                       62LNWTA    129 '  ,   ,   , 0 .  -'          LE3010
+0573 O                       63LNWTA    129 ' ,   ,   , 0 .   -'          LE3010
+0574 O                                  132 'W/T'                         LE3010
+0575 O**                                                                  LE3010
+0576 O**   TOTAL LINE - LOAN TYPE/SUB TYPE - 1                            LE3010
+0577 O**                                                                  LE3010
+0578 O        T 2      L3NU7N30                                           LE3010
+0579 O       AND      N28                                                 LE3010
+0580 O       OR 1      L3NU7N30                                           LE3010
+0581 O       AND       28                                                 LE3010
+0582 O                                   68 'LOAN TYPE/SUB TYPE TOTAL'    LE3010
+0583 O                       60LTPR      91 ' ,   ,   ,   , 0 -'          LE3010
+0584 O                       61LTPR      91 '   ,   ,   , 0 . -'          LE3010
+0585 O                       62LTPR      91 '  ,   ,   , 0 .  -'          LE3010
+0586 O                       63LTPR      91 ' ,   ,   , 0 .   -'          LE3010
+0587 O**                                                                  LE3010
+0588 O                       60LTIAD    110 ' ,   ,   ,   , 0 -'          LE3010
+0589 O                       61LTIAD    110 '   ,   ,   , 0 . -'          LE3010
+0590 O                       62LTIAD    110 '  ,   ,   , 0 .  -'          LE3010
+0591 O                       63LTIAD    110 ' ,   ,   , 0 .   -'          LE3010
+0592 O**                                                                  LE3010
+0593 O                       60LTITA    129 ' ,   ,   ,   , 0 -'          LE3010
+0594 O                       61LTITA    129 '   ,   ,   , 0 . -'          LE3010
+0595 O                       62LTITA    129 '  ,   ,   , 0 .  -'          LE3010
+0596 O                       63LTITA    129 ' ,   ,   , 0 .   -'          LE3010
+0597 O**                                                                  LE3010
+0598 O**   TOTAL LINE - LOAN TYPE/SUB TYPE - 2                            LE3010
+0599 O        T 1      L3NU7N24                                           LE3010
+0600 O       AND      N30                                                 LE3010
+0601 O                       60LTWAD    110 ' ,   ,   ,   , 0 -'          LE3010
+0602 O                       61LTWAD    110 '   ,   ,   , 0 . -'          LE3010
+0603 O                       62LTWAD    110 '  ,   ,   , 0 .  -'          LE3010
+0604 O                       63LTWAD    110 ' ,   ,   , 0 .   -'          LE3010
+0605 O**                                                                  LE3010
+0606 O                       60LTWTA    129 ' ,   ,   ,   , 0 -'          LE3010
+0607 O                       61LTWTA    129 '   ,   ,   , 0 . -'          LE3010
+0608 O                       62LTWTA    129 '  ,   ,   , 0 .  -'          LE3010
+0609 O                       63LTWTA    129 ' ,   ,   , 0 .   -'          LE3010
+0610 O                                  132 'W/T'                         LE3010
+0611 O**                                                                  LE3010
+0612 O**   TOTAL LINE - CURRENCY - 1                                      LE3010
+0613 O**                                                                  LE3010
+0614 O        T 2      L4NU7N30                                           LE3010
+0615 O                                   68 'CURRENCY TOTAL'              LE3010
+0616 O                         CCY       72                               LE3010
+0617 O                       60CCYPR     91 ' ,   ,   ,   , 0 -'          LE3010
+0618 O                       61CCYPR     91 '   ,   ,   , 0 . -'          LE3010
+0619 O                       62CCYPR     91 '  ,   ,   , 0 .  -'          LE3010
+0620 O                       63CCYPR     91 ' ,   ,   , 0 .   -'          LE3010
+0621 O**                                                                  LE3010
+0622 O                       60CCYIAD   110 ' ,   ,   ,   , 0 -'          LE3010
+0623 O                       61CCYIAD   110 '   ,   ,   , 0 . -'          LE3010
+0624 O                       62CCYIAD   110 '  ,   ,   , 0 .  -'          LE3010
+0625 O                       63CCYIAD   110 ' ,   ,   , 0 .   -'          LE3010
+0626 O**                                                                  LE3010
+0627 O                       60CCYITA   129 ' ,   ,   ,   , 0 -'          LE3010
+0628 O                       61CCYITA   129 '   ,   ,   , 0 . -'          LE3010
+0629 O                       62CCYITA   129 '  ,   ,   , 0 .  -'          LE3010
+0630 O                       63CCYITA   129 ' ,   ,   , 0 .   -'          LE3010
+0631 O**                                                                  LE3010
+0632 O**   TOTAL LINE - CURRENCY - 2                                      LE3010
+0633 O**                                                                  LE3010
+0634 O        T 1      L4NU7N25                                           LE3010
+0635 O       AND      N30                                                 LE3010
+0636 O                       60CCYWAD   110 ' ,   ,   ,   , 0 -'          LE3010
+0637 O                       61CCYWAD   110 '   ,   ,   , 0 . -'          LE3010
+0638 O                       62CCYWAD   110 '  ,   ,   , 0 .  -'          LE3010
+0639 O                       63CCYWAD   110 ' ,   ,   , 0 .   -'          LE3010
+0640 O**                                                                  LE3010
+0641 O                       60CCYWTA   129 ' ,   ,   ,   , 0 -'          LE3010
+0642 O                       61CCYWTA   129 '   ,   ,   , 0 . -'          LE3010
+0643 O                       62CCYWTA   129 '  ,   ,   , 0 .  -'          LE3010
+0644 O                       63CCYWTA   129 ' ,   ,   , 0 .   -'          LE3010
+0645 O                                  132 'W/T'                         LE3010
+0646 O**                                                                  LE3010
+0647 O**   HEADINGS IF NO DETAILS TO REPORT OR D/B ERROR IN FIRST CYCLE   LE3010
+0648 O**                                                                  LE3010
+0649 O        T   03   LR 30                                              LE3010
+0650 O                                   22 'REFERENCE LE3010'            LE3010
+0651 O                         TITL      89                               LE3010
+0652 O                                  104 'DATE'                        LE3010
+0653 O                         RUNA     112                               LE3010
+0654 O                                  122 'PAGE'                        LE3010
+0655 O                         PAGE  Z  127                               LE3010
+0656 O        T   05   LR 30                                              LE3010
+0657 O                                   56 'CUSTOMER LENDING INTERES'    LE3010
+0658 O                                   68 'T ACCRUALS -'                LE3010
+0659 O                                   90 'UP TO AND EXCLUDING -'       LE3010
+0660 O                         TDATA     98                               LE3010
+0661 O        T   06   LR 30                                              LE3010
+0662 O                                   56 '------------------------'    LE3010
+0663 O                                   68 '------------'                LE3010
+0664 O                                   91 '-----------------------'     LE3010
+0665 O                                   98 '-------'                     LE3010
+0666 O        T   09   LR 30                                              LE3010
+0667 O                                   13 'CUSTOMER'                    LE3010
+0668 O                                   52 'LOAN   ACCRUAL PERIOD'       LE3010
+0669 O                                   72 'RATE       CCY'              LE3010
+0670 O                                  104 'PRINCIPAL    ACCRUED TO'     LE3010
+0671 O                                  128 'DATE          TO ACCRUE'     LE3010
+0672 O        T   10   LR 30                                              LE3010
+0673 O                                   50 'NUMBER   FROM     TO'        LE3010
+0674 O        T   17   LR 30NU7                                           LE3010
+0675 O                                   76 'NO DETAILS TO REPORT'        LE3010
+0676 O**                                                                  LE3010
+0677 O**   DATABASE ERROR                                                 LE3010
+0678 O**                                                                  LE3010
+0679 O        T 32     LR U7                                              LE3010
+0680 O                                   51 '*** REFERENCE LE3010'        LE3010
+0681 O                                   71 'DATABASE ERROR AT'           LE3010
+0682 O                         DBASE     74                               LE3010
+0683 O        T        LR U7                                              LE3010
+0684 O                                   37 'FILENAME'                    LE3010
+0685 O                         DBFILE    43                               LE3010
+0686 O                                   48 'KEY'                         LE3010
+0687 O                         DBKEY     78                               LE3010
+0688 O**                                                                  LE3010
+0689 O**   FILE CONTROL REPORT                                            LE3010
+0690 O**                                                                  LE3010
+0691 O        T   03   LR                                                 LE3010
+0692 O                                   22 'REFERENCE LE3010'            LE3010
+0693 O                         TITL      89                               LE3010
+0694 O                                  104 'DATE'                        LE3010
+0695 O                         RUNA     112                               LE3010
+0696 O                                  122 'PAGE'                        LE3010
+0697 O                         PAGE  Z  127                               LE3010
+0698 O        T   05   LR                                                 LE3010
+0699 O                                   65 'CUSTOMER LENDING INTERES'    LE3010
+0700 O                                   89 'T ACCRUALS - FILE CONTRO'    LE3010
+0701 O                                   91 'LS'                          LE3010
+0702 O        T   06   LR                                                 LE3010
+0703 O                                   65 '------------------------'    LE3010
+0704 O                                   89 '------------------------'    LE3010
+0705 O                                   91 '--'                          LE3010
+0706 O        T   09   LR                                                 LE3010
+0707 O                                   28 'S/SLACX - RUN CONTROLS'      LE3010
+0708 O                                   59 'NUMBER'                      LE3010
+0709 O        T   10   LR                                                 LE3010
+0710 O                                   28 '----------------------'      LE3010
+0711 O                                   59 'OF RECORDS'                  LE3010
+0712 O        T   12   LR                                                 LE3010
+0713 O                                   29 'TOTAL RECORDS ON FILE'       LE3010
+0714 O                      NU7NORE  3   59                               LE3010
+0715 O        T   14   LR                                                 LE3010
+0716 O                                   29 'TOTAL RECORDS ON FILE'       LE3010
+0717 O                                   42 '- CALCULATED'                LE3010
+0718 O                         COUNT 3   59                               LE3010
+0719 O                    U8NU7         111 '***   DIFFERENCE   ***'      LE3010
+0720 O        T   17   LR                                                 LE3010
+0721 O                                   76 '*** END OF REPORT ***'       LE3010
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

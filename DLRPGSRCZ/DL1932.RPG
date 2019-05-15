@@ -1,0 +1,625 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FRA/IRS rates file List')
+/*OVRF*: OVRDBF FILE(DLFIRSLL) TOFILE(DLFRARL4)                     : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module
+     F*                                                               *
+     F*  DL1932 - FRA/IRS RATES FILE LIST                             *
+     F*                                                               *
+     F*  Function: To print a list of FRA or IRS Rates.               *
+     F*   (I/C)    The program is called in one of two modes          *
+     F*   (COB)    determined by the input parameter, FI :            *
+     F*            FI = F runs in FRA mode :                          *
+     F*               DLFIRSLL is overriden to DLFRARL4;              *
+     F*               the field prefix is FR;                         *
+     F*               the Date referred to is Value Date;             *
+     F*               the Title will mention 'FRA'.                   *
+     F*            FI = I runs in IRS mode :                          *
+     F*               DLFIRSLL is overriden to DLIRSRL4;              *
+     F*               the field prefix is IR;                         *
+     F*               the Date referred to is Maturity Date;          *
+     F*               the Title will mention 'IRS'.                   *
+     F*                                                               *
+     F*            Each list can be selected by Currency.             *
+     F*            During a COB run the appropriate header is read    *
+     F*            from FDTTOTLL and compared to the number of records*
+     F*            read.  If the report is for all currencies and the *
+     F*            file control total is different to that calculated *
+     F*            then 'DIFFERENCE' is printed on the audit report.  *
+     F*                                                               *
+     F*  The creation parameters override files DLFIRSLL to DLFRARL4  *
+     F*  so the file field names referred to in the DLFRARL4, prefix  *
+     F*  FR.                                                          *
+     F*                                                               *
+     F*  Called By: DLC1932 - FRA/IRS Rates File List Control         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.04 ---------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 E36623             Date 02APR92               *
+     F*                 S01328             DATE 08MAR91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CSD006 - Use long DS with SDBSRTPD.
+     F*  E36623 - FDINSTLL was made redundant by S01319.  Remove.    *
+     F*  S01328 - FRA/IRS REVALUATIONS - NEW PROGRAM                  *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F*FDINSTLLIF**E***********K********DISK         KINFSR *PSSR         E36623
+     FFDTTOTLLIF  E           K        DISK         KINFSR *PSSR      UC
+     FDLFIRSLLIF  E           K        DISK         KINFSR *PSSR
+     FDL1932P1O   E             05     PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL
+     FDL1932AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    04  - OUTPUT BASE RATE CODE AND NAME                       *
+     F*    05  - OVERFLOW INDICATOR DL1932P1                          *
+     F*    06  - CHANGE OF CURRENCY                                   *
+     F*    07  - CHANGE OF BASE RATE CODE                             *
+     F*****11**-*END*OF*FILE*ON*READ OF FDINSTLL                      *   E36623
+     F*    14  - END OF FILE DLFIRSLL                                 *
+     F*    16  - CHAIN FAIL DLFIRSLL                                  *
+     F*    20  - ON = FRA MODE; OFF = IRS MODE                        *
+     F*    54  - AT LEAST ONE SET OF DETAILS OUTPUT - USED FOR        *
+     F*          PRINTER FILE CONDITIONING.                           *
+     F*    63  - PROGRAM CALLED AT END OF DAY                         *
+     F*    64  - INPUT AND CALCULATED FILE TOTALS DO NOT AGREE        *
+     F*****78**-*READ*FAIL*FDINSTLL.***                               *   E36623
+     F*    80  - DATA BASE ERROR INDICATOR                            *
+     F*                                                               *
+     F*    U8  - FILE CONTROLS OUT OF BALANCE                         *
+     F*  U7+U8 - DATA BASE ERROR (JOB SWITCH)                         *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  #B     - MAIN PROCESSING                                     *
+     F*  ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.                *
+     F*  #A     - INITIAL PROCESSING                                  *
+     F*  #C     - TERMINATION PROCESSING                              *
+     F*  #CA    - FILE CONTROL PROCESSING                             *
+     F*  ZRATE1 - CONVERTS A RATE TO DISPLAY FORMAT                   *
+     F*  *PSSR  - ERROR HANDLING SUBROUTINE                           *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E**  COPYRIGHT ARRAY.
+     E*
+     E/COPY ZSRSRC,ZRATE1Z1
+     E*
+     E/EJECT
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDBSRT    E DSSDBSRTPD
+     I* BASE RATE DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     IPSDS       SDS
+     I**  PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I*
+     IDBERR       DS                            256
+     I** DATA AREA FOR DATABASE ERROR INFORMATION
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISPOOL       DS
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE - AU REPORT
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I/EJECT
+     C*
+     C**  INITIAL PROCESSING
+     C                     EXSR #A
+     C*
+     C**  MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**  TERMINATION PROCESSING
+     C                     EXSR #C
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B - MAIN PROCESSING.                                        *
+     C*       CONTROLS SET UP OF DL1932P1 DETAILS.                    *
+     C*       OUTPUTS DL1932P1 DETAILS.                               *
+     C*                                                               *
+     C*  CALLED BY:  CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS:      ZRATE1 - CONVERTS A RATE TO DISPLAY FORMAT       *
+     C*                                                               *
+     C*  USES:       @CALC  - TOTAL NUMBER OF DETAILS OUTPUT          *
+     C*              CURR   - INPUT PARAMETER - SELECTED CURRENCY     *
+     C*              ORCCY  - CURRENCY OF LAST RECORD READ            *
+     C*              OBRTT  - BASE RATE OF LAST RECORD READ           *
+     C*              FRART  - BASE RATE (ALPHA)                       *
+     C*              @@INPR - INPUT RATE TO ZRATE1                    *
+     C*              @@OUTR - OUTPUT RATE TO ZRATE1                   *
+     C*              SEQ    - RCF - SEQUENCE NUMBER OF REPORT         *
+     C*              SENTY  - RCF - ENTITY OF REPORT (BLANK)          *
+     C*              SFILE  - RCF - REPORT FILE NAME                  *
+     C*              ZSNUM  - RCF - REPORT FILE NUMBER (DECIMAL)      *
+     C*              SFNUM  - RCF - REPORT FILE NUMBER (BINARY)       *
+     C*              ZSERR  - RCF - ERROR IN ZSFILE                   *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** IF REPORT REQUIRED FOR ONLY ONE CURRENCY SET FILE POINTER
+     C** TO THAT CURRENCY
+     C           CURR      IFNE '   '
+     C           CURR      SETLLDLFIRSLL                 16
+     C*
+     C** IF CURRENCY NOT ON FILE GOTO END
+     C           *IN16     IFNE '1'
+     C                     MOVE '1'       *INLR
+     C                     GOTO #B9
+     C                     END
+     C                     END
+     C*
+     C** DO UNTIL END OF RATES FILE
+     C           *IN14     DOWNE'1'
+     C*
+     C** RESET CHANGE OF CURRENCY AND CHANGE OF BASE RATE INDICATORS
+     C                     MOVE '0'       *IN06
+     C                     MOVE '0'       *IN07
+     C*
+     C** READ THE RATES FILE (OVERRIDDEN TO DLFRARL4 OR DLIRSRL4)
+     C                     READ DLFIRSLL                 14
+     C*
+     C** IF REPORT REQUIRED FOR JUST ONE CURRENCY AND CURRENCY HAS
+     C** CHANGED GOTO END; OR IF END OF FILE THEN GOTO END
+     C           FRCCY     IFNE CURR
+     C           CURR      ANDNE'   '
+     C           *IN14     OREQ '1'
+     C                     MOVE '1'       *INLR
+     C                     GOTO #B9
+     C                     END
+     C*
+     C** IF CURRENCY CHANGED INDICATE CHANGE OF CURRENCY AND BASE RATE
+     C           FRCCY     IFNE ORCCY
+     C                     MOVE '1'       *IN07
+     C                     MOVE '1'       *IN06
+     C                     END
+     C*
+     C** IF BASE RATE CHANGED INDICATE CHANGE BASE RATE ONLY
+     C           FRBRTT    IFNE OBRTT
+     C                     MOVE '1'       *IN06
+     C                     END
+     C*
+     C**  IF DATA BASE ERROR HAS OCCURRED NO MORE PROCESSING IN THIS
+     C**  ROUTINE
+     C           *IN80     IFEQ '1'
+     C                     GOTO #B9
+     C                     END
+     C*
+     C** OPEN PRINTER FILE AND INDICATE THAT THERE IS AT LEAST ONE
+     C** DETAIL TO REPORT; ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C           *IN54     IFEQ '0'
+     C                     OPEN DL1932P1
+     C                     MOVE '1'       *IN54
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C**
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     END
+     C*
+     C** IF OVERFLOW INDICATOR IS ON THROW PAGE AND WRITE HEADER
+     C           *IN05     IFEQ '1'
+     C                     WRITEDL1932R0
+     C                     END
+     C*
+     C** IF THERE IS A CHANGE OF CURRENCY ACCESS CURRENCY DETAILS
+     C           *IN07     IFEQ '1'
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FRCCY     @CRKEY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     Z-ADD1         DBASE            * DBERR 001 *
+     C                     MOVELFRCCY     DBKEY            *************
+     C                     EXSR *PSSR
+     C                     GOTO #B9
+     C                     END
+     C*
+     C** IF OVERFLOW INDICATOR IS OFF (IE. NEW PAGE NOT JUST STARTED)
+     C** THEN WRITE HEADING FOR PRINTER FILE
+     C           *IN05     IFEQ '0'
+     C                     WRITEDL1932R0
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN06     IFEQ '1'
+     C*
+     C** CONVERT BASE RATE CODE TO ALPHANUMERIC EQUIVALENT
+     C                     MOVE FRBRTT    FRART   2
+     C**
+     C** CALL ACCESS PROGRAM FOR BASE RATE DETAILS
+     C                     CALL 'AOBSRTR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FRCCY     @AJCD   3
+     C                     PARM           FRART
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                                 CSD006
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBSRTPD'DBFILE            *************
+     C                     Z-ADD3         DBASE             * DBERR 003 *
+     C                     MOVE FRBRTT    BKEY    5         *************
+     C                     MOVELFRCCY     BKEY
+     C                     MOVELBKEY      DBKEY
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C*
+     C** IF CHANGE OF BASE RATE OR OVERFLOW INDICATOR ON THEN INDICATE E
+     C** OUTPUT OF BASE RATE CODE AND NAME                             E
+     C           *IN06     IFEQ '1'
+     C           *IN05     OREQ '1'
+     C                     MOVE '1'       *IN04
+     C                     END
+     C*
+     C** CONVERT RATE TO DISPLAY FORMAT
+     C                     MOVE FRRATE    @@INPR
+     C                     EXSR ZRATE1
+     C                     MOVEL@@OUTR    RATE
+     C*
+     C** IF OVERFLOW INDICATOR ON THEN SET IT OFF
+     C           *IN05     IFEQ '1'
+     C                     MOVE '0'       *IN05
+     C                     END
+     C*
+     C** WRITE DETAIL RECORD TO DL1932P1
+     C                     WRITEDL1932R1
+     C*
+     C** SAVE CURRENCY AND BASE RATE FOR COMPARISON TO NEXT READ
+     C                     MOVE FRCCY     ORCCY   3
+     C                     MOVE FRBRTT    OBRTT   20
+     C*
+     C** INCREMENT COUNT OF RECORDS OUTPUT
+     C                     ADD  1         @CALC
+     C*
+     C** SET OFF INDICATOR THAT OUTPUTS BASE RATE AND NAME
+     C                     MOVE '0'       *IN04
+     C*
+     C                     END
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C           #B9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ZA0150    - THIS SUBROUTINE CALLS THE ACCESS PROGRAMAOBANKR0 *
+     C*              TO GET ICD.  *IN80 IS SET ON IN *PSSR IF THE     *
+     C*              CALL TO AOBANKR0 FAILS.  DETAILS OF THE ATTEMPTED*
+     C*              ACCESS ARE PLACED IN THE LDA IF ACCESS FAILS.    *
+     C*                                                               *
+     C*  CALLED BY:  #A - INITIAL PROCESSING                          *
+     C*                                                               *
+     C*****************************************************************
+     C           ZA0150    BEGSR
+     C**
+     C**   ACCESS BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** IF ACCESS PROGRAM FAILS CALL SR. *PSSR
+     C           @RTCD     IFNE *BLANK                     *************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 003 *
+     C                     Z-ADD3         DBASE            *************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           ZA0159    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - INITIAL PROCESSING                        *
+     C*                                                               *
+     C*  CALLED BY :  CONTROL PROCESSING                              *
+     C*                                                               *
+     C*  CALLS     :  ZA0150 - STANDARD SUBROUTINE TO ACCESS ICD      *
+     C*                                                               *
+     C*  USES:        SEQ    - RCF - SEQUENCE NUMBER OF REPORT        *
+     C*               MODE   - EITHER 'F' FOR FRA OR 'I' FOR IRS      *
+     C*               @TYPP  - TYPE OF PROCESSING - I/C OR COB        *
+     C*               CURR   - CURRENCY SELECTED (BLANK FOR ALL)      *
+     C*               @CALC  - TOTAL NUMBER OF DETAILS OUTPUT         *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           MODE    1
+     C                     PARM           @TYPP   2
+     C                     PARM           CURR    3
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  SET *IN20 ON TO INDICATE FRA; OFF TO INDICATE IRS;
+     C**  SET UP KEY TO OBTAIN RECORD FROM FILE FDTTOTLL
+     C           MODE      IFEQ 'F'
+     C                     MOVE '1'       *IN20
+     C                     MOVEL'FR'      @TOTKY 12
+     C                     ELSE
+     C                     MOVE '0'       *IN20
+     C                     MOVEL'IR'      @TOTKY
+     C                     END
+     C*
+     C**  ACCESS INSTALLATION CONTROL DATA
+     C                     EXSR ZA0150
+     C*
+     C** IF SR. ZA0150 FAILS GOTO END
+     C           *IN80     IFEQ '1'
+     C                     GOTO #A9
+     C                     END
+     C*
+     C**  LOAD PRINTER FILE FIELDS WITH DATE AND TITLE
+     C                     MOVE BJURPT    RRTITL
+     C                     MOVE BJMRDT    RRRUNA
+     C*
+     C**  SET NUMBER OF RECORDS READ TO ZERO
+     C                     Z-ADD0         @CALC   50
+     C*********************                                               E36623
+     C****READ*FILE*FDINSTLL.                                             E36623
+     C*********************READ FDINSTLL               7811               E36623
+     C*********************                                               E36623
+     C***IF*READ*FAILS*CALL SR. *PSSR                                     E36623
+     C************IN78*****IFEQ '1'                        *************  E36623
+     C*********************MOVEL'FDINSTLL'DBFILE           * DBERR 004 *  E36623
+     C*********************Z-ADD4         DBASE            *************  E36623
+     C*********************EXSR *PSSR                                     E36623
+     C*********************END                                            E36623
+     C*
+     C           #A9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #C        - TERMINATION PROCESSING                           *
+     C*                                                               *
+     C*  CALLED BY : CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS     : ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.    *
+     C*              #CA    - FILE CONTROL PROCESSING                 *
+     C*                                                               *
+     C*  USES:       SEQ    - RCF - SEQUENCE NUMBER OF REPORT         *
+     C*              SENTY  - RCF - ENTITY OF REPORT (BLANK)          *
+     C*              SFILE  - RCF - REPORT FILE NAME                  *
+     C*              ZSNUM  - RCF - REPORT FILE NUMBER (DECIMAL)      *
+     C*              SFNUM  - RCF - REPORT FILE NUMBER (BINARY)       *
+     C*              ZSERR  - RCF - ERROR IN ZSFILE                   *
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C** CALL ZSFILE  FOR AUDIT REPORT
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+     C*
+     C** IF ERROR CODE = 'Y' THEN TERMINATE THE PROGRAM
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C**  IF DATA BASE ERROR HAS OCCURRED OUTPUT TOTAL REPORT HEADINGS;
+     C**  PRINT ERROR MESSAGE AND EXIT PROGRAM.
+     C           *IN80     IFEQ '1'
+     C                     WRITEDLTOTSR0
+     C                     WRITEDLTOTSR1
+     C                     GOTO #C9
+     C                     END
+     C*
+     C**  PRODUCE STANDARD TOTALS REPORT
+     C                     EXSR #CA
+     C*
+     C**  IF A DATA BASE ERROR HAS OCCURRED, BYPASS FURTHER PRODESSING
+     C           *INU7     CABEQ'1'       #C9
+     C*
+     C**  PRINTS 'END OF REPORT' IF *IN54 ON.
+     C           *IN54     IFEQ '1'
+     C                     WRITEDL1932R2
+     C                     END
+     C*
+     C                     RETRN
+     C           #C9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*  #CA - PRODUCES STANDARD TOTALS REPORT                      *
+     C*                                                              *
+     C*  CALLED BY:  #C                                        *
+     C*                                                              *
+     C*  CALLS:                                                 *
+     C*                                                              *
+     C*  USES:       @CALC  - TOTAL NUMBER OF DETAILS OUTPUT          *
+     C*              @TYPP  - TYPE OF PROCESSING - I/C OR COB        *
+     C*              CURR   - INPUT PARAMETER - SELECTED CURRENCY     *
+     C*                                                              *
+     C****************************************************************
+     C           #CA       BEGSR
+     C*
+     C**  SET UP CALCULATED NUMBER OF RECORDS FIELD
+     C                     Z-ADD@CALC     RRCALC
+     C*
+     C**  IF TYPE OF PROCESSING IS CLOSE OF BUSINESS 'ED' THEN RETRIEVE
+     C**  NUMBER OF RECORDS ON FILE ACCORDING TO THE HEADER, TABLETX
+     C           @TYPP     IFEQ 'ED'
+     C*
+     C**  SET ON *IN63 TO PRINT FIELDS ON REPORT
+     C                     MOVE '1'       *IN63
+     C*
+     C**  OPEN FDTTOTLL UNDER USER CONTROL
+     C                     OPEN FDTTOTLL
+     C*
+     C**  READ RECORD CONTROL TOTALS FILE; *IN80 ON IF RECORD NOT FOUND
+     C           @TOTKY    CHAINFDTTOTLL             80
+     C           *IN80     IFEQ '1'
+     C                     MOVEL@TOTKY    DBKEY            *************
+     C                     MOVEL'FDTTOTLL'DBFILE           * DBERR 002 *
+     C                     Z-ADD2         DBASE            *************
+     C                     EXSR *PSSR
+     C*
+     C**  PRINT TOTAL REPORT HEADINGS AND OUTPUT DATABASE ERROR FORMAT;
+     C**  BYPASS FURTHER PROCESSING
+     C                     WRITEDLTOTSR0
+     C                     WRITEDLTOTSR1
+     C                     GOTO #CA1
+     C                     END
+     C*
+     C**  SET UP INPUT NUMBER OF RECORDS FIELD
+     C                     Z-ADDNREC      RRNREC
+     C*
+     C**  IF CALCULATED AND INPUT NUMBER OF RECORDS DO NOT AGREE
+     C**  SET ON *IN64 TO PRINT '***  DIFFERENCE  ***' ON REPORT
+     C           NREC      IFNE @CALC
+     C           CURR      ANDEQ'   '
+     C                     MOVE '1'       *IN64
+     C                     MOVE '1'       *INU8
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  PRINT STANDARD TOTALS REPORT
+     C                     WRITEDLTOTSR0
+     C*
+     C           #CA1      TAG
+     C*
+     C**  IF RUN TYPE IS CLOSE OF BUSINESS, 'ED', CLOSE FDTTOTLL FILE
+     C           @TYPP     IFEQ 'ED'
+     C                     CLOSEFDTTOTLL
+     C                     END
+     C*
+     C           #CA9      ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZRATE1Z2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR - ERROR HANDLING SUBROUTINE.                           *
+     C*                                                               *
+     C*  CALLED BY:  EXECUTES WHENEVER FILE OR PROGRAM EXCEPTION      *
+     C*              ERROR OCCURS.                                    *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*  USES:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE 'DL1932  'DBPGM
+     C*
+     C** LOAD LDA WITH DATABASE ERROR INFORMATION FROM DBERR
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C** SET ON DATABASE ERROR INDICATOR AND DUMP
+     C                     MOVE '1'       *IN80
+     C                     DUMP
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

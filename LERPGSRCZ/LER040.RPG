@@ -1,0 +1,1199 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Reorg and archiving of facility history')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LER040 - Reorganise & Archiving of Facility History          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1075507          Date 06Feb12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE075AA           Date 06Aug12               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 242602A            Date 07Jun07               *
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 240409             Date 16Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 225591             Date 08Jul04               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 201127             Date 20Jan03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204452             Date 02May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      *                 194912             Date 19Nov01               *
+      *                 178425                  07Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 193860             Date 30May01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CLE009             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141453             Date 17Feb99               *
+      *                 127762             DATE 28MAY98               *
+      *                 127716             Date 20Nov97               *
+      *                 CLE005             Date 22May97               *
+      *                 CLE004             Date 02Dec96               *
+      *                 100515             Date 22May96               *
+      *                 054016             Date 26Apr93               *
+      *                 052154             DATE 26APR93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1075507 - Records on LEFHST, FACHISH and FACHISA are not   *
+      *             dropped properly                                  *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE075AA - COB Restructure - LE COB Optimisation Phase 1     *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00322                                 *
+      *             WNCPYSRC,LEH00323                                 *
+      *             WNCPYSRC,LEH00324                                 *
+      *             WNCPYSRC,LEH00325                                 *
+      *  242602A- Exclude dropping loan fee history records.          *
+      *  CRE026 - Consumer Banking                                    *
+      *  240409 - Fee history records not purged. Apply 193112:-      *
+      *  193112 - Drop lending fee history records if associated loan *
+      *           or facility records no longer exist.                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  225591 - Facility history changes for repayments due to      *
+      *           rollover (recompile)                                *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s).             *
+      *  201127 - Recompiled over changes made in LER040P1.           *
+      *  204452 - Recompiled due to changed PF/LEFEED.                *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *  194912 - Change multi-ccy action from 'ST' to 'MC'           *
+      *  178425 - The FADATE of each action should be moved to ZDAYNO *
+      *           before executing SR/ZDATE2.  This will ensure that  *
+      *           the correct dates are reflected on the report. Also,*
+      *           changes were made in LER040P1 to also include the   *
+      *           the customer number.                                *
+      *  193860 - Meaningless database error when dropping facility   *
+      *           history when customer already dropped               *
+      *  CLE009 - LE I/C Swift Message Generation for Fees            *
+      *           Recompiled due to changes in LEFEED                 *
+      *  141453 - Recompiled due to changes in PF/LEFEED              *
+      *  127762 -   Make the purging of the history file in line      *
+      *             with the purging of the facility file. If the     *
+      *             facility file was purged by LE0461 then its       *
+      *             history file should also be purged regardless     *
+      *             of retention period.                              *
+      *  127716 - Utilisation Amend Types (US, UE, UI, & UD) are      *
+      *         - not considered; thus, defaulting into some other    *
+      *         - amend types.                                        *
+      *  CLE005 - Customer Lending Enhancements - Others (T3)         *
+      *  CLE004 - Customer Lending Enhancements - Syndications        *
+      *  100515 - Recompile program due to changes in LEFEED.         *
+      *  054016  -  Put in processing to retain closed and expired    *
+      *             history recs if not past retention period.        *
+      *             Also, correct date processing in initialisation.  *
+      *  052154  -  Processing should be based on whether facility    *
+      *             is on facility file or not. Otherwise need to check
+      *             everything the LE0461 checks. Also, set up of     *
+      *             CHKDT field must take account of US date format.  *
+      *                                                               *
+      *****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+      *****************************************************************
+      *
+     F***FACHISHLIF  E           K        DISK                                              CLE075AA
+     F***FACHISHLUF  E                    DISK                                    CLE075AA AR1075507
+     FFACHISHLUF  E           K        DISK                                                AR1075507
+      ** Facilities History - Header details
+      *
+     F***FACHISA IF  E           K        DISK                                              CLE075AA
+     FFACHISA UF  E           K        DISK                                                 CLE075AA
+      ** Facilities History - Amount details
+      *
+     FLEFEED  IF  E           K        DISK
+      ** Fee Details
+      *
+     F***LEFHSTL4IF  E           K        DISK                                       193112 CLE075AA
+     FLEFHSTL4UF  E           K        DISK                                                 CLE075AA
+      ** Fee History Details - By Facility                                                    193112
+      *                                                                                       193112
+     FFCLTYL1 IF  E           K        DISK                               052154
+      ** Facility Details                                                 052154
+      *                                                                   052154
+     F***NFHISH* O   E                    DISK                                              CLE075AA
+      ** New Facility History Header
+     F**********  FACHISHF                          KRENAMENFHISHF                          CLE075AA
+      *
+     F***NFHISA* O   E                    DISK                                             AR1075507
+      ***New*Facility*History*Amount***********************************                    AR1075507
+     F**********  FACHISAF                          KRENAMENFHISAF                         AR1075507
+      *
+     F***AFHISH* O   E                    DISK                                              CLE075AA
+      ***Archived*Facilities*History*Header****************************                     CLE075AA
+     F**********  FACHISHF                          KRENAMEAFHISHF                          CLE075AA
+      *
+     F***AFHISA* O   E                    DISK                                              CLE075AA
+      ***Archived*Facilities*History*Amounts***************************                     CLE075AA
+     F**********  FACHISAF                          KRENAMEAFHISAF                          CLE075AA
+      *
+     F***NLFHST* O   E                    DISK                                      193112 AR1075507
+      ***New*Lending*Fee*History*file**********************************             193112 AR1075507
+     F**********  LEFHSTF                           KRENAMENLFHSTF                  193112 AR1075507
+      *                                                                                       193112
+     FLER040P1O   E             80     PRINTER      KINFDS SPOOL      UC
+      ** Detail Report
+      *
+     FLER040AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      ** Audit Report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      * 20    End of file on FACHISH                                  *
+      * 21    Details have been reported                              *
+      * 30    End of file on LEFEED                                   *
+      * 32    End of file on FACHISA                                  *
+      * 33    Multibranching indicator                                *
+      * 44    Multicustomer indicator                                 *
+      * 45    Multicurrency indicator                                 *
+      * 46    Date indicator                                          *
+      * 40    Number of Decimal Places = 0                            *
+      * 41    Number of Decimal Places = 1                            *
+      * 42    Number of Decimal Places = 2                            *
+      * 43    Number of Decimal Places = 3                            *
+      * 47    Revolving credit indicator                              *
+      * 50    LOKUP indicator (record found)                          *
+      * 80    Overflow indicator - LER040P1                           *
+      *   81  - Prime Facility                                        *   CLE004
+      *   82  - Participant Facility                                  *   CLE004
+      *   83  - Internal Participant Facility                         *   CLE004
+      *                                                               *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E************        ACT     1  12  2   @AC    26   ACTION TYPES     127716
+     E**********          ACT     1  20  2   @AC    26   ACTION TYPES                  127716 194912
+     E**********          ACT     1  21  2   @AC    26   ACTION TYPES                  194912 CLE023
+     E**********          ACT     1  22  2   @AC    26   ACTION TYPES                  CLE023 CLE028
+     E/COPY WNCPYSRC,LEH00322                                                               AR787620
+     E                    ACT     1  24  2   @AC    26   ACTION TYPES                         CLE028
+     E/COPY WNCPYSRC,LEH00323                                                               AR787620
+     E                    FTN     1   3  1   @FT    10   FACILITY TYPE IND
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/SPACE 3
+      *
+      ** File information data structure
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IRUNDAT    E DS
+     I              AGMBIN                          MBIN
+     I              AGDFF                           DATF
+     I              AGRDNB                          RUND
+      *
+     ILDA       E DS
+      ** Database error DS
+      *
+     I            DS
+      ** To combine fac type and seq.
+     I                                        1   30FHFTYP
+     I                                        4   50FHFSEQ
+     I                                        1   50FHFACL
+     I                                        1   3 WFTYP
+     I            DS
+      ** To Set up correct decimal places
+     I                                    P   1   70OFAM0
+     I                                    P   1   71OFAM1
+     I                                    P   1   72OFAM2
+     I                                    P   1   73OFAM3
+     I                                    P   8  140AAMT0
+     I                                    P   8  141AAMT1
+     I                                    P   8  142AAMT2
+     I                                    P   8  143AAMT3
+     I                                    P  22  280CFAM0
+     I                                    P  22  281CFAM1
+     I                                    P  22  282CFAM2
+     I                                    P  22  283CFAM3
+     I                                    P  29  350DRAM0
+     I                                    P  29  351DRAM1
+     I                                    P  29  352DRAM2
+     I                                    P  29  353DRAM3
+     I                                    P  36  420UNDR0
+     I                                    P  36  421UNDR1
+     I                                    P  36  422UNDR2
+     I                                    P  36  423UNDR3
+     I            DS
+     I**********                              1   60FHCNUM                                    CSD027
+     I                                        1   6 FHCNUM                                    CSD027
+     I                                        1   6 WCNUM
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch name details
+     I              A8BRNM                          BRNM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Type
+      *
+     ISDACOF    E DSSDACOFPD
+      ** Account Officer Details
+      *
+     ISDCTRY    E DSSDCTRYPD
+      ** Country Code Details
+      *
+     ISDFACT    E DSSDFACTPD
+      ** Facility Type Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      ** Customer Code Details
+      *
+     ISDCLND    E DSSDCLNDPD
+      **  EXTERNAL DS FOR CUSTOMER LENDING DETAILS
+     I              BPEFRP                          EFRP
+      **
+     IDSFDY     E DSDSFDY
+      ** DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISCSARD    E DSSCSARDPD                                              CLE004
+      **  Switchable Features File                                        CLE004
+      *                                                                   CLE004
+      *****************************************************************
+     C/TITLE MAIN PROCESSING
+      *****************************************************************
+      *
+      ** Initialisation
+      *
+     C                     EXSR SUB001
+      *
+      *  Detail processing
+      *
+      ** Read facility history header details report
+     C                     READ FACHISHF                 20
+      *
+      ** Do while not end of file
+     C           *IN20     DOWEQ'0'
+      *
+     C                     ADD  1         HISREC  50
+     C                     MOVE '0'       *IN32                           054016
+      *
+     C*
+     C*****CHECK*THE*VALUE*OF*THE*CHECK*DATE*AGAINST*EXPIRY*DATE**********052154
+     C*****AND*SET*FLAG*VALUE*TO*ZERO*IF*THE*EXPIRY*DATE*IS*LATER*THAN****052154
+     C*****THE*RETENTION*PERIOD*-*IE*ALLOW*EXPIRED*FACILITY*TO*BE*********052154
+     C*****OUTPUT*TO*FILE*************************************************052154
+     C********************************************************************052154
+     C*
+     C***  If Closed or Expired, check to see if it's still on facility   052154
+     C***  file                                                           052154
+     C*                                                                   052154
+     C           FHRECI    IFEQ 'C'
+     C           FHRECI    OREQ 'E'
+     C***********CHKDT     IFNE 0                                         127762
+     C***********FHEXDT    ANDLTCHKDT                                     127762
+     C***********CHKDT     OREQ 0                                         127762
+     C***********FHEXDT    ANDLTRUND                                      127762
+     C***********          MOVE '1'       FLAG1   1                       052154
+     C***********          ELSE                                           052154
+     C***********          MOVE '0'       FLAG1                           052154
+     C           FCLTKY    CHAINFCLTYL1              77                   052154
+     C********** *IN77     IFEQ '0'                                                  052154 CLE075AA
+     C**********           EXSR SUB010                                               052154 CLE075AA
+     C**********           ELSE                                                      052154 CLE075AA
+     C*                                                                                     CLE075AA
+     C** If Record is not on facility file                                                  CLE075AA
+     C*                                                                                     CLE075AA
+     C           *IN77     IFEQ '1'                                                         CLE075AA
+     C                     EXSR SUB020                                    052154
+     C                     ENDIF                                                            CLE075AA
+     C***********          END                                                       052154 CLE075AA
+     C***********                                                   054016127762
+     C*****Else*still*within*retention*period**                     054016127762
+     C***********                                                   054016127762
+     C***********          ELSE                                     054016127762
+     C***********          EXSR SUB010                              054016127762
+     C***********          END                                            127762
+     C                     END
+     C***********FHRECI    CASEQ'D'       SUB010
+     C***********FHRECI    CASEQ'E'       SUB010
+     C********** FHRECI    IFEQ 'D'                                                         CLE075AA
+     C***********FHRECI    OREQ 'E'                                       052154
+     C***********FLAG1     ANDEQ'0'                                       052154
+     C**********           EXSR SUB010                                                      CLE075AA
+     C**********           END                                                              CLE075AA
+     C***********FHRECI    CASEQ'C'       SUB020
+     C***********FHRECI    IFEQ 'C'                                       052154
+     C***********FHRECI    OREQ 'E'                                       052154
+     C***********FLAG1     ANDEQ'1'                                       052154
+     C***********          EXSR SUB020                                    052154
+     C***********          END                                            052154
+      *
+     C*********************END
+      *
+     C                     READ FACHISHF                 20
+      *
+     C                     END
+      *****************************************************************             242602A CLE075AA
+      ***Write*loan*fee*history*records.*******************************             242602A CLE075AA
+      *****************************************************************             242602A CLE075AA
+     C********** *LOVAL    SETLLLEFHSTL4                                            242602A CLE075AA
+     C**********           READ LEFHSTL4                 22                         242602A CLE075AA
+     C********** *IN22     DOWEQ'0'                                                 242602A CLE075AA
+     C********** HILNRF    IFGT 0                                                   242602A CLE075AA
+     C**********           WRITENLFHSTF                                             242602A CLE075AA
+     C**********           ENDIF                                                    242602A CLE075AA
+     C**********           READ LEFHSTL4                 22                         242602A CLE075AA
+     C**********           ENDDO                                                    242602A CLE075AA
+      *
+      ** If no facilities have been archived output msg
+     C           *IN21     IFEQ '0'
+     C                     EXSR OPNFIL
+     C                     WRITELER040A1
+     C                     WRITELER040A2
+     C                     ELSE
+     C                     WRITELER040T1
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+     C/TITLE SR/SUB010
+      ********************************************************************
+      ********************************************************************                 AR1075507
+      ***SUB010*-**SUBROUTINE*USED*FOR*LIVE*OR*EXPIRED*FACILITIES*********                 AR1075507
+      ********************************************************************                 AR1075507
+      ***CALLED*FROM:*MAIN*PROCESSING*************************************                 AR1075507
+      ********************************************************************                 AR1075507
+      ***CALLS:*NOTHING***************************************************                 AR1075507
+      ********************************************************************                 AR1075507
+      ********************************************************************
+      *
+     C********** SUB010    BEGSR                                                           AR1075507
+      *
+      ****Write*to*new*facility*history*header*record********************                   CLE075AA
+      ****These*'new'*files*are*used*as*temporary*files.**They*are*******                   CLE075AA
+      ****eventually*copied*back*to*the*original*facility*history********                   CLE075AA
+      ****files*minus*any*dropped*records********************************                   CLE075AA
+      *
+     C**********           WRITENFHISHF                                                     CLE075AA
+      *******************************************************************           193112 AR1075507
+      ***Write*valid*fee*history*record*to*new*fee*history*file.*********           193112 AR1075507
+      ***This*file*acts*the*same*as*the*new*facility*header*file.********           193112 AR1075507
+      *******************************************************************           193112 AR1075507
+     C**********           EXSR SRFEEH                                              193112 AR1075507
+      *******************************************************************                  AR1075507
+      **Look*for*amounts*on*facility*history*amounts*file****************                  AR1075507
+     C********** KEY002    SETLLFACHISA                                                    AR1075507
+     C**********           READ FACHISA                  32                                AR1075507
+      *
+     C********** *IN32     DOWEQ'0'                                                        AR1075507
+     C********** FHCNUM    ANDEQFACNUM                                                     AR1075507
+     C********** FHFACL    ANDEQFAFCTY                                                     AR1075507
+      *******************************************************************                  AR1075507
+      **Write*amounts*to*temporary*facility*history*amounts*file*********                  AR1075507
+     C**********           WRITENFHISAF                                                    AR1075507
+      *
+     C**********           READ FACHISA                  32                                AR1075507
+      *
+     C**********           END                                                             AR1075507
+      *
+     C**********           ENDSR                                                           AR1075507
+     C********************************************************************
+     C/TITLE SR/SUB020
+     C********************************************************************
+      *
+      *  SUB020 -  SUBROUTINE USED FOR CL0SED FACILITIES
+      *
+      *  CALLED FROM: MAIN PROCESSING
+      *
+      *  CALLS: SUB025, SUB026, *PSSR
+      *
+     C********************************************************************
+      *
+     C           SUB020    BEGSR
+      *
+      ** Store branch details for output to report
+     C                     MOVE FHBRCH    REPBRC  3
+      *
+      ** Check if there are outstanding fees for this facility; if
+      ** so facility cannot be archived.
+     C           KEY001    SETLLLEFEED
+     C                     READ LEFEED                   30
+      *
+      ** If details on LEFEED & FACHISH are the same output to
+      ** temporary file
+     C********** *IN30     IFEQ '0'                                                         CLE075AA
+     C***********FLAG1     OREQ '0'                                       052154
+     C********** FECNUM    ANDEQFHCNUM                                                      CLE075AA
+     C********** FEFACL    ANDEQFHFACL                                                      CLE075AA
+      *******************************************************************                   CLE075AA
+      ***Write*header****************************************************                   CLE075AA
+     C**********           WRITENFHISHF                                                     CLE075AA
+      **********                                                                     193112 CLE075AA
+      ***Write*valid*fee*history*record*to*new*fee*history*file.*********            193112 CLE075AA
+      ***This*file*acts*the*same*as*the*new*facility*header*file.********            193112 CLE075AA
+      *******************************************************************            193112 CLE075AA
+     C**********           EXSR SRFEEH                                               193112 CLE075AA
+      *******************************************************************                   CLE075AA
+      ***Otherwise*obtain*details*of*record*to*be*archived***************                   CLE075AA
+     C**********           ELSE                                                             CLE075AA
+      *                                                                                     CLE075AA
+      ** If there are no fees on LEFEED for this facility                                   CLE075AA
+      ** delete all records on FACHISH, FACHISA, LEFHST                                     CLE075AA
+      ** for this facility                                                                  CLE075AA
+      *                                                                                     CLE075AA
+     C           *IN30     IFEQ '0'                                                         CLE075AA
+     C           FECNUM    ANDNEFHCNUM                                                      CLE075AA
+     C********** FEFACL    ANDNEFHFACL                                            CLE075AA AR1075507
+     C           FEFACL    ORNE FHFACL                                                     AR1075507
+     C           *IN30     ANDEQ'0'                                                        AR1075507
+     C           *IN30     OREQ '1'                                                        AR1075507
+      *                                                                                     CLE075AA
+      ** Delete all records on LEFHST for this facility                                     CLE075AA
+      *                                                                                     CLE075AA
+     C           KLFHS4    SETLLLEFHSTL4                                                    CLE075AA
+     C           KLFHS4    READELEFHSTL4                 51                                 CLE075AA
+      *                                                                                     CLE075AA
+     C           *IN51     DOWEQ'0'                                                         CLE075AA
+      *                                                                                     CLE075AA
+     C                     DELETLEFHSTL4                                                    CLE075AA
+     C           KLFHS4    READELEFHSTL4                 51                                 CLE075AA
+      *                                                                                     CLE075AA
+     C                     ENDDO                                                            CLE075AA
+      *                                                                                     CLE075AA
+      ** Delete record on FACHISH for this facility                                         CLE075AA
+      *                                                                                     CLE075AA
+     C                     DELETFACHISHF                                                    CLE075AA
+      *
+      * sets up dates amounts and outputs.
+     C                     EXSR SUB025
+      *
+      ** When branch code changes open new spool file
+     C           MBIN      IFEQ 'Y'
+     C           REPBRC    ANDNESTRBRC
+      *
+      ** If details previously output write 'end of report' msg on
+      ** last print file.
+     C           *IN21     IFEQ '1'
+     C                     WRITELER040T1
+     C                     END
+      *
+     C                     MOVE REPBRC    STRBRC  3
+     C                     CLOSELER040P1
+     C                     OPEN LER040P1
+     C                     Z-ADD0         PAGE
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM FHBRCH    SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Obtain branch name for output
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FHBRCH    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVELFHBRCH    DBKEY            ************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DBERR 01 *
+     C                     MOVEL'001'     DBASE            ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** MBIN IFEQ 'Y' END
+     C                     END
+      *
+      ** If system is not multibranching set up single spool file
+     C           MBIN      IFNE 'Y'
+     C           P1OP      ANDNE'Y'
+     C                     CLOSELER040P1
+     C                     MOVE 'Y'       P1OP    1
+     C                     OPEN LER040P1
+     C                     Z-ADD0         PAGE
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     END
+      *
+      ** Details to report field
+     C                     MOVE '1'       *IN21
+      *
+      ** Set Prime/Participant/Int. Participant Indicator.                CLE004
+      *                                                                   CLE004
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C                     MOVE *OFF      *IN81                           CLE004
+     C                     MOVE *OFF      *IN82                           CLE004
+     C                     MOVE *OFF      *IN83                           CLE004
+     C                     SELEC                                          CLE004
+     C           FHPRTR    WHEQ 'A'                                       CLE004
+     C                     MOVE *ON       *IN81                           CLE004
+     C           FHPRTR    WHEQ 'P'                                       CLE004
+     C                     MOVE *ON       *IN82                           CLE004
+     C           FHPRTR    WHEQ 'I'                                       CLE004
+     C                     MOVE *ON       *IN83                           CLE004
+     C                     ENDSL                                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE004
+      ** Output report formats and write to archive file
+     C                     WRITELER040H1
+     C                     WRITELER040D1
+     C**********           WRITEAFHISHF                                                     CLE075AA
+      *
+     C**********           END                                                              CLE075AA
+      *                                                                                     CLE075AA
+      ** Delete all records on FACHISA for this facility                                    CLE075AA
+      *                                                                                     CLE075AA
+     C           KEY002    SETLLFACHISA                                                     CLE075AA
+     C                     READ FACHISA                  32                                 CLE075AA
+      *                                                                                     CLE075AA
+     C           *IN32     DOWEQ'0'                                                         CLE075AA
+     C           FHCNUM    ANDEQFACNUM                                                      CLE075AA
+     C           FHFACL    ANDEQFAFCTY                                                      CLE075AA
+     C********** *IN30     IFEQ '0'                                               CLE075AA AR1075507
+     C********** FECNUM    ANDNEFHCNUM                                            CLE075AA AR1075507
+     C********** FEFACL    ANDNEFHFACL                                            CLE075AA AR1075507
+      *                                                                                     CLE075AA
+     C                     DELETFACHISA                                                     CLE075AA
+      *****************************************************************                     CLE075AA
+      ***Get*amounts*from*facility*history*amounts*file****************                     CLE075AA
+     C********** KEY002    SETLLFACHISA                                                     CLE075AA
+     C**********           READ FACHISA                  32                                 CLE075AA
+      *****************************************************************                     CLE075AA
+      ***If*amounts*found*but*there*are*fees*outstanding*this**********                     CLE075AA
+      ***record*cannot*be*archived.************************************                     CLE075AA
+     C********** *IN32     DOWEQ'0'                                                         CLE075AA
+     C********** FHCNUM    ANDEQFACNUM                                                      CLE075AA
+     C********** FHFACL    ANDEQFAFCTY                                                      CLE075AA
+      *
+     C********** *IN30     IFEQ '0'                                                         CLE075AA
+     C********** FECNUM    ANDEQFHCNUM                                                      CLE075AA
+     C********** FEFACL    ANDEQFHFACL                                                      CLE075AA
+      *****************************************************************                     CLE075AA
+      ***Write*amounts*to*temporary*amounts*file***********************                     CLE075AA
+     C**********           WRITENFHISAF                                                     CLE075AA
+      *
+     C**********           ELSE                                                             CLE075AA
+      *
+      ** sets up fields for output
+     C                     EXSR SUB026
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN46
+     C                     WRITELER040H1
+     C                     WRITELER040D1
+     C                     WRITELER040D2
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN46
+     C                     ELSE
+      *
+     C                     WRITELER040D2
+      *
+     C                     END
+      *
+      ** Write to amounts archive file
+     C**********           WRITEAFHISAF                                                     CLE075AA
+      *
+     C**********           END                                                             AR1075507
+      *
+     C                     READ FACHISA                  32
+      *
+     C                     END
+      *
+     C                     ENDIF                                                            CLE075AA
+     C                     ENDSR
+      ********************************************************************
+     C/TITLE SR/SUB025
+      ********************************************************************
+      *
+      *  SUB025 -  SUBROUTINE USED FOR SETTING UP AMOUNTS & DATES
+      *            FOR THE HEADER RECORD.
+      *
+      *  CALLED FROM: SUB020
+      *
+      *  CALLS: *PSSR, ZDATE2
+      *
+     C********************************************************************
+      *
+     C           SUB025    BEGSR
+      *
+     C                     MOVEL*BLANKS   KEYC   10
+     C                     MOVELWCNUM     KEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           KEYC
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C**********           MOVELWCNUM     DBKEY            ************                       193860
+     C**********           MOVEL'SDCUSTPD'DBFILE           * DBERR 02 *                       193860
+     C**********           MOVEL'002'     DBASE            ************                       193860
+     C**********           EXSR *PSSR                                                         193860
+     C                     MOVE *BLANKS   BBCRNM                                              193860
+     C                     MOVEL'UNKNOWN' BBCRNM                                              193860
+     C                     MOVE *BLANKS   BBCRTN                                              193860
+     C                     END
+      *
+     C           FHMCUS    COMP 'Y'                      44
+     C           FHMCCY    COMP 'Y'                      45
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FHFCCY    K101    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVELFHFCCY    DBKEY            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 03 *
+     C                     MOVEL'003'     DBASE            ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVEA'0000'    *IN,40
+     C           A6NBDP    COMP 1                    424041
+     C   42      A6NBDP    COMP 2                    43  42
+      *
+     C                     CALL 'AOACOFR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FHACOF    ACOKEY  2
+     C           SDACOF    PARM SDACOF    DSFDY
+      *
+     C                     CALL 'AOCTRYR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FHCTYR    TKEY    2
+     C           SDCTRY    PARM SDCTRY    DSFDY
+      *
+     C                     CALL 'AOFACTR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WFTYP     FKEY    3
+     C           SDFACT    PARM SDFACT    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   AMFCNM
+     C                     END
+      *
+     C                     Z-ADDFHOFAM    OFAM0
+      *
+      * Get name of Facility/Commitment Ind.
+     C                     Z-ADD1         A
+     C           FHFTIN    LOKUPFTN,A                    50
+     C           *IN50     IFEQ '1'
+     C                     MOVEL@FT,A     @FACT  10
+     C                     ELSE
+     C                     MOVE *BLANKS   @FACT
+     C                     END
+      *
+      *  Convert dates
+     C                     Z-ADDFHDAPP    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    APPDAT  7
+      *
+     C                     Z-ADDFHEXDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    EXPDAT  7
+      *
+      * Blank out save date
+     C                     MOVE *BLANKS   SAVDAT
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+     C/TITLE SR/SUB026
+     C********************************************************************
+      *
+      *  SUB026 -  SUBROUTINE USED FOR SETTING UP AMOUNTS & DATES
+      *            FOR THE DETAIL RECORD.
+      *
+      *  CALLED FROM: SUB020
+      *
+      *  CALLS: ZDATE2
+      *
+     C********************************************************************
+      *
+     C           SUB026    BEGSR
+      *
+     C           FADATE    IFEQ SAVDAT
+     C                     MOVE '0'       *IN46
+     C                     ELSE
+     C                     MOVE '1'       *IN46
+     C                     Z-ADDFADATE    SAVDAT  50
+     C                     Z-ADDFADATE    ZDAYNO                          178425
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    FADAT   7
+     C                     END
+      *
+     C                     Z-ADDFACFAM    CFAM0
+     C                     Z-ADDFADRAM    DRAM0
+     C                     Z-ADDFAUNDR    UNDR0
+     C                     Z-ADDFAAAMT    AAMT0
+      *
+      *  Get name of action type
+     C                     Z-ADD1         A       20
+     C           FAACTN    LOKUPACT,A                    50
+     C                     MOVEL@AC,A     ACTN
+      *                                                                                       CLE028
+      ** If action is 'IC' and flat rate personal loan, the narrative                         CLE028
+      ** should be 'Interest added on'.                                                       CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           FAPTYP    ANDEQ80                                                            CLE028
+     C           FAACTN    ANDEQ'IC'                                                          CLE028
+     C                     MOVEL@AC,24    ACTN                                                CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+      *
+     C           FARCIN    COMP 'Y'                      47
+      *
+     C                     ENDSR
+      *                                                                                       193112
+      *****************************************************************             193112 AR1075507
+      ***/TITLE*SR/SRFEEH**********************************************             193112 AR1075507
+      *****************************************************************             193112 AR1075507
+      *****************************************************************             193112 AR1075507
+      ***SRFEEH*-*Writes*valid*fee*history*records*********************             193112 AR1075507
+      *****************************************************************             193112 AR1075507
+      ***Called*By:*SUB010*and*SUB020*subroutines**********************             193112 AR1075507
+      *****************************************************************             193112 AR1075507
+      ***Calls:*None***************************************************             193112 AR1075507
+      *****************************************************************             193112 AR1075507
+      *****************************************************************             193112 AR1075507
+      *****************************************************************             193112 AR1075507
+     C********** SRFEEH    BEGSR                           *** SRFEEH ***           193112 AR1075507
+      *                                                                                       193112
+     C********** KLFHS4    SETLLLEFHSTL4                                            193112 AR1075507
+     C********** KLFHS4    READELEFHSTL4                 51                         193112 AR1075507
+      *****************************************************************             193112 AR1075507
+      ***Write*valid*fee*history*records*that*corresponds*to***********             193112 AR1075507
+      ***the*valid*facility*history*header*record*being*written*to*****             193112 AR1075507
+      ***NFHISH*file.**************************************************             193112 AR1075507
+      *****************************************************************             193112 AR1075507
+     C********** *IN51     DOWEQ*OFF                                                193112 AR1075507
+     C**********           WRITENLFHSTF                                             193112 AR1075507
+     C********** KLFHS4    READELEFHSTL4                 51                         193112 AR1075507
+     C**********           ENDDO                                                    193112 AR1075507
+      *                                                                                       193112
+     C**********           ENDSR                                                    193112 AR1075507
+      *
+     C********************************************************************
+     C/TITLE SR/SUB001
+     C********************************************************************
+      *
+      *  SUB001 -  SUBROUTINE USED FOR INITIAL PROCESSING
+      *
+      *  CALLED FROM: MAIN PROCESSING
+      *
+      *  CALLS: *PSSR
+      *
+     C********************************************************************
+      *
+     C           SUB001    BEGSR
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Move blanks into sequence number
+     C                     MOVE *BLANKS   SEQ
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Lock in dataarea RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *LOCK     IN   RUNDAT
+      *
+      ** If system is not multibranching do not output branch details
+      ** on print report
+     C           MBIN      IFNE 'Y'
+     C                     SETON                     33
+     C                     END
+      *
+      ** Check the date format ready for execution of date conversion
+      ** subroutine ZDATE2
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     MOVEL'LER040  'DBPGM
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER040'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE             ************
+     C                     Z-ADD004       DBASE              * DBERR 04 *
+     C                     OUT  LDA                          ************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C***  ACCESS CUSTOMER LENDING DATA
+     C*
+     C                     CALL 'AOCLNDR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDCLND    PARM SDCLND    DSFDY                                               CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     99
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD6         DBASE            *** DBASE 6 ***
+     C                     MOVEL'SDCLNDPD'DBFILE           ***************
+     C                     MOVEL'LER040'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CLE004
+      ** Check if CLE004 is switched *ON                                  CLE004
+      *                                                                   CLE004
+     C                     MOVE 'N'       CLE004  1                       CLE004
+     C                     CALL 'AOSARDR0'                                CLE004
+     C                     PARM *BLANKS   @RTCD                           CLE004
+     C                     PARM '*VERIFY' @OPTN                           CLE004
+     C                     PARM 'CLE004'  @SARD   6                       CLE004
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE004
+      *                                                                   CLE004
+     C           @RTCD     IFEQ *BLANKS                                   CLE004
+     C                     MOVE 'Y'       CLE004                          CLE004
+     C                     END                                            CLE004
+      *                                                                   CLE004
+     C           @RTCD     IFNE *BLANKS                                   CLE004
+     C           @RTCD     ANDNE'*NRF   '                                 CLE004
+      *                                                                   CLE004
+      ** Call to program ended in error                                   CLE004
+      *                                                                   CLE004
+     C           *LOCK     IN   LDA                                       CLE004
+     C                     MOVEL'CLE004'  DBKEY            ***************CLE004
+     C                     MOVE 'SCSARDPD'DBFILE           * DB ERROR 10 *CLE004
+     C                     Z-ADD10        DBASE            ***************CLE004
+     C                     MOVEL'LER040'  DBPGM                           CLE004
+     C                     OUT  LDA                                       CLE004
+     C                     EXSR *PSSR                                     CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                                       CLE028
+      ** Check if CLE028 is switched *ON                                                      CLE028
+      *                                                                                       CLE028
+     C                     MOVE 'N'       CLE028  1                                           CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   @RTCD                                               CLE028
+     C                     PARM '*VERIFY' @OPTN                                               CLE028
+     C                     PARM 'CLE028'  @SARD                                               CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           @RTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028                                              CLE028
+     C                     END                                                                CLE028
+      *                                                                                       CLE028
+     C           @RTCD     IFNE *BLANKS                                                       CLE028
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE028
+      *                                                                                       CLE028
+      ** Call to program ended in error                                                       CLE028
+      *                                                                                       CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'CLE028'  DBKEY                                               CLE028
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE028
+     C                     Z-ADD11        DBASE                                               CLE028
+     C                     MOVEL'LER040'  DBPGM                                               CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,LEH00324                                                               AR787620
+     C*
+     C***  IF EXPIRED FACILITY RETENTION PERIOD WAS 00 THEN BYPASS DATE
+     C***  CHECKING
+     C*
+     C           EFRP      IFGT 0
+     C*
+     C***  CHECK THE RETENTION PERIOD FOR THE NO. OF YEARS AND MONTHS
+     C***  AND MOVE THE YEAR AND MONTH VALUES INTO APPROPRIATE FIELDS
+     C*
+     C           EFRP      IFGT 12
+     C           EFRP      DIV  12        FACRTN  10
+     C                     MVR            FACREM  20
+     C                     ELSE
+     C                     Z-ADD0         FACRTN
+     C                     Z-ADDEFRP      FACREM
+     C                     END
+     C*
+     C***  CONVERT RUNDATE INTO DDMMYY FORMAT
+     C*
+     C                     Z-ADDRUND      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C***  CREATE TWO SEPARATE FIELDS FOR THE MONTH AND THE YEAR
+     C***  FROM THE RESULTING DATE
+     C*
+     C                     MOVE ZDATE     TEST1   4
+     C                     MOVE ZDATE     YEAR    20
+     C***********          MOVELTEST1     MONTH   20                      052154
+     C           *IN98     IFEQ '0'                                       052154
+     C                     MOVELTEST1     MONTH   20                      052154
+     C                     ELSE                                           052154
+     C                     MOVELZDATE     MONTH                           052154
+     C                     END                                            052154
+     C*
+     C***  AND USE THE RETENTION PERIOD TO CALCULATE THE DATE FOR
+     C***  DROPPING EXPIRED FACILITIES
+     C*
+     C           YEAR      SUB  FACRTN    RTNYR   20
+     C           MONTH     SUB  FACREM    RTNMTH  20
+     C*
+     C***  WHEN CONVERTING TO MIDAS DAY NUMBER A DAY NUMBER WILL BE
+     C***  FOR THE CONV. ALL FACILITIES WILL BE DROPPED AT MONTHEND
+     C***  THEREFORE ADD ONE TO MONTH NOW FOR CALCULATION OF DAY NUMBER
+     C***  AT FIRST DAY OF FOLLOWING MONTH WHEN MIDAS DAY NUMBER HAS
+     C***  BEEN CALCULATED THE ONE ADDED NOW WILL BE SUBTRACTED TO GIVE
+     C***  THE LAST DAY OF THE CORRECT MONTH FOR PROCESSING!
+     C*
+     C           RTNMTH    ADD  1         RTNMTH
+     C           RTNMTH    IFGT 12
+     C           RTNMTH    SUB  12        RTNMTH
+     C           RTNYR     ADD  1         RTNYR
+     C                     END
+     C*
+     C***  CHECK WHETHER THE RESULTING MONTH IS NEGATIVE AND IF SO
+     C***  ADJUST ACCORDINGLY
+     C*
+     C           RTNMTH    IFLE 0
+     C           RTNYR     SUB  1         RTNYR
+     C           RTNMTH    ADD  12        RTNMTH
+     C                     END
+     C*
+     C***  CONSTRUCT CHECK DATE WITH DAY NUMBER 01
+     C*
+     C           *IN98     IFEQ '0'                                       054016
+     C                     MOVEL'01'      TEST2   40
+     C                     MOVE RTNMTH    TEST2
+     C                     ELSE                                           054016
+     C                     MOVE '01'      TEST2                           054016
+     C                     MOVELRTNMTH    TEST2                           054016
+     C                     END                                            054016
+     C                     MOVE RTNYR     ZDATE   60
+     C                     MOVELTEST2     ZDATE
+     C*
+     C***  CONVERT RESULTING DATE INTO A MIDAS DAY NUMBER
+     C*
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    CHKDT   50
+     C*
+     C***  IF EXPIRED FACILITY RETENTION PERIOD WAS 00 MAKE CHKDT ZERO
+     C*
+     C                     ELSE
+     C                     Z-ADD0         CHKDT
+     C                     END
+      *
+     C**********           Z-ADD0         @LOAN   60                                          CLE148
+     C                     MOVEL*BLANKS   @LOAN   6                                           CLE148
+     C                     Z-ADD0         @FSEQ   20
+      *
+      ** Key list for LEFEED
+     C           KEY001    KLIST
+     C                     KFLD           FHBRCH
+     C                     KFLD           FHCNUM
+     C                     KFLD           FHFACL
+     C                     KFLD           @LOAN
+     C                     KFLD           @FSEQ
+      *
+      ** Key list for FACHISA
+     C           KEY002    KLIST
+     C                     KFLD           FHBRCH
+     C                     KFLD           FHCNUM
+     C                     KFLD           FHFACL
+      *                                                                   052154
+      ** Key list for FCLTYL1                                             052154
+     C           FCLTKY    KLIST                                          052154
+     C                     KFLD           FHBRCH                          052154
+     C                     KFLD           FHCNUM                          052154
+     C                     KFLD           FHFTYP                          052154
+     C                     KFLD           FHFSEQ                          052154
+      *                                                                                       193112
+      ** Key list for LEFHSTL4                                                                193112
+     C           KLFHS4    KLIST                                                              193112
+     C                     KFLD           FHCNUM                                              193112
+     C                     KFLD           FHFACL                                              193112
+      *
+     C                     ENDSR
+      *                                                                ***
+      ****************************************************************
+     C/TITLE SR/*PSSR
+      ********************************************************************
+      *
+      *  *PSSR --- SUBROUTINE TO HANDLE ERROR CONDITIONS
+      *
+      *  CALLED FROM:
+      *
+      *  CALLS: OPNFIL
+      *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Check to see that *PSSR has already been called                 S01117
+     C           WRUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8                 S01117
+     C                     DUMP
+     C                     EXSR OPNFIL
+     C                     WRITELER040A1
+     C                     WRITEERROR
+     C                     END
+      **  IF *PSSR already run, then just end the program here.           S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+      **                                                                  S01117
+     C                     ENDSR
+      **
+      ********************************************************************
+     C/TITLE OPNFIL
+      ********************************************************************
+      *
+      *  OPNFIL - SUBROUTINE TO OPEN PRINTER FILE IF NOT ALREADY
+      *           OPENED, E.G. DATABASE ERROR OR SUCCESSFULLY
+      *           RECONCILED MSG ON AUDIT REPORT
+      *
+      *  CALLED FROM: MAIN PROCESSING
+      *
+      *  CALLS: SUB020, SUB025, SUB026, SUB001,
+      *
+      ********************************************************************
+      *
+     C           OPNFIL    BEGSR
+      *
+      ** Open P1 spool file
+     C                     OPEN LER040AU
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR
+      *
+     C           ZSERR     IFEQ 'Y'
+      ** Error during ZSFILE processing, return to calling program
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+      ****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      ****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**
+FSFACILITY START
+WOWRITE OFF
+REREPAYMENT
+MTMATURITY
+ICINTEREST CAPITALISATION
+PIPRINCIPLE INCREASE
+PDPRINCIPLE DECREASE
+STLOAN START
+FIFACILITY INCREASE
+FDFACILITY DECREASE
+RCCHANGE TO REVOLVING CR IND
+RVREVERSAL
+USUTILISATION START                                                       127716
+UEUTILISATION EXPIRY                                                      127716
+UIUTILISATION INCREASE                                                    127716
+UDUTILISATION DECREASE                                                    127716
+TCFACILITY TYPE CHANGE                                                    127716
+FRFACILITY REACTIVATION                                                   127716
+FEFACILITY EXPIRY                                                         127716
+FCFACILITY CLOSURE                                                        127716
+MCMULTI-CCY REDRAW                                                                            194912
+ROROLLOVER - FCLTY EXCH RATE                                                                  CLE023
+CHCHARGES ADDED-ON                                                                            CLE028
+ICINTEREST ADDED-ON                                                                           CLE028
+     X/COPY WNCPYSRC,LEH00325                                                               AR787620
+**
+CCOMMITMENT
+FCONFIRMED
+GGUIDANCE
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,250 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280EMAT                           *
+      *                                                               *
+      *  Last Amend No. MD022399B          Date 23Apr13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG6293            Date 04Oct04               *
+      *                 BUG7531 *CREATE    Date 10Jun05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD022399B - Incorrect rate for Early Maturity amendment      *
+      *  BUG6293- Convert /COPY from OPM to ILE.                      *
+      *  BUG7531- Move coding for SR/SREMAT into copy member for      *
+      *           DL0280 to make room in DL0280 for other changes.    *
+      *                                                               *
+      *****************************************************************                       CDL017
+      *                                                               *                       CDL017
+      * SREMAT - Subroutine to process Early Maturity amendment type  *                       CDL017
+      *                                                               *                       CDL017
+      *****************************************************************                       CDL017
+     C     SREMAT        BEGSR
+      *                                                                                       CDL017
+      ** Calculate outstanding interest to value date of deal amendment                       CDL017
+      *                                                                                       CDL017
+     C                   Z-ADD     INTR          W#INTR                                    MD022399B
+     C                   Z-ADD     RTSP          W#RTSP                                    MD022399B
+     C                   Z-ADD     BRTE          W#BRTE                                    MD022399B
+     C                   Z-ADD     BRTT          W#BRTT                                    MD022399B
+     C  N04              Z-ADD     INTR          NARRAT
+     C                   Z-ADD     IACD          ZIBEG
+     C                   Z-ADD     VDATDM        ZIEND
+     C                   Z-ADD     PAMT          ZIAMT
+     C                   Z-ADD     ICBS          ZICALC
+     C                   Z-ADD     INTR          ZIRATE
+      *                                                                                       CDL017
+     C                   EXSR      GLINTC
+      *                                                                                       CDL017
+      ** Adjust interest according to round down flag                                         CDL017
+      *                                                                                       CDL017
+     C     *IN02         IFEQ      '1'
+     C     ZIRDFC        ANDEQ     'Y'
+     C     *IN03         OREQ      '1'
+     C     JRDFC         ANDEQ     'Y'
+     C     *IN04         OREQ      '1'
+     C     JRDFC         ANDEQ     'Y'
+     C                   Z-ADD     ZINTR         WKINT
+     C                   ELSE
+     C                   Z-ADD(H)  ZINTR         WKINT
+     C                   END
+      *                                                                                       CDL017
+      **  Accumulate interest to interest accrual control date                                CDL017
+      *                                                                                       CDL017
+     C     AITC          ADD       WKINT         AITC
+      *                                                                                       CDL017
+      **  Interest calculation processing for CAS005                                          CDL017
+      *                                                                                       CDL017
+     C     CAS005        IFEQ      'Y'
+     C                   Z-ADD     INTR          WRKINT
+     C                   EXSR      SRNTR
+     C                   Z-ADD     IACD          ZIBEG
+     C                   Z-ADD     VDATDM        ZIEND
+     C                   Z-ADD     FSPAMT        ZIAMT
+     C                   Z-ADD     ICBS          ZICALC
+     C                   Z-ADD     WKINTR        ZIRATE
+     C                   EXSR      SRDLIN
+     C     FSAITN        ADD       WINTST        FSAITN
+     C                   ENDIF
+      *                                                                                       CDL017
+      **  Adjust interest accrual control date                                                CDL017
+      *                                                                                       CDL017
+     C                   Z-ADD     VDATDM        IACD
+      *                                                                                       CDL017
+      **  If a penalty fee has previously been applied due to previous                        CDL017
+      **  early maturity event then reverse out the account key                               CDL017
+      *                                                                                       CDL017
+     C     PENA          IFNE      *ZERO
+      *                                                                                      BUG4426
+      **  Get settlement instructions for orginal deal amendment                             BUG4426
+     C     DLNO          CHAIN     DLEMDAPD                           90
+     C     *IN90         IFEQ      *OFF
+     C                   Z-ADD     SETP          KYSETL
+     C                   MOVE      OSAC          KYOSTL
+     C                   MOVE      OSBR          KYSTBR
+     C                   MOVE      PRFC          OPPRFC
+     C   U1              DELETE    DLEMDAD0
+     C  NU1              UNLOCK    DLEMDAPD
+     C                   ENDIF
+      *                                                                                      BUG4426
+      **  Reread deal amendment file as field will have been overriden                       BUG4426
+      **  due to read to DLEMDAPD                                                            BUG4426
+     C                   READP     DAMSX                                  90
+      *                                                                                      BUG4426
+     C                   MOVE      'D'           AKY(3)
+     C                   MOVEA     DLST          AKY(4)
+     C                   MOVEA     '    '        AKY(6)
+     C                   MOVE      FSPNPR        AKY(8)
+     C                   MOVE      'P'           AKY(9)
+     C                   MOVE      'A'           AKY(10)
+     C                   MOVEL(P)  'PENALTY'     NARREV
+     C                   Z-ADD     PENA          KYAMT
+     C                   Z-ADD     FSCAND        KYDAT
+     C                   MOVE      PCCY          KYCCY
+     C                   MOVE      STCY          KYSCY
+     C***                  Z-ADDMDST      KYSETL  20                                   CDL017BUG4426
+     C***                  MOVE OMDA      KYOSTL                                       CDL017BUG4426
+     C***                  MOVE POBR      KYSTBR                                       CDL017BUG4426
+     C***                  MOVE PRFC      OPPRFC                                       CDL017BUG4426
+     C                   Z-ADD     1             REVI
+      *                                                                                       CDL017
+      **  Generate account key                                                                CDL017
+      *                                                                                       CDL017
+     C                   EXSR      EXCP
+      *                                                                                       CDL017
+     C                   ENDIF
+      *                                                                                       CDL017
+      **  Reset reversal indicator                                                            CDL017
+      *                                                                                       CDL017
+     C                   Z-ADD     0             REVI
+      *                                                                                       CDL017
+      **  Generate penalty fee account key for Early Maturity event                           CDL017
+      **  if penalty fee has been entered                                                     CDL017
+      *                                                                                       CDL017
+     C     DAAM          IFNE      *ZERO
+     C                   MOVE      'D'           AKY(3)
+     C                   MOVEA     DLST          AKY(4)
+     C                   MOVEA     '    '        AKY(6)
+     C                   MOVE      PENLTY        AKY(8)
+     C                   MOVE      'P'           AKY(9)
+     C                   MOVE      'A'           AKY(10)
+     C                   MOVEL(P)  'PENALTY'     NARREV
+     C                   Z-ADD     DAAM          KYAMT
+     C                   Z-ADD     VDATDM        KYDAT
+     C                   MOVE      PCCY          KYCCY
+     C                   MOVE      STCYM         KYSCY
+     C                   Z-ADD     SETP          KYSETL            2 0
+     C                   MOVE      OSAC          KYOSTL
+     C                   MOVE      OSBR          KYSTBR
+     C                   MOVE      PRFC          OPPRFC
+      *                                                                                       CDL017
+      **  Generate account key                                                                CDL017
+      *                                                                                       CDL017
+     C                   EXSR      EXCP
+      *                                                                                       CDL017
+      **  Write a record to DLEMDAPD to store early maturity details                         BUG4426
+     C   U1              WRITE     DLEMDAD0
+      *                                                                                      BUG4426
+     C                   ENDIF
+      *                                                                                       CDL017
+      **  Update base rate details on the main deals file                                     CDL017
+      *                                                                                       CDL017
+     C     BRTTDM        IFNE      0
+      *                                                                                       CDL020
+      **  Get base rate for base rate code                                                    CDL020
+      *                                                                                       CDL020
+     C     CDL020        IFNE      'Y'
+     C                   MOVE      BRTTDM        @@BSRC            2 0
+     C                   CALL      'AOBSHSR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM      PCCY          @@CYCD            3
+     C                   PARM                    @@BSRC
+     C                   PARM      VDATDM        @HSTDT            5 0
+     C     SDBSHS        PARM      SDBSHS        DSFDY
+      *                                                                                       CDL020
+     C     @RTCD         IFNE      *BLANK
+     C                   MOVEL     'SDBSHSPD'    DBFILE           10             *************
+     C                   MOVEL     '52'          DBASE             3             *DBERROR 52 *
+     C                   MOVEL     @@BSRC        DBKEY                           *************
+     C                   SETON                                        U7U8LR
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   END
+      *                                                                                       CDL020
+      **  Update the base rate                                                                CDL020
+      *                                                                                       CDL020
+     C                   Z-ADD     G0CBSR        BRTEDM
+     C                   ENDIF
+      *                                                                                       CDL017
+     C                   MOVE      BRTTDM        BRTT
+     C     INTR          SUB       BRTE          INTR
+     C                   Z-ADD     BRTEDM        BRTE
+     C     INTR          ADD       BRTE          INTR
+      *                                                                                       CDL017
+     C                   ENDIF
+      *                                                                                       CDL017
+      **  Update spread rate on the main deals file                                           CDL017
+      *                                                                                       CDL017
+     C     RTSPDM        IFNE      0
+     C     INTR          SUB       RTSP          INTR
+     C                   Z-ADD     RTSPDM        RTSP
+     C     INTR          ADD       RTSP          INTR
+     C                   ENDIF
+      *                                                                                    MD022399B
+      ** Do not update the Interest rate for EM                                            MD022399B
+      ** If the Amendment value date is equal to early                                     MD022399B
+      ** maturity date                                                                     MD022399B
+      *                                                                                    MD022399B
+     C     VDATDM        IFEQ      EMDAT                                                   MD022399B
+     C                   Z-ADD     W#INTR        INTR                                      MD022399B
+     C                   Z-ADD     W#RTSP        RTSP                                      MD022399B
+     C                   Z-ADD     W#BRTE        BRTE                                      MD022399B
+     C                   Z-ADD     W#BRTT        BRTT                                      MD022399B
+     C                   ENDIF                                                             MD022399B
+      *                                                                                       CDL017
+      **  Update penalty details on the main deals file                                       CDL017
+      *                                                                                       CDL017
+     C                   Z-ADD     DAAM          PENA
+     C                   Z-ADD     VDATDM        FSCAND
+     C***                  Z-ADDVDATDM    MDAT                                        CDL017 BUG4092
+     C                   Z-ADD     EMDAT         MDAT
+     C                   MOVE      PENLTY        FSPNPR
+      *                                                                                       CDL017
+      ****Update pay settlement instructions on deal                                  CDL017 BUG3045
+      **********                                                                      CDL017 BUG3045
+     C**********           MOVE PSTMDM    PSTM                                        CDL017 BUG3045
+     C**********           MOVE PONSDM    PONS                                        CDL017 BUG3045
+     C**********           MOVE PIBNDM    PIBN                                        CDL017 BUG3045
+     C**********           MOVE PIBADM    PIBA                                        CDL017 BUG3045
+     C**********           MOVE POBNDM    POBN                                        CDL017 BUG3045
+     C**********           MOVE POCNDM    POCN                                        CDL017 BUG3045
+     C**********           MOVE RCRNDM    RCRN                                        CDL017 BUG3045
+     C**********           MOVE RCRADM    RCRA                                        CDL017 BUG3045
+     C**********           MOVE RVNODM    RVNO                                        CDL017 BUG3045
+     C**********           MOVE AWBNDM    AWBN                                        CDL017 BUG3045
+     C**********           MOVE AWBADM    AWBA                                        CDL017 BUG3045
+     C**********           MOVE BENNDM    BENN                                        CDL017 BUG3045
+     C**********           MOVE BENADM    BENA                                        CDL017 BUG3045
+     C**********           MOVE DTP1DM    DTP1                                        CDL017 BUG3045
+     C**********           MOVE DTP2DM    DTP2                                        CDL017 BUG3045
+     C**********           MOVE DTP3DM    DTP3                                        CDL017 BUG3045
+     C**********           MOVE DTP4DM    DTP4                                        CDL017 BUG3045
+     C**********           MOVE DCHGDM    DCHG                                        CDL017 BUG3045
+     C**********           MOVE BTB1DM    BTB1                                        CDL017 BUG3045
+     C**********           MOVE BTB2DM    BTB2                                        CDL017 BUG3045
+     C**********           MOVE BTB3DM    BTB3                                        CDL017 BUG3045
+     C**********           MOVE BTB4DM    BTB4                                        CDL017 BUG3045
+     C**********           MOVE BTB5DM    BTB5                                        CDL017 BUG3045
+     C**********           MOVE BTB6DM    BTB6                                        CDL017 BUG3045
+     C**********           MOVE SETP      MDST                                        CDL017 BUG3045
+     C**********           MOVE OSAC      OMDA                                        CDL017 BUG3045
+     C**********           MOVE OSBR      POBR                                        CDL017 BUG3045
+      *                                                                               CDL017 BUG3045
+     C                   ENDSR
+      *****************************************************************
+      * End of /COPY DL0280EMAT                                       *
+      *****************************************************************

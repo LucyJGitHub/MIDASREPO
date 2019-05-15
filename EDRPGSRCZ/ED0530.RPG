@@ -1,0 +1,390 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Extract of FO book positions - COB')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Export Data Module                                   *
+      *                                                               *
+      *  ED0530 - Extract of FO Book Positions - COB                  *
+      *                                                               *
+      *  Function : This program reads through the FO Book Positions  *
+      *             file and writes an extract of all book positions  *
+      *             to EDFFBPPD.                                      *
+      *                                                               *
+      *  Called By: EDC0530  Extract changed FO Book Positions        *
+      *                                                               *
+      *  Calls    : *None                                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 Patch D ---------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 163444             Date 08Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CED006             Date 29JUL97               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  163444 - Re-compiled over changed physical file.             *
+      *  CED006 - Midas ED Enhancements                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     FPOSTNKD IF  E           K        DISK         KINFSR *PSSR
+      * FO Book Positions file (all members)
+     FINTYP   IF  E           K        DISK         KINFSR *PSSR
+      * FO Instrument Types file
+     FPRICS   IF  E           K        DISK         KINFSR *PSSR
+      * FO Prices file
+     FMARKT   IF  E           K        DISK         KINFSR *PSSR
+      * FO Market Centres file
+     FEDFFBPPDO   E                    DISK
+      * Extract of FO Book Positions
+      *
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   87  - CHAIN OF MARKT                                        *
+     F*   88  - CHAIN OF PRICS                                        *
+     F*   89  - CHAIN OF INTYP                                        *
+     F*   90  - EOF TRANSD                                            *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  PROC   - Read and Process TRANSD                             *
+     F*  EXIT   - Program Termination Subroutine                      *
+     F*  *PSSR  - Error Handling Subroutine                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+     E/COPY ZSRSRC,FFDATEZ1
+     E/COPY ZSRSRC,ZDATE1Z1
+     E/COPY ZSRSRC,ZHOLE
+      *
+      /SPACE 3
+      *
+      /EJECT
+      ** Rename fields
+     IINTYPDF
+     I              RECI                            IRECI
+     I              ISTT                            IISTT
+     I              ISCY                            IISCY
+     IMARKTDF
+     I              RECI                            MRECI
+     IPRICSDF
+     I              RECI                            PRECI
+     I              ISTT                            PISTT
+     I              YRNO                            PYRNO
+     I              MTHN                            PMTHN
+     I              PCAL                            PPCAL
+     I              STRP                            PSTRP
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IMKTC        DS                             10
+     I                                        1   2 #MKTC
+      ** Market Centre
+     IISTT        DS
+     I                                        1   2 #ISTT
+      ** Instrument Type
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, short data structure
+      *
+     I/COPY ZSRSRC,FFDATEZ2
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MKTC   10
+      *
+     C                     EXSR INIT
+     C                     EXSR PROC
+     C                     EXSR EXIT
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Program Initialisation                               *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls:     AOBANKR0 - Access Object for Bank Details ICD      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define Instrument Type (working field)
+     C           *LIKE     DEFN ISTT      W#ISTT
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** List to access price details from PRICS
+     C           KPRIC     KLIST
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD1  7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD1    IFNE *BLANKS
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Access Market Centre details
+      *
+     C           MKTC      IFNE 'OTC'
+     C           #MKTC     CHAINMARKT                87
+      *
+     C           *IN87     IFEQ *ON
+     C                     Z-ADD02        DBASE            ***************
+     C                     MOVEL'MARKT   'DBFILE           * DB ERROR 02 *
+     C                     MOVELMKTC      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PROC   - Reads file POSTNKD and upon a change of instrument   *
+      *          type writes record to EDFFBPPD.                      *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls: FFAVPR                                                 *
+      *        FFDATE                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC      BEGSR
+      *
+      * Read first record in POSTNKD
+      *
+     C                     READ POSTNKD                  90
+      *
+      * Process all records in POSTNKD
+      *
+     C           *IN90     DOWEQ*OFF                       B01
+      *
+      ** Is instrument type on book position file different to that of
+      ** the previous record processed
+     C           ISTT      IFNE W#ISTT                       B02
+      *
+      ** Access instrument type details
+     C           ISTT      CHAININTYP                89
+     C           *IN89     IFEQ *ON                            B03
+     C                     Z-ADD03        DBASE            ***************
+     C                     MOVEL'INTYP   'DBFILE           * DB ERROR 03 *
+     C                     MOVELISTT      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                             E02
+      *
+      ** Settlement Date
+     C           MKTC      IFEQ 'OTC'
+     C                     ELSE
+     C                     MOVE SEDF      FFDATC
+     C                     MOVE MTHN      FFMTH
+     C                     MOVE YRNO      FFYR
+     C                     MOVE CTCY      FFCCY1
+     C                     MOVE MLOC      FFLOC
+     C                     MOVE ISCY      FFCCY2
+     C                     MOVE OTHC      FFCCY3
+     C                     EXSR FFDATE
+     C                     Z-ADDFFDAY     SETD
+     C                     ENDIF
+      *
+      * If settlement date is after today
+     C           SETD      IFGT BJRDNB                       B02
+      *
+      * Access price details.
+     C           KPRIC     CHAINPRICS                88
+      *
+      ** Format details for extract to PF/EDFFBPPD.
+      *
+      ** Market Price
+     C           *IN88     IFEQ *ON
+     C                     Z-ADD0         MKTP
+     C                     ELSE
+     C           LOPE      SUB  SOPE      MKTP
+     C                     MULT PLEC      MKTP
+     C                     ENDIF
+      *
+      ** Average price
+     C                     MOVE SOPE      FFSHRT
+     C                     MOVE LOPE      FFLONG
+     C                     MOVE CUTV      FFCUTV
+     C                     MOVE MNPF      FFMNPF
+     C                     MOVE TKDM      FFTKDM
+     C                     EXSR FFAVPR
+     C                     Z-ADDFFAVER    CAVP
+      *
+      ** Extract Date
+     C                     Z-ADDBJRDNB    RUND
+      *
+     C                     WRITEEDFFBPD0
+      *
+      ** Save Instrument Type for comparison
+     C                     MOVE ISTT      W#ISTT
+      *
+     C                     ENDIF                             E02
+      *
+      * Read next record from POSTNKD
+      *
+     C                     READ POSTNKD                  90
+      *
+     C                     ENDDO                           E01
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,FFAVPRZ1
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,FFDATEZ3
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZBKDT
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * EXIT   - Program Termination                                  *
+      *                                                               *
+      * Called by: Main Program Processing                            *
+      *                                                               *
+      * Calls: *None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR
+      *
+      * End Program
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: PROC, EXIT                                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

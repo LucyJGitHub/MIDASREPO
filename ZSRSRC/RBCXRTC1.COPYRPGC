@@ -1,0 +1,619 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Last Amend No. 198870             Date 12Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+     C*  Prev Amend No. 193529             Date 29May01
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*                 118796             Date 05AUG97
+     C*                 117112             Date 22Apr97               *
+     C*                 CRT002  *CREATE    Date  1Dec95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  198870 - Compute the exchange rate from the 2 amounts since  *
+      *           Cashier did not pass the rate. Applies 195422.      *
+     C*  193529 - Array index error in RE4120                         *
+     C*  118796 - Change indicator used from 44 to 48.                *
+     C*  117112 - Cashier Interface.  Several problems corrected.     *
+     C*  CRT002 - RBA Interface.                                      *
+     C*                                                               *
+     C*****************************************************************
+      *                                                               *
+      *            CMPXRT - Compute Exchange Rate from two amounts    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                   -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           CMPXRT    BEGSR                           ** CMPXRT **
+      *
+     C                     Z-ADDW@TAM     W@TAM  150
+     C                     Z-ADDW@EAM     W@EAM  150
+     C                     Z-ADDW@TDP     W@TDP   10
+     C                     Z-ADDW@EDP     W@EDP   10
+     C                     MOVELW@TMD     W@TMD   1
+     C                     MOVELW@EMD     W@EMD   1
+     C                     MOVELW@TCY     W@TCY   3
+     C                     MOVELW@ECY     W@ECY   3
+      *
+     C***********W@TCY     IFEQ @BSCY                                     117112
+      ***********                                                         117112
+     C***********W@EMD     IFEQ 'M'                                       117112
+     C***********W@TAM     DIV  W@EAM     X@RT1  138                      117112
+     C***********          ELSE                                           117112
+     C***********W@EAM     DIV  W@TAM     X@RT1                           117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********          ELSE                                           117112
+      ***********                                                         117112
+     C***********W@ECY     IFEQ @BSCY                                     117112
+      ***********                                                         117112
+     C***********W@TMD     IFEQ 'D'                                       117112
+     C***********W@TAM     DIV  W@EAM     X@RT1                           117112
+     C***********          ELSE                                           117112
+     C***********W@EAM     DIV  W@TAM     X@RT1                           117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********          ELSE                                           117112
+     C***********W@EAM     DIV  W@TAM     X@RT1                           117112
+      ***********                                                         117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********          END                                            117112
+      ***********                                                         117112
+      ***Adjust*according*to*number*of*decimal*places.**                  117112
+      ***********                                                         117112
+     C***********W@EDP     SUB  W@TDP     W@NDP   10                      117112
+      ***********                                                         117112
+     C***********W@NDP     IFEQ 0                                         117112
+     C***********          Z-ADDX@RT1     @EXRT                           117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********W@NDP     IFEQ -1                                        117112
+     C***********X@RT1     DIV  10        @EXRT                           117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********W@NDP     IFEQ -2                                        117112
+     C***********X@RT1     DIV  100       @EXRT                           117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********W@NDP     IFEQ -3                                        117112
+     C***********X@RT1     DIV  1000      @EXRT                           117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********W@NDP     IFEQ 1                                         117112
+     C***********X@RT1     MULT 10        @EXRT                           117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********W@NDP     IFEQ 2                                         117112
+     C***********X@RT1     MULT 100       @EXRT                           117112
+     C***********          END                                            117112
+      ***********                                                         117112
+     C***********W@NDP     IFEQ 3                                         117112
+     C***********X@RT1     MULT 1000      @EXRT                           117112
+     C***********          END                                            117112
+      *                                                                   117112
+     C                     Z-ADD1         @Z                              117112
+     C                     MOVELW@TCY     @CCY                            117112
+     C                     EXSR RTCCYS                                    117112
+      *                                                                   117112
+     C***********W@TCY     LOKUPTCY,@Z                   44         117112118796
+     C           W@TCY     LOKUPTCY,@Z                   48               118796
+      *                                                                   117112
+     C************IN44     IFEQ '1'                                 117112118796
+     C           *IN48     IFEQ '1'                                       118796
+     C                     EXSR LDXRAR                                    117112
+      *                                                                   117112
+     C           PFNCD     IFEQ '0JI'                                     117112
+     C                     Z-ADDBCR,@Z    @EXRT1 138                      117112
+     C                     ELSE                                           117112
+     C                     Z-ADDBTR,@Z    @EXRT1                          117112
+     C                     ENDIF                                          117112
+      *                                                                   117112
+     C                     ELSE                                           117112
+     C                     Z-ADD@TCSP     @EXRT1                          117112
+     C                     ENDIF                                          117112
+      *                                                                   117112
+     C           W@TMD     IFEQ 'D'                                       117112
+     C           1         DIV  @EXRT1    @EXRT1    H                     117112
+     C                     ENDIF                                          117112
+      *                                                                   117112
+     C**********           Z-ADD1         @Z      10               117112 193529
+     C                     Z-ADD1         @Z      20                      193529
+     C                     MOVELW@ECY     @CCY                            117112
+     C                     EXSR RTCCYS                                    117112
+      *                                                                   117112
+     C***********W@ECY     LOKUPTCY,@Z                   44         117112118796
+     C           W@ECY     LOKUPTCY,@Z                   48               118796
+      *                                                                   117112
+     C************IN44     IFEQ '1'                                 117112118796
+     C           *IN48     IFEQ '1'                                       118796
+     C                     EXSR LDXRAR                                    117112
+      *                                                                   117112
+     C           PFNCD     IFEQ '0JI'                                     117112
+     C                     Z-ADDSCR,@Z    @EXRT2 138                      117112
+     C                     ELSE                                           117112
+     C                     Z-ADDSTR,@Z    @EXRT2                          117112
+     C                     ENDIF                                          117112
+      *                                                                   117112
+     C                     ELSE                                           117112
+     C                     Z-ADD@EQSP     @EXRT2                          117112
+     C                     ENDIF                                          117112
+      *                                                                   117112
+     C           W@EMD     IFEQ 'D'                                       117112
+     C           1         DIV  @EXRT2    @EXRT2    H                     117112
+     C                     ENDIF                                          117112
+      *                                                                   117112
+     C           W@TMD     IFEQ 'M'                                       117112
+     C           @EXRT2    DIV  @EXRT1    X@RT1  138H                     117112
+     C                     ELSE                                           117112
+     C           @EXRT1    DIV  @EXRT2    X@RT1     H                     117112
+     C                     ENDIF                                          117112
+      *                                                                   117112
+     C           WRDCY     IFEQ '1'                                       117112
+     C           W@TMD     ANDEQW@EMD                                     117112
+     C           1         DIV  X@RT1     X@RT1     H                     117112
+     C                     ENDIF                                          117112
+      *                                                                   117112
+     C                     Z-ADDX@RT1     @EXRT                           117112
+      *                                                                                       198870
+     C           PMODE     IFEQ 'P'                                                           198870
+      *                                                                                       198870
+      ** Define workfields so that other programs using                                       198870
+      ** this /COPY can be compiled                                                           198870
+      *                                                                                       198870
+     C           1         MULT @CHAMT    @CHAMT 150                                          198870
+     C           1         MULT @SCEQ     @SCEQ  150                                          198870
+     C           1         MULT @CSAM     @CSAM  130                                          198870
+     C           1         MULT @CQAM     @CQAM  130                                          198870
+     C           1         MULT @CSHEQ    @CSHEQ 130                                          198870
+     C           1         MULT @TCHG     @TCHG  150                                          198870
+     C           1         MULT @TRNAM    @TRNAM 130                                          198870
+      *                                                                                       198870
+      ** Commission                                                                           198870
+      *                                                                                       198870
+     C           WCHCCY    IFEQ W@TCY                                                         198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@TDP     WHEQ 0                                                             198870
+     C                     Z-ADD@TCHG     W@CCAM 238                                          198870
+     C                     Z-ADD@CHAMT    W@FCAM 238                                          198870
+     C           W@TDP     WHEQ 1                                                             198870
+     C           @TCHG     DIV  10        W@CCAM                                              198870
+     C           @CHAMT    DIV  10        W@FCAM                                              198870
+     C           W@TDP     WHEQ 2                                                             198870
+     C           @TCHG     DIV  100       W@CCAM                                              198870
+     C           @CHAMT    DIV  100       W@FCAM                                              198870
+     C           W@TDP     WHEQ 3                                                             198870
+     C           @TCHG     DIV  1000      W@CCAM                                              198870
+     C           @CHAMT    DIV  1000      W@FCAM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     ELSE                                                               198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADD@TCHG     W@CCAM                                              198870
+     C                     Z-ADD@CHAMT    W@FCAM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           @TCHG     DIV  10        W@CCAM                                              198870
+     C           @CHAMT    DIV  10        W@FCAM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           @TCHG     DIV  100       W@CCAM                                              198870
+     C           @CHAMT    DIV  100       W@FCAM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           @TCHG     DIV  1000      W@CCAM                                              198870
+     C           @CHAMT    DIV  1000      W@FCAM                                              198870
+     C                     ENDSL                                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+      ** Format sell amount                                                                   198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JO'                                                         198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADD@CSHEQ    W@C2AM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           @CSHEQ    DIV  10        W@C2AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           @CSHEQ    DIV  100       W@C2AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           @CSHEQ    DIV  1000      W@C2AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JN'                                                         198870
+     C           PFNCD     OREQ '0JK'                                                         198870
+     C           PFNCD     OREQ '0JL'                                                         198870
+     C           PFNCD     OREQ '0JQ'                                                         198870
+     C           PFNCD     OREQ '0JR'                                                         198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADD@TNAM     W@C2AM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           @TNAM     DIV  10        W@C2AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           @TNAM     DIV  100       W@C2AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           @TNAM     DIV  1000      W@C2AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+      ** Format buy amount                                                                    198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JN'                                                         198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@TDP     WHEQ 0                                                             198870
+     C                     Z-ADD@CSAM     W@C1AM                                              198870
+     C           W@TDP     WHEQ 1                                                             198870
+     C           @CSAM     DIV  10        W@C1AM                                              198870
+     C           W@TDP     WHEQ 2                                                             198870
+     C           @CSAM     DIV  100       W@C1AM                                              198870
+     C           W@TDP     WHEQ 3                                                             198870
+     C           @CSAM     DIV  1000      W@C1AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JQ'                                                         198870
+     C           PFNCD     OREQ '0JR'                                                         198870
+     C           PFNCD     OREQ '0JK'                                                         198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@TDP     WHEQ 0                                                             198870
+     C                     Z-ADD@CQAM     W@C1AM                                              198870
+     C           W@TDP     WHEQ 1                                                             198870
+     C           @CQAM     DIV  10        W@C1AM                                              198870
+     C           W@TDP     WHEQ 2                                                             198870
+     C           @CQAM     DIV  100       W@C1AM                                              198870
+     C           W@TDP     WHEQ 3                                                             198870
+     C           @CQAM     DIV  1000      W@C1AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JO'                                                         198870
+     C           PFNCD     OREQ '0JL'                                                         198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@TDP     WHEQ 0                                                             198870
+     C                     Z-ADD@TRNAM    W@C1AM                                              198870
+     C           W@TDP     WHEQ 1                                                             198870
+     C           @TRNAM    DIV  10        W@C1AM                                              198870
+     C           W@TDP     WHEQ 2                                                             198870
+     C           @TRNAM    DIV  100       W@C1AM                                              198870
+     C           W@TDP     WHEQ 3                                                             198870
+     C           @TRNAM    DIV  1000      W@C1AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+      ** This is for RE4115                                                                   198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JN'                                                         198870
+     C           PFNCD     OREQ '0JK'                                                         198870
+     C           PFNCD     OREQ '0JQ'                                                         198870
+     C           PFNCD     OREQ '0JR'                                                         198870
+      *                                                                                       198870
+     C           BJLCCY    IFNE RACCY1                                                        198870
+     C           BJLCCY    ANDNERACCY2                                                        198870
+      *                                                                                       198870
+     C           W@C1AM    SUB  W@CCAM    W@C1AM                                              198870
+     C                     ELSE                                                               198870
+      *                                                                                       198870
+     C           BJLCCY    IFEQ W@TCY                                                         198870
+     C           W@C1AM    SUB  W@CCAM    W@C1AM                                              198870
+     C                     ENDIF                                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+      ** This is for RE4117                                                                   198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JO'                                                         198870
+     C           BJLCCY    IFNE RACCY1                                                        198870
+     C           BJLCCY    ANDNERACCY2                                                        198870
+      *                                                                                       198870
+     C           W@C2AM    SUB  W@CCAM    W@C2AM                                              198870
+     C                     ELSE                                                               198870
+      *                                                                                       198870
+     C           BJLCCY    IFEQ W@TCY                                                         198870
+     C           W@C1AM    ADD  W@CCAM    W@C1AM                                              198870
+     C                     ELSE                                                               198870
+     C           W@C2AM    SUB  W@CCAM    W@C2AM                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+      ** This is for RE4119                                                                   198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JW'                                                         198870
+     C           BJLCCY    IFNE RACCY1                                                        198870
+     C           BJLCCY    ANDNERACCY2                                                        198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADDRACSPA    W@C2AM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           RACSPA    DIV  10        W@C2AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           RACSPA    DIV  100       W@C2AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           RACSPA    DIV  1000      W@C2AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADDRATCPA    W@C1AM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           RATCPA    DIV  10        W@C1AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           RATCPA    DIV  100       W@C1AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           RATCPA    DIV  1000      W@C1AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     ELSE                                                               198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADD@TNAM     W@C2AM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           @TNAM     DIV  10        W@C2AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           @TNAM     DIV  100       W@C2AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           @TNAM     DIV  1000      W@C2AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@TDP     WHEQ 0                                                             198870
+     C                     Z-ADD@TRNAM    W@C1AM                                              198870
+     C           W@TDP     WHEQ 1                                                             198870
+     C           @TRNAM    DIV  10        W@C1AM                                              198870
+     C           W@TDP     WHEQ 2                                                             198870
+     C           @TRNAM    DIV  100       W@C1AM                                              198870
+     C           W@TDP     WHEQ 3                                                             198870
+     C           @TRNAM    DIV  1000      W@C1AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C           BJLCCY    IFEQ W@TCY                                                         198870
+     C           W@C1AM    ADD  W@CCAM    W@C1AM                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JL'                                                         198870
+     C           BJLCCY    IFNE RACCY1                                                        198870
+     C           BJLCCY    ANDNERACCY2                                                        198870
+      *                                                                                       198870
+     C           W@C2AM    SUB  W@CCAM    W@C2AM                                              198870
+     C                     ELSE                                                               198870
+      *                                                                                       198870
+     C           BJLCCY    IFEQ W@TCY                                                         198870
+     C           W@C1AM    ADD  W@CCAM    W@C1AM                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+      ** This is for RE4120                                                                   198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JX'                                                         198870
+     C           BJLCCY    IFNE RACCY1                                                        198870
+     C           BJLCCY    ANDNERACCY2                                                        198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADDRACSPA    W@C2AM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           RACSPA    DIV  10        W@C2AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           RACSPA    DIV  100       W@C2AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           RACSPA    DIV  1000      W@C2AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADDRATCPA    W@C1AM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           RATCPA    DIV  10        W@C1AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           RATCPA    DIV  100       W@C1AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           RATCPA    DIV  1000      W@C1AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     ELSE                                                               198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@TDP     WHEQ 0                                                             198870
+     C                     Z-ADD@TAMT     W@C1AM                                              198870
+     C           W@TDP     WHEQ 1                                                             198870
+     C           @TAMT     DIV  10        W@C1AM                                              198870
+     C           W@TDP     WHEQ 2                                                             198870
+     C           @TAMT     DIV  100       W@C1AM                                              198870
+     C           W@TDP     WHEQ 3                                                             198870
+     C           @TAMT     DIV  1000      W@C1AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADD@SCEQ     W@C2AM                                              198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           @SCEQ     DIV  10        W@C2AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           @SCEQ     DIV  100       W@C2AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           @SCEQ     DIV  1000      W@C2AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C           W@ECY     IFEQ BJLCCY                                                        198870
+     C           W@C2AM    ADD  W@FCAM    W@C2AM                                              198870
+     C                     ELSE                                                               198870
+     C           W@C1AM    SUB  W@FCAM    W@C1AM                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C           PFNCD     IFEQ '0JI'                                                         198870
+     C           PFNCD     OREQ '0JS'                                                         198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@TDP     WHEQ 0                                                             198870
+     C                     Z-ADD@TAMT     W@C1AM 238                                          198870
+     C           W@TDP     WHEQ 1                                                             198870
+     C           @TAMT     DIV  10        W@C1AM                                              198870
+     C           W@TDP     WHEQ 2                                                             198870
+     C           @TAMT     DIV  100       W@C1AM                                              198870
+     C           W@TDP     WHEQ 3                                                             198870
+     C           @TAMT     DIV  1000      W@C1AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C                     Z-ADD@SCEQ     W@C2AM 238                                          198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           @SCEQ     DIV  10        W@C2AM                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           @SCEQ     DIV  100       W@C2AM                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           @SCEQ     DIV  1000      W@C2AM                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C           BJLCCY    IFNE W@ECY                                                         198870
+     C           BJLCCY    ANDNEW@TCY                                                         198870
+     C           W@C1AM    SUB  W@FCAM    W@C1AM                                              198870
+      *                                                                                       198870
+     C                     ELSE                                                               198870
+      *                                                                                       198870
+     C           W@ECY     IFEQ BJLCCY                                                        198870
+     C           W@C2AM    ADD  W@FCAM    W@C2AM                                              198870
+     C                     ELSE                                                               198870
+     C           W@C1AM    SUB  W@FCAM    W@C1AM                                              198870
+     C                     ENDIF                                                              198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+      ** Compute for the exchange rate                                                        198870
+      *                                                                                       198870
+     C                     SELEC                                                              198870
+     C           W@EDP     WHEQ 0                                                             198870
+     C           W@C1AM    MULT @EXRT     WTSAA1 180H                                         198870
+     C           W@C1AM    DIV  @EXRT     WTSAB1 180H                                         198870
+     C           1         MULT WTSAA1    WFAMTA 183                                          198870
+     C           1         MULT WTSAB1    WFAMTB 183                                          198870
+     C           W@EDP     WHEQ 1                                                             198870
+     C           W@C1AM    MULT @EXRT     WTSAA2 181H                                         198870
+     C           W@C1AM    DIV  @EXRT     WTSAB2 181H                                         198870
+     C           1         MULT WTSAA2    WFAMTA                                              198870
+     C           1         MULT WTSAB2    WFAMTB                                              198870
+     C           W@EDP     WHEQ 2                                                             198870
+     C           W@C1AM    MULT @EXRT     WTSAA3 182H                                         198870
+     C           W@C1AM    DIV  @EXRT     WTSAB3 182H                                         198870
+     C           1         MULT WTSAA3    WFAMTA                                              198870
+     C           1         MULT WTSAB3    WFAMTB                                              198870
+     C           W@EDP     WHEQ 3                                                             198870
+     C           W@C1AM    MULT @EXRT     WTSAA4 183H                                         198870
+     C           W@C1AM    DIV  @EXRT     WTSAB4 183H                                         198870
+     C           1         MULT WTSAA4    WFAMTA                                              198870
+     C           1         MULT WTSAB4    WFAMTB                                              198870
+     C                     ENDSL                                                              198870
+      *                                                                                       198870
+     C           W@C1AM    DIV  W@C2AM    @EXRT                                               198870
+     C           @EXRT     IFLT 1                                                             198870
+     C           W@C2AM    DIV  W@C1AM    @EXRT                                               198870
+     C                     ENDIF                                                              198870
+      *                                                                                       198870
+     C                     ENDIF                                                              198870
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT                                                              117112
+      *****************************************************************   117112
+      *                                                               *   117112
+      *            LDXRAR - Load exchange rates arrays.               *   117112
+      *                                                               *   117112
+      * CALLS             -                                           *   117112
+      *                                                               *   117112
+      * CALLED BY  VALDET - Validate details                          *   117112
+      *                                                               *   117112
+      * FLDS USED         -                                           *   117112
+      *                                                               *   117112
+      *****************************************************************   117112
+     C           LDXRAR    BEGSR                           ** LDXRAR **   117112
+      *                                                                   117112
+     C                     OPEN REBDCCPD                                  117112
+     C                     OPEN REBDCRPD                                  117112
+      *                                                                   117112
+     C                     SELEC                                          117112
+      *                                                                   117112
+     C           PFNCD     WHEQ '0JR'                                     117112
+     C                     MOVEL'0JK'     WKEY                            117112
+      *                                                                   117112
+     C           PFNCD     WHEQ '0JW'                                     117112
+     C                     MOVEL'0JL'     WKEY                            117112
+      *                                                                   117112
+     C           PFNCD     WHEQ '0JS'                                     117112
+     C           PFNCD     OREQ '0JX'                                     117112
+     C                     MOVEL'0JI'     WKEY                            117112
+      *                                                                   117112
+     C                     OTHER                                          117112
+      *                                                                   117112
+     C                     MOVELPFNCD     WKEY    3                       117112
+      *                                                                   117112
+     C                     ENDSL                                          117112
+      *                                                                   117112
+      ** Find function code in Exchange Rate Control Table                117112
+      *                                                                   117112
+     C           WKEY      CHAINREBDCCD0             70                   117112
+      *                                                                   117112
+      ** If record not found?                                             117112
+      *                                                                   117112
+     C           *IN70     IFEQ *ON                                       117112
+     C           *LOCK     IN   LDA                                       117112
+     C                     Z-ADD45        DBASE                           117112
+     C                     MOVEL'REBDCCPD'DBFILE                          117112
+     C                     MOVELPFNCD     DBKEY                           117112
+     C                     EXSR DBERR                                     117112
+     C                     END                                            117112
+      *                                                                   117112
+     C           @CCY      CHAINREBDCRD0             70                   117112
+      *                                                                   117112
+      ** Move exchange rate in accordance with function and currency code 117112
+      *                                                                   117112
+     C                     Z-ADD0         @RT    138                      117112
+     C           FEDNRT    DIV  FEAMNT    @RT       H                     117112
+     C                     Z-ADD@RT       BTR,@Z                          117112
+     C           FEDPRT    DIV  FEAMNT    @RT       H                     117112
+     C                     Z-ADD@RT       STR,@Z                          117112
+     C           FEVNRT    DIV  FEAMNT    @RT       H                     117112
+     C                     Z-ADD@RT       BCR,@Z                          117112
+     C           FEVPRT    DIV  FEAMNT    @RT       H                     117112
+     C                     Z-ADD@RT       SCR,@Z                          117112
+      *                                                                   117112
+     C                     CLOSEREBDCCPD                                  117112
+     C                     CLOSEREBDCRPD                                  117112
+      *                                                                   117112
+     C                     ENDSR                                          117112
+      *****************************************************************   117112

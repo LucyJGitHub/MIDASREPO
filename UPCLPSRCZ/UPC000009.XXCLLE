@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000009 - Trigger individual files                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Last Amend No. CUP041  *REDUNDANT Date 04Jun14              */
+/*       Prev Amend No. A1076141           Date 11Jan13              */
+/*                      CBF012             Date 04Jul11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      256038  *CREATE    Date 25Aug08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       A1076141 - Change back to only having one type of DBU.      */
+/*       CBF012 - BF Infrastructure: Upgradability                   */
+/*       256038 - Handle triggering of files.                        */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&RETURN)  */                                                 /*CBF012*/
+/**********  PGM        PARM(&RETURN &MODE)                                   */ /*CBF012 A1076141*/
+             PGM        PARM(&RETURN)                                                   /*A1076141*/
+ 
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)                         */ /*CBF012 A1076141*/
+ 
+             DCL        VAR(&USTS) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(UPDLVCL5)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2008')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&USTS) VALUE('C')
+READNEXT:
+             IF         COND(&AUMBNM *NE ' ') THEN(DO)
+/*/COPY UPCPYSRC,C_UP0020A                                           */
+             ENDDO
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**********  IF         COND(((&MODE *EQ '*NML') *AND +                              */ /*A1076141*/
+/**********               (%SUBSTRING(&AUSRCF 1 2) *EQ 'HI')) *OR +                  */ /*A1076141*/
+/**********               ((&MODE *EQ '*HIL') *AND +                                 */ /*A1076141*/
+/**********               (%SUBSTRING(&AUSRCF 1 2) *NE 'HI'))) THEN(DO)       */ /*CBF012 A1076141*/
+/**********     GOTO       CMDLBL(READNEXT)                                   */ /*CBF012 A1076141*/
+/**********  ENDDO                                                            */ /*CBF012 A1076141*/
+ 
+             TRIGZONE   FILE(&AUMBNM) ACTION(*ADDTRIG)
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+             CHGVAR     VAR(&RETURN) VALUE('F')
+ 
+ END:
+             ENDPGM

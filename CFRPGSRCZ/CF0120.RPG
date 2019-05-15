@@ -1,0 +1,705 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Extract outgoing dealing messages')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - CONFIRMATION MATCHING                                *
+     F*                                                               *
+     F*  CF0120 - EXTRACT OUTGOING DEALING MESSAGES                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CMG003             Date 04Oct12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 182723             Date 23Aug00               *
+      *                 113608             DATE 06FEB98               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 113352             DATE 13FEB97               *
+     F*                 CSW097             DATE 05AUG97               *
+     F*                 095196             DATE 14Jan97               *
+     F*                 CCF003             Date 01Aug96               *
+     F*                 S01408             Date 10May96               *
+     F*                 S01408             Date 24Apr96               *
+     F*                 090570             DATE 24JUL95               *
+     F*                 061784             DATE 17FEB94               *
+     F*                 061810             DATE 19JAN94               *
+     F*                 S01453             DATE 13DEC93               *
+     F*                 S01408             DATE 27MAY93               *
+     F*                 E42976             DATE 30JUL92               *
+     F*                 S01310             DATE 06DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CMG003 - SWIFT MT600 Message Generation                      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CDL008 - Continuous Linked Settlement (recompile MGOREFPD)   *
+     F*  182723 - Change Header so Priority is included and defaulted *
+     F*           to 'N'.                                             *
+     F*  113608 - SWIFT confs produced as 'New' instead of 'Amended'. *
+     F*           Use new LF/MGOREFA9 to select messages for download *
+     F*           to TRAM - this includes MT292 messages.             *
+     F*  113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                 *
+     F*  CSW097 - SWIFT Changes 1997                                  *
+     F*           New fields :15x: are empty and may cause an Array   *
+     F*           Index Error when looking for first blank character  *
+     F*  095196 - Re-compiled due to changes in MGOREFA7 to include   *
+     F*           MT392's and deleted msgs                            *
+     F*  CCF003 - Include MT360 and MT362 Confirmation Matching       *
+     F*  S01408 - Core hook CF0120IIP1 added                          *
+     F*  S01408 - Core hook CF0120CCP1 added                          *
+     F*  090570 - RECOMPILE FOR CHANGE IN MGOREFLI.                   *
+     F*  061784 - Use MGOREFA7 (New logical file) in order to omit    *
+     F*           MTPY 324 and 335.                                   *
+     F*  061810 - Create dummy MT392 for amended deals to cater TRAM  *
+     F*           (Recompile due to changes in MGOREFLI)              *
+     F*  S01453 - Margin and FX Positions/Points and Base currency    *
+     F*           Positions/Points added to FX input (Recompiled)     *
+     F*  S01408 - Core hook CF0120CEIP added                          *
+     F*           Core hook CF0120CPME added                          *
+     F*           Core hook CF0120CPMS added                          *
+     F*           Core hook CF0120FPG  added                          *
+     F*  E42976 - REMOVE CTRF FROM LOOP & DO NOT READ MGOMSGPD. THIS  *
+     F*           ENSURES THAT FIELD :72: IS FORMATTED CORRECTLY AND  *
+     F*           DOESN'T OVERWRITE ANY FOLLOWING FIELDS WHEN         *
+     F*           WRITING TO CFWOCMPD.                                *
+     F*  S01310 - RE WRITTEN FOR SWIFT RATIONALISATION                *
+     F*                                                               *
+     F*****************************************************************
+     FCFBRCHL0IF  E           K        DISK
+     F***MGOREFLIUF**E           K        DISK                            061784
+     F*GOREFA7UF**E***        K        DISK                         061784113608
+     FMGOREFA9UF  E           K        DISK                               113608
+     FMGOMSGPDIF  E           K        DISK
+     FSDBANKL0IF  E                    DISK
+     FSDCUSTL0IF  E           K        DISK
+     F/COPY WNCPYSRC,CF0120F001
+     FDEALS   IF  E           K        DISK
+     F/COPY WNCPYSRC,CF0120F002
+     FSDBROKL0IF  E           K        DISK
+     FCFWOCMPDUF  E                    DISK                      A
+     FCF0120AUO   E                    PRINTER                        UC
+     F*                                                                   S01408
+     F** Core hook for externalisation.                                   S01408
+      /COPY WNCPYSRC,CF0120FPG                                            S01408
+     F*
+     F* ID C  F  H  L    Function of indicators
+     F*    10            EOF CFWOCMPD
+     F*    11            EOF CFBRCHL0
+     F*****12************EOF*MGOREFLI**********************************   061784
+     F*****12************EOF MGOREFA7                               061784113608
+     F*    12            EOF MGOREFA9                                     113608
+     F*    13            EOF MGOMSGPD
+     F*    86            EOF SDBROKL0
+     F*    87            EOF DEALS
+     F*    88            EOF SDCUSTL0
+     F*    89            EOF SDBANKPD
+     F*    U7U8LR        DB error
+     F*
+     E                    ARY        50  1               incoming msg
+     E                    OMSG     4000  1               compressed msg
+     E                    TMSG     4000  1
+     E                    CPY@    1   1 80
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     I            DS
+     I                                       32  51 NWDS
+     I                                       40  43 @WK4
+     I                                       41  43 @WK3
+     I                                       40  42 @WL3
+     I                                       43  43 @WK1
+      **  Destination address data structure
+      *
+     I            DS
+     I**********                              1  49 @SW2                                      182723
+     I                                        1  50 @SW2                                      182723
+     I                                        1   7 TXT1
+     I                                        8  19 @SND2
+     I                                       15  15 @TNG
+     I                                       20  34 TXT2
+     I                                       35  37 MTPY
+     I                                       38  49 @DST2
+     I                                       50  50 MPRY
+      **  SWIFT II message header
+      *
+     I            DS
+     I                                        1   5 MTAG
+     I                                        5   5 @WL1
+      **  Field tag data structure
+      *
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,CF0120IIP1                                           S01408
+     I*                                                                   S01408
+     ISCSARD    E DSSCSARDPD                                              CCF003
+      *                                                                   CCF003
+      ** SC Switchable Features Details                                   CCF003
+      *                                                                   CCF003
+     IDSFDY     E DSDSFDY                                                 CCF003
+      *                                                                   CCF003
+      ** Short Data Structure (1 - 200 char)                              CCF003
+      *                                                                   CCF003
+     C           *ENTRY    PLIST
+     C                     PARM           TRID    3        Current TRAM system
+     C                     PARM           O350    1        Select our 350s
+     C                     PARM           MSOF    1        Messages on file
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   FORM  - Format sender, destination & TRAM brokerage         *
+      *   WRIT - output record                                        *
+      *   REPT - process error report                                 *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           FORM Format sender, destination & TRAM brokerage    *
+      *           WRIT output record                                  *
+      *           REPT process error report                           *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Begin processing after TRAM Id received
+     C           TRID      SETLLCFBRCHL0
+     C                     READ CFBRCHL0                 11
+      *
+      **  Process messages for one TRAM Id
+     C           *IN11     DOWEQ'0'                                   1
+      *
+      **  Process messages for all branches within TRAM Id
+     C***********IMBR      CHAINMGOREFLI             12                   061784
+     C***********IMBR      CHAINMGOREFA7             12             061784113608
+     C           IMBR      CHAINMGOREFA9             12                   113608
+      *
+     C           *IN12     DOWEQ'0'                                   2
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,CF0120CPMS                                           S01408
+      *
+     C           MTPY      IFEQ '600'                                                         CMG003
+     C           CMG003    ANDEQ'N'                                                           CMG003
+     C           IMBR      READEMGOREFA9                 12                                   CMG003
+     C                     ITER                                                               CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+      **  Process our MT350s ?
+     C           MTPY      IFNE '350'                                 3
+     C           O350      OREQ 'Y'
+      *                                                                   CCF003
+      ** Process '360', '361' and '362' if CCF003 is on                   CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'N'                                       CCF003
+      *                                                                   CCF003
+     C           MTPY      IFEQ '360'                                     CCF003
+     C           MTPY      OREQ '361'                                     CCF003
+     C           MTPY      OREQ '362'                                     CCF003
+      *                                                                   CCF003
+     C***********IMBR      READEMGOREFA7                 12         CCF003113608
+     C           IMBR      READEMGOREFA9                 12               113608
+     C                     ITER                                           CCF003
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+     C                     ENDIF                                          CCF003
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,CF0120CCP1                                           S01408
+     C*                                                                   S01408
+      *
+      **  Format sender, destination & TRAM brokerage
+     C                     EXSR FORM
+      *
+      **  Process message
+     C           TRNO      SETLLMGOMSGPD
+     C           PTDL      DOUNE'D'                                   4
+     C           *IN13     OREQ '1'
+     C           TRNO      READEMGOMSGPD                 13
+     C                     END                                       E4
+      *
+     C           *IN13     IFEQ '1'                                   4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD03        DBASE            * DB ERROR 03 *
+     C                     MOVELTRNO      DBKEY
+     C                     MOVE 'MGOMSGPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0120AU
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END                                       E4
+      *
+      **  Write SWIFT II header to message array
+      *                                                                                       182723
+      **  Default N in to header as priority                                                  182723
+     C                     MOVEL'N'       MPRY                                                182723
+     C                     MOVELNWSN      @SND2
+     C                     MOVEA@SW2      OMSG,O
+     C                     ADD  50        O
+      *
+      **  Write delivery notification to message array if not blank
+     C           DELC      IFNE *BLANKS                               4
+     C                     MOVE DELC      OMSG,O
+     C                     ADD  1         O
+     C                     END                                       E4
+     C                     MOVEATXT3      OMSG,O
+     C                     ADD  6         O
+      *
+      **  Process rest
+     C           *IN13     DOWEQ'0'                                   4
+      *
+      **  Write field tag to message array if not blank
+     C           MTAG      IFNE *BLANKS                               5
+     C                     MOVEAMTAG      OMSG,O
+     C           @WL1      IFEQ *BLANKS                               6
+     C                     ADD  4         O
+     C                     ELSE                                      X6
+     C                     ADD  5         O
+     C                     END                                       E6
+     C                     END                                       E5
+      *
+     C           MTAG      IFEQ ':72:'                                5
+     C           @BRK      ANDEQ'Y'
+     C/COPY WNCPYSRC,CF0120C003
+     C                     MOVEA@ARY      OMSG,O
+     C                     ADD  @A        O
+     C                     END                                         E42976
+      *
+     C********** MTAG      DOUNE*BLANK                                6E42976
+     C********** *IN13     OREQ '1'                                    E42976
+     C********** TRNO      READEMGOMSGPD                 13            E42976
+     C**********           END                                       E6E42976
+      *
+      **  Write all non blank characters in field to message array
+      **  Check field is not empty (e.g. :15a:)                           CSW097
+     C**********           ELSE                                      X5E42976
+     C           MFLD      IFNE *BLANKS                               5   CSW097
+     C                     MOVE *BLANKS   ARY
+     C                     MOVEAMFLD      ARY
+     C                     Z-ADD50        A       20
+     C           ARY,A     DOWEQ' '                                   6
+     C                     SUB  1         A
+     C                     END                                       E6
+      *
+     C                     Z-ADDA         S       40
+     C                     Z-ADD1         A
+     C           S         DOWGEA                                     6
+     C                     MOVE ARY,A     OMSG,O
+     C                     ADD  1         A
+     C                     ADD  1         O
+     C                     END                                       E6
+     C                     END                                       E5   CSW097
+      *
+      **  Write CRLF to message array if not blank
+     C           CTRC      IFNE *BLANKS                               6
+     C                     MOVEACTRC      OMSG,O
+     C                     ADD  2         O
+     C                     END                                       E6
+     C**********           END                                       E5E42976
+      *
+      **  Read outgoing messages file but ignore deleted parts.
+     C           PTDL      DOUNE'D'                                   5
+     C           *IN13     OREQ '1'
+     C           TRNO      READEMGOMSGPD                 13
+     C                     END                                       E5
+     C                     END                                       E4
+      *
+      **  Write end of text block
+     C                     MOVEA'-}'      OMSG,O
+     C                     ADD  2         O
+     C                     MOVEAETX       OMSG,O
+     C                     ADD  1         O
+      *
+      **  If ready output records
+     C           O         IFGT 1000                                  4
+     C                     EXSR WRIT
+     C                     END                                       E4
+      *
+      **  If compressed msg is greater than 2000 bytes output report
+     C           O         IFGT 2000                                  4
+     C                     EXSR REPT
+     C                     END                                       E4
+     C                     END                                       E3
+      *
+     C                     MOVE 'Y'       CFPF
+     C                     EXCPT
+      *
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,CF0120CPME                                           S01408
+     C*                                                                   S01408
+     C***********IMBR      READEMGOREFLI                 12               061784
+     C***********IMBR      READEMGOREFA7                 12         061784113608
+     C           IMBR      READEMGOREFA9                 12               113608
+     C                     END                                       E2
+      *
+     C           TRID      READECFBRCHL0                 11
+     C                     END                                       E1
+      *
+      **  Output remainder of last record
+     C           O         IFGT 1                                     1
+     C                     EXSR WRIT
+     C                     END                                       E1
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Initial process                                      *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'CF0120'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+     C                     MOVE *LOVAL    SOH     1
+     C                     BITON'7'       SOH
+     C                     MOVE *LOVAL    ETX     1
+     C                     BITON'67'      ETX
+      *
+      **  Initialise text fields
+     C                     MOVELSOH       TXT1
+     C                     MOVE '{1:F01'  TXT1
+     C                     MOVEL'99999999'TXT2
+     C                     MOVE '99}{2:I' TXT2
+     C                     MOVEL'}{4:'    TXT3
+     C                     MOVE CRLF      TXT3    6
+      *
+      **  Access SDBANKPD
+     C           1         CHAINSDBANKL0             89
+      *
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE            * DB ERROR 01 *
+     C                     MOVEL'FIRST'   DBKEY
+     C                     MOVEL'SDBANKL0'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0120AU
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  If messages already on output file...
+     C           MSOF      IFEQ 'Y'                                   1
+     C           *HIVAL    SETGTCFWOCMPD
+     C                     READPCFWOCMPD                 10
+      *
+     C           *IN10     IFEQ '1'                                   2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *
+     C                     MOVEL'LAST'    DBKEY
+     C                     MOVEL'CFWOCMPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0120AU
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END                                       E2
+      *
+     C                     MOVEAODTA      OMSG,1
+     C                     Z-ADD1000      O       40
+      *
+      **  Determine last non-blank byte
+     C           O         DOWGT0                                     2
+     C           OMSG,O    ANDEQ' '
+     C                     SUB  1         O
+     C                     END                                       E2
+      *
+     C                     ELSE                                      X1
+     C                     Z-ADD0         O
+     C                     END                                       E1
+      *
+     C                     ADD  1         O
+      *
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,CF0120CEIP                                           S01408
+     C*                                                                   S01408
+      *                                                                   CCF003
+      ** Access switchable feature details                                CCF003
+      *                                                                   CCF003
+     C                     MOVE 'N'       CCF003  1                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'AOSARDR0'                                CCF003
+     C                     PARM *BLANKS   @RTCD   7                       CCF003
+     C                     PARM '*VERIFY '@OPTN   7                       CCF003
+     C                     PARM 'CCF003'  @SRAD   6                       CCF003
+     C           SCSARD    PARM SCSARD    DSFDY                           CCF003
+      *                                                                   CCF003
+     C           @RTCD     IFNE *BLANK                                    CCF003
+     C           @RTCD     ANDNE'*NRF'                                    CCF003
+     C           *LOCK     IN   LDA                                       CCF003
+     C                     Z-ADD003       DBASE            ***************CCF003
+     C                     MOVEL'CCF003  'DBKEY            * DB ERROR 03 *CCF003
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CCF003
+     C                     OUT  LDA                                       CCF003
+     C                     OPEN CF0120AU                                  CCF003
+     C                     WRITEHEADER                                    CCF003
+     C                     WRITEDBERROR                                   CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF003
+      *                                                                   CCF003
+     C           @RTCD     IFEQ *BLANK                                    CCF003
+     C                     MOVE 'Y'       CCF003                          CCF003
+     C                     ENDIF                                          CCF003
+      *                                                                   CCF003
+      ** Access SAR details to see if CMG003 is switched on                                   CMG003
+      *                                                                                       CMG003
+     C                     MOVE 'N'       CMG003  1                                           CMG003
+     C                     CALL 'AOSARDR0'                                                    CMG003
+     C                     PARM *BLANKS   @RTCD                                               CMG003
+     C                     PARM '*VERIFY' @OPTN                                               CMG003
+     C                     PARM 'CMG003'  @SRAD                                               CMG003
+     C           SCSARD    PARM SCSARD    DSFDY                                               CMG003
+      *                                                                                       CMG003
+     C           @RTCD     IFEQ *BLANKS                                                       CMG003
+     C                     MOVE 'Y'       CMG003                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   FORM  - Format sender, destination & TRAM brokerage         *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           FORM      BEGSR
+      *
+     C                     MOVE 'Y'       @EXP    1
+      *
+      **  Replace non SWIFT address with SWIFT address or customer number
+     C           NWRK      IFNE 'SWIFT'                               1
+     C                     MOVE *BLANKS   NWSN
+     C                     MOVE *BLANKS   NWDS
+      *
+     C                     MOVE SECN      @WK6    6
+     C           @WK6      CHAINSDCUSTL0             88
+      *
+     C           *IN88     IFEQ '0'                                   2
+     C                     MOVELBBCSID    NWSN
+     C                     END                                       E2
+      *
+     C                     MOVE DECN      @WK6    6
+     C           @WK6      CHAINSDCUSTL0             88
+      *
+     C           *IN88     IFEQ '0'                                   2
+     C                     MOVELBBCSID    NWDS
+     C                     END                                       E2
+      *
+     C           NWSN      IFEQ *BLANK                                2
+     C           NWDS      OREQ *BLANK
+     C                     MOVE *BLANKS   NWSN
+     C                     MOVELSECN      NWSN
+     C                     MOVE *BLANKS   @DST2
+     C                     MOVELDECN      @DST2
+     C                     MOVE 'N'       @EXP
+     C                     END
+     C                     END
+      *
+      **  Expand destination address to 12 characters with Xs
+     C           @EXP      IFEQ 'Y'                                  X2
+     C           @WK4      IFEQ '    '                                3
+     C                     MOVELNWDS      @DST2
+     C                     MOVE 'XXXX'    @DST2
+     C                     ELSE                                      X3
+     C           @WK3      IFEQ '   '                                 4
+     C                     MOVELNWDS      @DST2
+     C                     MOVE 'XXX'     @DST2
+     C                     ELSE                                      X4
+     C           @WK1      IFEQ ' '                                   5
+     C                     MOVEL'X'       @WL4    4
+     C                     MOVE @WL3      @WL4
+     C                     MOVELNWDS      @DST2
+     C                     MOVE @WL4      @DST2
+     C                     ELSE                                      X5
+     C                     MOVELNWDS      @DST2
+     C                     END                                       E5
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+      *
+      **  Replace MIDAS brokerage on field 72 with TRAM brokerage
+      **  '/BROKER/', broker code, currency, amount & 'N' if negative
+     C                     MOVE *BLANKS   ARY
+     C                     MOVE 'N'       @BRK    1
+      *
+     C                     MOVELMTRN      @6      60
+     C/COPY WNCPYSRC,CF0120C001
+     C           @6        CHAINDEALS                87
+     C/COPY WNCPYSRC,CF0120C002
+      *
+     C           *IN87     IFEQ '0'                                   1
+     C           BRKC      ANDNE'MAIL'
+     C           BRKC      ANDNE'PHON'
+     C           BRKC      ANDNE'TELX'
+     C           BRKC      ANDNE'SWAP'
+     C           BRKC      CHAINSDBROKL0             86
+      *
+     C           *IN86     IFEQ '0'                                   2
+     C                     MOVEA'/BROKER/'ARY,1
+      *
+     C           A9ACBC    IFEQ ' '                                   3
+     C                     MOVE '000'     A9ACBC
+     C                     END                                       E3
+     C                     MOVEAA9ACBC    ARY,9
+     C                     MOVEAA9BRCY    ARY,12
+      *
+     C           BAGE      IFGE 0                                     3
+     C                     Z-ADDBAGE      ZAMNT
+     C                     ELSE                                      X3
+     C                     Z-SUBBAGE      ZAMNT
+     C                     END                                       E3
+     C                     CALL 'ZM0040'
+     C                     PARM           ZAMNT  130
+     C                     PARM A9BRCY    ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+     C           ZERR      IFEQ *BLANKS                               3
+     C                     MOVEAZSAMNT    ARY,15
+     C                     Z-ADD50        A       20
+     C           ARY,A     DOWEQ' '                                   4
+     C                     SUB  1         A
+     C                     END                                       E4
+     C                     ADD  1         A
+      *
+     C           BAGE      IFLT 0                                     4
+     C                     MOVE 'N'       ARY,A
+     C                     ADD  1         A
+     C                     END                                       E4
+     C                     MOVEACRLF      ARY,A
+      *
+     C******************** MOVEAARY,A     @ARY   50                     E42976
+     C                     MOVEAARY       @ARY   50                     E42976
+     C           A         ADD  1         @A      20
+     C                     MOVE 'Y'       @BRK
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+     C/COPY WNCPYSRC,CF0120C004
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   WRIT - output record                                        *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           WRIT      BEGSR
+      *
+      **  If messages already on output file update last record
+     C                     MOVEAOMSG,1    ODTA
+     C           MSOF      IFEQ 'Y'
+     C                     UPDATCFWOCMD0
+     C                     MOVE 'N'       MSOF
+     C                     ELSE
+     C                     WRITECFWOCMD0
+     C                     END
+      *
+      **  Move remaining data forward in output array
+     C                     MOVEAOMSG,1001 TMSG
+     C                     MOVEA*BLANKS   OMSG
+     C                     MOVEATMSG      OMSG,1
+     C                     SUB  1000      O
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT - process error report                                 *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           REPT      BEGSR
+      *
+      * Output error report
+     C                     OPEN CF0120AU
+     C                     WRITEHEADER
+     C                     WRITEMSGERROR
+     C                     CLOSECF0120AU
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - ERROR HANDLING                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     O/EJECT
+      *****************************************************************
+     O****Update of relevant fields of file MGOREFLI.**************S01310 061784
+     O****Update*of*relevant*fields of file MGOREFA7.               061784113608
+      **  Update of relevant fields of file MGOREFA9.                     113608
+     O*                                                                   S01310
+     OMGOREFD0E                                                           S01310
+     O                         CFPF                                       S01310
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

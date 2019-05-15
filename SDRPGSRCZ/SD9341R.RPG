@@ -1,0 +1,1872 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ICD For New Retail')                             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   Standing Data Module
+     F*                                                               *
+     F*  SD9341R - ICD FOR NEW RETAIL FEATURE MAINTENANCE             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT002             Date 01Dec95               *
+     F*                 CRT001             Date 28Feb95               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CER049 - Stamp Tax                                           *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*  CRT001 - Retail Teller System.                               *
+     F*  S01413 - Retail 3 Incorporation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSD9341R#CF  E                    WORKSTN      KINFSR *PSSR
+     FTABTBRE UF  E                    DISK         KINFSR *PSSR
+     FSD9341PMO   E                    PRINTER      KINFSR *PSSR      UC
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*  02         SCREEN VALIDATION ERROR
+     F*  11         ERROR IN SINTC
+     F*  53         ERROR IN STCAL
+     F*  13         ERROR IN SCMTR
+     F*  14         ERROR IN STCHOV
+     F*  15         ERROR IN SCDTR
+     F*  16         ERROR IN SCHOD2
+     F*  17         ERROR IN SCHOD1
+     F*  18         ERROR IN SFXAC
+     F*  19         ERROR IN SCNDS
+     F*  20         ERROR IN SCDRI
+     F*  21         ERROR IN SCMBL
+     F*  22         ERROR IN SCIAC
+     F*  23         ERROR IN SVATP
+     F*  24         ERROR IN STEGP
+     F*  25         ERROR IN STAIA
+     F*  26         ERROR IN SINTS
+     F*  27         ERROR IN SCHOV
+     F*  28         ERROR IN STURN
+     F*  29         ERROR IN SSTMC
+     F*  30         ERROR IN SFACH
+     F*  N31        PROTECT SCHOV, STCHOV, SCHOD1 & SCHOD2
+     F*  N32        PROTECT SCDTR, SCDTR1
+     F*  N33        PROTECT SFXAC, SFXAC1
+     F*  N34        PROTECT SCNDS, SCNDS1
+     F*  N35        PROTECT SCDRI, SCDRI1
+     F*  N36        PROTECT SCMBL, SCMBL1
+     F*  N37        PROTECT SCIAC, SCIAC1
+     F*  N38        PROTECT SVATP
+     F*  N39        PROTECT STEGP
+     F*  N40        PROTECT STAIA
+     F*  N41        PROTECT SINTS
+     F*  N42        PROTECT SINTC
+     F*  N43        PROTECT STCAL
+     F*  N44        PROTECT SCMTR
+     F*  N45        PROTECT SCADC
+     F*  46         ERROR IN SCADC
+     F*  47         ERROR IN SCDTR1
+     F*  48         ERROR IN SFXAC1
+     F*  49         ERROR IN SCNDS1
+     F*  50         ERROR IN SCDRI1
+     F*  51         ERROR IN SCMBL1
+     F*  52         ERROR IN SCIAC1
+     F*  N55        PROTECT STURN
+     F*  N56        PROTECT SSTMC
+     F*  N57        PROTECT SFACH
+     A*  N58        Protect SPBKU                                         CRT001
+     F*  62         ERROR IN SINTC
+     F*  63         ERROR IN STCAL
+     F*  64         ERROR IN SCMTR
+     F*  65         ERROR IN SCADC
+     F*  66         ERROR IN SCNDS1
+     A*  68         Error in SPBKU                                        CRT001
+     F*  72         PROTECT SINTC
+     F*  73         PROTECT STCAL
+     F*  74         PROTECT SCMTR
+     F*  75         PROTECT SCADC
+     F*  76         PROTECT SCNDS1
+     F*  79         ERROR IN SCHODS                                                           CER049
+     F*  80         ERROR IN SCDTOS                                                           CER049
+     F*  82         ERROR IN SFACOS                                                           CER049
+     F*  83         ERROR IN SFACCS                                                           CER049
+     F*  84         ERROR IN SNDSTS                                                           CER049
+     F*  85         ERROR IN SDRINS                                                           CER049
+     F*  86         ERROR IN SCACBS                                                           CER049
+     F*  87         ERROR IN SCHIAS                                                           CER049
+     F*  90         VAT PROCESSING NOT PRESENT IN SYSTEM
+     F*  99         FILE READ ERROR
+     F*
+     F*  LR         END OF PROGRAM
+     F*  U7         DATABASE ERROR
+     F*  U8         DATABASE ERROR
+     F*
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*
+     F*  I N D E X   T O   S U B R O U T I N E S
+     F*
+     F*  FIRST  -  Initial processing
+     F*  CHKINP -  Validate input fields
+     F*  RFRSH  -  Reset screen fields to original file values
+     F*  WARN   -  Send file update warning error
+     F*  UTBRE  -  Update TABTBRE
+     F*  RESET  -  Reset error indicators & clear messages
+     F*  *PSSR  -  Database error handling
+     F*  DBSR   -  Produce audit report if Dbase error
+     F*
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E                    ERR@    1   8 35                                                    CER049
+     E*
+     E** Copyright Statement
+     E*
+     I/EJECT
+     I*
+     I* Define the data structure to pass data to WN0010 and return pgm
+     I*
+     I/COPY QWINDSRC,SD9341DTA
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** RETRIEVE WSID FROM PROGRAM STATUS DATA STRUCTURE
+     I*
+     IPSDS       SDS
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I*
+     I* Data Structure to hold field values from TABTBRE when
+     I* program first entered
+     I***OVAL********DS                             27                    CRT001
+     I***OVAL        DS                             28                                 CRT001 CER049
+     IOVAL        DS                             36                                           CER049
+     I                                        1   1 OLNKA
+     I                                        2   2 OTCAL
+     I                                        3   3 OCMTR
+     I                                        4   4 OCDFC
+     I                                        5   5 OCDTO
+     I                                        6   6 OFXAC
+     I                                        7   7 OCNDS
+     I                                        8   8 OCDRI
+     I                                        9   9 OCMBL
+     I                                       10  10 OCINA
+     I                                       11  11 OVATP
+     I                                       12  12 OTEGP
+     I                                       13  13 OTAIA
+     I                                       14  14 OISTS
+     I                                       15  15 OCHOV
+     I                                       16  16 OTCDTO
+     I                                       17  17 OTCHOV
+     I                                       18  18 OTFXAC
+     I                                       19  19 OTCNDS
+     I                                       20  20 OTCMBL
+     I                                       21  21 OTCDRI
+     I                                       22  22 OTCINA
+     I                                       23  23 OCMDR
+     I                                       24  24 OMDPF
+     I                                       25  25 OTURN
+     I                                       26  26 OSTMC
+     I                                       27  27 OFACH
+     I                                       28  28 OPBKU                 CRT001
+     I                                       29  29 OCHODS                                    CER049
+     I                                       30  30 OCDTOS                                    CER049
+     I                                       31  31 OFACOS                                    CER049
+     I                                       32  32 OFACCS                                    CER049
+     I                                       33  33 ONDSTS                                    CER049
+     I                                       34  34 ODRINS                                    CER049
+     I                                       35  35 OCACBS                                    CER049
+     I                                       36  36 OCHIAS                                    CER049
+     I*
+     I* Latest screen values data structure used to compare with
+     I* original values to see if data changed
+     I***NVAL********DS                             27                    CRT001
+     I***NVAL        DS                             28                                 CRT001 CER049
+     INVAL        DS                             36                                           CER049
+     I                                        1   1 SINTC
+     I                                        2   2 STCAL
+     I                                        3   3 SCMTR
+     I                                        4   4 SCADC
+     I                                        5   5 SCDTR1
+     I                                        6   6 SFXAC1
+     I                                        7   7 SCNDS1
+     I                                        8   8 SCDRI1
+     I                                        9   9 SCMBL1
+     I                                       10  10 SCIAC1
+     I                                       11  11 SVATP
+     I                                       12  12 STEGP
+     I                                       13  13 STAIA
+     I                                       14  14 SINTS
+     I                                       15  15 SCHOV
+     I                                       16  16 SCDTR
+     I                                       17  17 STCHOV
+     I                                       18  18 SFXAC
+     I                                       19  19 SCNDS
+     I                                       20  20 SCMBL
+     I                                       21  21 SCDRI
+     I                                       22  22 SCIAC
+     I                                       23  23 SCHOD1
+     I                                       24  24 SCHOD2
+     I                                       25  25 STURN
+     I                                       26  26 SSTMC
+     I                                       27  27 SFACH
+     I                                       28  28 SPBKU                 CRT001
+     I                                       29  29 SCHODS                                    CER049
+     I                                       30  30 SCDTOS                                    CER049
+     I                                       31  31 SFACOS                                    CER049
+     I                                       32  32 SFACCS                                    CER049
+     I                                       33  33 SNDSTS                                    CER049
+     I                                       34  34 SDRINS                                    CER049
+     I                                       35  35 SCACBS                                    CER049
+     I                                       36  36 SCHIAS                                    CER049
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I*
+     I** Module Details
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     C/EJECT
+     C*===================================================================
+     C** P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** COPYRIGHT STATEMENT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           WP0001  5        Work Return cod
+     C*
+     C                     EXSR FIRST
+     C                     EXSR RESET
+     C*
+     C** MAIN PROCESSING UNTIL CK3 PRESSED OR FILE UPDATED
+     C*
+     C           *IN88     DOWEQ'0'
+     C           *IN02     OREQ '1'
+     C*
+     C                     MOVE '0'       *IN02
+     C*
+     C** Get screen input
+     C*
+     C                     EXFMTSD9341F1               88
+     C                     MOVE '1'       *IN88
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'EXXIT'   WP0001
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C           *IN12     IFEQ '1'
+     C                     MOVE 'PREVS'   WP0001
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C** Check user response
+     C*
+     C** If CMD5 pressed, restore original data to screen
+     C*
+     C           *INKE     IFEQ '1'
+     C                     EXSR RESET
+     C                     EXSR RFRSH
+     C                     ELSE
+     C*
+     C** If ENTER pressed, validate screen if first time pressed,
+     C** otherwise update file
+     C*
+     C                     EXSR RESET
+     C                     EXSR CHKINP
+     C*
+     C** If screen valid, display update warning error
+     C*
+     C           *IN02     IFEQ '1'                            B4
+     C                     EXSR WARN
+     C                     ELSE
+     C                     EXSR WIND
+     C*
+     C           *IN02     IFEQ '0'                            B4
+     C                     EXSR UTBRE
+     C                     END                                 E3
+     C*
+     C                     END                                 E4
+     C                     END                                 E3
+     C*
+     C                     END                             - E1
+     C*
+     C           EXIT      TAG
+     C                     MOVE '1'       *INLR
+     C*
+     C*===================================================================
+     C** P R O G R A M     E N D
+     C*===================================================================
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RESET - subroutine to reset screen indicators.
+     C**
+     C**     Called by: Main Processing
+     C**                UBTRE
+     C**     Calls
+     C**
+     C           RESET     BEGSR                                       **
+     C*
+     C** SET UP FORMAT INDICATORS
+     C*
+     C                     MOVE '0'       *IN02
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN53
+     C                     MOVE '0'       *IN13
+     C                     MOVE '0'       *IN14
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN16
+     C                     MOVE '0'       *IN17
+     C                     MOVE '0'       *IN18
+     C                     MOVE '0'       *IN19
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28
+     C                     MOVE '0'       *IN29
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN47
+     C                     MOVE '0'       *IN48
+     C                     MOVE '0'       *IN49
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN62
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C                     MOVE '0'       *IN68                           CRT001
+     C                     MOVE '0'       *IN79                                               CER049
+     C                     MOVE '0'       *IN80                                               CER049
+     C                     MOVE '0'       *IN82                                               CER049
+     C                     MOVE '0'       *IN83                                               CER049
+     C                     MOVE '0'       *IN84                                               CER049
+     C                     MOVE '0'       *IN85                                               CER049
+     C                     MOVE '0'       *IN86                                               CER049
+     C                     MOVE '0'       *IN87                                               CER049
+     C*
+     C** RESET ALL ERROR MESSAGES
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ
+     C                     PARM           TOPRQ
+     C                     WRITESD9341F0
+     C*
+     C                     ENDSR                           **MAIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CHKINP - Screen validation routine
+     C**
+     C**     Called by: Main Processing
+     C**                UTBRE
+     C**     Calls
+     C**
+     C           CHKINP    BEGSR                           **CHKINP BEGSR**
+     C*
+     C** Validate Module Active/Inactive fields first
+     C*
+     C           *IN41     IFEQ '1'
+     C           SINTS     IFNE '1'
+     C           SINTS     ANDNE'2'
+     C           SINTS     ANDNE'3'
+     C           SINTS     ANDNE'5'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0026' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN38     IFEQ '1'
+     C           SVATP     IFNE 'Y'
+     C           SVATP     ANDNE'N'
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0023' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C           SCHOV     IFNE 'Y'
+     C           SCHOV     ANDNE'N'
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SCHOD2    IFEQ ' '
+     C           SCHOD1    ANDNE' '
+     C           SCHOD1    OREQ ' '
+     C           SCHOD2    ANDNE' '
+     C                     MOVEA'11'      *IN,16
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0028' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SCHOD2    IFNE ' '
+     C           SCHOD1    ANDNE' '
+     C           SCHOD1    IFNE 'M'
+     C           SCHOD1    ANDNE'P'
+     C                     MOVE '1'       *IN17
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E2
+     C*
+     C           SCHOD2    IFNE 'P'                        - B2
+     C           SCHOD2    ANDNE'F'
+     C                     MOVE '1'       *IN16
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E2
+     C                     END                             - E1
+     C*
+     C                     END
+     C*
+     C           *IN32     IFEQ '1'
+     C           SCDTR1    IFNE 'Y'
+     C           SCDTR1    ANDNE'N'
+     C                     MOVE '1'       *IN47
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN33     IFEQ '1'
+     C           SFXAC1    IFNE 'Y'
+     C           SFXAC1    ANDNE'N'
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0040' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN57     IFEQ '1'
+     C           SFACH     IFNE 'Y'
+     C           SFACH     ANDNE'N'
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN34     IFEQ '1'
+     C           SCNDS1    IFNE 'Y'
+     C           SCNDS1    ANDNE'N'
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0062' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN35     IFEQ '1'
+     C           SCDRI1    IFNE 'Y'
+     C           SCDRI1    ANDNE'N'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0020' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN36     IFEQ '1'
+     C           SCMBL1    IFNE 'Y'
+     C           SCMBL1    ANDNE'N'
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0021' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN37     IFEQ '1'
+     C           SCIAC1    IFNE 'Y'
+     C           SCIAC1    ANDNE'N'
+     C                     MOVE '1'       *IN52
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN42     IFEQ '1'
+     C           SINTC     IFNE 'Y'
+     C           SINTC     ANDNE'N'
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0064' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN43     IFEQ '1'
+     C           STCAL     IFNE 'Y'
+     C           STCAL     ANDNE'N'
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0065' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '1'
+     C           STAIA     IFNE 'Y'
+     C           STAIA     ANDNE'N'
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0025' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN44     IFEQ '1'
+     C           SCMTR     IFNE 'Y'
+     C           SCMTR     ANDNE'N'
+     C                     MOVE '1'       *IN64
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0066' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN45     IFEQ '1'
+     C           SCADC     IFNE 'Y'
+     C           SCADC     ANDNE'N'
+     C                     MOVE '1'       *IN65
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0067' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN55     IFEQ '1'
+     C           STURN     IFNE 'Y'
+     C           STURN     ANDNE'N'
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*
+     C           *IN56     IFEQ '1'
+     C           SSTMC     IFNE 'Y'
+     C           SSTMC     ANDNE'N'
+     C                     MOVE '1'       *IN29
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0042' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C                     END
+     C*                                                                   CRT001
+     C** If Retail Teller System (CRT001) SAR is installed,               CRT001
+     C** or Retail Branch Access (CRT002) SAR is installed,               CRT002
+     C** validate passbook used flag                                      CRT001
+     C*                                                                   CRT001
+     C           CRT001    IFEQ 'Y'                                       CRT001
+     C           SPBKU     ANDNE'Y'                                       CRT001
+     C           SPBKU     ANDNE'N'                                       CRT001
+     C           CRT002    OREQ 'Y'                                       CRT002
+     C           SPBKU     ANDNE'Y'                                       CRT002
+     C           SPBKU     ANDNE'N'                                       CRT002
+     C                     MOVE '1'       *IN68                           CRT001
+     C                     MOVE '1'       *IN02                           CRT001
+     C                     MOVEL'REI0068' ZAMSID                          CRT001
+     C                     EXSR ZASNMS                                    CRT001
+     C                     WRITESD9341F0                                  CRT001
+     C                     END                                            CRT001
+     C*
+     C** Only validate the following fields if VAT Processing
+     C** is activated and no error so far
+     C*
+     C           *IN90     IFEQ '0'
+     C           *IN02     ANDEQ'0'
+     C*
+     C** For VAT fields, if either the module itself or the VAT
+     C** Processing module are inactive, the field is set to N
+     C** whatever the user has input
+     C*
+     C           STCHOV    IFNE 'Y'                        - B1
+     C           STCHOV    ANDNE'N'
+     C                     MOVE '1'       *IN14
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E1
+     C*
+     C           SCDTR     IFNE 'Y'                        - B1
+     C           SCDTR     ANDNE'N'
+     C                     MOVE '1'       *IN15
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0041' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E1
+     C*
+     C           SFXAC     IFNE 'Y'                        - B1
+     C           SFXAC     ANDNE'N'
+     C                     MOVE '1'       *IN18
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0040' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E1
+     C*
+     C           SCNDS     IFNE 'Y'                        - B1
+     C           SCNDS     ANDNE'N'
+     C                     MOVE '1'       *IN19
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0019' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E1
+     C*
+     C           SCDRI     IFNE 'Y'                        - B1
+     C           SCDRI     ANDNE'N'
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0020' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E1
+     C*
+     C           SCMBL     IFNE 'Y'                        - B1
+     C           SCMBL     ANDNE'N'
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0021' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E1
+     C*
+     C           SCIAC     IFNE 'Y'                        - B1
+     C           SCIAC     ANDNE'N'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END                             - E1
+     C*
+     C                     END                             -END *IN90
+     C*
+     C** Validate further with respect to file TABTBRE and Screen fields.
+     C*
+     C           *IN02     IFEQ '0'                        - B1
+     C*
+     C           STCHOV    IFEQ 'Y'
+     C           SCHOV     ANDNE'Y'
+     C           STCHOV    OREQ 'Y'
+     C           SVATP     ANDNE'Y'
+     C                     MOVE '1'       *IN14
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0060' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SCHOD1    IFNE *BLANK
+     C           SCHOV     ANDNE'Y'
+     C           SCHOD2    ORNE *BLANK
+     C           SCHOV     ANDNE'Y'
+     C                     MOVE '1'       *IN16
+     C                     MOVE '1'       *IN17
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0061' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SCDTR     IFEQ 'Y'
+     C           SCDTR1    ANDNE'Y'
+     C           SCDTR     OREQ 'Y'
+     C           SVATP     ANDNE'Y'
+     C                     MOVE '1'       *IN15
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0047' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SFXAC     IFEQ 'Y'
+     C           SFXAC1    ANDNE'Y'
+     C           SFXAC     OREQ 'Y'
+     C           SVATP     ANDNE'Y'
+     C                     MOVE '1'       *IN18
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0049' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SCNDS     IFEQ 'Y'
+     C           SCNDS1    ANDNE'Y'
+     C           SCNDS     OREQ 'Y'
+     C           SVATP     ANDNE'Y'
+     C                     MOVE '1'       *IN19
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0054' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SCDRI     IFEQ 'Y'
+     C           SCDRI1    ANDNE'Y'
+     C           SCDRI     OREQ 'Y'
+     C           SVATP     ANDNE'Y'
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0051' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SCMBL     IFEQ 'Y'
+     C           SCMBL1    ANDNE'Y'
+     C           SCMBL     OREQ 'Y'
+     C           SVATP     ANDNE'Y'
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0053' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C           SCIAC     IFEQ 'Y'
+     C           SCIAC1    ANDNE'Y'
+     C           SCIAC     OREQ 'Y'
+     C           SVATP     ANDNE'Y'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'REI0056' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C                     END
+     C*
+     C                     END
+      *                                                                                       CER049
+      ** Stamp Tax fields validation                                                          CER049
+      *                                                                                       CER049
+     C           *IN91     IFEQ '0'                                                           CER049
+     C           *IN02     ANDEQ'0'                                                           CER049
+      *                                                                                       CER049
+     C           SCHODS    IFEQ ' '                                                           CER049
+     C                     MOVE '1'       *IN79                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,1    ZAMSDA                                              CER049
+     C                     MOVEL'REI0069' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCHODS    IFNE 'Y'                                                           CER049
+     C           SCHODS    ANDNE'N'                                                           CER049
+     C           *IN79     ANDEQ'0'                                                           CER049
+     C                     MOVE '1'       *IN79                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,1    ZAMSDA                                              CER049
+     C                     MOVEL'REI0070' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCHODS    IFEQ 'Y'                                                           CER049
+     C           SCHOV     ANDNE'Y'                                                           CER049
+     C                     MOVE '1'       *IN79                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,1    ZAMSDA                                              CER049
+     C                     MOVEL'REI0071' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCHODS    IFEQ 'Y'                                                           CER049
+     C           STCHOV    ANDEQ'Y'                                                           CER049
+     C                     MOVE '1'       *IN79                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,1    ZAMSDA                                              CER049
+     C                     MOVEL'REI0072' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     MOVE '1'       *IN14                                               CER049
+     C                     MOVELERR@,1    ZAMSDA                                              CER049
+     C                     MOVEL'REI0073' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+      *                                                                                       CER049
+     C           SCDTOS    IFEQ ' '                                                           CER049
+     C                     MOVE '1'       *IN80                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,2    ZAMSDA                                              CER049
+     C                     MOVEL'REI0069' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCDTOS    IFNE 'Y'                                                           CER049
+     C           SCDTOS    ANDNE'N'                                                           CER049
+     C           *IN80     ANDEQ'0'                                                           CER049
+     C                     MOVE '1'       *IN80                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,2    ZAMSDA                                              CER049
+     C                     MOVEL'REI0070' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCDTOS    IFEQ 'Y'                                                           CER049
+     C           SCDTR1    ANDNE'Y'                                                           CER049
+     C                     MOVE '1'       *IN80                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,2    ZAMSDA                                              CER049
+     C                     MOVEL'REI0071' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCDTOS    IFEQ 'Y'                                                           CER049
+     C           SCDTR     ANDEQ'Y'                                                           CER049
+     C                     MOVE '1'       *IN80                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,2    ZAMSDA                                              CER049
+     C                     MOVEL'REI0072' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     MOVE '1'       *IN15                                               CER049
+     C                     MOVELERR@,2    ZAMSDA                                              CER049
+     C                     MOVEL'REI0073' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+      *                                                                                       CER049
+     C           SFACOS    IFEQ ' '                                                           CER049
+     C                     MOVE '1'       *IN82                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,3    ZAMSDA                                              CER049
+     C                     MOVEL'REI0069' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SFACOS    IFNE 'Y'                                                           CER049
+     C           SFACOS    ANDNE'N'                                                           CER049
+     C           *IN82     ANDEQ'0'                                                           CER049
+     C                     MOVE '1'       *IN82                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,3    ZAMSDA                                              CER049
+     C                     MOVEL'REI0070' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SFACOS    IFEQ 'Y'                                                           CER049
+     C           SFXAC1    ANDNE'Y'                                                           CER049
+     C                     MOVE '1'       *IN82                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,3    ZAMSDA                                              CER049
+     C                     MOVEL'REI0071' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SFACOS    IFEQ 'Y'                                                           CER049
+     C           SFXAC     ANDEQ'Y'                                                           CER049
+     C                     MOVE '1'       *IN82                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,3    ZAMSDA                                              CER049
+     C                     MOVEL'REI0072' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     MOVE '1'       *IN18                                               CER049
+     C                     MOVELERR@,3    ZAMSDA                                              CER049
+     C                     MOVEL'REI0073' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+      *                                                                                       CER049
+     C           SFACCS    IFEQ ' '                                                           CER049
+     C                     MOVE '1'       *IN83                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,4    ZAMSDA                                              CER049
+     C                     MOVEL'REI0069' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SFACCS    IFNE 'Y'                                                           CER049
+     C           SFACCS    ANDNE'N'                                                           CER049
+     C           *IN83     ANDEQ'0'                                                           CER049
+     C                     MOVE '1'       *IN83                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,4    ZAMSDA                                              CER049
+     C                     MOVEL'REI0070' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SFACCS    IFEQ 'Y'                                                           CER049
+     C           SFACH     ANDNE'Y'                                                           CER049
+     C                     MOVE '1'       *IN83                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,4    ZAMSDA                                              CER049
+     C                     MOVEL'REI0071' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+      *                                                                                       CER049
+     C           SNDSTS    IFEQ ' '                                                           CER049
+     C                     MOVE '1'       *IN84                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,5    ZAMSDA                                              CER049
+     C                     MOVEL'REI0069' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SNDSTS    IFNE 'Y'                                                           CER049
+     C           SNDSTS    ANDNE'N'                                                           CER049
+     C           *IN84     ANDEQ'0'                                                           CER049
+     C                     MOVE '1'       *IN84                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,5    ZAMSDA                                              CER049
+     C                     MOVEL'REI0070' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SNDSTS    IFEQ 'Y'                                                           CER049
+     C           SCNDS1    ANDNE'Y'                                                           CER049
+     C                     MOVE '1'       *IN84                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,5    ZAMSDA                                              CER049
+     C                     MOVEL'REI0071' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SNDSTS    IFEQ 'Y'                                                           CER049
+     C           SCNDS     ANDEQ'Y'                                                           CER049
+     C                     MOVE '1'       *IN84                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,5    ZAMSDA                                              CER049
+     C                     MOVEL'REI0072' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     MOVE '1'       *IN19                                               CER049
+     C                     MOVELERR@,5    ZAMSDA                                              CER049
+     C                     MOVEL'REI0073' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+      *                                                                                       CER049
+     C           SDRINS    IFEQ ' '                                                           CER049
+     C                     MOVE '1'       *IN85                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,6    ZAMSDA                                              CER049
+     C                     MOVEL'REI0069' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SDRINS    IFNE 'Y'                                                           CER049
+     C           SDRINS    ANDNE'N'                                                           CER049
+     C           *IN85     ANDEQ'0'                                                           CER049
+     C                     MOVE '1'       *IN85                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,6    ZAMSDA                                              CER049
+     C                     MOVEL'REI0070' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SDRINS    IFEQ 'Y'                                                           CER049
+     C           SCDRI1    ANDNE'Y'                                                           CER049
+     C                     MOVE '1'       *IN85                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,6    ZAMSDA                                              CER049
+     C                     MOVEL'REI0071' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SDRINS    IFEQ 'Y'                                                           CER049
+     C           SCDRI     ANDEQ'Y'                                                           CER049
+     C                     MOVE '1'       *IN85                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,6    ZAMSDA                                              CER049
+     C                     MOVEL'REI0072' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     MOVE '1'       *IN20                                               CER049
+     C                     MOVELERR@,6    ZAMSDA                                              CER049
+     C                     MOVEL'REI0073' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+      *                                                                                       CER049
+     C           SCACBS    IFEQ ' '                                                           CER049
+     C                     MOVE '1'       *IN86                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,7    ZAMSDA                                              CER049
+     C                     MOVEL'REI0069' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCACBS    IFNE 'Y'                                                           CER049
+     C           SCACBS    ANDNE'N'                                                           CER049
+     C           *IN86     ANDEQ'0'                                                           CER049
+     C                     MOVE '1'       *IN86                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,7    ZAMSDA                                              CER049
+     C                     MOVEL'REI0070' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCACBS    IFEQ 'Y'                                                           CER049
+     C           SCMBL1    ANDNE'Y'                                                           CER049
+     C                     MOVE '1'       *IN86                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,7    ZAMSDA                                              CER049
+     C                     MOVEL'REI0071' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCACBS    IFEQ 'Y'                                                           CER049
+     C           SCMBL     ANDEQ'Y'                                                           CER049
+     C                     MOVE '1'       *IN86                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,7    ZAMSDA                                              CER049
+     C                     MOVEL'REI0072' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     MOVE '1'       *IN21                                               CER049
+     C                     MOVELERR@,7    ZAMSDA                                              CER049
+     C                     MOVEL'REI0073' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+      *                                                                                       CER049
+     C           SCHIAS    IFEQ ' '                                                           CER049
+     C                     MOVE '1'       *IN87                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,8    ZAMSDA                                              CER049
+     C                     MOVEL'REI0069' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCHIAS    IFNE 'Y'                                                           CER049
+     C           SCHIAS    ANDNE'N'                                                           CER049
+     C           *IN87     ANDEQ'0'                                                           CER049
+     C                     MOVE '1'       *IN87                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,8    ZAMSDA                                              CER049
+     C                     MOVEL'REI0070' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCHIAS    IFEQ 'Y'                                                           CER049
+     C           SCIAC1    ANDNE'Y'                                                           CER049
+     C                     MOVE '1'       *IN87                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,8    ZAMSDA                                              CER049
+     C                     MOVEL'REI0071' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+     C           SCHIAS    IFEQ 'Y'                                                           CER049
+     C           SCIAC     ANDEQ'Y'                                                           CER049
+     C                     MOVE '1'       *IN87                                               CER049
+     C                     MOVE '1'       *IN02                                               CER049
+     C                     MOVELERR@,8    ZAMSDA                                              CER049
+     C                     MOVEL'REI0072' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     MOVE '1'       *IN22                                               CER049
+     C                     MOVELERR@,8    ZAMSDA                                              CER049
+     C                     MOVEL'REI0073' ZAMSID                                              CER049
+     C                     EXSR ZASNMS                                                        CER049
+     C                     WRITESD9341F0                                                      CER049
+     C                     END                                                                CER049
+      *                                                                                       CER049
+     C                     END                                                                CER049
+     C*
+     C** File fields are only updated if the module is installed
+     C** VAT fields are only updated if VAT Processing is also
+     C** installed
+     C*
+     C           *IN02     IFEQ '0'                        - B1
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE SCHOV     CHOV
+     C                     MOVE SCHOD1    CMDR
+     C                     MOVE SCHOD2    MDPF
+     C                     MOVE STCHOV    TCHOV
+     C                     END
+     C*
+     C           *IN32     IFEQ '1'
+     C           SCDTR1    IFNE 'Y'
+     C                     MOVE 'N'       CDTO
+     C                     MOVE 'N'       TCDTO
+     C                     ELSE
+     C                     MOVE SCDTR1    CDTO
+     C                     MOVE SCDTR     TCDTO
+     C                     END
+     C                     END
+     C*
+     C           *IN33     IFEQ '1'
+     C           SFXAC1    IFNE 'Y'
+     C                     MOVE 'N'       FXAC
+     C                     MOVE 'N'       TFXAC
+     C                     ELSE
+     C                     MOVE SFXAC1    FXAC
+     C                     MOVE SFXAC     TFXAC
+     C                     END
+     C                     END
+     C*
+     C           *IN34     IFEQ '1'
+     C           SCNDS1    IFNE 'Y'
+     C                     MOVE 'N'       CNDS
+     C                     MOVE 'N'       TCNDS
+     C                     ELSE
+     C                     MOVE SCNDS1    CNDS
+     C                     MOVE SCNDS     TCNDS
+     C                     END
+     C                     END
+     C*
+     C           *IN36     IFEQ '1'
+     C           SCMBL1    IFNE 'Y'
+     C                     MOVE 'N'       CMBL
+     C                     MOVE 'N'       TCMBL
+     C                     ELSE
+     C                     MOVE SCMBL1    CMBL
+     C                     MOVE SCMBL     TCMBL
+     C                     END
+     C                     END
+     C*
+     C           *IN35     IFEQ '1'
+     C           SCDRI1    IFNE 'Y'
+     C                     MOVE 'N'       CDRI
+     C                     MOVE 'N'       TCDRI
+     C                     ELSE
+     C                     MOVE SCDRI1    CDRI
+     C                     MOVE SCDRI     TCDRI
+     C                     END
+     C                     END
+     C*
+     C           *IN37     IFEQ '1'
+     C           SCIAC1    IFNE 'Y'
+     C                     MOVE 'N'       CINA
+     C                     MOVE 'N'       TCINA
+     C                     ELSE
+     C                     MOVE SCIAC1    CINA
+     C                     MOVE SCIAC     TCINA
+     C                     END
+     C                     END
+     C*
+     C           *IN38     IFEQ '1'
+     C                     MOVE SVATP     VATP
+     C           SVATP     IFEQ 'N'
+     C                     MOVE 'N'       TCDTO
+     C                     MOVE 'N'       TCHOV
+     C                     MOVE 'N'       TFXAC
+     C                     MOVE 'N'       TCNDS
+     C                     MOVE 'N'       TCMBL
+     C                     MOVE 'N'       TCDRI
+     C                     MOVE 'N'       TCINA
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '1'
+     C                     MOVE STAIA     TAIA
+     C                     END
+     C*
+     C           *IN41     IFEQ '1'
+     C                     MOVE SINTS     ISTS
+     C                     END
+     C*
+     C           *IN42     IFEQ '1'
+     C                     MOVE SINTC     LNKA
+     C                     END
+     C*
+     C           *IN43     IFEQ '1'
+     C                     MOVE STCAL     TCAL
+     C                     END
+     C*
+     C           *IN44     IFEQ '1'
+     C                     MOVE SCMTR     CMTR
+     C                     END
+     C*
+     C           *IN45     IFEQ '1'
+     C                     MOVE SCADC     CDFC
+     C                     END
+     C*
+     C           *IN55     IFEQ '1'
+     C                     MOVE STURN     TTURN
+     C                     END
+     C*
+     C           *IN56     IFEQ '1'
+     C                     MOVE SSTMC     TSTMC
+     C                     END
+     C*
+     C           *IN57     IFEQ '1'
+     C                     MOVE SFACH     FACH
+     C                     END
+     C*                                                                   CRT001
+     C** If Retail Teller System (CRT001) SAR is installed                CRT001
+     C** or Retail Branch Access (CRT002) SAR is installed,               CRT002
+     C** update passbook used flag field                                  CRT001
+     C*                                                                   CRT001
+     C           CRT001    IFEQ 'Y'                                       CRT001
+     C           CRT002    OREQ 'Y'                                       CRT002
+     C                     MOVE SPBKU     PBKU                            CRT001
+     C                     END                                            CRT001
+      *                                                                                       CER049
+     C           CER049    IFEQ 'Y'                                                           CER049
+     C                     MOVE SCHODS    CHODS                                               CER049
+     C                     MOVE SCDTOS    CDTOS                                               CER049
+     C                     MOVE SFACOS    FACOS                                               CER049
+     C                     MOVE SFACCS    FACCS                                               CER049
+     C                     MOVE SNDSTS    NDSTS                                               CER049
+     C                     MOVE SDRINS    DRINS                                               CER049
+     C                     MOVE SCACBS    CACBS                                               CER049
+     C                     MOVE SCHIAS    CHIAS                                               CER049
+     C                     ENDIF                                                              CER049
+     C*
+     C                     END                             - E1
+     C*
+     C** Store screen values in work field to use as a check to
+     C** see if data is amended after update warning message
+     C*
+     C***********          MOVELNVAL      TVAL   27                       CRT001
+     C**********           MOVELNVAL      TVAL   28                                    CRT001 CER049
+     C                     MOVELNVAL      TVAL   36                                           CER049
+     C*
+     C                     ENDSR                           **CHKINP ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*   RFRSH - Subroutine to restore original file data
+     C*           to screen fields if F5 pressed
+     C*
+     C*   Called by: Main Processing
+     C*
+     C           RFRSH     BEGSR
+     C                     MOVELOVAL      NVAL
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*  WARN - Subroutine to send warning message to screen
+     C*         before update of TABTBRE
+     C*
+     C* Called from: Main Processing
+     C*
+     C           WARN      BEGSR
+     C                     MOVEL'REI0031' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C*
+     C** Set up 'warning error sent' flag
+     C*
+     C                     MOVEL'Y'       WSENT   1
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*  UTBRE - Subroutine to update file TABTBRE
+     C*
+     C*  Called from: Main Processing
+     C*
+     C           UTBRE     BEGSR
+     C*
+     C** If data has changed since the warning message was sent,
+     C** do not update file - instead treat it as first time through
+     C** and validate new data
+     C*
+     C           NVAL      IFNE TVAL
+     C                     MOVEL'N'       WSENT
+     C                     EXSR RESET
+     C                     EXSR CHKINP
+     C           *IN02     IFNE '1'
+     C                     EXSR WARN
+     C                     END
+     C                     GOTO UTBRE9
+     C                     END
+     C*
+     C** Display 'file updating' message and delay before
+     C** exiting program
+     C*
+     C                     CALL 'ZA0250'
+     C                     MOVE '1'       *IN60
+     C                     MOVEL'REI0030' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESD9341F0
+     C*
+     C                     TIME           #TIME   60
+     C                     ADD  3         #TIME
+     C           #TIME1    DOWLE#TIME
+     C                     TIME           #TIME1  60
+     C                     END
+     C*
+     C                     UPDATTABTBREF
+     C*
+     C           UTBRE9    ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*  WIND - Subroutine to call SD9341WC - Window Program
+     C*
+     C*  Called from: Main Processing
+     C*
+     C           WIND      BEGSR
+     C*                                                               *
+     C**      WINDOW PROCESSING                                       *
+     C*                                                               *
+     C                     MOVEL'SD9341R' #PGM
+     C                     MOVE RECI      P1RECI
+     C                     MOVE BJDFIN    P1DFIN
+     C                     MOVE SSTMC     P1STMC
+     C                     MOVE SFACH     P1FACH
+     C*
+     C           BGWDPR    IFEQ 'Y'
+     C           SSTMC     ANDEQ'Y'
+     C           BGWDPR    OREQ 'Y'
+     C           SFACH     ANDEQ'Y'
+     C*
+     C/COPY WNCPYSRC,SD9341RC01
+     C                     CALL 'WN0010'
+     C                     PARM           #PGM   10
+     C                     PARM *BLANK    KEY     2
+     C                     PARM 'A'       ACTION  1
+     C                     PARM           DATA
+     C                     PARM *BLANK    #RTRN   7
+     C                     PARM           SPARE 256
+     C           *LOCK     IN   LDA
+     C                     END
+     C*
+     C** Cmd12 pressed
+     C*
+     C           #RTRN     IFEQ 'USR0790'
+     C                     MOVE '1'       *IN02
+     C                     CALL 'SNDERMSG'
+     C                     PARM 'SD9341R' ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM 'WND0001' ZAMSID  7        Message Id.
+     C                     PARM 'MIDAS  ' ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C** Clear all fields
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C                     END
+     C*
+     C           WIND9     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** FIRST subroutine to START THE PROGRAM
+     C**
+     C**     Called by       MAIN
+     C**     Calls
+     C**
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*
+     C** DATA AREA LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** PREPARE WORK VARIABLES
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SD9341R' DBPGM
+     C                     OUT  LDA
+     C                     Z-ADD1         PAGE
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C**   Select the program MSGQ for error msg.
+     C*
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C*
+     C**   Fill in fields for subroutine ZASNMS
+     C*
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'REUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C** Get Bank details from SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** ERROR IN SDBANKPD
+     C*
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA                        ***************
+     C                     MOVE '0'       *IN89            * DB ERROR 01 *
+     C                     EXSR DBSR                       ***************
+     C                     END                             - E1
+     C*
+     C** Set up audit report titles
+     C*
+     C                     MOVE BJMRDT    RUNA
+     C                     MOVE BJURPT    TITL
+     C*
+     C** Set up screen run date
+     C*
+     C                     MOVE RUNA      SRUNA
+     C*                                                                   CRT001
+     C**  Check if Retail Teller System (CRT001) SAR is installed         CRT001
+     C*                                                                   CRT001
+     C                     CALL 'AOSARDR0'                                CRT001
+     C                     PARM *BLANKS   @RTCD   7                       CRT001
+     C                     PARM '*VERIFY' @OPTN   7                       CRT001
+     C                     PARM 'CRT001'  @SAR    6                       CRT001
+     C*                                                                   CRT001
+     C           @RTCD     IFNE *BLANKS                                   CRT001
+     C                     MOVE '0'       *IN58                           CRT001
+     C                     ELSE                                           CRT001
+     C                     MOVE '1'       *IN58                           CRT001
+     C                     MOVE 'Y'       CRT001  1                       CRT001
+     C                     END                                            CRT001
+     C*                                                                   CRT002
+     C**  Check if Retail Branch Access (CRT002) SAR is installed         CRT002
+     C*                                                                   CRT002
+     C                     CALL 'AOSARDR0'                                CRT002
+     C                     PARM *BLANKS   @RTCD   7                       CRT002
+     C                     PARM '*VERIFY' @OPTN   7                       CRT002
+     C                     PARM 'CRT002'  @SAR    6                       CRT002
+     C*                                                                   CRT002
+     C           @RTCD     IFNE *BLANKS                                   CRT002
+     C           CRT001    IFNE 'Y'                                       CRT002
+     C                     MOVE '0'       *IN58                           CRT002
+     C                     END                                            CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE '1'       *IN58                           CRT002
+     C                     MOVE 'Y'       CRT002  1                       CRT002
+     C                     END                                            CRT002
+      *                                                                                       CER049
+      **  Check if Stamp Tax (CER049) SAR is installed                                        CER049
+      *                                                                                       CER049
+     C                     CALL 'AOSARDR0'                                                    CER049
+     C                     PARM *BLANKS   @RTCD                                               CER049
+     C                     PARM '*VERIFY' @OPTN                                               CER049
+     C                     PARM 'CER049'  @SAR                                                CER049
+      *                                                                                       CER049
+     C           @RTCD     IFNE *BLANKS                                                       CER049
+     C                     MOVE '1'       *IN91                                               CER049
+     C                     MOVE 'N'       CER049  1                                           CER049
+     C                     ELSE                                                               CER049
+     C                     MOVE '0'       *IN91                                               CER049
+     C                     MOVE 'Y'       CER049                                              CER049
+     C                     END                                                                CER049
+     C*
+     C/COPY WNCPYSRC,SD9341RC02
+     C** SET UP FORMAT INDICATORS
+     C*
+     C                     MOVE '1'       *IN02
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN53
+     C                     MOVE '0'       *IN13
+     C                     MOVE '0'       *IN14
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN16
+     C                     MOVE '0'       *IN17
+     C                     MOVE '0'       *IN18
+     C                     MOVE '0'       *IN19
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28
+     C                     MOVE '0'       *IN29
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN47
+     C                     MOVE '0'       *IN48
+     C                     MOVE '0'       *IN49
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN62
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C                     MOVE '0'       *IN57
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN79                                               CER049
+     C                     MOVE '0'       *IN80                                               CER049
+     C                     MOVE '0'       *IN82                                               CER049
+     C                     MOVE '0'       *IN83                                               CER049
+     C                     MOVE '0'       *IN84                                               CER049
+     C                     MOVE '0'       *IN85                                               CER049
+     C                     MOVE '0'       *IN86                                               CER049
+     C                     MOVE '0'       *IN87                                               CER049
+     C                     MOVE '0'       *IN90
+     C*
+     C** ACCESS ICD RETAIL (TABTBRE)
+     C*
+     C                     READ TABTBRE                  99
+     C*
+     C** ERROR IN TABTBRE
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVE 'TABTBRE' DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA                        ***************
+     C                     MOVE '0'       *IN89            * DB ERROR 02 *
+     C                     EXSR DBSR                       ***************
+     C                     END                             - E1
+     C*
+     C** SETUP ICD FIELDS
+     C*
+     C** (If a module is not installed, screen fields are non-display
+     C** and protected)
+     C*
+     C                     MOVE CDTO      SCDTR1
+     C                     MOVE TCDTO     SCDTR
+     C           ICDTO     IFEQ 'Y'
+     C                     MOVE '1'       *IN32
+     C                     END
+     C*
+     C                     MOVE CHOV      SCHOV
+     C                     MOVE CMDR      SCHOD1
+     C                     MOVE MDPF      SCHOD2
+     C                     MOVE TCHOV     STCHOV
+     C           ICHOV     IFEQ 'Y'
+     C                     MOVE '1'       *IN31
+     C                     END
+     C*
+     C                     MOVE FXAC      SFXAC1
+     C                     MOVE TFXAC     SFXAC
+     C           IFXAC     IFEQ 'Y'
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C                     MOVE CNDS      SCNDS1
+     C                     MOVE TCNDS     SCNDS
+     C           ICNDS     IFEQ 'Y'
+     C                     MOVE '1'       *IN34
+     C           CNDS      IFEQ 'Y'
+     C                     MOVE '1'       *IN76
+     C                     END
+     C                     END
+     C*
+     C                     MOVE CDRI      SCDRI1
+     C                     MOVE TCDRI     SCDRI
+     C           ICDRI     IFEQ 'Y'
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C                     MOVE CMBL      SCMBL1
+     C                     MOVE TCMBL     SCMBL
+     C           ICMBL     IFEQ 'Y'
+     C                     MOVE '1'       *IN36
+     C                     END
+     C*
+     C                     MOVE CINA      SCIAC1
+     C                     MOVE TCINA     SCIAC
+     C           ICINA     IFEQ 'Y'
+     C                     MOVE '1'       *IN37
+     C                     END
+     C*
+     C                     MOVE TTURN     STURN
+     C           TURN      IFEQ 'Y'
+     C                     MOVE '1'       *IN55
+     C                     END
+     C*
+     C                     MOVE TSTMC     SSTMC
+     C           STMC      IFEQ 'Y'
+     C                     MOVE '1'       *IN56
+     C                     END
+     C*
+     C                     MOVE FACH      SFACH
+     C           IFACH     IFEQ 'Y'
+     C                     MOVE '1'       *IN57
+     C                     END
+     C*
+     C** If VAT Processing not installed, set on screen field
+     C** protect indicator
+     C*
+     C                     MOVE VATP      SVATP
+     C           IVATP     IFEQ 'Y'
+     C                     MOVE '1'       *IN38
+     C                     ELSE
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C           ILNKA     IFEQ 'Y'
+     C                     MOVE LNKA      SINTC
+     C                     MOVE '1'       *IN42
+     C           LNKA      IFEQ 'Y'
+     C                     MOVE '1'       *IN72
+     C                     END
+     C                     END
+     C*
+     C           ITCAL     IFEQ 'Y'
+     C                     MOVE TCAL      STCAL
+     C                     MOVE '1'       *IN43
+     C           TCAL      IFEQ 'Y'
+     C                     MOVE '1'       *IN73
+     C                     END
+     C                     END
+     C*
+     C           ICMTR     IFEQ 'Y'
+     C                     MOVE CMTR      SCMTR
+     C                     MOVE '1'       *IN44
+     C           CMTR      IFEQ 'Y'
+     C                     MOVE '1'       *IN74
+     C                     END
+     C                     END
+     C*
+     C           ICDFC     IFEQ 'Y'
+     C                     MOVE CDFC      SCADC
+     C                     MOVE '1'       *IN45
+     C           CDFC      IFEQ 'Y'
+     C                     MOVE '1'       *IN75
+     C                     END
+     C                     END
+     C*
+     C           ITEGP     IFEQ 'Y'
+     C                     MOVE TEGP      STEGP
+     C                     MOVE '1'       *IN39
+     C                     END
+     C*
+     C           ITAIA     IFEQ 'Y'
+     C                     MOVE TAIA      STAIA
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C** If VAT Processing not active, the following tax fields must
+     C** default to N and are not displayed
+     C*
+     C           VATP      IFNE 'Y'
+     C                     MOVE 'N'       SCDTR
+     C                     MOVE 'N'       STCHOV
+     C                     MOVE 'N'       SFXAC
+     C                     MOVE 'N'       SCNDS
+     C                     MOVE 'N'       SCDRI
+     C                     MOVE 'N'       SCMBL
+     C                     MOVE 'N'       SCIAC
+     C                     END
+     C*
+     C** Interest Statements default
+     C*
+     C                     MOVE '1'       *IN41
+     C           ISTS      IFEQ *BLANKS
+     C                     MOVE '1'       SINTS
+     C                     ELSE
+     C                     MOVE ISTS      SINTS
+     C                     END
+     C*                                                                   CRT001
+     C**  If Retail Teller System (CRT001) SAR is installed               CRT001
+     C** or Retail Branch Access (CRT002) SAR is installed,               CRT002
+     C*                                                                   CRT001
+     C           CRT001    IFEQ 'Y'                                       CRT001
+     C           CRT002    OREQ 'Y'                                       CRT002
+     C                     MOVE PBKU      SPBKU                           CRT001
+     C                     END                                            CRT001
+      *
+     C           CER049    IFEQ 'Y'                                                           CER049
+     C                     MOVE CHODS     SCHODS                                              CER049
+     C                     MOVE CDTOS     SCDTOS                                              CER049
+     C                     MOVE FACOS     SFACOS                                              CER049
+     C                     MOVE FACCS     SFACCS                                              CER049
+     C                     MOVE NDSTS     SNDSTS                                              CER049
+     C                     MOVE DRINS     SDRINS                                              CER049
+     C                     MOVE CACBS     SCACBS                                              CER049
+     C                     MOVE CHIAS     SCHIAS                                              CER049
+     C                     ENDIF                                                              CER049
+     C*
+     C***  DETERMINE IF WINDOW REQUIRED (BGWDPR IN SDMMODPD)
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVE 'SDMMODPD'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            **DB ERROR 03**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '0'       *IN89
+     C                     EXSR DBSR
+     C                     END
+     C*
+     C* Store beginning file values in case refresh is requested
+     C*
+     C                     MOVELNVAL      OVAL
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZASNMS    - Send message to program message queue             *
+     C*                                                               *
+     C* CALLS     - Y2SNMGC                                           *
+     C*                                                               *
+     C* CALLED BY - CHKINP                                            *
+     C*                                                               *
+     C*****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DBSR subroutine for database error handling
+     C**
+     C**     Called by       FIRST, *PSSR
+     C**     Calls           -
+     C**
+     C           DBSR      BEGSR                           **DBSR BEGSR**
+     C*
+     C                     OPEN SD9341PM
+     C*
+     C                     WRITEHEADAU
+     C*
+     C                     WRITEERRAU
+     C*
+     C                     CLOSESD9341PM
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **DBSR ENDSR**
+     C********************************************************************
+     C*
+     C*   *PSSR  --  DATABASE ERROR HANDLING ROUTINE
+     C*
+     C*  CALLED AUTOMATICALLY IF ANY ERROR ON FILE I/O OPERATION
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     SETON                     U7U8LR
+     C*
+     C** Produce error audit report
+     C*
+     C                     EXSR DBSR
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  ERR@
+Commission on Highest Overdraft
+Commission on Debit Turnover
+Fixed Account Commission
+Fixed Account Charges
+Charge on No. of Daily Statements
+Commission on Debit Interest
+Commission on Average CR Balance
+Charge on Inactive Account

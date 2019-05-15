@@ -1,0 +1,356 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('MIDAS ABS ER LU Initial Duration for 1.4')
+     H**********************************************************************
+     H*                                                                    *
+     H*    MIDAS/ABS  EUROPEAN REPORTING - LUXEMBOURG                      *
+     H*                                                                    *
+     H*    RPG/ERIDUR14 - Initial Duration for IML 1.4                     *
+     H*                                                                    *
+      *  (c) Finastra International Limited 2005                      *
+     H*                                                                    *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 CEU007 PT          Date 01Dec98               *
+      *                 CAD018 PT          Date 29Sep98               *
+     H*                   XXXXXX PT             DATE 07MAY96               *
+     H*                   85606  PT             DATE 18APR95               *
+     H*                   ERL454 PT             DATE 16FEB95               *
+     H*                   ERL409 PT             DATE 14JUN94               *
+     H*                   ERL371 TLI            DATE 16NOV93               *
+     H*                                                                    *
+     H**********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     H*    CEU007 - Holidays Changes For Reporting Interface.              *
+     H*    CAD018   -   PARAMETERS INCORRECTLY MANAGED                     *
+     H*    XXXXXX   -   DURATION CODE NOT SET UP WHEN SAME DATES           *
+     H*    85606    -   ARRAY INDEX ERROR WHEN END DATE LESS THAN ZERO     *
+     H*    ERL454   -   FROM DATE TO DATE, LESS OR EQUAL ONE YEAR          *
+     H*    ERL409   -   IF DURATION LESS THAN OR EQUAL TO 14 DAYS, OMIT    *
+     H*             -   DURATION WRONGLY SET UP                            *
+     H*    ERL371   -   IML 1.4 DEVELOPMENT                                *
+     H**********************************************************************
+     H*                                                                    *
+     H* FUNCTION:    Calculate number of days between transaction          *
+     H*              reporting date and end/review date AND setup          *
+     H***************residual period code:  - 00  < or = 1 year and not = ERL409
+     H**************************************      14 calendar days        ERL409
+     H**************************************- 01  > 1 year < or = 2 years ERL409
+     H**************************************- 02  > 2 year < or = 3 years ERL409
+     H**************************************- 03  > 3 year < or = 4 years ERL409
+     H**************************************- xx  > xx year < or = yy yearERL409
+     H**************************************- 99  = 14 calendar days      ERL409
+     H*              residual period code:  - 01  < or = 1 year and > 14  ERL409
+     H*                                           calendar days           ERL409
+     H*                                     - 02  > 1 year < or = 2 years ERL409
+     H*                                     - 03  > 2 year < or = 3 years ERL409
+     H*                                     - 04  > 3 year < or = 4 years ERL409
+     H*                                     - xx  > xx year < or = yy yearERL409
+     H*                                     - 99  <= 14 calendar days     ERL409
+     H*                                                                    *
+     F**********************************************************************
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+      *                                                                   CEU007
+      ***  Array for ZDATE2                                               CEU007
+      *                                                                   CEU007
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYCEU007
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYCEU007
+     E                    ZMNM   12  12  3               ZDATE2 SR.ARRAY  CEU007
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZHOLE                                                  CEU007
+      /EJECT
+     I/COPY ZSRSRC,ZHOLDS                                                 CEU007
+     I/COPY ZSRSRC,ZHOLI                                                  CEU007
+      *
+      **  Data Structure for compilation  - Copyright Insertion:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+     I**
+     I            DS
+     I                                        1   80RESULT
+     I                                        1   40NBYEAR
+     I*
+     IWWDATE      DS                              8                       CEU007
+     I                                        5   6 WWMTH1                CEU007
+      /EJECT
+      *===================================================================
+     C**         *ENTRY    PLIST                           Entry parameterCAD018
+     C**                   PARM           PARM1   80       I: Start date  CAD018
+     C**                   PARM           PARM2   80       I: End Date    CAD018
+     C**                   PARM           PARM3   20       O: Residual DurCAD018
+     C           *ENTRY    PLIST                           Entry parameterCAD018
+     C                     PARM           PARM1   8        I: Start date  CAD018
+     C                     PARM           PARM2   8        I: End Date    CAD018
+     C           PARM3     PARM           PARM3   20       O: Residual DurCAD018
+     C                     PARM           PARM4   3        I: End Date LocCEU007
+     C                     PARM           PARM5   3        I: End Date CcyCEU007
+      *===================================================================
+      *
+     C                     MOVELPARM1     WKSTRD  80
+     C                     MOVELPARM2     WKENDT  80
+      *
+     C                     SUB  1         WKENDT                          ERL454
+      *                                                                   ERL454
+      **   If the reporting date has changed initialize period.
+     C***********WKSTRD    IFNE BKSTRD                                    XXXXXX
+     C*********************EXSR SRINIT                                    XXXXXX
+     C*********************END                                            XXXXXX
+      *********************                                               XXXXXX
+      *****If the two input date are the sane do not process one more(saveXXXXXX
+     C***********WKSTRD    IFEQ BKSTRD                                    XXXXXX
+     C***********WKENDT    ANDEQBKENDT                                    XXXXXX
+     C*********************GOTO SETUP                                     XXXXXX
+     C*********************END                                            XXXXXX
+      *
+     C           WKSTRD    IFEQ 0
+     C                     Z-ADD0         INITPR  20
+     C                     GOTO SETUP
+     C                     END
+      *
+     C***********WKENDT    IFEQ 0                                          85606
+     C           WKENDT    IFLT 0                                          85606
+     C                     Z-ADD0         INITPR
+     C                     GOTO SETUP
+     C                     END
+      *                                                                   CEU007
+      ***  Check if the feature CEU007 is installed.                      CEU007
+      *                                                                   CEU007
+     C                     MOVEL'N'       CEU007  1                       CEU007
+     C                     CALL 'AOSARDR0'                                CEU007
+     C                     PARM '       ' @RTCD   7                       CEU007
+     C                     PARM '*VERIFY' @OPTN   7                       CEU007
+     C                     PARM 'CEU007'  @SARD   6                       CEU007
+      *                                                                   CEU007
+     C           @RTCD     IFEQ *BLANKS                                   CEU007
+      *                                                                   CEU007
+     C                     MOVEL'Y'       CEU007                          CEU007
+      *                                                                   CEU007
+     C                     ENDIF                                          CEU007
+      *
+     C***********WKENDT    IFNE BKENDT                                    XXXXXX
+      *                                                                   XXXXXX
+      **   Convert reporting date in Midas format.                        XXXXXX
+     C                     MOVELWKSTRD    @@DTIN                          XXXXXX
+     C                     EXSR ZA0680                                    XXXXXX
+     C                     MOVE @@MDNO    STRD    50                      XXXXXX
+      *
+      ***  If the feature CEU007 is installed.                            CEU007
+      *                                                                   CEU007
+     C           CEU007    IFEQ 'Y'                                       CEU007
+      *                                                                   CEU007
+      ***  It's existing, check if the end date is a working date         CEU007
+      ***  with the "End Date Settlement location Code" and the           CEU007
+      ***  "End Date Settlement currency code".                           CEU007
+      ***  If it's a working day :                                        CEU007
+      ***  =====> Nothing                                                 CEU007
+      ***  If it's a no working day and the same month :                  CEU007
+      ***  =====> Take the next working day                               CEU007
+      ***  If it's a no working day and not the same month :              CEU007
+      ***  =====> Take the previous working day                           CEU007
+      *                                                                   CEU007
+      ***  Convert end date in Midas format                               CEU007
+      *                                                                   CEU007
+     C                     MOVELWKENDT    @@DTIN                          CEU007
+     C                     EXSR ZA0680                                    CEU007
+     C                     MOVE @@MDNO    WWENDT  50                      CEU007
+      *                                                                   CEU007
+     C                     MOVELPARM5     ZCCY                            CEU007
+     C                     Z-ADDWWENDT    ZDAYNO                          CEU007
+     C                     MOVE PARM4     ZLOC                            CEU007
+      *                                                                   CEU007
+     C                     EXSR ZCHKH                                     CEU007
+      *                                                                   CEU007
+      ***  If ZIND = 'H' then the date is a holiday                       CEU007
+      ***  End date ==> next working day                                  CEU007
+      *                                                                   CEU007
+     C           ZIND      DOWEQ'H'                                       CEU007
+     C                     ADD  1         ZDAYNO                          CEU007
+     C                     EXSR ZCHKH                                     CEU007
+     C                     ENDDO                                          CEU007
+      *                                                                   CEU007
+      ***  Check if it's the same month                                   CEU007
+      *                                                                   CEU007
+     C                     MOVE *IN98     WW98    1                       CEU007
+     C                     MOVE *ON       *IN98                           CEU007
+     C                     EXSR ZDATE2                                    CEU007
+     C                     MOVELZDATE     WWMTH2  2                       CEU007
+     C                     MOVELPARM2     WWDATE                          CEU007
+     C                     MOVE WW98      *IN98                           CEU007
+      *                                                                   CEU007
+     C           WWMTH1    IFNE WWMTH2                                    CEU007
+      *                                                                   CEU007
+      ***  Take the first date and seach into the another direction       CEU007
+      ***  End date ==> previous working day                              CEU007
+      *                                                                   CEU007
+     C                     MOVEL'H'       ZIND                            CEU007
+     C                     Z-ADDWWENDT    ZDAYNO                          CEU007
+     C           ZIND      DOWEQ'H'                                       CEU007
+     C                     SUB  1         ZDAYNO                          CEU007
+     C                     EXSR ZCHKH                                     CEU007
+     C                     ENDDO                                          CEU007
+      *                                                                   CEU007
+     C                     ENDIF                                          CEU007
+      *                                                                   CEU007
+     C                     Z-ADDZDAYNO    ENDT                            CEU007
+      *                                                                   CEU007
+     C                     ELSE                                           CEU007
+      *                                                                   XXXXXX
+     C                     MOVELWKENDT    @@DTIN
+     C                     EXSR ZA0680
+     C                     MOVE @@MDNO    ENDT    50
+      *                                                                   CEU007
+     C                     ENDIF                                          CEU007
+     C*********************END                                            XXXXXX
+      **************************************************************************
+     C**   Calcul period between to given date and setup corresponding code
+      **************************************************************************
+      *
+      ** Calculate difference in years
+     C           WKENDT    SUB  WKSTRD    RESULT
+      *
+      ** Calculate difference in days
+     C           ENDT      SUB  STRD      DIFF    50
+      *
+      ***<=*1*year*and*different*than*14*calendar*days*********           ERL409
+     C***********NBYEAR    IFLT 0001                                      ERL409
+     C***********DIFF      ANDNE14                                        ERL409
+     C*********************Z-ADD00        INITPR                          ERL409
+      *                                                                   ERL409
+      ** <= 1 year and greater than 14 calendar days                      ERL409
+     C           NBYEAR    IFLT 0001                                      ERL409
+     C           DIFF      ANDGT14                                        ERL409
+     C                     Z-ADD01        INITPR                          ERL409
+     C                     GOTO SETUP
+     C                     END
+      *
+      ***=*14*calendar*days******************                             ERL409
+     C***********DIFF      IFEQ 14                                        ERL409
+      ** <= 14 calendar days                                              ERL409
+     C           DIFF      IFLE 14                                        ERL409
+     C                     Z-ADD99        INITPR
+     C                     GOTO SETUP
+     C                     END
+      *
+      ***Setup*with*number*of*year*************                           ERL409
+     C*********************Z-ADDNBYEAR    INITPR                          ERL409
+      *                                                                   ERL409
+      ** Setup with number of year plus 1                                 ERL409
+     C           NBYEAR    ADD  1         INITPR                          ERL409
+      *
+     C           SETUP     TAG                             *** SETUP PARM ***
+      *
+      ** Setup backup parameters to avoid proccessing
+     C                     Z-ADDWKSTRD    BKSTRD  80
+     C                     Z-ADDWKENDT    BKENDT  80
+      *
+      ** Setup output parameters
+     C                     MOVELINITPR    PARM3
+      *
+     C                     RETRN
+      *
+      ** Define in98 for compilation
+     C  N98                MOVE '0'       *IN98
+     C/EJECT
+     C*****************************************************************
+     C* SRINIT - Routine called only if reporting date has changed    *
+     C*****************************************************************
+     C***********SRINIT    BEGSR                                          XXXXXX
+      ***********                                                         XXXXXX
+     C***********WKSTRD    IFNE 0                                         XXXXXX
+      ***********                                                         XXXXXX
+      *****Convert reporting date in Midas format.                        XXXXXX
+     C***********          MOVELWKSTRD    @@DTIN                          XXXXXX
+     C***********          EXSR ZA0680                                    XXXXXX
+     C***********          MOVE @@MDNO    STRD    50                      XXXXXX
+      ***********                                                         XXXXXX
+     C***********          END                                            XXXXXX
+      ***********                                                         XXXXXX
+     C***********          ENDSR                                          XXXXXX
+     C********************************************************************
+     C/EJECT
+     C*******************************************************************
+     C*
+     C           ZA0680    BEGSR
+     C*
+     C**  CLEAR OUT ANY 'OLD' DATA IN FIELD
+     C                     Z-ADD0         @@MDNO  50
+     C*
+     C**   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+     C           @@YYYY    IFGE 2072                       B1
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+     C           @@CC      SUB  19        @@WK2   20       *1
+     C           @@WK2     MULT 36524     @@MDNO           *1
+     C*
+     C**  YEAR 2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C           @@YYYY    ADD  28        @@WK2
+     C*
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+     C*
+     C**  CHECK REMAINDER AND MONTH NUMBER
+     C           @@REM     IFEQ 0                          B1
+     C           @@MTH     ANDGT2                          B1
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+     C           @@REM     IFNE 0                          B1
+     C                     ADD  @YD,@@REM @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  ADD MONTHS THIS YEAR
+     C                     ADD  @MD,@@MTH @@MDNO
+     C*
+     C**  ADD DAYS THIS MONTH
+     C                     ADD  @@DAY     @@MDNO
+     C*
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+     C********************************************************************
+      /EJECT                                                              CEU007
+     C/COPY ZSRSRC,ZACCH                                                  CEU007
+      /EJECT                                                              CEU007
+     C/COPY ZSRSRC,ZCHKH                                                  CEU007
+      /EJECT                                                              CEU007
+     C/COPY ZSRSRC,ZDATE2Z2                                               CEU007
+** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0680 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                      CEU007
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                        CEU007
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES                                            CEU007
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2005

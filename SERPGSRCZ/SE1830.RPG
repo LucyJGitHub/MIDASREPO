@@ -1,0 +1,240 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Bulk Transactions Batch Update II')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1830 - Bulk Transaction Batch update II                    *
+     F*                                                               *
+     F*  Function: This program runs before SE3003 Bulk trades batch  *
+     F*    (I/C)   update if the genration of MT5xx messages are      *
+     F*            available. SE1830 tries to keep the BULKSDX1 & X2  *
+     F*            files in line with BULKTD.                         *
+     F*                                                               *
+     F*  Called By: SEC3003  Bulk update                              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG2606            Date 14May04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE028             Date 06Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW098             Date 21Apr98               *
+      *                 103478             Date 21May96               *
+     F*                 066915             DATE 14FEB94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG2606 - Extension and Extended Settlements for Bulk Trades *
+      *            and SE Trades must have the same format            *
+      *            (Recompile).                                       *
+      *  CSE028 - Standing Settlement Instructions Enhancement.       *
+      *           (Recompiled).                                       *
+     F*  CSW098 - Recompile for addition of new field to bulk trade PF*
+     F*  103478 - Change Bulk to Trades format (Recompile)            *
+     F*  066915 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9 by GEMS 052254.                             *
+     F*  S01401 - The generation of MT5xx SWIFT Messages if the       *
+     F*           option is available.  NEW PROGRAM.                  *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FBULKTD  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FBULKSDY1UF  E           K        DISK                      A
+     F            TRADSDD1                          KRENAMEBULKSDD1
+     F                                              KINFSR *PSSR
+     FBULKSDY2UF  E           K        DISK                      A
+     F            TRADSDD2                          KRENAMEBULKSDD2
+     F                                              KINFSR *PSSR
+     FTRADSDY1IF  E           K        DISK
+     FTRADSDY2IF  E           K        DISK
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01 - CHAIN or READ failure BULKTD                           *
+      *   02 - CHAIN or READ failure TRADSDY1/2                       *
+      *   03 - CHAIN or READ failure BULKSDY1/2                       *
+      *                                                               *
+      *   U7 - Data base error                                        *
+      *   U8 - Data base error                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   I N D E X   T O   S U B R O U T I N E S                     *
+      *                                                               *
+      *   SRINIT - Routine to handle initial processing               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *
+     I            DS
+      * Data structure for compilation - Copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ILDA         DS                            256
+      *  Error reporting data structure
+      *
+     I                                      134 183 DBALL
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I@BLKY1    E DSBULKSDX1
+      **  Data structure for transfer of trade details TRADSDX1
+      **  to bulk BULKSDX1. Defining @BLKY1
+      *
+     I@BLKY2    E DSBULKSDX2
+      **  Data structure for transfer of trade details TRADSDX2
+      **  to bulk BULKSDX2. Defining @BLKY2
+      *
+     I@TRDY1    E DSTRADSDX1
+      **  Data structure for receiving bulk details BULKSDX1
+      **  from trade TRADSDX1. Defining @TRDY1
+      *
+     I@TRDY2    E DSTRADSDX2
+      **  Data structure for receiving trade details TRADSDX2
+      **  from bulk BULKSDX2. Defining @TRDY2
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *    M A I N   P R O C E S S I N G                              *
+      *                                                               *
+      *    Calls : SRINIT.                                            *
+      *                                                               *
+      *****************************************************************
+      *
+      * Initialize program
+     C                     EXSR SRINIT
+      *
+      ** Process all transaction for this batch
+     C           *IN01     DOWEQ'0'
+      *
+      *
+      **  Check if corresponding bulk extension record exist.
+     C           TDRF      CHAINBULKSDD1             03
+      *
+      **  If record not found default details from trade
+      *
+     C           *IN03     IFEQ *ON
+      *
+     C                     MOVEL@TRDY1    @BLKY1
+     C                     MOVELTDRF      B1TDRF
+     C                     WRITEBULKSDD1
+      *
+      **  Try to retrieve bulk settlement instructions.
+      *
+     C           TDRF      CHAINBULKSDD2             03
+      *
+      **  Record not found defaulf details from trade
+     C           *IN03     IFEQ *ON
+      *
+     C                     MOVEL@TRDY2    @BLKY2
+     C                     MOVELTDRF      B2TDRF
+     C                     WRITEBULKSDD2
+     C                     ELSE
+      *
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TDRF'    DBKEY
+     C                     MOVE 'BULKSDX2'DBFILE           ***************
+     C                     Z-ADD01        DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Process all transaction for this batch
+     C           BLKREF    READEBULKTDF                  01
+     C                     END
+      *
+      **  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   SRINIT - Routine to handle initial processing               *
+      **                                                              *
+      **  CALLS     -  *PSSR.                                         *
+      **                                                              *
+      **  CALLED BY -  MAIN.                                          *
+      **                                                              *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Get parameters from calling program
+     C           *ENTRY    PLIST
+     C                     PARM           BLKREF  6
+     C                     PARM           TRDREF  6
+      *
+      **  BULKSDX1 should have a corresponding record for each record
+      **  on BULKTD. Data obtained from TRADSDX1/2 will be used to
+      **  default details on BULKSDX1/X2 if the corresponding record
+      **  is not found on BULKSDX1.
+      *
+     C           TRDREF    CHAINTRADSDY1             02
+     C           *IN02     IFEQ '1'
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'TRADSXD1'DBFILE           * DB ERROR 02 *
+     C                     MOVELTRDREF    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C           TRDREF    CHAINTRADSDY2             02
+     C           *IN02     IFEQ '1'
+     C                     MOVE *BLANKS   @TRDY2
+     C                     ENDIF
+      *
+      * Set pointer at first trade for this batch
+     C           BLKREF    CHAINBULKTDF              01
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR - Program error handling                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     SETON                     LRU7U8
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR ends
+      *
+      *****************************************************************
+** CPY@
+(c) Finastra International Limited 2001

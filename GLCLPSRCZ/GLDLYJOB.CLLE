@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas GL DLYJOB for use in RPG program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLDLYJOB - DLYJOB for general use in RPG etc...             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG7529  *CREATE   Date 13Jun05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG7529 - Create program to call DLYJOB with chosen time    */
+/*                 from an RPG program.                              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*    @DELAY can be from 1 second to 999999 seconds. (11.5 days).    */
+/*    Enter one second as '1     ', ten minutes as '600   ' etc..    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&DELAY)
+ 
+             DCL        VAR(&DELAY) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2005')
+ 
+/* Global Error Trap */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLDLYJOB - GL DLYJOB command for calling +
+                          from RPG') TOMSGQ(MRUNQ)
+ 
+/* Reset Job Switches and return code */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Delay for time sent in calling parameter. Range of 1 - 999999 seconds allowed */
+ 
+             DLYJOB     DLY(&DELAY)
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           GLDLYJOB ended abnormally - see job +
+                           log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ ENDPGM:
+             ENDPGM

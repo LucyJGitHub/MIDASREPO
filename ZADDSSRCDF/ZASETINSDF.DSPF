@@ -1,0 +1,1163 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas ZA Settle instructions screen input')            *
+      *****************************************************************
+     A*                                                               *
+     A*  Midas - MM Dealer Module                                     *
+     A*                                                               *
+     A*  DSPF/ZASETINSDF - SETTLEMENT INSTRUCTIONS SCREEN INPUT       *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD040178           Date 05Aug16               *
+      *                 MD037023           Date 12Jan16               *
+      *                 MD036070           Date 19Oct15               *
+      *                 MD029216           Date 01Dec14               *
+      *                 CDL094             Date 30May14               *
+      *                 MD021872           Date 12Sep13               *
+      *                 AR1010565          Date 26Jul12               *
+      *                 CSW212             Date 03May12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CLE033             Date 25Apr05               *
+      *                 CLE031             Date 25Apr05               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 214967             Date 15Apr03               *
+      *                 215792             Date 10Mar03               *
+      *                 214110             Date 19Feb03               *
+      *                 CDL011             Date 07Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 192701             Date 06Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CIR003             Date 12Sep00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 180500             Date 11Aug00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW097             Date 02DEC99               *
+     A*                 161504  (ERN023)   Date 15Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 CAP003  *CREATE    Date 03Jun98               *
+     A*                 CAP002  *CREATE    Date 01Nov97               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD040178 - Rollup key text is missing in Settlement Details  *
+      *             screen. Adjust the position of Rollup key text.   *
+      *  MD037023 - Incorrect function keys on 2nd Settlement Details *
+      *             Interest screen                                   *
+      *  MD036070 - No way to go back to main deal details screen     *
+      *             after reaching settlement screen.  Introduce new  *
+      *             function key F11.                                 *
+      *  MD029216 - Navigation Issues on Deals Enquiry for CIRS       *
+      *             Transactions                                      *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *  MD021872 - No Reporting Information details in Deals enquiry *
+      *  AR1010565 - The words Cover message and Confirmation is not  *
+      *               written in the deals enquiry                    *
+      *  CSW212 - SWIFT 2012 Changes                                  *
+      *  CLE033 - Settlement method 09                                *
+      *  CLE031 - Lending Enhancements - Settlement Currency          *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposit       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  214967 - Move customer numbers as on the command key line.   *
+      *  215792 - Some Settlement Details fields are not underlined   *
+      *           but they are still amendable.  Reverse core fix     *
+      *           192701.                                             *
+      *  214110 - Add 'SHA' on allowed values for details of charges. *
+      *           Patterned after 212051.                             *
+     A*  CDL011 - Expansion of Customer Number on Dealing Transactions*
+     A*  192701 - Only protect the currency fields if CSW003 is on    *
+     A*           and record currency is an 'IN' currency or 'EURO',  *
+     A*           or if CSW003 is not on.                             *
+      *  CIR003 - Principal Exchange on Cross Currencies IRS          *
+     A*  180500 - Allow DDRSCY & DDPSCY to be amendable               *
+     A*  CSW097 - Swift 97 changes for MT360s and MT340s              *
+     A*  161504 - '?' must not be a valid value as a settlement       *
+     A*           method.                                             *
+     A*  CAP003 - Conversion of Midas inputs to modular API structure *
+     A*           Phase II                                            *
+     A*           Many indicators have been changed so that the field *
+     A*           specific indicators can be together, to ensure code *
+     A*           readability these have not been annotated.          *
+     A*  CAP002 - Conversion of Midas inputs to modular API structure *
+     A*                                                               *
+     A*****************************************************************
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+      **Start of change CLE031
+     A                                      DSPSIZ(*DS4)
+      **End of change CLE031
+     A*
+     A          R #RCDDTL1                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A* COMMAND KEYS
+     A                                      CF03
+     A**Start of change CIR003
+     A  75                                  CF08
+     A**End of change CIR003
+      **Start of change MD036070
+     A  76                                  CF11
+      **End of change MD036070
+     A                                      CF12
+     A  09                                  ROLLUP(07)                          CAP003
+     A*
+     A                                  1  2'ZASETIN'
+     A                                  1 15'SETTLEMENT DETAILS'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A**Start of change CIR003
+      **Start of change MD029216
+     A**75******  DDEVCD         8   O  1 34TEXT('EVENT CODE')                              MD029216
+     A  78
+     AO 75        DDEVCD         8   O  1 34TEXT('EVENT CODE')
+      **End of change MD029216
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A**End of change CIR003
+      *
+     A            DDDLNO         6A  O  1 45TEXT('DEAL NUMBER')
+     A                                      OVRDTA
+      *
+     A            DDRUNA         7A  O  1 63TEXT('MIDAS RUNDATE')
+     A                                      OVRDTA
+      *
+     A            DDTIME         6Y 0O  1 54TEXT('CURRENT TIME')
+     A                                      EDTWRD('  :  :  ')
+     A                                      OVRDTA
+      *
+     A                                  1 72'WID:'
+     A            DDWSID         3A  O  1 77TEXT('WORKSTATION ID')
+     A                                      OVRDTA
+      **Start of change CLE031
+     A********************************* 2  5'RECEIPTS'                                        CDL018
+     A**********                        2  5'RECEIPT'                                  CDL018 CLE031
+     A********************************* 2 14'Settlement Currency'                             CDL018
+     A**********                        2 13'Settlement Ccy'                           CDL018 CLE031
+     A                                  2  2'RECEIPTS'
+     A                                  2 11'Ccy'
+      **End of change CLE031
+     A  87                                  DSPATR(ND)
+     A                                      OVRATR
+      **Start of change CLE031
+     A*********** DDRSCY         3   B  2 34TEXT('Receipt-Settlement Currency')               CDL018
+     A*********** DDRSCY         3   B  2 28TEXT('Receipt-Settlement Currency')        CDL018 CLE031
+     A            DDRSCY         3   B  2 15TEXT('Receipt-Settlement Currency')
+      ** End of change CLE031
+     A**89                                                                CAP003180500
+     A***O 87                                  DSPATR(PR)                 CAP003180500
+     A**87****                              DSPATR(PR)                          CAP003
+     A  87                                  DSPATR(PR)                          180500
+     A  11                                  DSPATR(RI)
+     A  81                                  DSPATR(PC)                          CAP003
+     A*N87N11*                              DSPATR(UL)                          CAP003
+     A*N87N11N89*                           DSPATR(UL)                    CAP003180500
+     A N87N11                               DSPATR(UL)                          180500
+     A N11                                  DSPATR(HI)
+     A                                      OVRDTA
+      **Start of change CLE031
+     A**********                        2 32'More Ac'                                         CLE031
+     A                                  2 19'More Ac'
+      **End of change CLE031
+     A  79                                  DSPATR(ND)                                        CDL018
+     A                                      OVRATR                                            CDL018
+      **Start of change CLE031
+     A**********  DDRMAC         1   B  2 40TEXT('Receipt - More Accounts')                   CLE031
+     A            DDRMAC         1   B  2 27TEXT('Receipt - More Accounts')
+      **End of change CLE031
+     A  79                                  DSPATR(ND)                                        CDL018
+     A  79                                                                                    CDL018
+     AO 85                                  DSPATR(PR)                                        CDL018
+     A  69                                  DSPATR(RI PC)                                     CDL018
+     A N79N69N85                            DSPATR(UL)                                        CDL018
+     A N69                                  DSPATR(HI)                                        CDL018
+     A                                      OVRDTA                                            CDL018
+      **Start of CLE031
+      *
+     A N87 71                           2 29'Rate'
+     A            DDREXR        14N  B  2 34TEXT('Receipt Ccy Exchange Rate')
+     A N71                                  DSPATR(ND)
+     A  87                                  DSPATR(PR)
+     A  11 71                               DSPATR(RI)
+     A  81 71                               DSPATR(PC)
+     A N87N11 71                            DSPATR(UL)
+     A N11 71                               DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A            DDREXI         1   B  2 49TEXT('Receipt Ccy Exchnge Rate Ind')
+     A N71                                  DSPATR(ND)
+     A  87                                  DSPATR(PR)
+     A  11 71                               DSPATR(RI)
+     A  81 71                               DSPATR(PC)
+     A N87N11 71                            DSPATR(UL)
+     A N11 71                               DSPATR(HI)
+     A                                      OVRDTA
+      *
+      **End of CLE031
+     A                                  3  5'Method'
+     A**Start of change CGL029
+     A**********                        3  5'Method'                                          CGL029
+     A**********  DDRSTM         2   B  3 13TEXT('Receipt - Settlement Type')                 CGL029
+     A                                  3  2'Method'
+     A            DDRSTM         2   B  3  9TEXT('Receipt - Settlement Type')
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,ZASETIN_03
+     A                                      VALUES('05' +
+     A                                             '14' +
+     A                                             '02' +
+     A                                             '12' +
+     A                                             '03' +
+     A                                             '04' +
+     A                                             '15' +
+     A                                             '07' +
+     A                                             '08' +
+     A                                             '06' +
+     A                                             '01' +
+     A                                             '00' +
+     A                                             '09' +                                     CLE033
+     A**********                                   '99' '?')                                  161504
+     A                                             '99')                                      161504
+     A*/COPY WNCPYSRC,ZASETIN_04
+     A                                      CHECK(AB)
+     A  85                                  DSPATR(PR)                          CAP003
+     A  12                                  DSPATR(RI)
+     A  82                                  DSPATR(PC)                          CAP003
+     A N85N12                               DSPATR(UL)                          CAP003
+     A N12                                  DSPATR(HI)
+     A                                      OVRDTA
+     A                                  3 17'Our A/C'
+     A**Start of change CGL029
+     A**********                        3 17'Our A/C'                                         CGL029
+     A*N80******  DDRONS        12   B  3 25TEXT('Receipt - Our Nostro')                      CGL029
+     A                                  3 12'Our A/C'
+     A N80        DDRONS        18   B  3 20TEXT('Receipt - Our Nostro')
+     A**End of change CGL029
+     A**85******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  85                                  DSPATR(PR)
+      **End of change 215792
+     A  13                                  DSPATR(RI PC)
+     A N85N13                               DSPATR(UL)                          CAP003
+     A N13                                  DSPATR(HI)
+     A                                      OVRDTA
+     A**Start of change CGL029
+     A**80******  DDRONX        15   B  3 25TEXT('Receipt - Our Nostro')                      CGL029
+     A  80        DDRONX        21   B  3 20TEXT('Receipt - Our Nostro')
+     A**End of change CGL029
+     A**85******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  85                                  DSPATR(PR)
+      **End of change 215792
+     A  13                                  DSPATR(RI PC)
+     A N85N13                               DSPATR(UL)                          CAP003
+     A N13                                  DSPATR(HI)
+     A                                      OVRDTA
+     A                                  5  2'50 Ordering Customer'
+     A            DDROCN        10   B  5 27TEXT('Receive  Ordering Cust')
+     A**85******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  85                                  DSPATR(PR)
+      **End of change 215792
+     A  14                                  DSPATR(RI PC)
+     A N85N14                               DSPATR(UL)                          CAP003
+     A N14                                  DSPATR(HI)
+     A                                      OVRDTA
+     A                                  6  2'52 Ordering Bank'
+     A            DDROBN        10   B  6 27TEXT('Receive  ordering bank')
+     A**85******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  85                                  DSPATR(PR)
+      **End of change 215792
+     A  15                                  DSPATR(RI PC)
+     A N85N15                               DSPATR(UL)                          CAP003
+     A N15                                  DSPATR(HI)
+     A                                      OVRDTA
+     A                                  9  2'56 Intermediary Bank'
+     A            DDRIBN        10   B  9 27TEXT('Receive  Intermediary')
+     A**85******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  85                                  DSPATR(PR)
+      **End of change 215792
+     A  16                                  DSPATR(RI PC)
+     A N85N16                               DSPATR(UL)                          CAP003
+     A N16                                  DSPATR(HI)
+     A                                      OVRDTA
+     A            DDRIBA        35   B 10  2TEXT('Rcpt - I/m Bank A/c Line')
+     A**85******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  85                                  DSPATR(PR)
+      **End of change 215792
+     A  17                                  DSPATR(RI PC)
+     A N85N17                               DSPATR(UL)                          CAP003
+     A N17                                  DSPATR(HI)
+     A                                      OVRDTA
+      **Start of change CLE031
+     A********************************* 2 42'PAYMENTS'                                        CDL018
+     A**********                        2 42'PAYMENT'                                  CDL018 CLE031
+     A********************************* 2 54'Settlement Currency'                             CDL018
+     A**********                        2 50'Settlement Ccy'                           CDL018 CLE031
+     A                                  2 60'PAYMENTS'
+     A                                  2 69'Ccy'
+      **End of change CLE031
+     A  88                                  DSPATR(ND)
+     A                                      OVRATR
+      **Start of change CLE031
+     A*********** DDPSCY         3   B  2 74TEXT('Pay-Settlement Currency')                   CDL018
+     A**********  DDPSCY         3   B  2 65TEXT('Pay-Settlement Currency')            CDL018 CLE031
+     A            DDPSCY         3   B  2 73TEXT('Pay-Settlement Currency')
+      **End of change CLE031
+     A**89                                                                CAP003180500
+     A**O 88                                  DSPATR(PR)                  CAP003180500
+     A**88****                              DSPATR(PR)                          CAP003
+     A  88                                  DSPATR(PR)                          180500
+     A  18                                  DSPATR(RI)
+     A  83                                  DSPATR(PC)
+     A*N88N18*                              DSPATR(UL)                          CAP003
+     A*N88N18N89*                           DSPATR(UL)                    CAP003180500
+     A N88N18                               DSPATR(UL)                          180500
+     A N18                                  DSPATR(HI)
+     A                                      OVRDTA
+      **Start of change CLE031
+     A**********                        2 69'More Ac'                                  CDL018 CLE031
+     A                                  2 77'More Ac'
+      **End of change CLE031
+     A  79                                  DSPATR(ND)                                        CDL018
+     A                                      OVRATR                                            CDL018
+      **Start of change CLE031
+     A**********  DDPMAC         1   B  2 77TEXT('Pay - More Accounts')                CDL018 CLE031
+     A            DDPMAC         1   B  2 85TEXT('Pay - More Accounts')
+      **End of change CLE031
+     A  79                                  DSPATR(ND)                                        CDL018
+     A  79                                                                                    CDL018
+     AO 86                                  DSPATR(PR)                                        CDL018
+     A  70                                  DSPATR(RI PC)                                     CDL018
+     A N79N70N86                            DSPATR(UL)                                        CDL018
+     A N70                                  DSPATR(HI)                                        CDL018
+     A                                      OVRDTA                                            CDL018
+      **Start of change CLE031
+      *
+     A  71                              2 87'Rate'
+     A            DDPEXR        14N  B  2 92TEXT('Pay Ccy Exchange Rate')
+     A N71                                  DSPATR(ND)
+     A  88                                  DSPATR(PR)
+     A  18 71                               DSPATR(RI)
+     A  83 71                               DSPATR(PC)
+     A N88N18 71                            DSPATR(UL)
+     A N18 71                               DSPATR(HI)
+     A                                      OVRDTA
+     A            DDPEXI         1   B  2107TEXT('Payt Ccy Exchange Rate Ind.')
+     A N71                                  DSPATR(ND)
+     A  88                                  DSPATR(PR)
+     A  18 71                               DSPATR(RI)
+     A  83 71                               DSPATR(PC)
+     A N88N18 71                            DSPATR(UL)
+     A N18 71                               DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A**********                        3 42'Method'                                          CLE031
+     A**********  DDPSTM         2   B  3 49TEXT('Pay - Settlement Type')                     CLE031
+     A                                  3 60'Method'
+     A            DDPSTM         2   B  3 67TEXT('Pay - Settlement Type')
+      **End of change CLE031
+     A*/COPY WNCPYSRC,ZASETIN_01
+     A                                      VALUES('05' +
+     A                                             '14' +
+     A                                             '02' +
+     A                                             '12' +
+     A                                             '03' +
+     A                                             '04' +
+     A                                             '15' +
+     A                                             '07' +
+     A                                             '08' +
+     A                                             '06' +
+     A                                             '01' +
+     A                                             '00' +
+     A**********                                   '99' '?')                                  161504
+     A                                             '99')                                      161504
+     A*/COPY WNCPYSRC,ZASETIN_02
+     A                                      CHECK(AB)
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  19                                  DSPATR(RI)
+     A  84                                  DSPATR(PC)                          CAP003
+     A N86N19                               DSPATR(UL)
+     A N19                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********                        3 53'Our A/C'
+      **End of change CLE031
+     A**Start of change CGL029
+     A**********                        3 53'Our A/C'                                         CGL029
+     A*N80******  DDPONS        12   B  3 63TEXT('Pay - Our Nostro')                          CGL029
+      **Start of change CLE031
+     A**********                        3 52'Our A/C'                                         CLE031
+     A*N80******  DDPONS        18   B  3 60TEXT('Pay - Our Nostro')                          CLE031
+      **End of change CLE031
+     A**End of change CGL029
+      **Start of change CLE031
+     A                                  3 70'Our A/C'
+     A N80        DDPONS        18   B  3 78TEXT('Pay - Our Nostro')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                  CAP003192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  20                                  DSPATR(RI PC)
+     A N86N20                               DSPATR(UL)                          CAP003
+     A N20                                  DSPATR(HI)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**80******  DDPONX        15   B  3 62TEXT('Pay - Our Nostro')                          CGL029
+      **Start of change CLE031
+     A**80******  DDPONX        21   B  3 60TEXT('Pay - Our Nostro')                          CLE031
+      **End of change CLE031
+     A**End of change CGL029
+      **Start of change CLE031
+     A  80        DDPONX        21   B  3 78TEXT('Pay - Our Nostro')
+      **End of change CLE031
+     A*                                              End   /CLE031/
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  20                                  DSPATR(RI PC)
+     A N86N20                               DSPATR(UL)                          CAP003
+     A N20                                  DSPATR(HI)
+     A                                      OVRATR
+     A                                  4  5'Recipient of payment instructions'
+     A            DDRVNO        10   B  4 40TEXT('Scrn rcpt of payment istruct')
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  21                                  DSPATR(RI PC)
+     A N86N21                               DSPATR(UL)                          CAP003
+     A N21                                  DSPATR(HI)
+     A                                      OVRATR
+     A                                  4 53'Cover MT202 required'
+     A            DDCVMR         1   B  4 74TEXT('Cover MT202 required')
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  22                                  DSPATR(RI PC)
+     A N86N22                               DSPATR(UL)                          CAP003
+     A N22                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDPOCN        10   B  5 65TEXT('Payment  Ordering Cust')                    CLE031
+     A            DDPOCN        10   B  5 85TEXT('Payment  Ordering Cust')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  23                                  DSPATR(RI PC)
+     A N86N23                               DSPATR(UL)                          CAP003
+     A N23                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDPOBN        10   B  6 65TEXT('Payment  ordering bank')                    CLE031
+     A            DDPOBN        10   B  6 85TEXT('Payment  ordering bank')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  24                                  DSPATR(RI PC)
+     A N86N24                               DSPATR(UL)                          CAP003
+     A N24                                  DSPATR(HI)
+     A                                      OVRATR
+     A                                  7  2'54 Recipients Correspondent'
+      **Start of change CLE031
+     A**********  DDRCRN        10   B  7 65TEXT('Screen receiver Corr.')                     CLE031
+     A            DDRCRN        10   B  7 85TEXT('Screen receiver Corr.')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  25                                  DSPATR(RI PC)
+     A N86N25                               DSPATR(UL)                          CAP003
+     A N25                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDRCRA        35   B  8 40TEXT('Receiver Corr. A/c Line')                   CLE031
+     A            DDRCRA        35   B  8 60TEXT('Receiver Corr. A/c Line')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  26                                  DSPATR(RI PC)
+     A N86N26                               DSPATR(UL)                          CAP003
+     A N26                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDPIBN        10   B  9 65TEXT('Payment  Intermediary')                     CLE031
+     A            DDPIBN        10   B  9 85TEXT('Payment  Intermediary')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  27                                  DSPATR(RI PC)
+     A N86N27                               DSPATR(UL)                          CAP003
+     A N27                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDPIBA        35   B 10 40TEXT('Pay - I/m Bank A/c Line')                   CLE031
+     A            DDPIBA        35   B 10 60TEXT('Pay - I/m Bank A/c Line')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  28                                  DSPATR(RI PC)
+     A N86N28                               DSPATR(UL)                          CAP003
+     A N28                                  DSPATR(HI)
+     A                                      OVRATR
+     A                                 11  2'57 ''Account With'' Bank'
+      **Start of change CLE031
+     A**********  DDAWBN        10   B 11 65TEXT('Screen A/c with')                           CLE031
+     A            DDAWBN        10   B 11 85TEXT('Screen A/c with')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  29                                  DSPATR(RI PC)
+     A N86N29                               DSPATR(UL)                          CAP003
+     A N29                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDAWBA        35   B 12 40TEXT('A/c With Bank Line')                        CLE031
+     A            DDAWBA        35   B 12 60TEXT('A/c With Bank Line')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  30                                  DSPATR(RI PC)
+     A N86N30                               DSPATR(UL)                          CAP003
+     A N30                                  DSPATR(HI)
+     A                                      OVRATR
+     A                                 13  2'58/59 Beneficiary'
+      **Start of change CLE031
+     A**********  DDBENN        10   B 13 65TEXT('Screen Beneficiary')                        CLE031
+     A            DDBENN        10   B 13 85TEXT('Screen Beneficiary')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  31                                  DSPATR(RI PC)
+     A N86N31                               DSPATR(UL)                          CAP003
+     A N31                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDBENA        35   B 14 40TEXT('Beneficiary A/c Line')                      CLE031
+     A            DDBENA        35   B 14 60TEXT('Beneficiary A/c Line')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  32                                  DSPATR(RI PC)
+     A N86N32                               DSPATR(UL)                          CAP003
+     A N32                                  DSPATR(HI)
+     A                                      OVRATR
+     A                                 15  2'70 Details of Payment'
+     A            DDDTP1        35   B 16  2TEXT('Details of Payment 1')
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  33                                  DSPATR(RI PC)
+     A N86N33                               DSPATR(UL)                          CAP003
+     A N33                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDDTP2        35   B 16 40TEXT('Details of Payment 2')                      CLE031
+     A            DDDTP2        35   B 16 60TEXT('Details of Payment 2')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  34                                  DSPATR(RI PC)
+     A N86N34                               DSPATR(UL)                          CAP003
+     A N34                                  DSPATR(HI)
+     A                                      OVRATR
+     A            DDDTP3        35   B 17  2TEXT('Details of Payment 3')
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  35                                  DSPATR(RI PC)
+     A N86N35                               DSPATR(UL)                          CAP003
+     A N35                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDDTP4        35   B 17 40TEXT('Details of Payment 4')                      CLE031
+     A            DDDTP4        35   B 17 60TEXT('Details of Payment 4')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  36                                  DSPATR(RI PC)
+     A N86N36                               DSPATR(UL)                          CAP003
+     A N36                                  DSPATR(HI)
+     A                                      OVRATR
+     A                                 18  2'71 Details of Charges'
+      **Start of change CLE031
+     A**********  DDDCHG         3   B 18 72TEXT('Details of charges')                        CLE031
+     A            DDDCHG         3   B 18 92TEXT('Details of charges')
+      **End of change CLE031
+     A                                      VALUES('BEN' +
+     A                                             'CLM' +
+      **Start of change 214110
+     A                                             'SHA' +
+      **End of change 214110
+     A                                             'OUR' '?')
+     A                                      CHECK(AB)
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  37                                  DSPATR(RI PC)
+     A N86N37                               DSPATR(UL)                          CAP003
+     A N37                                  DSPATR(HI)
+     A                                      OVRATR
+     A*/COPY WNCPYSRC,ZASETIN_05
+     A                                 19  2'72 Bank to Bank Information'
+     A*/COPY WNCPYSRC,ZASETIN_06
+      **Start of change CLE031
+     A**********                       19 46'''In'' Currency in Field 72'                     CLE031
+     A                                 19 66'''In'' Currency in Field 72'
+      **End of change CLE031
+     A  88                                  DSPATR(ND)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDIC72         3   B 19 72TEXT('''In'' Currency in +                        CLE031
+     A**********                                 Field 72')                                   CLE031
+     A            DDIC72         3   B 19 92TEXT('''In'' Currency in +
+     A                                           Field 72')
+      **End of change CLE031
+     A**89                                                                CAP003180500
+     A***O 88                                  DSPATR(PR)                 CAP003180500
+     A**88****                              DSPATR(PR)                          CAP003
+     A  88                                  DSPATR(PR)                          180500
+     A  38                                  DSPATR(RI PC)
+     A*188N38*                              DSPATR(UL)                          CAP003
+     A*N88N38N89*                           DSPATR(UL)                    CAP003180500
+     A N88N38                               DSPATR(UL)                          180500
+     A N38                                  DSPATR(HI)
+     A                                      OVRDTA
+     A            DDBTB1        35   B 20  2TEXT('Bank to Bank Info. 1')
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  39                                  DSPATR(RI PC)
+     A N86N39                               DSPATR(UL)                          CAP003
+     A N39                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDBTB2        35   B 20 40TEXT('Bank to Bank Info. 2')                      CLE031
+     A            DDBTB2        35   B 20 60TEXT('Bank to Bank Info. 2')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  40                                  DSPATR(RI PC)
+     A N86N40                               DSPATR(UL)                          CAP003
+     A N40                                  DSPATR(HI)
+     A                                      OVRATR
+     A            DDBTB3        35   B 21  2TEXT('Bank to Bank Info. 3')
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  41                                  DSPATR(RI PC)
+     A N86N41                               DSPATR(UL)                          CAP003
+     A N41                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDBTB4        35   B 21 40TEXT('Bank to Bank Info. 4')                      CLE031
+     A            DDBTB4        35   B 21 60TEXT('Bank to Bank Info. 4')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  42                                  DSPATR(RI PC)
+     A N86N42                               DSPATR(UL)                          CAP003
+     A N42                                  DSPATR(HI)
+     A                                      OVRATR
+     A            DDBTB5        35   B 22  2TEXT('Bank to Bank Info. 5')
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  43                                  DSPATR(RI PC)
+     A N86N43                               DSPATR(UL)                          CAP003
+     A N43                                  DSPATR(HI)
+     A                                      OVRATR
+      **Start of change CLE031
+     A**********  DDBTB6        35   B 22 40TEXT('Bank to Bank Info. 6')                      CLE031
+     A            DDBTB6        35   B 22 60TEXT('Bank to Bank Info. 6')
+      **End of change CLE031
+     A                                      OVRDTA
+     A**86******                            DSPATR(PR)                                 CAP003 192701
+      **Start of change 215792
+     A  86                                  DSPATR(PR)
+      **End of change 215792
+     A  44                                  DSPATR(RI PC)
+     A N86N44                               DSPATR(UL)                          CAP003
+     A N44                                  DSPATR(HI)
+     A                                      OVRATR
+      * Start CDL011
+      * Start of 214967
+      **Start of change CLE031
+     A************DDRFNM        20   O 23 10                                                  214967
+     A**********  DDRFNM        20   O  5 40                                                  CLE031
+      **End of change CLE031
+      * End of 214967
+      **Start of change CLE031
+     A            DDRFNM        20   O  5 60
+      **End of change CLE031
+     A                                      OVRATR
+      * Start of 214967
+     A                                      DSPATR(HI)
+      **Start of change CLE031
+     A************DDPFNM        20   O 23 40                                                  214967
+     A**********  DDPFNM        20   O  6 40                                                  CLE031
+     A            DDPFNM        20   O  6 60
+      **End of change CLE031
+      * End of 214967
+     A                                      OVRATR
+      * Start of 214967
+     A                                      DSPATR(HI)
+      * End of 214967
+      * End CDL011
+      * Start of CDL094
+     A  67                             23  2'72 Rcv Bank to Bank Information'
+     A            DDRBB1        35   O 23 35TEXT('Rcv Bank to Bank Info. 1')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            DDRBB2        35   O 23 72TEXT('Rcv Bank to Bank Info. 2')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            DDRBB3        35   O 24 35TEXT('Rcv Bank to Bank Info. 3')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            DDRBB4        35   O 24 72TEXT('Rcv Bank to Bank Info. 4')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            DDRBB5        35   O 25 35TEXT('Rcv Bank to Bank Info. 5')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            DDRBB6        35   O 25 72TEXT('Rcv Bank to Bank Info. 6')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      * End of CDL094
+      **Start of change MD029216
+     A N75N76                          26  2'F3=Exit   F12=Previous            -
+     A                                                 '
+     A                                      OVRATR
+      **Start of change MD036070
+     A*N75*76***                       26  2'F3=Exit   F12=Reporting Info      -            MD036070
+     A**********                                       '                                    MD036070
+     A N75 76                          26  2'F3=Exit   F11=Main Deal Details   -
+     A                                        F12=Reporting Info'
+      **End of change MD036070
+     A                                      OVRATR
+     A  75N76                          26  2'F3=Exit   F8=Next Screen   F12=Pre-
+     A                                      vious      '
+     A                                      OVRATR
+      **Start of change MD040178
+     A**********                       26 50'Rollup'                                        MD040178
+     A                                 26 60'Rollup'
+      **End of change MD040178
+     A N09                                  DSPATR(ND)
+     A                                      OVRATR
+      **End of change MD029216
+     A*=========================================================================
+     A          R #HEAD2                    TEXT('Second Screen Header')
+     A                                      OVERLAY
+     A                                      INDTXT(86 'Condition PUTOVR.')
+     A  86                                  PUTOVR
+     A                                  1  2'ZASETIN'
+     A                                  1 15'SETTLEMENT DETAILS'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A**Start of change CIR003
+      **Start of change MD029216
+     A**75******  DDEVCD         8   O  1 34TEXT('EVENT CODE')                              MD029216
+     A  78
+     AO 75        DDEVCD         8   O  1 34TEXT('EVENT CODE')
+     A                                      DSPATR(HI)
+      **End of change MD029216
+     A                                      OVRDTA
+     A**End of change CIR003
+      *
+     A            DDDLNO         6A  O  1 45TEXT('DEAL NUMBER')
+     A                                      OVRDTA
+      *
+     A            DDRUNA         7A  O  1 63TEXT('MIDAS RUNDATE')
+     A                                      OVRDTA
+      *
+     A            DDTIME         6Y 0O  1 54TEXT('CURRENT TIME')
+     A                                      EDTWRD('  :  :  ')
+     A                                      OVRDTA
+      *
+     A                                  1 72'WID:'
+     A            DDWSID         3A  O  1 77TEXT('WORKSTATION ID')
+     A                                      OVRDTA
+     A*
+     A          R #RCDDTL2                  TEXT('Second Screen Detail')        CAP003
+     A                                      BLINK OVERLAY                       CAP003
+     A                                      PUTOVR                              CAP003
+     A                                      CF03(03 'Exit.')                    CAP003
+     A**Start of change CIR003
+     A  75                                  CF08(08 'Next Screen.')
+     A**End of change CIR003
+      **Start of change MD036070
+      **Start of change MD037023
+     A**76******                            CF11(11 'Main Details.')                        MD037023
+     A N75 76                               CF11(11 'Main Details.')
+      **End of change MD037023
+      **End of change MD036070
+     A                                      CF12(12 'Key screen.')              CAP003
+     A  09                                  ROLLDOWN(08)                        CAP003
+     A*                                                                         CAP003
+     A                                  3  2'72  Sender-to-receiver information'CAP003
+     A            DDDSR1        35   B  3 38TEXT('Def-Snder to Rcvr Info 1')    CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  45                                  DSPATR(RI PC)                       CAP003
+     A N45N86                               DSPATR(UL)                          CAP003
+     A N45                                  DSPATR(HI)                          CAP003
+      **Start of change CSW212
+     A**********                        4  6'(Definition Confirmation)'                CAP003 CSW212
+      **Start of change AR1010565
+     A**70******                        4  6'(Definition Confirmation)'                    AR1010565
+     A**71******                        4  6'(Cover Message)          '                    AR1010565
+     A  72                              4  6'(Definition Confirmation)'
+     A  73                              4  6'(Cover Message)          '
+      **End of change AR1010565
+      **End of change CSW212
+     A            DDDSR2        35   B  4 38TEXT('Def-Snder to Rcvr Info 2')    CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  46                                  DSPATR(RI PC)                       CAP003
+     A N46N86                               DSPATR(UL)                          CAP003
+     A N46                                  DSPATR(HI)                          CAP003
+     A            DDDSR3        35   B  5 38TEXT('Def-Snder to Rcvr Info 3')    CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  47                                  DSPATR(RI PC)                       CAP003
+     A N47N86                               DSPATR(UL)                          CAP003
+     A N47                                  DSPATR(HI)                          CAP003
+     A            DDDSR4        35   B  6 38TEXT('Def-Snder to Rcvr Info 4')    CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  48                                  DSPATR(RI PC)                       CAP003
+     A N48N86                               DSPATR(UL)                          CAP003
+     A N48                                  DSPATR(HI)                          CAP003
+     A            DDDSR5        35   B  7 38TEXT('Def-Snder to Rcvr Info 5')    CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  49                                  DSPATR(RI PC)                       CAP003
+     A N49N86                               DSPATR(UL)                          CAP003
+     A N49                                  DSPATR(HI)                          CAP003
+     A            DDDSR6        35   B  8 38TEXT('Def-Snder to Rcvr Info 6')    CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  50                                  DSPATR(RI PC)                       CAP003
+     A N50N86                               DSPATR(UL)                          CAP003
+     A N50                                  DSPATR(HI)                          CAP003
+     A*                                                                         CAP003
+     A                                  9  2'72  Sender-to-receiver information'CAP003
+     A            DDSSR1        35   B  9 38TEXT('Settl-Snder to Rcvr Info 1')  CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  51                                  DSPATR(RI PC)                       CAP003
+     A N51N86                               DSPATR(UL)                          CAP003
+     A N51                                  DSPATR(HI)                          CAP003
+      **Start of change CSW212
+     A**********                       10  6'(Settlement/reset Confirmation)'          CAP003 CSW212
+      **Start of change AR1010565
+     A**70******                       10  6'(Settlement/reset Confirmation)'              AR1010565
+     A**71******                       10  6'(Confirmation)                 '              AR1010565
+     A  72                             10  6'(Settlement/reset Confirmation)'
+     A  73                             10  6'(Confirmation)                 '
+      **End of change AR1010565
+      **End of change CSW212
+     A            DDSSR2        35   B 10 38TEXT('Settl-Snder to Rcvr Info 2')  CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  52                                  DSPATR(RI PC)                       CAP003
+     A N52N86                               DSPATR(UL)                          CAP003
+     A N52                                  DSPATR(HI)                          CAP003
+     A            DDSSR3        35   B 11 38TEXT('Settl-Snder to Rcvr Info 3')  CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  53                                  DSPATR(RI PC)                       CAP003
+     A N53N86                               DSPATR(UL)                          CAP003
+     A N53                                  DSPATR(HI)                          CAP003
+     A            DDSSR4        35   B 12 38TEXT('Settl-Snder to Rcvr Info 4')  CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  54                                  DSPATR(RI PC)                       CAP003
+     A N54N86                               DSPATR(UL)                          CAP003
+     A N54                                  DSPATR(HI)                          CAP003
+     A            DDSSR5        35   B 13 38TEXT('Settl-Snder to Rcvr Info 5')  CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  55                                  DSPATR(RI PC)                       CAP003
+     A N55N86                               DSPATR(UL)                          CAP003
+     A N55                                  DSPATR(HI)                          CAP003
+     A            DDSSR6        35   B 14 38TEXT('Settl-Snder to Rcvr Info 6')  CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  56                                  DSPATR(RI PC)                       CAP003
+     A N56N86                               DSPATR(UL)                          CAP003
+     A N56                                  DSPATR(HI)                          CAP003
+     A*                                                                         CAP003
+     A                                 15  2'77D Conditions'                    CAP003
+     A            DDCND1        35   B 15 38TEXT('Condition 1')                 CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  57                                  DSPATR(RI PC)                       CAP003
+     A N57N86                               DSPATR(UL)                          CAP003
+     A N57                                  DSPATR(HI)                          CAP003
+     A            DDCND2        35   B 16 38TEXT('Condition 2')                 CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  58                                  DSPATR(RI PC)                       CAP003
+     A N58N86                               DSPATR(UL)                          CAP003
+     A N58                                  DSPATR(HI)                          CAP003
+     A            DDCND3        35   B 17 38TEXT('Condition 3')                 CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  59                                  DSPATR(RI PC)                       CAP003
+     A N59N86                               DSPATR(UL)                          CAP003
+     A N59                                  DSPATR(HI)                          CAP003
+     A            DDCND4        35   B 18 38TEXT('Condition 4')                 CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  60                                  DSPATR(RI PC)                       CAP003
+     A N60N86                               DSPATR(UL)                          CAP003
+     A N60                                  DSPATR(HI)                          CAP003
+     A            DDCND5        35   B 19 38TEXT('Condition 5')                 CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  61                                  DSPATR(RI PC)                       CAP003
+     A N61N86                               DSPATR(UL)                          CAP003
+     A N61                                  DSPATR(HI)                          CAP003
+     A            DDCND6        35   B 20 38TEXT('Condition 6')                 CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                  DSPATR(PR)                          CAP003
+     A  62                                  DSPATR(RI PC)                       CAP003
+     A N62N86                               DSPATR(UL)                          CAP003
+     A N62                                  DSPATR(HI)                          CAP003
+     A*                                                                         CAP003
+     A                                 21  2'ISDA rules version'                CAP003
+     A  04                                  DSPATR(ND)                          CAP003
+     A            DDISDA         4   B 21 21TEXT('Version of ISDA')             CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                                                      CAP003
+     AO 04                                  DSPATR(PR)                          CAP003
+     A  04                                  DSPATR(ND)                          CAP003
+     A  63                                  DSPATR(RI PC)                       CAP003
+     A N04N63N86                            DSPATR(UL)                          CAP003
+     A N63                                  DSPATR(HI)                          CAP003
+     A*                                                                         CAP003
+     A                                 21 26'ISDA agreement: Type'              CAP003
+     A  04                                  DSPATR(ND)                          CAP003
+     A            DDAGTY         6   B 21 47TEXT('Agreement type')              CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                                                      CAP003
+     AO 04                                  DSPATR(PR)                          CAP003
+     A  04                                  DSPATR(ND)                          CAP003
+     A  64                                  DSPATR(RI PC)                       CAP003
+     A N04N64N86                            DSPATR(UL)                          CAP003
+     A N64                                  DSPATR(HI)                          CAP003
+     A*                                                                         CAP003
+     A                                 21 55'Date'                              CAP003
+     A  04                                  DSPATR(ND)                          CAP003
+     A            DDAGDT         6   B 21 60TEXT('Agreement date')              CAP003
+     A                                      OVRDTA                              CAP003
+     A  86                                                                      CAP003
+     AO 04                                  DSPATR(PR)                          CAP003
+     A  04                                  DSPATR(ND)                          CAP003
+     A  65                                  DSPATR(RI PC)                       CAP003
+     A N04N65N86                            DSPATR(UL)                          CAP003
+     A N65                                  DSPATR(HI)                          CAP003
+     A*                                                                         CAP003
+     A                                 21 68'Version'                           CAP003
+     A  04                                  DSPATR(ND)                          CAP003
+     A**  Start of CSW097
+     A******      DDAGVV         2   B 21 76TEXT('Agreement version')           CAP003
+     A            DDAGVV         4   B 21 76TEXT('Agreement version')
+     A**  End of CSW097
+     A                                      OVRDTA                              CAP003
+     A  86                                                                      CAP003
+     AO 04                                  DSPATR(PR)                          CAP003
+     A  04                                  DSPATR(ND)                          CAP003
+     A  66                                  DSPATR(RI PC)                       CAP003
+     A N04N66N86                            DSPATR(UL)                          CAP003
+     A N66                                  DSPATR(HI)                          CAP003
+     A*                                                                         CAP003
+     A**Start of change CIR003
+     A**********                       23 45'Rolldown   F3=Exit   F12+
+     A**********                             =Previous'                  CAP003 CIR003
+      ** Start of change MD021872
+     A*N75******                       23 45'Rolldown   F3=Exit   F12+                      MD021872
+     A*N75N76***                       23 45'Rolldown   F3=Exit   F12+                        CDL094
+     A N75N76                          26 45'Rolldown   F3=Exit   F12+                        CDL094
+      ** End of change MD021872
+     A                                       =Previous'
+      ** Start of change MD021872
+     A*N75*76***                       23 45'Rolldown   F3=Exit   F12+                        CDL094
+      **Start of change MD036070
+     A*N75*76***                       26 45'Rolldown   F3=Exit   F12+               CDL094 MD036070
+     A**********                             =Reporting Info'                               MD036070
+     A N75 76                          26 24'Rolldown   F3=Exit   F11+
+     A                                       =Main Deal Details    F1+
+     A                                       2=Reporting Info'
+      **End of change MD036070
+     A**75******                       23 28'Rolldown   F3=Exit   F8+                       MD021872
+     A**75N76***                       23 28'Rolldown   F3=Exit   F8+                         CDL094
+      ** Start of change MD029216
+     A**75N76***                       26 28'Rolldown   F3=Exit   F8+                CDL094 MD029216
+     A  75N76                          26 28'Rolldown   F3=Exit   F8'
+      ** End of change MD029216
+      ** End of change MD021872
+      ** Start of change MD029216
+     A**********                             =Next Screen   F12=Previous'                   MD029216
+     A  75N76                          26 29'=Next Screen   F12=Previous'
+      ** End of change MD029216
+      ** Start of change MD021872
+     A**75*76***                       23 28'Rolldown   F3=Exit   F8+                         CDL094
+      ** Start of change MD029216
+     A**75*76***                       26 28'Rolldown   F3=Exit   F8+                CDL094 MD029216
+     A**********                             =Next Screen   F12=Reporting Info'             MD029216
+      **Start of change MD036070
+     A**75*76***                       26 28'Rolldown   F3=Exit   F8'                       MD036070
+     A**75*76***                       26 29'=Next Screen   F12=Reporting Info'             MD036070
+      **Start of change MD037023                                                            MD037023
+     A**75*76***                       26 07'Rolldown   F3=Exit   F8-                       MD037023
+     A**********                             =Next Screen   F11=Main-                       MD037023
+     A**********                             Deal Details   F12=Repo-                       MD037023
+     A**********                             rting Info'                                    MD037023
+     A  75 76                          26 02'Rolldown   F3=Exit   F8+
+     A                                       =Next Screen   F12=Previous'
+      **End of change MD037023
+      **End of change MD036070
+      ** End of change MD029216
+      ** End of change MD021872
+     A**End of change CIR003
+     A*=========================================================================
+     A          R #CMDTXT1                  TEXT('Command keys.')
+     A                                      OVERLAY PUTOVR
+     A******                           23  2'F3=Exit   F12=Previous            -CAP003
+     A******                                                                   -CAP003
+     A******                                         '                          CAP003
+     A**Start of change CIR003
+     A**********                       23  2'F3=Exit   F12=Previous            -
+     A**********                                       '                 CAP003 CIR003
+      ** Start of change MD021872
+     A*N75******                       23  2'F3=Exit   F12=Previous            -            MD021872
+     A*N75N76***                       23  2'F3=Exit   F12=Previous            -              CDL094
+     A N75N76                          26  2'F3=Exit   F12=Previous            -              CDL094
+      ** End of change MD021872
+     A                                                 '
+      ** Start of change MD021872
+     A*N75*76***                       23  2'F3=Exit   F12=Reporting Info      -              CDL094
+      **Start of change MD036070
+     A*N75*76***                       26  2'F3=Exit   F12=Reporting Info      -     CDL094 MD036070
+     A**********                                       '                                    MD036070
+     A N75 76                          26  2'F3=Exit   F11=Main Deal Details   -
+     A                                        F12=Reporting Info'
+      **End of change MD036070
+      ** End of change MD021872
+     A                                       OVRATR
+      ** Start of change MD021872
+     A**75******                       23  2'F3=Exit   F8=Next Screen   F12=Pre-            MD021872
+     A**75N76***                       23  2'F3=Exit   F8=Next Screen   F12=Pre-              CDL094
+     A  75N76                          26  2'F3=Exit   F8=Next Screen   F12=Pre-              CDL094
+      ** End of change MD021872
+     A                                      vious      '
+      ** Start of change MD021872
+     A**75*76***                       23  2'F3=Exit   F8=Next Screen   F12=Rep-              CDL094
+      **Start of change MD036070
+     A**75*76***                       26  2'F3=Exit   F8=Next Screen   F12=Rep-     CDL094 MD036070
+     A**********                            orting Info'                                    MD036070
+     A  75 76                          26  2'F3=Exit   F8=Next Screen   F11=Mai-
+     A                                       n Deal Details    F12=Reporting In-
+     A                                       fo'
+      **End of change MD036070
+      ** End of change MD021872
+     A                                       OVRATR
+     A**09******                       23 48'Rollup'                     CAP003 CIR003
+     A**********                       23 50'Rollup'                                          CDL094
+     A                                 26 50'Rollup'                                          CDL094
+     A N09                                   DSPATR(ND)
+     A                                       OVRATR
+     A**End of change CIR003
+     A*=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A**********                            SFL SFLMSGRCD(24)                                 CDL094
+     A                                      SFL SFLMSGRCD(27)                                 CDL094
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  89
+     AON89                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================

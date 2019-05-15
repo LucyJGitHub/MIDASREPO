@@ -1,0 +1,919 @@
+     H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Base rates update')                           *
+/*XBIA*: OVRDBF TABLEU TABSDU                                       : *
+/*XBIB*  OVRDBF SDBSHSP0 SDBSHSL1                                     *                       CTI004
+0001 H***********                                                         S01117
+      *****************************************************************
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0600 - BASE RATES TABLE UPDATE                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR761706           Date 27May11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 245028             Date 02Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 235907             Date 06Jun06               *
+      *                 BUG2814            Date 26May04               *
+      *                 CTI004             Date 12Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CAP038             Date 17Mar00               *
+      *                 186713             Date 26Jan01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CMC001             DATE 18MAR96               *
+     F*                 103492             DATE 22MAY96               *
+     F*                 E36180             DATE 15JAN93               *
+     F*                 S01339             DATE 23JUL92               *
+     F*                 E39486             DATE 05MAY92               *
+     F*                 DT0025             DATE 22MAR91               *
+     F*                 S01267             DATE 25SEP90               *
+     F*                 E23394             DATE 10SEP90               *
+     F*                 S01251             DATE 03FEB90               *
+     F*                 S01168             DATE 11JAN90               *
+     F*                 LN0514             DATE 19JUL90               *
+     F*                 S01194             DATE 19MAR90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR761706 - SDC0607 in MSGW. Unlock the file after update     *
+      *             (EXCPT) operation (Child: AR761707)               *
+      *  245028 - TI Date and Change date not correct.                *
+      *  235907 - For back valued base rate changes, if a record does *
+      *           not exist for the value date of the change, then    *
+      *           this record needs to be created. Applied fix 225209.*
+      *  BUG2814 - Format date as 1YYMMDD not 1YYDDMM                 *
+      *            Midas US date format not required for TI field.    *
+      *  CTI004 - MidasPlus-TI Integration Enhancements               *
+      *           Base Rates Integration                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CAP038 - Midas APIs, base rates                              *
+     F*           Recompiled
+     F*  186713 - Only call MC0440 when the base rate code =          *
+     F*           the Funding Base Rate Code from PCA ICD.            *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Before processing LF/SDBSHSL1, update the Funding   *
+     F*           Gap Rework dates by calling MC0440.                 *
+     F*  103492 - History records are not updated if rate change is   *
+     F*           backvalued.                                         *
+     F*  E36180 - SD0600 issued update or delete in SDBSHSL1 without  *
+     F*           prior read or chain.                                *
+     F*  S01339 : SYNDICATED LOANS MODULE MADE REDUNDANT AT R10.      *
+     F*  E39486 : RECOMPILED FOR CHANGE TO PRINTER FILE               *
+     F*  DT0025 : LOCK IN LDA BEFORE DBERR PROCESSING                 *
+     F*  S01267 : INCORPORATE HISTORIC BASE RATE PROCESSING           *
+     F*                                                               *
+     F*  E23394 : PROGRAM SHOULD CHECK FOR RETAIL2 OR INTEREST ON     *
+     F*            ACCOUNTS RATHER THAN RETAIL1                       *
+     F*                                                               *
+     F*  S01251 : SYNON FIELD/PROGRAM NAME CHANGES                    *
+     F*            (superseded by S01194)                             *
+0011 F*                                                               *
+     F*  S01168 : CHANGES MADE FOR INCORPORATION OF SYNON BASE RATES  *
+     F*           FILE INTO Midas RELEASE 2                       *
+     F*           (superseded by S01194)                              *
+     F*                                                               *
+     F*   LN0514  -  RELEASE 10 CHANGES NOT FULLY APPLIED -           *
+     F*              USE *MSG FOR DATABASE ERROR HANDLING.ALSO        *
+     F*              REMOVE FILE OVERRIDE IN CREATION PARAMETERS.     *
+     F*   S01194  -  NEW STANDING DATA                                *
+0011 F*                                                               *
+     F*****************************************************************
+0013 F*TABLEI*IP**F******96 12AI     2 DISK                               S01194
+0014 FSDBSRTPDUF  E                    DISK                               S01194
+     FSDBSRTL0UF  E           K        DISK                                                   245028
+0014 F*TABLEU*UF**F      96 12AI     2 DISK                               S01194
+0014 FTABLETK UF  E                    DISK
+0014 FSDBSHSPAUF  E                    DISK                               S01267
+0014 FSDBSHSPDO   E                    DISK                      A        S01267
+     F            SDBSHSD0                          KRENAMESDBSSDP        S01267
+     FSDBSHSP0UF  E           K        DISK                                                   CTI004
+     F            SDBSHSD0                          KRENAMESDBSHSPP                           CTI004
+0014 FSDBSHSL1UF  E           K        DISK                               S01267
+     F/COPY WNCPYSRC,SDH00501
+     FSD0600AUO   E                    DISK                               S01267
+0015 F*
+0016 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0017 F**01************TABLEI RECORD - INSTALLATION CONTROL DATA1          S01194
+0018 F**02************TABLEI RECORD - INSTALLATION CONTROL DATA2          S01194
+0019 F**03************TABLEU RECORD - BASE RATE HEADER                    S01194
+0020 F**04************TABLEU RECORD - HEADER OTHER THAN BASE RATE         S01194
+0021 F**05************TABLEU - CATCHALL -DELETED RECORDS                  S01194
+0022 F********10******INSTALLATION CONTROL DATA RECORD1 FOUND             S01194
+0023 F********11******INSTALLATION CONTROL DATA RECORD2 FOUND             S01194
+0024 F*       20      NEW VALUE DATE NON-ZERO, NOT GR.THAN COMPARISON DATE
+0025 F*       21      DEALING MODULE PRESENT
+0026 F*       22      RETAIL MODULE PRESENT
+0027 F********23******COMMERCIAL LOANS MODULE PRESENT                     S01339
+0028 F*       24      DATE NEXT WORKING DAY LESS THAN ACCRUALS/PROFIT DATE
+0029 F*       25      DATE NEXT WORKING DAY GR. THAN ACCRUALS/PROFIT DATE
+0030 F*       26      DEALING MOD. RATE CHANGE INDICATOR ON
+0031 F*       27      RETAIL MOD. RATE CHANGE INDICATOR ON
+0032 F********28******COMM. LOANS MOD. RATE CHANGE INDICATOR ON           S01339
+0033 F********30******END OF FILE                                         S01194
+0033 F*       30      END OF FILE TABLETK                                 S01194
+0033 F*       31      END OF FILE SDBSRTPD                                S01194
+0033 F*       40      CUSTOMER LENDING MODULE PRESENT
+0033 F*       41      CUSTOMER LENDING MODULE RATE CHANGE ON
+0033 F*       50      PF/SDBSHSPA NOT SET UP                              S01267
+0033 F*       80      LF/SDBSHSL1 END OF FILE                             S01267
+     F*       85      LF/SDBSHSL1 END OF FILE                                                 245028
+     F*       86      LF/SDBSRTL0 not found                                                   245028
+0034 F*          U8   DATABASE IN ERROR
+      /COPY ZSRSRC,ZDATE2Z1                                                                   CTI004
+     E/COPY ZSRSRC,ZDATE9Z1                                                                   245028
+     E/COPY WNCPYSRC,SDH00502
+     E                    CPY@    1   1 80
+0035 I***********                                                         S01194
+0036 I**********TABLES*FILE*RECORDS                                       S01194
+0037 I***********                                                         S01194
+0038 I*TABLEI*NS**01***1 CD   2 C0   3 C1                                 S01194
+0039 I*******AND******12 C1  13 C0                                        S01194
+0040 I***********                             1   1 RECI                  S01194
+0041 I***********                             2   30RECT                  S01194
+0042 I***********                            12  130RCDE                  S01194
+0043 I***********                            14  66 TITL                  S01194
+0044 I***********                            67  67 DATF                  S01194
+0045 I***********                            68  700DFBR                  S01194
+0046 I***********                            74  74 MODI1                 S01194
+0047 I***********                            75  75 MODI2                 S01194
+0048 I***********                            76  76 MODI3                 S01194
+0049 I***********                         P  77  790RUND                  S01194
+0050 I***********                            80  86 RUNA                  S01194
+0051 I***********                            87  870SFLG                  S01194
+0052 I***********                         P  90  920LCD                   S01194
+0053 I***********                            93  93 CHTP                  S01194
+0054 I***********                         P  94  960TNLU                  S01194
+0055 I***********                             1  96 LOT                   S01194
+0056 I********NS**02***1 CD   2 C0   3 C1                                 S01194
+0057 I*******AND******12 C1  13 C1                                        S01194
+0058 I***********                             1   1 RECI                  S01194
+0059 I***********                             2   30RECT                  S01194
+0060 I***********                            12  130RCDE                  S01194
+0061 I***********                            14  16 BCCY                  S01194
+0062 I***********                            17  19 BCYL                  S01194
+0063 I***********                            20  22 HOCY                  S01194
+0064 I***********                            23  280HEAD                  S01194
+0065 I***********                         P  29  310APDA                  S01194
+0066 I***********                            35  35 APFQ                  S01194
+0067 I***********                         P  36  380LOGS                  S01194
+0068 I***********                            39  40 CUZR                  S01194
+0069 I***********                         P  41  430DNWD                  S01194
+0070 I***********                            44  460BVLP                  S01194
+0071 I***********                            47  49 LOCY                  S01194
+0072 I***********                            50  510FDAY                  S01194
+0073 I***********                            86  86 ISAV                  S01194
+0074 I***********                         P  87  890LLOG                  S01194
+0075 I***********                         P  90  920LCD                   S01194
+0076 I***********                            93  93 CHTP                  S01194
+0077 I***********                         P  94  960TNLU                  S01194
+0078 I***********                             1  96 LOT                   S01194
+0079 I********NS**05                                                      S01194
+0080 I***********                                                         S01194
+0081 I*****TABLE*FILE*-*TABLE*HEADER*RECORD - BASE RATES.                 S01194
+0082 I***********                                                         S01194
+0083 I*TABLEU*NS**03***1 CH   2 C2   3 C1                                 S01194
+0084 I***********                             1   1 RECI                  S01194
+0085 I***********                             2   30RECT                  S01194
+0086 I***********                            14  170NREC                  S01194
+0087 I***********                            18  210NINS                  S01194
+0088 I***********                            22  250NDEL                  S01194
+0089 I***********                            26  290NAMD                  S01194
+0090 I***********                             1  96 LOT                   S01194
+0091 I***********                                                         S01194
+0092 I*****TABLE*FILE*-*BASE*RATE*RECORD.                                 S01194
+0093 I***********                                                         S01194
+0094 I********NS*      1 CD   2 C2   3 C1                                 S01194
+0095 I***********                             1   1 RECI                  S01194
+0096 I***********                             2   30RECT                  S01194
+0097 I***********                             9  11 CCY                   S01194
+0098 I***********                            12  130BRTT                  S01194
+0099 I***********                         P  14  197BRTE                  S01194
+0100 I***********                         P  20  220VDRC                  S01194
+0101 I***********                            23  23 RCIN                  S01194
+0102 I***********                            24  53 BRTN                  S01194
+0103 I***********                         P  54  597NBRT                  S01194
+0104 I***********                         P  60  620VDNR        20        S01194
+0105 I***********                         P  90  920LCD                   S01194
+0106 I***********                            93  93 CHTP                  S01194
+0107 I***********                         P  94  960TNLU                  S01194
+0108 I***********                             1  96 LOT                   S01194
+0109 I***********                                                         S01194
+0110 I*****TABLE*FILE*-*TABLE*HEADER*RECORD OF NEXT TABLE.                S01194
+0111 I***********                                                         S01194
+0112 I********NS* 04   1 CH                                               S01194
+0113 I***********                             1   1 RECI                  S01194
+0114 I***********                             2   30RECT                  S01194
+0115 I***********                            14  170NREC                  S01194
+0116 I***********                            18  210NINS                  S01194
+0117 I***********                            22  250NDEL                  S01194
+0118 I***********                            26  290NAMD                  S01194
+0119 I***********                             1  96 LOT                   S01194
+0120 I***********                                                         S01194
+0121 I*****CATCHALL*FOR*DELETED*RECORDS.                                  S01194
+0122 I********NS* 05                                                      S01194
+     I**                                                                  S01194
+     I**     MIDAS MODULES                                                S01194
+     I**                                                                  S01194
+     IMMOD        DS                            256                       S01194
+     I                                        2   2 WDL                   S01194
+     I***********                             4   4 WCL             S01194S01339
+     I                                       10  10 WLE                   S01194
+     I                                       16  16 WRE                   S01194
+     I                                       23  23 WIC                   E23394
+     I**                                                                  S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** BANK DETAILS                                                     S01194
+     I*                                                                   S01194
+     ISDGELR    E DSSDGELRPD                                              S01194
+     I** GENERAL LEDGER DETAILS                                           S01194
+     I*                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                              CMC001
+     I**  Switchable Features Details                                     CMC001
+     I*                                                                   CMC001
+     ISDPCAC    E DSSDPCACPD                                              186713
+     I**   Profit Centre Accounting ICD Details                           186713
+     I*                                                                   186713
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I**                                                                  S01194
+     I/COPY WNCPYSRC,SDH00503
+     ILDA         DS                            256                       LN0514
+     I                                      134 141 DBFILE                LN0514
+     I                                      142 170 DBKEY                 LN0514
+     I                                      171 180 DBPGM                 LN0514
+     I                                      181 1830DBASE                 LN0514
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I/COPY ZSRSRC,ZDATE9Z2                                                                   245028
+     C*
+     C**   DEFINE KLIST                                                   S01267
+     C*                                                                   S01267
+     C           BSHSKY    KLIST                                          S01267
+     C                     KFLD           WCYCD                           S01267
+     C                     KFLD           WBSRC                           S01267
+     C                     KFLD           WVDNR                           S01267
+      *                                                                                       245028
+     C           BSHSK     KLIST                                                              245028
+     C                     KFLD           WCYCD                                               245028
+     C                     KFLD           WBSRC                                               245028
+      *                                                                                       245028
+     C           BSRTK     KLIST                                                              245028
+     C                     KFLD           WCYCD                                               245028
+     C                     KFLD           WBSRCA                                              245028
+     C/COPY WNCPYSRC,SD0600C001
+      *                                                                   S01267
+     C** SET WORK FIELDS TO ZERO                                          S01267
+     C*                                                                   S01267
+     C                     Z-ADD0         NHRW                            S01267
+     C                     Z-ADD0         NRBU                            S01267
+     C*    DEFINE LDA                                                     LN0514
+     C           *NAMVAR   DEFN           LDA                             LN0514
+     C                     MOVEACPY@      BIS@   80
+     C*
+0125 C*****CHECK*INSTALLATION*CONTROL*DATA*READ.IF NOT,DATABASE ERROR     S01194
+0126 C***********                                                         S01194
+0127 C***01******          SETON                     10                   S01194
+0128 C***02******          SETON                     11LR                 S01194
+0129 C*LRN10*****          SETON                     U8                   S01194
+0130 C*LRN11*****          SETON                     U8                   S01194
+0131 C*LRU8******          GOTO END                                       S01194
+0132 C*
+0133 C*    CHECK WHICH MODULES PRESENT IN SYSTEM
+0134 C*
+0135 C*LR********          TESTB'1'       MODI1          21               S01194
+0136 C*LR********          TESTB'2'       MODI1          22               S01194
+0137 C*LR********          TESTB'3'       MODI1          23               S01194
+0137 C*LR********          TESTB'1'       MODI2          40               S01194
+     C*                                                                   S01194
+     C           *NAMVAR   DEFN           MMOD                            S01194
+     C           *LOCK     IN   MMOD                                      S01194
+     C           WDL       COMP 'Y'                      21               S01194
+     C           WRE       COMP 'Y'                      22               S01194
+     C  N22      WIC       COMP 'Y'                      22               E23394
+     C***********WCL       COMP 'Y'                      23         S01194S01339
+     C           WLE       COMP 'Y'                      40               S01194
+     C                     OUT  MMOD                                      S01194
+     C*                                                                   S01194
+     C** ACCESS BANK DETAILS                                              S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C**********           PARM '*DBERR ' @RTCD   7                 S01194LN0514
+     C                     PARM '*MSG   ' @RTCD   7                       LN0514
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANK                                    LN0514
+     C           *LOCK     IN   LDA                                       LN0514
+     C                     SETON                       U8LR***************LN0514
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 01  *LN0514
+     C                     Z-ADD1         DBASE            ***************LN0514
+     C                     OUT  LDA                                       LN0514
+     C                     END                                            LN0514
+     C** ACCESS GENERAL LEDGER DETAILS                                    S01194
+     C**********           CALL 'AOGELRR0'                                S01194              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C**********           PARM '*DBERR ' @RTCD                     S01194LN0514
+     C                     PARM '*MSG   ' @RTCD                           LN0514
+     C                     PARM '*FIRST ' @OPTN                           S01194
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01194              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK                                    LN0514
+     C           *LOCK     IN   LDA                                       LN0514
+     C                     SETON                       U8LR***************LN0514
+     C                     MOVEL'SDGELRPD'DBFILE           * DBERROR 02  *LN0514
+     C                     Z-ADD2         DBASE            ***************LN0514
+     C                     OUT  LDA                                       LN0514
+     C                     END                                            LN0514
+      *                                                                   CMC001
+      **  Access SAR details file to determine if CMC001 is switched ON   CMC001
+      *                                                                   CMC001
+     C                     MOVE 'N'       CMC001  1                       CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM *BLANKS   @RTCD   7                       CMC001
+     C                     PARM '*VERIFY' @OPTN   7                       CMC001
+     C                     PARM 'CMC001'  @SARD   6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+     C           @RTCD     IFEQ *BLANKS                                   CMC001
+     C                     MOVE 'Y'       CMC001                          CMC001
+     C                     ELSE                                           CMC001
+      *                                                                   CMC001
+      **  else, database error (return code other than *NRF)              CMC001
+      *                                                                   CMC001
+     C           @RTCD     IFNE '*NRF   '                                 CMC001
+     C           *LOCK     IN   LDA                                       CMC001
+     C                     SETON                       U8LR***************CMC001
+     C                     MOVEL'SCSARDPD'DBFILE           * DBERROR 04  *CMC001
+     C                     Z-ADD4         DBASE            ***************CMC001
+     C                     MOVEL@SARD     DBKEY                           CMC001
+     C                     MOVE *BLANKS   DBPGM                           CMC001
+     C                     MOVEL'SD0600  'DBPGM                           CMC001
+     C                     EXSR DBERR                                     CMC001
+     C                     ENDIF                                          CMC001
+     C                     ENDIF                                          CMC001
+     C*                                                                   S01194
+     C**  Access PCA Details File.                                        186713
+     C*                                                                   186713
+     C           CMC001    IFEQ 'Y'                                       186713
+     C                     CALL 'AOPCACR0'                                186713
+     C                     PARM '*MSG   ' @RTCD                           186713
+     C                     PARM '*FIRST ' @OPTN                           186713
+     C           SDPCAC    PARM SDPCAC    DSFDY                           186713
+     C*                                                                   186713
+     C           @RTCD     IFNE *BLANKS                                   186713
+     C           *LOCK     IN   LDA                                       186713
+     C                     MOVEL'SDPCACPD'DBFILE           ************   186713
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 05 *   186713
+     C                     Z-ADD5         DBASE            ************   186713
+     C                     MOVE *BLANKS   DBPGM                           186713
+     C                     MOVEL'SD0600  'DBPGM                           186713
+     C                     EXSR DBERR                                     186713
+     C                     ENDIF                                          186713
+     C*                                                                   186713
+     C                     MOVE FTFNBR    WFNBR   2                       186713
+     C*                                                                   186713
+     C                     ENDIF                                          186713
+     C/COPY WNCPYSRC,SDH00504
+     C*                                                                   186713
+     C** LR SET ON FOR REMAINDER OF PROCESSING                            S01194
+     C*                                                                   S01194
+     C                     SETON                     LR                   S01194
+     C*                                                                   S01194
+0139 C*LR********APDA      COMP DNWD                 242525               S01194
+0140 C*LR***24***          Z-ADDDNWD      SAVE    50                      S01194
+0141 C*LR***25***          Z-ADDAPDA      SAVE                            S01194
+     C/COPY WNCPYSRC,SD0600C002
+0139 CLR         BKAPDT    COMP BJDNWD               242525               S01194
+0140 CLR    24             Z-ADDBJDNWD    SAVE    50                      S01194
+     C/COPY WNCPYSRC,SD0600C003
+0141 CLR    25             Z-ADDBKAPDT    SAVE                            S01194
+0142 C*
+0143 C******SET*LOWER*LIMITS*ON BASE RATE TABLE                           S01194
+0144 C*LR********          MOVEL'21'      LIMIT  12                       S01194
+0145 C*LR********LIMIT     SETLLTABLEU                                    S01194
+0146 C*
+0147 C*    LOOP TO READ & UPDATE BASE RATES & VALUE DATES IF REQUIRED
+0148 C*
+0149 CLR         READ      TAG                             ** READ TAG **
+0150 CLR                   SETOF                     030405
+0151 C*LR********          READ TABLEU                   30               S01194
+0151 CLR                   READ TABLETK                  30               S01194
+0152 C**
+0153 C**   READ AGAIN IF BASE RATES HEADER OR DELETED RECORD
+0154 CLR 03
+0155 COR 05                GOTO READ
+0156 CLR 04
+0157 C*OR30******          GOTO END                                       S01194
+0157 COR 30                GOTO READ2                                     S01194
+     CLR         RECI      IFEQ '*'                                       S01194
+     CLR                   GOTO READ                                      S01194
+     CLR                   END                                            S01194
+0158 C*
+0159 C*    CHECK STATUS OF RATE CHANGE INDICATORS FOR MODULES PRESENT
+0160 C*    IN SYSTEM. IF ON DO NOT UPDATE.
+0161 C*
+0162 C*R*******************SETOF                     262728               S01339
+0162 CLR                   SETOF                     2627
+0162 CLR                   SETOF                     41
+0163 CLR 21                TESTB'14'      RCIN         2626
+0164 CLR 26                GOTO READ
+0165 CLR 22                TESTB'03'      RCIN         2727
+0166 CLR 27                GOTO READ
+0167 C*R*23****************TESTB'25'      RCIN         2828               S01339
+0168 C*R*28****************GOTO READ                                      S01339
+0167 CLR 40                TESTB'67'      RCIN         4141
+0168 CLR 40 41             GOTO READ
+     CLR         VDNR      IFGT *ZEROS                                    S01194
+     CLR                   SETON                     20                   S01194
+     CLR                   END                                            S01194
+0172 CLR 20      VDNR      COMP SAVE                   2020
+     CLR 20                Z-ADDNBRT      BRTE                            S01194
+     CLR 20                Z-ADDVDNR      VDRC                            S01194
+0173 CLR 20                EXCPTTABLE
+0174 CLR                   GOTO READ
+0131 C*                                                                   S01194
+     C** REPEAT PROCESSING FOR NEW STANDING DATA FILES                    S01194
+     C*                                                                   S01194
+     CLR         READ2     TAG                             ** READ2 TAG **S01194
+     C*                                                                   S01194
+     CLR                   READ SDBSRTPD                 31               S01194
+     C*LR*31****************GOTO END                                S01194S01267
+     CLR 31                GOTO AUDIT                                     S01267
+     C*                                                                   S01194
+     C**      CHECK DEALING RECORDS TO BE GENERATED INDICATOR             S01194
+     C*                                                                   S01194
+     CLR 21      BADLLC    IFEQ 'Y'                                       S01194
+     CLR         BADLRC    OREQ 'Y'                                       S01194
+     CLR                   GOTO READ2                                     S01194
+     CLR                   END                                            S01194
+     C*                                                                   S01194
+     C********CHECK*SYNDICATED*LOANS*RECORDS*TO*BE*GENERATED*INDICATOR*   S01194
+     C*                                                                   S01194
+     C*R*23******BASYLL    IFEQ 'Y'                                 S01194S01339
+     C*R*********BASYLR    OREQ 'Y'                                 S01194S01339
+     C*R*********          GOTO READ2                               S01194S01339
+     C*R*********          END                                      S01194S01339
+     C*                                                                   S01194
+     C**      CHECK CUSTOMER LENDING LOANS RECORDS TO BE GENERATED        S01194
+     C**       INDICATOR                                                  S01194
+     C*                                                                   S01194
+     CLR 40      BACSLL    IFEQ 'Y'                                       S01194
+     CLR         BACSLR    OREQ 'Y'                                       S01194
+     CLR                   GOTO READ2                                     S01194
+     CLR                   END                                            S01194
+     C*                                                                   S01194
+     C**      CHECK RETAIL RECORDS TO BE GENERATED INDICATOR              S01194
+     C*                                                                   S01194
+     CLR 22      BAACLT    IFEQ 'Y'                                       S01194
+     CLR         BAACRC    OREQ 'Y'                                       S01194
+     CLR                   GOTO READ2                                     S01194
+     CLR                   END                                            S01194
+     C*                                                                   S01194
+     CLR                   MOVELBACYCD    WWCYCD  3                                           245028
+     CLR                   MOVELBABSRC    WWBSRC  2                                           245028
+0169 C*                                                                   S01194
+0170 C*    CHECK NEW VALUE DATE AGAINST COMPARISON DATE                   S01194
+0171 C*                                                                   S01194
+     CLR         BAVDNR    COMP *ZEROS               2020                 S01194
+0172 CLR 20      BAVDNR    COMP SAVE                   2020               S01194
+     CLR 20                Z-ADDBANBRT    BACBSR                          S01194
+     CLR 20                Z-ADDBAVDNR    BAVDRC                          S01194
+     CLR                   Z-ADD6991231   BAVDTO                                              245028
+     CLR                   Z-ADDBACBSR    BACBRT                                              245028
+      *
+0173 CLR 20                EXCPTSDBSRT                                    S01194
+     CLR                   UNLCKSDBSRTPD                                                    AR761706
+0131 C*                                                                   S01168
+     C** PROCESSING FOR PF/SDBSHSPD (HISTORIC DETAIL FILE)                S01267
+     C*                                                                   S01267
+     C** IF RATE CHANGE IS BACKVALUED, UPDATE OLD HISTORY RECORDS         S01267
+     C*                                                                   S01267
+     CLR 20      BAVDNR    IFLT BJRDNB                                    S01267
+     C***LR******BANBRT    ANDNEBACBSR                             S01267 103492
+     C*                                                                   S01267
+     CLR                   MOVELBACYCD    WCYCD   3                       S01267
+     CLR                   MOVELBABSRC    WBSRC   20                      S01267
+     CLR                   Z-ADDBAVDNR    WVDNR   50                      S01267
+     CLR                   Z-ADDBANBRT    WNBRT  117                      S01267
+      *                                                                   CMC001
+      **  If Management Accounts Enhancement feature is installed,        CMC001
+      **  call MC0440 to update the Funding Gap Rework dates              CMC001
+      **  Only call MC0440 when the base rate code is the same as         186713
+      **  the Funding Base Rate Code from PCA ICD and changed today.      186713
+      *                                                                   CMC001
+     CLR         CMC001    IFEQ 'Y'                                       CMC001
+     CLR         BABSRC    ANDEQWFNBR                                     186713
+     CLR         BALCD     ANDEQBJRDNB                                    186713
+     CLR                   CALL 'MC0440'                                  CMC001
+     CLR                   PARM           WCYCD                           CMC001
+     CLR                   PARM           WVDNR                           CMC001
+     CLR                   ENDIF                                          CMC001
+     C/COPY WNCPYSRC,SDH00505
+      *                                                                   CMC001
+     CLR         BSHSKY    SETLLSDBSHSL1                                  S01267
+     CLR                   READ SDBSHSL1                 80               S01267
+      *                                                                                       235907
+     CLR         G0HIDT    IFNE BAVDNR                                                        235907
+      *                                                                                       235907
+      ** Set historic date equal to value date of change                                      235907
+      *                                                                                       235907
+     CLR                   MOVELBAVDNR    G0HIDT                                              235907
+      *                                                                                       235907
+      ** Move values to fields for update of PF/SDBSHSPD                                      235907
+      *                                                                                       235907
+     CLR                   MOVELBACYCD    G0CYCD                                              235907
+     CLR                   MOVELBABSRC    G0BSRC                                              235907
+      *                                                                                       235907
+     CLR         BANBRT    IFNE *ZERO                                                         235907
+     CLR                   Z-ADDBANBRT    G0CBSR                                              235907
+     CLR                   ELSE                                                               235907
+     CLR                   Z-ADDBACBSR    G0CBSR                                              235907
+     CLR                   END                                                                235907
+      *                                                                                       235907
+      ** Write Historic record to PF/SDBSHSPD                                                 235907
+      *                                                                                       235907
+     CLR                   WRITESDBSSDP                                                       235907
+      *                                                                                       235907
+      ** Add 1 to number of historic records written                                          235907
+      *                                                                                       235907
+     CLR                   ADD  1         NHRW                                                235907
+     CLR                   ENDIF                                                              235907
+      *                                                                                       235907
+     CLR         BSHSKY    SETLLSDBSHSL1                                                      235907
+     CLR                   READ SDBSHSL1                 80                                   235907
+     C*                                                                   S01267
+     CLR         G0CYCD    DOWEQWCYCD                                     S01267
+     CLR         G0BSRC    ANDEQWBSRC                                     S01267
+     CLR         *IN80     ANDEQ'0'                                       E36180
+     CLR                   Z-ADDWNBRT     G0CBSR                          S01267
+     CLR                   EXCPTHIST                                      S01267
+     CLR                   READ SDBSHSL1                 80               S01267
+     CLR                   END                                            S01267
+     C*                                                                   S01267
+     C/COPY WNCPYSRC,SDH00506
+     CLR                   END                                            S01267
+     C*                                                                   S01267
+     C** SET HISTORIC DATE EQUAL TO MIDAS RUN DATE (PF/TABTB10)           S01267
+     C*                                                                   S01267
+     CLR                   MOVELBJRDNB    G0HIDT                          S01267
+     C*                                                                   S01267
+     C** MOVE VALUES TO FIELDS FOR UPDATE OF PF/SDBSHSPD                  S01267
+     C*                                                                   S01267
+     CLR                   MOVELBACYCD    G0CYCD                          S01267
+     CLR                   MOVELBABSRC    G0BSRC                          S01267
+     CLR         BANBRT    IFNE *ZERO                                     S01267
+     CLR                   Z-ADDBANBRT    G0CBSR                          S01267
+     CLR                   ELSE                                           S01267
+     CLR                   Z-ADDBACBSR    G0CBSR                          S01267
+     CLR                   END                                            S01267
+     C*                                                                   S01267
+     C** WRITE HISTORIC RECORD TO PF/SDBSHSPD                             S01267
+     C*                                                                   S01267
+     CLR                   WRITESDBSSDP                                   S01267
+     C*                                                                   S01267
+     C** ADD 1 TO NUMBER OF HISTORIC RECORDS WRITTEN                      S01267
+     C*                                                                   S01267
+     CLR                   ADD  1         NHRW                            S01267
+     C/COPY WNCPYSRC,SDH00507
+      *                                                                                       CTI004
+      ** Populate 'Date This Rate effective to:' to be use by T.I.                            CTI004
+      *                                                                                       CTI004
+     CLR                   EXSR SRCBRT                                                        245028
+     CLR                   EXSR SRVDTO                                                        CTI004
+     C*                                                                   S01267
+0174 CLR                   GOTO READ2                                     S01194
+0175 C*
+     C** PROCESS PF/SDBSHSPA (HISTORIC TRAILER FILE) AFTER ALL BASE       S01267
+     C** RATE RECORDS HAVE BEEN PROCESSED                                 S01267
+     C*                                                                   S01267
+     CLR         AUDIT     TAG                                            S01267
+     CLR                   READ SDBSHSPA               5050               S01267
+     C*                                                                   S01267
+     CLR         *IN50     IFEQ '1'                                       S01267
+     CLR         *LOCK     IN   LDA                                       DT0025
+     CLR                   MOVEL*BLANKS   DBKEY                           S01267
+     CLR                   MOVEL*BLANKS   DBPGM                        *  S01267
+     CLR                   MOVEL'SDBSHSPA'DBFILE           *************  S01267
+     CLR                   MOVEL'SD0600  'DBPGM            **DBERR OO3**  S01267
+     CLR                   Z-ADD03        DBASE            *************  S01267
+     CLR                   EXSR DBERR                                     S01267
+     CLR                   END                                            S01267
+     C* SET NUMBER OF RECORDS BEFORE UPDATE (NRBU) EQUAL TO COUNT OF      S01267
+     C* RECORDS ON FILE (CORC). THEN ADD COUNT OF RECORDS WRITTEN         S01267
+     C* (NHRW) TO COUNT OF RECORDS ON FILE (CORC)                         S01267
+     C*                                                                   S01267
+     CLR                   Z-ADDG1CORC    NRBU   150                      S01267
+     CLR                   ADD  NHRW      G1CORC                          S01267
+     C*                                                                   S01267
+     C* IF COUNT OF RECORDS WRITTEN NOT EQUAL TO ZERO, UPDATE             S01267
+     C* PF/SDBSHSPA                                                       S01267
+     CLR         NHRW      IFNE *ZERO                                     S01267
+     CLR                   UPDATSDBSHSA0                                  S01267
+     CLR                   END                                            S01267
+     C*                                                                   S01267
+     C* WRITE OUT REPORT HEADING, DETAILS AND END OF REPORT TEXT          S01267
+     C*                                                                   S01267
+     CLR                   WRITESD0600AH                                  S01267
+     CLR                   MOVELG1CORC    SHNR                            S01267
+     CLR                   WRITESD0600AD                                  S01267
+     CLR                   WRITESD0600AT                                  S01267
+     C*                                                                   S01267
+0176 CLR         END       TAG                             ** END TAG **
+      ********************************************************************                    245028
+      /EJECT                                                                                  245028
+      ********************************************************************                    245028
+      *                                                                  *                    245028
+      * SRCBRT - Populate BAVDTO and BACBRT for Midas-TI Interface       *                    245028
+      *                                                                  *                    245028
+      ********************************************************************                    245028
+      *                                                                                       245028
+     C           SRCBRT    BEGSR                                                              245028
+      *                                                                                       245028
+     C                     MOVELWWCYCD    WCYCD                                               245028
+     C                     MOVELWWBSRC    WBSRC                                               245028
+     C                     MOVELWWBSRC    WBSRCA  2                                           245028
+     C           BSRTK     CHAINSDBSRTL0             86                                       245028
+     C           *IN86     IFEQ '1'                                                           245028
+     C                     GOTO ECBRT                                                         245028
+     C                     ENDIF                                                              245028
+      *                                                                                       245028
+      ** Initialize BAVDTO tp 6991231                                                         245028
+      *                                                                                       245028
+     C                     Z-ADD6991231   BAVDTO                                              245028
+     C                     Z-ADDBACBSR    BACBRT                                              245028
+      *                                                                                       245028
+     C           BATYLC    IFEQ 'A'                                                           245028
+     C           BACBSR    ANDNEBANBRT                                                        245028
+     C           BACBSR    ANDNE*ZEROS                                                        245028
+     C           BAVDRC    ORNE BAVDNR                                                        245028
+     C           BAVDNR    ANDNE*ZEROS                                                        245028
+      *                                                                                       245028
+     C           BAVDNR    SUB  1         @@DAYN  50                                          245028
+     C*                    EXSR SRTIDT                                                        245028
+     C                     Z-ADD@@CYMD    BAVDTO                                              245028
+      *                                                                                       245028
+     C                     ENDIF                                                              245028
+      *                                                                                       245028
+      ** If SDBSRT's BAVDNR is backvalued, get previous day rate from                         245028
+      ** SDBSHSPD.  This is for new field BACBRT.                                             245028
+      *                                                                                       245028
+     C           BAVDNR    IFLE BAVDRC                                                        245028
+     C                     MOVE BACYCD    WCYCD                                               245028
+     C                     MOVE BABSRC    WBSRC                                               245028
+     C           BAVDNR    SUB  1         WVDNR                                               245028
+      *                                                                                       245028
+     C           BSHSKY    SETGTSDBSHSL1                                                      245028
+     C           BSHSK     REDPESDBSHSL1                 85                                   245028
+      *                                                                                       245028
+     C           *IN85     IFEQ '0'                                                           245028
+     C                     Z-ADDG0CBSR    BACBRT                                              245028
+     C                     ENDIF                                                              245028
+     C                     ENDIF                                                              245028
+      *                                                                                       245028
+     C                     EXCPTL0BSRT                                                        245028
+     C  N86                UNLCKSDBSRTL0                                                    AR761706
+      *                                                                                       245028
+      ** Records in SDBSHSPD have rates up to date of SDBSRTPD/BAVDRC.                        245028
+      ** Any records in SDBSHSPD greater than BAVDRC should be updated                        245028
+      ** with TI date of 6991231 because XD4PF doesn't need them.                             245028
+      *                                                                                       245028
+     C                     Z-ADDBAVDRC    WHIDT                                               245028
+     C           WHIDT     SUB  1         @@DAYN                                              245028
+     C                     EXSR SRTIDT                                                        245028
+     C                     Z-ADD@@CYMD    WPVDTO                                              245028
+      *                                                                                       245028
+     C                     Z-ADDBACBSR    WCBSR                                               245028
+      *                                                                                       245028
+     C           ECBRT     TAG                                                                245028
+     C                     ENDSR                                                              245028
+      *                                                                                       245028
+      ********************************************************************                    CTI004
+      /EJECT                                                                                  CTI004
+      ********************************************************************                    CTI004
+      *                                                                  *                    CTI004
+      * SRVDTO - Populate G0VDTO and G0CHGD for Midas-TI Interface       *                    CTI004
+      *                                                                  *                    CTI004
+      ********************************************************************                    CTI004
+      *                                                                                       CTI004
+     C           SRVDTO    BEGSR                                                              CTI004
+      *                                                                                       CTI004
+      ** Read all CCY/Rate records backward and set date 'Date This                           CTI004
+      ** Rate effective to:' until Rate Change indicator (G0CHGD) is 'Y'.                     CTI004
+      *                                                                                       CTI004
+     C**********           MOVE 'Y'       W1STR   1                                    CTI004 245028
+     C                     MOVE 99999     WVDNR                                               CTI004
+     C           BSHSKY    SETGTSDBSHSP0                                                      CTI004
+     C                     READPSDBSHSP0                 32                                   CTI004
+      *                                                                                       CTI004
+     C           *IN32     DOWEQ*OFF                                                          CTI004
+     C           WCYCD     ANDEQG0CYCD                                                        CTI004
+     C           WBSRC     ANDEQG0BSRC                                                        CTI004
+     C********** WCHGD     ANDNE'Y'                                                    CTI004 245028
+      *                                                                                       CTI004
+      ** If rate changes, set 'Date This Rate effective to:' to next date of its              CTI004
+      ** effectivity - 1 , otherwise set to 6991231. Format in CYYMMDD.                       CTI004
+      *                                                                                       CTI004
+     C           WCBSR     IFEQ G0CBSR                                                        CTI004
+     C********** W1STR     OREQ 'Y'                                                    CTI004 245028
+      *                                                                                       CTI004
+     C********** W1STR     IFEQ 'Y'                                                    CTI004 245028
+     C**********           Z-ADD6991231   G0VDTO                                       CTI004 245028
+     C**********           MOVE G0VDTO    WPVDTO                                       CTI004 245028
+     C**********           ELSE                                                        CTI004 245028
+     C                     MOVE WPVDTO    G0VDTO                                              CTI004
+     C**********           ENDIF                                                       CTI004 245028
+      *                                                                                       CTI004
+     C                     ELSE                                                               CTI004
+     C           WHIDT     SUB  1         ZDAYNO                                              CTI004
+      ** Date Format is always 'D' even for US Midas system. Field is for TI use.     CTI004 BUG2814
+     C**********           MOVE *ON       *IN98                                       CTI004 BUG2814
+     C                     MOVE *OFF      *IN98                                       CTI004 BUG2814
+     C                     EXSR ZDATE2                                                        CTI004
+     C                     MOVELZDATE     W1DDMM  4                                           CTI004
+     C                     MOVELW1DDMM    W1DD    2                                          BUG2817
+     C                     MOVE W1DDMM    W1MM    2                                          BUG2817
+     C                     MOVE W1DD      W1MMDD  4                                          BUG2817
+     C                     MOVELW1MM      W1MMDD  4                                          BUG2817
+     C                     MOVE ZDATE     W1YY    2                                           CTI004
+     C**********           MOVE W1DDMM    WYDM    6                                   CTI004 BUG2814
+     C                     MOVE W1MMDD    WYDM    6                                          BUG2814
+     C                     MOVELW1YY      WYDM                                                CTI004
+     C                     MOVEL'1'       WDATE   7                                           CTI004
+     C                     MOVE WYDM      WDATE                                               CTI004
+     C                     MOVE WDATE     G0VDTO                                              CTI004
+      *                                                                                       245028
+     C           WHIDT     SUB  1         @@DAYN                                              245028
+     C                     EXSR SRTIDT                                                        245028
+     C                     Z-ADD@@CYMD    G0VDTO                                              245028
+     C                     MOVE G0VDTO    WPVDTO  70                                          CTI004
+     C                     ENDIF                                                              CTI004
+      *                                                                                       245028
+      ** Records in SDBSHSPD is greater than or equal to SDBSRTPD's:                          245028
+      **    BAVDRC - Current Rate change date                                                 245028
+      *                                                                                       245028
+     C           G0HIDT    IFGE BAVDRC                                                        245028
+     C                     Z-ADD6991231   G0VDTO                                              245028
+     C                     ENDIF                                                              245028
+      *                                                                                       245028
+     C                     MOVE ' '       G0CHGD                                              245028
+     C                     EXCPTBSHSVD                                                        CTI004
+      *                                                                                       CTI004
+      ** Store previous values                                                                CTI004
+      *                                                                                       CTI004
+     C                     Z-ADDG0CBSR    WCBSR  117                                          CTI004
+     C                     Z-ADDG0HIDT    WHIDT   50                                          CTI004
+     C**********           MOVE G0CHGD    WCHGD   1                                    CTI004 245028
+      *                                                                                       CTI004
+     C                     READPSDBSHSP0                 32                                   CTI004
+     C**********           MOVE 'N'       W1STR                                        CTI004 245028
+     C                     ENDDO                                                              CTI004
+      *                                                                                       CTI004
+      ** Start reading forward to update Rate Change Indicator                                CTI004
+      *                                                                                       CTI004
+     C                     Z-ADD*ZEROS    WCBSR                                               CTI004
+     C                     READ SDBSHSP0                 32                                   CTI004
+      *                                                                                       CTI004
+     C           *IN32     DOWEQ*OFF                                                          CTI004
+     C           WCYCD     ANDEQG0CYCD                                                        CTI004
+     C           WBSRC     ANDEQG0BSRC                                                        CTI004
+     C********** G0CHGD    ANDNE'Y'                                                    CTI004 245028
+      *                                                                                       CTI004
+     C           WCBSR     IFNE G0CBSR                                                        CTI004
+     C                     MOVE 'Y'       G0CHGD                                              CTI004
+     C                     EXCPTBSHSCH                                                        CTI004
+     C                     ENDIF                                                              CTI004
+      *                                                                                       CTI004
+     C                     Z-ADDG0CBSR    WCBSR                                               CTI004
+      *                                                                                       CTI004
+     C                     READ SDBSHSP0                 32                                   CTI004
+     C                     ENDDO                                                              CTI004
+      *                                                                                       CTI004
+     C                     ENDSR                                                              CTI004
+      *                                                                                       CTI004
+      ********************************************************************
+      /EJECT                                                              S01267
+      *****************************************************************                       245028
+      *                                                               *                       245028
+      * SRTIDAT - Convert Midas Date to TI Date - CYYMMDD             *                       245028
+      *                                                               *                       245028
+      *****************************************************************                       245028
+      *                                                                                       245028
+     C           SRTIDT    BEGSR                                                              245028
+      *                                                                                       245028
+      **  Convert date from day number to YYYYMMDD                                            245028
+      *                                                                                       245028
+     C                     Z-ADD@@DAYN    @@DAYN                                              245028
+     C                     Z-ADD*ZEROS    @@CYMD                                              245028
+      *                                                                                       245028
+     C                     EXSR ZDATE9                                                        245028
+      *                                                                                       245028
+     C                     Z-ADD@@VDT     @YMD    80                                          245028
+     C                     MOVEL@YMD      W#YY    20                                          245028
+      *                                                                                       245028
+      ** Get century                                                                          245028
+      *                                                                                       245028
+     C                     SELEC                                                              245028
+     C           W#YY      WHEQ 20                                                            245028
+     C                     MOVEL1         W#CYMD  7                                           245028
+     C           W#YY      WHEQ 21                                                            245028
+     C                     MOVEL2         W#CYMD                                              245028
+     C           W#YY      WHEQ 22                                                            245028
+     C                     MOVEL3         W#CYMD                                              245028
+     C           W#YY      WHEQ 23                                                            245028
+     C                     MOVEL4         W#CYMD                                              245028
+     C           W#YY      WHEQ 24                                                            245028
+     C                     MOVEL5         W#CYMD                                              245028
+     C           W#YY      WHEQ 25                                                            245028
+     C                     MOVEL6         W#CYMD                                              245028
+     C                     OTHER                                                              245028
+     C                     MOVEL1         W#CYMD                                              245028
+     C                     ENDSL                                                              245028
+      *                                                                                       245028
+     C                     MOVE @YMD      W#YMD   6                                           245028
+     C                     MOVE W#YMD     W#CYMD                                              245028
+      *                                                                                       245028
+     C                     MOVE W#CYMD    @@CYMD  70                                          245028
+      *                                                                                       245028
+     C                     ENDSR                                                              245028
+      *****************************************************************                       245028
+      /EJECT                                                                                  245028
+      *****************************************************************   S01267
+      *                                                                   S01267
+      * DBERR - DATABASE ERROR PROCESSING. PERFORMED WHEN SDBSHSPA        S01167
+      *         IN ERROR                                                  S01267
+      *                                                                   S01267
+      * CALLED BY : MAIN PROCESSING                                       S01267
+      *                                                                   S01267
+      * CALLS     : NONE                                                  S01267
+      *                                                                   S01267
+      * FIELDS IN : NONE                                                  S01267
+      *                                                                   S01267
+      * FIELDS OUT: NONE                                                  S01267
+      *                                                                   S01267
+      ********************************************************************S01267
+      *                                                                   S01267
+     C           DBERR     BEGSR                                          S01267
+      *                                                                   S01267
+      ** WRITE REPORT HEADINGS                                            S01267
+      *                                                                   S01267
+     C                     WRITESD0600AH                                  S01267
+      ** WRITE OUT ERROR TEXT                                             S01267
+      *                                                                   S01267
+     C                     WRITESD0600AE                                  S01267
+      *                                                                   S01267
+      ** SETON DATABASE ERROR INDS, DUMP PROGRAM AND RETURN CONTROL       S01267
+      *                                                                   S01267
+     C                     SETON                     U7U8LR               S01267
+     C                     DUMP                                           S01267
+     C                     OUT  LDA                                       S01267
+     C                     RETRN                                          S01267
+      *                                                                   S01267
+     C                     ENDSR                                          S01267
+      /EJECT                                                              S01267
+      ********************************************************************S01267
+      /COPY ZSRSRC,ZDATE2Z2                                                                   CTI004
+     C/COPY ZSRSRC,ZDATE9Z3                                                                   245028
+      *                                                                                       CTI004
+0177 O*TABLEU*E**      LR 20                                              S01194
+0178 O***********              NBRT      19P                              S01194
+0179 O***********              VDNR      22P                              S01194
+0136 OTABLETKFE        LR 20   TABLE                                      S01194
+0178 O                         BRTE                                       S01194
+0179 O                         VDRC                                       S01194
+     O*                                                                   S01194
+0177 OSDBSRTD0E        LR 20   SDBSRT                                     S01194
+0178 O                         BACBSR                                     S01194
+0179 O                         BAVDRC                                     S01194
+     O                         BAVDTO                                                         245028
+     O                         BACBRT                                                         245028
+     O*                                                                   S01194
+     O@BAREDG E        LR      L0BSRT                                                         245028
+     O                         BAVDTO                                                         245028
+     O                         BACBRT                                                         245028
+     O*                                                                   S01267
+0177 OSDBSHSD0E        LR      HIST                                       S01267
+0178 O                         G0CBSR                                     S01267
+      *                                                                                       CTI004
+     OSDBSHSPPE        LR      BSHSVD                                                         CTI004
+     O                         G0VDTO                                                         CTI004
+     O                         G0CHGD                                                         245028
+      *                                                                                       CTI004
+     OSDBSHSPPE        LR      BSHSCH                                                         CTI004
+     O                         G0CHGD                                                         CTI004
+      /COPY ZSRSRC,ZDATE2Z3                                                                   CTI004
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN                        245028
+00366007310109601461                                                                          245028
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                           245028
+00000000310005900090001200015100181002120024300273003040033400365                             245028
+     X/COPY WNCPYSRC,SDH00508
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

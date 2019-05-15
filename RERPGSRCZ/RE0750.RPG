@@ -1,0 +1,882 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Uncleared Funds Report')                         *
+0001 H***********                                                         S01117
+0002 F*****************************************************************
+0004 F*                                                               *
+     F*  Midas - Retail Module
+0004 F*                                                               *
+0005 F*  RE0750 - UNCLEARED FUNDS REPORT                              *
+0006 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*      1990, 1993                                               *
+0008 F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23967           Date 13May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247707             Date 05Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 03Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 101702             Date 20Jan98               *
+0009  *                 S01413             Date 13Apr93               *
+0009 F*                 E36053                  06MAY92               *
+0009 F*                 LN0136                  09MAY90               *
+0009 F*                 S01117                  25JAN90               *
+0009 F*                 E18758                  05JUL89               *
+0010 F*                                                               *
+0002 F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field.                    *
+      *  247707 - SetOn L1 also for changes in ACSQ.                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL007 - Account Postings Enquiry                            *
+     F*  101702 - Report has incorrect page breaks due to problem     *
+     F*           with overflow when no detail to report. Fix is to   *
+     F*           use Fetch Overflow for overflow headings.           *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*  E36053 - A P1 spool should not be produced if there are no   *
+     F*           details to report                                   *
+0011 F*  LN0136 - Define KINFDS for RE0750AU Printer file             *
+0011 F*  S01117 - Rel. 10 Multibranching                              *
+     F*  E18758 - Number of records field 1 character too short       *
+     F*                                                               *
+0011 F*****************************************************************
+0012 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F*NCOL****** F     160  1AI     1 DISK                               S01413
+     F***UNCOL***IP  F     279  1AI     1 DISK                     S01413 CGL007
+     F***UNCOL** IP  F     331  1AI     1 DISK                                         CGL007 CGL029
+     FUNCOL   IP  F     620  1AI     1 DISK                                                   CGL029
+0014 F***TABLE** IF  F      96 12AI     2 DISK                                         RE0750 CGL029
+     FTABLE   IF  F     126 12AI     2 DISK                                                   CGL029
+0015 F***CLINT** IF  F     256  7AI     2 DISK                                       RE0750 BUG23967
+     FCLINT   IF  F     264  7AI     2 DISK                                                 BUG23967
+0016 F*E0750P1O** F     132     OF     PRINTER                      S01124S01117
+0016 FRE0750P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
+0016 F*E0750AUO** F     132            PRINTER                      S01117LN0136
+0016 FRE0750AUO   F     132     OA     PRINTER      KINFDS SPOOLU         LN0136
+     F/COPY WNCPYSRC,RE0750F001
+0017 F*****************************************************************   RE0750
+0017 F*                                                               *   RE0750
+0018 F*  F U N C T I O N   O F  I N D I C A T O R S                   *   RE0750
+0017 F*                                                               *   RE0750
+0019 F*  01 - UNCOL RECORDS   ACCOUNT POSTING DETAIL                  *   RE0750
+0020 F*  02 - UNCOL TRAILER                                           *   RE0750
+0021 F*  03 - TABLE RECORDS ICDR1    TAB,I1                           *   RE0750
+0022 F*  04 - TABLE RECORDS  CURRENCIES RECORD TYPE 1 TAB,TG          *   RE0750
+0023 F*  05 - CLINT RECORDS  CUSTOMER MASTER DETAILS  CLINT,A         *   RE0750
+     F*  06 - FOR OUTPUT OF TOTAL                                     *   S01117
+0024 F*  10 - DRCR INDICATOR = 1                                      *   RE0750
+0025 F*  20 - RETAIL A/C NO. ZERO OR BLANKS                           *   RE0750
+0026 F*  40 - 1ST CYCLE PROCESSING DONE                               *   RE0750
+0027 F*  41 - NO.OF DECIMAL POSITIONS IS 0                            *   RE0750
+0028 F*  42 - NO.OF DECIMAL POSITIONS IS 1                            *   RE0750
+0029 F*  43 - NO.OF DECIMAL POSITIONS IS 2                            *   RE0750
+0030 F*  44 - NO.OF DECIMAL POSITIONS IS 3                            *   RE0750
+0031 F*  60 - CHAIN TO TABLE FILE UNSUCCESSFUL                        *   RE0750
+0032 F*  70 - CHAIN TO CLINT FILE UNSUCCESSFUL                        *   RE0750
+0032 F*  86 - REPORT HAVE BEEN PRODUCED                               *   S01117
+0032 F*  87 - OUTPUT INDICATOR                                        *   S01117
+0032 F*  88 - MBIN = Y                                                *   S01117
+0033 F*  U8 - FILE CONTROL TOTALS OUT OF BALANCE                      *   RE0750
+0034 F*  L1 - CUSTOMER NO.                                            *   RE0750
+0035 F*  L2 - CURRENCY                                                *   RE0750
+0036 F*  L3 - BRANCH                                                  *   RE0750
+0037 F*                                                               *   RE0750
+0037 F*****************************************************************   RE0750
+     E/EJECT
+0038 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYRE0750
+0039 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYRE0750
+0040 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY RE0750
+     E                    CPY@    1   1 80
+0041 E**                                                                  RE0750
+     I/SPACE 3
+0042 I*    UNCOL RECORDS                                                  RE0750
+0043 I*    ACCOUNT POSTING DETAIL                                         RE0750
+0044 IUNCOL   NS  01   1 CP                                               RE0750
+0045 I                                        1   1 RECI                  RE0750
+0046 I**********                              2   70CNUM  L2                           RE0750 CSD027
+0046 I                                        2   7 CNUM  L2                                  CSD027
+0047 I                                        8  10 CCY   L3              RE0750
+0048 I**********                              2  16 ACID  L1                           RE0750 CGL029
+0049 I**********                             11  140ACOD                               RE0750 CGL029
+     I                                        2  10 ACID  L1                                  CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0050 I**********                             15  160ACSQ                               RE0750 247707
+0050 I                                       15  160ACSQ  L1                                  247707
+0051 I                                       23  320ACNO            20    RE0750
+0052 I                                    P  33  350PSTD                  RE0750
+0053 I                                    P  36  380VALD                  RE0750
+0054 I                                       39  430TRAT                  RE0750
+0055 I                                       44  73 PNAR                  RE0750
+0056 I                                    P  74  800PSTA                  RE0750
+0057 I                                       81  810DRCR                  RE0750
+0058 I**********                             82  870ASOC                               RE0750 CSD027
+0058 I                                       82  87 ASOC                                      CSD027
+0059 I                                       88  950CHQN                  RE0750
+0060 I                                       96 102 SPOS                  RE0750
+0061 I***********                           103 1050BRCD  L4              S01117
+0061 I                                      103 105 BRCA  L4              S01117
+0062 I                                      106 1060RIND                  RE0750
+0063 I                                    P 107 1080REJC                  RE0750
+0064 I                                      109 111 ORGC                  RE0750
+0065 I                                    P 112 1140RREC                  RE0750
+0066 I                                      124 124 ATST                  RE0750
+0067 I                                      128 1280PRIN                  RE0750
+0068 I                                      129 129 GETP                  RE0750
+0069 I                                      130 135 GREF                  RE0750
+0070 I                                      137 1370ACUM                  RE0750
+     I                                      590 5990ACOD  L1                                  CGL029
+     I/COPY WNCPYSRC,RE0750I001
+0071 I*    TRAILER                                                        RE0750
+0072 I        NS  02   1 CT                                               RE0750
+0073 I                                        1   1 RECI                  RE0750
+0074 I                                        2   60NORE                  RE0750
+0075 I                                    P   7  140HRWN                  RE0750
+0076 I                                    P  15  160HRDC                  RE0750
+0077 I        NS  77   1 CH                                               RE0750
+0078 I*                                                                   RE0750
+0079 I*    CATCHALL                                                       RE0750
+0080 I        NS                                                          RE0750
+0081 I*                                                                   RE0750
+0082 I*    TABLE RECORDS FROM LIBRARY MEMBER TAB/I1     (TABLE,TB)        RE0750
+0083 I*    INSTALLATION CONTROL DATA RECORD 1                             RE0750
+0084 ITABLE   NS  03   2 C0   3 C1  12 C1                                 RE0750
+0085 I       AND      13 C0                                               RE0750
+0086 I                                        1   1 RECI                  RE0750
+0087 I                                        2   30RECT                  RE0750
+0088 I                                       12  130RCDE                  RE0750
+0089 I                                       14  66 TITL                  RE0750
+0090 I                                       67  67 DATF                  RE0750
+0091 I***********                            68  700DFBR                  S01117
+0091 I                                       68  70 DFBM                  S01117
+0092 I                                       74  74 MODI1                 RE0750
+0093 I                                       75  75 MODI2                 RE0750
+0094 I                                       76  76 MODI3                 RE0750
+0095 I                                    P  77  790RUND                  RE0750
+0096 I                                       80  86 RUNA                  RE0750
+0097 I                                       87  870SFLG                  RE0750
+0098 I                                    P  90  920LCD                   RE0750
+0099 I                                       93  93 CHTP                  RE0750
+0100 I                                    P  94  960TNLU                  RE0750
+0101 I*                                       1  96 LOT                   RE0750
+0102 I**                                                                  RE0750
+0103 I**                                                                  RE0750
+0104 I**                                                                  RE0750
+0105 I*    TABLE RECORDS FROM LIBRARY MEMBER TAB/TG     (TABLE,TG)        RE0750
+0106 I*    CURRENCIES RECORD TYPE 1                                       RE0750
+0107 I        NS  04   1 CD   2 C2   3 C0                                 RE0750
+0108 I       AND      13 C1                                               RE0750
+0109 I                                        1   1 RECI                  RE0750
+0110 I                                        2   30RECT                  RE0750
+0111 I                                       10  12 CCY                   RE0750
+0112 I                                       13  130SREC                  RE0750
+0113 I                                       14  27 CCNM                  RE0750
+0114 I                                    P  28  348SPOT                  RE0750
+0115 I                                       35  37 CCYS                  RE0750
+0116 I                                       38  380CDP                   RE0750
+0117 I                                       39  390TNOT                  RE0750
+0118 I                                       40  40 DCCY                  RE0750
+0119 I                                       41  44 SRC1                  RE0750
+0120 I                                       45  48 SRC2                  RE0750
+0121 I**********                             49  520TACC                               RE0750 CGL029
+0122 I**********                             53  560TEQV                               RE0750 CGL029
+0123 I**********                             57  600SWQV                               RE0750 CGL029
+0124 I**********                             61  640TAC4                               RE0750 CGL029
+0125 I**********                             65  680TAC5                               RE0750 CGL029
+0126 I**********                             69  69 HIND                               RE0750 CGL029
+0127 I**********                          P  70  768PART                               RE0750 CGL029
+0128 I**********                             77  780SSNO                               RE0750 CGL029
+0129 I**********                          P  90  920LCD                                RE0750 CGL029
+0130 I**********                             93  93 CHTP                               RE0750 CGL029
+0131 I**********                          P  94  960TNLU                               RE0750 CGL029
+     I                                       49  580TACC                                      CGL029
+     I                                       59  680TEQV                                      CGL029
+     I                                       69  780SWQV                                      CGL029
+     I**********                             79  880TAC4                               CGL029 CSD027
+     I                                       79  88 TAC4                                      CSD027
+     I                                       89  980TAC5                                      CGL029
+     I                                       99  99 HIND                                      CGL029
+     I                                    P 100 1068PART                                      CGL029
+     I                                      107 1080SSNO                                      CGL029
+     I                                    P 120 1220LCD                                       CGL029
+     I                                      123 123 CHTP                                      CGL029
+     I                                    P 124 1260TNLU                                      CGL029
+0132 I*                                       1  96 LOT                   RE0750
+0133 I**   CATCHALL FOR DELETED RECORDS.                                  RE0750
+0134 I        NS                                                          RE0750
+0135 I**                                                                  RE0750
+0136 I*                                                                   RE0750
+0137 I*    CLINT RECORDS FROM LIBRARY MEMBER CLINTA     (CLINT,CB)        RE0750
+0138 I*    CUSTOMER MASTER DETAILS                                        RE0750
+0139 ICLINT   NS  05   1 CD   8 CA                                        RE0750
+0140 I                                        1   1 RECI                  RE0750
+0141 I**********                              2   70CNUM                               RE0750 CSD027
+0141 I                                        2   7 CNUM                                      CSD027
+0142 I                                        8   8 RCDT                  RE0750
+0143 I                                        9  28 CRNM                  RE0750
+0144 I                                       29  38 CTWN                  RE0750
+0145 I                                       39  48 CSNM                  RE0750
+0146 I                                       49  56 CASK                  RE0750
+0147 I                                       57  68 TELX                  RE0750
+0148 I                                       69  80 CSID                  RE0750
+0149 I                                       81  82 ACOC                  RE0750
+0150 I                                       83  83 CBSI                  RE0750
+0151 I                                       84  85 CCTZ                  RE0750
+0152 I                                       86  87 CLOC                  RE0750
+0153 I**********                             88  930CPAR                               RE0750 CSD027
+0153 I                                       88  93 CPAR                                      CSD027
+0154 I                                       97  98 LINS                  RE0750
+0155 I                                       99 101 LIND                  RE0750
+0156 I                                    P 102 1040DASU                  RE0750
+0157 I                                    P 105 1070CDIC                  RE0750
+0158 I                                    P 108 1100DADE                  RE0750
+0159 I                                      111 111 CMIN                  RE0750
+0160 I                                      112 112 CTYP                  RE0750
+0161 I                                      113 124 TELF                  RE0750
+0162 I                                    P 250 2520LCD                   RE0750
+0163 I                                      253 253 CHTP                  RE0750
+0164 I                                    P 254 2560TNLU                  RE0750
+     I                                      262 264 LOIC                                    BUG23967
+0165 I*                                       1 256 LOT                   RE0750
+0166 I**                                                                  RE0750
+0167 I**   CATCHALL FOR DELETED RECORDS.                                  RE0750
+0168 I        NS                                                          RE0750
+0169 I**                                                                  RE0750
+0095 I* STANDARD LOCAL DATA AREA FIELDS                                   S01117
+0096 I*                                                                   S01117
+0097 ILDA        UDS                            256                       S01117
+0232 I                                      134 141 DBFILE                S01117
+0233 I                                      142 170 DBKEY                 S01117
+0234 I                                      171 180 DBPGM                 S01117
+0235 I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I**                                                                  S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I**                                                                  S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I              A8BRNM                          BRNM                  S01117
+     I**  EXTERNAL DS FOR BRANCH CODES                                    S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+     I**                                                                  S01117
+0170 I**                                                                  RE0750
+0171 I*                                                                   RE0750
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C**                                                                  S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5         SEQUENCE NUM. S01117
+     C                     PARM           BRNCH   3         BRANCH OR ALL S01117
+     C/COPY WNCPYSRC,RE0750C001
+     C*    DEFINE LDA                                                     S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C**                                                                  S01117
+0172 C*    1ST CYCLE PROCESSING                                           RE0750
+0173 C*    ACCESS INST.CONTROL DATA REC.1 FOR HEADING INFORMATION         RE0750
+0174 C   40                GOTO START                                     RE0750
+0175 C                     EXSR ZSYSTM                                    RE0750
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C                     MOVE *BLANKS   DBFILE                          S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     MOVE *BLANKS   DBASE                           S01117
+     C                     MOVEL'RE0750'  DBPGM                           S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     88                   S01117
+     C                     END                                            S01117
+0176 C                     SETON                     40                   RE0750
+0177 C           START     TAG                             ** START TAG **RE0750
+0178 C   02                                                               RE0750
+0179 COR 77      FCTOT     ADD  1         FCTOT                           RE0750
+     C   02                SETON                     06                   S01117
+     C**                                                                  S01117
+     C** IF A REQUIRED BRANCH AND A LEVEL BREAK, OPEN RE0750P1            S01117
+     C           *INL4     IFEQ '1'                                       S01117
+     C                     CLOSERE0750P1                                  S01117
+     C                     Z-ADD0         BRTOT                           S01117
+     C           BRNCH     IFEQ 'ALL'                                     S01117
+     C           BRNCH     OREQ BRCA                                      S01117
+     C           MBIN      OREQ 'N'                                       S01117
+     C                     SETON                     5086                 S01117
+     C                     OPEN RE0750P1                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM                           S01117
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY                           S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM   60                      S01117
+     C                     PARM           ZSERR   1                       S01117
+     C           *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM        S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C                     Z-ADD0         BRTOT                           S01117
+     C**                                                                  S01117
+     C** GET BRANCH NAME                                                  S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVEL@DSNB     DBKEY            ***************S01117
+     C                     MOVEL'001'     DBASE            * DBERROR 001 *S01117
+     C                     EXSR *PSSR                      ***************S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C                     SETOF                     50                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C           BRCA      ANDGTBRNCH                                     S01117
+     C                     SETON                     LR                   S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+0180 C*                                                                   RE0750
+0181 C*    INPUT CYCLE PROCESSING                                         RE0750
+0182 C*    FOR EACH NEW CURRENCY GET CURRENCY NAME & NO. DECIMAL POSITIONSRE0750
+0183 C*    SET UP KEY AND CHAIN TO TABLES FILE                            RE0750
+0184 C   L3                MOVEL'20      'TABKEY 12                       RE0750
+0185 C   L3                MOVELCCY       TABK1   4                       RE0750
+0186 C   L3                MOVE '1'       TABK1                           RE0750
+0187 C   L3                MOVE TABK1     TABKEY                          RE0750
+0188 C   L3      TABKEY    CHAINTABLE                60                   RE0750
+0189 C*                                                                   RE0750
+0190 C*    SET INDICATORS FOR APPROPRIATE EDIT WORD                       RE0750
+0191 C   L3      CDP       COMP 1                      4142               RE0750
+0192 C   L3      CDP       COMP 2                    44  43               RE0750
+0193 C*                                                                   RE0750
+0194 C*    FOR EACH NEW CUSTOMER GET CUSTOMER NAME                        RE0750
+0195 C*    SET UP KEY AND CHAIN TO CLINT FILE                             RE0750
+0196 C   L2                MOVELCNUM      CLKEY   7                       RE0750
+0197 C   L2                MOVE 'A'       CLKEY                           RE0750
+0198 C   L2      CLKEY     CHAINCLINT                70                   RE0750
+0199 C*                                                                   RE0750
+0200 C*    MAINTAIN A COUNT OF UNCLEARED ITEMS                            RE0750
+0201 C***01******BRTOT     ADD  1         BRTOT   40                      E18758
+0201 C   01      BRTOT     ADD  1         BRTOT   50                      E18758
+0202 C   01                SETON                     15                   RE0750
+0203 C*                                                                   RE0750
+0204 C*    GET ALPHAMERIC DATE FROM DAYNO.FOR PSTD & VALD                 RE0750
+0205 C   01                MOVE PSTD      ZDAYNO                          RE0750
+0206 C   01                EXSR ZDATE2                                    RE0750
+0207 C   01                MOVE ZADATE    PSTD1   7                       RE0750
+0208 C*                                                                   RE0750
+0209 C   01                MOVE VALD      ZDAYNO                          RE0750
+0210 C   01                EXSR ZDATE2                                    RE0750
+0211 C   01                MOVE ZADATE    VALD1   7                       RE0750
+0212 C   01      DRCR      COMP 1                        10               RE0750
+0213 C*                                                                   RE0750
+     C/COPY WNCPYSRC,RE0750C002
+0214 C*    WHEN BRANCH CHANGES ADD BRANCH TOTAL TO FILE CONTROL TOTAL AND RE0750
+0215 C*    ZEROISE BRANCH TOTAL                                           RE0750
+0216 C*4*********BRTOT     ADD  FCTOT     FCTOT   40                      E18758
+0216 CL4         BRTOT     ADD  FCTOT     FCTOT   50                      E18758
+     C**                                                                  S01117
+     C** SET UP FOR CONTROL REPORT                                        S01117
+     C**                                                                  S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU                          S01117
+     CLR                   OUT  LDA                                       S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ     5                       S01117
+     CLR                   PARM *BLANK    SENTY   3                       S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU  60                      S01117
+     CLR                   PARM           ZSERR   1                       S01117
+     CLR         *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM        S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   END                                            S01117
+0217 C*                                                                   RE0750
+0218 C*    LAST RECORD PROCESSING                                         RE0750
+0219 C*    FILE CONTROL TOTAL COMPARISON                                  RE0750
+0220 C*    SUBTRACT 2 FROM 'NORE',HEADER & TRAILER NOT IN COUNT           RE0750
+     CLR         MBIN      IFEQ 'Y'                                       S01117
+     CLR         BRNCH     ANDEQ'ALL'                                     S01117
+     CLR         MBIN      OREQ 'N'                                       S01117
+0221 CLR         FCTOT     COMP NORE                 U8U8                 RE0750
+     CLR                   END                                            S01117
+     C**                                                                  E36053
+     C** THE FOLLOWING ACTIONS ARE INCONSISTENT WITH THE R10 MANUAL AND   E36053
+     C** IS CAUSING FC0600 TO FALL OVER.  THEREFORE THESE ARE REMOVED.    E36053
+     C**                                                                  E36053
+     C***PRINT*OUT 'NO DETAIL TO REPORT' IN THE P1 REPORT          S01117 E36053
+     C***IF*NO*REPORT HAS BEEN CREATED.                            S01117 E36053
+     C**                                                           S01117 E36053
+     C*R**********IN50     IFEQ '0'                                S01117 E36053
+     C*R**********IN86     ANDEQ'0'                                S01117 E36053
+     C*R*********          EXSR NODETL                             S01117 E36053
+     C*R*********          END                                     S01117 E36053
+     CLR U7 U8             EXSR *PSSR                                     S01117
+0222 C*                                                                   RE0750
+0223 C********************************************************************RE0750
+0224 C**                                                                  RE0750
+0225 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   RE0750
+0226 C**                                                                  RE0750
+0227 C           ZSYSTM    BEGSR                           *** ZSYSTM *** RE0750
+0228 C**                                                                  RE0750
+0229 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    RE0750
+0230 C                     MOVEL'01      'ZTABKY 12                       RE0750
+0231 C                     MOVE '  10'    ZTABKY                          RE0750
+0232 C**                                                                  RE0750
+0233 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   RE0750
+0234 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED RE0750
+0235 C**                                                                  RE0750
+0236 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    RE0750
+0237 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  RE0750
+0238 C**                                                                  RE0750
+0239 C                     ENDSR                                          RE0750
+0240 C**                                                                  RE0750
+0241 C**                                                                  RE0750
+0242 C********************************************************************RE0750
+0243 C*                                                                   RE0750
+0244 C********************************************************************RE0750
+0245 C**                                                                  RE0750
+0246 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.            RE0750
+0247 C**                                                                  RE0750
+0248 C           ZDATE2    BEGSR                           *** ZDATE2 *** RE0750
+0249 C**                                                                  RE0750
+0250 C**   CLEAR DATE FIELDS.                                             RE0750
+0251 C                     Z-ADD0         ZDATE   60                      RE0750
+0252 C                     MOVEL'       ' ZADATE  7                       RE0750
+0253 C**                                                                  RE0750
+0254 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.                        RE0750
+0255 C                     Z-ADDZDAYNO    ZDAYNO  50                      RE0750
+0256 C**                                                                  RE0750
+0257 C**   DETERMINE YEAR NUMBER.                                         RE0750
+0258 C**                                                                  RE0750
+0259 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.                    RE0750
+0260 C           ZDAYNO    SUB  1         ZDAYN1  50   99                 RE0750
+0261 C   99                GOTO ZDEND2                                    RE0750
+0262 C**                                                                  RE0750
+0263 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.             RE0750
+0264 C           ZDAYN1    DIV  1461      ZLYR    20                      RE0750
+0265 C                     MVR            ZDAYN1           SAVE REMAINING RE0750
+0266 C**                                                   DAYS           RE0750
+0267 C**   CALCULATE NUMBER OF REMAINING YEARS.                           RE0750
+0268 C                     Z-ADD1         ZWRK2   20                      RE0750
+0269 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *RE0750
+0270 C           ZDAYN1    COMP ZYDY,ZWRK2             90                 RE0750
+0271 C  N90      ZWRK2     ADD  1         ZWRK2                           RE0750
+0272 C  N90                GOTO ZDTAG1                                    RE0750
+0273 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON RE0750
+0274 C**                                                                  RE0750
+0275 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.                  RE0750
+0276 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          RE0750
+0277 C**                                                                  RE0750
+0278 C**   CALCULATE ACTUAL YEAR NUMBER.                                  RE0750
+0279 C           ZLYR      MULT 4         ZWRK3   30                      RE0750
+0280 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972   RE0750
+0281 C                     Z-ADDZWRK3     ZYEAR   20                      RE0750
+0282 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           RE0750
+0283 C**                                                                  RE0750
+0284 C**   DETERMINE MONTH NUMBER.                                        RE0750
+0285 C**                                                                  RE0750
+0286 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.         RE0750
+0287 C                     SETOF                     9293                 RE0750
+0288 C   91      ZDAYN1    COMP 59                     9293               RE0750
+0289 C   91N92   ZDAYN1    SUB  1         ZDAYN1                          RE0750
+0290 C**                                                                  RE0750
+0291 C**   CALCULATE MONTH NUMBER.                                        RE0750
+0292 C                     Z-ADD2         ZWRK2                           RE0750
+0293 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *RE0750
+0294 C           ZDAYN1    COMP ZMDY,ZWRK2             94                 RE0750
+0295 C  N94      ZWRK2     ADD  1         ZWRK2                           RE0750
+0296 C  N94                GOTO ZDTAG2                                    RE0750
+0297 C           ZWRK2     SUB  1         ZWRK2                           RE0750
+0298 C**                                                                  RE0750
+0299 C                     Z-ADDZWRK2     ZMTH    20       MONTH          RE0750
+0300 C**                                                                  RE0750
+0301 C**   DETERMINE DAY OF MONTH.                                        RE0750
+0302 C**                                                                  RE0750
+0303 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.                          RE0750
+0304 C           ZDAYN1    ADD  1         ZDAYN1                          RE0750
+0305 C**                                                                  RE0750
+0306 C**   CALCULATE DAY OF MONTH.                                        RE0750
+0307 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            RE0750
+0308 C**                                                                  RE0750
+0309 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.       RE0750
+0310 C   93      ZDAY      ADD  1         ZDAY                            RE0750
+0311 C**                                                                  RE0750
+0312 C**   FORMAT DATE, DDMMYY OR MMDDYY.                                 RE0750
+0313 C  N98                MOVELZDAY      ZWRK4   40                      RE0750
+0314 C   98                MOVE ZDAY      ZWRK4                           RE0750
+0315 C  N98                MOVE ZMTH      ZWRK4                           RE0750
+0316 C   98                MOVELZMTH      ZWRK4                           RE0750
+0317 C                     MOVELZWRK4     ZDATE                           RE0750
+0318 C                     MOVE ZYEAR     ZDATE                           RE0750
+0319 C**                                                                  RE0750
+0320 C**   FORMAT ALPHA DATE, DDMMMYY.                                    RE0750
+0321 C           ZDAY      COMP 10                     95                 RE0750
+0322 C                     MOVELZDAY      ZWRK5   5                       RE0750
+0323 C   95                MOVEL' '       ZWRK5                           RE0750
+0324 C                     MOVE ZMNM,ZMTH ZWRK5                           RE0750
+0325 C                     MOVELZWRK5     ZADATE                          RE0750
+0326 C                     MOVE ZYEAR     ZADATE                          RE0750
+0327 C**                                                                  RE0750
+0328 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*RE0750
+0329 C**                                                                  RE0750
+0330 C**                                                                  RE0750
+     C** SUBROUTINE NODETL IS INCONSISTENT WITH THE R10 MANUAL AND        E36053
+     C** IS CAUSING FC0600 TO FALL OVER.  THEREFORE IT IS REMOVED. S01117 E36053
+     C**                                                                  E36053
+0331 C********************************************************************RE0750
+     C***********                                                  S01117 E36053
+     C***PRINT*OUT NO DETAIL TO REPORT                             S01117 E36053
+     C***********                                                  S01117 E36053
+0454 C***********NODETL    BEGSR                           *** NODES01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          OPEN RE0750P1                           S01117 E36053
+     C***********          Z-ADD*ZEROS    PAGE                     S01117 E36053
+     C***********                                                  S01117 E36053
+     C***IF*REPORT FOR ALL ENTITIES CALL ZSFILE WITH BLANK SENTY   S01117 E36053
+     C***********BRNCH     IFEQ 'ALL'                      B1      S01117 E36053
+     C***********MBIN      ORNE 'Y'                                S01117 E36053
+     C***********                                                  S01117 E36053
+     C***ENSURE*REPORT SPOOL FILE RECORDED BY RCF                  S01117 E36053
+     C***********          Z-ADDSFNUM     ZSNUM   60               S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          OUT  LDA                                S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          CALL 'ZSFILE'                           S01117 E36053
+     C***********          PARM           SEQ                      S01117 E36053
+     C***********          PARM *BLANK    SENTY   3                S01117 E36053
+     C***********          PARM           SFILE                    S01117 E36053
+     C***********          PARM           ZSNUM                    S01117 E36053
+     C***********          PARM           ZSERR   1                S01117 E36053
+      ***********                                                  S01117 E36053
+     C************LOCK     IN   LDA                                S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********ZSERR     IFEQ 'Y'                                S01117 E36053
+     C****ERROR*DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMS01117 E36053
+     C***********          SETON                     U7U8LR        S01117 E36053
+     C***********          RETRN                                   S01117 E36053
+     C***********          END                                     S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          MOVE 'ALL'     BRCA                     S01117 E36053
+     C***********          MOVE *BLANKS   BRNM                     S01117 E36053
+     C***********                                                  S01117 E36053
+     C***ELSE*REPORT BY ENTITY SO CALL ZSFILE WITH ENTITY REQUESTEDS01117 E36053
+     C***********          ELSE                            X1      S01117 E36053
+     C***********                                                  S01117 E36053
+     C***ENSURE*REPORT SPOOL FILE RECORDED BY RCF                  S01117 E36053
+     C***********          Z-ADDSFNUM     ZSNUM   60               S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          OUT  LDA                                S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          CALL 'ZSFILE'                           S01117 E36053
+     C***********          PARM           SEQ                      S01117 E36053
+     C***********          PARM BRNCH     SENTY   3                S01117 E36053
+     C***********          PARM           SFILE                    S01117 E36053
+     C***********          PARM           ZSNUM                    S01117 E36053
+     C***********          PARM           ZSERR   1                S01117 E36053
+      ***********                                                  S01117 E36053
+     C************LOCK     IN   LDA                                S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********ZSERR     IFEQ 'Y'                                S01117 E36053
+     C****ERROR*DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMS01117 E36053
+     C***********          SETON                     U7U8LR        S01117 E36053
+     C***********          RETRN                                   S01117 E36053
+     C***********          END                                     S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          MOVE BRNCH     BRCA                     S01117 E36053
+     C***********          SETON                     87            S01117 E36053
+     C***********                                                  S01117 E36053
+     C***AND*GET*ENTITY DETAILS FOR REPORT HEADINGS WHEN MULTIBRANCS01117 E36053
+     C***********MBIN      IFEQ 'Y'                                S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          CALL 'AOBRCHR0'                         S01117 E36053
+     C***********          PARM '*MSG   ' @RTCD   7                S01117 E36053
+     C***********          PARM '*KEY   ' @OPTN   7                S01117 E36053
+     C***********          PARM BRNCH     @DSNB   3                S01117 E36053
+     C***********SDBRCH    PARM SDBRCH    DSFDY                    S01117 E36053
+     C***********@RTCD     IFNE *BLANKS                            S01117 E36053
+     C***********          MOVEL@DSNB     DBKEY                    S01117 E36053
+     C***********          MOVEL'SDBRCHPD'DBFILE           ********S01117 E36053
+     C***********          Z-ADD13        DBASE            * DBERROR 011 *E36053
+     C***********          SETON                     U7U8  ********S01117 E36053
+     C***********          EXSR *PSSR                              S01117 E36053
+     C***********          END                                     S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          END                                     S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          END                             E1      S01117 E36053
+     C***********                                                  S01117 E36053
+     C***********          EXCPTNODTL                              S01117 E36053
+     C***********                                                  S01117 E36053
+0466 C***********          ENDSR                                   S01117 E36053
+     C***********                                                  S01117 E36053
+0497 C********************************************************************S01117
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+0332 C*                                                                   RE0750
+0333 O*E0750P1D**203   L4                                           S01124S01117
+0334 O*******OR**      OFNL4                                              S01117
+0335 O***********                        23 'REFERENCE RE0750'            S01117
+0333 ORE0750P1D  203   L4 50                                              S01117
+0334 O*******OR***     OFNL4 50                                     S01117101702
+0334 O*******OR*       OF 50                                                           101702 247707
+     O       OR        OF 50NL4                                                               247707
+0335 O                                   25 'REFERENCE RE0750P1'          S01117
+0336 O                         TITL      92                               RE0750
+0337 O                                  104 'DATE'                        RE0750
+0338 O                         RUNA     113                               RE0750
+0339 O                                  122 'PAGE'                        RE0750
+0340 O                         PAGE  Z  127                               RE0750
+0341 O********D**1     L4                                                 S01117
+0342 O*******OR**      OFNL4                                              S01117
+0341 O        D  1     L4 50                                              S01117
+0342 O*******OR***     OFNL4 50                                     S01117101702
+0342 O*******OR*       OF 50                                                           101702 247707
+     O       OR        OF 50NL4                                                               247707
+0343 O                                   75 'UNCLEARED FUNDS REPORT'      RE0750
+0344 O***********                       106 'BRANCH'                      S01117
+0345 O***********              BRCD     110                               S01117
+0496 O                    88             95 'BRANCH '                     S01117
+0497 O                    88   BRCA      98                               S01117
+     O                    88             99 '-'                           S01117
+     O                    88   BRNM     129                               S01117
+0346 O********D**2     L4                                                 S01117
+0347 O*******OR**      OFNL4                                              S01117
+0346 O        D  2     L4 50                                              S01117
+0347 O*******OR***     OFNL4 50                                     S01117101702
+0347 O*******OR*       OF 50                                                           101702 247707
+     O       OR        OF 50NL4                                                               247707
+0348 O                                   75 '----------------------'      RE0750
+0349 O********D**1     L4                                                 S01117
+0350 O*******OR**      OFNL4                                              S01117
+0349 O        D  1     L4 50                                              S01117
+0350 O*******OR***     OFNL4 50                                     S01117101702
+0350 O*******OR*       OF 50                                                           101702 247707
+     O       OR        OF 50NL4                                                               247707
+0351 O                                   16 'ACCOUNT NO'                  RE0750
+     O/COPY WNCPYSRC,RE0750O001
+0352 O                                   44 'CUSTOMER NAME'               RE0750
+0353 O                                   62 'VALUE'                       RE0750
+0354 O                                   75 'POSTING'                     RE0750
+0355 O                                   90 'NARRATIVE'                   RE0750
+     O/COPY WNCPYSRC,RE0750O002
+0356 O                                  124 'AMOUNT'                      RE0750
+0357 O********D**1     L4                                                 S01117
+0358 O*******OR**      OFNL4                                              S01117
+0357 O        D  1     L4 50                                              S01117
+0358 O*******OR***     OFNL4 50                                     S01117101702
+0358 O*******OR*       OF 50                                                           101702 247707
+     O       OR        OF 50NL4                                                               247707
+     O/COPY WNCPYSRC,RE0750O003
+0359 O                                   61 'DATE'                        RE0750
+0360 O                                   72 'DATE'                        RE0750
+     O/COPY WNCPYSRC,RE0750O004
+0361 O********D*21     L3                                                 S01117
+0362 O*******OR**      OFNL3                                              S01117
+0361 O        D 21     L3 50                                              S01117
+0362 O       OR        OFNL3 50                                           S01117
+0363 O                                   10 'CURRENCY -'                  RE0750
+0364 O                         CCNM      25                               RE0750
+0365 O********D*11     01 L1                                              S01117
+0366 O*******OR**1     01NL1                                              S01117
+0365 O        D 11     01 L1 50                                           S01117
+0366 O       OR  1     01NL1 50                                           S01117
+0367 O                 L1N20   ACNO      16                               RE0750
+0368 O***********      L1 20             19 '-   -    -'                  S01413
+0369 O***********      L1 20   CNUM       9                               S01413
+0370 O***********      L1 20   CCY       13                               S01413
+0371 O***********      L1 20   ACOD      18                               S01413
+0372 O***********      L1 20   ACSQ      21                               S01413
+     O**********       L1 20             23 '-      -   -    -'                        S01413 CGL029
+     O**********       L1 20   BRCA       6                                            S01413 CGL029
+     O**********       L1 20   CNUM      13                                            S01413 CGL029
+     O**********       L1 20   CCY       17                                            S01413 CGL029
+     O**********       L1 20   ACOD      22                                            S01413 CGL029
+     O**********       L1 20   ACSQ      25                                            S01413 CGL029
+     O                 L1 20             26 '-      -   -          -'                         CGL029
+     O                 L1 20   BRCA       4                                                   CGL029
+     O                 L1 20   CNUM      11                                                   CGL029
+     O                 L1 20   CCY       15                                                   CGL029
+     O                 L1 20   ACOD      26                                                   CGL029
+     O                 L1 20   ACSQ      29                                                   CGL029
+     O/COPY WNCPYSRC,RE0750O005
+0373 O                 L1      CRNM      51                               RE0750
+0374 O                         VALD1     63                               RE0750
+0375 O                         PSTD1     75                               RE0750
+0376 O                         PNAR     109                               RE0750
+     O/COPY WNCPYSRC,RE0750O006
+0377 O                       41PSTA     127 ' ,   ,   ,   , 0 '           RE0750
+0378 O                       42PSTA     127 '   ,   ,   , 0 . '           RE0750
+0379 O                       43PSTA     127 '  ,   ,   , 0 .  '           RE0750
+0380 O                       44PSTA     127 ' ,   ,   , 0 .   '           RE0750
+0381 O                       10         129 'CR'                          RE0750
+     O/COPY WNCPYSRC,RE0750O007
+0382 O********T*22     L4 15                                              S01117
+0382 O********T*22     L4 15 50                                    S01117 101702
+0382 O        TF22     L4 15 50                                           101702
+0384 O       AND       88                                                 S01117
+0383 O                                   61 'BRANCH TOTALS-'              RE0750
+0384 O********T**2     L4 15                                              S01117
+0384 O********T**2     L4 15 50                                    s01117 101702
+0384 O        TF 2     L4 15 50                                           101702
+0384 O       AND       88                                                 S01117
+0385 O                                   68 'NO OF UNCLEARED ITEMS'       RE0750
+0386 O***********              BRTOT 1B  74                               S01117
+0386 O                         BRTOT 1   74                               S01117
+     O********T*3      U8 U7 LR                                     S01117101702
+     O        TF3      U8 U7 LR                                           101702
+     O                                   74 '** DATABASE IN ERROR **'     S01117
+     O********T*3      L4 50                                        S01117101702
+     O        TF3      L4 50                                              101702
+     O                 88                66 '*** END OF REPORT FOR'       S01117
+     O                 88                74 ' BRANCH '                    S01117
+     O                 88      BRCA      77                               S01117
+     O                 88                81 ' ***'                        S01117
+0518 O                N88                76 '*** END OF REPORT ***'       S01117
+     O**                                                                  E36053
+     O** REMOVED ALONG WITH SUBROUTINE NODETL                             E36053
+     O**                                                                  E36053
+     O*E0750P1E   03           NODTL                               S01117 E36053
+0476 O********                           22 'REFERENCE RE0750P1'   S01117 E36053
+0477 O********                 TITL      89                        S01117 E36053
+0478 O********                          104 'DATE'                 S01117 E36053
+0479 O********                 RUNA     113                        S01117 E36053
+0480 O********                          122 'PAGE'                 S01117 E36053
+0481 O********                 PAGE  3  127                        S01117 E36053
+     O********E   05           NODTL                               S01117 E36053
+0343 O********                           75 'UNCLEARED FUNDS REPORTS01117 E36053
+0496 O********            88             95 'BRANCH '              S01117 E36053
+0497 O********            88   BRNCH     98                        S01117 E36053
+     O********            87             99 '-'                    S01117 E36053
+     O********            88   BRNM     129                        S01117 E36053
+     O********E   06           NODTL                               S01117 E36053
+0348 O********                           75 '----------------------S01117 E36053
+     O********E 3        NU7   NODTL                               S01117 E36053
+     O********                           63 '***   NO DETAILS TO RES01117 E36053
+     O********                           71 'RT   ***'             S01117 E36053
+     O********E 3         U7   NODTL                               S01117 E36053
+     O********                           74 '** DATABASE IN ERROR *S01117 E36053
+     O********E 3              NODTL                               S01117 E36053
+     O********         88                66 '*** END OF REPORT FOR'S01117 E36053
+     O********         88                74 ' BRANCH '             S01117 E36053
+     O********         88      BRNCH     77                        S01117 E36053
+     O********         88                81 ' ***'                 S01117 E36053
+0518 O********        N88                76 '*** END OF REPORT ***'S01117 E36053
+0387 O***   LAST RECORD OUTPUT                                            RE0750
+0388 O********T**203   LR                                                 S01117
+0389 O***********                        23 'REFERENCE RE0750'            S01117
+0388 ORE0750AUT  203   LR                                                 S01117
+0389 O                                   25 'REFERENCE RE0750AU'          S01117
+0390 O                         TITL      92                               RE0750
+0391 O                                  104 'DATE'                        RE0750
+0392 O                         RUNA     113                               RE0750
+0393 O                                  122 'PAGE'                        RE0750
+0394 O***********              PAGE  Z  127                               S01117
+0394 O                         PAGE1 Z  127                               S01117
+0395 O        T  1     LR                                                 RE0750
+0396 O                                   75 'UNCLEARED FUNDS REPORT'      RE0750
+0400 O                                   89 '   RUN CONTROL'              S01117
+0397 O        T  2     LR                                                 RE0750
+0398 O                                   75 '----------------------'      RE0750
+0399 O********T**215   LR                                                 S01117
+0400 O***********                        57 'FILE CONTROLS -'             S01117
+0401 O        T  2     LR                                                 RE0750
+0402 O                                   62 'UNCLEARED FUNDS FILE'        RE0750
+0403 O********T**2     LR                                                 S01117
+0403 O        T  2     LR    06                                           S01117
+0404 O                                   60 ' NO.OF RECORDS READ'         RE0750
+0405 O                         NORE  1   69                               RE0750
+0406 O********T**1     LR    U8                                           S01117
+0406 O        T  2     LR                                                 S01117
+0407 O                                   39 'CALCULATED'                  RE0750
+0408 O                                   60 ' NO.OF RECORDS READ'         RE0750
+0409 O                         FCTOT 1   69                               RE0750
+0410 O********T**2     LR    U8                                           S01117
+0410 O        T  2     LRNU7 U8                                           S01117
+0411 O                                   69 '***  OUT OF BALANCE  ***'    RE0750
+0642 O        T 3      LR U7                                              S01117
+     O                                   66 'DATABASE ERROR '             S01117
+     O                         DBASE     69                               S01117
+     O                                   83 'IN PROGRAM '                 S01117
+     O                         DBPGM     93                               S01117
+     O        T 2      LR U7                                              S01117
+     O                                   56 'FILE '                       S01117
+     O                         DBFILE    64                               S01117
+     O                                   70 ', KEY '                      S01117
+     O                         DBKEY     99                               S01117
+     O        T 3      LRNU7N86                                           S01117
+     O                                   63 '***   NO DETAILS TO REPO'    S01117
+     O                                   71 'RT   ***'                    S01117
+0412 O*                                                                   RE0750
+0413 O********T** 30   LR                                                 S01117
+0414 O***********                        75 '*** END OF REPORT ***'       S01117
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

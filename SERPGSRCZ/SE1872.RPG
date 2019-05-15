@@ -1,0 +1,1491 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Depot Mvmts Extract for Confirms')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1872 - DEPOT MOVEMENTS EXTRACT FOR CONFIRMATIONS           *
+     F*                                                               *
+     F*  Function: Extract details required for S.W.I.F.T. Depot      *
+     F*   (I/C)    Movement Confirmation Messages for Depot Movements *
+     F*  (I/C TRM) that were Input, Amended or Cancelled Today and    *
+     F*            Maturities that are due.                           *
+     F*                                                               *
+     F*  Called by: SEC0304 - Input Cycle Confirmation Print          *
+     F*                       (Before SE0560 is run)                  *
+     F*             Frequency:                                        *
+     F*             - Automatically after Depot Movements Maintenance *
+     F*               in Input Cycle                                  *
+     F*             - As part of I/C Termination procedure to ensure  *
+     F*               all messages for the Day have been sent (which  *
+     F*               includes Maturities on Repos and Pledges)       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE028             Date 06Jun01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 113352             Date 13Feb97               *
+      *                 CSE005             Date 04Feb97               *
+     F*                 094335             DATE 03JUN96               *
+     F*                 103984             DATE 03JUN96               *
+     F*                 103449             DATE 21MAY96               *
+     F*                 078256             DATE 07MAY96               *
+     F*                 089773             DATE 03MAY96               *
+     F*                 CSW003             DATE 21NOV95               *
+     F*                 S01445             DATE 04NOV93               *
+     F*                 066915             DATE 14FEB94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           (recompilation due to change to ZNCD/ZLCD)          *
+      *  180707 - No Position Settlements generated. Recompile over   *
+      *           changes in /COPY ZNCDZ3.                            *
+      *  CSE028 - Standing Settlement Instructions Enhancement.       *
+      *           (Recompiled).                                       *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  113352  -  RECOMPILE OVER CHANGES IN MGOREFPD                *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  094335 - MT5xx cancellation process fix                      *
+     F*  103984 - Confirmations should be produced on day of input    *
+     F*  103449 - Allow confirmation message for 'PD' and 'PL'        *
+     F*  078256 - Output nominal dec places                           *
+     F*  089773 - DBASE error 09 when trying to access SDNOSTPD       *
+     F*           using field TMAN. This field may be blanks and      *
+     F*           does not seem to be a Nostro code anyway. It is a   *
+     F*           customer number. It comes from the Intermediary     *
+     F*           Bank field or the Account with Bank field on the    *
+     F*           settlement screen.                                  *
+     F*  CSW003 - MT5xx Message Generation - Phase 2                  *
+     F*  S01445 - DEPOT MOVEMENT CHARGES ENHANCEMENT.                 *
+     F*           Recompiled due to changes in PF/DPTMVD.             *
+     F*  066915 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9 by GEMS 052254.                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature: New program           *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FDPTMVDJ1IF  E           K        DISK         KINFSR *PSSR
+     FDPTMVDJ2IF  E           K        DISK         KINFSR *PSSR
+     F            DPTMVDD1                          KRENAMEDPTMVDD2
+     FDPTMVDJ3IF  E           K        DISK         KINFSR *PSSR
+     F            DPTMVDD1                          KRENAMEDPTMVDD3
+     FDPTMVDY1UF  E           K        DISK
+     F            DPTMVDD1                          KRENAMEUPDIDX
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F/COPY WNCPYSRC,SE1872F001
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     FDPTMVDY2IF  E           K        DISK         KINFSR *PSSR
+     F            DPTMVDD2                          KRENAMEDPTMVDY
+     FMGOREFL0IF  E           K        DISK         KINFSR *PSSR
+     FMGF512PDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT                103511
+     FSE1872AUO   E                    PRINTER      KINFSR *PSSR
+      /TITLE FUNCTION OF INCICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    21  - Control of call to MG5910                            *   094335
+     F*    40  - ON  : I/C processing (PICFG = N)                     *
+     F*          OFF : COB processing (PICFG = Y)                     *
+     F*                                                               *
+     F*    50  - Control of chain to DPTMVDJ1                         *
+     F*    51  - Control of chain to MGOREFL0                         *
+     F*    52  - Control of call to MG9505                            *
+     F*    53  - Control of chain to DPTMVDJ2                         *
+     F*    54  - Control of chain to DPTMVDJ3                         *
+     F*    67  - Control of chain to SECTY                            *
+     F*    68  - Control of chain to DEALS                            *
+     F*    69  - Control of chain to DPTMVDY2                         *
+     F*    70  - Control of write to MGF512D0                         *
+     F*                                                               *
+     F*    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  PROCES - Perform Detail Processing                           *
+     F*  AMASF  - Access master files                                 *
+     F*  FMT512 - Format message fields for MT512                     *
+     F*  GD512  - Delete/Generate MT512 Messages                      *
+     F*  ICPSD  - Input Cycle Processing (Start Date)                 *
+     F*  ICPMD  - Input Cycle Processing (Maturity Date)              *
+     F*  COBPR  - Close of Business Processing                        *
+     F*  DPTX1  - Update DPTMVDX1/DPGMEC to 'N' if a confirmation     *
+     F*           message is not requested.                           *
+     F*  AUDIT  - Run Control Process                                 *
+     F*                                                               *
+     F*  *PSSR  - Program error handling routine                      *
+     F*                                                               *
+     F*  ZNCD   - Determines next coupon date                         *
+     F*                                                               *
+     F*****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZNCDZ1
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+      ** RENAME DUPLICATE FIELDS
+     ISECTYDF
+     I              CHTP                            SYCHTP
+     IDEALSDCF
+     I              CHTP                            DSCHTP
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General Ledger Details
+      *
+     ISDSECS    E DSSDSECSPD
+     I              QQACCD                          QQACD1                                    CGL029
+      ** Securities Trading Clients
+      *
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACD2                                    CGL029
+      ** Nostro Details
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPSDS       SDS
+      ** PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 WSID
+     I                                      254 263 USID
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+     IKYMGDS      DS
+      * DATA STRUCTURE MGOREFL0
+     I                                        1  16 WMGKEY
+     I                                        1   3 WM0103
+     I                                        4   9 WM0409
+     I                                       10  16 WM1016
+      *
+     I            DS
+      * DATA STRUCTURE FOR EXTENDED SETTLEMENT FIELDS
+     I                                        1  16 WXSFLD
+     I                                        1   1 WXS53
+     I                                        2   2 WXS57
+     I                                        3   3 WXS58
+     I                                        4   4 WXS71
+     I                                        5   5 WXS72
+     I                                        6   6 WXS77F
+     I                                        7   7 WXS77R
+     I                                        8   8 WXS79
+     I                                        9   9 WXS82I
+     I                                       10  10 WXS82C
+     I                                       11  11 WXS83
+     I                                       12  12 WXS84
+     I                                       13  13 WXS85
+     I                                       14  14 WXS87R
+     I                                       15  15 WXS87D
+     I                                       16  16 WXS88
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** KLIST FOR DPTMVDY1/2
+     C           KL2       KLIST
+     C                     KFLD           WYDPSS
+     C                     KFLD           WYDPRN
+     C                     KFLD           DPWHEN                          CSW003
+      *
+      ** KLIST FOR DPTMVDJ2
+     C           KL3       KLIST
+     C                     KFLD           WBRDNB
+     C                     KFLD           WBDPSS
+     C                     KFLD           WBDPRN
+      *
+      ** KLIST FOR DPTMVDJ3
+     C           KL4       KLIST
+     C                     KFLD           WCRDNB
+     C                     KFLD           WCDPSS
+     C                     KFLD           WCDPRN
+      *
+      **   GET PARAMETERS FROM CALLING PROGRAM
+      **   PICFG - 'N' = I/C;  'Y' = COB
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PICFG   1
+      *
+      ** Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** ACCESS PF/SDGELRPD
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'002'     DBASE            **************
+     C                     MOVEL'SDGELRPD'DBFILE           * DB ERROR 2 *
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     END
+      *
+     C                     CALL 'AOSARDR0'                                CSW003
+     C                     PARM *BLANKS   WRTCD                           CSW003
+     C                     PARM '*VERIFY' WOPTN                           CSW003
+     C                     PARM 'CSW003'  WSARD   6                       CSW003
+     C*                                                                   CSW003
+     C           WRTCD     IFEQ *BLANK                                    CSW003
+     C                     MOVE 'Y'       CSW003  1                       CSW003
+     C                     END                                            CSW003
+     C/COPY WNCPYSRC,SE1872C001
+      *                                                                   CSW003
+      ** DEFINE WORKFIELDS
+     C           *LIKE     DEFN DPRN      WBDPRN
+     C           *LIKE     DEFN BJRDNB    WBRDNB
+     C           *LIKE     DEFN DPRN      WCDPRN
+     C           *LIKE     DEFN BJRDNB    WCRDNB
+     C           *LIKE     DEFN DPSS      WBDPSS
+     C           *LIKE     DEFN DPSS      WCDPSS
+     C           *LIKE     DEFN DPSS      WYDPSS
+     C           *LIKE     DEFN DPRN      WYDPRN
+      *
+      ** INITIALISE FIELDS
+     C                     MOVE ' '       SMFLAG  1
+     C                     Z-ADD*ZERO     RRLIV1
+     C                     Z-ADD*ZERO     RRLIV2
+     C                     Z-ADD*ZERO     RRLIV3
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: ICPSD, ICPMD, COBPR                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** IF INPUT PARAMETER = N (I/C)
+     C           PICFG     IFEQ 'N'
+      *
+      ** SET ON INDICATOR TO IDENTIFY 'I/C PROCESSING' TO AUDIT REPORT
+     C                     MOVE '1'       *IN40
+      *
+      ***  Read the Depot Movements/Extension Join File. Note that the
+      ***  Logical is choosing the Depot Movements where the Depot
+      ***  Movement Confirmation is required and the S.W.I.F.T. Depot
+      ***  Movement Confirmation Message has been requested.
+      *
+     C                     READ DPTMVDJ1                 50
+      *
+      ***  Process all Depot Movements requiring Confirmation Messages.
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      **  Set EXTCT to 'N'. This field will be used to determine whether
+      **  the record has been extracted to the MGF512PD file.
+      *
+     C                     MOVEL'N'       EXTCT   1
+      *
+      ***  Count the record read.
+      *
+     C                     ADD  1         RRLIV1
+      *
+      ** IF 'RR' OR 'RP' AND WE ARE PAST OR ON THE START DATE,
+      ** SET A FLAG TO INDICATE START DATE MESSAGE AND EXECUTE -
+      ** INPUT CYCLE PROCESSING(START DATE)
+     C           DPMV      IFEQ 'RP'
+     C***********DPDO      ANDLEBJRDNB                                    103984
+     C           DPMV      OREQ 'RR'
+     C***********DPMD      ANDLEBJRDNB                                    103984
+     C           DPMV      OREQ 'PD'                                      103449
+     C***********DPDO      ANDLEBJRDNB                             103449 103984
+     C           DPMV      OREQ 'PL'                                      103449
+     C***********DPMD      ANDLEBJRDNB                             103449 103984
+     C           CSW003    IFNE 'Y'                                       CSW003
+     C           CSW003    OREQ 'Y'                                       CSW003
+     C           DPWHEN    ANDEQ'S'                                       CSW003
+     C                     MOVE 'S'       SMFLAG
+     C                     EXSR ICPSD
+     C                     END                                            CSW003
+     C                     END
+      *
+      ** IF 'RR' OR 'RP' AND WE ARE ALSO PAST OR ON THE MATURITY,
+      ** DATE SET A FLAG TO INDICATE MATURITY DATE MESSAGE AND
+      ** EXECUTE INPUT CYCLE PROCESSING(MATURITY DATE)
+     C           DPMV      IFEQ 'RP'
+     C***********DPMD      ANDLEBJRDNB                                    103984
+     C           DPMV      OREQ 'RR'
+     C***********DPDO      ANDLEBJRDNB                                    103984
+     C           DPMV      OREQ 'PD'                                      103449
+     C***********DPMD      ANDLEBJRDNB                             103449 103984
+     C           DPMV      OREQ 'PL'                                      103449
+     C***********DPDO      ANDLEBJRDNB                             103449 103984
+     C           CSW003    IFNE 'Y'                                       CSW003
+     C           CSW003    OREQ 'Y'                                       CSW003
+     C           DPWHEN    ANDEQ'M'                                       CSW003
+     C                     MOVE 'M'       SMFLAG
+     C                     EXSR ICPMD
+     C                     END                                            CSW003
+     C                     END
+      *
+      **  If confirmation message not requested then DPTMVDX1/DPSCMG
+      **  needs to be reset to "N".
+     C***********EXTCT     IFEQ 'N'                                       103984
+     C***********          EXSR DPTX1                                     103984
+     C***********          ENDIF                                          103984
+      *
+      ***  Read the next record from the Depot Movements/Extension File
+      *
+     C                     READ DPTMVDJ1                 50
+     C                     END
+     C                     END
+      *
+      *---------------------------------------------------------------*
+      ** IF INPUT PARAMETER = Y  (COB)
+     C           PICFG     IFEQ 'Y'
+      *
+      ** SET OFF INDICATOR TO IDENTIFY 'COB PROCESSING' TO AUDIT REPORT
+     C                     MOVE '0'       *IN40
+      *
+      ***  Set Pointer to read Depot Movements with Date In Equal To
+      ***  Tomorrow (up to Date of Next Working Day).
+      *
+     C                     MOVE *LOVAL    WBDPSS
+     C                     MOVE *LOVAL    WBDPRN
+     C           BJRDNB    ADD  1         WBRDNB
+     C           KL3       SETLLDPTMVDJ2
+     C                     READ DPTMVDJ2                 53
+      *
+      ** DO WHILE RECORDS EXIST FOR THIS DATE AND DPMD < OR = BJDNWD
+     C           *IN53     DOWEQ'0'
+     C           DPMD      ANDLEBJDNWD
+      *
+      **  Set EXTCT to 'N'. This field will be used to determine whether
+      **  the record has been extracted to the MGF512PD file           .
+      *
+     C                     MOVEL'N'       EXTCT   1
+      *
+      ***  Count the record read.
+     C                     ADD  1         RRLIV2
+      *
+      ***  Check if a Confirmation Message has been requested.
+      *
+     C           DPGMEC    IFEQ 'Y'
+      *
+      ***IF*'RR'*AND*WE*ARE*PAST*OR*ON*THE*START*DATE,*****************   103984
+      ***SET*A*FLAG*TO*INDICATE*START*DATE*MESSAGE*AND*EXECUTE*-*******   103984
+      ***CLOSE*OF*BUSINESS*PROCESSING**********************************   103984
+     C***********DPMV      IFEQ 'RR'                                      103984
+     C***********DPMV      OREQ 'PL'                               103449 103984
+     C***********CSW003    IFNE 'Y'                                CSW003 103984
+     C***********CSW003    OREQ 'Y'                                CSW003 103984
+     C***********DPWHEN    ANDEQ'S'                                CSW003 103984
+     C***********          MOVE 'S'       SMFLAG                          103984
+     C***********          EXSR COBPR                                     103984
+     C***********          END                                     CSW003 103984
+     C***********          END                                            103984
+      *
+      ** IF 'RP' AND WE ARE PAST OR ON THE MATURITY DATE,
+      ** SET A FLAG TO INDICATE MATURITY DATE MESSAGE AND
+      ** EXECUTE CLOSE OF BUSINESS PROCESSING
+     C           DPMV      IFEQ 'RP'
+     C           DPMV      OREQ 'PD'                                      103449
+     C           CSW003    IFNE 'Y'                                       CSW003
+     C           CSW003    OREQ 'Y'                                       CSW003
+     C           DPWHEN    ANDEQ'M'                                       CSW003
+     C                     MOVE 'M'       SMFLAG
+     C                     EXSR COBPR
+     C                     END                                            CSW003
+     C                     END
+      *
+     C                     ENDIF
+      *
+      **  If confirmation message not requested then DPTMVDX1/DPSCMG
+      **  needs to be reset to "N".
+     C***********EXTCT     IFEQ 'N'                                       103984
+     C***********          EXSR DPTX1                                     103984
+     C***********          ENDIF                                          103984
+      *
+      ***  Read the next record from the Depot Movements/Extension Join
+      ***  File by Date In.
+      *
+     C                     READ DPTMVDJ2                 53
+     C                     END
+      *
+      ***  Set Pointer to read Depot Movements with Date Out Equal To
+      ***  Tomorrow (up to Date of Next Working Day).
+      *
+     C                     MOVE *LOVAL    WCDPSS
+     C                     MOVE *LOVAL    WCDPRN
+     C           BJRDNB    ADD  1         WCRDNB
+     C           KL4       SETLLDPTMVDJ3
+     C                     READ DPTMVDJ3                 54
+      *
+      ** DO WHILE RECORDS EXIST FOR THIS DATE AND DPDO < OR = BJDNWD
+     C           *IN54     DOWEQ'0'
+     C           DPDO      ANDLEBJDNWD
+      *
+      **  Set EXTCT to 'N'. This field will be used to determine whether
+      **  the record has been extracted to the MGF512PD file           .
+      *
+     C                     MOVEL'N'       EXTCT   1
+      *
+      ***  Count the record read.
+      *
+     C                     ADD  1         RRLIV3
+      *
+      ***  Check if a Confirmation Message has been requested.
+      *
+     C           DPGMEC    IFEQ 'Y'
+      *
+      ***IF*'RP'*AND*WE*ARE*PAST*OR*ON*THE*START*DATE,*****************   103984
+      ***SET*A*FLAG*TO*INDICATE*START*DATE*MESSAGE*AND*EXECUTE*-*******   103984
+      ***CLOSE*OF*BUSINESS*PROCESSING**********************************   103984
+     C***********DPMV      IFEQ 'RP'                                      103984
+     C***********DPMV      OREQ 'PD'                               103449 103984
+     C***********CSW003    IFNE 'Y'                                CSW003 103984
+     C***********CSW003    OREQ 'Y'                                CSW003 103984
+     C***********DPWHEN    ANDEQ'S'                                CSW003 103984
+     C***********          MOVE 'S'       SMFLAG                          103984
+     C***********          EXSR COBPR                                     103984
+     C***********          END                                     CSW003 103984
+     C***********          END                                            103984
+      *
+      ** IF 'RR' AND WE ARE PAST OR ON THE MATURITY DATE,
+      ** SET A FLAG TO INDICATE MATURITY DATE MESSAGE AND
+      ** EXECUTE CLOSE OF BUSINESS PROCESSING
+     C           DPMV      IFEQ 'RR'
+     C           DPMV      OREQ 'PL'                                      103449
+     C           CSW003    IFNE 'Y'                                       CSW003
+     C           CSW003    OREQ 'Y'                                       CSW003
+     C           DPWHEN    ANDEQ'M'                                       CSW003
+     C                     MOVE 'M'       SMFLAG
+     C                     EXSR COBPR
+     C                     END                                            CSW003
+     C                     END
+      *
+     C                     ENDIF
+      *
+      **  If confirmation message not requested then DPTMVDX1/DPSCMG
+      **  needs to be reset to "N".
+     C***********EXTCT     IFEQ 'N'                                       103984
+     C***********          EXSR DPTX1                                     103984
+     C***********          ENDIF                                          103984
+      *
+      ***  Read the next record from the Depot Movements/Extension Join
+      ***  File by Date Out.
+      *
+     C                     READ DPTMVDJ3                 54
+     C                     END
+      *
+      ***  End of If Close of Business Run.
+     C                     END
+      *---------------------------------------------------------------*
+      *
+      ** OUTPUT RUN CONTROL REPORT
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ICPSD
+      *****************************************************************
+      *                                                               *
+      *    ICPSD     - INPUT CYCLE PROCESSING (START DATE)            *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - AMASF, FMT512, GD512                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ICPSD     BEGSR
+      *
+      ** ACCESS MASTER FILES
+     C                     EXSR AMASF
+      *
+      * SET UP GENERATION DRIVER FILES FIELDS
+     C                     CLEARMGF512D0
+      *
+      ** DETERMINE DESTINATION CUSTOMER ADDRESS
+      ** MESSAGE BRANCH ZERO - SET DEST CUST EQUAL TO COUNTERPARY CUST
+     C                     MOVELDPBN      MGDEST
+      *
+      ***SET*UP*CHANGE*TYPE*WORKFIELD***************                      094335
+     C***********CHTP      IFNE 'D'                                       094335
+      *
+      ***  If the Confirmation Generated Indicator is 'N' and the Last    094335
+      ***  Change was not a Deletion, then continue to process further    094335
+      ***  messages.                                                      094335
+     C           DPCONG    IFEQ 'N'
+     C           CHTP      ANDNE'D'                                       094335
+     C                     MOVE 'I'       WWCHTP  1
+     C***********          END                                            094335
+     C***********DPCONG    IFEQ 'A'                                       094335
+     C***********DPCONG    OREQ 'Y'                                       094335
+     C***********          MOVE 'A'       WWCHTP                          094335
+     C***********          END                                            094335
+      *
+      ** GENERATE MT512 MESSAGE
+     C                     EXSR FMT512
+     C                     END                                            094335
+      *
+      ***ELSE*CHANGE*TYPE*IS*'D'**********************                    094335
+     C***********          ELSE                                           094335
+      *                                                                   094335
+     C           DPCONG    IFEQ 'A'
+     C           DPCONG    OREQ 'Y'
+      *
+      ** DELETE/GENERATE MT512 MESSAGE
+     C                     EXSR GD512
+     C                     END
+      *
+     C***********          END                                            094335
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ICPMD
+      *****************************************************************
+      *                                                               *
+      *    ICPMD     - INPUT CYCLE PROCESSING (MATURITY DATE)         *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - AMASF, FMT512, GD512                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ICPMD     BEGSR
+      *
+      ** ACCESS MASTER FILES
+     C                     EXSR AMASF
+      *
+      * SET UP GENERATION DRIVER FILES FIELDS
+     C                     CLEARMGF512D0
+      *
+      ** DETERMINE DESTINATION CUSTOMER ADDRESS
+      ** MESSAGE BRANCH ZERO - SET DEST CUST EQUAL TO COUNTERPARY CUST
+     C                     MOVELDPBN      MGDEST
+      *
+      ** SET UP CHANGE TYPE WORKFIELD
+     C           CHTP      IFNE 'D'
+      *
+     C           DPCONG    IFEQ 'N'
+     C           DPCONG    OREQ 'A'
+     C                     MOVE 'I'       WWCHTP
+     C***********          END                                            094335
+     C***********DPCONG    IFEQ 'Y'                                       094335
+     C***********          MOVE 'A'       WWCHTP                          094335
+     C***********          END                                            094335
+      *
+      ** GENERATE MT512 MESSAGE
+     C                     EXSR FMT512
+     C                     END                                            094335
+     C                     END                                            094335
+      *
+      ** ELSE CHANGE TYPE IS 'D'
+     C***********          ELSE                                           094335
+     C           DPCONG    IFEQ 'Y'
+      *
+      ** DELETE/GENERATE MT512 MESSAGE
+     C                     EXSR GD512
+     C                     END
+      *
+     C***********          END                                            094335
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/COBPR
+      *****************************************************************
+      *                                                               *
+      *    COBPR     - CLOSE OF BUSINESS PROCESSING                   *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - AMASF, FMT512                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           COBPR     BEGSR
+      *
+      ** CHECK THAT MESSAGE SHOULD NOT ALREADY HAVE BEEN PRODUCED
+     C***********SMFLAG    IFEQ 'S'                                       103984
+     C***********DPCONG    ANDNE'N'                                       103984
+     C***********SMFLAG    OREQ 'M'                                       103984
+     C           SMFLAG    IFEQ 'M'                                       103984
+     C           DPCONG    ANDNE'A'
+     C           CSW003    ANDNE'Y'                                       CSW003
+     C           SMFLAG    OREQ 'M'                                       CSW003
+     C           DPCONG    ANDEQ'Y'                                       CSW003
+     C           CSW003    ANDEQ'Y'                                       CSW003
+     C                     MOVEL'003'     DBASE            **************
+     C                     MOVEL'DPTMVDJ2'DBFILE           * DB ERROR 3 *
+     C                     MOVELDPSS      DBKEY            **************
+     C                     MOVE DPRN      DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** ACCESS MASTER FILES
+     C                     EXSR AMASF
+      *
+      * SET UP GENERATION DRIVER FILES FIELDS
+     C                     CLEARMGF512D0
+      *
+      ** DETERMINE DESTINATION CUSTOMER ADDRESS
+      ** MESSAGE BRANCH ZERO - SET DEST CUST EQUAL TO COUNTERPARY CUST
+     C                     MOVELDPBN      MGDEST
+      *
+      ** SET UP CHANGE TYPE WORKFIELD
+     C                     MOVE 'I'       WWCHTP
+      *
+      ** GENERATE MT512 MESSAGE
+     C                     EXSR FMT512
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AMASF
+      *****************************************************************
+      *                                                               *
+      *    AMASF     - ACCESS MASTER FILES                            *
+      *                                                               *
+      *    CALLED BY - ICPSD, ICPMD, COBPR                            *
+      *    CALLS     -                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AMASF     BEGSR
+      *
+      ** SAVE BRANCH CODE AS CHARACTER FIELD
+     C                     MOVE DPBA      WWDPBA  3
+      *
+      ** ACCESS LF/SDBRCHL1 FOR BRANCH CODE
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WWDPBA    WBRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'004'     DBASE            **************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 4 *
+     C                     MOVELWWDPBA    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** SAVE BRANCH INTERNAL CUSTOMER
+     C                     MOVE A8BICN    WWBICN  6
+      *
+      ** SAVE CUSTOMER NUMBER AS A CHARACTER FIELD
+     C                     MOVE DPBN      WWDPBN  6
+      *
+      ** ACCESS LF/SDSECSJ3 USING KEY COUNTERPARTY CUST NO.
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM WWDPBN    WWCUST  6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'005'     DBASE            **************
+     C                     MOVEL'SDSECSPD'DBFILE           * DB ERROR 5 *
+     C                     MOVELWWDPBN    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** ACCESS PF/DPTMVDY2 USING KEY OF DEPOT REF AND SET ON FLAG
+      **  IF RECORD EXISTS
+     C                     MOVELDPSS      WYDPSS
+     C                     MOVELDPRN      WYDPRN
+     C           KL2       CHAINDPTMVDY2             69
+     C           *IN69     IFEQ '0'
+     C                     MOVE 'Y'       WWEXSS  1
+     C                     ELSE
+     C                     MOVE 'N'       WWEXSS
+     C                     END
+      *
+      ** RESET EXTENDED FIELDS DATA STRUCTURE
+     C                     MOVE *BLANKS   WXSFLD
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FMT512
+      *****************************************************************
+      *                                                               *
+      *    FMT512    - FORMAT MESSAGE FIELDS FOR MT512                *
+      *                                                               *
+      *    CALLED BY - ICPSD, ICPMD, COBPR                            *
+      *    CALLS     - ZNCD                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMT512    BEGSR
+      *
+      ** FORMAT SECURITY FULL-NAME
+      **    ACCESS LF/SECTY    USING KEY SECURITY SHORTNAME
+     C           DPSS      CHAINSECTY                67
+      *
+      **    IF RECORD NOT FOUND
+     C           *IN67     IFEQ '1'
+     C                     MOVEL'006'     DBASE            **************
+     C                     MOVEL'SECTY   'DBFILE           * DB ERROR 6 *
+     C                     MOVELDPSS      DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** SECURITY FULL NAME-1 & 2
+      **    CHECK IF SECURITY FULL NAME-1 IS BLANK
+     C           SFN1      IFNE *BLANKS
+     C                     MOVELSFN1      MGSFN1
+     C                     MOVELSFN2      MGSFN2
+      *
+     C                     ELSE
+      *
+     C                     MOVELSESN      MGSFN1
+     C                     MOVELSRPN      MGSFN2
+     C                     END
+      *
+      ** TRANSACTION NUMBER
+     C                     MOVELDPRN      MGTNUM
+      *
+      ** MODULE ID
+     C                     MOVEL'SE'      MGMODI
+      *
+      ** TRANSACTION TYPE
+     C           DPWHEN    IFEQ 'M'                                       CSW003
+     C                     MOVEL'DN'      MGTTYP                          CSW003
+     C                     ELSE                                           CSW003
+     C                     MOVEL'DM'      MGTTYP
+     C                     END                                            CSW003
+      *
+      ** TRANSACTION SUB-TYPE
+     C                     MOVELDPMV      MGTSTP
+      *
+      ** BRANCH CODE OF SENDER
+     C                     MOVELDPBA      MGSNBR
+      *
+      ** SETTLEMENT BRANCH
+     C                     MOVELDPBA      MGBRCA
+      *
+      ** QUANTITY OF SECURITIES
+     C                     Z-ADDDPNA      MGQANT
+      *
+      ** Nominal decimal places                                           078256
+     C                     Z-ADDNMDP      MGNMDP                          078256
+      *                                                                   078256
+      ** SWIFT SECURITY TYPE
+     C                     MOVELSWTP      MGSWTP
+      *
+      ** ISIN OF SECURITY FOR SWIFT
+     C                     MOVELISIN      MGISIN
+      *
+      ** TRADE DATE
+     C/COPY WNCPYSRC,SE1872C002
+      **    ACCESS LF/DEALS USING KEY OF ASSOC. DEAL NO.
+     C           DPAD      CHAINDEALS                68
+      *
+      **    IF RECORD NOT FOUND
+     C           *IN68     IFEQ '1'
+     C                     MOVEL'007'     DBASE            **************
+     C                     MOVEL'DEALS'   DBFILE           * DB ERROR 7 *
+     C                     MOVELDPAD      DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADDDDAT      MGTDAT
+      *
+      ** SETTLEMENT CURRENCY
+      ** SETTLEMENT AMOUNT
+      ** NOMINAL CURRENCY
+      ** DEAL AMOUNT
+      ** NET PROCEEDS
+      **    IF DEPOT MOVEMENT = 'RR' OR 'RP'
+     C           DPMV      IFEQ 'RR'
+     C           DPMV      OREQ 'RP'
+     C           DPMV      OREQ 'PL'                                      103449
+     C           DPMV      OREQ 'PD'                                      103449
+      *
+     C                     MOVELCCY       MGSTCY
+     C                     Z-ADDPCPL      MGSTAM
+     C                     MOVELCCY       MGNMCY
+     C                     Z-ADDPCPL      MGDLAM
+     C                     Z-ADDPCPL      MGNPRO
+     C                     END
+      *
+      ** TRADE BASIS
+     C                     MOVELSTBS      MGSTBS
+      *
+      ** PRICE BASIS
+     C                     MOVELSPBS      MGSPBS
+      *
+      ** MARKET PRICE
+     C           CSW003    IFEQ 'Y'                                       CSW003
+     C           DPPRIC    ANDNE0                                         CSW003
+     C                     Z-ADDDPPRIC    MGPRIC                          CSW003
+     C                     ELSE                                           CSW003
+     C           MKTP      IFNE 0
+     C                     Z-ADDMKTP      MGPRIC
+     C                     ELSE
+     C                     Z-ADDMKPR      MGPRIC
+     C                     END
+     C                     END                                            CSW003
+      *
+      ** VALUE DATE
+      **  IF SMFLAG = 'S' AND DEPOT MOVEMENT = 'RP'
+      **  OR SMFLAG = 'M' AND DEPOT MOVEMENT = 'RR'
+     C           SMFLAG    IFEQ 'S'
+     C           DPMV      ANDEQ'RP'
+     C           SMFLAG    OREQ 'S'                                       103449
+     C           DPMV      ANDEQ'PD'                                      103449
+     C           SMFLAG    OREQ 'M'
+     C           DPMV      ANDEQ'RR'
+     C           SMFLAG    OREQ 'M'                                       103449
+     C           DPMV      ANDEQ'PL'                                      103449
+      *
+     C                     Z-ADDDPDO      MGVDAT
+     C                     ELSE
+     C                     Z-ADDDPMD      MGVDAT
+     C                     END
+      *
+      ***  Next Coupon Date. If Security is not Interest-Bearing,
+      ***  (implied by Initial Date = 0 or Coupon Rate = 0), then set
+      ***  the Next Coupon Date to zero.
+      *
+     C           ITLD      IFEQ 0
+     C           CPNR      OREQ 0
+     C                     Z-ADD0         MGNCDT
+     C                     ELSE
+     C           MGVDAT    ADD  1         ECD     50
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       MGNCDT
+     C                     ENDIF
+      *
+      ** RECEIVER OF SECURITIES
+      ** RECEIVER OF SECURITIES A/C LINE
+      ** NB THIS IS THE MANDATORY :87a: FIELD
+      **    IF RECORD IS FOUND AND REC. OF SECURITIES OR REC. OF
+      **    SECURITIES A/C LINE IS NOT BLANK
+     C           WWEXSS    IFEQ 'Y'
+     C           D2RSSN    ANDNE*BLANKS
+     C           WWEXSS    OREQ 'Y'
+     C           D2RSS1    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS87R
+     C                     MOVELD2RSSN    MGRSSN
+     C                     MOVELD2RSS1    MGRSS1
+     C                     ELSE
+      *
+      **  IF SMFLAG = 'S' AND DEPOT MOVEMENT = 'RR'
+      **  OR SMFLAG = 'M' AND DEPOT MOVEMENT = 'RP'
+     C           SMFLAG    IFEQ 'S'
+     C           DPMV      ANDEQ'RP'
+     C           SMFLAG    OREQ 'S'                                       103449
+     C           DPMV      ANDEQ'PD'                                      103449
+     C           SMFLAG    OREQ 'M'
+     C           DPMV      ANDEQ'RR'
+     C           SMFLAG    OREQ 'M'                                       103449
+     C           DPMV      ANDEQ'PL'                                      103449
+      *
+     C                     MOVELDPID      MGRSSN
+     C                     ELSE
+     C                     MOVELDPOD      MGRSSN
+     C                     END
+     C                     END
+      *
+      ** ACCOUNT WITH INSTITUTION
+      ** ACCOUNT WITH INSTITUTION A/C LINE
+      **    IF ACC. WITH INSTIT. OR ACC WITH INST. A/C LINE IS NOT
+      **     BLANK
+     C           WWEXSS    IFEQ 'Y'
+     C           D2AWIN    ANDNE*BLANKS
+     C           WWEXSS    OREQ 'Y'
+     C           D2AWIL    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS57
+     C                     MOVELD2AWIN    MGAWIN
+     C                     MOVELD2AWIL    MGAWIL
+      *
+     C                     ELSE
+      *
+      **  IF SMFLAG = 'S'
+     C           SMFLAG    IFEQ 'S'
+     C           SDST      IFEQ 01
+     C           SDST      OREQ 07
+     C           SDST      OREQ 08
+      **    ACCESS LF/SDNOSTL0 USING DEAL CURR. AND THEIR START NOSTRO
+     C***********          MOVELTSTN      WWTSTN  2                       089773
+     C***********          CALL 'AONOSTR0'                                089773
+     C***********          PARM *BLANKS   WRTCD   7                       089773
+     C***********          PARM '*KEY   ' WOPTN   7                       089773
+     C***********          PARM *BLANKS   PWCUST  6          Customer No  089773
+     C***********          PARM CCY       PWCYCD  3          Currency     089773
+     C***********          PARM *BLANKS   PWACCD  4          A/c Code     089773
+     C***********          PARM *BLANKS   PWACSN  2          A/c Seq      089773
+     C***********          PARM WWTSTN    PWNONB  2          Nostro No    089773
+     C***********          PARM *BLANKS   PWBRCD  3          Branch Code  089773
+     C***********          PARM *BLANKS   PWCSSN 10          Cust ShortN  089773
+     C***********          PARM *BLANKS   PWPNOI  1          Prime Nost In089773
+     C***********SDNOST    PARM SDNOST    DSFDY                           089773
+      ***********                                                         089773
+      ***DATABASE ERROR                                                   089773
+     C***********WRTCD     IFNE *BLANKS                                   089773
+     C***********          MOVEL'008'     DBASE            ************** 089773
+     C***********          MOVEL'SDNOSTPD'DBFILE           * DB ERROR 8 * 089773
+     C***********          MOVELCCY       DBKEY5  5        ************** 089773
+     C***********          MOVE WWTSTN    DBKEY5                          089773
+     C***********          MOVE DBKEY5    DBKEY                           089773
+     C***********          EXSR *PSSR                                     089773
+     C***********          END                                            089773
+      ***********                                                         089773
+     C***********          MOVELA7CUST    MGAWIN                          089773
+     C                     MOVELTSTN      MGAWIN                          089773
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           MDST      IFEQ 01
+     C           MDST      OREQ 07
+     C           MDST      OREQ 08
+      *
+      ******ACCESS*LF/SDNOSTL0*USING*DEAL*CURR.*AND*THEIR*MATUR.*NOSTRO*  089773
+     C***********          MOVELTMAN      WWTSTN                          089773
+     C***********          CALL 'AONOSTR0'                                089773
+     C***********          PARM *BLANKS   WRTCD   7                       089773
+     C***********          PARM '*KEY   ' WOPTN   7                       089773
+     C***********          PARM *BLANKS   PWCUST  6          Customer No  089773
+     C***********          PARM CCY       PWCYCD  3          Currency     089773
+     C***********          PARM *BLANKS   PWACCD  4          A/c Code     089773
+     C***********          PARM *BLANKS   PWACSN  2          A/c Seq      089773
+     C***********          PARM WWTSTN    PWNONB  2          Nostro No    089773
+     C***********          PARM *BLANKS   PWBRCD  3          Branch Code  089773
+     C***********          PARM *BLANKS   PWCSSN 10          Cust ShortN  089773
+     C***********          PARM *BLANKS   PWPNOI  1          Prime Nost In089773
+     C***********SDNOST    PARM SDNOST    DSFDY                           089773
+      ***********                                                         089773
+      ***DATABASE ERROR                                                   089773
+     C***********WRTCD     IFNE *BLANKS                                   089773
+     C***********          MOVEL'009'     DBASE            ************** 089773
+     C***********          MOVEL'SDNOSTL0'DBFILE           * DB ERROR 9 * 089773
+     C***********          MOVELCCY       DBKEY5  5        ************** 089773
+     C***********          MOVE WWTSTN    DBKEY5                          089773
+     C***********          MOVE DBKEY5    DBKEY                           089773
+     C***********          EXSR *PSSR                                     089773
+     C***********          END                                            089773
+      ***********                                                         089773
+     C***********          MOVELA7CUST    MGAWIN                          089773
+      * NOTE TMAN (Their Maturity Nostro) contains a customer number      089773
+      * it comes from Intermediary bank or 'Account with bank' on         089773
+      * the settlements sceen.                                            089773
+      * (PS I think that the chain using TSTN above may be dodgy as       089773
+      * well)                                                             089773
+     C                     MOVELTMAN      MGAWIN                          089773
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** COUNTERPARTY & A/C LINE
+     C           WWEXSS    IFEQ 'Y'
+     C           D2CTYN    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS82C
+     C                     MOVELD2CTYN    MGCTYN
+     C                     MOVELD2CTYL    MGCTYL
+     C                     END
+      *
+      ** DELIVERER OF SECURITIES
+      ** DELIVERER OF SECURITIES A/C LINE
+     C           WWEXSS    IFEQ 'Y'
+     C           D2DSSN    ANDNE*BLANKS
+     C           WWEXSS    OREQ 'Y'
+     C           D2DSS1    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS87D
+     C                     MOVELD2DSSN    MGDSSN
+     C                     MOVELD2DSS1    MGDSS1
+     C                     END
+      *
+     C           MGDSSN    IFEQ MGRSSN
+     C           MGDSS1    ANDEQMGRSS1
+     C                     MOVE *BLANKS   MGDSSN
+     C                     MOVE *BLANKS   MGDSS1
+     C                     END
+      *
+      ** SENDER TO RECEIVER INFO 1 & 2 & 3
+     C           WWEXSS    IFEQ 'Y'
+     C           D2SRL1    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS72
+     C                     MOVELD2SRL1    MGSRL1
+     C                     MOVELD2SRL2    MGSRL2
+     C                     MOVELD2SRL3    MGSRL3
+     C                     END
+      *
+      ** TIME OF TRADE
+     C                     MOVELDPTRTT    MGTRTT
+      *
+      ** MOVEMENT DATE IN
+     C                     Z-ADDDPMD      MGDMDI
+      *
+      ** MOVEMENT DATE OUT
+     C                     Z-ADDDPDO      MGDMDO
+      *
+      ** CHANGE TYPE
+     C                     MOVELWWCHTP    MGCHTP
+      *
+      ** PAY CODE
+     C           DPFIND    IFEQ 'A'
+     C                     MOVEL'1'       MGPCOD
+     C                     ELSE
+     C                     MOVE *BLANKS   MGPCOD
+     C                     END
+     C*                                                                   CSW003
+     C*  INTEREST AMOUNT                                                  CSW003
+     C*                                                                   CSW003
+     C           CSW003    IFEQ 'Y'                                       CSW003
+     C                     Z-ADDDPITRA    MGITRA                          CSW003
+     C                     END                                            CSW003
+     C*                                                                   CSW003
+     C*  EXCHANGE RATE                                                    CSW003
+     C*                                                                   CSW003
+     C           CSW003    IFEQ 'Y'                                       CSW003
+     C                     Z-ADDDPTDER    MGTDER                          CSW003
+     C                     END                                            CSW003
+      *
+      ** EXTENDED SETTLEMENT FIELDS
+     C                     MOVE WXSFLD    MGXSFL
+     C/COPY WNCPYSRC,SE1872C003
+      *
+      ** WRITE A RECORD TO MGF512PD
+     C                     WRITEMGF512D0               70
+      *
+      ** CHECK RECORD SUCCESSFULLY WRITTEN TO FILE
+     C           *IN70     IFEQ '1'
+     C                     MOVEL'010'     DBASE            **************
+     C                     MOVEL'MGF512PD'DBFILE           * DB ERROR 10*
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     EXSR *PSSR
+      *
+      **  If record written successfully to MGF510PD, change EXTCT to
+      **  reflect this.
+     C                     ELSE
+     C                     MOVEL'Y'       EXTCT
+     C                     END
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,SE1872C004
+      *
+      *****************************************************************
+      /TITLE SR/GD512
+      *****************************************************************
+      *                                                               *
+      *    GD512     - DELETE/GENERATE MT512 MESSAGE                  *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - MG9505, FMT512                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GD512     BEGSR
+      *
+     C                     MOVE *BLANKS   MGST                            094335
+     C                     MOVE *BLANKS   MGSG                            094335
+      *                                                                   094335
+      ** SET GREATER THAN LIMITS ON LF/MGOREFL0
+     C***********          MOVE 'SET'     WM0103                          094335
+     C           CSW003    IFEQ 'Y'                                       CSW003
+     C           DPWHEN    ANDEQ'M'                                       CSW003
+     C                     MOVE 'SEE'     WM0103                          CSW003
+     C                     ELSE                                           CSW003
+     C                     MOVE 'SED'     WM0103                          094335
+     C                     END                                            CSW003
+     C                     MOVE DPRN      WM0409
+     C                     MOVE *HIVAL    WM1016
+      *
+     C           WMGKEY    SETGTMGOREFL0
+     C                     READPMGOREFL0                 51
+     C                     MOVELTRNO      WCHK    3
+      *
+      ** SET RECORD FOUND COUNT
+     C           CSW003    IFNE 'Y'                                       CSW003
+     C           SMFLAG    IFEQ 'S'
+     C           DPCONG    ANDEQ'Y'
+     C                     Z-ADD0         WWRECC  10
+     C                     ELSE
+     C                     Z-ADD1         WWRECC
+     C                     END
+      *
+      ** DO WHILE MTRN = DPRN AND WWRECC NOT = 2
+      **  AND NOT START OF FILE
+     C           MTRN      DOWEQDPRN
+     C           WWRECC    ANDNE2
+     C           *IN51     ANDEQ'0'
+     C           WCHK      ANDEQWM0103                                    094335
+      *
+      ** IF MTPY = '512'
+     C           MTPY      IFEQ '512'
+     C                     ADD  1         WWRECC
+     C                     END
+      *
+      ** IF WWRECC NOT = 2
+     C           WWRECC    IFNE 2
+     C                     READPMGOREFL0                 51
+     C                     MOVELTRNO      WCHK                            094335
+     C                     END
+     C                     END
+      *                                                                   CSW003
+     C                     ELSE                                           CSW003
+      ** SET FLAG TO INDICATE RECORD FOUND                                CSW003
+     C                     MOVE 'N'       WWFLG2  1                       CSW003
+      *                                                                   CSW003
+      ** DO WHILE MTRN = DPRN AND WWFLG2 = 'N' AND NOT START OF FILE      CSW003
+     C           MTRN      DOWEQDPRN                                      CSW003
+     C           WWFLG2    ANDEQ'N'                                       CSW003
+     C           *IN51     ANDEQ'0'                                       CSW003
+     C           WCHK      ANDEQWM0103                                    CSW003
+      *                                                                   CSW003
+      ** IF MTPY = '512'                                                  CSW003
+     C           MTPY      IFEQ '512'                                     CSW003
+     C                     MOVE 'Y'       WWFLG2                          CSW003
+      *                                                                   CSW003
+     C                     ELSE                                           CSW003
+      *                                                                   CSW003
+     C                     READPMGOREFL0                 51               CSW003
+     C                     MOVELTRNO      WCHK                            CSW003
+     C                     END                                            CSW003
+     C                     END                                            CSW003
+     C                     ENDIF                                          CSW003
+      *                                                                   094335
+     C           *IN51     IFEQ '0'                                       094335
+     C           MTRN      IFNE DPRN                                      094335
+     C           WCHK      ORNE WM0103                                    094335
+     C                     SETON                     51                   094335
+     C                     ENDIF                                          094335
+     C                     ENDIF                                          094335
+      *
+     C           *IN51     IFEQ '0'
+     C           MGST      ANDEQ'CRTD'
+     C           *IN51     OREQ '0'
+     C           MGST      ANDEQ'AMND'
+     C************IN51     OREQ '0'                                       094335
+     C***********MGST      ANDEQ'RSND'                                    094335
+     C           *IN51     OREQ '0'                                       094335
+     C           MGSG      ANDEQ'4'                                       094335
+      *
+      ** CALL DELETION PROGRAM 'MG9505'
+     C           MGST      IFEQ 'CRTD'                                    094335
+     C           MGST      OREQ 'AMND'                                    094335
+     C                     MOVE TRNO      @TNUM  16
+      *
+     C                     CALL 'MG9505'               52
+     C                     PARM           @TNUM
+     C                     PARM *BLANKS   @RTNC   1
+      *
+      ** IF PROGRAM NOT FOUND
+     C           *IN52     IFEQ '1'
+     C                     MOVE '011'     DBASE            ***************
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 011 *
+     C                     MOVEL'MG9505'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** IF ERROR DURING PROGRAM
+     C***********@RTNC     IFEQ 'E'                                       094335
+     C           @RTNC     IFEQ 'Y'                                       094335
+     C                     MOVE '012'     DBASE            ***************
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 012 *
+     C                     MOVEL@TNUM     DBKEY            ***************
+     C                     MOVEL'MG9505'  DBPGM
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   094335
+     C                     ENDIF                                          094335
+      *                                                                   094335
+     C           LSCC      IFEQ 'AMEND'                                   094335
+     C           CHTP      ANDEQ'D'                                       094335
+     C           CHTP      ORNE 'D'                                       094335
+      *                                                                   094335
+     C           LSCC      IFEQ 'NEW'                                     094335
+     C           CHTP      ANDEQ'A'                                       094335
+     C           LSCC      OREQ *BLANKS                                   094335
+     C           CHTP      ANDEQ'A'                                       094335
+     C                     MOVE 'I'       WWCHTP                          094335
+     C                     ELSE                                           094335
+     C                     MOVE CHTP      WWCHTP                          094335
+     C                     ENDIF                                          094335
+      *                                                                   094335
+      ** FORMAT MESSAGE SPECIFIC FIELDS FOR MT512                         094335
+     C                     EXSR FMT512                                    094335
+     C           WWCHTP    IFEQ 'I'                                       094335
+     C                     MOVE *BLANKS   @TRAN  15                       094335
+     C                     MOVELDPRN      WWSIX   6                       094335
+     C                     MOVELWWSIX     @TRAN                           094335
+     C           DPWHEN    IFEQ 'M'                                       094335
+     C                     MOVEL'DN'      @TTYP   2                       094335
+     C                     ELSE                                           094335
+     C                     MOVEL'DM'      @TTYP                           094335
+     C                     END                                            094335
+     C                     MOVE @TTYP     @TRAN                           094335
+      *                                                                   094335
+     C                     CALL 'MG5910'               21                 094335
+     C                     PARM 'SE'      MODID   2                       094335
+     C                     PARM           @TRAN  15                       094335
+     C                     PARM 'CE'      CALLP   2                       094335
+     C                     PARM 'C'       @MODE   1                       094335
+     C                     PARM *BLANKS   @CONG   1                       094335
+     C                     PARM *BLANKS   @RCDG   1                       094335
+     C                     PARM *BLANKS   @ERCD   1                       094335
+     C                     PARM           CSW003                          094335
+     C*                                                                   094355
+     C** IF PROGRAM MG5910 NOT FOUND                                      094337
+     C           *IN21     IFEQ '1'                                       094335
+     C                     MOVE '020'     DBASE            * * * * * * * *094335
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 020  *094335
+     C                     MOVEL'MG5910'  DBPGM            * * * * * * * *094335
+     C                     EXSR *PSSR                                     094335
+     C                     ENDIF                                          094335
+     C*                                                                   094335
+     C** IF ERROR DURING PROGRAM MG5910                                   094335
+     C           @ERCD     IFEQ 'Y'                                       094335
+     C                     MOVE '021'     DBASE            * * * * * * * *094335
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 021  *094335
+     C                     MOVELDBERR     DBKEY            * * * * * * * *094335
+     C                     MOVEL'MG5910'  DBPGM                           094335
+     C                     EXSR *PSSR                                     094335
+     C                     ENDIF                                          094335
+     C                     ENDIF                                          094335
+     C                     ENDIF                                          094335
+      *
+     C                     ELSE
+      *
+      ** EXECUTE SUBROUTINE TO FORMAT MT512 FIELDS
+     C                     MOVE CHTP      WWCHTP                          094335
+     C                     EXSR FMT512
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DPTX1
+      *****************************************************************
+      *                                                               *
+      *    DPTX1     - Process to update DPTMVDX1/DPSCMG to "N" if    *
+      *                DPGMEC is not "Y"                              *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - NONE                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DPTX1     BEGSR
+      *
+     C           KL2       CHAINDPTMVDY1             99
+     C           *IN99     IFEQ *OFF
+     C                     MOVEL'N'       DPGMEC
+     C                     UPDATUPDIDX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *    AUDIT     - RUN CONTROL PROCESS                            *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - NONE                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      ***  Write Heading and control information
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE1872'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     SETON                     U7U8LR
+      *
+     C                     EXSR AUDIT
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZNCD
+     C/COPY ZSRSRC,ZNCDZ3
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

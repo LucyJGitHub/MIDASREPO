@@ -1,0 +1,831 @@
+0001 H        1                                                           DL0235
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL List of Brokerage Rates')
+0002 F********************************************************************DL0235
+     F*  Midas - Dealing Module
+0004 F*                                                                  *DL0235
+0005 F*       DL0235 - BROKERAGE RATES REPORT                            *DL0235
+0006 F*                                                                  *DL0235
+      *  (c) Finastra International Limited 2001                      *
+0008 F*                                                                  *DL0235
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 117818             Date 19Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 049680             DATE 18JAN93               *
+     F*                 LN0741             DATE 17SEP90               *
+     F*                 LN0363             DATE 16JUN90               *
+     F*                      BHF139           DATE 14JUN90               *BHF139
+0009 F*                      LN0146           DATE 10MAY90               *LN0146
+0009 F*                      LN0133           DATE 09MAY90               *LN0133
+0009 F*                      E19922           DATE 12APR90               *E19922
+0009 F*                      S01117           DATE 08/05/89              *S01117
+     F*                      S01194           DATE 08/05/89              *S01194
+     F*                      E25              DATE 01NOV89               *E25
+0010 F*                                                                  *DL0235
+0002 F********************************************************************
+0010 F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  117818 - Subheading printing at bottom of page.            *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  049680 - Program no longer compiles at OS/400 release level*
+     F*           V2R2M0, because there are two I-spec lines for    *
+     F*           one file, both without record-identifying         *
+     F*           indicators.                                       *
+     F*                                                             *
+     F*       LN0741 - P1 SHOULD NOT BE OPENED WHEN NO DETAILS TO        *LN0741
+     F*                REPORT                                            *LN0741
+     F*       LN0363 - NOT PRINTING 'END OF REPORT' FOR P1. 'NO DETAILS  *LN0363
+     F*                TO REPORT' NOT USED FOR P1                        *LN0363
+     F*       LN0146 - AU NOT PRINTING HEADINGS WHEN DETAILS TO REPORT   *LN0146
+     F*       BHF139 - LN0133 MADE HEADINGS PRINTED FOR EVERY DETAIL     *BHF139
+     F*       LN0133 - P1 SHOULD NOT BE OPENED WHEN NO DETAILS TO        *LN0133
+     F*                REPORT                                            *LN0133
+     F*       E19922 - CODE ADDED TO ENSURE REPORT HEADINGS ARE          *E19922
+     F*                PRINTED WHEN PRIMARY FILE EMPTY.                  *E19922
+     F*       S01117 - MULTIBRANCHING CHANGES.                           *S01117
+     F*       S01194 - STANDING DATA CHANGES DERIVED FROM SYNON.         *S01194
+     F*       E25    - 'END OF REPORT' MESSAGE ADDED TO DL0235P1         *E25
+     F*                                                                  *
+0011 F********************************************************************DL0235
+0012 FBROKR   UP  F     180  7AI     2 DISK                               DL0235
+0013 F*ABLE***IF**F      96 12AI     2 DISK                       *****   S01194
+0014 F**0235P1O***F     132     OF     PRINTER                    *****   S01124
+0014 F**0235P1O***F     132     OF     PRINTER      KINFDS SPOOL  S01117  LN0741
+0014 FDL0235P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  LN0741
+0014 FDL0235AUO   F     132     OV     PRINTER      KINFDS SPOOLU         S01117
+     F*****************************************************************
+     F*
+     F*              FUNCTION OF INDICATORS
+     F*
+     F*     18  -  SETON IF FIRST CYCLE PROCESSING DONE                   E19922
+     F*     85  -  PRINT HEADINGS ON P1                                   BHF139
+     F*     86  -  HEADER HAS BEEN READ                                   BHF139
+     F*     87  -  DETAIL HAS BEEN READ AND PRINTER FILE OPENED           BHF139
+     F*
+     F*
+     F*****************************************************************
+     E                    CPY@    1   1 80
+0015 E                    BRF        11  5 3             FX SWAP FWD RATESDL0235
+0016 E                    TABCH   3   3  1   TABEX   5   PRD CHAR -> NAME DL0235
+0017 E                    SPD         3  3               SWAP PERIOD      DL0235
+0018 E                    SMD         3  1               SWAP METHOD      DL0235
+0019 E                    SRT         3  7 7             SWAP RATE        DL0235
+0020 E                    SCA         3  7 0             SWAP AMOUNT      DL0235
+0021 E                    DPD        12  3               DEPOSIT PERIOD   DL0235
+0022 E                    DMD        12  1               DEPOSIT METHOD   DL0235
+0023 E                    DRT        12  7 7             DEPOSIT RATE     DL0235
+0024 E                    DCA        12  7 0             DEPOSIT AMOUNT   DL0235
+0025 E                    SWP         3  8               EXPANDED SW PRD  DL0235
+0026 E                    DPP        12  8               EXPANDED DP PRD  DL0235
+0027 I*                                                                   DL0235
+0028 I*    BROKERAGE RATES FILE - HEADER RECORD.                          DL0235
+0029 I*                                                                   DL0235
+0030 IBROKR   NS  01   1 CH                                               DL0235
+0031 I                                    P  15  170NLRB                  DL0235
+0032 I                                    P  18  200NINS                  DL0235
+0033 I                                    P  21  230NAMD                  DL0235
+0034 I                                    P  24  260NDEL                  DL0235
+0035 I                                    P  27  290NLRA                  DL0235
+0036 I                                       30  31 TBLTP                 DL0235
+0037 I*                                                                   DL0235
+0038 I*    BROKERAGE RATES FILE - DETAIL RECORD - TYPE '01'               DL0235
+0039 I*                                                                   DL0235
+0040 I        NS  02   1 CD  10 C1                                        DL0235
+0041 I                                        1   1 RECI                  DL0235
+0042 I                                        2   5 BRKC  L1              DL0235
+0043 I                                        6   8 CCY                   DL0235
+0044 I                                        9  100BRKT                  DL0235
+0045 I                                    P  11  147BRRD                  DL0235
+0046 I                                    P  15  187BRRN                  DL0235
+0047 I                                    P  19  210BRFS                  DL0235
+0048 I                                    P  22  54 BRF                   DL0235
+0049 I*                                                                   DL0235
+0050 I*    BROKERAGE RATES FILE - DETAIL RECORD TYPE '02'.                DL0235
+0051 I*                                                                   DL0235
+0052 I        NS  02   1 CD  10 C2                                        DL0235
+0053 I                                        1   1 RECI                  DL0235
+0054 I                                        2   5 BRKC  L1              DL0235
+0055 I                                        6   8 CCY                   DL0235
+0056 I                                        9  100BRKT                  DL0235
+0057 I                                       11  13 CHCY                  DL0235
+0058 I                                    P  14  170PRMT                  DL0235
+0059 I                                       18  20 PRCY                  DL0235
+0060 I                                       21  23 FXPD                  DL0235
+0061 I                                       24  24 FXMD            20    DL0235
+0062 I                                    P  25  287FXRT                  DL0235
+0063 I                                    P  25  280FXCA                  DL0235
+0064 I                                       29  37 SPD                   DL0235
+0065 I                                       38  38 SMD,1           21    DL0235
+0066 I                                       39  39 SMD,2           22    DL0235
+0067 I                                       40  40 SMD,3           23    DL0235
+0068 I                                    P  41  52 SRT                   DL0235
+0069 I                                    P  41  52 SCA                   DL0235
+0070 I                                       53  88 DPD                   DL0235
+0071 I                                       89  89 DMD,1           24    DL0235
+0072 I                                       90  90 DMD,2           25    DL0235
+0073 I                                       91  91 DMD,3           26    DL0235
+0074 I                                       92  92 DMD,4           27    DL0235
+0075 I                                       93  93 DMD,5           28    DL0235
+0076 I                                       94  94 DMD,6           29    DL0235
+0077 I                                       95  95 DMD,7           30    DL0235
+0078 I                                       96  96 DMD,8           31    DL0235
+0079 I                                       97  97 DMD,9           32    DL0235
+0080 I                                       98  98 DMD,10          33    DL0235
+0081 I                                       99  99 DMD,11          34    DL0235
+0082 I                                      100 100 DMD,12          35    DL0235
+0083 I                                    P 101 148 DRT                   DL0235
+0084 I                                    P 101 148 DCA                   DL0235
+0085 I                                      177 177 CHTP                  DL0235
+0086 I        NS                                                          DL0235
+0087 I*****                                                       *****   S01194
+0088 I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.       *****   S01194
+0089 I*****                                                       *****   S01194
+0090 I*ABLE   NS       2 C0   3 C1  12 C1                         *****   S01194
+0091 I*****  AND      13 C0                                       *****   S01194
+0092 I*****                                   1   1 RECI          *****   S01194
+0093 I*****                                   2   30RECT          *****   S01194
+0094 I*****                                  12  130RCDE          *****   S01194
+0095 I*****                                  14  66 TITL          *****   S01194
+0096 I*****                                  67  67 DATF          *****   S01194
+0097 I*****                                  68  700DFBR          *****   S01194
+0097 I*****                                  68  70 DFBM          *****   S01194
+0098 I*****                                  74  74 MODI1         *****   S01194
+0099 I*****                                  75  75 MODI2         *****   S01194
+0100 I*****                                  76  76 MODI3         *****   S01194
+0101 I*****                               P  77  790RUND          *****   S01194
+0102 I*****                                  80  86 RUNA          *****   S01194
+0103 I*****                                                       *****   S01194
+0104 I*****TABLE FILE - BROKER DETAILS RECORD.                    *****   S01194
+0105 I*****                                                       *****   S01194
+0106 I*****   NS  03   1 CD   2 C8   3 C0                         *****   S01194
+0107 I*****                                  14  43 BKNM          *****   S01194
+0108 I*****                                  44  53 BKTN          *****   S01194
+0109 I*****                                                       *****   S01194
+0110 I*****TABLE FILE - CURRENCY DETAILS RECORD.                  *****   S01194
+0111 I*****                                                       *****   S01194
+0112 I*****   NS  03   1 CD   2 C2   3 C0                         *****   S01194
+0113 I*****  AND      13 C1                                       *****   S01194
+0114 I*****                                  38  380CDP           *****   S01194
+0115 I*****                                                       *****   S01194
+0116 I********NS                                                          049680
+0117 I*                                                                   DL0235
+0118 I*                                                                   DL0235
+0119 I            DS                                                      DL0235
+0120 I                                        1  12 TABKEY                DL0235
+0121 I                                        9  12 BRKC                  DL0235
+0122 I                                       13  24 CCYKEY                DL0235
+0123 I                                       21  23 CHCY                  DL0235
+0124 I                                       24  24 ONE                   DL0235
+0125 I                                       25  27 PEROD                 DL0235
+0126 I                                       25  25 CH1                   DL0235
+0127 I                                       25  26 PRNO                  DL0235
+0128 I                                       27  27 PRCH                  DL0235
+0109 I*                                                                   S01117
+     I/EJECT
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM                          S01194
+     I*                                                                   S01194
+     ISDBROK    E DSSDBROKPD                                              S01194
+     I* BROKER DETAILS ACCESSED VIA ACCESS PROGRAM                        S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I* CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM                      S01194
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*
+0112 ISPOOL       DS                                                      S01117
+0110 I**   FILE INFORMATION DATA STRUCTURE.                               S01117
+0111 I*                                                                   S01117
+0114 I                                       83  92 SFILE                 S01117
+0114 I                                    B 123 1240SFNUM                 S01117
+0114 I                                    B 243 2460SWRIT                 S01117
+0109 I*                                                                   S01117
+0112 ISPOOLU      DS                                                      S01117
+0110 I**   AUDIT FILE INFORMATION DATA STRUCTURE.                         S01117
+0111 I*                                                                   S01117
+0114 I                                       83  92 SFILEU                S01117
+0114 I                                    B 123 1240SFNUMU                S01117
+0109 I*                                                                   S01117
+0112 I@BINRY      DS                                                      S01117
+0110 I**   DEFINE A BLANK BINARY FIELD FOR USE WITH SWRIT.                S01117
+0111 I*                                                                   S01117
+0114 I                                    B   1   40@BKBIN                S01117
+0130 C/EJECT                                                              DL0235
+      *                                                                   S01117
+      * ENTRY PARAMETER REQUIRED BY RCF                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ                             S01117
+      *                                                                   S01117
+0129 C*    FIRST CYCLE                                                    DL0235
+0130 C*                                                                   DL0235
+0131 C  N01                GOTO START                                     DL0235
+0133 C                     SETON                     18                   E19922
+0132 C*****                EXSR ZSYSTM                            *****   S01194
+0133 C***99                SETON                     U7U8LR       *****   S01194
+0399 C**   READ BANK DETAILS VIA ACCESS PROGRAM                           S01194
+     C                     MOVEACPY@      BIS@   80
+0395 C                     CALL 'AOBANKR0'                                S01194
+0396 C                     PARM '*MSG   ' @RTCD   7                       S01194
+0397 C                     PARM '*FIRST ' @OPTN   7                       S01194
+0398 C           SDBANK    PARM SDBANK    DSFDY                           S01194
+0396 C           @RTCD     IFNE *BLANK                                    S01194
+0398 C                     MOVEL'SDBANKPD'DBFILE 10                       S01194
+0398 C                     MOVEL'001'     DBASE   3        * * * * * * *  S01194
+0397 C                     MOVEL@OPTN     DBOPTN  7        * DBERR 001 *  S01194
+0398 C                     MOVEL'*FIRST ' DBKEY  29        * * * * * * *  S01194
+0397 C                     SETON                     U7U8LR               S01194
+0398 C                     EXSR *PSSR                                     S01194
+0397 C                     GOTO PRINT                                     S01194
+0398 C                     END                                            S01194
+0130 C*                                                                   DL0235
+0134 C*****                MOVEL'80'      TABKEY                  *****   S01194
+0135 C*****                MOVEL'20'      CCYKEY                  *****   S01194
+0136 C                     MOVE '1'       ONE                             DL0235
+0137 C                     Z-ADD0         ZERO5   50                      DL0235
+0138 C           NLRB      ADD  NINS      NLRB                            DL0235
+0139 C           NLRB      SUB  NDEL      NLRB                            DL0235
+0140 C           TBLTP     COMP '01'                     50               DL0235
+     C                     SETON                     86                   BHF139
+0141 C*                                                                   DL0235
+0142 C*    CHANGE OF BROKER - GET NAME AND TOWN                           DL0235
+0143 C*                                                                   DL0235
+0144 C           START     TAG                             ** START TAG **DL0235
+     C*                                                                   LN0741
+     C**  OPEN P1 ONLY IF THERE ARE DETAILS TO REPORT                     LN0741
+     C*                                                                   LN0741
+     C           *IN02     IFEQ '1'                                       LN0741
+     C           *IN87     ANDEQ'0'                                       LN0741
+     C                     OPEN DL0235P1                                  LN0741
+     C                     EXCPT                                          LN0741
+     C                     SETON                     87                   LN0741
+     C                     END                                            LN0741
+     C           *INOF     IFEQ '1'                                       LN0741
+     C                     EXCPT                                          LN0741
+     C                     END                                            LN0741
+     C*
+     C************IN86     IFEQ '1'                                BHF139 LN0741
+     C***********          SETON                     85            BHF139 LN0741
+     C***********          SETOF                     86            BHF139 LN0741
+     C***********          ELSE                                    BHF139 LN0741
+     C***********          SETOF                     85            BHF139 LN0741
+     C***********          END                                     BHF139 LN0741
+     C*
+0145 C***L1      TABKEY    CHAINTABLE                11           *****   S01194
+0146 C***L1                SETOF                     11                   S01194
+0147 C***L1 03             SETON                     11           *****   S01194
+     C           *INL1     IFEQ '1'                                       S01194
+     C*                                                                   S01194
+0146 C                     MOVE '0'       *IN11                           S01194
+0399 C**   CHAIN BROKER CODE DETAILS VIA ACCESS PROGRAM                   S01194
+0136 C                     CALL 'AOBROKR0'                                S01194
+0137 C                     PARM '*MSG   ' @RTCD   7                       S01194
+0138 C                     PARM '*KEY   ' @OPTN   7                       S01194
+0138 C                     PARM BRKC      A9BROK  4                       S01194
+     C           SDBROK    PARM SDBROK    DSFDY                           S01194
+     C*                                                                   S01194
+     C** IF SUCCESSFUL READ SET ON *IN11                                  S01194
+     C           @RTCD     IFEQ *BLANKS                                   S01194
+     C                     MOVE '1'       *IN11                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     END                                            S01194
+0141 C*                                                                   S01194
+0148 C*                                                                   DL0235
+0149 C*    KEEP COUNT OF RECORDS READ                                     DL0235
+0150 C*                                                                   DL0235
+0151 C   02      COUNT     ADD  1         COUNT   50 10                   DL0235
+0152 C   50                                                               DL0235
+0153 CORN02                GOTO PRINT                                     DL0235
+0154 C**                                                                  DL0235
+0155 C**   SET OFF INDICATORS                                             DL0235
+0156 C                     SETOF                     646566               DL0235
+0157 C                     SETOF                     676869               DL0235
+0158 C                     SETOF                     707172               DL0235
+0159 C                     SETOF                     737475               DL0235
+0160 C                     SETOF                     767778               DL0235
+0161 C                     SETOF                     798081               DL0235
+0162 C                     SETOF                     82                   DL0235
+0163 C**                                                                  DL0235
+0164 C**   LOOK UP DECIMAL PLACES OF CURRENCY.                            DL0235
+0165 C           CHCY      COMP '   '                5151                 DL0235
+0166 C  N51                GOTO LNTST                                     DL0235
+0167 C*****                SETOF                     03           *****   S01194
+0168 C*****      CCYKEY    CHAINTABLE                U8           *****   S01194
+0399 C**   CHAIN CURRENCY CODE DETAILS VIA ACCESS PROGRAM                 S01194
+0136 C                     CALL 'AOCURRR0'                                S01194
+0137 C                     PARM '*MSG   ' @RTCD   7                       S01194
+0138 C                     PARM '*KEY   ' @OPTN   7                       S01194
+0138 C                     PARM CHCY      A6CYCD  3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+0396 C           @RTCD     IFNE *BLANK                                    S01194
+0398 C                     MOVEL'SDCURRPD'DBFILE 10                       S01194
+0398 C                     MOVEL'002'     DBASE   3        * * * * * * *  S01194
+0397 C                     MOVEL@OPTN     DBOPTN  7        * DBERR 002 *  S01194
+0398 C                     MOVEL'*KEY'    DBKEY  29        * * * * * * *  S01194
+0397 C                     SETON                     U7U8LR               S01194
+0398 C                     EXSR *PSSR                                     S01194
+0170 C                     GOTO PRINT                                     S01194
+0398 C                     END                                            S01194
+0130 C*                                                                   DL0235
+0141 C*                                                                   S01194
+0169 C**N03                SETON                     U7U8LR       *****   S01194
+0170 C***U8                GOTO PRINT                             *****   S01194
+0171 C*****      CDP       COMP 1                      6061       *****   S01194
+0172 C*****      CDP       COMP 2                    63  62       *****   S01194
+0171 C           A6NBDP    COMP 1                      6061               S01194
+0172 C           A6NBDP    COMP 2                    63  62               S01194
+0173 C**                                                                  DL0235
+0174 C**   DETERMINE WHICH LINES TO BE PRINTED                            DL0235
+0175 C           LNTST     TAG                             ** LNTST TAG **DL0235
+0176 C  N20      FXMD      COMP 'P'                      64               DL0235
+0177 C  N21      SMD,1     COMP 'P'                      65               DL0235
+0178 C  N22      SMD,2     COMP 'P'                      66               DL0235
+0179 C  N23      SMD,3     COMP 'P'                      67               DL0235
+0180 C  N24      DMD,1     COMP 'P'                      68               DL0235
+0181 C  N25      DMD,2     COMP 'P'                      69               DL0235
+0182 C  N26      DMD,3     COMP 'P'                      70               DL0235
+0183 C  N27      DMD,4     COMP 'P'                      71               DL0235
+0184 C  N28      DMD,5     COMP 'P'                      72               DL0235
+0185 C  N29      DMD,6     COMP 'P'                      73               DL0235
+0186 C  N30      DMD,7     COMP 'P'                      74               DL0235
+0187 C  N31      DMD,8     COMP 'P'                      75               DL0235
+0188 C  N32      DMD,9     COMP 'P'                      76               DL0235
+0189 C  N33      DMD,10    COMP 'P'                      77               DL0235
+0190 C  N34      DMD,11    COMP 'P'                      78               DL0235
+0191 C  N35      DMD,12    COMP 'P'                      79               DL0235
+0192 C**                                                                  DL0235
+0193 C**   EXPAND PERIODS - FX.                                           DL0235
+0194 C  N20                MOVE FXPD      PEROD                           DL0235
+0195 C  N20                EXSR EXPAND                                    DL0235
+0196 C   U8                GOTO PRINT                                     DL0235
+0197 C  N20                MOVE EXPRD     FXP     8                       DL0235
+0198 C**                                                                  DL0235
+0199 C**   EXPAND PERIODS - SW.                                           DL0235
+0200 C   21                GOTO EXPDP                                     DL0235
+0201 C                     Z-ADD3         C       20                      DL0235
+0202 C           SWLOP     TAG                             ** SWLOP TAG **DL0235
+0203 C                     MOVE SPD,C     PEROD                           DL0235
+0204 C                     EXSR EXPAND                                    DL0235
+0205 C   U8                GOTO PRINT                                     DL0235
+0206 C                     MOVE EXPRD     SWP,C                           DL0235
+0207 C           C         SUB  1         C              40               DL0235
+0208 C  N40                GOTO SWLOP                                     DL0235
+0209 C**                                                                  DL0235
+0210 C**   EXPAND PERIODS - PD.                                           DL0235
+0211 C           EXPDP     TAG                             ** EXPDP TAG **DL0235
+0212 C   24                GOTO FSTLN                                     DL0235
+0213 C                     Z-ADD12        C                               DL0235
+0214 C           DPLOP     TAG                             ** DPLOP TAG **DL0235
+0215 C                     MOVE DPD,C     PEROD                           DL0235
+0216 C                     EXSR EXPAND                                    DL0235
+0217 C   U8                GOTO PRINT                                     DL0235
+0218 C                     MOVE EXPRD     DPP,C                           DL0235
+0219 C           C         SUB  1         C              40               DL0235
+0220 C  N40                GOTO DPLOP                                     DL0235
+0221 C**                                                                  DL0235
+0222 C**   CHECK FOR FIRST LINE OUTPUT                                    DL0235
+0223 C           FSTLN     TAG                             ** FSTLN TAG **DL0235
+0224 C  N20                SETON                     80                   DL0235
+0225 C  N80N21             SETON                     81                   DL0235
+0226 C  N80N81N24          SETON                     82                   DL0235
+0227 C**                                                                  DL0235
+0228 C**   CHECK ACTION CODE                                              DL0235
+0229 C           CHTP      COMP 'A'                      52               DL0235
+0230 C*                                                                   DL0235
+0231 C           PRINT     TAG                             ** PRINT TAG **DL0235
+0232 C*                                                                   DL0235
+0233 C*    LAST RECORD - CONTROL TOTALS                                   DL0235
+     C*                                                                   LN0741
+0399 C**   READ BANK DETAILS VIA ACCESS PROGRAM                           E19922
+     CLR                   MOVEACPY@      BIS@   80                       E19922
+0395 CLR                   CALL 'AOBANKR0'                                E19922
+0396 CLR                   PARM '*MSG   ' @RTCD   7                       E19922
+0397 CLR                   PARM '*FIRST ' @OPTN   7                       E19922
+0398 CLR         SDBANK    PARM SDBANK    DSFDY                           E19922
+0396 CLR         @RTCD     IFNE *BLANK                                    E19922
+0398 CLR                   MOVEL'SDBANKPD'DBFILE 10                       E19922
+0398 CLR                   MOVEL'003'     DBASE   3        * * * * * * *  E19922
+0397 CLR                   MOVEL@OPTN     DBOPTN  7        * DBERR 003 *  E19922
+0398 CLR                   MOVEL'*FIRST ' DBKEY  29        * * * * * * *  E19922
+0397 CLR                   SETON                     U7U8                 E19922
+0398 CLR                   EXSR *PSSR                                     E19922
+0398 CLR                   END                                            E19922
+0234 C*                                                                   DL0235
+0235 C*R 10                SETON                     OF           *****   S01117
+0236 CLRNU7      COUNT     COMP NLRB                 U8U8                 DL0235
+0136 CLR         SWRIT     IFNE 0                                         S01117
+0137 CLR         SWRIT     ANDNE@BKBIN                                    S01117
+0141 C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01117
+     C*                                                                   S01117
+     C** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     CLR                   Z-ADDSFNUM     ZSNUM   60                      S01117
+0136 CLR                   CALL 'ZSFILE'                                  S01117
+0137 CLR                   PARM           SEQ     5                       S01117
+0138 CLR                   PARM *BLANK    @PARM   3                       S01117
+0139 CLR                   PARM           SFILE                           S01117
+0140 CLR                   PARM           ZSNUM                           S01117
+     CLR                   PARM *BLANK    ZSERR   1                       S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+0140 CLR                   END                                            S01117
+0141 C**  ENSURE TOTALS SPOOL FILE RECORDED BY RCF                        S01117
+     C*                                                                   S01117
+     C** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ                             S01117
+     CLR                   PARM *BLANK    @PARM                           S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU                          S01117
+     CLR                   PARM *BLANK    ZSERR                           S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+0237 C*                                                                   DL0235
+0238 C********************************************************************DL0235
+0239 C**                                                                  DL0235
+0240 C**   EXPAND SR. - TO CONVERT 3 LONG PERIOIDS INTO 8 LONG PERIODS.   DL0235
+0241 C**                                                                  DL0235
+0242 C           EXPAND    BEGSR                           *** EXPAND  ***DL0235
+0243 C**                                                                  DL0235
+0244 C**   SET OUTPUT FIELD TO BLANKS.                                    DL0235
+0245 C                     MOVE '        'EXPRD   8                       DL0235
+0246 C           PEROD     COMP '   '                    40               DL0235
+0247 C   40                GOTO EXPEND                                    DL0235
+0248 C           PRCH      LOKUPTABCH     TABEX          40               DL0235
+0249 C  N40                SETON                     U7U8LR               DL0235
+0250 C  N40                GOTO EXPEND                                    DL0235
+0251 C                     MOVE TABEX     EXPRD                           DL0235
+0252 C           CH1       COMP '0'                      40               DL0235
+0253 C   40                MOVE ' '       CH1                             DL0235
+0254 C           PRNO      COMP ' 1'                     40               DL0235
+0255 C   40      PRCH      COMP 'Y'                      41               DL0235
+0256 C   40N41             MOVE '  '      EXPRD                           DL0235
+0257 C   40 41             MOVE ' '       EXPRD                           DL0235
+0258 C                     MOVELPRNO      EXPRD                           DL0235
+0259 C**                                                                  DL0235
+0260 C           EXPEND    ENDSR                           * EXPEND ENDSR DL0235
+0261 C*                                                                   DL0235
+0262 C********************************************************************S01194
+0263 C*****                                                       *****   S01194
+0264 C*****ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD    S01194
+0265 C*****                                                       *****   S01194
+0266 C*****      ZSYSTM    BEGSR                           *** ZSYSTM**   S01194
+0267 C*****                                                       *****   S01194
+0268 C*****SET UP KEY FOR INSTALLATION CONTROL RECORD.            *****   S01194
+0269 C*****                MOVEL'01      'ZTABKY 12               *****   S01194
+0270 C*****                MOVE '  10'    ZTABKY                  *****   S01194
+0271 C*****                                                       *****   S01194
+0272 C*****      ZTABKY    CHAINTABLE                99    ON NOT *****   S01194
+0273 C**N99      RECI      COMP 'D'                  9999  ON, IS *****   S01194
+0274 C*****                                                       *****   S01194
+0275 C*****CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.            *****   S01194
+0276 C*****      DATF      COMP 'M'                      98MMDDYY,*****   S01194
+0277 C*****                                                       *****   S01194
+0278 C*****                ENDSR                                  *****   S01194
+0279 C*****                                                       *****   S01194
+0280 C*****                                                       *****   S01194
+0281 C*****************************************************************   S01194
+1024 C*    ERROR DUMP SUBROUTINE.                                         S01194
+1048 C*                                                                   S01194
+1034 C           *PSSR     BEGSR                           ***  PSSR **   S01194
+1020 C           @RUN      IFEQ *BLANK                                    S01194
+1021 C                     MOVE 'Y'       @RUN    1                       S01194
+1020 C                     DUMP                                           S01194
+1021 C                     END                                            S01194
+1022 C                     ENDSR                           *** *PSSR **   S01194
+1048 C**                                                                  S01194
+1049 C*****************************************************************   S01194
+1050  /EJECT
+0282 OBROKR   D        01                                                 DL0235
+0283 O                         NLRA      17P                              DL0235
+0284 O                         ZERO5     20P                              DL0235
+0285 O                         ZERO5     23P                              DL0235
+0286 O                         ZERO5     26P                              DL0235
+0287 O*****5P1H  203   OF                                          S01124 LN0741
+0287 ODL0235P1E  203                                                      LN0741
+0288 O*******OR********01                                                 LN0133
+0288 O*******OR********02                                           LN0133BHF139
+0288 O*******OR********85                                          BHF139 LN0714
+0289 O*****                              22 'REFERENCE DL0235'    *****   S01117
+0289 O                                   24 'REFERENCE DL0235P1'          S01117
+0290 O*****                    TITL      89                       *****   S01194
+0290 O                         BJURPT    89                               S01194
+0291 O                                  104 'DATE'                        DL0235
+0292 O*****                    RUNA     112                       *****   S01194
+0292 O                         BJMRDT   112                               S01194
+0293 O                                  122 'PAGE'                        DL0235
+0294 O                         PAGE     127                               DL0235
+0295 O********H  1     OF                                                 LN0741
+0295 O        E  1                                                        LN0741
+0296 O*******OR********01                                                 LN0133
+0296 O*******OR********02                                           LN0133BHF139
+0296 O*******OR********85                                          BHF139 LN0741
+0297 O                                   66 'BROKERAGE RATES FILE'        DL0235
+0298 O                                   74 'LISTING'                     DL0235
+0299 O********H  1     OF                                                 LN0741
+0299 O        E  1                                                        LN0741
+0300 O*******OR********01                                                 LN0133
+0300 O*******OR********02                                           LN0133BHF139
+0296 O*******OR********85                                          BHF139 LN0741
+0301 O                                   66 '--------------------'        DL0235
+0302 O                                   74 '--------'                    DL0235
+0303 O********H  2     OFNLR                                              LN0741
+0303 O        E  2    NLR                                                 LN0741
+0304 O*******OR********01                                                 LN0133
+0304 O*******OR********02                                           LN0133BHF139
+0296 O*******OR********85                                          BHF139 LN0741
+0305 O                                   21 'BROKER CODE, NAME AND'       DL0235
+0306 O                                   26 'TOWN'                        DL0235
+0307 O********H  1     OFNLR 50                                           DL0235
+0307 O        E  1    NLR 50                                              DL0235
+0308 O*******OR********01 50                                              LN0133
+0308 O*******OR********02 50                                        LN0133BHF139
+0308 O*******OR********85 50                                       BHF139 LN0741
+0309 O                                   34 'DEPOSIT N/ASSET   SPOT'      DL0235
+0310 O                                   57 'FWD    FWD     FWD'          DL0235
+0311 O                                   81 'FWD     FWD     FWD'         DL0235
+0312 O                                  107 'FWD    8 DAYS   6 MOS'       DL0235
+0313 O                                  122 '1YR     OVER'                DL0235
+0314 O********H  2     OFNL1 50                                           LN0741
+0315 O*******OR  0     OF L1NLR                                           LN0741
+0316 O*******AND       50                                                 LN0741
+0314 O        E  2    NL1 50                                              LN0741
+0315 O       OR  0     L1NLR 50                                           LN0741
+0317 O*******OR**2*****01*50                                              LN0133
+0317 O*******OR**2*****02 50                                        LN0133BHF139
+0308 O*******OR**2*****85 50                                       BHF139 LN0741
+0318 O                                   25 'CCY    RATE   RATE'          DL0235
+0319 O                                   51 'RATE    1 DAY  2 DAYS'       DL0235
+0320 O                                   75 '3 DAYS  4 DAYS  5 DAYS'      DL0235
+0321 O                                  101 '6 DAYS  7 DAYS TO 6 MOS.'    DL0235
+0322 O                                  123 'TO 1YR TO 2YR   2 YRS'       DL0235
+0323 O********H  2     OFNLRN50                                           LN0741
+0323 O        E  2    NLRN50                                              LN0741
+0324 O*******OR********01N50                                              LN0133
+0324 O*******OR********02N50                                        LN0133BHF139
+0308 O*******OR**2*****85N50                                       BHF139 LN0741
+0325 O                                   15 'ACTION'                      DL0235
+0326 O                                   46 'CCY     DEAL TYPE'           DL0235
+0327 O                                   74 'PERIOD     PERCENTAGE/'      DL0235
+0328 O                                   98 'CHARGE AMOUNT    CHARGE '    DL0235
+0329 O                                  115 'CCY    PER AMOUNT'           DL0235
+0330 O                                  126 'PER CCY'                     DL0235
+     O        E  1    NL1                                                 117818
+     O                         BRKC       4                               117818
+     O                                   23 '***  MISSING ***'            117818
+     O                    11   A9BKNM    36                               117818
+     O        E  2    NL1                                                 117818
+     O                       11A9BRTN    16                               117818
+0331 O        D 21     L1                                                 DL0235
+0333 O****** OR  1     OFNL1                                        DL0235117818
+0334 O                         BRKC       4                               DL0235
+0335 O                                   23 '***  MISSING ***'            DL0235
+0336 O*****               11   BKNM      36                       *****   S01194
+     O                    11   A9BKNM    36                               S01194
+0337 O        D  1     L1                                                 DL0235
+0339 O****** OR  2     OFNL1                                        DL0235117818
+0340 O*****                  11BKTN      16                       *****   S01194
+     O                       11A9BRTN    16                               S01194
+0341 O        D 11     02 50                                              DL0235
+0342 O                         CCY       10                               DL0235
+0343 O                         BRRD  3   19                               DL0235
+0344 O                         BRRN  3   28                               DL0235
+0345 O                         BRFS      35 '0 .   '                      DL0235
+0346 O                         BRF      123 '&&0 .   '                    DL0235
+0347 O        D 11     02N20N50                                           DL0235
+0348 O                      N52          15 'INSERT'                      DL0235
+0349 O                       52          14 'AMEND'                       DL0235
+0350 O                         CCY       32                               DL0235
+0351 O                                   46 'OUTRIGHTS'                   DL0235
+0352 O                         FXP       59                               DL0235
+0353 O                       64FXRT  3   76                               DL0235
+0354 O                    60N64FXCA      76 '     0 '                     DL0235
+0355 O                    61N64FXCA      76 '    0 . '                    DL0235
+0356 O                    62N64FXCA      76 '   0 .  '                    DL0235
+0357 O                    63N64FXCA      76 '  0 .   '                    DL0235
+0358 O                       64          81 '%'                           DL0235
+0359 O                       51CHCY      97                               DL0235
+0360 O                       51PRMT  Z  115                               DL0235
+0361 O                       51PRCY     124                               DL0235
+0362 O        DF 1     02N21N50                                           DL0235
+0363 O       AND      N81                                                 DL0235
+0364 O       OR 11     02N21N50                                           DL0235
+0365 O       AND       81                                                 DL0235
+0366 O                   N52 81          15 'INSERT'                      DL0235
+0367 O                    52 81          14 'AMEND'                       DL0235
+0368 O                       81CCY       32                               DL0235
+0369 O                                   42 'SWAPS'                       DL0235
+0370 O                         SWP,1     59                               DL0235
+0371 O                       65SRT,1 3   76                               DL0235
+0372 O                    60N65SCA,1     76 '     0 '                     DL0235
+0373 O                    61N65SCA,1     76 '    0 . '                    DL0235
+0374 O                    62N65SCA,1     76 '   0 .  '                    DL0235
+0375 O                    63N65SCA,1     76 '  0 .   '                    DL0235
+0376 O                       65          81 '%'                           DL0235
+0377 O                    51 81CHCY      97                               DL0235
+0378 O                    51 81PRMT  Z  115                               DL0235
+0379 O                    51 81PRCY     124                               DL0235
+0380 O        DF 1     02N22N50                                           DL0235
+0381 O                         SWP,2     59                               DL0235
+0382 O                       66SRT,2 3   76                               DL0235
+0383 O                    60N66SCA,2     76 '     0 '                     DL0235
+0384 O                    61N66SCA,2     76 '    0 . '                    DL0235
+0385 O                    62N66SCA,2     76 '   0 .  '                    DL0235
+0386 O                    63N66SCA,2     76 '  0 .   '                    DL0235
+0387 O                       66          81 '%'                           DL0235
+0388 O        DF 1     02N23N50                                           DL0235
+0389 O                         SWP,3     59                               DL0235
+0390 O                       67SRT,3 3   76                               DL0235
+0391 O                    60N67SCA,3     76 '     0 '                     DL0235
+0392 O                    61N67SCA,3     76 '    0 . '                    DL0235
+0393 O                    62N67SCA,3     76 '   0 .  '                    DL0235
+0394 O                    63N67SCA,3     76 '  0 .   '                    DL0235
+0395 O                       67          81 '%'                           DL0235
+0396 O        DF 1     02N24N50                                           DL0235
+0397 O       AND      N82                                                 DL0235
+0398 O       OR 11     02N24N50                                           DL0235
+0399 O       AND       82                                                 DL0235
+0400 O                   N52 82          15 'INSERT'                      DL0235
+0401 O                    52 82          14 'AMEND'                       DL0235
+0402 O                       82CCY       32                               DL0235
+0403 O                                   45 'DEPOSITS'                    DL0235
+0404 O                         DPP,1     59                               DL0235
+0405 O                       68DRT,1 3   76                               DL0235
+0406 O                    60N68DCA,1     76 '     0 '                     DL0235
+0407 O                    61N68DCA,1     76 '    0 . '                    DL0235
+0408 O                    62N68DCA,1     76 '   0 .  '                    DL0235
+0409 O                    63N68DCA,1     76 '  0 .   '                    DL0235
+0410 O                       68          81 '%'                           DL0235
+0411 O                    51 82CHCY      97                               DL0235
+0412 O                    51 82PRMT  Z  115                               DL0235
+0413 O                    51 82PRCY     124                               DL0235
+0414 O        DF 1     02N25N50                                           DL0235
+0415 O                         DPP,2     59                               DL0235
+0416 O                       69DRT,2 3   76                               DL0235
+0417 O                    60N69DCA,2     76 '     0 '                     DL0235
+0418 O                    61N69DCA,2     76 '    0 . '                    DL0235
+0419 O                    62N69DCA,2     76 '   0 .  '                    DL0235
+0420 O                    63N69DCA,2     76 '  0 .   '                    DL0235
+0421 O                       69          81 '%'                           DL0235
+0422 O        DF 1     02N26N50                                           DL0235
+0423 O                         DPP,3     59                               DL0235
+0424 O                       70DRT,3 3   76                               DL0235
+0425 O                    60N70DCA,3     76 '     0 '                     DL0235
+0426 O                    61N70DCA,3     76 '    0 . '                    DL0235
+0427 O                    62N70DCA,3     76 '   0 .  '                    DL0235
+0428 O                    63N70DCA,3     76 '  0 .   '                    DL0235
+0429 O                       70          81 '%'                           DL0235
+0430 O        DF 1     02N27N50                                           DL0235
+0431 O                         DPP,4     59                               DL0235
+0432 O                       71DRT,4 3   76                               DL0235
+0433 O                    60N71DCA,4     76 '     0 '                     DL0235
+0434 O                    61N71DCA,4     76 '    0 . '                    DL0235
+0435 O                    62N71DCA,4     76 '   0 .  '                    DL0235
+0436 O                    63N71DCA,4     76 '  0 .   '                    DL0235
+0437 O                       71          81 '%'                           DL0235
+0438 O        DF 1     02N28N50                                           DL0235
+0439 O                         DPP,5     59                               DL0235
+0440 O                       72DRT,5 3   76                               DL0235
+0441 O                    60N72DCA,5     76 '     0 '                     DL0235
+0442 O                    61N72DCA,5     76 '    0 . '                    DL0235
+0443 O                    62N72DCA,5     76 '   0 .  '                    DL0235
+0444 O                    63N72DCA,5     76 '  0 .   '                    DL0235
+0445 O                       72          81 '%'                           DL0235
+0446 O        DF 1     02N29N50                                           DL0235
+0447 O                         DPP,6     59                               DL0235
+0448 O                       73DRT,6 3   76                               DL0235
+0449 O                    60N73DCA,6     76 '     0 '                     DL0235
+0450 O                    61N73DCA,6     76 '    0 . '                    DL0235
+0451 O                    62N73DCA,6     76 '   0 .  '                    DL0235
+0452 O                    63N73DCA,6     76 '  0 .   '                    DL0235
+0453 O                       73          81 '%'                           DL0235
+0454 O        DF 1     02N30N50                                           DL0235
+0455 O                         DPP,7     59                               DL0235
+0456 O                       74DRT,7 3   76                               DL0235
+0457 O                    60N74DCA,7     76 '     0 '                     DL0235
+0458 O                    61N74DCA,7     76 '    0 . '                    DL0235
+0459 O                    62N74DCA,7     76 '   0 .  '                    DL0235
+0460 O                    63N74DCA,7     76 '  0 .   '                    DL0235
+0461 O                       74          81 '%'                           DL0235
+0462 O        DF 1     02N31N50                                           DL0235
+0463 O                         DPP,8     59                               DL0235
+0464 O                       75DRT,8 3   76                               DL0235
+0465 O                    60N75DCA,8     76 '     0 '                     DL0235
+0466 O                    61N75DCA,8     76 '    0 . '                    DL0235
+0467 O                    62N75DCA,8     76 '   0 .  '                    DL0235
+0468 O                    63N75DCA,8     76 '  0 .   '                    DL0235
+0469 O                       75          81 '%'                           DL0235
+0470 O        DF 1     02N32N50                                           DL0235
+0471 O                         DPP,9     59                               DL0235
+0472 O                       76DRT,9 3   76                               DL0235
+0473 O                    60N76DCA,9     76 '     0 '                     DL0235
+0474 O                    61N76DCA,9     76 '    0 . '                    DL0235
+0475 O                    62N76DCA,9     76 '   0 .  '                    DL0235
+0476 O                    63N76DCA,9     76 '  0 .   '                    DL0235
+0477 O                       76          81 '%'                           DL0235
+0478 O        DF 1     02N33N50                                           DL0235
+0479 O                         DPP,10    59                               DL0235
+0480 O                       77DRT,103   76                               DL0235
+0481 O                    60N77DCA,10    76 '     0 '                     DL0235
+0482 O                    61N77DCA,10    76 '    0 . '                    DL0235
+0483 O                    62N77DCA,10    76 '   0 .  '                    DL0235
+0484 O                    63N77DCA,10    76 '  0 .   '                    DL0235
+0485 O                       77          81 '%'                           DL0235
+0486 O        DF 1     02N34N50                                           DL0235
+0487 O                         DPP,11    59                               DL0235
+0488 O                       78DRT,113   76                               DL0235
+0489 O                    60N78DCA,11    76 '     0 '                     DL0235
+0490 O                    61N78DCA,11    76 '    0 . '                    DL0235
+0491 O                    62N78DCA,11    76 '   0 .  '                    DL0235
+0492 O                    63N78DCA,11    76 '  0 .   '                    DL0235
+0493 O                       78          81 '%'                           DL0235
+0494 O        DF 1     02N35N50                                           DL0235
+0495 O                         DPP,12    59                               DL0235
+0496 O                       79DRT,123   76                               DL0235
+0497 O                    60N79DCA,12    76 '     0 '                     DL0235
+0498 O                    61N79DCA,12    76 '    0 . '                    DL0235
+0499 O                    62N79DCA,12    76 '   0 .  '                    DL0235
+0500 O                    63N79DCA,12    76 '  0 .   '                    DL0235
+0501 O                       79          81 '%'                           DL0235
+0516 O********T**130***LRN10                                       S01117 LN0133
+0516 O******* T  130   LRN10 02                                    LN0133 LN0363
+0517 O*******                            58 '***   NO DETAILS TO'  S01117 LN0363
+0518 O*******                            71 'REPORT   ***'         S01117 LN0363
+0602 O********T*30*****LR                                             E25 LN0133
+0602 O******* T 30     LR 02                                       LN0133 LN0363
+     O        T 30     LR 10                                              LN0363
+0603 O                                   71 '*** END OF REPORT ***'       E25
+     ODL0235AUTF 203   LR                                                 S01117
+     O                                   24 'REFERENCE DL0235AU'          S01117
+     O*****                    TITL      89                      S01117   S01194
+0290 O                         BJURPT    89                               S01194
+     O                                  104 'DATE'                        S01117
+     O*****                    RUNA     112                       *****   S01117
+     O                         BJMRDT   112                               S01194
+     O                                  122 'PAGE'                        S01117
+     O                         PAGE1    127                               S01117
+0295 O********T  1     LR                                          S01117 E19922
+0295 O********T  1     LRN18                                       E19922 LN0146
+0295 O        T  1     LR                                                 LN0146
+0297 O                                   66 'BROKERAGE RATES FILE'        S01117
+0298 O                                   74 'LISTING'                     S01117
+0298 O                                   91 '- CONTROL REPORT'            S01117
+0299 O********T  1     LR                                          S01117 E19922
+0299 O********T  1     LRN18                                       E19922 LN0146
+0299 O        T  1     LR                                                 LN0146
+0301 O                                   66 '--------------------'        S01117
+0302 O                                   74 '--------'                    S01117
+0301 O                                   91 '------------------'          S01117
+     O*                                                                   S01117
+     O** OUTPUT DATABASE ERROR IF NECESSARY                               S01117
+     O        T 3      LR U7 U8                                           S01117
+     O                                   71 '*** PRINT TERMINATED ***'    S01117
+     O        T 1      LR U7 U8                                           S01117
+     O                                   57 'DATABASE ERROR'              S01117
+     O                         DBASE     61                               S01117
+     O                                   67 'FILE'                        S01117
+     O                         DBFILE    78                               S01117
+     O        T 13     LR U7 U8                                           S01117
+     O                                   46 'KEY'                         S01117
+     O                         DBKEY     76                               S01117
+0502 O********TF 226   LR                                                 S01117
+0502 O        T  226   LR                                                 S01117
+0503 O                   NU7             18 'RUN CONTROLS'                DL0235
+0504 O        T  2     LRNU7                                              DL0235
+0505 O                                   59 'NUMBER'                      DL0235
+0506 O        T  2     LRNU7                                              DL0235
+0507 O                                   30 'RECORDS LISTED IN THIS'      DL0235
+0508 O                                   37 'REPORT'                      DL0235
+0509 O                         COUNT 3   59                               DL0235
+0510 O        T  3     LRNU7                                              DL0235
+0511 O                                   28 'LIVE RECORDS ON FILE'        DL0235
+0512 O                                   35 'HEADER'                      DL0235
+0513 O                         NLRA  3   59                               DL0235
+0514 O        T  3     LR U8NU7                                           DL0235
+0515 O                                   71 '***   DIFFERENCE   ***'      DL0235
+0516 O        T  1     LRN10                                              DL0235
+0517 O                                   58 '***   NO DETAILS TO'         DL0235
+0518 O                                   71 'REPORT   ***'                DL0235
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** TABCH & TABEX - PERIOD CHAR TO DESCRIPTION
+DDAYS MMTHS YYEARS

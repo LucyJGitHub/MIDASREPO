@@ -1,0 +1,747 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Loan amendments per loan enquiry')            *
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM2080 - Loan Amendments Per Loan Enquiry                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 156179             Date 02Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 11Jul96               *
+     F*                 CPM004             DATE 03MAR96               *
+     F*                 092516             DATE 31AUG95               *
+     F*                 085817             DATE 13MAR95               *
+     F*                 081239             DATE 01FEB95               *
+     F*                 057266             DATE 25NOV94               *
+     F*                 S01486             DATE 11AUG94               *
+     F*                 S01313             DATE 06NOV92               *
+     F*                 SA9108             DATE 06NOV91               *
+     F*                 049467             DATE 28JAN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  156179 - Do not omit CLOANCKF format for CLOAN file to avoid *
+     F*           database error in PM2010.                           *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*  CPM004 - Bank Portfolios (RECOMPILED)                        *
+     F*  092516 - Recompile due to changes to PM2080DF                *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  081239 - R10 Private Banking Rework                          *
+     F*  057266 - Display Loan activity, call new program PM2081      *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  S01313 - RECOMPILED DUE TO PORTFOLIO PERFORMANCE             *
+     F*  SA9108 - POOL SECURITIES TRANSACTIONS (ONLY RECOMPILED       *
+     F*           FOR DTAARA/LDA)                                     *
+     F*  049467 - RECOMPILED FOR RELEASE 3 PTF 02                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***PM2080DDCF**E                    WORKSTN                         S01486
+     FPM2080DFCF  E                    WORKSTN                            S01486
+     F                                        RRN   KSFILE PM2080S1
+     FLOAMS   IF  E           K        DISK
+     F            LOAMSDHF                          KIGNORE
+     F*           LOAMSDKF                          KIGNORE
+     F            LOAMSZ1F                          KIGNORE
+     F                                              KINFSR *PSSR
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F*           CLOANCLF                          KIGNORE
+     F*********** CLOANCKF                          KIGNORE               156179
+     F            CLOANZ1F                          KIGNORE
+     F                                              KINFSR *PSSR
+     F***SDCURRL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDLOANL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F*****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       02         CHAIN FAIL ON CLOAN MASTER
+     F*       03         CHAIN FAIL ON LOAMS DETAIL / END OF LOAMS FILE
+     F********04*********CHAIN*FAIL*ON*SDCURRL0************************   S01486
+     F********05*********CHAIN*FAIL*ON*SDLOANL0************************   S01486
+     F*       11         LOAMS DETAILS REQUESTED FROM SUBFILE
+     F*       12         LOKUP RESULT INDICATOR
+     F*       25         ROLLUP REQUESTED
+     F*       26         ROLLDOWN REQUESTED
+     F*       61         CLEAR SUBFILE IF ON, DISPLAY SUBFILE IF OFF
+     F*       62         SUBFILE END
+     F*       U7         DATABASE ERROR (JOB SWITCH).
+     F*       U8         DATABASE ERROR (JOB SWITCH).
+     E********************************************************************
+     E*  TABLES AND ARRAYS
+     E*    ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E*****ARRAY*TO*ENABLE*ATTENTION*KEY*******************************   S01486
+     E***********         ATN     1   1 22                                S01486
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZSEDITZ1
+     E*
+     E*    ARRAYS FOR LOAN AND AMENDMENT TYPES TRANSLATION
+     E                    AMTPA   7   7  2               LOAMS TYPES
+     E                    AMTPB   1   7 23               LOAMS TYPES NARRATIVE
+     E*
+     E/EJECT
+     I*
+     I*    RENAME COMMON INPUT FIELDS
+     ILOAMSDKF
+     I              RECI                            RECID
+     I              LNRF                            LNRFD
+     I              BRTT                            BRTTD
+     I              RTSP                            RTSPD
+     I              CCY                             CCYD
+     I              VDAT                            VDATD
+     I              LTYP                            LTYPD
+     I              SUTP                            SUTPD
+     I*
+     I*****GROUP*DATA*AREA*********************************************   S01486
+     I***WWGDA*****E DSPMGRDAPP                                           S01486
+     I*
+     I***WWLDA*****E DSPMLDAPP                                            S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     I*
+     I*    PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I**
+     I** DATA STRUCTURE FOR SUBROUTINE ZSEDIT
+     I**
+     I            DS
+     I                                        1  150ZFLD15
+     I                                        1  15 ZFLDA
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I*    DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I***********                                                         S01486
+     I*****L.D.A. DATA AREA TO HOLD INFORMATION ON DATABASE ERROR.        S01486
+     I***********UDS                            256                       S01486
+     I***********                           134 141 DBFILE                S01486
+     I***********                           142 170 DBKEY                 S01486
+     I***********                           171 180 DBPGM                 S01486
+     I***********                           181 183 DBASE                 S01486
+     I*                                                                   S01486
+     I** Data Area of menu user                                           S01486
+     IZMUSER      DS                             17                       S01486
+     I                                       11  13 USRBCH                S01486
+     I*                                                                   S01486
+     IRUNDAT    E DS                                                      S01486
+     I**  Standard Data Area Layout for System flags and Run Date         S01486
+     I*                                                                   S01486
+     ISDLOAN    E DSSDLOANPD                                              S01486
+     I**  Data structure for Loan types/sub-types details                 S01486
+     I*                                                                   S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I**  Data structure for Currency details                             S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I**  Long data structure for access programs                         S01486
+     I*                                                                   S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * ACCESS   - ACCESS LOANS DETAILS                                  *
+      * LOADSF   - LOAD SUBFILE                                          *
+      * ZDATE2   - CONVERSION ROUTINE (DAY NUMBER TO DATE)               *
+      * ZSEDIT   - EDITION SUBROUTINE TO NUMERIC FIELDS                  *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * PM2110   - LOAN AMENDMENT ENQUIRY                                *
+      * PMC1000  - UPDATE GROUP JOB DATA AREA                            *
+      * PMC1020  - TERMINATE GROUP JOB IF DATABASE ERROR                 *
+      * PMC1010  - READ GROUP JOB DATA AREA                              *
+      * QCMDEXC  - EXEC AS/400 COMMAND                                   *
+      *                                                                  *
+      ********************************************************************
+     C/EJECT
+     C*   Initial processing.
+     C                     EXSR #INIT
+     C*
+     C*   Details access processing
+     C                     EXSR ACCESS
+     C*
+     C*   Termination processing
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ACCESS   - ACCESS LOANS DETAILS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      * LOADSF   - LOAD SUBFILE                                          *
+      * PM2110   - LOAN AMENDMENT ENQUIRY                                *
+      **PMC1000**-*UPDATE*GROUP*JOB*DATA*AREA*****************************S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWLNRF   - LOAN NUMBER PARAMETER PASSED TO PROGRAM               *
+      * WWVD1P   - FIRST PAGE LOAMS VALUE DATE                           *
+      * WWSN1P   - FIRST PAGE LOAMS SEQUENCE NO                          *
+      * WWVDSV   - CURRENT PAGE LOAMS VALUE DATE                         *
+      * WWSNSV   - CURRENT PAGE LOAMS SEQUENCE NO                        *
+      * WWRETC   - RETURN CODE FROM PM2110                               *
+      **WWPARM***-*GROUP*JOB*DATA*STRUCTURE*******************************S01486
+      *                                                                  *
+      ********************************************************************
+     C           ACCESS    BEGSR
+     C*
+     C*   ACCESS LOANS DETAILS
+     C           WWLNRF    CHAINCLOAN                02
+     C           *IN02     IFEQ '1'
+     C                     Z-ADD2         QMERRN
+     C***********          MOVEL'CLOAN'   QMFILE                          S01486
+     C                     MOVE 'CLOAN'   QMFILE                          S01486
+     C                     MOVELWWLNRF    QMKEY
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*   ACCESS CURRENCY CODES FILE
+     C***********CCY       CHAINSDCURRL0             04                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*KEY   ' P@OPTN  7                       S01486
+     C                     PARM CCY       P@CCY   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C************IN04     IFEQ '1'                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C                     Z-ADD4         QMERRN
+     C***********          MOVEL'SDCURR'  QMFILE                          S01486
+     C                     MOVE 'SDCURRPD'QMFILE                          S01486
+     C                     MOVELCCY       QMKEY
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*   ACCESS LOAN TYPE-SUB TYPE FILE
+     C***********SDLNKY    CHAINSDLOANL0             05                   S01486
+     C                     CALL 'AOLOANR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY   ' P@OPTN                          S01486
+     C                     PARM LTYP      P@LNTY  2                       S01486
+     C                     PARM SUTP      P@LNST  2                       S01486
+     C           SDLOAN    PARM SDLOAN    DSFDY                           S01486
+     C************IN05     IFEQ '1'                                       S01486
+     C           P@RTCD    IFNE *BLANK                                    S01486
+     C                     Z-ADD5         QMERRN
+     C***********          MOVEL'SDLOAN'  QMFILE                          S01486
+     C                     MOVE 'SDLOANPD'QMFILE                          S01486
+     C                     MOVELLTYP      QMKEY
+     C                     MOVE SUTP      QMKEY
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*    LOAD SUBFILE
+     C                     Z-ADD0         VDAT
+     C                     Z-ADD0         LASN
+     C           LMSKEY    SETLLLOAMS                    03
+     C                     EXSR LOADSF
+     C*
+     C*    SAVE FIRST RECORD ON FIRST PAGE
+     C                     Z-ADDWWVDSV    WWVD1P  50
+     C                     Z-ADDWWSNSV    WWSN1P  30
+     C*
+     C*    INITIALISE HEADER DISPLAY ZONES
+     C                     MOVELQMCNUM    DDCNUM           CUSTOMER NUMBER
+     C                     MOVELQMCRNM    DDCRNM           CUSTOMER NAME
+     C                     MOVELQMPTF2    DDPTFR           PORTFOLIO REF
+     C                     MOVELQMPTFN    DDPTFN              "      NARR
+     C                     MOVELWWLNRF    DDLNRF           LOAN NUMBER
+     C                     MOVELAYLNTD    DDLNTD           LOAN TYPE
+     C                     MOVELCCY       DDCCY            CURRENCY CODE
+     C                     Z-ADDCPAM      ZFLD15           CURRENT PRINCIPAL
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDCPAM
+     C           BRTT      IFNE 0
+     C                     MOVELBRTT      DDBRTT           BASE RATE CODE
+     C                     END
+     C           RTSP      IFNE 0
+     C                     Z-ADD0         ZFLD15           RATE/SPREAD
+     C                     MOVE RTSP      ZFLDA
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDRTSP
+     C                     ELSE
+     C                     MOVE *BLANKS   DDRTSP
+     C                     END
+     C*
+     C*   LOOP UNTIL QUIT REQUESTED
+     C************INKC     DOUEQ'1'                                       081239
+     C************INKL     OREQ '1'                                       081239
+     C***********                                                   S01486081239
+     C***If*F22*pressed,*access*Enquiry*selection*screen************S01486081239
+     C***********                                                   S01486081239
+     C************INKW     IFEQ '1'                                 S01486081239
+     C***********          CALL 'PMC0610'                           S01486081239
+     C***********          END                                      S01486081239
+     C           QMENQT    DOUEQ'Y'                                       081239
+     C           QMENQT    OREQ 'C'                                       081239
+     C           QMENQT    OREQ 'P'                                       081239
+     C           QMENQT    OREQ 'D'                                       081239
+     C           *INKL     OREQ '1'                                       081239
+     C*
+     C*   DISPLAY DETAILS SCREEN
+     C                     WRITEPM2080F1
+     C                     WRITEPM2080F2
+     C*
+     C                     EXFMTPM2080C1
+     C*                                                                   081239
+     C** If F3  pressed, exit program                                     081239
+     C*                                                                   081239
+     C           *INKC     IFEQ '1'                                       081239
+     C                     MOVE 'Y'       QMENQT                          081239
+     C                     CALL 'PMC1001'                                 081239
+     C                     PARM           WWLDA                           081239
+     C                     END                                            081239
+     C**********                                                    081239CPM005
+     C***If*F22*pressed, access Enquiry selection screen            081239CPM005
+     C**********                                                    081239CPM005
+     C********** *INKW     IFEQ '1'                                 081239CPM005
+     C**********           CALL 'PMC0610'                           081239CPM005
+     C**********                                                    081239CPM005
+     C***Retrieve *LDA values                                       081239CPM005
+     C**********                                                    081239CPM005
+     C**********           CALL 'PMC1003'                           081239CPM005
+     C**********           PARM           WWLDA                     081239CPM005
+     C**********           END                                      081239CPM005
+     C*                                                                   057266
+     C* IF F8 IS USED DISPLAY LOAN ACTIVITY                               057266
+     C*                                                                   057266
+     C           *INKH     IFEQ '1'                                       057266
+     C                     CALL 'PM2081'                                  057266
+     C                     PARM           DDLNRF                          057266
+     C                     END                                            057266
+     C*
+     C*   UPDATE SUBFILE ACCORDING TO ROLLUP/DOWN
+     C           *IN25     IFEQ '1'
+     C           *IN03     ANDEQ'0'                        LOAMS EOF
+     C                     Z-ADDVDAT      WWVDSV           TAKE LAST
+     C                     Z-ADDLASN      WWSNSV           RECORD READ
+     C           LMSKY2    SETLLLOAMS                    03
+     C                     EXSR LOADSF
+     C                     END
+     C*
+     C           *IN26     IFEQ '1'
+     C           WWVD1P    ANDNEWWVDSV                     NOT ON 1ST
+     C*          WWSN1P    ANDNEWWSNSV                     PAGE
+     C*
+     C*    READ PREVIOUS RECORDS TO DISPLAY FORM FIRST OF CURRENT SCREEN
+     C           LMSKY2    SETLLLOAMS                    03
+     C                     Z-ADD12        RECNO   10
+     C           *IN05     DOWNE'1'
+     C           WWLNRF    ANDEQLNRFD
+     C           RECNO     ANDGT0
+     C                     READPLOAMS                    05
+     C           RECID     IFNE '*'
+     C           RECID     ANDNE'R'
+     C                     SUB  1         RECNO
+     C                     END
+     C                     END
+     C*
+     C           *IN05     IFEQ '1'
+     C           WWLNRF    ORNE LNRFD
+     C                     Z-ADDWWVD1P    WWVDSV
+     C                     Z-ADDWWSN1P    WWSNSV
+     C           LMSKY2    SETLLLOAMS                    03
+     C                     END
+     C*
+     C                     EXSR LOADSF
+     C*
+     C                     END
+     C*
+     C*    ACCESS LOAMS DETAILS IF REQUESTED
+     C                     READCPM2080S1                 11
+     C           *IN11     IFEQ '0'
+     C                     UPDATPM2080S1
+     C                     WRITEPM2080C1
+     C                     CALL 'PM2110'
+     C                     PARM           WWRETC  1
+     C                     PARM           DDLNRF
+     C                     PARM           DDVDA2
+     C                     PARM           DDLASN
+     C                     END
+     C*
+     C***********WWRETC    IFEQ '1'                        CMD3 PRESSED   081239
+     C***********WWRETC    OREQ '9'                        DB ERROR       081239
+     C***********          MOVE '1'       *INKC                           081239
+     C***********          END                                            081239
+     C**                                                                  081239
+     C** Retrieve *LDA values                                             081239
+     C**                                                                  081239
+     C                     CALL 'PMC1003'                                 081239
+     C                     PARM           WWLDA                           081239
+     C*
+     C                     END                             ENDDOU
+     C*
+     C****EXIT*PROGRAM****************************************************081239
+     C************INKC     IFEQ '1'                                       081239
+     C***********          MOVE 'Y'       QMENQT                          081239
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C**********                                                    S01486081239
+     C***UPDATE**LDA                                                S01486081239
+     C**********                                                    S01486081239
+     C**********           CALL 'PMC1001'                           S01486081239
+     C**********           PARM           WWLDA                     S01486081239
+     C**********           END                                            081239
+     C*
+     C                     ENDSR
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * LOADSF   - LOAD SUBFILE                                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   - CONVERSION ROUTINE (DAY NUMBER TO DATE)               *
+      * ZSEDIT   - EDITION SUBROUTINE TO NUMERIC FIELDS                  *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * ACCESS   - ACCESS LOANS DETAILS                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWVDSV   - CURRENT PAGE LOAMS VALUE DATE                         *
+      * WWSNSV   - CURRENT PAGE LOAMS SEQUENCE NO                        *
+      *                                                                  *
+      ********************************************************************
+     C           LOADSF    BEGSR
+     C*    CLEAR SUBFILE
+     C                     MOVE '1'       *IN61
+     C                     WRITEPM2080C1
+     C                     MOVE '0'       *IN61
+     C*
+     C                     Z-ADD1         RRN
+     C           *IN03     DOUEQ'1'
+     C           RRN       ORGT 12
+     C           LMSKEY    READELOAMS                    03
+     C*
+     C*    INITIALISE SUBFILE FIELDS
+     C           RECID     IFNE '*'
+     C           RECID     ANDNE'C'
+     C           *IN03     ANDNE'1'
+     C*
+     C*    SAVE RECORD KEY ON CURRENT PAGE
+     C           RRN       IFEQ 1
+     C                     Z-ADDVDATD     WWVDSV  50
+     C                     Z-ADDLASN      WWSNSV  30
+     C                     END
+     C*
+     C                     MOVE ' '       DDACTN           ACTION
+     C                     Z-ADDVDATD     ZDAYNO           VALUE DATE
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDVDAT
+     C                     MOVELLASN      DDLASN           SEQUENCE NUMBER
+     C           AMTP      LOKUPAMTPA,X                  12AMEND TYPE
+     C           *IN12     IFEQ '1'
+     C                     MOVEAAMTPB,X   DDAMTP
+     C           AMTP      IFEQ 'SA'
+     C           STAI      ANDEQ'Y'
+     C                     MOVEL'STOP '   DDAMTP
+     C                     END
+     C                     ELSE
+     C                     MOVE *ALL'?'   DDAMTP
+     C                     END
+     C           PRAM      IFNE 0
+     C                     Z-ADDPRAM      ZFLD15           PRINCIPAL AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDPRAM
+     C                     ELSE
+     C                     MOVE *BLANKS   DDPRAM
+     C                     END
+     C           BRTTD     IFNE 0
+     C                     MOVELBRTTD     DDBRT2           BASE RATE CODE
+     C                     ELSE
+     C                     MOVE *BLANKS   DDBRT2
+     C                     END
+     C           RTSPD     IFNE 0
+     C                     Z-ADD0         ZFLD15           RATE/SPREAD
+     C                     MOVE RTSPD     ZFLDA
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDRTS2
+     C                     ELSE
+     C                     MOVE *BLANKS   DDRTS2
+     C                     END
+     C                     Z-ADDVDATD     DDVDA2           VALUE DATE NO
+     C                     WRITEPM2080S1
+     C                     ADD  1         RRN
+     C*
+     C                     END                             END RECID
+     C*
+     C                     END                             ENDDOU
+     C*
+     C*    READ ANOTHER TIME TO DETECT END OF FILE
+     C           *IN03     IFNE '1'
+     C           LMSKEY    READELOAMS                    03
+     C                     END
+     C*
+     C           RRN       IFEQ 1                          NO RECORD LOADED
+     C                     MOVE '1'       *IN59            PROTECT ZONE
+     C                     MOVE *BLANKS   DDVDAT
+     C                     MOVEL*BLANKS   DDLASN                       BER
+     C                     MOVE *BLANKS   DDAMTP
+     C                     MOVE *BLANKS   DDPRAM
+     C                     MOVE *BLANKS   DDBRT2
+     C                     MOVE *BLANKS   DDRTS2
+     C                     WRITEPM2080S1
+     C                     MOVE '0'       *IN59
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PMC1000  - UPDATE GROUP JOB DATA AREA                            *
+      * PMC1020  - TERMINATE GROUP JOB IF DATABASE ERROR                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * ACCESS   - ACCESS LOANS DETAILS                                  *
+      * LOADSF   - LOAD SUBFILE                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPARM   - GROUP JOB DATA STRUCTURE                              *
+      * WWEND    - GROUP JOB TERMINATION VALUE                           *
+      * WWGRPJ   - GROUP JOB VALUE                                       *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'PM2080'  QMPGM
+     C                     MOVEL'Y'       QMENQT
+     C*
+     C*****UPDATE**GDA*************************************************   S01486
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C*                                                                   S01486
+     C** UPDATE *LDA                                                      S01486
+     C*                                                                   S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C*
+     C                     DUMP
+     C*
+     C                     CALL 'PMC1020'
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PMC1010  - READ GROUP JOB DATA AREA                              *
+      * QCMDEXC  - EXEC AS/400 COMMAND                                   *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWLNRF   - LOAN NUMBER PARAMETER PASSED TO PROGRAM               *
+      * WWRETC   - RETURN CODE FROM PM2110                               *
+      * WWPARM   - GROUP JOB DATA STRUCTURE                              *
+      * WWFLD    - COMMAND PART OF QCMDEXEC PARAMETER                    *
+      * WWNUMB   - LENGHT PART OF QCMDEXEC PARAMETER                     *
+      * WWVDSV   - CURRENT PAGE LOAMS VALUE DATE                         *
+      * WWSNSV   - CURRENT PAGE LOAMS SEQUENCE NO                        *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           WWLOAN  6
+     C**********           MOVE WWLOAN    WWLNRF  60                                          CLE148
+     C                     MOVE WWLOAN    WWLNRF  6                                           CLE148
+     C*                                                                   S01486
+     C                     MOVEACPY@      CPY2@  80                       S01486
+     C*                                                                   S01486
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator           S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           RUNDAT                          S01486
+     C                     IN   RUNDAT                                    S01486
+     C*                                                                   S01486
+     C**   Read in ZMUSER                                                 S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           ZMUSER                          S01486
+     C                     IN   ZMUSER                                    S01486
+     C*
+     C*    INITIALISE SUBFILE
+     C                     Z-ADD0         RRN     30
+     C*
+     C*    CLEAR SUBFILE
+     C                     MOVE '1'       *IN61
+     C                     WRITEPM2080C1
+     C                     MOVE '0'       *IN61
+     C*
+     C                     MOVEA'0'       *IN
+     C                     MOVE '0'       *INKC
+     C                     MOVE '0'       *INKL
+     C                     MOVE '0'       WWRETC  1
+     C                     Z-ADD1         X       20
+     C*
+     C*    RECEIVE PARAMETERS FROM DATA AREA *GDA
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C                     MOVELQMRUNA    DDRUNA
+     C*
+     C*****IF*ATTENTION*KEY*ENABLED*SET*THE*ATTENTION*PROGRAM*TO*******   S01486
+     C*****PMC0610*****************************************************   S01486
+     C***********QMATTN    IFEQ 'Y'                                       S01486
+     C***********          MOVEAATN       WWFLD  22                       S01486
+     C***********          Z-ADD22        WWNUMB 155                      S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM           WWFLD                           S01486
+     C***********          PARM           WWNUMB                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C*
+     C*    INIT KEY LIST
+     C           LMSKEY    KLIST                           LOAMS KEY
+     C                     KFLD           WWLNRF           (TRUNCATED)
+     C           LMSKY2    KLIST                           LOAMS KEY
+     C                     KFLD           WWLNRF           (COMPLETE)
+     C                     KFLD           WWVDSV
+     C                     KFLD           WWSNSV
+     C***********SDLNKY    KLIST                           SDLOAN KEY     S01486
+     C***********          KFLD           LTYP                            S01486
+     C***********          KFLD           SUTP                            S01486
+     C*                                                                   S01486
+     C** Set up parameter to retrieve message from message file           S01486
+     C*                                                                   S01486
+     C           PLLANG    PLIST                                          S01486
+     C                     PARM           MSMBR4  7                       S01486
+     C                     PARM           MSGER  10                       S01486
+     C                     PARM           MSGTXT 80                       S01486
+     C                     MOVEL'PMUSRMSG'MSGER                           S01486
+     C*                                                                   S01486
+     C           AGMBIN    IFEQ 'Y'                                       S01486
+     C                     MOVE '1'       *IN39                           S01486
+     C                     MOVELUSRBCH    DDBCH                           S01486
+     C*                                                                   S01486
+     C**  Validate user's default booking branch                          S01486
+     C*                                                                   S01486
+     C                     CALL 'ZVBBU'                                   S01486
+     C                     PARM USRBCH    P@BRCH  3                       S01486
+     C                     PARM *ZEROS    P@ERCD  10                      S01486
+     C*                                                                   S01486
+     C           P@ERCD    IFNE 0                                         S01486
+     C           P@ERCD    IFEQ 1                                         S01486
+     C                     MOVEL'PM00307' MSMBR4                          S01486
+     C                     CALL 'SDRTVTXT'PLLANG                          S01486
+     C                     MOVELMSGTXT    DDMSG                           S01486
+     C                     END                                            S01486
+     C           P@ERCD    IFEQ 2                                         S01486
+     C                     MOVEL'PM00308' MSMBR4                          S01486
+     C                     CALL 'SDRTVTXT'PLLANG                          S01486
+     C                     MOVELMSGTXT    DDMSG                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           *INKC     DOUEQ'1'                                       S01486
+     C           *INKL     OREQ '1'                                       S01486
+     C                     EXFMTPM2080F3                                  S01486
+     C                     END                                            S01486
+     C           *INKL     IFEQ '1'                                       S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C           *INKC     IFEQ '1'                                       S01486
+     C                     MOVE 'Y'       QMENQT                          S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C*
+     C                     ENDSR
+**  CPY@
+(c) Finastra International Limited 2001
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  DAMTP - AMENDMENT TYPE
+PDREMRPIBCSCSA
+**  AMTPB - AMENDMENT TYPE NARRATIVE
+PAST DUE REPAYMENT
+REPAYMENT SCHEDULE
+MANUAL REPAYMENT
+PRINCIPAL INCREASE
+BASE RATE CHANGE
+SPREAD RATE CHANGE
+START ACCRUAL

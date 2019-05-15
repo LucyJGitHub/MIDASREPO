@@ -1,0 +1,124 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GP Drop UDF extension table column')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GPCDROPCOL - Drop UDF extension table column                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD042210           Date 26Oct16              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      247277             Date 16Jul07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG5728 *CREATE    Date 28Jan05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD042210 - Blank character may be passed if API name is     */
+/*                  less than 4 characters (e.g. 'FRA ').            */
+/*       247277 - Cater for native JDBC driver as well as toolbox    */
+/*       BUG5728 - UDF API to drop columns from a table              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&API &DROPCOL &MSGARROUT &APIRETC)
+ 
+             DCL        VAR(&API) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&DROPCOL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGARROUT) TYPE(*CHAR) LEN(9999)
+             DCL        VAR(&APIRETC) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&TABLE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&NUMBER) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)                                 /*247277*/
+             DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)                                 /*247277*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(28)
+             DCL        VAR(&INQMSGRPY) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2005')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for GPCDROPCOL')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Create a copy of QCPFMSG in QTEMP to remove enquiry message */
+             DLTMSGF    MSGF(QTEMP/QCPFMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTMSGF    MSGF(QTEMP/QCPFMSG)
+             ADDMSGD    MSGID(CPA32B2) MSGF(QTEMP/QCPFMSG) +
+                          MSG('Message to override IBM enquiry +
+                          message') VALUES('I') DFT('I')
+             OVRMSGF    MSGF(QCPFMSG) TOMSGF(QTEMP/QCPFMSG)
+             RTVJOBA    INQMSGRPY(&INQMSGRPY)
+             CHGJOB     INQMSGRPY(*DFT)
+ 
+/* Build table name */
+/*           CHGVAR     VAR(&TABLE) VALUE('T_GZ' *CAT &API *CAT 'EX') */                /*MD042210*/
+             CHGVAR     VAR(&TABLE) VALUE('T_GZ' *CAT &API *TCAT 'EX')                  /*MD042210*/
+ 
+/* Check if table exists if not issue error */
+             CHKOBJ     OBJ(&TABLE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Check if table exists if not issue error */
+             ALCOBJ     OBJ((&TABLE *FILE *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Build string to drop column */
+             CHGVAR     VAR(&STM_STR) VALUE('ALTER TABLE ' *CAT +
+                          &TABLE *BCAT 'DROP COLUMN' *BCAT &DROPCOL)
+ 
+/* Call standard program to write to source file ... */
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 SQL0000)
+             MONMSG     MSGID(CPD32CC)
+             MONMSG     MSGID(SQL0952) CMPDTA(CPA32B2)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+/*******     RTVJOBA    NBR(&NUMBER)                                                       *247277*/
+             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&NUMBER)                         /*247277*/
+/*******     CHGVAR     VAR(&JOB) VALUE(&NUMBER *CAT +                                     *247277*/
+/*******                  '/QUSER/QZDASOINIT')                                             *247277*/
+             CHGVAR     VAR(&JOB) VALUE(&NUMBER *BCAT '/' *CAT +
+                          &JOBUSER *TCAT '/' *CAT &JOBNAME)                               /*247277*/
+             CHGVAR     VAR(&MSGARROUT) VALUE(':::Column ' *CAT +
+                          &DROPCOL *BCAT 'not dropped from table ' +
+                          *CAT &TABLE *CAT '.  Check job  ' *CAT +
+                          &JOB *TCAT ':')
+             CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&APIRETC) VALUE('1')
+ 
+ENDPGM:
+             DLTOVR     FILE(QCPFMSG)
+             MONMSG     MSGID(CPF0000)
+             DLTMSGF    MSGF(QTEMP/QCPFMSG)
+             MONMSG     MSGID(CPF0000)
+             DLCOBJ     OBJ((&TABLE *FILE *EXCL))
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     INQMSGRPY(&INQMSGRPY)
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

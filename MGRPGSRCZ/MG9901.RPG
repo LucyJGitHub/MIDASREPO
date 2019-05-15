@@ -1,0 +1,1245 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG Standard routing API - Double Swift IDs')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Generation APIs module                       *
+      *                                                               *
+      *  MG9901 - Standard routing API - Double Swift IDs             *
+      *                                                               *
+      *  Function:  This is a copy of MG9900 enhanced to manage       *
+      *             customers with 2 SWIFT IDs.                       *
+      *                                                               *
+      *  Note: Any change applied to MG9900 may well be applied to    *
+      *        this program. For that reason, the previous CAR tags   *
+      *        have not been removed                                  *
+      *                                                               *
+      *  Called By: DL/MG/SE pgms- Only those handling Confirmations  *
+      *                                                               *
+      *  (c) Finastra International Limited 2004                      *
+      *                                                               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 245770A            Date 14Mar07               *
+      *                 245770             Date 15Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG7526            Date 15Jun05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSW036  *CREATE    Date 15Dec04               *
+      * ----- CSW036 -------------------------------------------------*
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 14Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 123301             Date 16Feb98               *
+      *                 110747             Date 29JAN98               *
+      *                 CSW096             Date 01AUG96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  245770A- Amendment to 245770. Program was still using MT321  *
+      *           as a basis for comparision.                         *
+      *  245770 - MT322 (MT321 before CSW202) is a pseudo-SWIFT       *
+      *           message.  It should not have a network = 'SWIFT'.   *
+      *           This fix was patterned after fix 239744 in MG9900   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7526 - Set-up Sender's Address and Destination Address    *
+      *            for paper confirations as CF0120.                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value (Recompile)                            *
+      *  207006 - Produce messages RSND                               *
+      *  123301 - Ensure FT messages are created with status RSND if  *
+      *           this is the default - amend 110747.                 *
+      *  110747 - Messages for network PAPER appear in the Unreleased *
+      *           Messages enquiry, because the messages are not set  *
+      *           to status PRTD correctly.  Amend pgm to set status  *
+      *           to PRTD instead of leaving as CRTD.                 *
+      *  CSW096 - SWIFT 96 Changes                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *   50        Work                                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *   Notes                                                       *
+      *   -----                                                       *
+      *                                                               *
+      *   1. This program replaces subroutines ROUT, NWAD, PRAD       *
+      *      SWROUT and TXROUT in the MG01??, MG02?? and MG03??       *
+      *      range of message generation programs.                    *
+      *                                                               *
+      *   2. The parameters are:                                      *
+      *      INPUT                                                    *
+      *        o  I@SNBR sender's branch                              *
+      *        o  I@DSCN destination customer                         *
+      *        o  I@MTPY message type                                 *
+      *        o  I@SETT settlement method                            *
+      *        o  I@CONC ConCord type (Y or N)                        *
+      *        o  I@FTCS Funds Transfer default-status-released       *
+      *        o  I@MMOD Midas Module for generated message           *
+      *      OUTPUT                                                   *
+      *        o  O@CNSN sender's customer number (ie. BICN)          *
+      *        o  O@SWSN sender's SWIFT address                       *
+      *        o  O@NWSN senders's network address                    *
+      *        o  O@SWDS destination SWIFT address                    *
+      *        o  O@NWDS network address of destination               *
+      *        o  O@NWRK network                                      *
+      *        o  O@MGSG message status group                         *
+      *        o  O@MGST message status                               *
+      *        o  O@PAIN Sender's Parent Indicator                    *
+      *        o  O@PCNB Sender's Parent Customer Number              *
+      *        o  O@SPRS Suppress Message required                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      * Initialise Program F-Spec
+     F/COPY WNCPYSRC,MG9901DFPG
+      *                                                                                       CSW218
+     FMEBICDL2IF  E           K        DISK                                                   CSW218
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    A@NN       15  3
+      ** Array of message type generated with status released
+      *
+     E                    A@SP       15  3
+      ** Array of message types to be suppressed
+      *
+      * Initialise Program E-Spec
+     E/COPY WNCPYSRC,MG9901DEPG
+      /EJECT
+      * Initialise Program I-Spec
+     I/COPY WNCPYSRC,MG9901DIPG
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ISDTRAD    E DSSDTRADPD
+      ** Data structure for trading file
+      *
+     ISDCUST    E DSSDCUSTPD
+     I                                      377 421 A@SP
+     I                                      422 466 A@NN
+      ** Data structure for customer file (incl. array over default
+      ** status released fields).
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Data structure for branch file
+     I              QQDFAC                          #DFAC1                                    CGL029
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Data structure for module ICD file
+      *
+     ISDMGME    E DSSDMGMEPD
+      ** Data structure for message management data.
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     IDSLDY     E DSDSLDY                                                 CSW036
+      **  Very long data structure for access programs                    CSW036
+      *                                                                   CSW036
+     IP@IN        DS                            256
+     I                                        1   3 I@SNBR
+     I                                        4   9 I@DSCN
+     I                                       10  12 I@MTPY
+     I                                       13  140I@SETT
+     I                                       15  15 I@CONC
+     I                                       16  16 I@FTCS
+     I                                       17  18 I@MMOD
+      ** Data structure for input parameter
+      *
+     IP@OUT       DS                            256
+     I**********                              1   60O@CNSN                                    CSD027
+     I                                        1   6 O@CNSN                                    CSD027
+     I                                        7  18 O@SWSN
+     I                                       19  38 O@NWSN
+     I                                       39  49 O@SWDS
+     I                                       46  46 W@96CN
+     I                                       47  49 W@BIC
+     I                                       50  69 O@NWDS
+     I                                       70  75 O@NWRK
+     I                                       76  76 O@MGSG
+     I                                       77  80 O@MGST
+     I                                       81  81 O@PAIN
+     I                                       82  87 O@PCNB
+     I                                       88  90 O@SPRS
+      ** Data structure for ouput parameter
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I            DS                                                                          245770
+     I                                        1 200 SVAL2                                     245770
+     I                                        1   1 SVAL21                                    245770
+     I            DS                                                                          245770
+     I I            'GenerateMT322'           1  20 SVALK2                                    245770
+      *                                                                                       245770
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRINIT - Initial processing                                 *
+      *   SRDETL - Detail processing                                  *
+      *   SRNWAD - Routing; default network from destination          *
+      *   SRPRD1 - Routing; pay/receive messages                      *
+      *   SRPRD2 - Routing; non-pay/receive messages                  *
+      *   SRTXRT - Attempt Telex routing                              *
+      *   SRSWRT - Attempt SWIFT routing                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Parameter list
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7
+     C                     PARM           P@IN
+     C                     PARM           P@OUT
+     C                     PARM           P@ZZ  256
+      *
+      ** Clear output parameters
+     C                     CLEARP@OUT
+     C                     CLEARP@RTCD
+      * Main processing 1
+     C/COPY WNCPYSRC,MG9901DMP1
+      *
+      ** Only perform initialisation once
+     C           W@INIT    IFNE 'Y'
+     C                     MOVEL'Y'       W@INIT  1
+     C                     EXSR SRINIT
+     C                     ENDIF
+      *
+      * Main processing 2
+     C/COPY WNCPYSRC,MG9901DMP2
+     C                     EXSR SRDETL
+      * Main processing 3
+     C/COPY WNCPYSRC,MG9901DMP3
+      *
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRDETL                                         *
+      * Purpose     :  Perform detail processing                      *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  SRNWAD                                         *
+      *                SRPRD1                                         *
+      *                SRPRD2                                         *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      * Copy point for Detail Processing
+     C/COPY WNCPYSRC,MG9901DETL
+      *
+      ** 1. Access sender's base details
+      ** -------------------------------
+      *
+      ** Access branch code details for sender's branch
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM I@SNBR    @BRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ** Branch record not found - database error
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MEM0011' P@RTCD
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVELI@SNBR    DBKEY            *  DBERR 004  *
+     C                     MOVEL'SDBRCHPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save branch internal customer number & SWIFT TID address
+     C                     MOVELA8BRCD    I@SNBR
+     C                     MOVELA8BICN    O@CNSN
+     C                     MOVELA8BTID    O@SWSN
+      *
+      ** Access customer details for branch internal customer
+     C                     MOVELA8BICN    @KEY1     P
+     C*********************CALL 'AOCUSTR0'                                CSW036
+     C                     CALL 'AOCUSTR1'                                CSW036
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSW036
+     C           SDCUST    PARM SDCUST    DSLDY                           CSW036
+      *
+      ** Customer record not found - database error
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MEM0011' P@RTCD
+     C                     MOVE '005'     DBASE            * * * * * * * *
+     C                     MOVELA8BICN    DBKEY            *  DBERR 005  *
+     C                     MOVEL'SDCUSTPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set up work address fields for sender
+     C                     MOVELBBTXA1    W@TELX
+     C                     MOVELBBSTAD    W@STTX
+     C                     MOVELBBCRNM    W@CRNM
+     C                     MOVELBBPCNB    W@PCNB
+     C                     MOVELBBPAIN    W@PAIN
+     C                     MOVELBBPCNB    O@PCNB
+     C                     MOVELBBPAIN    O@PAIN
+      *
+      * Copy point for Detail Processing 2
+     C/COPY WNCPYSRC,MG9901DET2
+      *
+      ** 2. Access destination's base details
+      ** ------------------------------------
+      *
+      ** Access customer details for destination
+     C                     MOVELI@DSCN    @KEY1     P
+     C*********************CALL 'AOCUSTR0'                                CSW036
+     C                     CALL 'AOCUSTR1'                                CSW036
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSW036
+     C           SDCUST    PARM SDCUST    DSLDY                           CSW036
+      *
+      ** Customer record not found - database error
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MEM0011' P@RTCD
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVELI@DSCN    DBKEY            *  DBERR 006  *
+     C                     MOVEL'SDCUSTPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set up SWIFT address of destination
+     C                     MOVELBBCUST    I@DSCN
+      *                                                                   CSW036
+      * Setting up the CSID, depending on the availability of CSIDs      SCSW036
+      *                                                                   CSW036
+     C           @CSW36    IFEQ 'Y'                                       CSW036
+     C           BBCSI2    ANDNE*BLANKS                                   CSW036
+     C                     MOVELBBCSI2    W0CSID                          CSW036
+     C                     ELSE                                           CSW036
+     C                     MOVELBBCSID    W0CSID 12                       CSW036
+     C                     ENDIF                                          CSW036
+      *                                                                   CSW036
+     C*********************MOVELBBCSID    O@SWDS                          CSW036
+     C                     MOVELW0CSID    O@SWDS                          CSW036
+      *                                                                                       CSW218
+      ** Check if SWIFT address is connected to SWIFTNet FIN if CSW218 is ON                  CSW218
+     C                     MOVEL*BLANKS   WSID19                                              CSW218
+     C           CSW218    IFEQ 'Y'                                                           CSW218
+     C           BBCSID    ANDNE*BLANKS                                                       CSW218
+     C                     MOVELBBCSID    WBICC   8                                           CSW218
+     C           3         SUBSTBBCSID:9  WBICB   3                                           CSW218
+     C           WBICB     IFEQ *BLANKS                                                       CSW218
+     C                     MOVEL'XXX'     WBICB                                               CSW218
+     C                     ENDIF                                                              CSW218
+     C           KBICD     CHAINMEBICDL2             90                                       CSW218
+     C           *IN90     IFEQ '0'                                                           CSW218
+     C           1         SUBSTBDXINF:19 WSID19  1                                           CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *
+      * Copy point for Detail Processing 3
+     C/COPY WNCPYSRC,MG9901DET3
+      *
+      ** Establish whether destination is attached to SWIFT network:
+      **  o before Nov 96 changes active, branch code of 'BIC'
+      **    indicates not-connected
+      **  o after Nov 96 posn. 8 of BIC address set to '1' indicates
+      **    not-connected.
+      **  - after SWIFT2018 changes, BIC address indicates not connected if the               CSW218
+      **    Extra Information field position 19 is set to 'N'                                 CSW218
+      *                                                                                       CSW218
+     C                     MOVEL'N'       W@CONN  1
+     C           O@SWDS    IFNE *BLANKS
+     C           CSW218    IFEQ 'N'                                                           CSW218
+      *                                                                                       CSW218
+     C           W@SW96    IFNE 'CSW096 '
+     C           W@BIC     IFNE 'BIC'
+     C                     MOVEL'Y'       W@CONN
+     C                     ENDIF
+     C                     ELSE
+     C           W@96CN    IFNE '1'
+     C                     MOVEL'Y'       W@CONN
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                       CSW218
+     C                     ELSE                                                               CSW218
+      ** SWIFT2018 is ON                                                                      CSW218
+     C           WSID19    IFNE 'N'                                                           CSW218
+     C                     MOVEL'Y'       W@CONN                                              CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
+     C                     ENDIF
+     C/COPY WNCPYSRC,MG9901C006
+      *
+      ** Use message type group (1 - 9) to identify destination
+      ** customer default network for message
+     C                     MOVELI@MTPY    W@MGRP  1
+     C                     MOVEL*BLANKS   W@DNWN
+     C           W@MGRP    IFEQ '1'
+     C                     MOVELBBDNW1    W@DNWN
+     C                     ENDIF
+     C           W@MGRP    IFEQ '2'
+     C                     MOVELBBDNW2    W@DNWN
+     C                     ENDIF
+     C           W@MGRP    IFEQ '3'
+     C                     MOVELBBDNW3    W@DNWN
+     C                     ENDIF
+     C           W@MGRP    IFEQ '4'
+     C                     MOVELBBDNW4    W@DNWN
+     C                     ENDIF
+     C           W@MGRP    IFEQ '5'
+     C                     MOVELBBDNW5    W@DNWN
+     C                     ENDIF
+     C           W@MGRP    IFEQ '6'
+     C                     MOVELBBDNW6    W@DNWN
+     C                     ENDIF
+     C           W@MGRP    IFEQ '7'
+     C                     MOVELBBDNW7    W@DNWN
+     C                     ENDIF
+     C           W@MGRP    IFEQ '8'
+     C                     MOVELBBDNW8    W@DNWN
+     C                     ENDIF
+     C           W@MGRP    IFEQ '9'
+     C                     MOVELBBDNW9    W@DNWN
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,MG9901C007
+      ** If default network defined, attempt to route to this network,
+      ** otherwise perform routing based on system criteria for type
+      ** (settlement method for pay/receives, confirmation priorities
+      ** for others).
+     C           W@DNWN    IFNE *BLANKS
+     C                     EXSR SRNWAD
+     C                     ELSE
+     C           W@MGRP    IFEQ '1'
+     C           W@MGRP    OREQ '2'
+     C                     EXSR SRPRD1
+     C                     ELSE
+     C                     EXSR SRPRD2
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,MG9901C008
+      *
+      ** If message status is not returned (because implied by network)
+      ** check for default-status-released for destination
+     C                     MOVEL*OFF      *IN50
+      *
+     C           O@MGST    IFEQ *BLANK
+     C           I@MTPY    ANDNE*BLANK
+      *
+     C                     MOVELI@MTPY    W@MTPY
+     C           W@MTPY    LOKUPA@NN                     50
+     C           *IN50     IFEQ '0'
+     C                     MOVE '*'       W@MTPY
+     C           W@MTPY    LOKUPA@NN                     50
+     C                     ENDIF
+     C           *IN50     IFEQ '0'
+     C                     MOVE '**'      W@MTPY
+     C           W@MTPY    LOKUPA@NN                     50
+     C                     ENDIF
+     C           *IN50     IFEQ '0'
+     C                     MOVE '***'     W@MTPY
+     C           W@MTPY    LOKUPA@NN                     50
+     C                     ENDIF
+      *                                                                   110747
+      ** If default-status-released is specified, or FT default status    110747
+      ** is 'R' (ready-to-send), set status to RSND, else set status to   110747
+      ** CRTD (Created).                                                  110747
+     C           *IN50     IFEQ '1'                                       110747
+     C           I@FTCS    OREQ 'R'                                       123301
+     C                     MOVEL'2'       O@MGSG                          110747
+     C                     MOVEL'RSND'    O@MGST                          110747
+     C                     ELSE                                           110747
+     C                     MOVEL'1'       O@MGSG                          110747
+     C                     MOVEL'CRTD'    O@MGST                          110747
+     C                     ENDIF                                          110747
+      *
+     C                     ENDIF
+      *
+      ** If default-status-released is specified, or FT default status
+      ** is 'R' (ready-to-send), set status to RSND, else set status to
+      ** CRTD (Created).
+     C********** *IN50     IFEQ '1'                                       110747
+     C********** I@FTCS    OREQ 'R'                                       110747
+     C           I@MMOD    IFEQ 'FT'                                      110747
+     C           *IN50     ANDEQ'0'                                       110747
+     C           O@NWRK    ANDNE'PAPER'                                   110747
+     C           I@FTCS    IFEQ 'R'                                       110747
+     C                     MOVEL'2'       O@MGSG
+     C                     MOVEL'RSND'    O@MGST
+     C                     ELSE
+     C                     MOVEL'1'       O@MGSG
+     C                     MOVEL'CRTD'    O@MGST
+     C                     ENDIF
+     C                     ENDIF                                          110747
+     C/COPY WNCPYSRC,MG9901C001
+      *
+      ** If message status is not returned (because implied by network)
+      ** check for suppress message status
+     C                     MOVEL*OFF      *IN50
+      *
+     C           I@MTPY    IFNE *BLANK
+      *
+     C                     MOVELI@MTPY    W@MTPY
+     C           W@MTPY    LOKUPA@SP                     50
+     C           *IN50     IFEQ '0'
+     C                     MOVE '*'       W@MTPY
+     C           W@MTPY    LOKUPA@SP                     50
+     C                     ENDIF
+     C           *IN50     IFEQ '0'
+     C                     MOVE '**'      W@MTPY
+     C           W@MTPY    LOKUPA@SP                     50
+     C                     ENDIF
+     C           *IN50     IFEQ '0'
+     C                     MOVE '***'     W@MTPY
+     C           W@MTPY    LOKUPA@SP                     50
+     C                     ENDIF
+      *
+      ** If found set up return parameter
+      *
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'Yes'     O@SPRS
+     C                     ELSE
+      *
+      * If message type is 202 then check for suppression of 203
+      *
+     C                     SELEC
+     C           I@MTPY    WHEQ '202'
+     C           '203'     LOKUPA@SP                     50
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'202'     O@SPRS
+     C                     ELSE
+     C                     MOVEL'No '     O@SPRS
+     C                     ENDIF
+      * All other messages
+     C                     OTHER
+     C                     MOVEL'No '     O@SPRS
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           @CSW25    IFEQ 'Y'                                                           207006
+     C                     MOVEL'2'       O@MGSG                                              207006
+     C                     MOVEL'RSND'    O@MGST                                              207006
+     C                     ENDIF                                                              207006
+     C           EXDETL    TAG
+     C                     ENDSR                           SRDETL
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRNWAD                                         *
+      * Purpose     :  Routing for instances where default network    *
+      *                preference is specified for destination        *
+      *                                                               *
+      * Called by   :  SRDELT                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRNWAD    BEGSR
+      *
+      * Copy point for Find Default Network address
+     C/COPY WNCPYSRC,MG9901NWAD
+      *
+      ** Initialise network
+     C                     CLEARO@NWRK
+     C/COPY WNCPYSRC,MG9901C005
+      *
+      ** If network preference is 'SWIFT', MSDL is on, addresses exist
+      ** and destination is connected, route via SWIFT.
+     C           W@DNWN    IFEQ 'SWIFT'
+     C           BGMSDL    ANDEQ'Y'
+     C           O@SWSN    ANDNE*BLANKS
+     C           O@SWDS    ANDNE*BLANKS
+     C           W@CONN    ANDEQ'Y'
+     C                     MOVEL'SWIFT'   O@NWRK
+     C                     MOVELO@SWSN    O@NWSN    P
+     C                     MOVELO@SWDS    O@NWDS    P
+     C                     ENDIF
+      *
+      ** If network preference is 'TELEX', MT is on, and addresses
+      ** exist, route via Telex
+     C           W@DNWN    IFEQ 'TELEX'
+     C           BGMTMI    ANDEQ'Y'
+     C           W@TELX    ANDNE*BLANKS
+     C           BBTXA1    ANDNE*BLANKS
+     C                     MOVEL'TELEX'   O@NWRK
+     C                     MOVELW@TELX    O@NWSN    P
+     C                     MOVELBBTXA1    O@NWDS    P
+     C                     ENDIF
+      *
+      ** If network preference is 'STTX', MSDL is on, and addresses
+      ** exist, route via STTX
+     C           W@DNWN    IFEQ 'STTX'
+     C           BGMSDL    ANDEQ'Y'
+     C           W@STTX    ANDNE*BLANKS
+     C           BBSTAD    ANDNE*BLANKS
+     C                     MOVEL'STTX'    O@NWRK
+     C                     MOVELW@STTX    O@NWSN    P
+     C                     MOVELBBSTAD    O@NWDS    P
+     C                     ENDIF
+      *
+      *
+      ** If network preference is 'CONCOR' (ConCord), ConCord i/f is
+      ** on, and address exists, route via ConCord
+     C           W@DNWN    IFEQ 'CONCOR'
+     C           W@CNON    ANDEQ'Y'
+     C           I@CONC    ANDEQ'Y'
+     C           BBCRPC    ANDNE*BLANKS
+     C                     MOVEL'CONCOR'  O@NWRK
+     C                     MOVELO@SWSN    O@NWSN    P
+     C                     MOVELBBPSWC    O@NWDS    P
+     C                     MOVEL'2'       O@MGSG
+     C                     MOVEL'RSND'    O@MGST
+     C                     ENDIF
+      *
+      ** If network preference is 'PAPER' route via Paper
+     C           W@DNWN    IFEQ 'PAPER'
+     C                     MOVEL'PAPER'   O@NWRK
+      *                                                                                      BUG7526
+     C                     MOVELO@SWSN    O@NWSN    P                                        BUG7526
+     C                     MOVELO@SWDS    O@NWDS    P                                        BUG7526
+     C           O@NWSN    IFEQ *BLANKS                                                      BUG7526
+     C           O@NWDS    OREQ *BLANKS                                                      BUG7526
+     C***********          MOVELO@CNSN    O@NWSN    P                     110747
+     C***********          MOVELW@CRNM    O@NWSN    P                                 110747 BUG7526
+     C***********          MOVELBBCRNM    O@NWDS    P                                        BUG7526
+     C                     MOVE *BLANKS   O@NWSN                                             BUG7526
+     C                     MOVE *BLANKS   O@NWDS                                             BUG7526
+     C                     MOVELO@CNSN    O@NWSN    P                                        BUG7526
+     C                     MOVELBBCUST    O@NWDS    P                                        BUG7526
+     C                     ENDIF                                                             BUG7526
+      *                                                                                      BUG7526
+      *   For 3** messages
+      **  If the ICD option for free format confirmations is 'Y',
+      **  and this is a confirmation, the message has already been
+      **  printed , hence no further print out is needed.
+      *  OR
+      *   For 1** and 2** messages
+      **  If the ICD option for free format advices is 'Y' the
+      **  message has already been printed , hence no further
+      **  print out is needed.
+     C           ENFFCR    IFEQ 'Y'
+     C           W@MGRP    ANDEQ'3'
+     C           ENFFAR    OREQ 'Y'
+     C           W@MGRP    ANDEQ'1'
+     C           ENFFAR    OREQ 'Y'
+     C           W@MGRP    ANDEQ'2'
+     C                     MOVEL'PRTD'    O@MGST
+     C                     MOVE '3'       O@MGSG
+     C                     ELSE
+     C                     MOVEL'RSND'    O@MGST
+     C                     MOVE '2'       O@MGSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If found to be unroutable, set up as network 'UNROUT'
+     C           O@NWRK    IFEQ *BLANKS
+     C                     MOVEL'UNROUT'  O@NWRK
+     C                     MOVELO@CNSN    O@NWSN    P
+     C                     MOVELBBCRNM    O@NWDS    P
+     C                     MOVEL'CRTD'    O@MGST
+     C                     MOVE '1'       O@MGSG
+     C                     ENDIF
+      *
+     C           EXNWAD    TAG
+     C                     ENDSR                           SRNWAD
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRPRD1                                         *
+      * Purpose     :  Routing for pay/receive messages, based on     *
+      *                settlement method.                             *
+      *                                                               *
+      * Called by   :  SRDELT                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRPRD1    BEGSR
+      *
+      * Copy point for Pay/Receive Routing
+     C/COPY WNCPYSRC,MG9901PRD1
+      *
+      **  Set up priority sender, destination & network:
+      **   o 'S' = SWIFT; 'T' = TELEX; 'X' = STTX
+      **                   (1)  (2)  (3)  (4)  (5)  (6)  (7)
+      **  ---------------------------------------------------
+      **  SWIFT ADDRESS  ¦  Y ¦  N ¦  N ¦  Y ¦  Y ¦  Y ¦  Y ¦
+      **  TELEX ADDRESS  ¦  N ¦  Y ¦  N ¦  Y ¦  Y ¦  N ¦  N ¦
+      **  STTX ADDRESS   ¦  N ¦  N ¦  Y ¦  N ¦  N ¦  Y ¦  Y ¦
+      **  SETT. TYPE     ¦    ¦    ¦    ¦ 01 ¦ 08 ¦ 01 ¦ 08 ¦
+      **  ---------------------------------------------------
+      ****DESTN*=*BBCSID*¦**X*¦****¦****¦****¦**X*¦****¦**X*¦             CSW036
+      **  DESTN = W0CSID ¦  X ¦    ¦    ¦    ¦  X ¦    ¦  X ¦             CSW036
+      **  DESTN = BBTXA1 ¦    ¦  X ¦    ¦  X ¦    ¦    ¦    ¦
+      **  DESTN = BBSTAD ¦    ¦    ¦  X ¦    ¦    ¦  X ¦    ¦
+      **  ---------------------------------------------------
+      **  NETWORK        ¦    ¦    ¦    ¦    ¦    ¦    ¦    ¦
+      **  (NWRK)         ¦  S ¦  T ¦  X ¦  T ¦  S ¦  X ¦  S ¦
+      *
+      **  SWIFT ?
+      **  (1)
+     C           BGMSDL    IFEQ 'Y'
+     C           O@SWSN    ANDNE*BLANKS
+      *
+     C***********BBCSID    IFNE *BLANKS                                   CSW036
+     C           W0CSID    IFNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+      **  (5)
+     C***********BBCSID    ORNE *BLANKS                                   CSW036
+     C           W0CSID    ORNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDNE*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+     C           I@SETT    ANDEQ08
+      **  (7)
+     C***********BBCSID    ORNE *BLANKS                                   CSW036
+     C           W0CSID    ORNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDNE*BLANKS
+     C           I@SETT    ANDEQ08
+      *
+     C                     MOVELO@SWSN    O@NWSN    P
+     C*********************MOVELBBCSID    O@NWDS    P                     CSW036
+     C                     MOVELW0CSID    O@NWDS    P                     CSW036
+     C                     MOVE 'SWIFT '  O@NWRK
+     C/COPY WNCPYSRC,MG9901C002
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Telex ?
+      **  (2)
+     C           BGMTMI    IFEQ 'Y'
+     C           W@TELX    ANDNE*BLANKS
+      *
+     C***********BBCSID    IFEQ *BLANKS                                   CSW036
+     C           W0CSID    IFEQ *BLANKS                                   CSW036
+     C           BBTXA1    ANDNE*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+      **  (4)
+     C***********BBCSID    ORNE *BLANKS                                   CSW036
+     C           W0CSID    ORNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDNE*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+     C           I@SETT    ANDEQ01
+      *
+     C                     MOVELW@TELX    O@NWSN    P
+     C                     MOVELBBTXA1    O@NWDS    P
+     C                     MOVE 'TELEX '  O@NWRK
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  STTX ?
+      **  (3)
+     C           BGMSDL    IFEQ 'Y'
+     C           W@STTX    ANDNE*BLANKS
+      *
+     C***********BBCSID    IFEQ *BLANKS                                   CSW036
+     C           W0CSID    IFEQ *BLANKS                                   CSW036
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDNE*BLANKS
+      **  (6)
+     C***********BBCSID    ORNE *BLANKS                                   CSW036
+     C           W0CSID    ORNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDNE*BLANKS
+     C           I@SETT    ANDEQ01
+      *
+     C                     MOVELW@STTX    O@NWSN    P
+     C                     MOVELBBSTAD    O@NWDS    P
+     C                     MOVE 'STTX  '  O@NWRK
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If network is SWIFT, but destination is not connected
+      **  try to route the message via Telex or STTX
+     C           O@NWRK    IFEQ 'SWIFT '
+     C           W@CONN    ANDNE'Y'
+      *
+     C                     CLEARO@NWSN
+     C                     CLEARO@NWDS
+      *
+     C           BGMTMI    IFEQ 'Y'
+     C           BBTXA1    ANDNE*BLANKS
+     C           W@TELX    ANDNE*BLANKS
+     C                     MOVELW@TELX    O@NWSN    P
+     C                     MOVELBBTXA1    O@NWDS    P
+     C                     MOVEL'TELEX '  O@NWRK
+     C                     ENDIF
+      *
+     C           BGMSDL    IFEQ 'Y'
+     C           BBSTAD    ANDNE*BLANKS
+     C           W@STTX    ANDNE*BLANKS
+     C                     MOVELW@STTX    O@NWSN    P
+     C                     MOVELBBSTAD    O@NWDS    P
+     C                     MOVE 'STTX  '  O@NWRK
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Found to be unroutable (send via PAPER)
+     C           O@NWRK    IFEQ *BLANKS
+     C           O@NWDS    OREQ *BLANKS
+     C           O@NWSN    OREQ *BLANKS
+     C           I@SETT    OREQ 02
+     C/COPY WNCPYSRC,MG9901C003
+     C                     MOVEL'PAPER '  O@NWRK
+      *                                                                                      BUG7526
+     C                     MOVELO@SWSN    O@NWSN    P                                        BUG7526
+     C                     MOVELO@SWDS    O@NWDS    P                                        BUG7526
+     C           O@NWSN    IFEQ *BLANKS                                                      BUG7526
+     C           O@NWDS    OREQ *BLANKS                                                      BUG7526
+     C***********          MOVELO@CNSN    O@NWSN    P                     110747
+     C***********          MOVELW@CRNM    O@NWSN    P                                 110747 BUG7526
+     C***********          MOVELBBCRNM    O@NWDS    P                                        BUG7526
+     C                     MOVE *BLANKS   O@NWSN                                             BUG7526
+     C                     MOVE *BLANKS   O@NWDS                                             BUG7526
+     C                     MOVELO@CNSN    O@NWSN    P                                        BUG7526
+     C                     MOVELBBCUST    O@NWDS    P                                        BUG7526
+     C                     ENDIF                                                             BUG7526
+      *
+      **  If the ICD option for free format advices is 'Y' the
+      **  message has already been printed , hence no further
+      **  print out is needed.
+     C           ENFFAR    IFEQ 'Y'
+     C                     MOVEL'PRTD'    O@MGST
+     C                     MOVE '3'       O@MGSG
+     C                     ELSE
+     C                     MOVEL'RSND'    O@MGST
+     C                     MOVE '2'       O@MGSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EXPRD1    TAG
+     C                     ENDSR                           SRPRD1
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRPRD2                                         *
+      * Purpose     :  Routing for non-pay/receive messages, based on *
+      *                confirmation priorities.                       *
+      *                                                               *
+      * Called by   :  SRDELT                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRPRD2    BEGSR
+      *
+      * Copy point for Pay/Receive Routing
+     C/COPY WNCPYSRC,MG9901PRD2
+      *
+      ** If the ConCord switch is ON, and the customer is a corporate
+      ** set default network to 'CONCOR' (ConCord)
+     C           W@CNON    IFEQ 'Y'
+     C           BBCRPC    ANDEQ'Y'
+     C                     MOVEL'CONCOR'  O@NWRK
+     C                     MOVELBBPSWC    O@NWDS    P
+     C                     MOVELO@SWSN    O@NWSN    P
+     C                     MOVE 'RSND'    O@MGST
+     C                     MOVE '2'       O@MGSG
+     C                     ELSE
+      *
+      **  If STTX/Telex has higher priority than SWIFT attempt
+      **  STTX/Telex routing first, followed by SWIFT. (nb. 'Higher'
+      **  priority is numerically lower ie. '1' is higher than '2')
+     C           BLTXPY    IFLT BLSWPY
+     C                     EXSR SRTXRT
+     C                     EXSR SRSWRT
+      *
+      **  otherwise attempt SWIFT routing first
+     C                     ELSE
+     C                     EXSR SRSWRT
+     C                     EXSR SRTXRT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If failed to route to electronic network, produce paper
+     C           O@NWRK    IFEQ *BLANKS
+     C           I@SETT    OREQ 02
+     C/COPY WNCPYSRC,MG9901C004
+     C                     MOVEL'PAPER'   O@NWRK
+      *                                                                                      BUG7526
+     C                     MOVELO@SWSN    O@NWSN    P                                        BUG7526
+     C                     MOVELO@SWDS    O@NWDS    P                                        BUG7526
+     C           O@NWSN    IFEQ *BLANKS                                                      BUG7526
+     C           O@NWDS    OREQ *BLANKS                                                      BUG7526
+     C***********          MOVELO@CNSN    O@NWSN    P                     110747
+     C***********          MOVELW@CRNM    O@NWSN    P                                 110747 BUG7526
+     C***********          MOVELBBCRNM    O@NWDS    P                                        BUG7526
+     C                     MOVE *BLANKS   O@NWSN                                             BUG7526
+     C                     MOVE *BLANKS   O@NWDS                                             BUG7526
+     C                     MOVELO@CNSN    O@NWSN    P                                        BUG7526
+     C                     MOVELBBCUST    O@NWDS    P                                        BUG7526
+     C                     ENDIF                                                             BUG7526
+      *
+      **  If the ICD option for free format advices is 'Y' the
+      **  message has already been printed , hence no further
+      **  print out is needed.
+     C           ENFFCR    IFEQ 'Y'
+     C                     MOVEL'PRTD'    O@MGST
+     C                     MOVE '3'       O@MGSG
+     C                     ELSE
+     C                     MOVEL'RSND'    O@MGST
+     C                     MOVE '2'       O@MGSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EXPRD2    TAG
+     C                     ENDSR                           SRPRD2
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRTXRT                                         *
+      * Purpose     :  Attempt Telex routing                          *
+      *                                                               *
+      * Called by   :  SRPRD2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRTXRT    BEGSR
+      *
+      * Copy point for Telex Routing
+     C/COPY WNCPYSRC,MG9901TXRT
+      *
+      **  If not already routed, attempt STTX/Telex routing
+     C           O@NWRK    IFEQ *BLANKS
+      *
+      **  Note that STTX and Telex are mutually exclusive - try both
+     C           BGMSDL    IFEQ 'Y'
+     C           BBSTAD    ANDNE*BLANKS
+     C           W@STTX    ANDNE*BLANKS
+     C                     MOVELW@STTX    O@NWSN    P
+     C                     MOVELBBSTAD    O@NWDS    P
+     C                     MOVEL'STTX  '  O@NWRK
+     C                     ENDIF
+      *
+     C           BGMTMI    IFEQ 'Y'
+     C           BBTXA1    ANDNE*BLANKS
+     C           W@TELX    ANDNE*BLANKS
+     C                     MOVELW@TELX    O@NWSN    P
+     C                     MOVELBBTXA1    O@NWDS    P
+     C                     MOVEL'TELEX '  O@NWRK
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EXTXRT    TAG
+     C                     ENDSR                           SRTXRT
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSWRT                                         *
+      * Purpose     :  Attempt SWIFT routing                          *
+      *                                                               *
+      * Called by   :  SRPRD2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRSWRT    BEGSR
+      *
+      * Copy point for SWIFT Routing
+     C/COPY WNCPYSRC,MG9901SWRT
+      *
+      **  If not already routed, attempt SWIFT routing
+      **  but do not force SWIFT network for MT321.
+     C           O@NWRK    IFEQ *BLANKS
+     C           BGMSDL    ANDEQ'Y'
+     C***********BBCSID    ANDNE*BLANKS                                   CSW036
+     C           W0CSID    ANDNE*BLANKS                                   CSW036
+     C           O@SWSN    ANDNE*BLANKS
+     C           W@CONN    ANDEQ'Y'
+     C***********I@MTPY    ANDNE'321'                                                        245770A
+     C           I@MTPY    IFNE '322'                                                        245770A
+     C           I@MTPY    OREQ '322'                                                        245770A
+     C           SVAL21    ANDEQ'N'                                                           245770
+     C                     MOVELO@SWSN    O@NWSN    P
+     C*********************MOVELBBCSID    O@NWDS    P                     CSW036
+     C                     MOVELW0CSID    O@NWDS    P                     CSW036
+     C                     MOVEL'SWIFT'   O@NWRK
+     C                     ENDIF                                                             245770A
+     C                     ENDIF
+      *
+     C           EXSWRT    TAG
+     C                     ENDSR                           SRSWRT
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Purpose     :  Initialise program                             *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      **  Access SDTRADPD for trading information
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MEM0011' P@RTCD
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 001  *
+     C                     MOVEL'SDTRADPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Access SDMMODPD for modules available
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MEM0011' P@RTCD
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 002  *
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Access SDMGMEPD for message management data.
+     C                     CALL 'AOMGMER0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMGME    PARM SDMGME    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MEM0011' P@RTCD
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 003  *
+     C                     MOVEL'SDMGMEPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access SAR details file to check for presence of ConCord
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' RTCDA   7
+     C                     PARM '*VERIFY' RTCDB   7
+     C                     PARM 'CCF001'  RTCDC   6
+      *
+     C                     CLEARW@CNON
+     C           RTCDA     IFEQ *BLANK
+     C                     MOVE 'Y'       W@CNON  1
+     C                     ENDIF
+      *                                                                                       207006
+      ** Access SAR details file to check for presence of CSW025                              207006
+      *                                                                                       207006
+     C                     CALL 'AOSARDR0'                                                    207006
+     C                     PARM '       ' RTCDA   7                                           207006
+     C                     PARM '*VERIFY' RTCDB   7                                           207006
+     C                     PARM 'CSW025'  RTCDC   6                                           207006
+      *                                                                                       207006
+     C                     CLEAR@CSW25                                                        207006
+     C           RTCDA     IFEQ *BLANK                                                        207006
+     C                     MOVE 'Y'       @CSW25  1                                           207006
+     C                     ENDIF                                                              207006
+      *                                                                                       207006
+      ** Access SAR details file to check for presence of CSW036          CSW036
+      *                                                                   CSW036
+     C                     CALL 'AOSARDR0'                                CSW036
+     C                     PARM '       ' RTCDA   7                       CSW036
+     C                     PARM '*VERIFY' RTCDB   7                       CSW036
+     C                     PARM 'CSW036'  RTCDC   6                       CSW036
+      *                                                                   CSW036
+     C                     CLEAR@CSW36                                    CSW036
+     C           RTCDA     IFEQ *BLANK                                    CSW036
+     C                     MOVE 'Y'       @CSW36  1                       CSW036
+     C                     ENDIF                                          CSW036
+      *                                                                                       245770
+     C                     CALL 'AOSVALR0'                                                    245770
+     C                     PARM *BLANKS   RTNCDE  7                                           245770
+     C                     PARM           SVALK1 20                                           245770
+     C                     PARM           SVAL1 200                                           245770
+     C                     PARM           SVALK2 20                                           245770
+     C                     PARM           SVAL2 200                                           245770
+     C                     PARM           SVALK3 20                                           245770
+     C                     PARM           SVAL3 200                                           245770
+     C                     PARM           SVALK4 20                                           245770
+     C                     PARM           SVAL4 200                                           245770
+     C                     PARM           SVALK5 20                                           245770
+     C                     PARM           SVAL5 200                                           245770
+     C                     PARM           SVALK6 20                                           245770
+     C                     PARM           SVAL6 200                                           245770
+     C                     PARM           SVALK7 20                                           245770
+     C                     PARM           SVAL7 200                                           245770
+     C                     PARM           SVALK8 20                                           245770
+     C                     PARM           SVAL8 200                                           245770
+     C                     PARM           SVALK9 20                                           245770
+     C                     PARM           SVAL9 200                                           245770
+     C                     PARM           SVALK0 20                                           245770
+     C                     PARM           SVAL10200                                           245770
+      *                                                                                       245770
+     C           RTNCDE    IFNE *BLANKS                                                       245770
+     C           SVAL10    IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK0    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL9     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK9    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL8     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK8    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL7     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK7    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL6     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK6    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL5     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK5    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL4     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK4    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL3     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK3    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL2     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK2    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           SVAL1     IFEQ '*NRF'                                                        245770
+     C                     MOVE SVALK1    DBKEY                                               245770
+     C                     ENDIF                                                              245770
+     C           *LOCK     IN   LDA                                                           245770
+     C                     MOVE '007'     DBASE            * * * * * * * *                    245770
+     C                     MOVEL'SDSVALPD'DBFILE           *  DBERR 007  *                    245770
+     C                     OUT  LDA                        * * * * * * * *                    245770
+     C                     EXSR *PSSR                                                         245770
+     C                     ENDIF                                                              245770
+      *
+      ** Access standard function to determine whether SWIFT changes
+      ** enabled
+     C                     CALL 'SWIFT96'
+     C                     PARM           W@SW96  7
+      *
+      ** *LIKE definitions
+     C           *LIKE     DEFN BBTXA1    W@TELX
+     C           *LIKE     DEFN BBSTAD    W@STTX
+     C           *LIKE     DEFN BBCRNM    W@CRNM
+     C           *LIKE     DEFN BBPCNB    W@PCNB
+     C           *LIKE     DEFN BBPAIN    W@PAIN
+     C           *LIKE     DEFN BBDNW1    W@DNWN
+     C           *LIKE     DEFN I@MTPY    W@MTPY
+      *
+      ** Check if Swift 2018 changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                     CALL 'SWIF2018'                                                    CSW218
+     C                     PARM           PRTCD   7                                           CSW218
+     C           PRTCD     IFEQ 'CSW2018'                                                     CSW218
+     C                     MOVEL'Y'       CSW218  1                                           CSW218
+     C                     ELSE                                                               CSW218
+     C                     MOVEL'N'       CSW218                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
+     C           KBICD     KLIST                                                              CSW218
+     C                     KFLD           WBICC                                               CSW218
+     C                     KFLD           WBICB                                               CSW218
+      * Copy point for Initialisation
+     C/COPY WNCPYSRC,MG9901INIT
+     C           EXINIT    TAG
+     C                     ENDSR                           SRINIT
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MG9901'  DBPGM
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY WNCPYSRC,MG9901DCPG
+      *
+      *  /Copy point for Subroutines
+      *
+     C/COPY WNCPYSRC,MG9901DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@
+(c) Finastra International Limited 2001

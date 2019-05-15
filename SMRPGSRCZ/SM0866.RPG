@@ -1,0 +1,146 @@
+     H        1
+      *****************************************************************
+/*XBIA*  OVRDBF FILE(REPT1) TOFILE(FCREPTL1)                          *
+/*XBIB*  OVRDBF FILE(REPT2) TOFILE(FCREPTL1)                          *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SM Update output ins. on new FCREPTPD')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Implementation module                                *
+      *                                                               *
+      *  SM0866 - Update output ID on new FCREPTPD                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP016 *CREATE     Date 01Apr03               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CUP016 - Add implementation software to core.                *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *
+      *****************************************************************
+     FREPT1   IF  E                    DISK         KINFSR *PSSR
+     FREPT2   UF  E           K        DISK         KINFSR *PSSR
+     F            @DXREIK                           KRENAMEREPTF
+      *
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+     IREPTF
+     I              DXRNAM                          RNAM
+     I              DXLCD                           LCD
+     I              DXCHTP                          CHTP
+     I              DXCMOD                          CMOD
+     I              DXRDSC                          RDSC
+     I              DXGLVL                          GLVL
+     I              DXCLVL                          CLVL
+     I              DXBLVL                          BLVL
+     I              DXIPCY                          IPCY
+     I              DXCLBP                          CLBP
+     I              DXPDFL                          PDFL
+     I              DXDFTO                          DFTO
+     I              DXMIDQ                          MIDQ
+     I              DXALVL                          ALVL
+     I              DXDLVL                          DLVL
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      * Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           COMP      KLIST
+     C                     KFLD           DXRNAM
+      *
+     C                     READ REPT1                  6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+     C           COMP      CHAINREPTF                3069
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * If record not found then ignore otherwise update
+      * Default Output ID field.
+     C           *IN30     IFEQ *OFF
+     C                     MOVE DXDFTO    DFTO
+     C                     UPDATREPTF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Read next record
+     C                     READ REPT1                  6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2003

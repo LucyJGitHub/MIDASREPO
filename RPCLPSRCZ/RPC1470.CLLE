@@ -1,0 +1,351 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas RP New Private Banking Customer Selection.')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Private Banking Module                              */
+/*                                                                   */
+/*       RPC1470 - New Private Banking Customer Selection.           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BG18886            Date 27May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      198158             Date 24Oct01              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CPB002  *CREATE    Date 01Jun99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       198158 - To validate Account Manager and Acc. officer, a new*/
+/*                value for return code has been added. *ErrCust     */
+/*       CPB002 - New Private Banking Customer Processing.           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+ 
+/*-------------------------------------------------------------------*/
+/*  Variables declaration.                                           */
+/*-------------------------------------------------------------------*/
+ 
+             DCL        VAR(&Rtcd)       TYPE(*CHAR) LEN(7)
+             DCL        VAR(&Optn)       TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SDMmod)     TYPE(*CHAR) LEN(128)
+ 
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(1) +
+                        /* Requested PB Customer Flag set/reset option. */
+ 
+             DCL        VAR(&ReturnCode) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CallingPgm) TYPE(*CHAR) LEN(10) VALUE(RPC1470)
+             DCL        VAR(&FromCustNo) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ToCustNo)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AccOffRef)  TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MainCustBr) TYPE(*CHAR) LEN(3)
+ 
+             DCL        VAR(&Qryslt)     TYPE(*CHAR) LEN(128)
+ 
+             DCL        VAR(&CallMsgQ)   TYPE(*CHAR) LEN(7)  VALUE(*SAME)
+             DCL        VAR(&Msgid)      TYPE(*CHAR) LEN(7)
+             DCL        VAR(&Msgf)       TYPE(*CHAR) LEN(10) VALUE(PBUSRMSG)
+             DCL        VAR(&Msgdta)     TYPE(*CHAR) LEN(132)
+             DCL        VAR(&MsgType)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&Mem)        TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+/*---------------------------------------*/
+/*  Initiation Queues File declaration.  */
+/*---------------------------------------*/
+ 
+             DCLF       FILE(RP1470DF)
+ 
+/*-------------------------------------------------------------------*/
+/*  Global Monitor Message.                                          */
+/*-------------------------------------------------------------------*/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*-------------------------------------------------------------------*/
+/*  Create LDA if not present.                                       */
+/*-------------------------------------------------------------------*/
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                                AUT(*EXCLUDE)
+             ENDDO
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+/*-------------------------------------------------------------------*/
+/*  Create Customer Selection Data Area in library QTEMP, if it does */
+/*  not already exists, to be used for Customer Selection Input.     */
+/*-------------------------------------------------------------------*/
+ 
+             CHKOBJ     OBJ(QTEMP/RPCUST) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTDTAARA  DTAARA(QTEMP/RPCUST) TYPE(*CHAR) LEN(256) +
+                                AUT(*EXCLUDE)
+             ENDDO
+             CHGDTAARA  DTAARA(QTEMP/RPCUST) VALUE(' ')
+ 
+/*-------------------------------------------------------------------*/
+/*  Set switches U7 and U8 off.                                      */
+/*  Set switch U1 on to indicate take on processing is running       */
+/*  within scope of Gateway to Private banking.                      */
+/*-------------------------------------------------------------------*/
+ 
+             CHGJOB     SWS(1XXXXX00)
+ 
+/*-------------------------------------------------------------------*/
+/*  Retrieve Job and User names.                                     */
+/*-------------------------------------------------------------------*/
+ 
+             RTVJOBA    JOB(&SWSID) USER(&SUSER)
+ 
+/*-------------------------------------------------------------------*/
+/*  Retrieve Midas Run Date.                                         */
+/*-------------------------------------------------------------------*/
+ 
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&SRUNA)
+ 
+/*-------------------------------------------------------------------*/
+/*  Check if Portfolio Management Module is installed.               */
+/*-------------------------------------------------------------------*/
+ 
+             CHGVAR     VAR(&RTCD) VALUE(' ')
+             CHGVAR     VAR(&Optn) VALUE('*FIRST')
+             CALL       PGM(AOMMODR0) PARM(&Rtcd &Optn &SDMmod)
+ 
+             /* If Midas Modules information not found, handle Database error. */
+ 
+             IF         COND(&Rtcd *NE ' ') THEN(DO)
+                    CHGVAR     VAR(&Msgdta) +
+                                 VALUE('Error on access to ICD file SDMMODPD')
+                   SNDPGMMSG  MSG(&Msgdta) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                   CHGJOB     JOB(XXXXXX11)
+                   GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  Set up RPCUST data area fields for customer selection display.   */
+/*-------------------------------------------------------------------*/
+ 
+             CHGDTAARA  DTAARA(RPCUST) VALUE(' ')
+             CHGDTAARA  DTAARA(RPCUST (11 10)) VALUE(&CallingPgm)
+             CHGDTAARA  DTAARA(RPCUST (21 10)) VALUE(ALL)
+             CHGDTAARA  DTAARA(RPCUST (43 3))  VALUE(ALL)
+ 
+/*-------------------------------------------------------------------*/
+/*  Set up Subfile Program Message Queue.                            */
+/*-------------------------------------------------------------------*/
+ 
+             CHGVAR  VAR(&##PGM) VALUE(&CallingPgm)
+ 
+/*-------------------------------------------------------------------*/
+/*  Send display file record format.                                 */
+/*-------------------------------------------------------------------*/
+ 
+             /* Clear program message queue. */
+             CALL CLRERMSG (&CallingPgm &CallMsgQ)
+ 
+SNDF:        SNDF       RCDFMT(#MSGCTL)
+             SNDF       RCDFMT(RP1470F1)
+ 
+/*-------------------------------------------------------------------*/
+/*  Call Private Banking Customers Selection program.                */
+/*-------------------------------------------------------------------*/
+ 
+             CALLPRC    PRC(RPC1430)
+ 
+/*-------------------------------------------------------------------*/
+/*  Database error processing                                        */
+/*-------------------------------------------------------------------*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                                TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  Get Customer Selection criteria from data area RPCUST.           */
+/*-------------------------------------------------------------------*/
+ 
+             RTVDTAARA  DTAARA(RPCUST (1 10))  RTNVAR(&ReturnCode)
+             RTVDTAARA  DTAARA(RPCUST (21 10)) RTNVAR(&FromCustNo)
+             RTVDTAARA  DTAARA(RPCUST (31 10)) RTNVAR(&ToCustNo)
+             RTVDTAARA  DTAARA(RPCUST (41 2))  RTNVAR(&AccOffRef)
+             RTVDTAARA  DTAARA(RPCUST (43 3))  RTNVAR(&MainCustBr)
+ 
+/*-------------------------------------------------------------------*/
+/*  If key <CA03> was pressed on Customer Selection Window, exit.    */
+/*-------------------------------------------------------------------*/
+ 
+             IF         COND(&ReturnCode = 'Exit') THEN(DO)
+                   GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  Send wait message.                                               */
+/*-------------------------------------------------------------------*/
+ 
+             /* Clear program message queue. */
+             CALL CLRERMSG (&CallingPgm &CallMsgQ)
+ 
+             SNDF       RCDFMT(#MSGCTL)
+             SNDF       RCDFMT(RP1470W1)
+ 
+/*-------------------------------------------------------------------*/
+/*  Select all customers with PB flag = "N" within the selected      */
+/*  range or for selected Account Officer.                           */
+/*-------------------------------------------------------------------*/
+ 
+             CALLPRC    PRC(RPC1435)
+ 
+/*-------------------------------------------------------------------*/
+/*  If Private Banking Customers selection ended abnormally.         */
+/*-------------------------------------------------------------------*/
+ 
+             RTVDTAARA  DTAARA(RPCUST (1 10)) RTNVAR(&ReturnCode)
+/************IF         COND(&ReturnCode *= ' ') THEN(DO)                    */ /*BG18886*/
+             IF         COND(&ReturnCode *NE ' ') THEN(DO)                       /*BG18886*/
+                   GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  Set PB Requested Customer Flag program.                          */
+/*-------------------------------------------------------------------*/
+ 
+             OVRPRTF    FILE(RP1475AU) USRDTA(RP1475)                          /*198158*/
+             CHGVAR     VAR(&Option) VALUE(S)
+             CALLPRC    PRC(RP1475) PARM(&OPTION)
+             DLTOVR     FILE(RP1475AU)                                         /*198158*/
+ 
+/*-------------------------------------------------------------------*/
+/*  If any error occurred while setting PB Requested Customer Flag.  */
+/*-------------------------------------------------------------------*/
+ 
+             RTVDTAARA  DTAARA(RPCUST (1 10)) RTNVAR(&ReturnCode)
+/************IF         COND(&RETURNCODE *= ' ' *AND &RETURNCODE *= +       */ /*198158*/
+/************             '*Warning') THEN(DO)                              */ /*198158*/
+/************IF         COND(&RETURNCODE *= ' ' *AND &RETURNCODE *= +         ***198158 BG18886*/
+/************             '*Warning' *AND &RETURNCODE *= '*ErrCust') THEN(DO) ***198158 BG18886*/
+             IF         COND(&RETURNCODE *NE ' ' *AND &RETURNCODE *NE +
+                          '*Warning' *AND &RETURNCODE *NE '*ErrCust') THEN(DO) /*198158 BG18886*/
+                   GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  If Portfolio Management Module is installed.                     */
+/*-------------------------------------------------------------------*/
+ 
+             IF         COND(%SST(&Sdmmod 65 1) = 'Y') THEN(DO)
+ 
+/*-------------------------------------------------------------------*/
+/*  Start all Transactions/Positions for Customer take on,           */
+/*  that will only run for Portfolio Management Customers.           */
+/*-------------------------------------------------------------------*/
+ 
+                   CALLPRC    PRC(RPC1465)
+ 
+                   RTVDTAARA  DTAARA(RPCUST (1 10)) RTNVAR(&ReturnCode)
+ 
+/*-------------------------------------------------------------------*/
+/*  If full customer take on processing ended abnormally.            */
+/*-------------------------------------------------------------------*/
+/************IF         COND(&RETURNCODE *= ' ' *AND &RETURNCODE *= +       */ /*198158*/
+/************             '*Warning') THEN(DO)                              */ /*198158*/
+/************IF         COND(&RETURNCODE *= ' ' *AND &RETURNCODE *= +            ***198158 BG18886*/
+/************             '*Warning' *AND &RETURNCODE *= '*ErrCust') THEN(DO)    ***198158 BG18886*/
+             IF         COND(&RETURNCODE *NE ' ' *AND &RETURNCODE +
+                          *NE '*Warning' *AND &RETURNCODE *NE +
+                          '*ErrCust') THEN(DO)                                /*198158*/ /*BG18886*/
+                         GOTO       CMDLBL(ENDPGM)
+                    ENDDO
+ 
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  Send comletion message.                                          */
+/*-------------------------------------------------------------------*/
+ 
+             /* Clear program message queue. */
+             CALL CLRERMSG (&CallingPgm &CallMsgQ)
+ 
+             RTVDTAARA  DTAARA(RPCUST (1 10))  RTNVAR(&ReturnCode)
+             RTVDTAARA  DTAARA(RPCUST (21 10)) RTNVAR(&FromCustNo)
+             RTVDTAARA  DTAARA(RPCUST (31 10)) RTNVAR(&ToCustNo)
+             RTVDTAARA  DTAARA(RPCUST (41 2))  RTNVAR(&AccOffRef)
+             RTVDTAARA  DTAARA(RPCUST (43 3))  RTNVAR(&MainCustBr)
+ 
+/************IF         COND(&ReturnCode = '*Warning') THEN(DO)                 /*198158*/
+             IF         COND(&ReturnCode = '*Warning' *OR +
+                             &ReturnCode = '*ErrCust') THEN(DO)                 /*198158*/
+                   CHGVAR VAR(&Msgid)  VALUE(RP00029)
+                   CHGVAR VAR(&MSGDTA) VALUE(' ')
+                   CALL SNDERMSG (&CallingPgm &CallMsgQ &Msgid &Msgf +
+                                  &Msgdta &Msgtype)
+             ENDDO
+ 
+             /* Account Officer selection. */
+/************IF         COND(&AccOffRef *= ' ') THEN(DO)                              */ /*BG18886*/
+             IF         COND(&AccOffRef *NE ' ') THEN(DO)                                /*BG18886*/
+                   CHGVAR VAR(&Msgid)  VALUE(RP00012)
+                   CHGVAR VAR(&Msgdta) VALUE(&AccOffRef)
+                   CALL SNDERMSG (&CallingPgm &CallMsgQ &Msgid &Msgf +
+                                  &Msgdta &Msgtype)
+                   GOTO CMDLBL(RESET)
+             ENDDO
+ 
+             /* All customers selection. */
+             IF         COND(&FromCustNo = 'ALL') THEN(DO)
+                   CHGVAR VAR(&Msgid)  VALUE(RP00007)
+                   CALL SNDERMSG (&CallingPgm &CallMsgQ &Msgid &Msgf +
+                                  &Msgdta &Msgtype)
+                   GOTO CMDLBL(RESET)
+             ENDDO
+ 
+             /* Customer range selection. */
+             CHGVAR VAR(&Msgid)  VALUE(RP00006)
+             CHGVAR VAR(&Msgdta) VALUE(&FromCustNo *CAT &ToCustNo)
+             CALL SNDERMSG (&CallingPgm &CallMsgQ &Msgid &Msgf +
+                            &Msgdta &Msgtype)
+             GOTO CMDLBL(RESET)
+ 
+/*-------------------------------------------------------------------*/
+/*  Reset input fields on PB Customer Selection Window.              */
+/*-------------------------------------------------------------------*/
+ 
+RESET:       CHGDTAARA  DTAARA(RPCUST (1 42)) VALUE(' ')
+ 
+             GOTO       CMDLBL(SNDF)
+ 
+/*-------------------------------------------------------------------*/
+/*  Abnormal Termination.                                            */
+/*-------------------------------------------------------------------*/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*-------------------------------------------------------------------*/
+/*  End processing.                                                  */
+/*-------------------------------------------------------------------*/
+ 
+ ENDPGM:
+             ENDPGM

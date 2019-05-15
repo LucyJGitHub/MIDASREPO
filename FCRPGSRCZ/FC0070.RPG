@@ -1,0 +1,240 @@
+     H        1
+      ********************************************************************
+/*STD *  RPGSQL                                                          *
+/*EXI *  TEXT('Midas FC Setup Periodics Acc Maint reports')              *
+      ********************************************************************
+      *                                                                  *
+      *  Midas - Report Control Facility Module                          *
+      *                                                                  *
+      *  FC0070 - Midas FC Setup Periodics Acc Maint reports             *
+      *                                                                  *
+      *  (c) Finastra International Limited 2015                         *
+      *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031966 *CREATE   Date 27Jul15               *
+      ********************************************************************
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD031966 - BFM GL3572P1 issue                                   *
+      *                                                                  *
+      ********************************************************************
+      *  C R E A T I O N     P A R A M E T E R S
+      *
+      *
+      ********************************************************************
+      * OPERATION
+      * ~~~~~~~~~
+      *
+      * THIS PROGRAM REBUILDS THE FILTERS APPLICABLE TO THE (ON REQUEST)
+      * ACCOUNTS REPORT WHICH HAS BEEN CONVERTED INTO INTO A PERIODIC REQUEST.
+      *
+      * THE PROGRAM WILL CHANGE THE SEQNO FIELD ON GL0781EX TO REFLECT EITHER
+      * THE SEQUENCE NUMBER IN FCRREQPD OR THE PERIODIC NUMBER IN FCPREQPD.
+      *
+      * BEFORE THIS PROGRAM IS CALLED, FCRREQPD HAS ALREADY BEEN REBUILT TO
+      * INCLUDE ALL REPORTS WHICH ARE SUPPOSED TO RUN 'TODAY' FOLLOWING THE
+      * PERIODS SPECIFIED IN FCPREQPD.
+      *
+      ********************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+     ILDA        UDS                            256
+      **
+      * DATA STRUCTURE FOR DATABASE ERROR
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ** External DS for GL0781EX
+      *
+     IGL0781    E DSGL0781EX
+     I              SEQNO                           SEQNOX
+      *
+     ** External DS for FCYREQPD
+      *
+     IFCYREQ    E DSFCYREQPD
+      *
+     ** External DS for FCRREQPD
+      *
+     IFCRREQ    E DSFCRREQPD
+      *
+     ** DS to split SEQNO
+      *
+     IWSEQNO      DS
+     I                                        1   3 WSEQNA
+     I                                        4   5 WSEQNB
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C/EXEC SQL
+     C+ Declare GLCURSOR dynamic scroll cursor for
+     C+ select * from GL0781EX
+     C/END-EXEC
+      *
+     C/EXEC SQL
+     C+ Open GLCURSOR
+     C/END-EXEC
+      *
+     C           SQLCOD    IFEQ 0
+      *
+     C/EXEC SQL
+     C+ Fetch next from GLCURSOR into :GL0781
+     C/END-EXEC
+      *
+     C           SQLCOD    DOWEQ0
+      *
+      * DEFINE RECORD TYPE
+      *
+      * Default: remove record that does not match the sequence/periodic criteria
+     C                     MOVE 'DELET'   W@TYPE  5
+      *
+     C                     MOVE SEQNOX    WSEQNO
+      *
+      * Is this a seq no or a periodic no ?
+     C                     TESTN          WSEQNO     99
+      *
+     C           *IN99     IFEQ *ON
+      * This is a seq no (fully numeric)
+     C                     MOVE 'SEQNO'   W@TYPE
+      *
+     C                     ELSE
+      *
+     C           WSEQNA    IFEQ *BLANKS
+      * Prerequisite for a periodic no
+     C                     TESTN          WSEQNB     99
+      *
+     C           *IN99     IFEQ *ON
+      * This is a periodic no (periodic report not run during the COB)
+     C                     MOVE 'PERNO'   W@TYPE
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * REASSIGN THE FILTER, IF APPLICABLE
+      *
+     C                     SELEC
+      *
+     C           W@TYPE    WHEQ 'DELET'
+      * Stray record, remove it
+      *
+     C/EXEC SQL
+     C+ delete from GL0781EX where current of GLCURSOR
+     C/END-EXEC
+      *
+     C           W@TYPE    WHEQ 'SEQNO'
+      * This record was used in the previous COB, use backup file
+      *
+     C/EXEC SQL
+     C+ select * into :FCYREQ from FCYREQPD
+     C+ where EKRQSQ = :SEQNOX
+     C/END-EXEC
+      *
+     C           SQLCOD    IFEQ 0
+     C           EKPSQR    ANDNE*BLANKS
+      * See if meant to run today too
+      *
+     C/EXEC SQL
+     C+ select * into :FCRREQ from FCRREQPD
+     C+ where D5RNAM = :EKRNAM and D5PSQR = :EKPSQR
+     C/END-EXEC
+      *
+     C           SQLCOD    IFEQ 0
+      * It is also to be run today, update GL0781EX with new SEQNO
+      *
+     C/EXEC SQL
+     C+ update GL0781EX set SEQNO = :D5RQSQ
+     C+ where current of GLCURSOR
+     C/END-EXEC
+      *
+     C                     ELSE
+      * Not meant to run today, update GL0781EX with the periodic no
+      *
+     C/EXEC SQL
+     C+ update GL0781EX set SEQNO = :EKPSQR
+     C+ where current of GLCURSOR
+     C/END-EXEC
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      * Non periodic record or removed, delete it
+      *
+     C/EXEC SQL
+     C+ delete from GL0781EX where current of GLCURSOR
+     C/END-EXEC
+      *
+     C                     ENDIF
+      *
+     C           W@TYPE    WHEQ 'PERNO'
+      * This record was not used in the previous COB
+      *
+     C                     Z-ADD0         WIDX01  50
+      *
+     C/EXEC SQL
+     C+ select D5RQSQ into :WIDX01 from FCRREQPD
+     C+ where D5RNAM = 'GL3572' and D5PSQR = :WSEQNB
+     C/END-EXEC
+      * If the report is expected to run in the next COB, update value
+     C           SQLCOD    IFEQ 0
+     C           WIDX01    ANDNE0
+      *
+     C                     MOVE WIDX01    SEQNOT  5 P
+      *
+     C/EXEC SQL
+     C+ update GL0781EX set SEQNO = :SEQNOT
+     C+ where current of GLCURSOR
+     C/END-EXEC
+      *
+     C                     ELSE
+      * Check if the report was dropped from the periodic list
+      *
+     C                     Z-ADD0         WIDX01
+      *
+     C/EXEC SQL
+     C+ select count(*) into :WIDX01 from FCPREQPD
+     C+ where D9RNAM = 'GL3572' and D9PSQN = :WSEQNB
+     C/END-EXEC
+      *
+     C           SQLCOD    IFEQ 0
+     C           WIDX01    ANDEQ0
+      *
+     C/EXEC SQL
+     C+ delete from GL0781EX where current of GLCURSOR
+     C/END-EXEC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C/EXEC SQL
+     C+ Fetch next from GLCURSOR into :GL0781
+     C/END-EXEC
+      *
+     C                     ENDDO
+      *
+      * Graceful exit
+      *
+     C/EXEC SQL
+     C+ close GLCursor
+     C/END-EXEC
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      ********************************************************************
+** CPY@
+(c) Finastra International Limited 2015

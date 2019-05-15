@@ -1,0 +1,910 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Audit Letters Selection Maintenance')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7050 - Audit Letters Selection Maintenance                 *
+      *                                                               *
+      *  Function: Program shows an Audit Letter screen from where    *
+      *            user can choose for which client Audit letter      *
+      *            should be generated                                *
+      *                                                               *
+      *  Called By: CGC7050 - Audit Letter Selection                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23250A          Date 27Mar09               *
+      *                 BUG23250           Date 19Mar09               *
+      *                 BUG22554           Date 02Feb09               *
+      *                 CER041  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23250A - Show Zero Confirmation on Display in Edit Mode   *
+      *  BUG23250 - Show Zero Confirmation on Display                 *
+      *  BUG22554 - Display default date as System Date, When user    *
+      *             enter blank entry                                 *
+      *  CER041 - Audit Letters Correspondence                        *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  USED INDICATORS:                                             *
+      *  ----------------                                             *
+      *  - Subfile's indicator :                                      *
+      *    20 - Processing Date invalid                               *
+      *    21 - Processing Date less than Midas Run Date              *
+      *    25 - Page up / down                                        *
+      *    26 - VLDCMDKEY                                             *
+      *    70 - SFLEND                                                *
+      *    71 - SFLDSP & SFLDSPCTL                                    *
+      *    72 - SFLCLR                                                *
+      *    73 - Error 'no record found'                               *
+      *    74 - SFLNXTCHG                                             *
+      *                                                               *
+      *  - Indicators used by RPG :                                   *
+      *    80 - READ the Audit Letters Selection File                 *
+      *    81 - read sub-file record changed                          *
+      *    82 - chain the Audit Letters Selection File                *
+      *    83 - chain sub-file                                        *
+      *    84 - read display file format USRENT                       *
+      *                                                               *
+      *    90 - ON, if a action code (I/A/D) has been enterred        *
+      *         or a subfile record has been changed.                 *
+      *****************************************************************
+      *
+      ** CG Audit Letters Selection file
+      *
+     FCGAUSLL0IF  E           K        DISK
+      *
+      ** CG Audit Letters Selection file
+      *
+     FCGAUSLL1UF  E           K        DISK                      A
+     F            CGAUSLD0                          KRENAMECGAUSLD1
+      *
+      ** Audit Letters Selection Maintenance Display
+      *
+     FCG7050DFCF  E                    WORKSTN
+     F                                        FRROW KSFILE SELSFL
+     F                                              KINFDS DSPFB
+      *
+      ** DSPFB: Chosen name for the File Information Data Structure
+      **        defined by Key KINFDS; Position 378-379 stores the
+      *         position of the current sub-file record
+     IDSPFB       DS
+     I                                    B 378 3790CSRRRN
+      *
+     IPDATA       DS
+     I                                        1   6 CNUMFR
+     I                                        7  12 CNUMTO
+     I                                       13  15 BRCHNR
+     I                                       16  16 MODLE
+     I                                       17  17 MODRE
+     I                                       18  18 MODMM
+     I                                       19  19 MODFX
+     I                                       20  20 MODFR
+     I                                       21  21 MODIR
+     I                                       22  22 MODSE
+     I                                       23  23 MODFF
+     I                                       24  24 MODAL
+      *
+      ** Convert date DMY-->YMD
+      *
+     I           IDS
+     I                                        1   20@@DD
+     I                                        3   40@@MM
+     I                                        5   60@@YY
+     I                                        1   60@DMY
+     I           IDS
+     I                                        1   20##YY
+     I                                        3   40##MM
+     I                                        5   60##DD
+     I                                        1   60#YMD
+      *
+      ** Program Status Data Structure - gives Job/Workstation name
+      ** and User ID
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+     ISDBANK    E DSSDBANKPD
+     I              BJRDNB                          WRKDAT
+      *                                                                                     BUG23250
+      ** External Data Structure for Additional Customer Details                            BUG23250
+      *                                                                                     BUG23250
+     ISDACUS    E DSSDACUSPD                                                                BUG23250
+      *                                                                                     BUG23250
+      ** Long Data Structure for Access Object                                              BUG23250
+      *                                                                                     BUG23250
+     IDSLDY     E DSDSLDY                                                                   BUG23250
+      *
+      *****************************************************************
+      *                                                               *
+      *  Main routine - Main Processing                               *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Keys and parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           PDATC   6
+      *
+      ** Initialise parameters
+      *
+     C           THEKEY    KLIST
+     C                     KFLD           ##CNFR  6
+     C                     KFLD           ##CNTO  6
+     C                     KFLD           ##MOLE  1
+     C                     KFLD           ##MORE  1
+     C                     KFLD           ##MOMM  1
+     C                     KFLD           ##MOFX  1
+     C                     KFLD           W1MOFR  1
+     C                     KFLD           W1MOIR  1
+     C                     KFLD           W1MOSE  1
+     C                     KFLD           W1MOFF  1
+     C                     KFLD           ##MOAL  1
+     C                     KFLD           ##BRCH  3
+      *
+      ** Retrieve Midas Run Date from SDBANKPD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   #RTCD   7
+     C                     PARM '*FIRST ' #OPTN   7
+     C                     PARM           SDBANK
+      *
+      ** Convert Midas Day No. into DDMMYY
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM WRKDAT    WQ0001  50
+     C                     PARM           ZDATFM  1
+     C                     PARM           RUNDAT  60
+     C                     PARM           WQ0004  7
+      *
+      ** Convert Processing Date into a numeric field
+      *
+     C           PDATC     IFEQ *BLANKS                                                     BUG22554
+     C                     MOVELRUNDAT    PDATE                                             BUG22554
+     C                     ELSE                                                             BUG22554
+     C                     MOVELPDATC     PDATE   60
+     C                     ENDIF                                                            BUG22554
+      *
+      ** Remember prcocessing date
+      *
+     C                     Z-ADDPDATE     MDATE   60
+      *
+      ** Move Processing Date into screen field
+      *
+     C                     Z-ADDPDATE     #PDATE
+      *
+      ** Display until F3 is pressed
+      *
+     C           *INKC     DOUEQ*ON
+      *
+      ** Clear sub-file
+      *
+     C                     EXSR SRCLR
+     C                     EXSR SRCLRQ                                                      BUG23250
+     C                     WRITEUSRENT
+     C                     WRITEFNKEYS
+      *
+      ** Read 1. Audit Letters record
+      *
+     C           *LOVAL    SETLLCGAUSLL0
+     C                     READ CGAUSLL0                 80
+     C                     MOVE *ON       *IN25
+     C                     MOVE *ON       *IN26
+     C                     MOVE *OFF      *IN70
+     C                     MOVEL'1'       AGAIN   1
+      *
+      ** Do if no selection made or existing selection not changed
+      ** Or not F3
+      *
+     C           AGAIN     DOWEQ'1'
+     C           *INKC     ANDEQ*OFF
+      *
+      ** If ROLLUP
+      *
+     C           *IN25     IFEQ *ON
+     C           *IN26     ANDEQ*ON
+     C                     EXSR SRFILL
+     C                     END
+      *                                                                                     BUG22554
+      ** If User enter Rundate blank,Default system date is dispalyed.                      BUG22554
+      ** When file CGAUSLPD is empty.                                                       BUG22554
+      *                                                                                     BUG22554
+     C           FRROW     IFEQ 0                                                           BUG22554
+     C                     MOVE RUNDAT    #PDATE                                            BUG22554
+     C                     ENDIF                                                            BUG22554
+      *
+     C                     EXSR SRDSP
+      *
+     C           FRROW     IFEQ 0
+     C           *INKC     ANDEQ*OFF
+     C           *INKI     ANDEQ*OFF
+     C           *INKJ     ANDEQ*OFF
+     C                     ITER
+     C                     ENDIF
+      *
+     C                     EXSR SRACT
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           *IN20     IFNE *ON
+     C                     MOVEL#PDATE    PDATC
+     C                     ELSE
+      *
+      ** If processing date not valid and F3 hit --> Nxt.Proc.
+      ** Date = Midas Run Date
+      *
+     C                     MOVELRUNDAT    PDATC
+     C                     END
+      *
+      ** Program ends here
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLR     : Clear sub-file                                   *
+      *                                                               *
+      *  Called by : Main Processing                                  *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRCLR     BEGSR
+     C                     MOVE *ON       *IN72
+     C                     WRITESELCTL
+     C                     MOVE *OFF      *IN72
+     C                     Z-ADD0         FRROW   40
+     C                     Z-ADD0         TOROW   40
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLRQ    : Clear Program Msgq                               *
+      *                                                               *
+      *  Called by : SRDSP                                            *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C           SRCLRQ    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFILL    : Fill sub-file with records from the the Audit    *
+      *              Letters Selection file                           *
+      *                                                               *
+      *  Called by : Main processing                                  *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRFILL    BEGSR
+     C                     MOVE *OFF      *IN74
+      *
+     C                     Z-ADDTOROW     ANZREC  40
+     C                     Z-ADDANZREC    FRROW
+      *
+      ** Show 10 records per screen
+      *
+     C                     Z-ADD10        RECPAG  40
+      *
+     C           FRROW     ADD  1         RRN
+     C           RECPAG    ADD  FRROW     TOROW
+      *
+     C           *IN70     DOWEQ*OFF
+     C           FRROW     ANDLTTOROW
+     C           *IN80     ANDEQ*OFF
+     C                     ADD  1         FRROW
+     C                     MOVEL*BLANKS   FDACT
+     C                     MOVELCNUMFR    #CNFR
+     C                     MOVELCNUMTO    #CNTO
+     C                     MOVELMODLE     #MODLE
+     C                     MOVELMODRE     #MODRE
+     C                     MOVELMODMM     #MODMM
+     C                     MOVELMODFX     #MODFX
+     C                     MOVELMODFR     SMODFR
+     C                     MOVELMODIR     SMODIR
+     C                     MOVELMODSE     SMODSE
+     C                     MOVELMODFF     SMODFF
+     C                     MOVELMODAL     #MODAL
+     C                     MOVELBRCHNR    #BRCH
+     C                     MOVELDZEROC    SZEROC                                           BUG23250A
+      *                                                                                    BUG23250A
+     C           SZEROC    IFEQ *BLANKS                                                    BUG23250A
+      *                                                                                     BUG23250
+      ** Display 'Zero Confirmation' value; if for a 'single' Customer                      BUG23250
+      *                                                                                     BUG23250
+     C           CNUMFR    IFEQ CNUMTO                                                      BUG23250
+     C           CNUMTO    OREQ *BLANKS                                                    BUG23250A
+      *                                                                                     BUG23250
+     C                     CALL 'AOACUSR0'                                                  BUG23250
+     C                     PARM *BLANKS   #RTCD                                             BUG23250
+     C                     PARM '*KEY   ' #OPTN                                             BUG23250
+     C**********           PARM CNUMTO    #KEY    6                               BUG23250 BUG23250A
+     C                     PARM CNUMFR    #KEY    6                                        BUG23250A
+     C           SDACUS    PARM SDACUS    DSLDY                                             BUG23250
+      *                                                                                     BUG23250
+     C           #RTCD     IFNE *BLANKS                                                     BUG23250
+     C                     MOVEL*BLANKS   SZEROC                                            BUG23250
+     C                     ELSE                                                             BUG23250
+     C                     MOVELE5ZCFG    SZEROC                                            BUG23250
+     C                     MOVELE5ZCFG    DZEROC                                           BUG23250A
+     C                     ENDIF                                                            BUG23250
+      *                                                                                     BUG23250
+     C                     ELSE                                                             BUG23250
+     C                     MOVEL*BLANKS   SZEROC                                            BUG23250
+     C                     MOVEL*BLANKS   DZEROC                                           BUG23250A
+      *                                                                                     BUG23250
+     C                     ENDIF                                                            BUG23250
+      *                                                                                    BUG23250A
+     C                     ENDIF                                                           BUG23250A
+      *
+     C                     MOVE *ON       *IN74                                            BUG23250A
+     C                     WRITESELSFL
+     C                     MOVE *OFF      *IN74                                            BUG23250A
+      *
+      ** Read next DB-record
+      *
+     C                     READ CGAUSLL0                 80
+     C           *IN80     IFEQ *ON
+     C                     MOVE *ON       *IN70
+     C                     END
+     C                     END
+      *
+      ** Dont display the sfl if no records to display
+      *
+     C           FRROW     COMP 0                    69
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDSP     : Show sub-file on screen                          *
+      *                                                               *
+      *  Called by : Main Processing                                  *
+      *                                                               *
+      *  Calls     : SRCLRQ                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRDSP     BEGSR
+     C                     MOVE *ON       *IN71
+     C                     MOVE BJMRDT    #RUNDT
+      *
+     C                     WRITEUSRENT
+      *
+     C                     WRITEFOOTER
+     C                     WRITE#MSGCTL
+      *
+     C           *IN20     IFEQ '0'
+     C                     EXFMTSELCTL
+     C                     ENDIF
+      *
+     C                     EXSR SRCLRQ
+      *
+     C                     READ USRENT                   84
+     C                     MOVE *OFF      *IN73
+     C                     MOVE *OFF      *IN71
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT     : Control actions in sub-file                      *
+      *                                                               *
+      *  Called by : Main Processing                                  *
+      *                                                               *
+      *  Calls     : SRMESS                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRACT     BEGSR
+      *
+      ** If Action Code has been entered
+      *
+     C           *IN69     IFEQ *ON
+      *
+     C                     READCSELSFL                   81
+     C           *IN81     DOWEQ*OFF
+     C                     MOVEL#CNFR     CNUMFR
+     C                     MOVEL#CNTO     CNUMTO
+     C                     MOVEL#BRCH     BRCHNR
+     C                     MOVEL#MODLE    MODLE
+     C                     MOVEL#MODRE    MODRE
+     C                     MOVEL#MODMM    MODMM
+     C                     MOVEL#MODFX    MODFX
+     C                     MOVELSMODFR    MODFR
+     C                     MOVELSMODIR    MODIR
+     C                     MOVELSMODSE    MODSE
+     C                     MOVELSMODFF    MODFF
+     C                     MOVEL#MODAL    MODAL
+      *
+     C                     SELEC
+      *
+      ** If Action code is 'A(mend)'
+      *
+     C           FDACT     WHEQ 'A'
+      *
+      ** Remember values
+      *
+     C                     MOVELCNUMFR    MCNFR   6
+     C                     MOVELCNUMTO    MCNTO   6
+     C                     MOVELMODLE     MMODLE  1
+     C                     MOVELMODRE     MMODRE  1
+     C                     MOVELMODFX     MMODFX  1
+     C                     MOVELMODMM     MMODMM  1
+     C                     MOVELMODFR     MMODFR
+     C                     MOVELMODIR     MMODIR
+     C                     MOVELMODSE     MMODSE
+     C                     MOVELMODFF     MMODFF
+     C                     MOVELMODAL     MMODAL  1
+     C                     MOVELBRCHNR    MBRCH   3
+      *
+     C                     CALL 'CG7060 '
+     C                     PARM           W0RTN
+     C                     PARM           PDATA
+     C                     PARM 'A'       ACODE
+     C                     PARM           W1RTN
+     C                     SELEC
+     C           W1RTN     WHEQ '1'
+     C                     MOVE *ON       *INKC
+     C           W1RTN     WHEQ '3'
+     C                     MOVEL'0'       AGAIN
+     C                     EXSR SRCLRQ                                                      BUG23250
+     C           W1RTN     WHEQ '4'
+      *
+      ** Remember the Position of the current record
+      *
+     C           CSRRRN    IFNE *ZERO
+     C                     Z-ADDCSRRRN    MEMRRN  40
+     C                     ELSE
+     C                     Z-ADD1         MEMRRN
+     C                     ENDIF
+      *
+      ** Read again the sub-file record, which is changed
+      *
+     C           FRROW     CHAINSELSFL               83
+      *
+      ** Copy amended values to subfile fields
+      *
+     C                     MOVELCNUMFR    #CNFR
+     C                     MOVELCNUMTO    #CNTO
+     C                     MOVELMODLE     #MODLE
+     C                     MOVELMODRE     #MODRE
+     C                     MOVELMODFX     #MODFX
+     C                     MOVELMODMM     #MODMM
+     C                     MOVELMODFR     SMODFR
+     C                     MOVELMODIR     SMODIR
+     C                     MOVELMODSE     SMODSE
+     C                     MOVELMODFF     SMODFF
+     C                     MOVELMODAL     #MODAL
+     C                     MOVELBRCHNR    #BRCH
+     C                     MOVEL*BLANKS   FDACT
+      *                                                                                    BUG23250A
+     C           SZEROC    IFNE *BLANKS                                                    BUG23250A
+     C           SZEROC    IFNE 'Y'                                                        BUG23250A
+     C           SZEROC    ANDNE'N'                                                        BUG23250A
+     C                     MOVEL'USR3973' ZAMSID                                           BUG23250A
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                           BUG23250A
+     C                     EXSR SRMESS                                                     BUG23250A
+     C                     MOVE *ON       *IN23                                            BUG23250A
+     C                     ELSE                                                            BUG23250A
+     C                     MOVE *OFF      *IN23                                            BUG23250A
+     C                     ENDIF                                                           BUG23250A
+     C                     ELSE                                                            BUG23250A
+      *                                                                                     BUG23250
+      ** Display 'Zero Confirmation' value; if for a 'single' Customer                      BUG23250
+      *                                                                                     BUG23250
+     C           CNUMFR    IFEQ CNUMTO                                                      BUG23250
+     C           CNUMFR    OREQ *BLANKS                                                    BUG23250A
+      *                                                                                     BUG23250
+     C                     CALL 'AOACUSR0'                                                  BUG23250
+     C                     PARM *BLANKS   #RTCD                                             BUG23250
+     C                     PARM '*KEY   ' #OPTN                                             BUG23250
+     C**********           PARM CNUMTO    #KEY    6                               BUG23250 BUG23250A
+     C                     PARM CNUMFR    #KEY    6                                        BUG23250A
+     C           SDACUS    PARM SDACUS    DSLDY                                             BUG23250
+      *                                                                                     BUG23250
+     C           #RTCD     IFNE *BLANKS                                                     BUG23250
+     C                     MOVEL*BLANKS   SZEROC                                            BUG23250
+     C                     ELSE                                                             BUG23250
+     C                     MOVELE5ZCFG    SZEROC                                            BUG23250
+     C                     ENDIF                                                            BUG23250
+      *                                                                                     BUG23250
+     C                     ELSE                                                             BUG23250
+     C                     MOVEL*BLANKS   SZEROC                                            BUG23250
+      *                                                                                     BUG23250
+     C                     ENDIF                                                            BUG23250
+      *                                                                                    BUG23250A
+     C                     ENDIF                                                           BUG23250A
+      *
+      ** Update screen
+      *
+     C                     MOVE *ON       *IN74                                             BUG23250
+     C                     UPDATSELSFL
+     C                     MOVE *OFF      *IN74                                             BUG23250
+     C                     MOVE *OFF      *IN23                                            BUG23250A
+     C                     WRITEUSRENT
+     C                     WRITEFNKEYS
+      *
+      ** Copy remembered values to key fields
+      ** In order to chain file
+      *
+     C                     MOVELMCNFR     ##CNFR
+     C                     MOVELMCNTO     ##CNTO
+     C                     MOVELMMODLE    ##MOLE
+     C                     MOVELMMODRE    ##MORE
+     C                     MOVELMMODFX    ##MOFX
+     C                     MOVELMMODMM    ##MOMM
+     C                     MOVELMMODFR    W1MOFR
+     C                     MOVELMMODIR    W1MOIR
+     C                     MOVELMMODSE    W1MOSE
+     C                     MOVELMMODFF    W1MOFF
+     C                     MOVELMMODAL    ##MOAL
+     C                     MOVELMBRCH     ##BRCH
+      *
+      ** Remember values
+      *
+     C                     MOVELCNUMFR    MCNFR   6
+     C                     MOVELCNUMTO    MCNTO   6
+     C                     MOVELMODLE     MMODLE  1
+     C                     MOVELMODRE     MMODRE  1
+     C                     MOVELMODFX     MMODFX  1
+     C                     MOVELMODMM     MMODMM  1
+     C                     MOVELMODFR     MMODFR  1
+     C                     MOVELMODIR     MMODIR  1
+     C                     MOVELMODSE     MMODSE  1
+     C                     MOVELMODFF     MMODFF  1
+     C                     MOVELMODAL     MMODAL  1
+     C                     MOVELBRCHNR    MBRCH   3
+      *
+      ** Chain File
+      *
+     C           THEKEY    CHAINCGAUSLL1             82
+      *
+      ** Copy remembered values to PF fields in order to update
+      *
+     C           *IN82     IFEQ '0'
+     C                     MOVELMCNFR     CNUMFR
+     C                     MOVELMCNTO     CNUMTO
+     C                     MOVELMMODLE    MODLE
+     C                     MOVELMMODRE    MODRE
+     C                     MOVELMMODFX    MODFX
+     C                     MOVELMMODMM    MODMM
+     C                     MOVELMMODFR    MODFR
+     C                     MOVELMMODIR    MODIR
+     C                     MOVELMMODSE    MODSE
+     C                     MOVELMMODFF    MODFF
+     C                     MOVELMMODAL    MODAL
+     C                     MOVELMBRCH     BRCHNR
+     C                     MOVELSZEROC    DZEROC                                           BUG23250A
+      *
+      ** Update File
+      *
+     C                     UPDATCGAUSLD1
+     C                     ENDIF
+      *
+      ** Put the saved record position back into RRN
+      *
+     C                     Z-ADDMEMRRN    RRN
+     C                     ENDSL
+      *
+      ** If Action code is 'Delete'
+      *
+     C           FDACT     WHEQ 'D'
+     C                     CALL 'CG7060'
+     C                     PARM           W0RTN
+     C                     PARM           PDATA
+     C                     PARM 'D'       ACODE
+     C                     PARM           W1RTN
+      *
+     C                     SELEC
+     C           W1RTN     WHEQ '1'
+     C                     MOVE *ON       *INKC
+     C           W1RTN     WHEQ '3'
+     C                     MOVEL'0'       AGAIN
+     C           W1RTN     WHEQ '2'
+      *
+      ** Copy values to key fields in order to chain file
+      *
+     C                     MOVELCNUMFR    ##CNFR
+     C                     MOVELCNUMTO    ##CNTO
+     C                     MOVELMODLE     ##MOLE
+     C                     MOVELMODRE     ##MORE
+     C                     MOVELMODFX     ##MOFX
+     C                     MOVELMODMM     ##MOMM
+     C                     MOVELMODFR     W1MOFR
+     C                     MOVELMODIR     W1MOIR
+     C                     MOVELMODSE     W1MOSE
+     C                     MOVELMODFF     W1MOFF
+     C                     MOVELMODAL     ##MOAL
+     C                     MOVELBRCHNR    ##BRCH
+      *
+     C           THEKEY    CHAINCGAUSLL1             82
+      *
+     C           *IN82     IFEQ '0'
+     C                     DELETCGAUSLD1
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   FDACT
+     C                     MOVEL'0'       AGAIN
+     C                     ENDSL
+      *
+     C           FDACT     WHNE 'D'
+     C           FDACT     ANDNE'A'
+     C           FDACT     ANDNE*BLANKS
+     C                     MOVEL'USR8211' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     MOVE *ON       *IN22
+     C                     MOVE *ON       *IN74                                             BUG23250
+     C                     UPDATSELSFL
+     C                     MOVE *OFF      *IN22
+     C                     MOVE *OFF      *IN74                                             BUG23250
+      *
+     C           FDACT     WHEQ *BLANKS
+      *                                                                                    BUG23250A
+     C           SZEROC    IFNE *BLANKS                                                    BUG23250A
+     C           SZEROC    IFNE 'Y'                                                        BUG23250A
+     C           SZEROC    ANDNE'N'                                                        BUG23250A
+     C                     MOVEL'USR3973' ZAMSID                                           BUG23250A
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                           BUG23250A
+     C                     EXSR SRMESS                                                     BUG23250A
+     C                     MOVE *ON       *IN23                                            BUG23250A
+     C                     ELSE                                                            BUG23250A
+     C                     MOVE *OFF      *IN23                                            BUG23250A
+     C                     ENDIF                                                           BUG23250A
+     C                     ENDIF                                                           BUG23250A
+      *                                                                                    BUG23250A
+      ** Copy values from Screen in order to chain file                                    BUG23250A
+      *                                                                                    BUG23250A
+     C                     MOVEL#CNFR     CNUMFR                                           BUG23250A
+     C                     MOVEL#CNTO     CNUMTO                                           BUG23250A
+     C                     MOVEL#BRCH     BRCHNR                                           BUG23250A
+     C                     MOVEL#MODLE    MODLE                                            BUG23250A
+     C                     MOVEL#MODRE    MODRE                                            BUG23250A
+     C                     MOVEL#MODMM    MODMM                                            BUG23250A
+     C                     MOVEL#MODFX    MODFX                                            BUG23250A
+     C                     MOVELSMODFR    MODFR                                            BUG23250A
+     C                     MOVELSMODIR    MODIR                                            BUG23250A
+     C                     MOVELSMODSE    MODSE                                            BUG23250A
+     C                     MOVELSMODFF    MODFF                                            BUG23250A
+     C                     MOVEL#MODAL    MODAL                                            BUG23250A
+      *                                                                                    BUG23250A
+      ** Copy values from Screen in order to chain file                                    BUG23250A
+      *                                                                                    BUG23250A
+     C                     MOVELCNUMFR    ##CNFR                                           BUG23250A
+     C                     MOVELCNUMTO    ##CNTO                                           BUG23250A
+     C                     MOVELMODLE     ##MOLE                                           BUG23250A
+     C                     MOVELMODRE     ##MORE                                           BUG23250A
+     C                     MOVELMODFX     ##MOFX                                           BUG23250A
+     C                     MOVELMODMM     ##MOMM                                           BUG23250A
+     C                     MOVELMODFR     W1MOFR                                           BUG23250A
+     C                     MOVELMODIR     W1MOIR                                           BUG23250A
+     C                     MOVELMODSE     W1MOSE                                           BUG23250A
+     C                     MOVELMODFF     W1MOFF                                           BUG23250A
+     C                     MOVELMODAL     ##MOAL                                           BUG23250A
+     C                     MOVELBRCHNR    ##BRCH                                           BUG23250A
+      *                                                                                    BUG23250A
+      ** Chain File                                                                        BUG23250A
+      *                                                                                    BUG23250A
+     C           THEKEY    CHAINCGAUSLL1             82                                    BUG23250A
+      *                                                                                    BUG23250A
+      ** Copy remembered values to PF fields in order to update                            BUG23250A
+      *                                                                                    BUG23250A
+     C           *IN82     IFEQ '0'                                                        BUG23250A
+     C                     MOVEL##CNFR    CNUMFR                                           BUG23250A
+     C                     MOVEL##CNTO    CNUMTO                                           BUG23250A
+     C                     MOVEL##MOLE    MODLE                                            BUG23250A
+     C                     MOVEL##MORE    MODRE                                            BUG23250A
+     C                     MOVEL##MOFX    MODFX                                            BUG23250A
+     C                     MOVEL##MOMM    MODMM                                            BUG23250A
+     C                     MOVELW1MOFR    MODFR                                            BUG23250A
+     C                     MOVELW1MOIR    MODIR                                            BUG23250A
+     C                     MOVELW1MOSE    MODSE                                            BUG23250A
+     C                     MOVELW1MOFF    MODFF                                            BUG23250A
+     C                     MOVEL##MOAL    MODAL                                            BUG23250A
+     C                     MOVEL##BRCH    BRCHNR                                           BUG23250A
+     C                     MOVELSZEROC    DZEROC                                           BUG23250A
+      *                                                                                    BUG23250A
+      ** Update File                                                                       BUG23250A
+      *                                                                                    BUG23250A
+     C                     UPDATCGAUSLD1                                                   BUG23250A
+     C                     ENDIF                                                           BUG23250A
+      *                                                                                    BUG23250A
+     C                     MOVE *OFF      *IN22
+     C                     UPDATSELSFL
+      *
+     C                     ENDSL
+      *
+     C                     MOVE *OFF      *IN23                                            BUG23250A
+     C                     MOVE *ON       *IN90
+     C                     MOVE *OFF      *IN74
+      *
+     C                     READCSELSFL                   81
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** If F9 is pressed to insert a new selection
+      *
+     C           *INKI     IFEQ *ON
+      *                                                                                    BUG23250A
+      ** Clear the Zero Conf Flag in Case of new insert                                    BUG23250A
+      *                                                                                    BUG23250A
+     C                     MOVEL*BLANKS   DZEROC                                           BUG23250A
+      *                                                                                    BUG23250A
+     C                     CALL 'CG7060 '
+     C                     PARM           W0RTN   7
+     C                     PARM ' '       PDATA
+     C                     PARM 'I'       ACODE   1
+     C                     PARM           W1RTN   1
+     C                     SELEC
+     C           W1RTN     WHEQ '1'
+     C                     MOVE *ON       *INKC
+     C           W1RTN     WHEQ '3'
+     C                     MOVEL'0'       AGAIN
+     C           W1RTN     WHEQ '4'
+     C                     WRITECGAUSLD1
+     C                     MOVEL'0'       AGAIN
+     C                     ENDSL
+     C                     END
+      *
+      ** If F10 is pressed to delete all selections
+      *
+     C           *INKJ     IFEQ *ON
+     C           *LOVAL    SETLLCGAUSLL1
+     C                     READ CGAUSLL1                 80
+     C           *IN80     DOWEQ*OFF
+     C                     DELETCGAUSLL1
+     C                     READ CGAUSLL1                 80
+     C                     END
+     C                     MOVEL*BLANKS   CNUMFR
+     C                     MOVEL*BLANKS   CNUMTO
+     C                     MOVEL*BLANKS   MODLE
+     C                     MOVEL*BLANKS   MODRE
+     C                     MOVEL*BLANKS   MODMM
+     C                     MOVEL*BLANKS   MODFX
+     C                     MOVEL*BLANKS   MODFR
+     C                     MOVEL*BLANKS   MODIR
+     C                     MOVEL*BLANKS   MODSE
+     C                     MOVEL*BLANKS   MODFF
+     C                     MOVEL*BLANKS   MODAL
+     C                     MOVEL*BLANKS   BRCHNR
+      *
+      ** If F10=Delete all Records --> Processing Date = Midas Run Date
+      *
+     C                     Z-ADDRUNDAT    #PDATE
+     C                     MOVEL'0'       AGAIN
+     C                     END
+      *
+      ** If processing date has been changed
+      *
+     C           MDATE     IFNE #PDATE
+      *                                                                                     BUG22554
+     C           #PDATE    IFEQ *ZEROS                                                      BUG22554
+     C                     MOVE RUNDAT    #PDATE                                            BUG22554
+     C                     ENDIF                                                            BUG22554
+      *
+      ** Convert processing date
+      *
+     C                     CALL 'ZDATE1'
+     C                     PARM           W0RTN   7
+     C                     PARM MDATE     W0DATE  60
+     C                     PARM ' '       W0FMT   1
+     C                     PARM           WDAYNO  50
+      *
+     C                     MOVELWDAYNO    WDATE   50
+      *
+      ** Validate if date input OK
+      *
+     C                     CALL 'ZDATE1'
+     C                     PARM           W0RTN   7
+     C                     PARM #PDATE    W0DATE  60
+     C                     PARM ' '       W0FMT   1
+     C                     PARM           WDAYNO  50
+      *
+      ** Date not valid
+      *
+     C                     MOVE *OFF      *IN20
+     C                     MOVE *OFF      *IN22
+      *
+     C           W0RTN     IFNE *BLANKS
+     C                     MOVEL'USR8203' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVE *ON       *IN20
+     C                     MOVE *OFF      *IN22
+     C                     EXSR SRMESS
+     C                     END
+      *
+      ** Date may not be less than Midas rundate
+      *
+     C           W0RTN     IFEQ *BLANKS
+     C           WDAYNO    ANDLTWDATE
+     C                     MOVEL'USR8204' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVE *ON       *IN20
+     C                     MOVE *OFF      *IN22
+     C                     EXSR SRMESS
+     C                     END
+     C                     ELSE
+     C                     MOVE *OFF      *IN20
+     C                     END
+      *
+      ** If ENTER hit, but no Action code and no new processing
+      ** Date has been enterred  --> show sub-file again
+      *
+     C           *IN90     IFNE *ON
+      *
+      ** Move the position of the current record into the
+      ** Relative Record Nr.
+      *
+     C           CSRRRN    IFNE *ZERO
+     C                     Z-ADDCSRRRN    RRN
+     C                     ELSE
+     C                     Z-ADD1         RRN
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE *OFF      *IN90
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMESS    : Routine to send messages to message subfile.     *
+      *                                                               *
+      *  Called by : SRACT                                            *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRMESS    BEGSR
+      *
+     C           ZAPGM     IFEQ *BLANKS
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR

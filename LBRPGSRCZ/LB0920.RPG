@@ -1,0 +1,1017 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Lombard Credit Collateral List')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0920 - Portfolio Lending Collateral Report.                *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 197820             Date 13Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 087628             Date 01Sep95               *
+     F*                 S01498             DATE 13JUL94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  197820 - Avoid array index error                             *
+     F*  087628 - Add branches to accounts                            *
+     F*  S01498 - Portfolio Lending Upgrade to Rel 10.  Remove        *
+     F*           mode option (i.e. audit mode).                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***LBPLEGLRIF**E           K        DISK         KINFSR *PSSR       S01498
+     F***LBPLEGLSIF**E           K        DISK         KINFSR *PSSR       S01498
+     F************LBPLEGJ0                          KRENAMELBPLEGJS       S01498
+     FLBPLEGJ3IF  E           K        DISK         KINFSR *PSSR          S01498
+     FLBPLEGJ4IF  E           K        DISK         KINFSR *PSSR          S01498
+     F            LBPLEGJ0                          KRENAMELBPLEGJ1       S01498
+     FLBTRAIPDIF  E           K        DISK         KINFSR *PSSR
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F***LB0920P1O***E             70     PRINTER                         S01498
+     F***LB0920AUO***E                    PRINTER                         S01498
+     FLB0920P1O   E             70     PRINTER      KINFDS SPOOL      UC  S01498
+     FLB0920AUO   E                    PRINTER      KINFDS SPOOLU         S01498
+     F**
+     F*==================================================================
+     F**                FUNCTION OF INDICATORS
+     F**
+     F**  25      - P1 OPENED                                             S01498
+     F****41******- INPUT PARAMETER 'MODE' IS '1'                         S01498
+     F****42******- INPUT PARAMETER 'MODE' IS '2'                         S01498
+     F**  46      - REPORT IS BY BRANCH                                   S01498
+     F**  47      - REPORT IS BY A/C OFR                                  S01498
+     F**  54      - PRINT '*** DIFFERENCE ***' LEGEND
+     F**  70      - PAGE OVERFLOW
+     F**
+     F****80******- ACCESS SDBANKPD                                       S01498
+     F****81******- ACCESS LBPLEGLS                                       S01498
+     F****82******- ACCESS LBPLEGLR                                       S01498
+     F**  82      - ACCESS LBPLEGJ3/J4                                    S01498
+     F**  83      - ACCESS LBTRAIPD
+     F**
+     F**  98      - SYSTEM DATE FORMAT
+     F**
+     F**  U8      - FILE OUT OF BALANCE
+     F**  U7 U8   - DATABASE ERROR / DATABASE CONTROL ERROR
+     F**
+     F**  LR      - END OF FILE
+     F**
+     F**                 *************************
+     F**                 ** INDICATORS NOT USED **
+     F**                 *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   __   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   __   __   48   49   50 *
+     F**      * 51   52   53   __   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   __ *
+     F**      * 71   72   73   74   75   76   77   78   79   80 *
+     F**      * 81   __   __   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   __   99      *
+     F**      ***************************************************
+     F**
+     F*==================================================================
+     F/EJECT
+     E**
+     E                    CPY@    1   1 80
+     E** COVERED INTRUMENT TYPE
+     E                    CV      1   4  9
+     E** COVERING INTRUMENT TYPE
+     E                    CO      1  10 15
+     E/EJECT
+     I**
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     I**
+     I***LDA********UDS                            256                    S01498
+     I**************************************132 183 DBLOT                 S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I**************************************181 183 DBASE                 S01498
+     I                                      181 1830DBASE                 S01498
+     I*                                                                   087628
+     I            DS                                                      087628
+     I                                        1  30 RRCNAR                087628
+     I                                       12  14 RRIBCH                087628
+     I*                                                                   087628
+     I            DS                                                      087628
+     I                                        1  26 RRCVAR                087628
+     I                                        9  11 RREBCH                087628
+     I*                                                                   087628
+     IRUNDAT    E DS                                                      087628
+     I*                                                                   S01498
+     I**  FILE INFORMATION DATA STRUCTURE                                 S01498
+     I*                                                                   S01498
+     ISPOOL       DS                                                      S01498
+     I                                       83  92 SFILE                 S01498
+     I                                    B 123 1240SFNUM                 S01498
+     ISPOOLU      DS                                                      S01498
+     I                                       83  92 SFILEU                S01498
+     I                                    B 123 1240SFNUMU                S01498
+     I**
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I** Dummy record format for access to Bank Details                   S01498
+     I*                                                                   S01498
+     ISDACOF    E DSSDACOFPD                                              S01498
+     I** Dummy record format for access to Account Officer Details        S01498
+     I*                                                                   S01498
+     ISDBRCH    E DSSDBRCHPD                                              S01498
+     I** Dummy record format for access to Branch Details                 S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I** First DS for access programs, short data structure               S01498
+     I*                                                                   S01498
+     IDSSDY     E DSDSSDY                                                 S01498
+     I** Second DS for access programs, long data structure               S01498
+     I*                                                                   S01498
+     I/EJECT
+     C**================================================================
+     C**           KEY DEFINITION
+     C**================================================================
+     C***********KEYCO     KLIST                                          S01498
+     C***********          KFLD           WWCNUM  60                      S01498
+     C***********          KFLD           WWBPSN  30                      S01498
+     C***********          KFLD           WWSEQN  30                      S01498
+     C**
+     C**================================================================
+     C**           PROGRAM  START
+     C**================================================================
+     C**
+     C**  DEFINE INPUT PARAMETERS:
+     C**
+     C           *ENTRY    PLIST
+     C***********          PARM           MODE    1                       S01498
+     C                     PARM           @SEQ    5                       S01498
+     C                     PARM           @LVL    1                       S01498
+     C                     PARM           @ENT    3                       S01498
+     C**
+     C**  INITIALIZATION:
+     C**
+     C                     EXSR #INIT
+     C*****************************************************************   S01498
+     C****PROCESS*AUDIT*REPORT:****************************************   S01498
+     C*****************************************************************   S01498
+     C***********MODE      IFEQ '1'                        - B1           S01498
+     C***********          EXSR #PR01                                     S01498
+     C***********          ELSE                            - X1           S01498
+     C**                                                                  S01498
+     C**  PROCESS FULL INSTRUMENT TYPES LIST:
+     C**
+     C***********MODE      IFEQ '2'                        - B2           S01498
+     C*                                                                   S01498
+     C**  PROCESS REPORT EITHER BY BRANCH OR A/C OFFICER                  S01498
+     C*                                                                   S01498
+     C           @LVL      IFEQ 'A'                                       S01498
+     C                     EXSR #PR02
+     C                     ELSE                                           S01498
+     C                     EXSR #PR03                                     S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C***********          ELSE                            - X2           S01498
+     C*****************************************************************   S01498
+     C****PROCESS*DATABASE*ERROR:**************************************   S01498
+     C*****************************************************************   S01498
+     C***********          MOVEL'02'      DBASE            ***************S01498
+     C***********          MOVEL'LB0920'  DBPGM            ** DB ERROR 02 S01498
+     C***********          MOVEL'MODE  '  DBFILE           ***************S01498
+     C***********          MOVELMODE      DBKEY                           S01498
+     C*****************************************************************   S01498
+     C***********          EXSR *PSSR                                     S01498
+     C***********          END                             - E2           S01498
+     C*****************************************************************   S01498
+     C***********          END                             - E1           S01498
+     C**
+     C**  PROCESS AUDIT:
+     C**
+     C                     EXSR #AU01
+     C**================================================================
+     C**           PROGRAM  END
+     C**================================================================
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+     C**================================================================
+     C/EJECT
+     C**================================================================
+      **                INDEX TO SUBROUTINES
+      **
+      ** #INIT    -        PROCESS TO INITIALIZE STANDARD FIELDS AND ACCESS
+      **                           OF STANDING DATA
+      ** #PR01    -        PROCESS AUDIT REPORT (MODE = '1')
+      ** #PR02    -        PROCESS FULL LIST (MODE = '2')
+      ** *PSSR    -        PROCESS DATABASE ERROR
+      ** #AU01    -        PROCESS AUDIT
+      **
+      ** #TYPE    -        PROCESS TO DETERMINE CHANGE TYPE AND COMPUTE RECORDS
+      ** #FIELD   -        PROCESS TO TRANSFER FILE & WORK FIELDS TO PRINTER
+      **                           FIELDS
+      **
+      ** #REPOR   -        PROCESS TO PRINT AUDIT REPORT
+      **
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+      **
+      **  #INIT       SUBROUTINE TO INITIALIZE STATIC FIELDS AND ACCESS STANDING
+      **              DATA CALLED ONCE AT START OF PROGRAM FROM MAIN LINE.
+     C**
+      **     CALLED BY PROGRAM
+      **     CALLS     *PSSR
+      **
+     C**=================================================================
+     C**                                                   *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C**                                                   *****************
+     C**  PREPARE LDA:
+     C**
+     C***********          MOVEL*BLANK    DBLOT                           S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE *BLANKS   DBFILE                          S01498
+     C                     MOVE *BLANKS   DBKEY                           S01498
+     C                     Z-ADD*ZEROS    DBASE                           S01498
+     C                     MOVEL'LB0920'  DBPGM
+     C                     OUT  LDA                                       S01498
+     C           *NAMVAR   DEFN           RUNDAT                          087628
+     C                     IN   RUNDAT                                    087628
+     C*                                                                   S01498
+     C** CALL ZSFILE FOR AUDIT REPORT.                                    S01498
+     C*                                                                   S01498
+     C                     EXSR RCFAU                                     S01498
+     C**
+     C**  INITIALIZE INDICATORS:
+     C**
+     C                     MOVE '0'       *IN
+     C                     MOVEA'00'      *IN,46                          S01498
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C**
+     C***********          READ SDBANKPD                 80               S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM 'BLANKS'  @RTCD   7                       S01498
+     C                     PARM '*FIRST'  @OPTN   7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C**
+     C**  IF RECORD FOUND:
+     C**
+     C************IN80     IFEQ '0'                        - B1           S01498
+     C           @RTCD     IFEQ *BLANK                                    S01498
+     C**
+     C**  CHECK SYSTEM DATE FORMAT (DDMMYY OR MMDDYY):
+     C**
+     C           BJDFIN    IFEQ 'M'                        - B2
+     C                     MOVE '1'       *IN98            ON => MMDDYY
+     C                     END                             - E2
+     C                     ELSE                            - X1
+     C**
+     C**  OTHERWISE DB ERROR:
+     C**
+     C***********          MOVEL'01'      DBASE            ***************S01498
+     C***********          MOVEL'SDBANKPD'DBFILE           ** DB ERROR 01 S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD1         DBASE            ***************S01498
+     C                     MOVE 'SDBANKPD'DBFILE           ** DB ERROR 01 S01498
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     OUT  LDA                                       S01498
+     C**
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C**                                                   *****************
+     C                     ENDSR                           ** #INIT ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #PR01       SUBROUTINE TO PRINT COLLATERAL INSERTED, AMENDED
+     **              OR DELETED DURING DAY.
+     **
+     C**     CALLED BY PROGRAM
+     C**     CALLS     #TYPE, #FIELD
+     **
+     C**=================================================================
+     C********************************************************************S01498
+     C***********#PR01     BEGSR                           ** #PR01 BEGSR S01498
+     C********************************************************************S01498
+     C****PRINT*LIST*HEADER:*******************************************   S01498
+     C*****************************************************************   S01498
+     C***********          MOVE '1'       *IN41                           S01498
+     C***********          WRITEHEADLI                                    S01498
+     C*****************************************************************   S01498
+     C****ACCESS*TO*FILE:**********************************************   S01498
+     C*****************************************************************   S01498
+     C***********BJRDNB    SETLLLBPLEGLS                                  S01498
+     C***********BJRDNB    READELBPLEGLS                 81               S01498
+     C*****************************************************************   S01498
+     C************IN81     IFEQ '0'                                       S01498
+     C*****************************************************************   S01498
+     C****SO*LONG*AS*LAST*CHANGE*DATE*=*RUN*DATE:**********************   S01498
+     C*****************************************************************   S01498
+     C************IN81     DOWEQ'0'                        - B1           S01498
+     C*****************************************************************   S01498
+     C****EXECUTE*PAGE*OVERFLOW:***************************************   S01498
+     C*****************************************************************   S01498
+     C************IN70     IFEQ '1'                        - B2           S01498
+     C***********          WRITEHEADLI                                    S01498
+     C***********          MOVE '0'       *IN70                           S01498
+     C***********          END                             - E2           S01498
+     C*****************************************************************   S01498
+     C****DETERMINE*CHANGE*TYPE*AND*COMPUTE*RECORDS:*******************   S01498
+     C*****************************************************************   S01498
+     C***********          EXSR #TYPE                                     S01498
+     C*****************************************************************   S01498
+     C****TRANSFER*FILE*AND*WORK*FIELDS*TO*PRINTER*FIELDS:*************   S01498
+     C*****************************************************************   S01498
+     C***********          EXSR #FIELD                                    S01498
+     C*****************************************************************   S01498
+     C****PRINT*LIST:**************************************************   S01498
+     C*****************************************************************   S01498
+     C***********          WRITELIST                                      S01498
+     C*****************************************************************   S01498
+     C****ACCESS*TO*FILE*AGAIN:****************************************   S01498
+     C*****************************************************************   S01498
+     C***********BJRDNB    READELBPLEGLS                 81               S01498
+     C***********          END                             - E1           S01498
+     C*****************************************************************   S01498
+     C****PRINT*NO*DETAILS*TO*REPORT***********************************   S01498
+     C*****************************************************************   S01498
+     C***********          ELSE                                           S01498
+     C***********          WRITENULL1                                     S01498
+     C***********          END                                            S01498
+     C*****************************************************************   S01498
+     C****PRINT*LIST*END:**********************************************   S01498
+     C*****************************************************************   S01498
+     C***********          WRITEENDLI                                     S01498
+     C********************************************************************S01498
+     C***********          ENDSR                           ** #PR01 ENDSR S01498
+     C********************************************************************S01498
+     C**=================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #PR02       SUBROUTINE TO PRINT ALL COLLATERAL
+     **                    (BY ACCOUNT OFFICER)                           S01498
+     **
+     **     CALLED BY PROGRAM
+     **     CALLS     #TYPE, #FIELD
+     **
+     C**=================================================================
+     C**                                                   *****************
+     C           #PR02     BEGSR                           ** #PR02 BEGSR **
+     C**                                                   *****************
+     **  PRINT LIST HEADER:
+     **
+     C***********          MOVE '1'       *IN42                           S01498
+     C***********          WRITEHEADLI                                    S01498
+     C**
+     **  ACCESS TO FILE:
+     **
+     C***********          MOVE *LOVAL    WWCNUM                          S01498
+     C***********          MOVE *LOVAL    WWBPSN                          S01498
+     C***********          MOVE *LOVAL    WWSEQN                          S01498
+     C***********KEYCO     SETLLLBPLEGLR                                  S01498
+     C**                                                                  S01498
+     C***********          READ LBPLEGLR                 82               S01498
+     C*                                                                   S01498
+     C** POSITION FILE                                                    S01498
+     C*                                                                   S01498
+     C                     MOVE '1'       *IN47                           S01498
+     C           @ENT      IFEQ 'ALL'                                     S01498
+     C           *LOVAL    SETLLLBPLEGJ4                                  S01498
+     C                     ELSE                                           S01498
+     C                     MOVEL@ENT      WLACOF  2                       S01498
+     C           WLACOF    SETLLLBPLEGJ4                                  S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     READ LBPLEGJ4                 82               S01498
+     C*                                                                   S01498
+     C************IN82     IFEQ '0'                                       S01498
+     C**
+     **  SO LONG AS END OF FILE NOT REACHED:
+     **
+     C           *IN82     DOWEQ'0'                        - B1
+     C           @ENT      ANDEQ'ALL'                                     S01498
+     C           *IN82     OREQ '0'                                       S01498
+     C           BBACOC    ANDEQWLACOF                                    S01498
+     C**
+     **  EXECUTE PAGE OVERFLOW:
+     **
+     C           *IN70     IFEQ '1'                        - B2
+     C                     WRITEHEADLI
+     C                     MOVE '0'       *IN70
+     C                     END                             - E2
+     C**
+     **  FOR EACH LIVE RECORD READ:
+     **
+     C           PGRECI    IFEQ 'D'                        - B2
+     C**
+     **  ADD 1 TO NUMBER OF RECORDS READ:
+     **
+     C                     ADD  1         WWNORE  50
+     C**
+     **  DETERMINE CHANGE TYPE AND COMPUTE RECORDS:
+     **
+     C                     EXSR #TYPE
+     C**
+     **  TRANSFER FILE AND WORK FIELDS TO PRINTER FIELDS:
+     **
+     C                     EXSR #FIELD
+     C**
+     **  PRINT LIST:
+     **
+     C           BBACOC    IFNE WLACOC                                    S01498
+     C           *IN25     OREQ '0'                                       S01498
+     C*                                                                   S01498
+     C           *IN25     IFNE '0'                                       S01498
+     C                     WRITEENDLI                                     S01498
+     C                     CLOSELB0920P1                                  S01498
+     C                     MOVE '0'       *IN25                           S01498
+     C                     END                                            S01498
+     C                     MOVE BBACOC    WLACOC  2                       S01498
+     C                     MOVELBBACOC    SENTY                           S01498
+     C*                                                                   S01498
+     C** RETRIEVE ACCOUNT OFFICER NAME                                    S01498
+     C*                                                                   S01498
+     C           WLACOC    IFNE *BLANKS                                   S01498
+     C                     CALL 'AOACOFR0'                                S01498
+     C                     PARM 'BLANKS'  @RTCD                           S01498
+     C                     PARM '*KEY   ' @OPTN                           S01498
+     C                     PARM           WLACOC                          S01498
+     C           SDACOF    PARM SDACOF    DSSDY                           S01498
+     C*                                                                   S01498
+     C           @RTCD     IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD4         DBASE            ***************S01498
+     C                     MOVE 'SDACOFPD'DBFILE           * DBERROR 04  *S01498
+     C                     MOVELWLACOC    DBKEY            ***************S01498
+     C                     OUT  LDA                                       S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     ELSE                                           S01498
+     C                     MOVE AZACON    PACNM                           S01498
+     C                     MOVE WLACOC    PACOC                           S01498
+     C                     END                                            S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     EXSR RCFP1                                     S01498
+     C                     WRITEHEADLI                                    S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     WRITELIST
+     C                     END                             - E2
+     C**
+     **  ACCESS TO FILE AGAIN:
+     **
+     C***********          READ LBPLEGLR                 82               S01498
+     C                     READ LBPLEGJ4                 82               S01498
+     C                     END                             - E1
+     C*****************************************************************   S01498
+     C****PRINT*NO*DETAILS*TO*REPORT***********************************   S01498
+     C*****************************************************************   S01498
+     C***********          ELSE                                           S01498
+     C***********          WRITENULL1                                     S01498
+     C***********          END                                            S01498
+     C*****************************************************************   S01498
+     ****PRINT*LIST*END:***********************************************   S01498
+     ******************************************************************   S01498
+     C***********          WRITEENDLI                                     S01498
+     C**                                                   *****************
+     C                     ENDSR                           ** #PR02 ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT                                                              S01498
+     C**================================================================= S01498
+     **                                                                   S01498
+     **  #PR03       SUBROUTINE TO PRINT ALL COLLATERAL                   S01498
+     **                     (BY BRANCH)                                   S01498
+     **                                                                   S01498
+     **     CALLED BY PROGRAM                                             S01498
+     **     CALLS     #TYPE, #FIELD                                       S01498
+     **                                                                   S01498
+     C**================================================================= S01498
+     C**                                                   ***************S01498
+     C           #PR03     BEGSR                           ** #PR03 BEGSR S01498
+     C*                                                                   S01498
+     C** POSITION FILE                                                    S01498
+     C*                                                                   S01498
+     C                     MOVE '1'       *IN46                           S01498
+     C*                                                                   S01498
+     C           @ENT      IFEQ 'ALL'                                     S01498
+     C           *LOVAL    SETLLLBPLEGJ3                                  S01498
+     C                     ELSE                                           S01498
+     C           @ENT      SETLLLBPLEGJ3                                  S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     READ LBPLEGJ3                 82               S01498
+     C*                                                                   S01498
+     C** SO LONG AS END OF FILE NOT REACHED:                              S01498
+     C*                                                                   S01498
+     C           *IN82     DOWEQ'0'                                       S01498
+     C           @ENT      ANDEQ'ALL'                                     S01498
+     C           *IN82     OREQ '0'                                       S01498
+     C           BBBRCD    ANDEQ@ENT                                      S01498
+     C*                                                                   S01498
+     C** EXECUTE PAGE OVERFLOW:                                           S01498
+     C*                                                                   S01498
+     C           *IN70     IFEQ '1'                                       S01498
+     C                     WRITEHEADLI                                    S01498
+     C                     MOVE '0'       *IN70                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C** FOR EACH LIVE RECORD READ:                                       S01498
+     C*                                                                   S01498
+     C           PGRECI    IFEQ 'D'                                       S01498
+     C*                                                                   S01498
+     C** ADD 1 TO NUMBER OF RECORDS READ:                                 S01498
+     C*                                                                   S01498
+     C                     ADD  1         WWNORE                          S01498
+     C*                                                                   S01498
+     C** DETERMINE CHANGE TYPE AND COMPUTE RECORDS:                       S01498
+     C*                                                                   S01498
+     C                     EXSR #TYPE                                     S01498
+     C*                                                                   S01498
+     C** TRANSFER FILE AND WORK FIELDS TO PRINTER FIELDS:                 S01498
+     C*                                                                   S01498
+     C                     EXSR #FIELD                                    S01498
+     C*                                                                   S01498
+     C** PRINT LIST:                                                      S01498
+     C*                                                                   S01498
+     C           BBBRCD    IFNE WLBRCD                                    S01498
+     C*                                                                   S01498
+     C           *IN25     IFNE '0'                                       S01498
+     C                     WRITEENDLI                                     S01498
+     C                     CLOSELB0920P1                                  S01498
+     C                     MOVE '0'       *IN25                           S01498
+     C                     END                                            S01498
+     C                     MOVE BBBRCD    WLBRCD  3                       S01498
+     C                     MOVE BBBRCD    SENTY                           S01498
+     C*                                                                   S01498
+     C** RETRIEVE BRANCH NAME                                             S01498
+     C*                                                                   S01498
+     C**********           CALL 'AOBRCHR0'                                S01498              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM 'BLANKS'  @RTCD                           S01498
+     C                     PARM '*KEY   ' @OPTN                           S01498
+     C                     PARM           WLBRCD                          S01498
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01498              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   S01498
+     C           @RTCD     IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD5         DBASE            ***************S01498
+     C                     MOVE 'SDBRCHPD'DBFILE           * DBERROR 05  *S01498
+     C                     MOVELWLBRCD    DBKEY            ***************S01498
+     C                     OUT  LDA                                       S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     ELSE                                           S01498
+     C                     MOVE A8BRNM    PBRNM                           S01498
+     C                     MOVE WLBRCD    PBRCA                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     EXSR RCFP1                                     S01498
+     C                     WRITEHEADLI                                    S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     WRITELIST                                      S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C** ACCESS TO FILE AGAIN:                                            S01498
+     C*                                                                   S01498
+     C                     READ LBPLEGJ3                 82               S01498
+     C                     END                                            S01498
+     C**                                                   ***************S01498
+     C                     ENDSR                           ** #PR03 ENDSR S01498
+     C**                                                   ***************S01498
+     C**================================================================  S01498
+     C/EJECT
+     C**=================================================================
+     C**
+     C**  *PSSR       SUBROUTINE TO OUTPUT DATABASE ERROR.
+     C**
+     C**     CALLED BY PROGRAM, #INIT, #AU01
+     C**     CALLS     -
+     C**
+     C**=================================================================
+     C**                                                   *****************
+     C           *PSSR     BEGSR                           ** *PSSR BEGSR **
+     C**                                                   *****************
+     C           WWERRO    IFEQ ' '                        - B1
+     C                     MOVE 'Y'       WWERRO  1
+     C**
+     C***********DBASE     IFNE '   '                      - B2           S01498
+     C           DBASE     IFNE *ZEROS                     - B2           S01498
+     C**
+     C**  PRINT ERROR MESSAGE:
+     C**
+     C***********          MOVE '1'       *IN41                           S01498
+     C*                                                                   S01498
+     C           *IN25     IFEQ '1'                                       S01498
+     C*                                                                   S01498
+     C           *IN70     IFEQ '1'                        - B2           S01498
+     C                     WRITEHEADLI                                    S01498
+     C                     MOVE '0'       *IN70                           S01498
+     C                     END                             - E2           S01498
+     C                     WRITELB0920E1                                  S01498
+     C                     CLOSELB0920P1                                  S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+     C***********          WRITEENDAU                                     S01498
+     C**
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     ELSE                            - X2
+     C**
+     C***********          MOVE '999'     DBASE                           S01498
+     C                     Z-ADD999       DBASE                           S01498
+     C                     END                             - E2
+     C**
+     C                     DUMP
+     C                     END                             - E1
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+     C                     RETRN
+     C**                                                   *****************
+     C                     ENDSR                           ** *PSSR ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #AU01       SUBROUTINE TO CHAIN ON TRAILER FILE.
+     **
+     **     CALLED BY PROGRAM
+     **     CALLS     #REPOR, *PSSR
+     **
+     C**=================================================================
+     **                                                    *****************
+     C           #AU01     BEGSR                           ** #AU01 BEGSR **
+     C**                                                   *****************
+     C**  ACCESS TO TRAILER FILE
+     C**
+     C                     MOVEL'LBPLEGPD'TRFILE
+     C*
+     C           TRFILE    CHAINLBTRAIPD             83
+     C**
+     C           *IN83     IFEQ '0'                        - B1
+     C*                                                                   S01498
+     C           *IN25     IFEQ '1'                                       S01498
+     C*                                                                   S01498
+     C           *IN70     IFEQ '1'                        - B2           S01498
+     C                     WRITEHEADLI                                    S01498
+     C                     MOVE '0'       *IN70                           S01498
+     C                     END                             - E2           S01498
+     C                     WRITEENDLI                                     S01498
+     C                     CLOSELB0920P1                                  S01498
+     C                     END                                            S01498
+     C**
+     C**  PRINT AUDIT REPORT:
+     C**
+     C                     EXSR #REPOR
+     C                     ELSE                            - X1
+     C**
+     C**  AUDIT RECORD NOT FOUND THEN DATABASE ERROR:
+     C**
+     C           *LOCK     IN   LDA                                       S01498
+     C***********          MOVEL'03'      DBASE            ***************S01498
+     C***********          MOVEL'LBTRAIPD'DBFILE           ** DB ERROR 03 S01498
+     C                     Z-ADD3         DBASE            **             S01498
+     C                     MOVE 'LBTRAIPD'DBFILE           **             S01498
+     C                     MOVEL'LBPLEGPD'DBKEY            *****************
+     C                     OUT  LDA                                       S01498
+     C**
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C**                                                   *****************
+     C                     ENDSR                           ** #AU01 ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #TYPE       SUBROUTINE TO DETERMINE CHANGE TYPE AND COMPUTE
+     **              RECORDS.
+     **
+     **     CALLED BY #PR01, #PR02
+     **     CALLS     -
+     **
+     C**=================================================================
+     C**                                                   *****************
+     C           #TYPE     BEGSR                           ** #TYPE BEGSR **
+     C**                                                   *****************
+     C**  IF THE LAST CHANGE TYPE IS 'I', ADD 1 TO NUMBER OF INSERTS:
+     C**
+     C           PGCHTP    IFEQ 'I'                        - B1
+     C                     ADD  1         WWNOIN  50
+     C                     MOVEL'INSERT'  WWCHTP  6
+     C                     END                             - E1
+     C**
+     C**  IF THE LAST CHANGE TYPE IS 'A', ADD 1 TO NUMBER OF AMENDS:
+     C**
+     C           PGCHTP    IFEQ 'A'                        - B1
+     C                     ADD  1         WWNOAM  50
+     C                     MOVEL'AMEND '  WWCHTP
+     C                     END                             - E1
+     C**
+     C**  IF THE LAST CHANGE TYPE IS 'D', ADD 1 TO NUMBER OF DELETES:
+     C**
+     C           PGCHTP    IFEQ 'D'                        - B1
+     C                     ADD  1         WWNODE  50
+     C                     MOVEL'DELETE'  WWCHTP
+     C                     END                             - E1
+     C**                                                   *****************
+     C                     ENDSR                           ** #TYPE ENDSR **
+     C**                                                   *****************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #FIELD      SUBROUTINE TO TRANSFER FILE AND WORK FIELDS TO
+     **              PRINTER FIELDS.
+     **
+     **     CALLED BY #PRO1, #PR02
+     **     CALLS     -
+     **
+     C**=================================================================
+     C**                                                   ******************
+     C           #FIELD    BEGSR                           ** #FIELD BEGSR **
+     C**                                                   ******************
+     C                     MOVE PGCNUM    RRCNUM
+     C                     MOVE PGBPSN    RRBPSN
+     C                     MOVE PGSEQN    RRSEQN
+     C*
+     C                     MOVE *BLANK    RRCVNR
+     C                     MOVE *BLANK    RRCNAR
+     C*
+     C                     Z-ADD0         X       30
+     C           PGETYP    IFEQ 'A'
+     C                     Z-ADD1         X
+     C           AGMBIN    IFEQ 'Y'                                       087628
+     C                     MOVELPGEBCH    RREBCH                          087628
+     C                     END                                            087628
+     C                     END
+     C           PGETYP    IFEQ 'F'
+     C                     Z-ADD2         X
+     C                     END
+     C           PGETYP    IFEQ 'L'
+     C                     Z-ADD3         X
+     C                     END
+     C           PGETYP    IFEQ 'X'
+     C                     Z-ADD4         X
+     C                     END
+     C           X         IFNE 0
+     C                     MOVELCV,X      RRCVNR
+     C                     MOVE PGEREF    RRCVNR
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRCVNR
+     C                     END
+     C*
+     C                     Z-ADD0         X
+     C           PGITYP    IFEQ 'A'
+     C                     Z-ADD1         X
+     C           AGMBIN    IFEQ 'Y'                                       087628
+     C                     MOVELPGIBCH    RRIBCH                          087628
+     C                     END                                            087628
+     C                     END
+     C           PGITYP    IFEQ 'C'
+     C                     Z-ADD2         X
+     C                     END
+     C           PGITYP    IFEQ 'D'
+     C                     Z-ADD3         X
+     C                     END
+     C           PGITYP    IFEQ 'E'
+     C                     Z-ADD4         X
+     C                     END
+     C           PGITYP    IFEQ 'G'
+     C                     Z-ADD5         X
+     C                     END
+     C           PGITYP    IFEQ 'S'
+     C                     Z-ADD6         X
+     C                     END
+     C           PGITYP    IFEQ 'T'
+     C                     Z-ADD7         X
+     C                     END
+     C           PGITYP    IFEQ 'U'
+     C                     Z-ADD8         X
+     C                     END
+     C           PGITYP    IFEQ 'X'
+     C                     Z-ADD9         X
+     C                     END
+     C           PGITYP    IFEQ 'P'
+     C                     Z-ADD10        X
+     C                     END
+     C           X         IFNE 0                                                             197820
+     C                     MOVELCO,X      RRCNAR
+     C                     ELSE                                                               197820
+     C                     MOVEL*BLANKS   RRCNAR                                              197820
+     C                     END                                                                197820
+     C           PGITYP    IFNE 'E'
+     C           PGITYP    ANDNE'U'
+     C                     MOVE PGIREF    RRCNAR
+     C                     END
+     C*
+     C                     MOVE PGISSB    RRGVBY
+     C********** RRGVBY    IFEQ *ZEROS                                                        CSD027
+     C**********           MOVE *BLANK    RRGVBY                                              CSD027
+     C**********           END                                                                CSD027
+     C                     Z-ADDPGPCAA    RRPCT
+     C***********          MOVE COSNB     RRSNB                           S01498
+     C                     MOVE WWCHTP    RRCHTP
+     C                     Z-ADDPGDLUP    RRDLUP
+     C                     MOVE PGMLUP    RRMLUP
+     C                     Z-ADDPGYLUP    RRYLUP
+     C                     Z-ADDPGTLUP    RRTLUP
+     C**                                                   ******************
+     C                     ENDSR                           ** #FIELD ENDSR **
+     C**                                                   ******************
+     C**================================================================
+     C/EJECT
+     C**=================================================================
+     **
+     **  #REPOR      SUBROUTINE TO PRINT AUDIT REPORT.
+     **
+     **     CALLED BY #AU01
+     **     CALLS     -
+     **
+     C**=================================================================
+     C**                                                   ******************
+     C           #REPOR    BEGSR                           ** #REPOR BEGSR **
+     C*                                                    ******************
+     C****WHEN*MODE*IS*'1':********************************************   S01498
+     C*****************************************************************   S01498
+     C***********MODE      IFEQ '1'                        - B1           S01498
+     C***********          Z-ADDWWNOIN    RRNOIN                          S01498
+     C***********          Z-ADDWWNOAM    RRNOAM                          S01498
+     C***********          Z-ADDWWNODE    RRNODE                          S01498
+     C***********          Z-ADDTRLIVE    R1NORE                          S01498
+     C*****************************************************************   S01498
+     C****PRINT*AUDIT*REPORT:******************************************   S01498
+     C*****************************************************************   S01498
+     C***********          MOVE '1'       *IN41                           S01498
+     C***********          WRITEHEADAU                                    S01498
+     C***********          WRITECONTROL1                                  S01498
+     C***********          WRITEENDAU                                     S01498
+     C***********          ELSE                            - X1           S01498
+     C*****************************************************************   S01498
+     C****WHEN*MODE*IS*'2':********************************************   S01498
+     C*****************************************************************   S01498
+     C***********MODE      IFEQ '2'                        - B2           S01498
+     C**
+     C**  IF COUNT OF LIVE RECORDS READ NOT EQUAL TO NUMBER TOTAL OF RECORDS:
+     C**
+     C           WWNORE    IFNE TRLIVE                     - B3
+     C**
+     C**  PRINT '*** DIFFERENCE ***' LEGEND:
+     C**
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *IN54
+     C                     END                             - E3
+     C**
+     C                     Z-ADDTRLIVE    R1NORE
+     C                     Z-ADDWWNORE    R2NORE
+     C**
+     C**  PRINT AUDIT REPORT:
+     C**
+     C***********          MOVE '1'       *IN42                           S01498
+     C                     WRITEHEADAU
+     C                     WRITECONTROL2
+     C           *IN25     IFEQ '0'                                       S01498
+     C                     WRITELB0920AN                                  S01498
+     C                     END                                            S01498
+     C***********          WRITEENDAU                                     S01498
+     C***********          END                             - E2           S01498
+     C**
+     C***********          END                             - E1           S01498
+     C**                                                   ******************
+     C                     ENDSR                           ** #REPOR ENDSR **
+     C**                                                   ******************
+     C**=================================================================
+     C/EJECT
+     C**===============================================================   S01498
+     C*                                                                   S01498
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          S01498
+     C*                                                                   S01498
+     C**===============================================================   S01498
+     C*                                                                   S01498
+     C           RCFP1     BEGSR                            ** RCFP1 **   S01498
+     C*                                                                   S01498
+     C                     OPEN LB0920P1                                  S01498
+     C                     MOVE '1'       *IN25                           S01498
+     C*                                                                   S01498
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF                         S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01498
+     C*                                                                   S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @SEQ                            S01498
+     C                     PARM           SENTY   3                       S01498
+     C                     PARM           SFILE                           S01498
+     C                     PARM           ZSNUM                           S01498
+     C                     PARM *BLANKS   ZSERR   1                       S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C*                                                                   S01498
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01498
+     C*                                                                   S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     ENDSR                                          S01498
+     C**===============================================================   S01498
+     C/EJECT                                                              S01498
+     C**===============================================================   S01498
+     C*                                                                   S01498
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          S01498
+     C*                                                                   S01498
+     C**===============================================================   S01498
+     C*                                                                   S01498
+     C           RCFAU     BEGSR                            ** RCFAU **   S01498
+     C*                                                                   S01498
+     C** ENSURE AUDIT SPOOL FILE RECORDED BY RCF                          S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01498
+     C*                                                                   S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @SEQ                            S01498
+     C                     PARM *BLANK    SENTY                           S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUMU                          S01498
+     C                     PARM *BLANK    ZSERR                           S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C*                                                                   S01498
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01498
+     C*                                                                   S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     ENDSR                                          S01498
+     C**===============================================================   S01498
+      /EJECT                                                              S01498
+     C**================================================================
+**  CPY@
+(c) Finastra International Limited 2001
+**  CV
+ACCOUNT
+FACILITY
+LOAN
+PORTFOLIO
+**  CO
+ACCOUNT
+COLLATERAL
+DEAL NUMBER
+DEAL CUSTOMER
+GUARANTEE
+SECURITY
+FIDUCIARY NR.
+FIDUCIARY CUST.
+PORTFOLIO
+PLEDGE

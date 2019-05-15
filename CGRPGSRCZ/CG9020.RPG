@@ -1,0 +1,917 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Write data to UDC extract files.')
+/*OVRF*: OVRDBF  EXUDT1PD  CGUDT1PD  SHARE(*NO) SECURE(*YES)        : *
+/*OVRF*: OVRDBF  EXUDT2PD  CGUDT2PD  SHARE(*NO) SECURE(*YES)        : *
+/*OVRF*: OVRDBF  EXUDT3PD  CGUDT3PD  SHARE(*NO) SECURE(*YES)        : *
+/*OVRF*: OVRDBF  EXUDTAPD  CGUDTAPD  SHARE(*NO) SECURE(*YES)        : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CG9020        - Write data to UDC extract files              *
+     F*                                                               *
+     F*  Function:  This program writes data to one of eight          *
+     F*              database files, according to the length          *
+     F*              of the data and the commitment flag.             *
+     F*                                                               *
+     F*  Called By: Many programs, as required.                       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG2330            Date 29Apr04               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 082060             Date 24Jan95               *
+      *                 102195             Date 12Jan95               *
+     F*                 S01522             DATE 22NOV94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  BUG2330- CG programs looking at wrong dataarea for CSC022    *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  082060 - Redefine Binary fields as Decimal (9,0 Packed)      *
+     F*  102195 - If an element of a path is less than 6 long the     *
+     F*           path's data are added onto the new path resulting   *
+     F*           in invalid data in ##GET. Clear out ##GSET before   *
+     F*           Substring.                                          *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  90 -- Error detected.                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*                                                               *
+     F*  SROUT  -- Write a record to the appropriate file.            *
+     F*  SRAUD  -- Print the audit report.                            *
+     F*  SRPATH -- Look for a path; if not found, create it.          *
+     F*  SRNGRP -- Find next group.                                   *
+     F*  SRBAD  -- Handle an undefined action.                        *
+     F*  SRINIT -- Provides initialisation and definitions.           *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,CG9020FPG
+     F*-------------------------------------------------------------------
+     FEXUDT1PDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDT1PD                           KRENAME@FRM064N
+     F* Not committed,  64 bytes long
+     F*-------------------------------------------------------------------
+     FEXUDT2PDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDT2PD                           KRENAME@FRM320N
+     F* Not committed, 320 bytes long
+     F*-------------------------------------------------------------------
+     FEXUDT3PDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDT3PD                           KRENAME@FRM576N
+     F* Not committed, 576 bytes long
+     F*-------------------------------------------------------------------
+     FEXUDTAPDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDTAPD                           KRENAME@FRM832N
+     F* Not committed, 832 bytes long
+     F*-------------------------------------------------------------------
+     FCGUDT1PDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDT1PD                           KRENAME@FRM064Y
+     F                                              KCOMIT
+     F* Under commitment control,  64 bytes long
+     F*-------------------------------------------------------------------
+     FCGUDT2PDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDT2PD                           KRENAME@FRM320Y
+     F                                              KCOMIT
+     F* Under commitment control, 320 bytes long
+     F*-------------------------------------------------------------------
+     FCGUDT3PDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDT3PD                           KRENAME@FRM576Y
+     F                                              KCOMIT
+     F* Under commitment control, 576 bytes long
+     F*-------------------------------------------------------------------
+     FCGUDTAPDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDTAPD                           KRENAME@FRM832Y
+     F                                              KCOMIT
+     F* Under commitment control, 832 bytes long
+     F*-------------------------------------------------------------------
+     FCGGSETL1IF  E           K        DISK         KINFSR SRFILE
+     F* Group set definition -- retrieval index
+     F*-------------------------------------------------------------------
+     FCGPATHL2IF  E           K        DISK         KINFSR SRFILE
+     F* Path by group sets:
+     F*-------------------------------------------------------------------
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    PTH       500256               Saved paths.
+     E                    NON       500  6               Saved non-repeat.
+     E                    REP       500  6               Saved repeating.
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CG9020EPG
+     E*
+     E/COPY WNCPYSRC,CG1010DEPG
+      *                                                                                       CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      *                                                                                       CSC022
+     E                    WCMT       10 10                                                    CSC022
+     E*-------------------------------------------------------------------
+     I/EJECT
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CG9020IPG
+     I*
+     I* Copied-in input specifications
+     I*
+     I*...................................................................
+     IW0FMT     E DSCGUDTAPD
+     I*
+     I* Record format of CGUDTAPD as an input parameter
+     I*
+     I*...................................................................
+     I* Error processing data structures:
+     I*
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     IDSFDY     E DSDSFDY                                                                     CSC022
+     IWDSJOB    E DSSCCMTJOB                                                                  CSC022
+     I              COMITNUM                        WCMTNO                                    CSC022
+     I              COMITJOB1                       WJOB01                                    CSC022
+     I              COMITJOB2                       WJOB02                                    CSC022
+     I              COMITJOB3                       WJOB03                                    CSC022
+     I              COMITJOB4                       WJOB04                                    CSC022
+     I              COMITJOB5                       WJOB05                                    CSC022
+     I              COMITJOB6                       WJOB06                                    CSC022
+     I              COMITJOB7                       WJOB07                                    CSC022
+     I              COMITJOB8                       WJOB08                                    CSC022
+     I              COMITJOB9                       WJOB09                                    CSC022
+     I              COMITJOB10                      WJOB10                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      *                                                                                       CSC022
+     I*...................................................................
+     IW1DTA       DS                            256
+     I* ______________________________________________
+     I* Data structure for data being sent to CGZAUDIT
+     I* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     I* Spool file name (if blank, name unchanged)
+     I* N.B. To change name, I#SPLR must be Y
+     I*       unless first call of program:
+     I                                        1  10 I#SPLN
+     I* Repeat open and close of spool file:
+     I                                       11  11 I#SPLR
+     I* Report reference:
+     I                                       12  21 I#REF
+     I* Report title (uses MSGID on CGUSRMSG):
+     I                                       26  32 I#TITL
+     I* Title underline (uses MSGID on CGUSRMSG):
+     I                                       33  39 I#TUL
+     I* Flag to control Report Control Facility:
+     I                                       40  40 I#RCF
+     I* Define fields for line printing:
+     I                                       41  47 I#TEXT
+     I                                       48  57 I#FILE
+     I                                       58  720I#QTY
+     I                                       73  730I#DECS
+     I                                       74  74 I#EDIT
+     I                                       75  770I#EXT
+     I                                       78  78 I#MORE
+     I                                       81 130 I#SUB
+     I*...................................................................
+     I* Data structure for compilation - Copyright insertion:
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I*...................................................................
+     I* Message translation fields:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+     I*...................................................................
+     I* Named constants holding the message IDs for the audit report:
+     I*
+     I*   > W#ID1 -- Total count of records written to file &1 ...:
+     I*   > W#ID2 -- Total count of records written to all files ... ...:
+     I*
+     I              'CAD1011'             C         W#ID1
+     I              'CAD1012'             C         W#ID2
+     I*...................................................................
+     I* Named constants identifying the files for error handling:
+     I*
+     I              'CGUDT1PD  '          C         W#FIL1
+     I              'CGUDT2PD  '          C         W#FIL2
+     I              'CGUDT3PD  '          C         W#FIL3
+     I              'CGUDTAPD  '          C         W#FILA
+     I*
+     I              'EXUDT1PD  '          C         X#FIL1
+     I              'EXUDT2PD  '          C         X#FIL2
+     I              'EXUDT3PD  '          C         X#FIL3
+     I              'EXUDTAPD  '          C         X#FILA
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                 M A I N L I N E
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM           W0TITL  7
+     C                     PARM           W0ULIN  7
+     C                     PARM           W0CMT   3
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C* Initialise program:
+     C*
+     C           W0INIT    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     ENDIF
+     C*
+     C* Select the appropriate action:
+     C*
+     C           W0ACT     CASEQ'*WRITE  'SROUT
+     C           W0ACT     CASEQ'*AUDIT  'SRAUD
+     C*
+     C* Copy in optional action processing:
+     C*
+     C/COPY WNCPYSRC,CGZAUDACT
+     C*
+     C                     CAS            SRBAD
+     C                     ENDCS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C* Return to calling program:
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SROUT writes a record to the appropriate file.     **
+     C********************************************************************
+     C           SROUT     BEGSR                           * S R O U T   *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SROUT '  @STK,Q
+     C*
+     C* Have the path names been determined already?
+     C*
+     C                     Z-ADD1         @P      30
+     C           W0PATH    LOKUPPTH,@P                   90
+     C*
+     C* If found, mpve the existing values:
+     C*
+     C           *IN90     IFEQ *ON
+     C                     MOVE NON,@P    DENPTH
+     C                     MOVE REP,@P    DERPTH
+     C                     ELSE
+     C*
+     C* New path -- determine the path names and move the results:
+     C*
+     C                     EXSR SRPATH
+     C                     MOVE W@NPTH    DENPTH
+     C                     MOVE W@RPTH    DERPTH
+     C*
+     C* Save the results if space in the arrays:
+     C*
+     C           @Q        IFLT 500
+     C                     ADD  1         @Q
+     C                     MOVE W0PATH    PTH,@Q
+     C                     MOVE W@NPTH    NON,@Q
+     C                     MOVE W@RPTH    REP,@Q
+     C                     ENDIF
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Write a record --
+     C*
+     C* Files are under commitment control:
+     C*
+     C           W0CMT     IFEQ 'YES'
+     C* Select file:
+     C                     SELEC
+     C           DECH04    WHNE *BLANKS
+     C                     WRITE@FRM832Y               90
+     C                     MOVE W#FILA    W#FILE 10
+     C                     ADD  1         COUNTA
+     C           DECH03    WHNE *BLANKS
+     C                     WRITE@FRM576Y               90
+     C                     MOVE W#FIL3    W#FILE
+     C                     ADD  1         COUNT3
+     C           DECH02    WHNE *BLANKS
+     C                     WRITE@FRM320Y               90
+     C                     MOVE W#FIL2    W#FILE
+     C                     ADD  1         COUNT2
+     C                     OTHER
+     C                     WRITE@FRM064Y               90
+     C                     MOVE W#FIL1    W#FILE
+     C                     ADD  1         COUNT1
+     C                     ENDSL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Files are not under commitment control:
+     C*
+     C                     ELSE
+     C* Select file:
+     C                     SELEC
+     C           DECH04    WHNE *BLANKS
+     C                     WRITE@FRM832N               90
+     C                     MOVE X#FILA    W#FILE 10
+     C                     ADD  1         COUNTA
+     C           DECH03    WHNE *BLANKS
+     C                     WRITE@FRM576N               90
+     C                     MOVE X#FIL3    W#FILE
+     C                     ADD  1         COUNT3
+     C           DECH02    WHNE *BLANKS
+     C                     WRITE@FRM320N               90
+     C                     MOVE X#FIL2    W#FILE
+     C                     ADD  1         COUNT2
+     C                     OTHER
+     C                     WRITE@FRM064N               90
+     C                     MOVE X#FIL1    W#FILE
+     C                     ADD  1         COUNT1
+     C                     ENDSL
+     C* Endif controlled:
+     C                     ENDIF
+     C*
+     C           *IN90     IFEQ *ON
+     C                     MOVE W#FILE    W0FILE           ***************
+     C                     MOVEL'*WRITE  'W0KEY            ** Database  **
+     C                     Z-ADD1         W0ERNB           ** error 1.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C           EXOUT     TAG                             <<<=== EXOUT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRAUD prints the audit report.                     **
+     C********************************************************************
+     C           SRAUD     BEGSR                           * S R A U D   *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUD '  @STK,Q
+     C*
+     C* Prepare parameters for the report:
+     C*
+     C                     MOVEL'CG9020  'I#REF
+     C                     MOVE W0TITL    I#TITL
+     C                     MOVE W0ULIN    I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C* Determine the file names:
+     C*
+     C           W0CMT     IFEQ 'YES'
+     C                     MOVE W#FIL1    Z1FIL1 10
+     C                     MOVE W#FIL2    Z1FIL2 10
+     C                     MOVE W#FIL3    Z1FIL3 10
+     C                     MOVE W#FILA    Z1FILA 10
+     C                     ELSE
+     C                     MOVE X#FIL1    Z1FIL1
+     C                     MOVE X#FIL2    Z1FIL2
+     C                     MOVE X#FIL3    Z1FIL3
+     C                     MOVE X#FILA    Z1FILA
+     C                     ENDIF
+     C*
+     C                     MOVE W#ID1     I#TEXT
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Print count 1:
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVELZ1FIL1    I#SUB
+     C                     Z-ADDCOUNT1    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN  5
+     C* Print count 2:
+     C                     MOVELZ1FIL2    I#SUB
+     C                     Z-ADDCOUNT2    I#QTY
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C* Print count 3:
+     C                     MOVELZ1FIL3    I#SUB
+     C                     Z-ADDCOUNT3    I#QTY
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Print count 4:
+     C                     MOVELZ1FILA    I#SUB
+     C                     Z-ADDCOUNTA    I#QTY
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C* Skip a line:
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C* Total:
+     C           COUNT1    ADD  COUNT2    COUNTT  90
+     C                     ADD  COUNT3    COUNTT
+     C                     ADD  COUNTA    COUNTT
+     C* Print the total:
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE W#ID2     I#TEXT
+     C                     Z-ADDCOUNTT    I#QTY
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN
+     C                     PARM           W1ACT
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN
+     C* Reset the counters:
+     C                     Z-ADD*ZERO     COUNT1
+     C                     Z-ADD*ZERO     COUNT2
+     C                     Z-ADD*ZERO     COUNT3
+     C                     Z-ADD*ZERO     COUNTA
+     C*
+     C           EXAUD     TAG                             <<<=== EXAUD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** SRPATH   : Look for a path; if not found, create it            **
+     C**                                                                **
+     C** Called by: SROUT                                               **
+     C**                                                                **
+     C** Calls    : SRERR                                               **
+     C********************************************************************
+     C           SRPATH    BEGSR                           * S R P A T H *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATH'  @STK,Q
+     C*
+     C* /COPY for subroutine:
+     C*
+     C/COPY WNCPYSRC,CG1160PATH
+     C*
+     C* Define key list for path:
+     C*
+     C           KPGRPS    KLIST
+     C                     KFLD           EPLEV1
+     C                     KFLD           EPLEV2
+     C                     KFLD           EPLEV3
+     C                     KFLD           EPLEV4
+     C                     KFLD           EPLEV5
+     C                     KFLD           EPLEV6
+     C                     KFLD           EPLEV7
+     C                     KFLD           EPLEV8
+     C                     KFLD           EPLEV9
+     C                     KFLD           EPLEV0
+     C*
+     C* Reset path group set fields:
+     C*
+     C                     MOVE *BLANKS   EPLEV1
+     C                     MOVE *BLANKS   EPLEV2
+     C                     MOVE *BLANKS   EPLEV3
+     C                     MOVE *BLANKS   EPLEV4
+     C                     MOVE *BLANKS   EPLEV5
+     C                     MOVE *BLANKS   EPLEV6
+     C                     MOVE *BLANKS   EPLEV7
+     C                     MOVE *BLANKS   EPLEV8
+     C                     MOVE *BLANKS   EPLEV9
+     C                     MOVE *BLANKS   EPLEV0
+     C                     MOVE *BLANKS   W#RTN
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Find repeating path/top group set:
+     C*
+     C                     Z-ADD2         Y#      70       Start.
+     C                     Z-ADD*ZERO     X#      70       Position of "\"
+     C                     Z-ADD1         C#      50       Counter.
+     C                     MOVE 'N'       ##NONR  1        Get repeating.
+     C*
+     C* Do until message CGD1087 -- "Last group set in path":
+     C*
+     C           W#RTN     DOUEQ'CGD1087'
+     C*
+     C* Find next group:
+     C                     EXSR SRNGRP
+     C*
+     C* Check if group set is top or repeating:
+     C*
+     C           ##GSET    CHAINCGGSETL1             90
+     C*
+     C* If not found, error:
+     C*
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGGSETL1'W0FILE           ***************
+     C                     MOVEL##GSET    W0KEY            ** Database  **
+     C                     Z-ADD2         W0ERNB           ** error 2.  **
+     C                     MOVE 'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C* Record is a repeating group:
+     C*
+     C           GSMREC    IFNE 'N'
+     C           ##NONR    ANDEQ'Y'
+     C                     MOVEL'CGGSETL1'W0FILE           ***************
+     C                     MOVEL##GSET    W0KEY            ** Database  **
+     C                     Z-ADD3         W0ERNB           ** error 3.  **
+     C                     MOVE 'CGD1088' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           GSMREC    IFEQ 'N'
+     C           GSCSET    ANDNE'T'
+     C           ##NONR    ANDNE'Y'
+     C*
+     C* Read path:
+     C*
+     C           KPGRPS    CHAINCGPATHL2             90
+     C*
+     C* If path not found, move "NoPath" text:
+     C*
+     C           *IN90     IFEQ *ON
+     C                     MOVE ##NOPT    W@RPTH  6
+     C                     ELSE
+     C                     MOVE EPPATH    W@RPTH  6
+     C                     ENDIF
+     C*
+     C* Reset Path group set fields:
+     C*
+     C                     MOVE *BLANKS   EPLEV1
+     C                     MOVE *BLANKS   EPLEV2
+     C                     MOVE *BLANKS   EPLEV3
+     C                     MOVE *BLANKS   EPLEV4
+     C                     MOVE *BLANKS   EPLEV5
+     C                     MOVE *BLANKS   EPLEV6
+     C                     MOVE *BLANKS   EPLEV7
+     C                     MOVE *BLANKS   EPLEV8
+     C                     MOVE *BLANKS   EPLEV9
+     C                     MOVE *BLANKS   EPLEV0
+     C*
+     C* Now find non-repeating path:
+     C*
+     C                     Z-ADD1         C#
+     C                     MOVE 'Y'       ##NONR  1         get non-repeat
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Set up key to path file by group set:
+     C*
+     C                     SELEC
+     C           C#        WHEQ 1
+     C                     MOVE ##GSET    EPLEV1
+     C           C#        WHEQ 2
+     C                     MOVE ##GSET    EPLEV2
+     C           C#        WHEQ 3
+     C                     MOVE ##GSET    EPLEV3
+     C           C#        WHEQ 4
+     C                     MOVE ##GSET    EPLEV4
+     C           C#        WHEQ 5
+     C                     MOVE ##GSET    EPLEV5
+     C           C#        WHEQ 6
+     C                     MOVE ##GSET    EPLEV6
+     C           C#        WHEQ 7
+     C                     MOVE ##GSET    EPLEV7
+     C           C#        WHEQ 8
+     C                     MOVE ##GSET    EPLEV8
+     C           C#        WHEQ 9
+     C                     MOVE ##GSET    EPLEV9
+     C           C#        WHEQ 10
+     C                     MOVE ##GSET    EPLEV0
+     C                     ENDSL
+     C* Step level:
+     C                     ADD  1         C#
+     C                     ENDDO
+     C*
+     C* Read path for Non-Repeating Group:
+     C*
+     C           KPGRPS    CHAINCGPATHL2             90
+     C*
+     C* If path not found, move "NoPath" text:
+     C*
+     C           *IN90     IFEQ *ON
+     C                     MOVE ##NOPT    W@NPTH  6
+     C                     ELSE
+     C                     MOVE EPPATH    W@NPTH
+     C                     ENDIF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C           EXPATH    TAG                             <<<=== EXPATH
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** SRNGRP   : Find next group                                     **
+     C**                                                                **
+     C** Called by: SRPATH                                              **
+     C**                                                                **
+     C** Calls    : SRERR                                               **
+     C********************************************************************
+     C           SRNGRP    BEGSR                           * S R N G R P *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRNGRP'  @STK,Q
+     C*
+     C* /COPY for subroutine:
+     C*
+     C/COPY WNCPYSRC,CG1160NGRP
+     C*
+     C* Initialise control code:
+     C*
+     C                     MOVE *BLANKS   W#RTN   7
+     C           *LIKE     DEFN EPLEV1    ##GSET
+     C*
+     C* Find first delimiter (look for "\"; start at Y#; found at X#):
+     C*
+     C           '\'       SCAN W0PATH:Y# X#             90
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If found, find length (position of "\" minus start position):
+     C*
+     C                     MOVE *BLANKS   ##GSET                          102195
+     C           *IN90     IFEQ *ON
+     C           X#        SUB  Y#        Z#      50
+     C           Z#        SUBSTW0PATH:Y# ##GSET
+     C*
+     C* Set Y# to next free space (one character after the "\":
+     C*
+     C           X#        ADD  1         Y#
+     C                     ELSE
+     C*
+     C* Substring has a fixed length of six.
+     C* Message CGD1087 is "Last group set in path":
+     C*
+     C           6         SUBSTW0PATH:Y# ##GSET
+     C                     MOVE 'CGD1087' W#RTN
+     C                     ENDIF
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C           EXNGRP    TAG                             <<<=== EXNGRP
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBAD handles an undefined action.                 **
+     C********************************************************************
+     C           SRBAD     BEGSR                           * S R B A D   *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBAD '  @STK,Q
+     C*
+     C* Database error -- undefined action:
+     C*
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            ** Database  **
+     C                     Z-ADD4         W0ERNB           ** error 4.  **
+     C                     MOVEL'MEM5006' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C*
+     C           EXBAD     TAG                             <<<=== EXBAD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation and definition.     **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Move copyright statement:
+     C*
+     C                     MOVE CPYR@#    ACT@   80
+     C*
+     C* Tag subroutine as executed:
+     C*
+     C                     MOVE 'Y'       W0INIT  1
+     C*
+     C* Open the appropriate set of files, according to
+     C*  the commitment control status flag:
+     C*
+     C           W0CMT     IFEQ 'YES'
+     C                     OPEN CGUDT1PD
+     C                     OPEN CGUDT2PD
+     C                     OPEN CGUDT3PD
+     C                     OPEN CGUDTAPD
+     C                     ELSE
+     C                     OPEN EXUDT1PD
+     C                     OPEN EXUDT2PD
+     C                     OPEN EXUDT3PD
+     C                     OPEN EXUDTAPD
+     C                     ENDIF
+     C*
+     C* Initialise the counters:
+     C*
+     C                     Z-ADD*ZERO     COUNT1  90
+     C                     Z-ADD*ZERO     COUNT2  90
+     C                     Z-ADD*ZERO     COUNT3  90
+     C                     Z-ADD*ZERO     COUNTA  90
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Get "NoPath" text (message identifier CGD1121):
+     C*
+     C           *LIKE     DEFN EPPATH    ##NOPT
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1121' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##NOPT
+     C*
+     C* Clear path arrays and reset index:
+     C*
+     C                     Z-ADD*ZERO     @Q      30
+     C                     MOVE *BLANKS   NON
+     C                     MOVE *BLANKS   REP
+     C                     MOVE *BLANKS   PTH
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   PRTCD   7                                           CSC022
+     C                     PARM '*VERIFY' POPTN   7                                           CSC022
+     C                     PARM 'CSC022'  PSARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           PRTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C                     MOVE 'N'       WCMTSK                                              CSC022
+      *                                                                                       CSC022
+     C                     IN   WDSJOB                                                        CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+     C           ##JOB     LOKUPWCMT,I                   51                                   CSC022
+     C           *IN51     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+     C           PRTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD21        W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C************NAMVAR   DEFN           WDSJOB                                       CSC022BUG2330
+     C           *NAMVAR   DEFN SCCMTJOB  WDSJOB                                             BUG2330
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CG9020CPG
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for error-handling subroutine:
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     O* /Copy point for output specifications:
+     O*
+     O/COPY WNCPYSRC,CG9020OPG
+     O*
+     O********************************************************************
+** CPY@ -- Copyright statement
+(c) Finastra International Limited 2001

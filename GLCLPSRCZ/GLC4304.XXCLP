@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CGL061A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC4304 - Balance Statements - End Task Split               */
+/*                                                                   */
+/*       (c) Misys Banking Systems Ltd. 2006                         */
+/*                                                                   */
+/*       Last Amend No. CGL061A *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. 252651             Date 07Feb08              */
+/*                      CGL061  *Create    Date 27Jun06              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CGL061A - Statements Task Split Processing                  */
+/*       252651 - COB Error - GLC4302                                */
+/*       CGL061 - Multi-streaming GL Statements - Task Split         */
+/*                End Sub-Task                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('STMTSERVE')
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50) +
+                          VALUE('FINISH')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                /*252651*/
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+/* Send message to MRUNQ */
+             SNDPGMMSG  MSG('GLC4304 - Balance Statements +
+                           - End Sub-Task') TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                      /*252651*/
+             CHGVAR     VAR(&DTAQLIBL) VALUE(&SYSID *CAT 'DPLIB')                /*252651*/
+                                                                                 /*252651*/
+/* Send FINISH message to main data queue */
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GLC4304 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+ 
+             ENDPGM

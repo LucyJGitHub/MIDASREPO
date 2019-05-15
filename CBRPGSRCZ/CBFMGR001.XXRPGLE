@@ -1,0 +1,387 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                    AR1096969
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CBFMGR001 - Midas CB File Manager - Determine ADDLFM Parms   *
+      *                                                               *
+      *  Function: This program determines the DTAMBRS parameter      *
+      *            value for the ADDLFM command to add members back   *
+      *            as they are currently applied.                     *
+      *                                                               *
+      *  (C) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. AR1096969*REDUNDANTDate 21Mar13               *
+      *  Prev Amend No. AR544188 *CREATE   Date 01Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1096969 - CBCFMGR_nn jobs should no longer run in our      *
+      *              system                                           *
+      *            - CCB022B - COB Restructure - COB File Manager     *
+      *              (Missed out for drop2A delivery)                 *
+      *  AR544188 - Performance enhancements for LEC07003 component   *
+      *             (Child: AR544186)                                 *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Logical file file description (*MBR)
+     FCBLFMBRPD IF   E           K DISK    INFSR(*PSSR)
+      *
+      ** Physical file file description (*ATR)
+     FCBPFATRPD IF   E           K DISK    INFSR(*PSSR)
+      *
+      ** Add logical file member details
+     FCBADLFMPD O    E             DISK    INFSR(*PSSR)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** +--------------------------------------+
+      ** | End of automatically included D-specs|
+      ** | =====================================|
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** | Arrays and Data Structures           |
+      ** | ==========================           |
+      ** +--------------------------------------+
+      *
+      ** Array for Physical file details
+     D                 DS
+     D ArPFMBR                       20    DIM(999)
+     D   PFNAME                      10    OVERLAY(ArPFMbr:1)
+     D   PFMBR                       10    OVERLAY(ArPFMbr:11)
+      *
+      ** +--------------------------------------+
+      ** | Declared variables                   |
+      ** | ==================                   |
+      ** +--------------------------------------+
+      *
+     D SVNAME          S                   LIKE(MBBOF)
+     D SVMBR           S                   LIKE(MBBOM)
+     D SVBOLF          S                   LIKE(MBBOLF)
+      *
+     D PFMBRCNT        S              5P 0
+     D X               S              3P 0
+     D Y               S              3P 0
+     D @RUN            S              1A
+ 
+      ** +--------------------------------------+
+      ** | End of D-specs                       |
+      ** | ==============                       |
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--- Start of Main processing -----------------------------------+
+      ** |                                                                |
+      ** | Initial processing is performed automatically: the *INZSR is   |
+      ** | executed at program activation.                                |
+      ** |                                                                |
+      ** +----------------------------------------------------------------+
+      *
+      ** Read through all records on CBLFMBRPD
+      *
+     C                   READ      CBLFMBRPD
+     C                   DOW       NOT %EOF(CBLFMBRPD)
+      *
+      ** Skip if file is SQL View
+      *
+     C                   IF        MBRES4 <> 'V'
+      *
+      ** Process depending on whether LF has one or more members
+      *
+     C     MBNOMB        CASEQ     1             #SINGLEMBR
+     C     MBNOMB        CASGT     1             #MULTIMBR
+     C                   ENDCS
+      *
+     C                   ENDIF
+     C                   READ      CBLFMBRPD
+     C                   ENDDO
+      *
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *******************************************************************
+      * #SINGLEMBR - Process Single Member Logical File
+      *******************************************************************
+     C     #SINGLEMBR    BEGSR
+      *
+      ** Initialise count of members in physical files accessed
+      *
+     C                   EVAL      PFMBRCNT = 0
+      *
+      ** Initialise array of physical files and members
+      *
+     C                   EVAL      X = 0
+     C                   MOVE      *BLANKS       ArPFMBR
+     C                   EVAL      PHLIB  = *BLANKS
+     C                   EVAL      PHFILE = *BLANKS
+     C                   EVAL      SVBOLF = *BLANKS
+      *
+      ** Process all records for the same logical
+      *
+     C     K0LFMBR       SETLL     CBLFMBRPD
+     C     K0LFMBR       READE     CBLFMBRPD
+     C                   DOW       NOT %EOF(CBLFMBRPD)
+      *
+      ** Add physical file name and member to array
+      *
+     C                   EVAL      X = X + 1
+     C                   EVAL      PFNAME(X) = MBBOF
+     C                   EVAL      PFMBR(X)  = MBBOM
+      *
+      ** Access physical file details for all physical files
+      *
+     C                   IF        PHLIB <> MBBOL OR PHFILE <> MBBOF OR
+     C                             SVBOLF <> MBBOLF
+     C                   EVAL      PHLIB  = MBBOL
+     C                   EVAL      PHFILE = MBBOF
+     C                   EVAL      SVBOLF = MBBOLF
+      *
+     C     K0PFATR       CHAIN     CBPFATRPD
+      *
+     C                   IF        %FOUND(CBPFATRPD)
+     C                   EVAL      PFMBRCNT = PFMBRCNT + PHNOMB
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Read next record for logical
+      *
+     C     K0LFMBR       READE     CBLFMBRPD
+     C                   ENDDO
+      *
+      ** If number of members according to logical file is the same as
+      ** the total of members for all accessed physical files, then
+      ** DTAMBRS *ALL can be used.
+      *
+     C                   IF        PFMBRCNT = MBNSCM
+     C                   EVAL      CBDTAMBR = '(*ALL)'
+     C                   ELSE
+      *
+      ** Else need to load data members from array
+      *
+     C                   EVAL      X = 1
+     C                   EVAL      SVNAME = *BLANKS
+     C                   EVAL      SVMBR  = *BLANKS
+      *
+     C                   DOW       PFNAME(X) <> *BLANKS
+      *
+     C                   IF        PFNAME(X) <> SVNAME
+      *
+     C                   IF        SVNAME = *BLANKS
+     C                   CAT       '((':0        CBDTAMBR
+     C                   ELSE
+     C                   CAT       ')) (':0      CBDTAMBR
+     C                   ENDIF
+      *
+     C                   CAT       PFNAME(X):0   CBDTAMBR
+     C                   CAT       ' (':0        CBDTAMBR
+     C                   CAT       PFMBR(X):0    CBDTAMBR
+     C                   ELSE
+     C                   CAT       PFMBR(X):1    CBDTAMBR
+     C                   ENDIF
+      *
+     C                   EVAL      SVNAME = PFNAME(X)
+     C                   EVAL      SVMBR  = PFMBR(X)
+     C                   EVAL      X = X + 1
+     C                   ENDDO
+      *
+      ** Add closing brackets
+      *
+     C                   IF        X > 1
+     C                   CAT       ')))':0       CBDTAMBR
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      ** Write details to output file if not already present
+      *
+     C                   EVAL      CBLFLIB  = MBLIB
+     C                   EVAL      CBLFNAME = MBFILE
+     C                   EVAL      CBMBNAME = MBNAME
+      *
+     C     ''''          CHECK     MBMTXT:1
+     C                   IF        NOT %FOUND
+     C                   EVAL      CBMBTEXT = MBMTXT
+     C                   ELSE
+      *
+     C                   EVAL      X = 1
+     C                   EVAL      Y = 1
+      *
+     C                   DO        50
+     C                   EVAL      %SUBST(CBMBTEXT:X:1) = %SUBST(MBMTXT:Y:1)
+     C                   IF        %SUBST(MBMTXT:Y:1) = ''''
+     C                   EVAL      X = X + 1
+     C                   EVAL      %SUBST(CBMBTEXT:X:1) = ''''
+     C                   ENDIF
+     C                   EVAL      X = X + 1
+     C                   EVAL      Y = Y + 1
+     C                   ENDDO
+      *
+     C                   ENDIF
+      *
+     C                   IF        MBRSHR = 'Y'
+     C                   EVAL      CBSHARE = '*YES'
+     C                   ELSE
+     C                   EVAL      CBSHARE = '*NO '
+     C                   ENDIF
+      *
+     C                   WRITE     CBADLFMD0
+     C                   CLEAR                   CBADLFMD0
+      *
+      ** Reposition cursor for next logical
+      *
+     C     K0LFMBR       SETGT     CBLFMBRPD
+      *
+     C                   ENDSR
+      *******************************************************************
+      * #MULTIMBR - Process Multi Member Logical File
+      *******************************************************************
+     C     #MULTIMBR     BEGSR
+      *
+     C                   EVAL      SVNAME = *BLANKS
+     C                   EVAL      SVMBR  = *BLANKS
+      *
+      ** Process all records for the same logical and member
+      *
+     C     K1LFMBR       SETLL     CBLFMBRPD
+     C     K1LFMBR       READE     CBLFMBRPD
+     C                   DOW       NOT %EOF(CBLFMBRPD)
+      *
+     C                   IF        MBBOF <> SVNAME
+      *
+     C                   IF        SVNAME = *BLANKS
+     C                   CAT       '((':0        CBDTAMBR
+     C                   ELSE
+     C                   CAT       ')) (':0      CBDTAMBR
+     C                   ENDIF
+      *
+     C                   CAT       MBBOF:0       CBDTAMBR
+     C                   CAT       ' (':0        CBDTAMBR
+     C                   CAT       MBBOM:0       CBDTAMBR
+     C                   ELSE
+     C                   CAT       MBBOM:1       CBDTAMBR
+     C                   ENDIF
+      *
+     C                   EVAL      SVNAME = MBBOF
+     C                   EVAL      SVMBR  = MBBOM
+      *
+      ** Read next record for logical and member
+      *
+     C     K1LFMBR       READE     CBLFMBRPD
+     C                   ENDDO
+      *
+      ** Add closing brackets
+      *
+     C                   CAT       ')))':0       CBDTAMBR
+      *
+      ** Write details to output file
+      *
+     C                   EVAL      CBLFLIB  = MBLIB
+     C                   EVAL      CBLFNAME = MBFILE
+     C                   EVAL      CBMBNAME = MBNAME
+      *
+     C     ''''          CHECK     MBMTXT:1
+     C                   IF        NOT %FOUND
+     C                   EVAL      CBMBTEXT = MBMTXT
+     C                   ELSE
+      *
+     C                   EVAL      X = 1
+     C                   EVAL      Y = 1
+      *
+     C                   DO        50
+     C                   EVAL      %SUBST(CBMBTEXT:X:1) = %SUBST(MBMTXT:Y:1)
+     C                   IF        %SUBST(MBMTXT:Y:1) = ''''
+     C                   EVAL      X = X + 1
+     C                   EVAL      %SUBST(CBMBTEXT:X:1) = ''''
+     C                   ENDIF
+     C                   EVAL      X = X + 1
+     C                   EVAL      Y = Y + 1
+     C                   ENDDO
+      *
+     C                   ENDIF
+      *
+     C                   IF        MBRSHR = 'Y'
+     C                   EVAL      CBSHARE = '*YES'
+     C                   ELSE
+     C                   EVAL      CBSHARE = '*NO '
+     C                   ENDIF
+      *
+     C                   WRITE     CBADLFMD0
+     C                   CLEAR                   CBADLFMD0
+      *
+      ** Reposition cursor for next logical
+      *
+     C     K1LFMBR       SETGT     CBLFMBRPD
+      *
+     C                   ENDSR
+      *******************************************************************
+      * *INZSR - INITIAL PROCESSING
+      *******************************************************************
+     C     *INZSR        BEGSR
+      *
+      ** Define Key Lists
+      *
+     C     K0LFMBR       KLIST
+     C                   KFLD                    MBLIB
+     C                   KFLD                    MBFILE
+      *
+     C     K1LFMBR       KLIST
+     C                   KFLD                    MBLIB
+     C                   KFLD                    MBFILE
+     C                   KFLD                    MBNAME
+      *
+     C     K0PFATR       KLIST
+     C                   KFLD                    PHLIB
+     C                   KFLD                    PHFILE
+      *
+      ** Define/initialise program work fields
+      *
+     C                   Z-ADD     0             PFMBRCNT
+     C                   Z-ADD     0             X
+     C                   Z-ADD     0             Y
+      *
+     C                   ENDSR
+      *******************************************************************
+      * *PSSR  - Program Exception Error Routine                        *
+      *******************************************************************
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANKS
+     C                   MOVE      'Y'           @RUN
+     C                   DUMP
+     C                   OUT       LDA
+     C                   ENDIF
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2012

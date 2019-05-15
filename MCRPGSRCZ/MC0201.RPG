@@ -1,0 +1,1248 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Hist bal ctl groups detail screen')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  MC0201 - Historic Balance Control Groups Maintenance         *
+      *           (Detail Screen)                                     *
+      *                                                               *
+      *  Function: This program displays a detail screen through      *
+      *  (I/C Int) which a user can input a new historic balance      *
+      *            control group or amend/delete/enquire upon         *
+      *            existing historic balance control groups.          *
+      *                                                               *
+      *  Called by: MC0200 - Historic Balance Control Groups          *
+      *                      Initial Screen                           *
+      *                                                               *
+      *  Calls: SD0020S - Select Currency Code                        *
+      *         DBERRCTL - Database Error Control Program             *
+      *                                                               *
+      *  Parameters: 1A Action code (I,A,D,E)                         *
+      *              2A Group code (not for action I)                 *
+      *              1A Return code (Blank - OK)                      *
+      *                             (I - Exit to initial screen)      *
+      *                             (E - Exit to menu)                *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11278           Date 03May06               *
+      *                 CSC023             Date 28Jan04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 14Nov01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01419             Date 14May93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  BUG11278- Analysis by Branch, Customer and A/C seq. should   *
+      *            be mandatory to create a full account.             *
+      *  CSC023 - SBMJOB output queue must be *JOBD.                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK014 - Submit jobs with user *JOBD                         *
+      *  S01419 - Maintain Logical files over APOSTPD/GLACPHPD        *
+      *                                                               *
+      *****************************************************************
+      *
+     FMC0201DFCF  E                    WORKSTN
+      * Historic Balance Control Groups Detail Screen
+      *
+     FGLHBCGL0UF  E           K        DISK         KCOMIT       A
+      * Historic Balance Control Groups file - Update
+      *
+     FGLFCTLL0UF  E           K        DISK         KCOMIT
+      * Record totals file
+      *
+     FGLPERSL1IF  E           K        DISK
+      * Period Set Codes Table
+      *
+     FSDCURRL1IF  E           K        DISK
+      * Currency Codes Table
+      *
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10  -  Work indicator                                        *
+      *  30  -  Screen validation error found                         *
+      *  40  -  Multibranching is switched on                         *
+      *  41  -  Profit Centres are used in the system                 *
+      *  51  -  Action is Insert                                      *
+      *  52  -  Action is Amend                                       *
+      *  53  -  Action is Delete                                      *
+      *  54  -  Action is Enquire                                     *
+      *  60  -  Enable F10 for delete function                        *
+      *  61  -  ERROR Group code                                      *
+      *  62  -  ERROR Set code                                        *
+      *  63  -  ERROR Posting basis                                   *
+      *  64  -  ERROR Number of periods to retain                     *
+      *  65  -  ERROR Average DR/CR balances                          *
+      *  66  -  ERROR Currency of balances                            *
+      *  67  -  ERROR Update audit                                    *
+      *  68  -  ERROR Analysis by a/c codes                           *
+      *  69  -  ERROR Average over a/c open                           *
+      *  70  -  ERROR Analysis by currencies                          *
+      *  71  -  ERROR Include asset a/c's                             *
+      *  72  -  ERROR Analysis by branches                            *
+      *  73  -  ERROR Include liability a/c's                         *
+      *  74  -  ERROR Analysis by customers                           *
+      *  75  -  ERROR Include income a/c's                            *
+      *  76  -  ERROR Analysis by a/c sequence                        *
+      *  77  -  ERROR Include expense a/c's                           *
+      *  78  -  ERROR Analysis by profit centre                       *
+      *  79  -  ERROR Include control a/c's                           *
+      *  80  -  ERROR Analysis by book                                *
+      *  81  -  ERROR Include memo a/c's                              *
+      *  82  -  ERROR Analysis by transaction types                   *
+      *  83  -  ERROR Include trading a/c's                           *
+      *  84  -  ERROR Analysis by transaction sub-types               *
+      *  85  -  ERROR Include contingent a/c's                        *
+      *  86  -  ERROR Analysis by associated customers                *
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INSERT  -  Insert processing                                 *
+      *  AMEND   -  Amend processing                                  *
+      *  DELETE  -  Delete processing                                 *
+      *  ENQIRE  -  Enquiry processing                                *
+      *  GETREC  -  Get existing control group record                 *
+      *  *PSSR   -  Error processing SR                               *
+      *  GETCTL  -  Get control totals record                         *
+      *  VALID   -  Validate Input                                    *
+      *  SCTOFL  -  Move screen fields to file                        *
+      *  FLTOSC  -  Move file fields to screen                        *
+      *  ZASNMS  -  Send message to program message queue             *
+      *  MSGSUB  -  Set up message subfile                            *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80               Copyright
+     E************        CMD     1   2 80               Commands         S01419
+     E**********          CMD     1   4 80               Commands                      S01419 CSC023
+     E                    CMD     1   5 80               Commands                             CSC023
+     E                    FIL     1  11 20               Files
+     E                    EM1     1   8 40               Error messages 1
+     E                    EM2     1   8 40               Error messages 2
+     E                    C1     26  26  1               Valid char 1
+     E                    C2     36  36  1               Valid char 2
+      /SPACE 3
+     IRUNDAT    E DS
+      *
+      **  Run Date DS
+      *
+     ILDA       E DSLDA
+      ** Local data structure used for error handling
+      *
+     IPSDS       SDS
+      *
+      **  Program Status DS
+      *
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     ISDGELR    E DSSDGELRPD
+      **  General Ledger details
+      *
+     I*CMDDS******DS                             80                                           CSC023
+     ICMDDS       DS                            160                                           CSC023
+      *
+      **  DS to format commands for QCMDEXC
+      *
+     I                                       13  22 FIL1
+     I                                       29  30 MBR1
+     I                                       42  51 FIL2
+     I                                       54  55 MBR2
+     I                                       41  42 GRP                   S01419
+     I                                       46  46 PBAS                  S01419
+     I                                       50  59 ANAL                  S01419
+     I                                       81 160 EXTRA                                     CSC023
+      *                                                                   S01419
+     ISORT        DS                             10                       S01419
+      *                                                                   S01419
+      **  DS to format Analysis Field                                     S01419
+      *                                                                   S01419
+     I                                        1   1 SABAC                 S01419
+     I                                        2   2 SABCY                 S01419
+     I                                        3   3 SABBR                 S01419
+     I                                        4   4 SABCU                 S01419
+     I                                        5   5 SABAS                 S01419
+     I                                        6   6 SABPC                 S01419
+     I                                        7   7 SABBK                 S01419
+     I                                        8   8 SABTT                 S01419
+     I                                        9   9 SABTS                 S01419
+     I                                       10  10 SASCU                 S01419
+      *
+     I/COPY WNCPYSRC,MC0201I001
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      **  Receive parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           XACT    1        Action code
+     C                     PARM           XGRP    2        Group code
+     C                     PARM           XRET    1        Return code
+      *
+      **  Set up copyright
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Initialize return code
+      *
+     C                     MOVEL*BLANKS   XRET
+      *
+      **  Define the error DS
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  In the Dataarea RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      **  Move run date (alpha) to screen field for display
+      *
+     C                     MOVELAGMRDT    SMRDT
+      *
+      **  Switch on indicator if multibranching on
+      *
+     C           AGMBIN    IFEQ 'Y'                        *B1
+     C                     SETON                     40    * 1
+     C                     END                             *E1
+      *
+      ** Obtain General Ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK                     *B1
+     C           *LOCK     IN   LDA                        * 1         2
+     C                     MOVEL'SDGELRPD'DBFILE           * 1
+     C                     Z-ADD003       DBASE            * 1
+     C                     MOVELPOPTN     DBKEY            * 1
+     C                     MOVEL'MC0201'  DBPGM            * 1
+     C                     OUT  LDA                        * 1
+     C                     EXSR *PSSR                      * 1
+     C                     END                             *E1
+      *
+      **  Switch on indicator if Profit Centres used
+      *
+     C           BKPRCU    IFEQ 'Y'                        *B1
+     C                     SETON                     41    * 1
+     C                     END                             *E1
+      *
+     C/COPY WNCPYSRC,MC0201C001
+      **  Set up message subfile
+      *
+     C                     EXSR MSGSUB
+      *
+      **  Process according to received action code
+      *
+     C           XACT      CASEQ'I'       INSERT
+     C           XACT      CASEQ'A'       AMEND
+     C           XACT      CASEQ'D'       DELETE
+     C           XACT      CASEQ'E'       ENQIRE
+     C                     END
+      *
+      **  Set return code if command key used to exit
+      **  (Do not set 'initial menu' code for enquiries, since
+      **   user must exit with a command key)
+      *
+     C   KC                MOVEL'E'       XRET
+     C           *INKL     IFEQ '1'                        *B1
+     C           XACT      ANDNE'E'                        * 1
+     C                     MOVEL'I'       XRET             * 1
+     C                     END                             *E1
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INSERT - SR TO PROCESS ACTION CODE 'I' - INSERT RECORD       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSERT    BEGSR
+      *
+      **  Set 'insert' indicator
+      *
+     C                     SETON                     51
+      *
+      ** Set up default field values
+      *
+     C                     MOVEL'N'       SADCB
+     C                     MOVEL'N'       SUPAU
+     C                     MOVEL'N'       SAOAO
+     C                     MOVEL'N'       SIAAC
+     C                     MOVEL'N'       SILAC
+     C                     MOVEL'N'       SIIAC
+     C                     MOVEL'N'       SIEAC
+     C                     MOVEL'N'       SICAC
+     C                     MOVEL'N'       SIMAC
+     C                     MOVEL'N'       SITAC
+     C                     MOVEL'N'       SICTA
+      *
+      ** Display/validate screen until either no errors or a command
+      ** key is pressed
+      *
+     C           *IN30     DOUEQ'0'                        *B1
+     C           *INKC     OREQ '1'                        * 1
+     C           *INKL     OREQ '1'                        * 1
+     C                     EXSR VALID                      * 1
+     C                     END                             *E1
+      *
+      ** If command key not used to exit, create a new record
+      ** Update file controls on GLFCTLL0
+      ** COMIT file changes
+      *
+     C           *INKC     IFEQ '0'                        *B1
+     C           *INKL     ANDEQ'0'                        * 1
+      *
+     C                     EXSR SCTOFL                     * 1
+     C                     Z-ADD0         HCCPNB           * 1
+     C                     Z-ADD0         HCLPDT           * 1
+     C                     MOVEL'I'       HCTYLC           * 1
+     C                     Z-ADDAGRDNB    HCLCD            * 1
+     C                     WRITE@BNREDZ                    * 1
+      *
+     C                     EXSR GETCTL                     * 1
+     C                     ADD  1         GFNORC           * 1
+     C                     ADD  1         GFNOIN           * 1
+     C                     UPDAT@AHREAU                    * 1
+      *
+     C                     COMIT                           * 1
+      *                                                                   S01419
+      ** Create Logical files over APOSTPD/GLACPHPD                       S01419
+      ** if required                                                      S01419
+     C                     MOVE *BLANKS   CMDDS            * 1            S01419
+     C                     MOVELCMD,3     CMDDS            * 1 SBMJOB     S01419
+     C                     MOVE HCCGCD    GRP              * 1            S01419
+     C                     MOVE SPSTB     PBAS             * 1            S01419
+     C                     MOVE SORT      ANAL             * 1            S01419
+     C                     MOVELCMD,5     EXTRA                                               CSC023
+     C                     CALL 'QCMDEXC'                  * 1            S01419
+     C                     PARM           CMDDS            * 1            S01419
+     C**********           PARM 80        CMDLN            * 1                         S01419 CSC023
+     C                     PARM 160       CMDLN                                               CSC023
+      *
+      ** Add file members for group code to physical and logical files
+      *
+     C           1         DO   11        @       30       *B2
+     C                     MOVELFIL,@     PF     10        * 2
+     C                     MOVE FIL,@     LF     10        * 2
+     C           LF        IFEQ *BLANKS                    *B3
+     C                     MOVELCMD,1     CMDDS            * 3 ADDPFM
+     C                     MOVELPF        FIL1             * 3
+     C                     MOVELHCCGCD    MBR1             * 3
+     C                     ELSE                            *X3
+     C                     MOVELCMD,2     CMDDS            * 3 ADDLFM
+     C                     MOVELLF        FIL1             * 3
+     C                     MOVELHCCGCD    MBR1             * 3
+     C                     MOVELPF        FIL2             * 3
+     C                     MOVELHCCGCD    MBR2             * 3
+     C                     END                             *E3
+     C                     CALL 'QCMDEXC'                  * 2
+     C                     PARM           CMDDS            * 2
+     C                     PARM 80        CMDLN  155       * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AMEND - SR TO PROCESS ACTION CODE 'A' - AMEND RECORD         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AMEND     BEGSR
+      *
+      **  Set 'amend' indicator
+      *
+     C                     SETON                     52
+      *
+      **  Get record
+      *
+     C                     EXSR GETREC
+      *
+      **  Move file fields to screen
+      *
+     C                     EXSR FLTOSC
+      *
+      ** Display/validate screen until either no errors or a command
+      ** key is pressed
+      *
+     C           *IN30     DOUEQ'0'                        *B1
+     C           *INKC     OREQ '1'                        * 1
+     C           *INKL     OREQ '1'                        * 1
+     C                     EXSR VALID                      * 1
+     C                     END                             *E1
+      *
+      ** If command key not used to exit, update existing record.
+      ** Update file controls on GLFCTLL0
+      ** COMIT file changes
+      *
+     C           *INKC     IFEQ '0'                        *B1
+     C           *INKL     ANDEQ'0'                        * 1
+     C                     EXSR SCTOFL                     * 1
+     C                     MOVEL'A'       HCTYLC           * 1
+     C                     Z-ADDAGRDNB    HCLCD            * 1
+     C                     UPDAT@BNREDZ                    * 1
+      *
+     C                     EXSR GETCTL                     * 1
+     C                     ADD  1         GFNOAM           * 1
+     C                     UPDAT@AHREAU                    * 1
+      *
+     C                     COMIT                           * 1
+      *
+      ** Create Logical files over APOSTPD/GLACPHPD                       S01419
+      ** if required                                                      S01419
+     C                     MOVE *BLANKS   CMDDS            * 1            S01419
+     C                     MOVELCMD,3     CMDDS            * 1 SBMJOB     S01419
+     C                     MOVE HCCGCD    GRP              * 1            S01419
+     C                     MOVE SPSTB     PBAS             * 1            S01419
+     C                     MOVE SORT      ANAL             * 1            S01419
+     C                     MOVELCMD,5     EXTRA                                               CSC023
+     C                     CALL 'QCMDEXC'                  * 1            S01419
+     C                     PARM           CMDDS            * 1            S01419
+     C**********           PARM 80        CMDLN            * 1                         S01419 CSC023
+     C                     PARM 160       CMDLN                                               CSC023
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DELETE - SR TO PROCESS ACTION CODE 'D' - DELETE RECORD       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DELETE    BEGSR
+      *
+      **  Set 'delete' indicators
+      *
+     C                     SETON                     53  54
+      *
+      **  Get record
+      *
+     C                     EXSR GETREC
+      *
+      **  Enable F10 if record not already marked for deletion
+      *
+     C           HCTYLC    COMP 'D'                  6060
+      *
+      **  Move file fields to screen
+      *
+     C                     EXSR FLTOSC
+      *
+      ** Display/validate screen until a command key is pressed
+      *
+     C           *INKC     DOUEQ'1'                        *B1
+     C           *INKJ     OREQ '1'                        * 1
+     C           *INKL     OREQ '1'                        * 1
+     C                     EXSR VALID                      * 1
+     C                     END                             *E1
+      *
+      ** If F10 used to exit, mark record for deletion
+      ** COMIT file changes
+      *
+     C           *INKJ     IFEQ '1'                        *B1
+     C                     EXSR SCTOFL                     * 1
+     C                     MOVEL'D'       HCTYLC           * 1
+     C                     Z-ADDAGRDNB    HCLCD            * 1
+     C                     UPDAT@BNREDZ                    * 1
+      *
+     C                     COMIT                           * 1
+      *                                                                   S01419
+      ** Delete Logical files over APOSTPD/GLACPHPD                       S01419
+      ** if required                                                      S01419
+     C                     MOVE *BLANKS   CMDDS            * 1            S01419
+     C                     MOVELCMD,4     CMDDS            * 1 SBMJOB     S01419
+     C                     MOVE HCCGCD    GRP              * 1            S01419
+     C                     MOVELCMD,5     EXTRA                                               CSC023
+     C                     CALL 'QCMDEXC'                  * 1            S01419
+     C                     PARM           CMDDS            * 1            S01419
+     C**********           PARM 80        CMDLN            * 1                         S01419 CSC023
+     C                     PARM 160       CMDLN                                               CSC023
+      *
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ENQIRE - SR TO PROCESS ACTION CODE 'E' - ENQUIRE UPON RECORD *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ENQIRE    BEGSR
+      *
+      **  Set 'enqire' indicator
+      *
+     C                     SETON                     54
+      *
+      **  Get record
+      *
+     C                     EXSR GETREC
+      *
+      **  Move file fields to screen
+      *
+     C                     EXSR FLTOSC
+      *
+      ** Display/validate screen until a command key is pressed
+      *
+     C           *INKC     DOUEQ'1'                        *B1
+     C           *INKL     OREQ '1'                        * 1
+     C                     EXSR VALID                      * 1
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GETREC - SR TO GET EXISTING CONTROL GROUP RECORD             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GETREC    BEGSR
+      *
+      **  Get record, error if not found
+      *
+     C           XGRP      CHAIN@BNREDZ              LR
+     C           *INLR     IFEQ '1'                        *B1 ERROR 002
+     C           *LOCK     IN   LDA                        * 1 ERROR 002
+     C                     MOVEL'GLHBCGL0'DBFILE           * 1 ERROR 002
+     C                     Z-ADD002       DBASE            * 1 ERROR 002
+     C                     MOVELXGRP      DBKEY            * 1 ERROR 002
+     C                     MOVEL'MC0201'  DBPGM            * 1 ERROR 002
+     C                     OUT  LDA                        * 1 ERROR 002
+     C                     EXSR *PSSR                      * 1 ERROR 002
+     C                     END                             *E1 ERROR 002
+      *
+      **  Send message if record marked for deletion
+      *
+     C           HCTYLC    IFEQ 'D'                        *B1
+     C                     SETON                     30  61* 1
+     C                     MOVE 'GLX0358' ZAMSID           * 1
+     C                     EXSR ZASNMS                     * 1
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - SR TO HANDLE ABNORMAL ERROR CONDITIONS               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     ROLBK
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GETCTL - SR TO GET CONTROL TOTALS RECORD                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GETCTL    BEGSR
+      *
+     C                     MOVEL'GLHBCGPD'GFFLNM
+     C           GFFLNM    CHAIN@AHREAU              LR
+     C           *INLR     IFEQ '1'                        *B1 ERROR 001
+     C           *LOCK     IN   LDA                        * 1 ERROR 001
+     C                     MOVEL'GLFCTLL0'DBFILE           * 1 ERROR 001
+     C                     Z-ADD001       DBASE            * 1 ERROR 001
+     C                     MOVELGFFLNM    DBKEY            * 1 ERROR 001
+     C                     MOVEL'MC0201'  DBPGM            * 1 ERROR 001
+     C                     OUT  LDA                        * 1 ERROR 001
+     C                     EXSR *PSSR                      * 1 ERROR 001
+     C                     END                             *E1 ERROR 001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VALID - SR TO VALIDATE INPUT                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      **  Display screen
+      *
+     C                     WRITESFLCTLM
+     C                     EXFMTDETAIL
+      *
+      **  Exit if F3 or F12
+      *
+     C   KC
+     COR KL                GOTO #ENDVL
+      *
+      **  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      **  Initialise indicators
+      *
+     C                     SETOF                     306162
+     C                     SETOF                     636465
+     C                     SETOF                     666768
+     C                     SETOF                     697071
+     C                     SETOF                     727374
+     C                     SETOF                     757677
+     C                     SETOF                     787980
+     C                     SETOF                     818283
+     C                     SETOF                     848586
+      *
+      **  Insert only - Check group code is entered
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SCGCD     ANDEQ*BLANKS                    * 1
+     C                     SETON                     30  61* 1
+     C                     MOVE 'GLX0356' ZAMSID           * 1
+     C                     EXSR ZASNMS                     * 1
+     C                     END                             *E1
+      *
+      **  Insert only - Check group code not already on file
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SCGCD     ANDNE*BLANKS                    * 1
+     C           SCGCD     CHAIN@BNREDZ              10    * 1
+     C           *IN10     IFEQ '0'                        *B2
+     C                     SETON                     30  61* 2
+     C                     MOVE 'GLX0357' ZAMSID           * 2
+     C                     EXSR ZASNMS                     * 2
+      *
+      **  If group code not on file check char 1 is A-Z
+      **  and char 2 is A-Z or 0-9
+      *
+     C                     ELSE                            *X2
+     C                     MOVELSCGCD     W1      1        * 2
+     C           W1        LOKUPC1                       10* 2
+     C   10                MOVE SCGCD     W1               * 2
+     C   10      W1        LOKUPC2                       10* 2
+     C           *IN10     IFEQ '0'                        *B3
+     C                     SETON                     30  61* 3
+     C                     MOVE 'GLX0371' ZAMSID           * 3
+     C                     EXSR ZASNMS                     * 3
+     C                     END                             *E3
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      **  Not Insert - Check record not marked for deletion
+      *
+     C           XACT      IFNE 'I'                        *B1
+     C           HCTYLC    ANDEQ'D'                        * 1
+     C                     SETON                     30  61* 1
+     C                     MOVE 'GLX0358' ZAMSID           * 1
+     C                     EXSR ZASNMS                     * 1
+     C                     END                             *E1
+      *
+      **  Insert/Amend - Check set code exists on table
+      **  (Note - Unable to amend set code, but record needed
+      **   for validation of no. periods to retain)
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           XACT      OREQ 'A'                        * 1
+     C           SPSTC     CHAIN@BJREDT              10    * 1
+     C           *IN10     IFEQ '1'                        *B2
+     C           *IN10     OREQ '0'                        * 2
+     C           STTYLC    ANDEQ'D'                        * 2
+     C                     SETON                     30  62* 2
+     C                     MOVE 'GLX0359' ZAMSID           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      **  Insert only - Posting basis must be P or V
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SPSTB     ANDNE'P'                        * 1
+     C           SPSTB     ANDNE'V'                        * 1
+     C/COPY WNCPYSRC,MC0201C003
+     C                     SETON                     30  63* 1
+     C/COPY WNCPYSRC,MC0201C002
+     C                     MOVE 'GLX0360' ZAMSID           * 1
+     C                     EXSR ZASNMS                     * 1
+     C                     END                             *E1
+      *
+      **  Insert/Amend - Periods to retain must be in range
+      **                 1 to 'periods per annum' x history period
+      **                 from GLPERSL1 (see set code validation above).
+      **                 Treat History Period of 0 as if it were 1.
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           XACT      OREQ 'A'                        * 1
+      *
+      **  Calculate 'periods per annum' x history period, set to -1
+      **  if GLPERSL1 not found
+      *
+     C           *IN62     IFEQ '0'                        *B2
+      *
+     C           STHPYR    IFEQ 0                          *B3
+     C                     Z-ADD1         STHPYR           * 3
+     C                     END                             *E3
+      *
+     C           STPPAN    MULT STHPYR    PMAX    30       * 2
+     C                     ELSE                            *X2
+     C                     Z-SUB1         PMAX             * 2
+     C                     END                             *E2
+      *
+     C           SNPTR     IFLT 1                          *B2
+     C           SNPTR     ORGT PMAX                       * 2
+     C                     SETON                     30  64* 2
+     C                     MOVE 'GLX0361' ZAMSID           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      **  Insert only - Average DR/CR balances must be D,T or N
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SADCB     ANDNE'D'                        * 1
+     C           SADCB     ANDNE'T'                        * 1
+     C           SADCB     ANDNE'N'                        * 1
+     C                     SETON                     30  65* 1
+     C                     MOVE 'GLX0362' ZAMSID           * 1
+     C                     EXSR ZASNMS                     * 1
+     C                     END                             *E1
+      *
+      **  Insert only - If currency is '?' call selection program
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SCCYB     ANDEQ'?  '                      * 1
+     C                     CALL 'SD0020S'                  * 1
+     C                     PARM           W7      7        * 1
+     C           SCCYB     PARM SCCYB     W3      3        * 1
+     C                     END                             *E1
+      *
+      **  Insert only - Check currency code exists on table if entered
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SCCYB     ANDNE*BLANKS                    * 1
+     C           SCCYB     CHAIN@A6REA3              10    * 1
+     C           *IN10     IFEQ '1'                        *B2
+     C           *IN10     OREQ '0'                        * 2
+     C           A6TYLC    ANDEQ'D'                        * 2
+     C                     SETON                     30  66* 2
+     C                     MOVE 'GLX0363' ZAMSID           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      **  Insert/Amend - Update audit must be Y or N
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           XACT      OREQ 'A'                        * 1
+     C           SUPAU     IFNE 'Y'                        *B2
+     C           SUPAU     ANDNE'N'                        * 2
+     C                     SETON                     30  67* 2
+     C                     MOVE 'GLX0364' ZAMSID           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      **  Input only - Analysis by account codes must be 0 to 9
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SABAC     ANDLT'0'                        * 1
+     C           XACT      OREQ 'I'                        * 1
+     C           SABAC     ANDGT'9'                        * 1
+     C                     SETON                     30  68* 1
+     C                     MOVE 'GLX0365' ZAMSID           * 1
+     C                     EXSR ZASNMS                     * 1
+     C                     END                             *E1
+      *
+      **  Input only - Average over a/c open must be Y or N
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SAOAO     ANDNE'Y'                        * 1
+     C           SAOAO     ANDNE'N'                        * 1
+     C                     SETON                     30  69* 1
+     C                     MOVE 'GLX0366' ZAMSID           * 1
+     C                     EXSR ZASNMS                     * 1
+     C                     END                             *E1
+      *
+      **  Input only - Average over a/c open must not be Y if
+      **               certain analysis fields are blank
+      *
+     C           SABBR     IFEQ *BLANKS                    *B1
+     C           SABCU     OREQ *BLANKS                    * 1
+     C           SABAS     OREQ *BLANKS                    * 1
+     C           XACT      IFEQ 'I'                        *B2
+     C           SAOAO     ANDEQ'Y'                        * 2
+     C                     SETON                     30  69* 2
+     C                     MOVE 'GLX0367' ZAMSID           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      **  Input only - Analysis by currencies must be 0 to 9 and
+      **               must not be the same as analysis by a/c codes
+      *
+     C           XACT      IFEQ 'I'                        *B1
+     C           SABCY     ANDLT'0'                        * 1
+     C           XACT      OREQ 'I'                        * 1
+     C           SABCY     ANDGT'9'                        * 1
+     C           XACT      OREQ 'I'                        * 1
+     C           SABCY     ANDEQSABAC                      * 1
+     C                     SETON                     30  70* 1
+     C                     MOVE 'GLX0368' ZAMSID           * 1
+     C                     EXSR ZASNMS                     * 1
+     C                     END                             *E1
+      *
+      **  Input only - 'Include a/c' fields must be Y,N or blank
+      **               'Analysis' fields must be 0-9 or blank and if
+      **               non-blank must not be equal to any preceding
+      **               fields.
+      *
+     C           XACT      IFEQ 'I'                        *B1
+      *
+     C           SIAAC     IFNE *BLANKS                    *B2
+     C           SIAAC     ANDNE'Y'                        * 2
+     C           SIAAC     ANDNE'N'                        * 2
+     C                     SETON                     30  71* 2
+     C                     MOVE 'GLX0369' ZAMSID           * 2
+     C                     MOVELEM1,1     ZAMSDA           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+      *
+      * Analysis by Branches                                                                BUG11278
+     C           *IN40     IFEQ '1'                        *B2
+     C********** SABBR     IFNE *BLANKS                    *B3                              BUG11278
+     C           SABBR     IFLT '0'                        *B4
+     C           SABBR     ORGT '9'                        * 4
+     C           SABBR     OREQ SABAC                      * 4
+     C           SABBR     OREQ SABCY                      * 4
+     C                     SETON                     30  72* 4
+     C                     MOVE 'GLX0370' ZAMSID           * 4
+     C                     MOVELEM2,1     ZAMSDA           * 4
+     C                     EXSR ZASNMS                     * 4
+     C                     END                             *E4
+     C**********           END                             *E3                              BUG11278
+     C                     END                             *E2
+      *
+     C           SILAC     IFNE *BLANKS                    *B2
+     C           SILAC     ANDNE'Y'                        * 2
+     C           SILAC     ANDNE'N'                        * 2
+     C                     SETON                     30  73* 2
+     C                     MOVE 'GLX0369' ZAMSID           * 2
+     C                     MOVELEM1,2     ZAMSDA           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+      *
+      * Analysis By Customer                                                                BUG11278
+     C********** SABCU     IFNE *BLANKS                    *B2                              BUG11278
+     C           SABCU     IFLT '0'                        *B3
+     C           SABCU     ORGT '9'                        * 3
+     C           SABCU     OREQ SABAC                      * 3
+     C           SABCU     OREQ SABCY                      * 3
+     C           SABCU     OREQ SABBR                      * 3
+     C                     SETON                     30  74* 3
+     C                     MOVE 'GLX0370' ZAMSID           * 3
+     C                     MOVELEM2,2     ZAMSDA           * 3
+     C                     EXSR ZASNMS                     * 3
+     C                     END                             *E3
+     C**********           END                             *E2                              BUG11278
+      *
+     C           SIIAC     IFNE *BLANKS                    *B2
+     C           SIIAC     ANDNE'Y'                        * 2
+     C           SIIAC     ANDNE'N'                        * 2
+     C                     SETON                     30  75* 2
+     C                     MOVE 'GLX0369' ZAMSID           * 2
+     C                     MOVELEM1,3     ZAMSDA           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+      *
+      * Analysis By A/C Seq.                                                                BUG11278
+     C********** SABAS     IFNE *BLANKS                    *B2                              BUG11278
+     C           SABAS     IFLT '0'                        *B3
+     C           SABAS     ORGT '9'                        * 3
+     C           SABAS     OREQ SABAC                      * 3
+     C           SABAS     OREQ SABCY                      * 3
+     C           SABAS     OREQ SABBR                      * 3
+     C           SABAS     OREQ SABCU                      * 3
+     C                     SETON                     30  76* 3
+     C                     MOVE 'GLX0370' ZAMSID           * 3
+     C                     MOVELEM2,3     ZAMSDA           * 3
+     C                     EXSR ZASNMS                     * 3
+     C                     END                             *E3
+     C**********           END                             *E2                              BUG11278
+      *
+     C           SIEAC     IFNE *BLANKS                    *B2
+     C           SIEAC     ANDNE'Y'                        * 2
+     C           SIEAC     ANDNE'N'                        * 2
+     C                     SETON                     30  77* 2
+     C                     MOVE 'GLX0369' ZAMSID           * 2
+     C                     MOVELEM1,4     ZAMSDA           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+      *
+     C           *IN41     IFEQ '1'                        *B3
+     C           SABPC     IFNE *BLANKS                    *B3
+     C           SABPC     IFLT '0'                        *B4
+     C           SABPC     ORGT '9'                        * 4
+     C           SABPC     OREQ SABAC                      * 4
+     C           SABPC     OREQ SABCY                      * 4
+     C           SABPC     OREQ SABBR                      * 4
+     C           SABPC     OREQ SABCU                      * 4
+     C           SABPC     OREQ SABAS                      * 4
+     C                     SETON                     30  78* 4
+     C                     MOVE 'GLX0370' ZAMSID           * 4
+     C                     MOVELEM2,4     ZAMSDA           * 4
+     C                     EXSR ZASNMS                     * 4
+     C                     END                             *E4
+     C                     END                             *E3
+     C                     END                             *E2
+      *
+     C           SICAC     IFNE *BLANKS                    *B2
+     C           SICAC     ANDNE'Y'                        * 2
+     C           SICAC     ANDNE'N'                        * 2
+     C                     SETON                     30  79* 2
+     C                     MOVE 'GLX0369' ZAMSID           * 2
+     C                     MOVELEM1,5     ZAMSDA           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+      *
+     C           SABBK     IFNE *BLANKS                    *B2
+     C           SABBK     IFLT '0'                        *B3
+     C           SABBK     ORGT '9'                        * 3
+     C           SABBK     OREQ SABAC                      * 3
+     C           SABBK     OREQ SABCY                      * 3
+     C           SABBK     OREQ SABBR                      * 3
+     C           SABBK     OREQ SABCU                      * 3
+     C           SABBK     OREQ SABAS                      * 3
+     C           SABBK     OREQ SABPC                      * 3
+     C                     SETON                     30  80* 3
+     C                     MOVE 'GLX0370' ZAMSID           * 3
+     C                     MOVELEM2,5     ZAMSDA           * 3
+     C                     EXSR ZASNMS                     * 3
+     C                     END                             *E3
+     C                     END                             *E2
+      *
+     C           SIMAC     IFNE *BLANKS                    *B2
+     C           SIMAC     ANDNE'Y'                        * 2
+     C           SIMAC     ANDNE'N'                        * 2
+     C                     SETON                     30  81* 2
+     C                     MOVE 'GLX0369' ZAMSID           * 2
+     C                     MOVELEM1,6     ZAMSDA           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+      *
+     C           SABTT     IFNE *BLANKS                    *B2
+     C           SABTT     IFLT '0'                        *B3
+     C           SABTT     ORGT '9'                        * 3
+     C           SABTT     OREQ SABAC                      * 3
+     C           SABTT     OREQ SABCY                      * 3
+     C           SABTT     OREQ SABBR                      * 3
+     C           SABTT     OREQ SABCU                      * 3
+     C           SABTT     OREQ SABAS                      * 3
+     C           SABTT     OREQ SABPC                      * 3
+     C           SABTT     OREQ SABBK                      * 3
+     C                     SETON                     30  82* 3
+     C                     MOVE 'GLX0370' ZAMSID           * 3
+     C                     MOVELEM2,6     ZAMSDA           * 3
+     C                     EXSR ZASNMS                     * 3
+     C                     END                             *E3
+     C                     END                             *E2
+      *
+     C           SITAC     IFNE *BLANKS                    *B2
+     C           SITAC     ANDNE'Y'                        * 2
+     C           SITAC     ANDNE'N'                        * 2
+     C                     SETON                     30  83* 2
+     C                     MOVE 'GLX0369' ZAMSID           * 2
+     C                     MOVELEM1,7     ZAMSDA           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+      *
+     C           SABTS     IFNE *BLANKS                    *B2
+     C           SABTS     IFLT '0'                        *B3
+     C           SABTS     ORGT '9'                        * 3
+     C           SABTS     OREQ SABAC                      * 3
+     C           SABTS     OREQ SABCY                      * 3
+     C           SABTS     OREQ SABBR                      * 3
+     C           SABTS     OREQ SABCU                      * 3
+     C           SABTS     OREQ SABAS                      * 3
+     C           SABTS     OREQ SABPC                      * 3
+     C           SABTS     OREQ SABBK                      * 3
+     C           SABTS     OREQ SABTT                      * 3
+     C                     SETON                     30  84* 3
+     C                     MOVE 'GLX0370' ZAMSID           * 3
+     C                     MOVELEM2,7     ZAMSDA           * 3
+     C                     EXSR ZASNMS                     * 3
+     C                     END                             *E3
+     C                     END                             *E2
+      *
+     C           SICTA     IFNE *BLANKS                    *B2
+     C           SICTA     ANDNE'Y'                        * 2
+     C           SICTA     ANDNE'N'                        * 2
+     C                     SETON                     30  85* 2
+     C                     MOVE 'GLX0369' ZAMSID           * 2
+     C                     MOVELEM1,8     ZAMSDA           * 2
+     C                     EXSR ZASNMS                     * 2
+     C                     END                             *E2
+      *
+     C           SASCU     IFNE *BLANKS                    *B2
+     C           SASCU     IFLT '0'                        *B3
+     C           SASCU     ORGT '9'                        * 3
+     C           SASCU     OREQ SABAC                      * 3
+     C           SASCU     OREQ SABCY                      * 3
+     C           SASCU     OREQ SABBR                      * 3
+     C           SASCU     OREQ SABCU                      * 3
+     C           SASCU     OREQ SABAS                      * 3
+     C           SASCU     OREQ SABPC                      * 3
+     C           SASCU     OREQ SABBK                      * 3
+     C           SASCU     OREQ SABTT                      * 3
+     C           SASCU     OREQ SABTS                      * 3
+     C                     SETON                     30  86* 3
+     C                     MOVE 'GLX0370' ZAMSID           * 3
+     C                     MOVELEM2,8     ZAMSDA           * 3
+     C                     EXSR ZASNMS                     * 3
+     C                     END                             *E3
+     C                     END                             *E2
+      *
+     C                     END                             *E1
+      *
+     C           #ENDVL    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SCTOFL - SR TO MOVE SCREEN FIELDS TO FILE                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SCTOFL    BEGSR
+      *
+     C                     MOVELSCGCD     HCCGCD
+     C                     MOVELSCGDS     HCCGDS
+     C                     MOVELSPSTC     HCPSTC
+     C                     MOVELSPSTB     HCPSTB
+     C                     Z-ADDSNPTR     HCNPTR
+     C                     MOVELSADCB     HCADCB
+     C                     MOVELSCCYB     HCCCYB
+     C                     MOVELSUPAU     HCUPAU
+     C                     MOVELSABAC     HCABAC
+     C                     MOVELSAOAO     HCAOAO
+     C                     MOVELSABCY     HCABCY
+     C                     MOVELSIAAC     HCIAAC
+     C                     MOVELSABBR     HCABBR
+     C                     MOVELSILAC     HCILAC
+     C                     MOVELSABCU     HCABCU
+     C                     MOVELSIIAC     HCIIAC
+     C                     MOVELSABAS     HCABAS
+     C                     MOVELSIEAC     HCIEAC
+     C                     MOVELSABPC     HCABPC
+     C                     MOVELSICAC     HCICAC
+     C                     MOVELSABBK     HCABBK
+     C                     MOVELSIMAC     HCIMAC
+     C                     MOVELSABTT     HCABTT
+     C                     MOVELSITAC     HCITAC
+     C                     MOVELSABTS     HCABTS
+     C                     MOVELSICTA     HCICTA
+     C                     MOVELSASCU     HCASCU
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FLTOSC - SR TO MOVE FILE FIELDS TO SCREEN                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FLTOSC    BEGSR
+      *
+     C                     MOVELHCCGCD    SCGCD
+     C                     MOVELHCCGDS    SCGDS
+     C                     MOVELHCPSTC    SPSTC
+     C                     MOVELHCPSTB    SPSTB
+     C                     Z-ADDHCNPTR    SNPTR
+     C                     MOVELHCADCB    SADCB
+     C                     MOVELHCCCYB    SCCYB
+     C                     MOVELHCUPAU    SUPAU
+     C                     MOVELHCABAC    SABAC
+     C                     MOVELHCAOAO    SAOAO
+     C                     MOVELHCABCY    SABCY
+     C                     MOVELHCIAAC    SIAAC
+     C                     MOVELHCABBR    SABBR
+     C                     MOVELHCILAC    SILAC
+     C                     MOVELHCABCU    SABCU
+     C                     MOVELHCIIAC    SIIAC
+     C                     MOVELHCABAS    SABAS
+     C                     MOVELHCIEAC    SIEAC
+     C                     MOVELHCABPC    SABPC
+     C                     MOVELHCICAC    SICAC
+     C                     MOVELHCABBK    SABBK
+     C                     MOVELHCIMAC    SIMAC
+     C                     MOVELHCABTT    SABTT
+     C                     MOVELHCITAC    SITAC
+     C                     MOVELHCABTS    SABTS
+     C                     MOVELHCICTA    SICTA
+     C                     MOVELHCASCU    SASCU
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - SR TO SEND MESSAGE TO PROGRAM MESSAGE QUEUE         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      ** Declare message file name
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     MOVEL*BLANKS   ZAMSDA
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MSGSUB - SR SETUP MESSAGE SUBFILE                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MSGSUB    BEGSR
+      *
+      **  Clear all fields to send messages to message queue
+      *
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     C                     MOVE *BLANKS   SPGMQ
+     C                     MOVEL'MC0201'  SPGMQ
+      *
+      **  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  CMD - Commands for QCMDEXC                                            S01419
+ADDPFM FILE(xxxxxxxxxx) MBR(xx)
+ADDLFM FILE(xxxxxxxxxx) MBR(xx) DTAMBRS((xxxxxxxxxx (xx)))
+SBMJOB MCC0300 MEODD CMD(CALL MCC0300 ('xx' 'x' 'xxxxxxxxxx')) USER(*JOBD)                    CPK014
+SBMJOB MCC0203 MEODD CMD(CALL MCC0203 ('xx')) USER(*JOBD)                                     CPK014
+OUTQ(*JOBD) INLLIBL(*JOBD)                                                                    CSC023
+**  FIL - Files to add members to on insert
+GLHIBLPD
+GLHIBLPD  GLHIBLL0
+GLHIBLPD  GLHIBLL1
+GLHIBLPD  GLHIBLL2
+GLHIBLPD  GLHIBLL3
+GLHIBLPD  GLHIBLL4
+GLAVBLPD
+GLAVBLPD  GLAVBLL0
+GLAVBLPD  GLAVBLL1
+GLAVBLPD  GLAVBLL2
+GLAVBLPD  GLAVBLL3
+**  EM1 - Error messages for 'include accounts' fields
+Invalid 'Include Asset Accounts'
+Invalid 'Include Liability Accounts'
+Invalid 'Include Income Accounts'
+Invalid 'Include Expense Accounts'
+Invalid 'Include Control Accounts'
+Invalid 'Include Memorandum Accounts'
+Invalid 'Include Trading Accounts'
+Invalid 'Include Contingent Accounts'
+**  EM2 - Error messages for 'Analysis' fields
+Invalid 'Analysis by Branches'
+Invalid 'Analysis by Customers'
+Invalid 'Analysis by Account Sequences'
+Invalid 'Analysis by Profit Centres'
+Invalid 'Analysis by Books'
+Invalid 'Analysis by Transaction Types'
+Invalid 'Analysis by Trans"n Sub-Types'
+Invalid 'Analysis by Assc. Customer'
+**  C1 - Valid values for character 1 of group code
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+**  C2 - Valid values for character 2 of group code
+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789

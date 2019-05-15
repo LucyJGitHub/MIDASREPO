@@ -1,0 +1,209 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL IRS payment date calculations')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DLZIRP - IRS Payment Date Calculations using Payment Date    *
+      *           Conventions                                         *
+      *                                                               *
+      *  Function:  This program calculates next/previous working day *
+      *  (I/C)      using all the Payment Date Currencies and         *
+      *             Conventions set up for each IRS transaction.      *
+      *                                                               *
+      *  Called By: DL0280 - Deals Update Phase 2                     *
+      *             DL0401 - Events File Creation                     *
+      *             DLZIRF - IRC Schedule Date Generation Formula     *
+      *                      using Payment Date Convention            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. CIR005  *CREATE    Date 21Jan00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CIR005 - FRA/IRS Business Day Conventions                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    ACUR       10  3
+      ** Array containing Payment Convention Currencies
+      *
+     E/COPY ZSRSRC,ZHOLE
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PDAY    50
+     C                     PARM           PCURR  30
+     C                     PARM           PPAYC   2
+     C                     PARM           PLOCN   3
+     C                     PARM           PDFIN   1
+     C                     PARM           PAJDT   50
+     C                     PARM           PBSDT   50
+      *
+     C                     Z-ADDPDAY      PBSDT
+      *
+     C           PPAYC     IFEQ *BLANKS
+     C           PCURR     OREQ *BLANKS
+     C                     Z-ADDPDAY      PAJDT
+     C                     ELSE
+     C                     Z-ADDPDAY      ZDAYNO
+     C                     MOVE PPAYC     WPAYC   2
+     C                     EXSR SRAJDT
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAJDT - Determines the Adjusted Date                        *
+      *                                                               *
+      *  Called by: Main Routine                                      *
+      *                                                               *
+      *  Calls: ZDATE2, SRCHKH                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAJDT    BEGSR
+      *
+      ** Move PCURR in array
+      *
+     C                     Z-ADD1         X       20
+     C                     Z-ADD1         T       20
+      *
+     C           X         DOWLE10
+     C           3         SUBSTPCURR:T   ACUR,X
+     C                     ADD  1         X
+     C                     ADD  3         T
+     C                     ENDDO
+      *
+     C                     EXSR SRCHKH
+      *
+     C           PPAYC     IFEQ 'MF'
+     C           PPAYC     OREQ 'MP'
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           PDAY
+     C                     PARM           PDFIN
+     C                     PARM           PDATE   6
+     C                     PARM           PADAT   7
+      *
+     C           3         SUBSTPADAT:3   WMTH    3
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO
+     C                     PARM           PDFIN
+     C                     PARM           PDATE
+     C                     PARM           PADAT
+      *
+     C           3         SUBSTPADAT:3   WMTH2   3
+      *
+     C           WMTH      IFNE WMTH2
+      *
+     C           PPAYC     IFEQ 'MF'
+     C                     MOVE 'P'       WPAYC
+     C                     SUB  1         ZDAYNO
+     C                     ELSE
+     C                     MOVE 'F'       WPAYC
+     C                     ADD  1         ZDAYNO
+     C                     ENDIF
+      *
+     C                     EXSR SRCHKH
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDZDAYNO    PAJDT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHKH - Determines if Date is a Holiday                     *
+      *                                                               *
+      *  Called by: SRAJDT                                            *
+      *                                                               *
+      *  Calls: ZCHKH                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHKH    BEGSR
+      *
+      ** Initialise fields
+      *
+     C                     MOVE PLOCN     ZLOCN   3
+     C                     Z-ADD1         X
+      *
+      ** Check if date is a holiday for each payment convention ccy
+      *
+     C           X         DOWLE10
+     C           ACUR,X    ANDNE*BLANK
+      *
+     C                     MOVE ACUR,X    ZCCY
+     C                     EXSR ZCHKH
+      *
+     C           ZIND      IFEQ 'H'
+      *
+     C           WPAYC     IFEQ 'F'
+     C           WPAYC     OREQ 'MF'
+     C                     ADD  1         ZDAYNO
+     C                     ENDIF
+      *
+     C           WPAYC     IFEQ 'P'
+     C           WPAYC     OREQ 'MP'
+     C                     SUB  1         ZDAYNO
+     C                     ENDIF
+      *
+     C                     Z-ADD1         X
+      *
+     C                     ELSE
+      *
+     C                     ADD  1         X
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

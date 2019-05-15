@@ -1,0 +1,59 @@
+/******************************************************************************/
+/*STD    CLPBASEBND                                                           */
+/*EXI    TEXT('Midas GL Submit background update of ABC files')      */
+/******************************************************************************/
+/*                                                                            */
+/*       Midas - General Ledger Module                                        */
+/*                                                                            */
+/*       GLC007011 - Submit background update of ABC files                    */
+/*                                                                            */
+/*       (c) Finastra International Limited 2018                              */
+/*                                                                            */
+/*       Last Amend No. MD022132A          Date 09Mar18                       */
+/*       Prev Amend No. MD022132 *CREATE   Date 09Mar18                       */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/*       MD022132A- Job GO_ONL_ABC is being submitted many times during IC.   */
+/*                  Prevent multiple submission of job and run only on I/C.   */
+/*                - Applied for MD-35969.                                     */
+/*       MD022132 - Triggers don't pick up Rollback deletes of ABC files.     */
+/*                - Applied for MD-35969.                                     */
+/*                                                                            */
+/******************************************************************************/
+             PGM
+
+             COPYRIGHT TEXT('(c) Finastra International Limited 2018')
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                 /*MD022132A*/
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             ALCOBJ     OBJ((GLABJSTD *FILE *EXCLRD)) WAIT(0)                          /*MD022132A*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)                        /*MD022132A*/
+                GOTO       CMDLBL(END)                                                 /*MD022132A*/
+             ENDDO                                                                     /*MD022132A*/
+                                                                                       /*MD022132A*/
+             DLCOBJ     OBJ((GLABJSTD *FILE *EXCLRD))                                  /*MD022132A*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                 /*MD022132A*/
+                                                                                       /*MD022132A*/
+             RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&MPHAS)                             /*MD022132A*/
+                                                                                       /*MD022132A*/
+             IF         COND(&MPHAS *EQ 'A') THEN(DO)                                  /*MD022132A*/
+             SBMJOB     JOB(GO_ONL_ABC) JOBD(MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
+                          RQSDTA('CALL GLC007012') INLLIBL(*JOBD)
+             ENDDO                                                                     /*MD022132A*/
+
+             GOTO       CMDLBL(END)
+
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC007011 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             ENDPGM

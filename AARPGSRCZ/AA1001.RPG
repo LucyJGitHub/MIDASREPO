@@ -1,0 +1,1102 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Margin Window Input')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Analytical Accounting Module                         *
+      *                                                               *
+      *  AA1001 - Margin Window Input                                 *
+      *                                                               *
+      *  Function : This program allows the maintenance of margin     *
+      *   (I/C)     information.                                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC001  *CREATE    Date 01Feb96               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAC001  -  Profit Centre Accounting Development              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *          F U N C T I O N   O F   I N D I C A T O R S          *
+      *                                                               *
+      *   03  - F3  was pressed - Exit from the program               *
+      *   05  - F5  was pressed - Redisplay the screen                *
+      *   12  - F12 was pressed - Goto previous screen                *
+      *   20  - Protect fields in Enquire/Delete mode                 *
+      *   21  - Some Fields are defaulted                             *
+      *   22  - A Warning Message was displayed                       *
+      *   30  - Redisplay the screen                                  *
+      *   50  - Error in fields                                       *
+      *   51  - FX Margin Points in error                             *
+      *   52  - Margin P/S Indicator in error                         *
+      *   53  - Margin Sign in error                                  *
+      *                                                               *
+      *****************************************************************
+     F*
+     FAA1001DFCF  E                    WORKSTN      KINFSR *PSSR
+     F** Margin Window Display
+     F*
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Copyright Statement
+     E*
+     E                    AP      1  10 10 0
+     E** Array - Powers of Ten.
+     E*
+     E/COPY ZSRSRC,ZALIGNZ1
+     E*
+     I/EJECT
+     I*
+     ICPYR@#      DS
+     I** Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     IWSPRE       DS                            256
+     I                                        1   1 PACTN
+     I                                    P   2   88PRATE
+     I                                        9   9 PMBSD
+     I                                       10  12 PPCCY
+     I                                       13  15 PSMCY
+     I                                    P  16  220PPYAM
+     I                                    P  23  290PSMAM
+     I                                       30  300PMDIN
+     I                                    P  31  342PFXMP
+     I                                       35  350PFXMD
+     I                                       36  36 PMBSI
+     I                                       37  37 PMSIG
+     I                                    P  38  440PMAMT
+     I                                       45  45 PMAND
+     I*
+     IDATA        DS                           1024
+     I*
+     ILDA       E DSLDA
+     I*
+     I** Local data area for database error details
+     I** *LOCK IN LDA immediately before and OUT LDA immediately
+     I** after each database error handling.
+     I**
+     I**                                    134 141 DBFILE
+     I**       Defines:                     142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     I*
+     IPSDS       SDS
+     I*
+     I** Program Status Data Structure - gives Job/Workstation name and
+     I** User ID.
+     I*
+     I                                     *PROGRAM SPGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Data Structure for Bank Details Access Program
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** Data Structure for Currency Details Access Program
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I** Data Structure for Dealing ICD Details Access Program
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I** Data Structure for Module Details Access Program
+     I*
+     ISDPCAC    E DSSDPCACPD
+     I** Data Structure for Profit Centre Accounting Access Program
+     I*
+     IDSFDY     E DSDSFDY
+     I** Short Data Structure for Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I** Long Data Structure for Access Programs
+     I*
+     C/EJECT
+     C*
+     C**  Copyright statement.
+     C*
+     C                     MOVEACPY@      MKI@   80
+     C*
+     C**  Standard *ENTRY parameter list for window manager.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           WSPRE 256
+     C*
+     C**  Initial subroutine.
+     C*
+     C                     EXSR SRINIT
+     C*
+     C                     WRITEAA1001F1
+     C                     WRITEAA1001F0
+     C*
+     C**  Continue to redisplay the screen if *IN30 remains off.
+     C*
+     C           *IN30     DOUEQ'1'
+     C*
+     C           *IN22     IFEQ '0'
+     C           *IN50     OREQ '1'
+     C*
+     C                     WRITEAA1001C0
+     C                     EXFMTAA1001F0
+     C                     EXSR SRMCLR
+     C                     MOVEA'0000'    *IN,50
+     C*
+     C**  If action code is Enquire/Delete, exit from the program.
+     C*
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C           *IN20     ANDEQ'1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C           *IN03     CASEQ'1'       SREXIT
+     C           *IN05     CASEQ'1'       SRESET
+     C           *IN12     CASEQ'1'       SRPREV
+     C                     CAS            SRVALD
+     C                     ENDCS
+     C*
+     C                     ENDIF
+     C*
+     C**  Prompt the user to accept the details if fields are defaulted
+     C**  or if a warning message was displayed.
+     C*
+     C           *IN21     IFEQ '1'
+     C           *IN50     ANDEQ'0'
+     C           *IN22     OREQ '1'
+     C           *IN50     ANDEQ'0'
+     C*
+     C           *IN22     IFEQ '1'
+     C                     MOVEL'AAM0014' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'AAM0003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVEL'AAM0012' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C*
+     C                     WRITEAA1001C0
+     C                     EXFMTAA1001F0
+     C                     EXSR SRMCLR
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     ENDIF
+     C*
+     C           *IN03     IFEQ '0'
+     C           *IN05     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           *IN50     ANDEQ'0'
+     C           SMBSI     IFEQ 'P'
+     C                     MOVE 'S'       PMBSI
+     C                     ENDIF
+     C           SMBSI     IFEQ 'S'
+     C                     MOVE 'B'       PMBSI
+     C                     ENDIF
+     C                     Z-ADDPMDIN     PFXMD
+     C                     MOVE SMSIG     PMSIG
+     C                     Z-ADDWFXMP     PFXMP
+     C                     Z-ADDWMAMT     PMAMT
+     C                     SETON                     30
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C**  Exit from program.
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRINIT                                        *
+     C*  Function    :  Initial Subroutine                            *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  SRMOVF - Move data to screen fields           *
+     C*                 SRVALD - Validate Screen Fields               *
+     C*                 SRCURR - Get Settlement and Pay Ccy Details   *
+     C*                 SRDRAT - Get Default Cross-Currency Rate      *
+     C*                 SRNQDP - Get Normally-Quoted Decimal Places   *
+     C*                 ZEDIT  - Format a Numeric Field               *
+     C*                 AOBANKR0 - Bank details access object         *
+     C*                 AODEALR0 - Dealing ICD details access object  *
+     C*                 AOMMODR0 - Module details access object       *
+     C*                 AOPCACR0 - Profit Centre Account access object*
+     C*                 SDRTVTXT - Retrive Text                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR                           ** SRINIT **
+     C*
+     C**  Parameter list for program 'AOBANKR0'.
+     C*
+     C           PBANK     PLIST
+     C                     PARM '*DBERR  'WRTCD   7
+     C                     PARM '*FIRST  'WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Parameter list for program 'AOCURRR0'.
+     C*
+     C           PCURR     PLIST
+     C                     PARM '*DBERR  'WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           WCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**  Parameter list for program 'AODEALR0'.
+     C*
+     C           PDEAL     PLIST
+     C                     PARM '*DBERR  'WRTCD
+     C                     PARM '*FIRST  'WOPTN
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C**  Parameter list for program 'AOMMODR0'.
+     C*
+     C           PMMOD     PLIST
+     C                     PARM '*DBERR  'WRTCD
+     C                     PARM '*FIRST  'WOPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C**  Parameter list for program 'AOPCACR0'.
+     C*
+     C           PPCAC     PLIST
+     C                     PARM '*DBERR  'WRTCD
+     C                     PARM '*FIRST  'WOPTN
+     C           SDPCAC    PARM SDPCAC    DSFDY
+     C*
+     C**  Define the LDA for error handling.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Access Bank Details File.
+     C*
+     C                     CALL 'AOBANKR0'PBANK
+     C*
+     C**  Check System Date Format, DDMMYY OR MMDDYY.
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     ENDIF
+     C*
+     C**  Access Dealing ICD Details File.
+     C*
+     C**********           CALL 'AODEALR0'PDEAL                                               CGL029
+     C                     CALL 'AODEALR1'PDEAL                                               CGL029
+     C*
+     C**  Access Module Details File.
+     C*
+     C                     CALL 'AOMMODR0'PMMOD
+     C*
+     C**  If Analytical Accounting Module is switched off, return to
+     C**  the calling program.
+     C*
+     C           BGN0ST    IFNE 'Y'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C**  Access Profit Centre Accounting details.
+     C*
+     C                     CALL 'AOPCACR0'PPCAC
+     C*
+     C**  Define window position.
+     C*
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+     C*
+     C**  Retrieve title for window.
+     C*
+     C                     MOVEL'WNMSGF  'ZAMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+     C*
+     C**  Protect input fields if enquiry/delete mode.
+     C*
+     C           ACTN      IFNE 'I'
+     C           ACTN      ANDNE'A'
+     C                     MOVE '1'       *IN20
+     C                     ELSE
+     C                     MOVE '0'       *IN20
+     C                     ENDIF
+     C*
+     C**  Get Settlement and Pay Currencies Details.
+     C*
+     C                     EXSR SRCURR
+     C*
+     C**  Move data into screen fields.
+     C*
+     C                     EXSR SRMOVF
+     C*
+     C           *IN20     IFEQ '0'
+     C*
+     C**  Get Default Cross-Currency Rate.
+     C*
+     C                     EXSR SRDRAT
+     C*
+     C**  Get Normally-Quoted Decimal Places.
+     C*
+     C                     EXSR SRNQDP
+     C*
+     C**  Calculate for Default FX Margin Points and Sign.
+     C**  Deflt FX Marg Pts = (Xccy rate - Trans Rate) * 10**Quoted DP
+     C*
+     C           ZRATEX    IFGE PRATE
+     C           ZRATEX    SUB  PRATE     WDFXMR 138
+     C                     ELSE
+     C           PRATE     SUB  ZRATEX    WDFXMR
+     C                     ENDIF
+     C*
+     C           ZRATEX    IFGE PRATE
+     C           ZRATEX    ANDGT1
+     C           WWPYAM    ANDGEWWSMAM
+     C           ZRATEX    ORGE PRATE
+     C           ZRATEX    ANDLT1
+     C           WWPYAM    ANDLEWWSMAM
+     C           ZRATEX    ORLE PRATE
+     C           ZRATEX    ANDGT1
+     C           WWPYAM    ANDLEWWSMAM
+     C           ZRATEX    ORLE PRATE
+     C           ZRATEX    ANDLT1
+     C           WWPYAM    ANDGEWWSMAM
+     C                     MOVE '+'       WDMSIG  1
+     C                     ELSE
+     C                     MOVE '-'       WDMSIG
+     C                     ENDIF
+     C*
+     C*
+     C           ZNQDPX    ADD  1         ZA      10
+     C           WDFXMR    MULT AP,ZA     WDFXMP  72H
+     C*
+     C**  Compute the maximum margin points allowed.
+     C**  Maximum Marg Pts = Xccy rate * Tolerance * 10**Quoted DP
+     C*
+     C           FTTMRT    DIV  100       W1      32
+     C           W1        MULT PRATE     W2     138H
+     C           W2        MULT AP,ZA     WMAXPT  72H
+     C*
+     C**  If the Default FX Margin Points is greater than the maximum,
+     C**  use the maximum as the default.
+     C*
+     C           WDFXMP    IFGT WMAXPT
+     C                     Z-ADDWMAXPT    WDFXMP
+     C                     ENDIF
+     C*
+     C**  Format Default FX Margin Points.
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WDFXMP    ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDFXMP  8
+     C*
+     C                     ENDIF
+     C*
+     C**  If call is being forced in Insert/Amend, revalidate fields.
+     C*
+     C           PMAND     IFEQ 'Y'
+     C           ACTN      ANDEQ'I'
+     C           PMAND     OREQ 'Y'
+     C           ACTN      ANDEQ'A'
+     C*
+     C                     EXSR SRVALD
+     C*
+     C**  If data are all valid, return to the calling program.
+     C*
+     C           *IN22     IFEQ '0'
+     C           *IN50     ANDEQ'0'
+     C                     Z-ADDPMDIN     PFXMD
+     C                     Z-ADDWMAMT     PMAMT
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           SRINI9    ENDSR                           ** SRINI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRMOVF                                        *
+     C*  Function    :  Move Data to Screen Fields                    *
+     C*                                                               *
+     C*  Called by   :  SRINIT - Initial Subroutine                   *
+     C*                 SRESET - Reset/Refresh Screen if F5 Pressed   *
+     C*  Calls       :  ZEDIT  - Format a Numeric Field               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRMOVF    BEGSR                           ** SRMOVF **
+     C*
+     C                     MOVEL*BLANKS   SFXMP
+     C                     MOVEL*BLANKS   SMBSI
+     C                     MOVEL*BLANKS   SMSIG
+     C*
+     C**  Format FX Margin Points.
+     C*
+     C           PMBSI     IFNE *BLANKS
+     C           PMSIG     ORNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE PFXMP     ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SFXMP
+     C                     ENDIF
+     C*
+     C**  Margin P/S Indicator.
+     C*
+     C           ZNBDP1    ADD  1         ZB
+     C           PSMAM     DIV  AP,ZB     WWSMAM 163
+     C           ZNBDP2    ADD  1         ZB
+     C           PPYAM     DIV  AP,ZB     WWPYAM 163
+     C*
+     C           WWSMAM    IFGE WWPYAM
+     C                     MOVE 'S'       PMBSD
+     C                     ELSE
+     C                     MOVE 'P'       PMBSD
+     C                     ENDIF
+     C*
+     C           ACTN      IFEQ 'I'
+     C           PMBSI     ANDEQ*BLANKS
+     C           ACTN      OREQ 'A'
+     C           PMBSI     ANDEQ*BLANKS
+     C                     MOVELPMBSD     SMBSI
+     C                     ELSE
+     C           PMBSI     IFEQ 'S'
+     C                     MOVE 'P'       SMBSI
+     C                     ENDIF
+     C           PMBSI     IFEQ 'B'
+     C                     MOVE 'S'       SMBSI
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  Margin Sign.
+     C*
+     C                     MOVELPMSIG     SMSIG
+     C*
+     C*
+     C           SRMOV9    ENDSR                           ** SRMOV9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRVALD                                        *
+     C*  Function    :  Validate Screen Fields                        *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*                 SRINIT - Initial Subroutine                   *
+     C*  Calls       :  SRMAMT - Calculate Margin Amount              *
+     C*                 ZALIGN - Validate and Right-align Numeric Fld *
+     C*                 ZASNMS - Send Message to program Message Queue*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRVALD    BEGSR                           ** SRVALD **
+     C*
+     C**  If all fields are blank, return to the calling program.
+     C*
+     C           SFXMP     IFEQ *BLANKS
+     C           SMBSI     ANDEQ*BLANKS
+     C           SMSIG     ANDEQ*BLANKS
+     C                     Z-ADDPMDIN     PFXMD
+     C                     MOVE *BLANKS   PMBSI
+     C                     MOVE *BLANKS   PMSIG
+     C                     Z-ADD0         PFXMP
+     C                     Z-ADD0         PMAMT
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C**  If Purchase Currency is equal to Sell Currency, display error
+     C**  message "Margin information is not allowed if the settle and
+     C**  and pay currencies are the same".
+     C*
+     C           PPCCY     IFEQ PSMCY
+     C*
+     C                     MOVEL'AAM0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C*
+     C           SFXMP     IFNE *BLANKS
+     C                     MOVE '1'       *IN51
+     C                     ENDIF
+     C*
+     C           SMBSI     IFNE *BLANKS
+     C                     MOVE '1'       *IN52
+     C                     ENDIF
+     C*
+     C           SMSIG     IFNE *BLANKS
+     C                     MOVE '1'       *IN53
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C**  Validate FX Margin points.
+     C*
+     C**  If FX Margin Points is not entered, default it if the Margin
+     C**  Sign is not also entered.
+     C*
+     C           SFXMP     IFEQ *BLANKS
+     C*
+     C           SMSIG     IFEQ *BLANKS
+     C                     Z-ADDWDFXMP    WFXMP   72
+     C                     MOVE SDFXMP    SFXMP
+     C                     MOVE WDMSIG    SMSIG
+     C                     MOVE '1'       *IN21
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C**  If FX Margin Points is not valid, display error message
+     C**  "Invalid FX Margin Points entry. Must be entered with a
+     C**   maximum of 5 integers and 2 decimals."
+     C*
+     C                     Z-ADD0         WFXMP
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SFXMP     ZFIELD
+     C                     Z-ADD5         ZADIG
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WFXMP
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'AAM0009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN51
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  If FX Margin points is valid, check if equivalent exchange
+     C**  rate is within the defined tolerance.
+     C*
+     C           *IN51     IFEQ '0'
+     C           *IN21     ANDEQ'0'
+     C*
+     C**  If the entered margin points is greater than the maximum
+     C**  allowed, display warning message "Warning - Effective deal
+     C**  funding rate must be within tolerance level defined."
+     C*
+     C           WFXMP     IFGT WMAXPT
+     C                     MOVE '1'       *IN22
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Validate Margin P/S Indicator.
+     C**       If the Margin P/S Indicator is not entered, default it.
+     C*
+     C           SMBSI     IFEQ *BLANKS
+     C                     MOVE PMBSD     SMBSI
+     C                     ELSE
+     C*
+     C**  If the Margin P/S Indicator is not 'P' nor 'S', display error
+     C**  message "Margin P/S Indicator should be 'P' or 'S'".
+     C*
+     C           SMBSI     IFNE 'P'
+     C           SMBSI     ANDNE'S'
+     C                     MOVEL'AAM0013' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN52
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Validate Margin Sign.
+     C**       If the Margin Sign is not entered, default it.
+     C*
+     C           SMSIG     IFEQ *BLANKS
+     C                     MOVE WDMSIG    SMSIG
+     C                     MOVE '1'       *IN21
+     C                     ELSE
+     C*
+     C**  If the FX Margin points field has not been entered, display
+     C**  error message 'Margin Sign entry invalid if no FX Margin
+     C**  Points have been defined."
+     C*
+     C           SFXMP     IFEQ *BLANKS
+     C                     MOVEL'AAM0010' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN53
+     C*
+     C                     ELSE
+     C*
+     C**  If the Margin Sign is not the same as the default, display
+     C**  error message "Margin Sign should be '+'/'-'".
+     C*
+     C           SMSIG     IFNE WDMSIG
+     C           WDMSIG    IFEQ '+'
+     C                     MOVEL'AAM0016' ZAMSID
+     C                     ELSE
+     C                     MOVEL'AAM0017' ZAMSID
+     C                     ENDIF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN53
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Calculate Margin Amount.
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRMAMT
+     C                     ELSE
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           SRVAL9    ENDSR                           ** SRVAL9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRMAMT                                        *
+     C*  Function    :  Calculate Margin Amount                       *
+     C*                                                               *
+     C*  Called by   :  SRVALD - Validate Screen Fields               *
+     C*  Calls       :  -                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRMAMT    BEGSR                           ** SRMAMT **
+     C*
+     C           WFXMP     DIV  AP,ZA     WFXMR  138H
+     C*
+     C** Set up factoring to adjust for decimal places.
+     C*
+     C           SMBSI     IFEQ 'P'
+     C           ZNBDP1    SUB  ZNBDP2    ZNBDPX  10
+     C                     ELSE
+     C           ZNBDP2    SUB  ZNBDP1    ZNBDPX
+     C                     ENDIF
+     C*
+     C           ZNBDPX    IFGE 0
+     C           ZNBDPX    ADD  1         ZB      10
+     C           1         MULT AP,ZB     ZFACTR  73
+     C                     ELSE
+     C                     Z-SUBZNBDPX    ZNBDPX
+     C           ZNBDPX    ADD  1         ZB
+     C           1         DIV  AP,ZB     ZFACTR
+     C                     ENDIF
+     C*
+     C*
+     C** If the Margin P/S Indicator is 'P'...
+     C**    If the Purchase amount is greater than the sale amount and
+     C**            the exchage rate is greater than 1  OR
+     C**    If the Purchase amount is less than the sale amount and
+     C**            the exchage rate is less than 1  THEN
+     C**    the Margin amount is calculated as:
+     C**
+     C**       IMAR (Margin Amt) = SAMT (Sale amt) x MRAT (Margin rate)
+     C**
+     C**    ELSE the Margin amount is calculated as:
+     C**    If a profit (margin sign is '+') :
+     C**                            SAMT (Sale Amt)
+     C**       IMAR (Margin Amt) = ----------------- - PAMT (Purch Amt)
+     C**                              XRAT - MRAT
+     C**    If a loss (margin sign is '-') :
+     C**                                               SAMT (Sale Amt)
+     C**       IMAR (Margin Amt) = PAMT (Purch Amt) - -----------------
+     C**                                                 XRAT + MRAT
+     C*
+     C           SMBSI     IFEQ 'P'
+     C*
+     C           WWPYAM    IFGT WWSMAM
+     C           PRATE     ANDGT1
+     C           WWPYAM    ORLT WWSMAM
+     C           PRATE     ANDLT1
+     C*
+     C           PSMAM     MULT WFXMR     WMAMT  163H
+     C                     DIV  ZFACTR    WMAMT     H
+     C*
+     C                     ELSE
+     C*
+     C           SMSIG     IFEQ '+'
+     C           PRATE     SUB  WFXMR     WRATE  138
+     C                     ELSE
+     C           PRATE     ADD  WFXMR     WRATE
+     C                     ENDIF
+     C*
+     C           PSMAM     DIV  WRATE     WCPYAM 163H
+     C                     DIV  ZFACTR    WCPYAM    H
+     C*
+     C           SMSIG     IFEQ '+'
+     C           WCPYAM    SUB  PPYAM     WMAMT
+     C                     ELSE
+     C           PPYAM     SUB  WCPYAM    WMAMT
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C** If the Margin P/S Indicator is 'S'...
+     C**    If the Sale amount is greater than the purchase amount and
+     C**            the exchage rate is greater than 1  OR
+     C**    If the Sale amount is less than the purchase amount and
+     C**            the exchage rate is less than 1  THEN
+     C**    the Margin amount is calculated as:
+     C**
+     C**       IMAR (Margin Amt) = PAMT (Purc amt) x MRAT (Margin rate)
+     C**
+     C**    ELSE the Margin amount is calculated as:
+     C**    If a profit (margin sign is '+') :
+     C**                                              PAMT (Purch Amt)
+     C**       IMAR (Margin Amt) = SAMT (Sale Amt) - ------------------
+     C**                                                XRAT + MRAT
+     C**    If a loss (margin sign is '-') :
+     C**                            PAMT (Purch Amt)
+     C**       IMAR (Margin Amt) = ------------------ - SAMT (Sale Amt)
+     C**                               XRAT - MRAT
+     C*
+     C           SMBSI     IFEQ 'S'
+     C*
+     C           WWSMAM    IFGT WWPYAM
+     C           PRATE     ANDGT1
+     C           WWSMAM    ORLT WWPYAM
+     C           PRATE     ANDLT1
+     C*
+     C           PPYAM     MULT WFXMR     WMAMT     H
+     C                     DIV  ZFACTR    WMAMT     H
+     C*
+     C                     ELSE
+     C*
+     C           SMSIG     IFEQ '+'
+     C           PRATE     ADD  WFXMR     WRATE
+     C                     ELSE
+     C           PRATE     SUB  WFXMR     WRATE
+     C                     ENDIF
+     C*
+     C           PPYAM     DIV  WRATE     WCSMAM 163H
+     C                     DIV  ZFACTR    WCSMAM    H
+     C*
+     C           SMSIG     IFEQ '+'
+     C           PSMAM     SUB  WCSMAM    WMAMT
+     C                     ELSE
+     C           WCSMAM    SUB  PSMAM     WMAMT
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           SRMAM9    ENDSR                           ** SRMAM9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRCURR                                        *
+     C*  Function    :  Get Settlement and Pay Currencies Details     *
+     C*                                                               *
+     C*  Called by   :  SRINIT - Initial Subroutine                   *
+     C*  Calls       :  AOCURRR0 - Currency Details Access Program    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCURR    BEGSR                           ** SRCURR **
+     C*
+     C**  Get Settlement Currency Details.
+     C*
+     C                     MOVE PSMCY     WCURR
+     C                     CALL 'AOCURRR0'PCURR
+     C                     Z-ADDA6NBDP    ZNBDP1  10
+     C                     Z-ADDA6NQDP    ZNQDP1  10
+     C                     Z-ADDA6SPRT    ZRATE1 138
+     C                     MOVE A6MDIN    ZMDI1   1
+     C*
+     C**  Get Pay Currency Details.
+     C*
+     C                     MOVE PPCCY     WCURR
+     C                     CALL 'AOCURRR0'PCURR
+     C                     Z-ADDA6NBDP    ZNBDP2  10
+     C                     Z-ADDA6NQDP    ZNQDP2  10
+     C                     Z-ADDA6SPRT    ZRATE2 138
+     C                     MOVE A6MDIN    ZMDI2   1
+     C*
+     C           SRCUR9    ENDSR                           ** SRCUR9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRDRAT                                        *
+     C*  Function    :  Get Default Cross-Currency Rate               *
+     C*                                                               *
+     C*  Called by   :  SRINIT - Initial Subroutine                   *
+     C*  Calls       :  ZXRATE - Obtain Cross-Exchange Rate between   *
+     C*                          2 Currencies                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRDRAT    BEGSR                           ** SRDRAT **
+     C*
+     C**  Obtain cross-exchange rate between settlement and pay ccys.
+     C*
+     C                     EXSR ZXRATE
+     C*
+     C           PRATE     IFGT 1
+     C           ZRATEX    ANDLT1
+     C           PRATE     ORLT 1
+     C           ZRATEX    ANDGT1
+     C           1         DIV  ZRATEX    ZRATEX    H
+     C                     ENDIF
+     C*
+     C           SRDRA9    ENDSR                           ** SRDRA9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRNQDP                                        *
+     C*  Function    :  Get Normally-Quoted Decimal Places            *
+     C*                                                               *
+     C*  Called by   :  SRINIT - Initial Subroutine                   *
+     C*  Calls       :  -                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRNQDP    BEGSR                           ** SRNQDP **
+     C*
+     C** --------------------------------------------------------------
+     C**  If either the settlement or pay currency is the base currency
+     C**  obtain the number of normally-quoted decimal places for the
+     C**  other currency. Otherwise:
+     C**      A)  If ZNQDP1 =  ZNQDP2 =  5       :   ZNQDPX = 5
+     C**      B)  If ZNQDP1 =  ZNQDP2 <> 5  or
+     C**             ZNQDP1 <> ZNQDP2
+     C**             1)  If Rate >= 100          :   ZNQDPX = 2
+     C**             2)  If 100 > Rate >= 20     :   ZNQDPX = 3
+     C**             3)  If 20  > Rate >= 1      :   ZNQDPX = 4
+     C**             4)  If 1   > Rate           :   ZNQDPX = 5
+     C**---------------------------------------------------------------
+     C*
+     C                     SELEC
+     C*
+     C           PSMCY     WHEQ BNCYDL
+     C                     Z-ADDZNQDP2    ZNQDPX  10
+     C*
+     C           PPCCY     WHEQ BNCYDL
+     C                     Z-ADDZNQDP1    ZNQDPX
+     C*
+     C           ZNQDP1    WHEQ ZNQDP2
+     C           ZNQDP1    ANDEQ5
+     C                     Z-ADD5         ZNQDPX
+     C*
+     C           PRATE     WHEQ 100
+     C                     Z-ADD2         ZNQDPX
+     C*
+     C           PRATE     WHLT 100
+     C           PRATE     ANDGE20
+     C                     Z-ADD3         ZNQDPX
+     C*
+     C           PRATE     WHLT 20
+     C           PRATE     ANDGE1
+     C                     Z-ADD4         ZNQDPX
+     C*
+     C           PRATE     WHLT 1
+     C                     Z-ADD5         ZNQDPX
+     C*
+     C                     ENDSL
+     C*
+     C           SRNQD9    ENDSR                           ** SRNQD9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRPREV                                        *
+     C*  Function    :  Exit From Program If F12 has been Pressed     *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  -                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRPREV    BEGSR                           ** SRPREV **
+     C*
+     C                     MOVE 'USR0790' W0RTN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           SRPRE9    ENDSR                           ** SRPRE9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRESET                                        *
+     C*  Function    :  Reset/Refresh Screen If F5 has been Pressed   *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  SRMOVF - Move data to screen fields           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRESET    BEGSR                           ** SRESET **
+     C*
+     C**  Move data into screen fields.
+     C*
+     C                     EXSR SRMOVF
+     C*
+     C           SRESE9    ENDSR                           ** SRESE9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRMCLR                                        *
+     C*  Function    :  Clear Message Subfile                         *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  Y2CLMSC - Clear Program Message Queue         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRMCLR    BEGSR                           ** SRMCLR **
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C           SRMCL9    ENDSR                           ** SRMCL9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SREXIT                                        *
+     C*  Function    :  Exit From Program If F3 has been Pressed      *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  -                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SREXIT    BEGSR                           ** SREXIT **
+     C*
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           SREXI9    ENDSR                           ** SREXI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  ZASNMS                                        *
+     C*  Function    :  Send Message to Program Message Queue         *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*                 SRVALD - Validate Screen Fields               *
+     C*  Calls       :  Y2SNMGC - Send a Message                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+     C*
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVELSPGM      ZAPGMQ
+     C                     ENDIF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C           ZASNM9    ENDSR                           ** ZASNM9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C           #PSSR9    ENDSR                           ** *PSSR9 **
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZXRATEZ1
+     C/EJECT
+** CPY@
+(c) Finastra International Limited 2001
+** AP - Array of powers of 10.
+0000000001
+0000000010
+0000000100
+0000001000
+0000010000
+0000100000
+0001000000
+0010000000
+0100000000
+1000000000

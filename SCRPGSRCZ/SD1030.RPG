@@ -1,0 +1,925 @@
+0001 H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SC Update run dates')                            *
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Standing Data Module                                 *
+0005 F*                                                               *
+0006 F*  SD1030 - UPDATE PROCESSING DATES                             *
+0007 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+0009  *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1026104          Date 06Sep12               *
+      *                 AR884111A          Date 25Jan12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 177294             Date 07Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187057             Date 14Dec00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD009             Date 10Oct00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 081639             DATE 28FEB96               *
+     F*                 082738             DATE 07FEB95               *
+     F*                 S01495             DATE 01OCT94               *
+     F*                 061717             DATE 15JUL94               *
+     F*                 046303             DATE 16JAN94               *
+     F*                 E38323             DATE 30JUL92               *
+     F*                 S01333             DATE 02APR91               *
+     F*                 E20929             DATE 25JUL90               *
+     F*                 LN0514             DATE 19JUL90               *
+     F*                 S01117             DATE 06MAR90               *
+     F*                 E14427             DATE 03/10/88              *
+     F*                 S01168             DATE 22/07/88              *
+     F*                 E11751             DATE 20/10/87              *
+     F*                 E43452             DATE 24/03/87              *
+     F*                 S01103             DATE 27/08/86              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1026104 - rundates in BFMidas is not insynch with BFTC     *
+      *  AR884111A - Update Business Date in BF                       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  177294 - Add DEBUG processing to program.                    *
+      *  187057 - Use CCY by location for holidays and if not found   *
+      *           use CCY without location.                           *
+      *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+     F*  081639 - Error in calc'ing accrl/prof date for mode '0'      *
+     F*           at EOM, if EOM falls on a holiday followed by       *
+     F*           a working day set accrl/profit date to run day,     *
+     F*           should be EOM date.                                 *
+     F*  082738 - Call AOBANKR0 and AOGELRR0 with *FREE to free the   *
+     F*           files updated in SD1020                             *
+     F*  S01495 - COB Enhancements.                                   *
+     F*  061717 - APDAT should be set up for set up of event control  *
+     F*           for non-daily accrual.                              *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  E38323 - Recompiled due to a change in copy source ZFWDT subr*
+     F*  S01333 - MIS GL Real Time Posting                            *
+     F*  E20929 - MANIPULATION OF ACCRUAL PROFIT DATE                 *
+     F*           IS NOT PRODUCING REQUIRED RESULTS. PROCESSING       *
+     F*           ON DATE HAS BEEN MODIFIED. METHOD OF PROCESSING     *
+     F*           NON-WORKING DAYS (ANWI) NOW IMPACTS ON DATE.        *
+     F*  LN0514 - RELEASE 10 CHANGES NOT FULLY APPLIED -              *
+     F*           REMOVE OLD HOLIDAYS PROCESSING                      *
+     F*  S01117 - RELEASE 10 CHANGES                                  *
+     F*  E14427 - INPUT CYCLE INITIATION PROBLEM DURING REL 22.1      *
+     F*           INSTALLATION. AFTER SYSTEM PROMPTED FOR RUN         *
+     F*           DATE THE PROGRAM LOOPED BECAUSE DNWD WAS            *
+     F*           BLANK. THE PROBLEM WAS CAUSED BY FIX E43452.        *
+     F*  S01168 - SD SYNON - UPDATE NEW TABLE FILES AS WELL           *
+     F*  E11751 - ACCRUAL SUMMARY INDICATOR GETS CLEARED DURING       *
+     F*           INPUT CYCLE INITIATION ON ICD.                      *
+     F*  E43452 - IF WORKING DAYS ARE MISSED THE ACCRUAL PROFIT       *
+     F*           DATE SHOULD BE UPDATED WITH THE CORRECT DATE        *
+     F*  S01103 - REMOVE LLOG FROM TABTB11.                           *
+     F*                                                               *
+0012 F*****************************************************************
+0013 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/****F*******: OVRDBF TABLE TABSDU                                  : *
+     F*                                                               *
+     F*****************************************************************
+0015 FTABLE   UF  F      96 12AI     2 DISK
+     FSDBANKL0UF  E           K        DISK
+     FSDGELRL0UF  E           K        DISK
+     FSDMMODL1IF  E           K        DISK                               S01117
+     FCBAICDL1IF  E           K        DISK                               S01495
+     F/COPY WNCPYSRC,SD1030F001
+0017 F*
+0018 F*  ID F  C  H  L    FUNCTION OF INDICATORS
+0019 F* 01            TABLE - INSTALLATION CONTROL DATA RECORD 1.
+0020 F* 02                  - INSTALLATION CONTROL DATA RECORD 2.
+     F* 06            CATCHALL
+0024 F**
+0025 F*               EXCEPTION OUTPUT/UPDATE INDICATORS ARE-
+ 028 F*       71      UPDATE TABLE DETAIL RECORD.
+0030 F**
+0031 F*       76      CHAIN TO TABLE FILE FAILED IF ON.
+0033 F**
+0034 F*       90-97   Z SUBROUTINE INDICATORS.
+0035 F*       98      ZSYSTM, DATE FORMAT MMDDYY IF ON.
+0036 F*       99      ZSYSTM, INSTALLATION CONTROL DATA RECORD NOT FOUND.
+0037 F**
+0042 F*          U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.
+ 043 F*               N.B. U8 ENDS THE PROGRAM AND CONDITIONS
+0044 F*                    FOLLOWING OCL EXECUTION.
+0045 F**
+0046 F*       LR      SETON IN CALCULATIONS TO END PROGRAM.
+0047 F**
+0048 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+0049 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+0050 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+0051 E                    HCCY       25  3               HOLIDAY CURRENC'S
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZHOLE                                                  LN0514
+     E/COPY WNCPYSRC,SD1030E001
+0052 E**
+0056 I**
+0057 I**
+0058 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+0059 I**
+0060 ITABLE   NS  01   1 CD   2 C0   3 C1
+0061 I       AND      12 C1  13 C0
+0062 I                                        1   1 RECI
+0063 I                                        2   30RECT
+0064 I                                       12  130RCDE
+0065 I                                       14  66 TITL
+0066 I                                       67  67 DATF
+0067 I                                       68  700DFBR
+0068 I                                       74  74 MODI1
+0069 I                                       75  75 MODI2
+0070 I                                       76  76 MODI3
+0071 I                                    P  77  790RUND
+0072 I                                       80  86 RUNA
+0073 I                                       87  870SFLG
+0074 I                                    P  90  920LCD
+0075 I                                       93  93 CHTP
+0076 I                                    P  94  960TNLU
+0077 I                                        1  96 LOT
+0078 I**
+0079 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.
+0080 I**
+0081 I        NS  02   1 CD   2 C0   3 C1
+0082 I       AND      12 C1  13 C1
+0083 I                                        1   1 RECI
+0084 I                                        2   30RECT
+0085 I                                       12  130RCDE
+0086 I                                       14  16 BCCY
+0087 I                                       17  19 BCYL
+0088 I                                       20  22 HOCY
+0089 I**********                             23  280HEAD                                      CSD027
+0089 I                                       23  28 HEAD                                      CSD027
+0090 I                                    P  29  310APDA
+0091 I                                       35  35 APFQ
+0092 I                                    P  36  380LOGS
+0093 I                                       39  40 CUZR
+0094 I                                    P  41  430DNWD
+0095 I                                       44  460BVLP
+0096 I                                       47  49 LOCY
+0097 I                                       50  510FDAY
+0098 I                                       86  86 ISAV
+0099 I********************                P  87  890LLOG                  S01103
+     I                                       88  88 ANWI                  E20929
+     I                                       89  89 AKSI                  E11751
+0100 I                                    P  90  920LCD
+0101 I                                       93  93 CHTP
+0102 I                                    P  94  960TNLU
+0103 I                                        1  96 LOT
+0104 I**********                                                          LN0514
+0105 I*****TABLE FILE - HOLIDAY RECORD.                                   LN0514
+0106 I********E*EXCLUDE, I-INCLUDE.                                       LN0514
+0107 I**********                                                          LN0514
+0108 I*ABLE***NS  06   1 CD   2 C2   3 C2                                 LN0514
+0109 I*******AND      14 CE                                               LN0514
+0110 I*******OR        1 CD   2 C2   3 C2                                 LN0514
+0111 I*******AND      14 CI                                               LN0514
+0112 I*********                               1   1 RECI                  LN0514
+0113 I*********                               2   30RECT                  LN0514
+0114 I*********                               8  120HOL                   LN0514
+0115 I*********                              13  130SREC                  LN0514
+0116 I*********                              14  14 INEX                  LN0514
+0117 I*********                              15  89 HCCY                  LN0514
+0118 I*********                           P  90  920LCD                   LN0514
+0119 I*********                              93  93 CHTP                  LN0514
+0120 I*********                           P  94  960TNLU                  LN0514
+0121 I*********                               1  96 LOT                   LN0514
+0122 I*********                                                           LN0514
+0123 I**   CATCHALL FOR DELETED RECORDS.
+0124 I        NS  06
+0125 I                                        1   1 RECI
+0126 I                                        2   30RECT
+0127 I**
+0128 I**
+0173 I**
+0174 I**
+0175 I**   LOCAL DATA AREA CONTAINING RUN DATE AND WORK STATION ID.
+0176 I**
+0177 ILDA        UDS                            256
+0178 I*************************************** 1   50RUNDAT                S01168
+0178 I                                        1   50NEWRUN                S01168
+0179 I                                       11  12 WSID
+0180 I**
+     I**   JNSTAT DATA AREA
+     IJNSTAT     UDS                            200
+     I                                    P 103 1050PRUN
+     I**   GLTEMP DATA AREA                                               S01333
+     IGLTEMP     UDS                            256                       S01333
+     I                                       74  78 EVCD0                 S01333
+     I                                       79  83 EVCD1                 S01333
+     I                                       84  88 EVCD2                 S01333
+     I**                                                                  S01168
+     IRUNDAT     UDS                                                      S01168
+     I**                                                                  S01168
+     I**  MIDAS SD SYNON DATA AREA                                        S01168
+     I****************************************1   7 AANA           S01168 S01117
+     I                                        1   7 MRDT                  S01118
+     I************************************P   8  100AKTX           S01168 S01117
+     I                                    P   8  100RDNB                  S01117
+     I***************************************11  11 AUST           S01168 S01117
+     I                                       11  11 SUC                   S01117
+     I***************************************12  12 E3ST           S01168 S01117
+     I                                       12  12 DFF                   S01117
+     I***************************************13  13 F1ST           S01168 S01117
+     I                                       13  13 MBIN                  S01117
+     I**    RETRIEVE WSID FROM PROG STATUS DATA STRUCTURE
+0255 I**
+     IPSDS       SDS
+     I                                      244 246 WSID1
+     I                                      245 246 WSID2
+     I*                                                                   LN0514
+     ISDBANK    E DSSDBANKPD                                              082738
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM                          082738
+     I*                                                                   082738
+     ISDGELR    E DSSDGELRPD                                              082738
+     I* GENERAL LEDGER DETAILS ACCESSED VIA ACCESS PROGRAM                082738
+     I/COPY WNCPYSRC,SD1030I002
+     I*                                                                   082738
+     IDSFDY     E DSDSFDY                                                 082738
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                082738
+     I*                                                                   082738
+     IDSSDY     E DSDSSDY                                                 LN0514
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                LN0514
+     I*                                                                   LN0514
+     I/COPY ZSRSRC,ZHOLI                                                  LN0514
+     I/COPY WNCPYSRC,SD1030I001
+     C                     MOVEACPY@      BIS@   80
+     C**   DEFN JNSTAT
+     C           *NAMVAR   DEFN           JNSTAT
+0372 C**                                                                  S01333
+     C**   DEFN GLTEMP                                                    S01333
+      *                                                                   082738
+     C                     EXSR FREEAO                                    082738
+      ****************************************************************           AR884111A AR1026104
+      ***Initiate*BankFusion*Web*Service*Call*to*Update*Business*Date*           AR884111A AR1026104
+      ***on*BF*Schema*************************************************           AR884111A AR1026104
+      ****************************************************************           AR884111A AR1026104
+     C**********           CALL 'BF000016'                                       AR884111A AR1026104
+0184 C**                                                                  S01333
+     C           *NAMVAR   DEFN           GLTEMP                          S01333
+0372 C**                                                                  S01333
+0182 C**   SET LR TO END PROGRAM.
+     C/COPY WNCPYSRC,SD1030C004
+0183 C                     SETON                     LR
+0184 C**
+0185 C**   ALL FURTHER CALCULATIONS ARE AT LR LEVEL.
+0186 C**
+0187 C**
+0188 C**   OBTAIN REQUIRED DATA FROM INSTALLATION CONTROL DATA RECORDS.
+0189 C**
+0190 C**   CODE 10, DATABASE ERROR IF NOT FOUND.
+0191 CLR                   EXSR ZSYSTM
+0192 CLR 99                SETON                     U8
+0192 CLR 99                DUMP                                           177294
+0193 CLR U8                GOTO ENDT
+0194 C**
+0195 C**   CODE 11, DATABASE ERROR IF NOT FOUND.
+0196 CLR                   MOVEL'01'      TABKEY 12
+0197 CLR                   MOVE '11'      TABKEY
+0198 CLR                   EXSR TABCHN
+0199 CLRN02                SETON                     U8
+0192 CLRN02                DUMP                                           177294
+0200 CLR U8                GOTO ENDT
+0201 C**
+     C*                                                                   S01495
+     C** Retrieve run date from CBAICDPD                                  S01495
+     C*                                                                   S01495
+     CLR                   MOVEL'A.COB '  ABACOB                          S01495
+     CLR         ABACOB    CHAIN@AICDF1              99                   S01495
+     CLR 99                SETON                     U8                   S01495
+0192 CLR 99                DUMP                                           177294
+     CLR U8                GOTO ENDT                                      S01495
+     C/COPY WNCPYSRC,SD1030C006
+0202 C**
+0203 C**   CALCULATIONS TO UPDATE TABLE FILE.
+0204 C**
+0247 C**   SET UP FIELDS FOR OUTPUT.
+0248 C**
+0255 C**   CREATE ALPHA RUN DATE.
+0256 C*********************Z-ADDRUNDAT    ZDAYNO                          S01168
+0256 C***LR******             Z-ADDNEWRUN    ZDAYNO                S01168 S01495
+     CLR                   Z-ADDABDBRN    ZDAYNO                          S01495
+0257 CLR                   EXSR ZDATE2
+     CLR                   MOVE ZADATE    ALFDAT  7                       E43452
+     C/COPY WNCPYSRC,SD1030C007
+0258 C**
+0259 C**   CALCULATE DATE OF NEXT WORKING DAY.
+0260 C*********************Z-ADDRUNDAT    ZDAYNO                          S01168
+0260 C***LR******             Z-ADDNEWRUN    ZDAYNO                S01168 S01495
+     CLR                   Z-ADDABDBRN    ZDAYNO                          S01495
+0261 CLR                   Z-ADD1         ZNRDYS
+0262 CLR                   MOVE LOCY      ZCCY
+     CLR                   MOVELBJSLCD    ZLOC                            187057
+0263 C*R********           EXSR ZDATE3                                    LN0514
+0263 CLR                   EXSR ZFWDT                                     LN0514
+0264 CLR                   Z-ADDZDYNBR    DNXTWD  50
+     C/COPY WNCPYSRC,SD1030C008
+     C**                                                                  E43452
+     C**   FOR DAILY ACCRUALS ALL RUN DAYS ARE ACCRUAL DAYS               E43452
+     C**                                                                  E43452
+     CLR         APFQ      COMP 'D'                      80               E43452
+     C**                                                                  E43452
+     C**   UPDATE ACCRUAL DATE WITH LESSER OF                             E43452
+     C**   DNWD - 1 OR MONTH END DATE                                     E43452
+     C**                                                                  E43452
+     CLRN80                Z-ADDAPDA      APDAT                           061717
+     C/COPY WNCPYSRC,SD1030C003
+     CLRN80                GOTO NOTDLA                                    E43452
+     C*                                                                   E14427
+     CLR         DNWD      CABEQ*ZEROS    NOTDLA                          E14427
+     C*                                                                   E43452
+     CLR         DNXTWD    SUB  1         NWDS1   50                      E43452
+     CLR                   Z-ADDDNWD      ZDAYNO                          E43452
+     CLR                   EXSR ZDATE2                                    E43452
+     CLR                   MOVELZDATE     DDMM    4                       E43452
+     CLR                   Z-ADD31        DD      20                      E43452
+     C*                                                                   E43452
+     CLR         EOMCAL    TAG                                            E43452
+     C*                                                                   E43452
+     CLRN98                MOVELDD        DDMM                            E43452
+     CLR 98                MOVE DD        DDMM                            E43452
+     CLR                   MOVELDDMM      ZDATE                           E43452
+     CLR                   EXSR ZDATE1                                    E43452
+     CLR 99                SUB  1         DD                              E43452
+     CLR 99                GOTO EOMCAL                                    E43452
+     C*                                                                   E43452
+     CLR                   Z-ADDZDAYNO    EOMDAT  50                      E43452
+     C*LR********NWDS1     COMP EOMDAT                 81           E43452E20929
+     C*LRN81*****          Z-ADDEOMDAT    APDAT   50                E43452E20929
+     C*LR*81*****          Z-ADDNWDS1     APDAT                     E43452E20929
+     C*                                                                   E20929
+     C**   DETERMINE ACCRUAL DATE.                                        E20929
+     C*                                                                   E20929
+     CLR                   EXSR ACCRUL                                    E20929
+     C*                                                                   E20929
+     C*                                                                   E43452
+     CLR         NOTDLA    TAG                                            E43452
+     C/COPY WNCPYSRC,SD1030C005
+     C*                                                                   E43452
+0265 C**
+0266 C**   GET TABLE RECORD TO BE UPDATED, I.C.D.R. CODE 10.
+0267 CLR                   MOVE '10'      TABKEY
+0268 CLR                   EXSR TABCHN
+0269 C**
+     C**   ZEROISE FIELD
+     CLR                   Z-ADD0         FIV0    50
+0284 C**   UPDATE TABLE FILE DETAIL RECORD.
+0285 CLR                   SETON                     71
+0286 CLR                   EXSR TIMES
+0287 CLR                   EXSR EXCPTN
+0288 C**
+0331 C**   GET TABLE RECORD TO BE UPDATED, I.C.D.R. CODE 11.
+0332 CLR                   MOVE '11'      TABKEY
+0333 CLR                   EXSR TABCHN
+0334 C**
+0349 C**   UPDATE TABLE FILE DETAIL RECORD.
+0350 CLR                   SETON                     71
+0351 CLR                   EXSR TIMES
+0352 CLR                   EXSR EXCPTN
+0353 C**
+0372 C**
+     C**   UPDATE 'PRUN' ON JNSTAT
+     CLR                   MOVE RUND      PRUN
+     CLR                   OUT  JNSTAT
+0372 C**                                                                  S01333
+     C**   UPDATE EVENT CONTROL DATES ON GLTEMP                           S01333
+0184 C**                                                                  S01333
+     CLR                   IN   GLTEMP                                    S01333
+     CLR                   MOVE EVCD1     EVCD2                           S01333
+     CLR                   MOVE EVCD0     EVCD1                           S01333
+     CLR         DNXTWD    SUB  1         NXWDS1  50                      S01333
+     CLR         APDAT     IFLT NXWDS1                                    S01333
+     CLR                   MOVE APDAT     EVCD0                           S01333
+     CLR                   ELSE                                           S01333
+     CLR                   MOVE NXWDS1    EVCD0                           S01333
+     CLR                   END                                            S01333
+     CLR                   OUT  GLTEMP                                    S01333
+0372 C**                                                                  S01333
+     CLR                   EXSR NEWDAT                                    S01168
+      *                                                                                    AR1026104
+      ** Initiate BankFusion Web Service Call to Update Business Date                      AR1026104
+      ** on BF Schema                                                                      AR1026104
+      *                                                                                    AR1026104
+     CLR                   CALL 'BF000016'                                                 AR1026104
+      *                                                                                    AR1026104
+     C/COPY WNCPYSRC,SD1030C001
+0373 CLR         ENDT      TAG                             ** ENDT TAG **
+0374 C**
+     C****************************************************************    E20929
+     C/EJECT
+     C****************************************************************    E20929
+     C*                                                              *    E20929
+     C*                                                              *    E20929
+     C*         DAILY ACCRUALS PROCESSING........                    *    E20929
+     C*           MODE 0 - ACCRUAL/PROFIT DATE EQUALS RUNDATE OR     *    E20929
+     C*                    EOM (IF EOM < DNWD - 1).                  *    E20929
+     C*                                                              *    E20929
+     C*           MODE 1 - ACCRUAL/PROFIT DATE EQUALS DNWD - 1 OR    *    E20929
+     C*                    EOM (IF EOM < DNWD).                      *    E20929
+     C*                                                              *    E20929
+     C*           MODE 2 - ACCRUAL/PROFIT DATE EQUALS RUNDATE OR     *    E20929
+     C*                    EOM (IF EOM < DNWD).                      *    E20929
+     C*                                                              *    E20929
+     C****************************************************************    E20929
+     C*                                                                   E20929
+     C           ACCRUL    BEGSR                                          E20929
+     C*                                                                   E20929
+     C/COPY WNCPYSRC,SD1030C009
+     C***        CALCUALTE DATE FOR ACCRUALS PROCESSING TYPE 0.           E20929
+     C*                                                                   E20929
+     C           ANWI      IFEQ '0'                         NORMAL PRCSS. E20929
+     C           DNXTWD    SUB  1         WKDNWD  50                      E20929
+     C***********EOMDAT    IFLT WKDNWD                IF EOM<DNWD-1 E20929081639
+     C           EOMDAT    IFLE WKDNWD                      IF EOM<DNWD-1 081639
+     C                     Z-ADDEOMDAT    APDAT   50          END OF MNTH E20929
+     C                     ELSE                             ELSE          E20929
+     C***********          Z-ADDNEWRUN    APDAT        RUN DATE    E20929 S01495
+     C                     Z-ADDABDBRN    APDAT               RUN DATE    S01495
+     C                     END                              END IF..      E20929
+     C                     END                              END IF....    E20929
+     C*                                                                   E20929
+     C*                                                                   E20929
+     C*                                                                   E20929
+     C*                                                                   E20929
+     C***        CALCULATE DATE FOR ACCRUALS PROCESSING TYPE 1.           E20929
+     C*                                                                   E20929
+     C           ANWI      IFEQ '1'                         IN ADVANCE    E20929
+     C           EOMDAT    IFLT DNXTWD                      IF EOM<NXT DY E20929
+     C                     Z-ADDEOMDAT    APDAT               END OF MTH  E20929
+     C                     ELSE                             ELSE          E20929
+     C           DNXTWD    SUB  1         APDAT               NXT DAY -1  E20929
+     C                     END                              END IF..      E20929
+     C                     END                              END IF....    E20929
+     C*                                                                   E20929
+     C*                                                                   E20929
+     C*                                                                   E20929
+     C*                                                                   E20929
+     C***        CALCUALTE DATE FOR ACCRUALS PROCESSING TYPE 2.           E20929
+     C*                                                                   E20929
+     C           ANWI      IFEQ '2'                         IN ARREARS    E20929
+     C           EOMDAT    IFLT DNXTWD                      IF EOM<NXT WK E20929
+     C                     Z-ADDEOMDAT    APDAT               END OF MTH  E20929
+     C                     ELSE                             ELSE          E20929
+     C***********          Z-ADDNEWRUN    APDAT        RUN DATE    E20929 S01495
+     C                     Z-ADDABDBRN    APDAT               RUN DATE    S01495
+     C                     END                              END IF..      E20929
+     C                     END                              END IF....    E20929
+     C*                                                                   E20929
+     C/COPY WNCPYSRC,SD1030C010
+     C*                                                                   E20929
+     C                     ENDSR                                          E20929
+     C*                                                                   E20929
+     C*                                                                   E20929
+     C********************************************************************S01168
+     C/EJECT                                                              S01168
+     C********************************************************************S01168
+     C*                                                                   S01168
+     C** NEWDAT S/R TO UPDATE NEW TABLE FILES/DATAAREA                    S01168
+     C*                                                                   S01168
+     C********************************************************************S01168
+     C           NEWDAT    BEGSR                                          S01168
+     C*                                                                   S01168
+     C** ACCESS BANK DATA                                                 S01168
+     C*                                                                   S01168
+     C                     MOVEL'BANK'    ICDFLG 10                       S01168
+     C           ICDFLG    CHAINSDBANKL0             99                   S01168
+     C*                                                                   S01168
+     C** UPDATE RUN DATE & DATE OF NEXT WORKING DAY                       S01168
+     C*                                                                   S01168
+     C*********************MOVE ALFDAT    BJHZNB                   S01168 S01117
+     C                     MOVE ALFDAT    BJMRDT                          S01117
+     C*********************Z-ADDNEWRUN    BJAKTX                   S01168 S01117
+     C***********          Z-ADDNEWRUN    BJRDNB                   S01117 S01495
+     C                     Z-ADDABDBRN    BJRDNB                          S01495
+     C*********************Z-ADDDNXTWD    BJH0NB                   S01168 S01117
+     C                     Z-ADDDNXTWD    BJDNWD                          S01117
+     C                     UPDAT@BJREEE                                   S01168
+     C*                                                                   S01117
+     C** Read SDMMODPD for the value of the Multi-branch Indicator        S01117
+     C*                                                                   S01117
+     C                     MOVEL'MMOD'    MMOD   10                       S01168
+     C           MMOD      CHAINSDMMODL1             99
+     C*                                                                   S01168
+     C** UPDATE DATA AREA FOR DATE ETC. IN SYNON                          S01168
+     C*                                                                   S01168
+     C           *NAMVAR   DEFN           RUNDAT                          S01168
+     C                     IN   RUNDAT                                    S01168
+     C*********************MOVE BJHZNB    AANA                     S01168 S01117
+     C                     MOVE BJMRDT    MRDT                            S01117
+     C*********************MOVE BJAKTX    AKTX                     S01168 S01117
+     C                     MOVE BJRDNB    RDNB                            S01117
+     C*********************MOVE BJAUST    AUST                     S01168 S01117
+     C                     MOVE BJSUC     SUC                             S01117
+     C*********************MOVE BJFKST    E3ST                     S01168 S01117
+     C                     MOVE BJDFIN    DFF                             S01117
+     C*********************MOVE BJFLST    F1ST                     S01168 S01117
+     C                     MOVE BGMBIN    MBIN
+     C                     OUT  RUNDAT                                    S01168
+     C*                                                                   S01168
+     C** UPDATE ACCRUAL PROFIT DATE IF REQUIRED                           S01168
+     C*                                                                   S01168
+     C           *IN80     IFEQ '1'                                       S01168
+     C                     MOVEL'GELR'    ICDFLG                          S01168
+     C           ICDFLG    CHAINSDGELRL0             99                   S01168
+     C*********************Z-ADDAPDAT     BKFOST                   S01168 S01117
+     C                     Z-ADDAPDAT     BKAPDT                          S01117
+     C                     UPDAT@BKREEB                                   S01168
+     C                     END                                            S01168
+     C*                                                                   S01168
+     C                     ENDSR                                          S01168
+     C*                                                                   S01168
+     C********************************************************************S01168
+     C/EJECT                                                              S01168
+0375 C**
+0376 C********************************************************************
+0377 C**
+0378 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0379 C**
+0380 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0381 C**
+0382 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0383 C                     MOVEL'01      'ZTABKY 12
+0384 C                     MOVE '  10'    ZTABKY
+0385 C**
+0386 C           ZTABKY    CHAINTABLE                99    ON NOT THERE
+0387 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0388 C**
+0389 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0390 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0391 C**
+0392 C                     ENDSR
+0393 C**
+0394 C**
+0395 C********************************************************************
+0396 C**
+0397 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0398 C**
+0399 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0400 C**
+0401 C**   CLEAR DATE FIELDS.
+0402 C                     Z-ADD0         ZDATE   60
+0403 C                     MOVEL'       ' ZADATE  7
+0404 C**
+0405 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0406 C                     Z-ADDZDAYNO    ZDAYNO  50
+0407 C**
+0408 C**   DETERMINE YEAR NUMBER.
+0409 C**
+0410 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0411 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0412 C   99                GOTO ZDEND2
+0413 C**
+0414 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0415 C           ZDAYN1    DIV  1461      ZLYR    20
+0416 C                     MVR            ZDAYN1           SAVE REMAINING
+0417 C**                                                   DAYS
+0418 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0419 C                     Z-ADD1         ZWRK2   20
+0420 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0421 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0422 C  N90      ZWRK2     ADD  1         ZWRK2
+0423 C  N90                GOTO ZDTAG1
+0424 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0425 C**
+0426 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0427 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0428 C**
+0429 C**   CALCULATE ACTUAL YEAR NUMBER.
+0430 C           ZLYR      MULT 4         ZWRK3   30
+0431 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0432 C                     Z-ADDZWRK3     ZYEAR   20
+0433 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0434 C**
+0435 C**   DETERMINE MONTH NUMBER.
+0436 C**
+0437 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0438 C                     SETOF                     9293
+0439 C   91      ZDAYN1    COMP 59                     9293
+0440 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0441 C**
+0442 C**   CALCULATE MONTH NUMBER.
+0443 C                     Z-ADD2         ZWRK2
+0444 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0445 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0446 C  N94      ZWRK2     ADD  1         ZWRK2
+0447 C  N94                GOTO ZDTAG2
+0448 C           ZWRK2     SUB  1         ZWRK2
+0449 C**
+0450 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0451 C**
+0452 C**   DETERMINE DAY OF MONTH.
+0453 C**
+0454 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0455 C           ZDAYN1    ADD  1         ZDAYN1
+0456 C**
+0457 C**   CALCULATE DAY OF MONTH.
+0458 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0459 C**
+0460 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0461 C   93      ZDAY      ADD  1         ZDAY
+0462 C**
+0463 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0464 C  N98                MOVELZDAY      ZWRK4   40
+0465 C   98                MOVE ZDAY      ZWRK4
+0466 C  N98                MOVE ZMTH      ZWRK4
+0467 C   98                MOVELZMTH      ZWRK4
+0468 C                     MOVELZWRK4     ZDATE
+0469 C                     MOVE ZYEAR     ZDATE
+0470 C**
+0471 C**   FORMAT ALPHA DATE, DDMMMYY.
+0472 C           ZDAY      COMP 10                     95
+0473 C                     MOVELZDAY      ZWRK5   5
+0474 C   95                MOVEL' '       ZWRK5
+0475 C                     MOVE ZMNM,ZMTH ZWRK5
+0476 C                     MOVELZWRK5     ZADATE
+0477 C                     MOVE ZYEAR     ZADATE
+0478 C**
+0479 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0480 C**
+0481 C**
+0482 C********************************************************************
+0483 C*********                                                           LN0514
+0484 C*****ZDATE3 SR. TO CALCULATE ANY NUMBER OF WORKING                  LN0514
+0485 C**********      DAYS FORWARD IN ANY CURRENCY.                       LN0514
+0486 C**********                                                          LN0514
+0487 C*********THIS SR. CAN BE USED WHEN THE INPUT CYCLE IS RUNNING AS    LN0514
+0488 C*********HOLIDAY RECORDS ARE ACCESSED BY CHAIN. THEREFORE NEWLY     LN0514
+0489 C*********ADDED RECORDS IN THE OVERFLOW AREA CAN ALSO BE ACCESSED.   LN0514
+0490 C**********                                                          LN0514
+0491 C********** ZDATE3    BEGSR                           *** ZDATE3 *** LN0514
+0492 C**********                                                          LN0514
+0493 C*****CALCULATIONS TO DEFINE INPUT FIELDS.                           LN0514
+0494 C**********           Z-ADDZDAYNO    ZDAYNO  50       STARTING DATE  LN0514
+0495 C**********           MOVE ZCCY      ZCCY    3        DATE CURRENCY  LN0514
+0496 C**********           Z-ADDZNRDYS    ZNRDYS  20       NBR OF WORKING LN0514
+0497 C**********                                           DAYS FORWARD   LN0514
+0498 C*****CLEAR COUNT OF NBR OF DAYS ADDED, & DEFINE ZDYNBR.             LN0514
+0499 C**********           Z-ADD0         ZDCNT   20                      LN0514
+0500 C**********           Z-ADDZDAYNO    ZDYNBR  50                      LN0514
+0501 C**********                                                          LN0514
+0502 C*****LOOP*TO INCREMENT DAY NUMBER AND CHECK FOR HOLIDAY.            LN0514
+0503 C********** ZDLOP1    TAG                             ** ZDLOP1 TAG *LN0514
+0504 C**********                                                          LN0514
+0505 C**********           SETOF                     9596                 LN0514
+0506 C********** ZDYNBR    ADD  1         ZDYNBR                          LN0514
+0507 C**********                                                          LN0514
+0508 C*****SET*KEY FOR FIRST HOLIDAY RECORD.                              LN0514
+0509 C**********           MOVEL'22    '  ZDHKEY 12                       LN0514
+0510 C**********           MOVELZDYNBR    ZWRK6   6                       LN0514
+0511 C**********           MOVE '1'       ZWRK6                           LN0514
+0512 C**********           MOVE ZWRK6     ZDHKEY                          LN0514
+0513 C**********                                                          LN0514
+0514 C*****CHAIN FOR HOLIDAY RECORD, RECORD 1 OR 2                        LN0514
+0515 C********** ZDHCHN    TAG                             ** ZDHCHN TAG *LN0514
+0516 C**********                                                          LN0514
+0517 C********** ZDHKEY    CHAINTABLE                90    ON NOT THERE   LN0514
+0518 C**N90***** RECI      COMP 'D'                  9090  DELETED        LN0514
+0519 C**********                                                          LN0514
+0520 C*****NO*RECORD 1 FOUND, IS NOT A HOLIDAY                            LN0514
+0521 C***90N95**           GOTO ZDOAGN                                    LN0514
+0522 C**********                                                          LN0514
+0523 C*****NO*RECORD 2 FOUND                                              LN0514
+0524 C***90*95*96          GOTO ZDLOP1                     EXC. NOT FOUND LN0514
+0525 C***90*95N96          GOTO ZDOAGN                     INC. NOT FOUND LN0514
+0526 C**********                                                          LN0514
+0527 C*****DETERMINE TYPE FOUND, INCLUDE OR EXCLUDE                       LN0514
+0528 C********** INEX      COMP 'E'                  92  91               LN0514
+0529 C**********                                                          LN0514
+0530 C*****CHECK IF DAY IS HOLIDAY FOR CURRENCY.                          LN0514
+0531 C********** ZCCY      LOKUPHCCY                     93               LN0514
+0532 C***91*93**           GOTO ZDOAGN                     EXCLUDE FOUND  LN0514
+0533 C***92*93**           GOTO ZDLOP1                     INCLUDE FOUND  LN0514
+0534 C**********                                                          LN0514
+0535 C*****IF*EXCLUDE OR INCLUDE NOT FOUND CHECK                          LN0514
+0536 C*****FOR*SECOND HOLIDAY RECORD, IF REQUIRED.                        LN0514
+0537 C********** '   '     LOKUPHCCY                     94ON IF NO RCD.2 LN0514
+0538 C**********           MOVE ZDHKEY    ZWRK1   1                       LN0514
+0539 C********** ZWRK1     COMP '1'                      95               LN0514
+0540 C***91*95**           SETON                     96                   LN0514
+0541 C***95N94**           MOVE '2'       ZDHKEY                          LN0514
+0542 C***95N94**           GOTO ZDHCHN                     GET SECOND REC LN0514
+0543 C**********                                                          LN0514
+0544 C***91*****           GOTO ZDLOP1                     EXC. NOT FOUND LN0514
+0545 C***92*****           GOTO ZDOAGN                     INC. NOT FOUND LN0514
+0546 C**********                                                          LN0514
+0547 C*****INCREMENT COUNT AND CHECK IF REQUIRED NUMBER OF DAYS           LN0514
+0548 C*****HAVE BEEN ADDED. IF NOT, GO THROUGH LOOP1 AGAIN.               LN0514
+0549 C********** ZDOAGN    TAG                             ** ZDOAGN TAG *LN0514
+0550 C**********                                                          LN0514
+0551 C********** ZDCNT     ADD  1         ZDCNT                           LN0514
+0552 C********** ZDCNT     COMP ZNRDYS                 97                 LN0514
+0553 C***97*****           GOTO ZDLOP1                                    LN0514
+0554 C**********                                                          LN0514
+0555 C**********           ENDSR                                          LN0514
+0556 C**********                                                          LN0514
+0557 C**********                                                          LN0514
+     C********************************************************************LN0514
+     C*                                                                   LN0514
+     C* ZACCH  --- SUBROUTINE TO ACCESS A HOLIDAY RECORD FOR A            LN0514
+     C*            PARTICULAR CURRENCY (AND LOCATION IF DESIRED)          LN0514
+     C*                                                                   LN0514
+     C********************************************************************LN0514
+     C/COPY ZSRSRC,ZACCH                                                  LN0514
+     C/EJECT                                                              LN0514
+0558 C********************************************************************LN0514
+     C*                                                                   LN0514
+     C* ZFWDT  --- SUBROUTINE TO CALCULATE THE NTH WORKING DAY            LN0514
+     C*            FORWARD FROM A GIVEN START DATE FOR ANY                LN0514
+     C*            PARTICULAR CURRENCY AND (OPTIONAL) LOCATION.           LN0514
+     C*                                                                   LN0514
+     C*                                                                   LN0514
+     C* CALLS: ZACCH                                                      LN0514
+     C*                                                                   LN0514
+     C********************************************************************LN0514
+     C/COPY ZSRSRC,ZFWDT                                                  LN0514
+     C/EJECT                                                              LN0514
+     C********************************************************************LN0514
+     C/COPY WNCPYSRC,SD1030C002
+0559 C**
+0560 C**
+0561 C**   TABCHN SR. TO RANDOM ACCESS TABLE FILE.
+0562 C**
+0563 C           TABCHN    BEGSR                           *** TABCHN ***
+0564 C**
+0565 C**   RESET INDICATORS.
+0566 C                     SETOF                     0102
+0567 C**
+0568 C**   RANDOM ACCESS TABLE FILE BY KEY.
+0569 C           TABKEY    CHAINTABLE                76    ON NOT THERE
+0570 C**
+0571 C                     ENDSR
+0572 C**
+0573 C**
+0574 C********************************************************************
+0590 C**
+0591 C**   EXCPTN SR. TO PERFORM EXCEPTION TIME OUTPUT
+0592 C**              AND RESET EXCPTION CONTROL INDICATORS.
+0593 C**
+0594 C           EXCPTN    BEGSR                           *** EXCPTN ***
+0595 C**
+0596 C**   EXCEPTION OUTPUT.
+0597 C                     EXCPT
+0598 C**
+0599 C**   RESET INDICATORS.
+0600 C                     SETOF                     71
+0602 C**
+0603 C                     ENDSR
+0604 C**
+0605 C**
+0606 C********************************************************************
+0607 C**
+0608 C**   TIME SR. TO OBTAIN TIME.
+0609 C**
+0610 C           TIMES     BEGSR                           *** TIME ***
+0611 C**
+0612 C                     TIME           TIM     60
+0613 C**
+0614 C                     ENDSR
+0615 C**
+0616 C**
+0617 C********************************************************************
+3746 C**                                                                  E43452
+3747 C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND                     E43452
+3748 C**              CONVERT TO A NUMBER OF DAYS.                        E43452
+3749 C**                                                                  E43452
+3750 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.         E43452
+3751 C**                                                                  E43452
+3752 C           ZDATE1    BEGSR                           *** ZDATE1 *** E43452
+3753 C**                                                                  E43452
+3754 C**   CLEAR DAY NUMBER.                                              E43452
+3755 C                     Z-ADD0         ZDAYNO  50                      E43452
+3756 C**                                                                  E43452
+3757 C**   CALCULATION TO DEFINE INPUT DATE FIELD.                        E43452
+3758 C                     Z-ADDZDATE     ZDATE   60                      E43452
+3759 C**                                                                  E43452
+3760 C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.                     E43452
+3761 C                     MOVE ZDATE     ZYEAR   20                      E43452
+3762 C  N98                MOVELZDATE     ZDAY    20                      E43452
+3763 C   98                MOVELZDATE     ZMTH    20                      E43452
+3764 C                     MOVE ZDATE     ZWRK4   40                      E43452
+3765 C  N98                MOVELZWRK4     ZMTH                            E43452
+3766 C   98                MOVELZWRK4     ZDAY                            E43452
+3767 C**                                                                  E43452
+3768 C**   ENSURE MONTH IS VALID.                                         E43452
+3769 C           ZMTH      COMP 0                      9999               E43452
+3770 C  N99      ZMTH      COMP 12                   99                   E43452
+3771 C   99                GOTO ZDEND1                     BYPASS IF ERRORE43452
+3772 C**                                                                  E43452
+3773 C**   CHECK FOR 30 DAY MONTHS.                                       E43452
+3774 C           ZMTH      COMP 4                        90IF 90 ON, 30   E43452
+3775 C  N90      ZMTH      COMP 6                        90DAY MONTH.     E43452
+3776 C  N90      ZMTH      COMP 9                        90               E43452
+3777 C  N90      ZMTH      COMP 11                       90               E43452
+3778 C**                                                                  E43452
+3779 C**   ENSURE DAY IS VALID.                                           E43452
+3780 C           ZDAY      COMP 0                      9999               E43452
+3781 C   90N99   ZDAY      COMP 30                   99                   E43452
+3782 C  N90N99   ZDAY      COMP 31                   99                   E43452
+3783 C   99                GOTO ZDEND1                     BYPASS IF ERRORE43452
+3784 C**                                                                  E43452
+3785 C**   CHECK FOR LEAP YEAR AND FEBRUARY.                              E43452
+3786 C           ZYEAR     ADD  28        ZYEAR                           E43452
+3787 C           ZYEAR     DIV  4         ZLYR    20                      E43452
+3788 C                     MVR            ZLY     10     91LEAP YR, 91 ON E43452
+3789 C           ZMTH      COMP 2                    93  92FEB., 92 ON    E43452
+3790 C**                                                   PAST FEB, 93 ONE43452
+3791 C**   IF FEBUARY FURTHER VALIDATE DAY.                               E43452
+3792 C  N91 92   ZDAY      COMP 28                   99                   E43452
+3793 C   91 92   ZDAY      COMP 29                   99                   E43452
+3794 C   99                GOTO ZDEND1                     BYPASS IF ERRORE43452
+3795 C**                                                                  E43452
+3796 C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANSE43452
+3797 C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.E43452
+3798 C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YRE43452
+3799 C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.E43452
+3800 C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR E43452
+3801 C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTHE43452
+3802 C**                                                                  E43452
+3803 C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*E43452
+3804 C**                                                                  E43452
+3805 C**                                                                  E43452
+     C****************************************************************    E43452
+      *                                                              *    082738
+      *  FREEAO - Subroutine to call Access objects AOBANKR0 and     *    082738
+      *           AOGELRR0 to free files SDBANKPD & SDGELRPD which   *    082738
+      *           have just been updated in SD1020.                  *    082738
+      *                                                              *    082738
+      ****************************************************************    082738
+      *                                                                   082738
+     C           FREEAO    BEGSR                                          082738
+      *                                                                   082738
+      ** CALL AOBANKR0 WITH *FREE TO SETON LR & FREE PAG.                 082738
+      *                                                                   082738
+     C                     CALL 'AOBANKR0'                                082738
+     C                     PARM '       ' @RTCD   7                       082738
+     C                     PARM '*FREE  ' @OPTN   7                       082738
+     C           SDBANK    PARM SDBANK    DSFDY                           082738
+      *                                                                   187057
+      ** Call AOBANKR0 with *FIRST to retrieve the location code          187057
+     C                     CALL 'AOBANKR0'                                187057
+     C                     PARM '*MSG   ' @RTCD   7                       187057
+     C                     PARM '*FIRST ' @OPTN   7                       187057
+     C           SDBANK    PARM SDBANK    DSFDY                           187057
+      *                                                                   082738
+      ** CALL AOGELRR0 WITH *FREE TO SETON LR & FREE PAG.                 082738
+      *                                                                   082738
+     C**********           CALL 'AOGELRR0'                                082738              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '       ' @RTCD   7                       082738
+     C                     PARM '*FREE  ' @OPTN   7                       082738
+     C********** SDGELR    PARM SDGELR    DSFDY                           082738              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   082738
+     C                     ENDSR                                          082738
+3806 C********************************************************************082738
+0676 O**
+0677 O**   UPDATE TABLE FILE.
+0678 O**
+0679 O**   AMENDMENT, INSTALLATION CONTROL DATA RECORD 1.
+0680 OTABLE   E        71 01
+0681 O                         LOT       96
+0682 O*************************RUNDAT    79P                              S01168
+0682 O*************************NEWRUN****79P                       S01168 S01495
+     O                         ABDBRN    79P                              S01495
+0683 O*************************ZADATE    86                               E43452
+     O                         ALFDAT    86                               E43452
+0684 O*************************RUNDAT    92P                              S01168
+0684 O*************************NEWRUN****92P                       S01168 S01495
+     O                         ABDBRN    92P                              S01495
+0685 O                                   93 'A'
+     O                         FIV0      96P
+0687 O**
+0688 O**   AMENDMENT, INSTALLATION CONTROL DATA RECORD 2.
+0689 O        E        71 02
+0690 O                         LOT       96
+     O                       80APDAT     31P                              E43452
+0691 O                         DNXTWD    43P
+     O*************************FIV0      89P                              E11751
+0693 O*************************RUNDAT    92P                              S01168
+0693 O*************************NEWRUN****92P                       S01168 S01495
+     O                         ABDBRN    92P                              S01495
+0694 O                                   93 'A'
+     O                         FIV0      96P
+0696 O**
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

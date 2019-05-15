@@ -1,0 +1,116 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  ZDATE2Z4LE - Convert day number to a date                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2012                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134  *CREATE    Date 01Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *                                                               *
+      *****************************************************************
+     C     ZDATE2        BEGSR
+      *
+      ** CLEAR DATE FIELDS.
+      *
+     C                   Z-ADD     0             ZDATE             6 0
+     C                   MOVEL     '       '     ZADATE            7
+      *
+      ** CALCULATION TO DEFINE INPUT DAY NUMBER.
+      *
+     C                   Z-ADD     ZDAYNO        ZDAYNO            5 0
+      *
+      ** DETERMINE YEAR NUMBER.
+      *
+      ** ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+      *
+     C     ZDAYNO        SUB       1             ZDAYN1            5 0  99
+     C   99              GOTO      ZDEND2
+      *
+      ** CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+      *
+     C     ZDAYN1        DIV       1461          ZLYR              2 0
+     C                   MVR                     ZDAYN1                         SAVE REMAINING DAYS
+      *
+      ** CALCULATE NUMBER OF REMAINING YEARS.
+      *
+     C                   Z-ADD     1             ZWRK2             2 0
+     C     ZDTAG1        TAG
+     C     ZDAYN1        COMP      ZYDY(ZWRK2)                          90
+     C  N90ZWRK2         ADD       1             ZWRK2
+     C  N90              GOTO      ZDTAG1
+     C     ZWRK2         SUB       1             ZWRK2                    91    LEAP YR, 91 ON
+      *
+      ** DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+      *
+     C  N91ZDAYN1        SUB       ZYDY(ZWRK2)   ZDAYN1
+      *
+      ** CALCULATE ACTUAL YEAR NUMBER.
+      *
+     C     ZLYR          MULT      4             ZWRK3             3 0
+     C     ZWRK3         ADD       72            ZWRK3                          BASE IS 1972
+     C                   Z-ADD     ZWRK3         ZYEAR             2 0
+     C     ZYEAR         ADD       ZWRK2         ZYEAR                          YEAR
+      *
+      ** DETERMINE MONTH NUMBER.
+      *
+      ** ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+      *
+     C                   SETOFF                                       9293
+     C   91ZDAYN1        COMP      59                                   9293
+     C   91
+     CANN92ZDAYN1        SUB       1             ZDAYN1
+      *
+      ** CALCULATE MONTH NUMBER.
+      *
+     C                   Z-ADD     2             ZWRK2
+     C     ZDTAG2        TAG
+     C     ZDAYN1        COMP      ZMDY(ZWRK2)                          94
+     C  N94ZWRK2         ADD       1             ZWRK2
+     C  N94              GOTO      ZDTAG2
+     C     ZWRK2         SUB       1             ZWRK2
+      *
+     C                   Z-ADD     ZWRK2         ZMTH              2 0          MONTH
+      *
+      ** DETERMINE DAY OF MONTH.
+      *
+      ** ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+      *
+     C     ZDAYN1        ADD       1             ZDAYN1
+      *
+      ** CALCULATE DAY OF MONTH.
+      *
+     C     ZDAYN1        SUB       ZMDY(ZWRK2)   ZDAY              2 0          DAY
+      *
+      ** ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+      *
+     C   93ZDAY          ADD       1             ZDAY
+      *
+      ** FORMAT DATE, DDMMYY OR MMDDYY.
+      *
+     C  N98              MOVEL     ZDAY          ZWRK4             4 0
+     C   98              MOVE      ZDAY          ZWRK4
+     C  N98              MOVE      ZMTH          ZWRK4
+     C   98              MOVEL     ZMTH          ZWRK4
+     C                   MOVEL     ZWRK4         ZDATE
+     C                   MOVE      ZYEAR         ZDATE
+      *
+      ** FORMAT ALPHA DATE, DDMMMYY.
+      *
+     C     ZDAY          COMP      10                                   95
+     C                   MOVEL     ZDAY          ZWRK5             5
+     C   95              MOVEL     ' '           ZWRK5
+     C                   MOVE      ZMNM(ZMTH)    ZWRK5
+     C                   MOVEL     ZWRK5         ZADATE
+     C                   MOVE      ZYEAR         ZADATE
+      *
+     C     ZDEND2        ENDSR
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

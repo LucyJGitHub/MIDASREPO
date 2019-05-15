@@ -1,0 +1,258 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Error processing for schedlr fail')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing
+     F*                                                               *
+     F*  CB0170 - ERROR PROCESSING FOR SCHEDULER FAILURE              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 LN0278             Date 13Jul90               *
+     F*                 LN0382             Date 16JUN90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                                *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  LN0278 - USE NEW PROGRAM CBTIME TO ACCESS TIME AND           *
+     F*           DATE IN CORRECT FORMAT FOR CALCULATIONS             *
+     F*           AND REMOVE ZDATE1 SUBROUTINE                        *
+     F*  LN0382 - REMOVE CALL TO AOBANKR0 AND USE RUNDAT TO           *
+     F*           OBTAIN DATE FORMAT IN ORDER TO AVOID AOBANKR0       *
+     F*           BEING CALLED BY ITSELF                              *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FCBHALTPDO   E                    DISK
+     FCBMESGPDO   E                    DISK
+     F*
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*****90-99***USED IN STANDARD SUBROUTINE ZDATE1                     LN0278
+     F*
+     F*       LR   LAST RECORD INDICATOR
+     F*
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E*
+     E                    MSG     1   2 43
+     E** TYPE OF FAILURE MESSAGE
+     E*
+     E****/COPY ZSRSRC,ZDATE1Z1                                           LN0278
+     E***SR.ARRAY*FOR*ZDATE1                                              LN0278
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     LOCAL DATA AREA
+     I*
+     I***RUNDAT   DS                             13                 LN0382LN0278
+     I*******                                12  12 AGDFF           LN0382LN0278
+     I***DATA*STRUCTURE*TO*GET*DATE*FORMAT*FROM*RUNDAT*DATA*AREA    LN0382LN0278
+     I*                                                                   LN0382
+     INICTIM      DS
+     I                                        1   2 NICHR
+     I                                        3   3 COLON1
+     I                                        4   5 NICMI
+     I                                        6   6 COLON2
+     I                                        7   8 NICSE
+     I**  CONVERT CURRENT TIME INTO 'NICE' DISPLAY (HH:MM:SS)
+     I*
+     IHLTTIM      DS
+     I                                        1   2 CURHR
+     I                                        3   4 CURMI
+     I                                        5   6 CURSE
+     I                                        1   60HSTI
+     I**  DATA STRUCTURE TO SPLIT CURRENT TIME INTO HOURS, MINUTES
+     I**  AND SECONDS
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I**SDBANK    E DSSDBANKPD                                            LN0382
+     I***EXTERNAL*DATA*STRUCTURE*FOR*ACCESS*OBJECT*FORMAT                 LN0382
+     I*
+     I**DSFDY     E DSDSFDY                                               LN0382
+     I***FIRST*DATA*STRUCTURE*FOR*ACCESS*OBJECT,*SHORT*DATA*STRUCTURE     LN0382
+     I*
+     I*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C**   ACCEPT PARAMETER TO SHOW WHERE CALLED FROM
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           FROM    1
+     C                     PARM           ERROR   1
+     C*
+     C** DEFINE DATA AREA LDA AND LOCK TO SET
+     C** UP PROGRAM NAME FOR DATABASE ERRORS
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CB0170  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+     C*                                                                   LN0382
+     C*********  *NAMVAR   DEFN           RUNDAT                    LN0382LN0278
+     C*                                                                   LN0382
+     C***GET*DATE*FORMAT*FROM*RUNDAT                                LN0382LN0278
+     C*                                                                   LN0382
+     C*********            IN   RUNDAT                              LN0382LN0278
+     C*********            MOVE AGDFF     BJDFIN  1                 LN0382LN0278
+     C*********            UNLCKRUNDAT                              LN0382LN0278
+     C*
+     C***USE*ACCESS*OBJECT*AOBANKR0*TO*                                   LN0382
+     C***RETRIEVE*DATE*FORMAT*FOR*ZDATE1                                  LN0382
+     C*****                                                               LN0382
+     C*****                CALL 'AOBANKR0'                                LN0382
+     C*****                PARM '*MSG   ' P@RTCD  7                       LN0382
+     C*****                PARM '*FIRST ' P@OPTN  7                       LN0382
+     C*****      SDBANK    PARM SDBANK    DSFDY                           LN0382
+     C*****                                                               LN0382
+     C***IF ERROR FOUND BY ACCESS OBJECT EXIT                             LN0382
+     C***PROGRAM VIA DATABASE ERROR SUBROUTINE                            LN0382
+     C*****                                                               LN0382
+     C*****      P@RTCD    IFNE *BLANKS                                   LN0382
+     C*****                MOVEL'AOBNK'   DBFILE           ***************LN0382
+     C*****                Z-ADD1         DBASE            * DB ERROR 01 *LN0382
+     C*****                EXSR DBERR                      ***************LN0382
+     C*****                END                                            LN0382
+     C*
+     C***VALIDATION*OF*DATE*FORMAT*ON*RUNDAT                              LN0278
+     C***AS*REQUIRED*BY*SUBROUTINE*ZDATE1                                 LN0278
+     C*
+     C******     BJDFIN    IFEQ 'M'                                       LN0278
+     C******               SETON                     98                   LN0278
+     C******               ELSE                                           LN0278
+     C******               SETOF                     98                   LN0278
+     C******               END                                            LN0278
+     C*
+     C**   ACCESS CURRENT DATE AND TIME
+     C*
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA  5                       LN0278
+     C                     PARM           STIME   6                       LN0278
+     C                     PARM           DFMT    1                       LN0278
+     C*
+     C*********            TIME           TIMDAT 120                      LN0278
+     C*********            MOVELTIMDAT    HSTI                            LN0278
+     C                     MOVE STIME     HSTI                            LN0278
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C*
+     C*****CONVERT*CURRENT*DATE*INTO*MIDAS*DAY*NUMBER                     LN0278
+     C*
+     C******               EXSR ZDATE1                                    LN0278
+     C*********            MOVE ZDAYNO    CURRDT  50                      LN0278
+     C                     MOVE DAYNOA    CURRDT  50                      LN0278
+     C                     MOVELCURRDT    HSDE
+     C*
+     C**   IF ERROR DUE TO SCHEDULER FAILURE
+     C*
+     C           FROM      IFEQ 'S'
+     C*
+     C**   SET UP ERROR MESSAGE FOR OUTPUT TO PF/CBHALTPD
+     C*
+     C                     MOVELMSG,1     SCHMSG 43
+     C                     MOVE ':'       COLON1
+     C                     MOVE ':'       COLON2
+     C                     MOVE CURHR     NICHR
+     C                     MOVE CURMI     NICMI
+     C                     MOVE CURSE     NICSE
+     C                     MOVE NICTIM    SCHMSG
+     C                     MOVELSCHMSG    HTXT
+     C*
+     C**   ELSE ERROR MUST BE DUE TO MACHINE FAILURE
+     C                     ELSE
+     C*
+     C**   SET UP 'MACHINE FAILURE' MESSAGE FOR OUTPUT TO PF/CBHALTPD
+     C*
+     C                     MOVELMSG,2     HTXT
+     C*
+     C**   WRITE COB HALT MESSAGE TO PF/CBMESGPD
+     C*
+     C                     MOVELHTXT      CTXT
+     C                     MOVEL'ERROR '  CBSM
+     C                     WRITECBMESGP0
+     C*
+     C                     END
+     C*
+     C**   WRITE COB HALT MESSAGE TO PF/CBHALTPD
+     C*
+     C                     WRITECBHALTP0
+     C*
+     C                     SETON                         LR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** INDEX OF SUBROUTINES
+     C**
+     C**
+     C***ZDATE1*-*TO*CONVERT*DATE*INTO*MIDAS*DAY*NUMBER                   LN0278
+     C**
+     C** DBERR  - DATABASE ERROR HANDLING
+     C**
+     C********************************************************************
+     C/EJECT
+     C*****/COPY ZSRSRC,ZDATE1Z2                                          LN0278
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** SETON INDICATOR LR, UPDATE ERROR PARAMETER
+     C** AND RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     LR
+     C*
+     C                     MOVE 'Y'       ERROR
+     C*
+     C                     OUT  LDA
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+**  MSG
+SCHEDULER TERMINATED ABNORMALLY AT
+MACHINE FAILURE
+**  CPY@
+(c) Finastra International Limited 2001

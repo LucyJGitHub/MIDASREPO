@@ -1,0 +1,541 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account postings history purge')              *
+/*O*R ***CRTDTAARA*DTAARA(QTEMP/RUNPRG)*TYPE(*CHAR)*LEN(1)*************                     CGL127AY
+      *****************************************************************
+     F*                                                               *
+     F*  Midas - General Ledger                                       *
+     F*                                                               *
+     F*  GL4450A - Account Postings History Purge                     *
+     F*            (if S01520 not installed)                          *
+     F*                                                               *
+     F*  Function:  This component will delete from the A/C Posting   *
+     F*            History file GLACPHPD any posting with a posting   *
+     F*            date earlier than the Account Posting Retention    *
+     F*            Period from the account codes file. If the account *
+     F*            code record has been deleted, the default Account  *
+     F*            Posting Retention period from the ICD is used.     *
+     F*                                                               *
+     F*             This component ends automatically if MPHAS is not *
+     F*            either 'A' or 'C' - Input Cycle or COB             *
+     F*                                                               *
+     F*             This program is called during Close of Business,  *
+     F*            or can be run interactively or in batch in Input   *
+     F*            Cycle as long as there are no users in the system. *
+     F*                                                               *
+     F*  Called by: GLC4450 - Account Postings History Purge component*
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL127AY           Date 06Aug12               *
+      *                 CCB020             Date 06Aug12               *
+      *                 CGL127AB           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 127318 *CREATE     Date 09Dec97               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL127AY - COB Restructure - GL COB Optimisation Phase 1     *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CGL127AB - General Ledger module optimisation - Phase 1      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+     F*           Information (Recompile)                             *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*   127318 - New program, based on GL4450, to purge Historic    *
+     F*            Postings file, without commitment control.         *
+     F*            Commitment control is not required if Switchable   *
+     F*            Feature S01520 not installed as the Account Master *
+     F*            record does not need to be updated as historic     *
+     F*            postings are dropped.                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*FSTART
+      * Account postings history file.
+      * ------------------------------
+     F*
+     F/COPY WNCPYSRC,GL4450FFPG
+     F*
+     FGLACPHL UF  E           K        DISK
+     F*  GL Accounts Post Historic Details file
+     F                                              KINFSR GLASR
+     F            APOSTPDF                          KRENAMEAPOSTPDX
+     F                                              KCOMIT                                  CGL127AY
+     FGLACHDPDIF  E                    DISK                           UC                    CGL127AY
+      * Driver File                                                                         CGL127AY
+     F                                              KCOMIT                                  CGL127AY
+     FGLACHPZZO   E                    DISK                                                 CGL127AY
+      * Summary File for number of postings dropped.                                        CGL127AY
+     F                                              KCOMIT                                  CGL127AY
+     F*
+     FGL4450AUO   E                    PRINTER
+      * Audit report.
+      * -------------
+      /EJECT
+     E                    CPY@    1   1 80
+     I*ISTART
+     I***MPHAS*******DS                                                                       CCB020
+     I**********                              1   1 MPHASE                                    CCB020
+      ***Data*area*for*MPHAS*******************************************                       CCB020
+      *
+     I***RUNPRG*     DS                                                                     CGL127AY
+     I**********                              1   1 RUNFLG                                  CGL127AY
+      ***Data*area*for*RUNPRG                                                               CGL127AY
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data area for AOBANKR0.
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+      ** Data area for AOGELRR0
+      *
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACD1                                    CGL029
+      *
+      ** Data area for AOACODR0
+      *
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      ** DS for Access programs, long data structure                                          CGL029
+      *                                                                                       CGL029
+     ILDA         DS                            256
+      *
+      ** Local data area.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ICBTASK    E DSCBTASKSP                                                                CGL127AY
+      ** Data area for CBTASKSP                                                             CGL127AY
+     I*
+     I/COPY WNCPYSRC,GL4450IIPG
+     I*
+      /EJECT
+     C*CSTART
+      *---------------------------------------------------------------*
+      *                                                               *
+      *             FUNCTION OF INDICATORS                            *
+      *                                                               *
+      *  01         End of file for LF/GLACPHL.                       *
+      *  10         Loop prevention indicator for GLASR.              *
+      *  81         EOF of PF/GLACHDPD                                *                     CGL127AY
+      *  U7         Along with U8, file out of balance.               *
+      *  U8         File out of balance.                              *
+      *  LR         Last record indicator.                            *
+      *                                                               *
+      *---------------------------------------------------------------*
+      /SPACE 3
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Initial process - defines local data area , outputs report  *
+      *                     heading and determines default control    *
+      *                     date.                                     *
+      *                                                               *
+      *   Calls programs    : AOBANKR0                                *
+      *                       AOGELRR0                                *
+      *                                                               *
+      *   Calls subroutines : ERROR                                   *
+      *                                                               *
+      *---------------------------------------------------------------*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C/COPY WNCPYSRC,GL4450CCPG
+     C*
+      **  Define local data area.
+      *
+     C           *ENTRY    PLIST                                                            CGL127AY
+     C                     PARM           RSTART  1                                         CGL127AY
+      *                                                                                     CGL127AY
+     C           *NAMVAR   DEFN           LDA
+     C********** *NAMVAR   DEFN           MPHAS                                               CCB020
+     C********** *NAMVAR   DEFN           RUNPRG                                            CGL127AY
+     C           *NAMVAR   DEFN CBTASKSP  CBTASK                                            CGL127AY
+     C                     IN   CBTASK                                                      CGL127AY
+     C                     MOVE CMTBLK    #OPTIM 100                                        CGL127AY
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'GL4450  'DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access run date and report title.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTNC  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Write report heading.
+      *
+     C**********           WRITEHEADING                                                     CGL127AY
+      *
+     C           P@RTNC    IFNE *BLANKS
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD01        DBASE            * DB error 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR ERROR
+      *
+     C                     END
+      *
+      **  Access a/c postings retention period.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG    'P@RTNC
+     C                     PARM '*FIRST'  P@OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           P@RTNC    IFNE *BLANKS
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     Z-ADD02        DBASE            * DB error 02 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR ERROR
+      *
+     C                     END
+     C*
+      **  Calculate the default control date:-
+      **
+      **  'Run date' - (31 * 'a/c posting retention period').
+      *
+     C           BKAPRP    MULT 31        WORK4   40
+     C           BJRDNB    SUB  WORK4     DCDATE  50
+      *
+      *  Initialise fields
+     C                     Z-ADD*ZERO     COUNT   40
+     C                     TIME           TIME1   60
+     C*                                                                                     CGL127AB
+     C**  DEFINE KEY LIST FOR LF/GLACPHL FILE                                               CGL127AB
+     C*                                                                                     CGL127AB
+     C           GLAKEY    KLIST                                                            CGL127AB
+     C                     KFLD           ACOD                                              CGL127AB
+     C                     KFLD           PSTD                                              CGL127AB
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Main process -  reads through the a/c postings history file *
+      *                   and deletes relevent records.               *
+      *                                                               *
+      *   Calls subroutine  : LVLBRK                                  *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+      ** If RESTART indicator = 'E', end program.                                           CGL127AY
+      *                                                                                     CGL127AY
+     C           RSTART    IFEQ 'E'                                                         CGL127AY
+      *                                                                                     CGL127AY
+     C                     SETON                     LR                                     CGL127AY
+      *                                                                                     CGL127AY
+     C                     ELSE                                                             CGL127AY
+      *                                                                                     CGL127AY
+      ** Open and Read driver file.                                                         CGL127AY
+      *                                                                                     CGL127AY
+     C                     OPEN GLACHDPD                                                    CGL127AY
+     C                     READ GLACHDPD                 81                                 CGL127AY
+      *                                                                                     CGL127AY
+      ** If driver file is not empty, process records starting                              CGL127AY
+      ** at S#ACOD.                                                                         CGL127AY
+      *                                                                                     CGL127AY
+     C           *IN81     IFEQ '0'                                                         CGL127AY
+      *                                                                                     CGL127AY
+     C           S#ACOD    SETLLGLACPHL                                                     CGL127AY
+     C                     READ GLACPHL                  01
+      *
+      **  Execute level break subroutine for the first posting record.
+      *
+     C           *IN01     IFEQ '0'
+     C                     EXSR LVLBRK
+     C                     END
+      *
+      ** Process while ACOD LE end ACOD in driver file.                                     CGL127AY
+      *                                                                                     CGL127AY
+     C           *IN01     DOWEQ'0'
+     C           ACOD      ANDLEE#ACOD                                                      CGL127AY
+      *
+      **  Check for level break.
+      *
+     C           ACOD      IFNE SACOD
+     C                     EXSR LVLBRK
+     C                     END
+      *                                                                                     CGL127AB
+      **  Using the Account Code and Back-valued Date,                                      CGL127AB
+      **  SETGT to GLACPHL.                                                                 CGL127AB
+      *                                                                                     CGL127AB
+     C                     MOVE CTLD      PSTD                                              CGL127AB
+     C           GLAKEY    SETGTGLACPHL                                                     CGL127AB
+     C           ACOD      REDPEGLACPHL                  01                                 CGL127AB
+      *                                                                                     CGL127AB
+      **  While record is found in GLACPHL, delete record.                                  CGL127AB
+      *                                                                                     CGL127AB
+     C           *IN01     DOWEQ'0'                                                         CGL127AB
+      *
+      ****Only*delete*record*if*its*posting*date*is*less*than*the*control                   CGL127AB
+      ****date.*Take*into*account*the*case*of*ACOD*equal*to*'9999'.*                        CGL127AB
+      *
+     C********** PSTD      IFLT CTLD                                                        CGL127AB
+     C*
+     C/COPY WNCPYSRC,GL4450CDBU
+     C*
+     C                     DELETGLACPHL
+     C**********           ADD  1         NDROP                                             CGL127AY
+     C                     ADD  1         NDROP   70                                        CGL127AY
+      *                                                                                     CGL127AY
+      ** If number of records dropped is GE commitment size, COMMIT.                        CGL127AY
+      *                                                                                     CGL127AY
+     C           NDROP     IFGE #OPTIM                                                      CGL127AY
+     C                     Z-ADDNDROP     NOPP                                              CGL127AY
+     C                     WRITEGLACHPR0                                                    CGL127AY
+     C                     Z-ADD0         NDROP                                             CGL127AY
+     C                     COMIT                                                            CGL127AY
+     C                     ENDIF                                                            CGL127AY
+     C**********           ADD  1         COUNT                                             CGL127AB
+      *                                                                                     CGL127AB
+     C           ACOD      REDPEGLACPHL                  01                                 CGL127AB
+     C                     ENDDO                                                            CGL127AB
+     C*
+     C****Check*time*elapsed*-*each*60*seconds*elapsed*gives*a*difference                   CGL127AB
+     C****of*100.                                                                           CGL127AB
+     C**********           TIME           TIME2   60                                        CGL127AB
+     C********** TIME2     SUB  TIME1     TMDIFF  60                                        CGL127AB
+     C*
+     C****If*There*are*1000*records*dropped,****                                            CGL127AB
+     C****or*60*seconds*have*elapsed,***********                                            CGL127AB
+     C****check*if*pgm*should*be*halted.********                                            CGL127AB
+      *
+     C********** COUNT     IFGE 1000                                                        CGL127AB
+     C********** TMDIFF    ORGE 100                                                         CGL127AB
+     C**********           Z-ADD0         COUNT                                             CGL127AB
+     C**********           TIME           TIME1                                             CGL127AB
+      *
+     C*   If system not in COB or Input Cycle, terminate program.
+     C*   Terminate if user has requested halt - RUNFLG NE 'R' (Run)
+     C**********           IN   MPHAS                                                         CCB020
+     C**********           IN   RUNPRG                                                      CGL127AY
+     C********** MPHASE    IFNE 'C'                                                           CCB020
+     C********** MPHASE    ANDNE'A'                                                           CCB020
+     C********** RUNFLG    ORNE 'R'                                                           CCB020
+     C********** RUNFLG    IFNE 'R'                                                  CCB020 CGL127AY
+     C**********           GOTO END                                                         CGL127AY
+     C**********           END                                                              CGL127AY
+     C*
+     C**********           END                                                              CGL127AB
+      *
+      **  Read ahead.
+     C           ACOD      SETGTGLACPHL                                                     CGL127AB
+     C                     READ GLACPHL                  01
+      *
+     C**********           ELSE                                                             CGL127AB
+      *
+     C********** ACOD      IFNE 9999                                                        CGL127AB
+     C**********           ADD  1         ACOD                                              CGL127AB
+     C********** ACOD      SETLLGLACPHL                                                     CGL127AB
+      **  Read ahead.
+     C**********           READ GLACPHL                  01                                 CGL127AB
+      *
+     C**********           ELSE                                                             CGL127AB
+      **  Exit do loop.
+     C**********           MOVE '1'       *IN01                                             CGL127AB
+     C**********           END                                                              CGL127AB
+      *
+     C**********           END                                                              CGL127AB
+      *
+     C                     ENDDO
+     C                     ENDIF                                                            CGL127AY
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Final process - writes detail and end format of audit       *
+      *                   report.                                     *
+      *                 - commits any remaining uncommitted changes   *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           END       TAG
+      *
+     C**********           WRITEDETAIL                                                      CGL127AY
+     C**********           WRITEENDRPT                                                      CGL127AY
+      *                                                                                     CGL127AY
+      ** If number of records dropped is NE zero, COMMIT.                                   CGL127AY
+      *                                                                                     CGL127AY
+     C           NDROP     IFNE 0                                                           CGL127AY
+     C                     Z-ADDNDROP     NOPP                                              CGL127AY
+     C                     WRITEGLACHPR0                                                    CGL127AY
+     C                     Z-ADD0         NDROP                                             CGL127AY
+     C                     COMIT                                                            CGL127AY
+     C                     ENDIF                                                            CGL127AY
+      *
+     C                     CLOSEGLACHDPD                                                    CGL127AY
+     C                     UNLCKGLACPHL                                                     CGL127AY
+     C                     ENDIF                                                            CGL127AY
+     C**********           MOVE '1'       *INLR                                             CGL127AY
+     C                     RETRN
+      /EJECT
+      *---------------------------------------------------------------*
+      *   Index to subroutines.                                       *
+      *                                                               *
+      *   LVLBRK - accesses retention date for account code.          *
+      *   ERROR  - processing for data base errors.                   *
+      *   GLASR  - file exception/error subroutine.                   *
+      *   *PSSR  - program exception/error subroutine.                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   LVLBRK subroutine - on the change of account code , this    *
+      *                       subroutine will access a/c posting      *
+      *                       retention period from the account codes *
+      *                       file and use it to calculate the        *
+      *                       control date. If a valid record does    *
+      *                       not exist it will use the default       *
+      *                       control date.                           *
+      *                                                               *
+      *   Called by main process.                                     *
+      *                                                               *
+      *   Calls program     : AOACODR0                                *
+      *                                                               *
+      *   Input  - account code: ACOD                                 *
+      *   Output - control date: CTLD                                 *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           LVLBRK    BEGSR
+      *
+     C**********           MOVE ACOD      SACOD   40                                          CGL029
+     C**********           MOVE ACOD      P@ACOD  4                                           CGL029
+     C                     MOVE ACOD      SACOD  100                                          CGL029
+     C                     MOVE ACOD      P@ACOD 10                                           CGL029
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   P@RTNC
+     C                     PARM '*KEY'    P@OPTN
+     C                     PARM           P@ACOD
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           P@RTNC    IFEQ *BLANKS
+     C           A5ACPR    ANDNE0
+      *
+     C           A5ACPR    MULT 31        WORK4
+     C           BJRDNB    SUB  WORK4     CTLD    50
+     C                     SUB  1         CTLD                                              CGL127AB
+      *
+     C                     ELSE
+      *
+     C                     MOVE DCDATE    CTLD
+     C                     SUB  1         CTLD                                              CGL127AB
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   ERROR subroutine - in the event of a data base error this   *
+      *                      routine will write the error format to   *
+      *                      the audit report.                        *
+      *                                                               *
+      *   Called by initial process and GLASR.                        *
+      *                                                               *
+      *   Input  - db information: DBFILE, DBPGM, DBASE.              *
+      *                                                               *
+      *   Output - formats to GL4450AU: DBERROR, ENDRPT.              *
+      *            db information: DBFILE, DBPGM, DBASE.              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           ERROR     BEGSR
+      *
+     C                     WRITEHEADING                                                     CGL127AY
+     C                     WRITEDBERROR
+     C                     WRITEENDRPT
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     DUMP
+     C                     ROLBK                                                            CGL127AY
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   GLASR subroutine - in the event of a file exception/error , *
+      *                      for LF/GLACPHL , this subroutine will    *
+      *                      produce a dump.                          *
+      *   Called by RPG/400.                                          *
+      *                                                               *
+      *   Calls subroutine : ERROR                                    *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           GLASR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLACPHL' DBFILE           ***************
+     C                     Z-ADD03        DBASE            * DB error 03 *
+     C                     OUT  LDA                        ***************
+      *
+     C           *IN10     IFEQ '0'
+     C                     MOVE '1'       *IN10
+     C                     DUMP
+     C                     END
+      *
+     C                     EXSR ERROR
+      *
+     C                     ENDSR
+     C*
+     C/EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   *PSSR subroutine - in the event of a program exception/     *
+      *                      error , this subroutine will produce a   *
+      *                      dump and return to caller.               *
+      *   Called by RPG/400.                                          *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           *PSSR     BEGSR
+      *
+     C           *IN10     IFEQ '0'
+     C                     MOVE '1'       *IN10
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

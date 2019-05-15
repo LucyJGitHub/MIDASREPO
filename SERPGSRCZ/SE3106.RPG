@@ -1,0 +1,1628 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Currency Maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3106  -  EXTEL Currencies Maintenance                      *
+     F*                                                               *
+     F*  Function: This input provides a link between the EXTEL       *
+     F*   (I/C)    currency codes and those set up on Midas so that   *
+     F*            the price details on the EXTEL transmission or     *
+     F*            tape can be edited correctly before application    *
+     F*            to the Midas Prices data.                          *
+     F*                                                               *
+     F*  Called by: SEC3106 - Extel Currencies Maintenance            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAAA03             Date 24Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 052254             Date 11Jan94               *
+     F*                E26590              Date 25Jul91               *
+     F*                S01117              DATE 24JUL91               *
+     F*                S01199              DATE 03AUG89               *
+     F*                E16750              DATE 01JAN89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes                                   *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E26590 - Program should use *INKJ instead of *INKD to        *
+     F*           activate record deletions as this refers to F10     *
+     F*  S01117 - Multibranching                                      *
+     F*           Access object programs used to replace table files  *
+     F*           SPF access code validation added.                   *
+     F*  S01199 -  HELP SYSTEM                                     *
+     F*  E16750 - READ FAIL NOT CATERED FOR.                          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSE3106DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SUBFLREC
+     F                                              KINFDS PAGEN
+     FEXCCYD  UF  E           K        DISK         KCOMIT       A
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+     FEXCCYZ  UF  E                    DISK         KCOMIT
+     FEXCCA   IF  E           K        DISK
+     F            EXCCYDF                           KRENAMEEXCCYAF
+     FEXCCM   IF  E           K        DISK
+     F            EXCCYDF                           KRENAMEEXCCYMF
+     F***TABTB10*IF  E                    DISK                            S01117
+     F***TABTG10*IF  E           K        DISK                            S01117
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01 - S/SUBFLCTL  SFLDSP                                     *
+     F*   02 - S/SUBFLCTL  SFLDSPCTL                                  *
+     F*   03 - S/SUBFLCTL  SFLEND                                     *
+     F*   04 - S/SUBFLCTL  SFLMSG                                     *
+     F*   05 - S/KEYINPUT  PROTECT/NON-DISPLAY ON LOCATION            *
+     F*   06 - S/RECDETLS  PROTECT FIELDS-ACTION DELETE               *
+     F*   07 - NON-DISPLAY SUBFILE HEADINGS                           *
+     F*   10 - START  SCREEN                                          *
+     F*   11 - REVIEW SCREEN                                          *
+     F*   12 - UPDATE SCREEN                                          *
+     F*   15 - ROLLUP                                                 *
+     F****19*-*HELP*******************                                *   S01199
+     F*   20 - ERASE SUBFILE AND DETAILS SCREEN                       *
+     F*   21 - S/KEYINPUT  ERROR-ACTION CODE                          *
+     F*   22 - S/KEYINPUT  ERROR-NUMERIC EXTEL CCY                    *
+     F*   23 - S/KEYINPUT  ERROR-ALPHAMERIC CCY                       *
+     F*   24 - S/KEYINPUT  ERROR-MIDAS CCY                            *
+     F*   25 - NO RECORDS IN SUBFILE                                  *
+     F*   31 - S/RECDETLS  INVALID FORMAT FIELD                       *
+     F*   60 - ADD RECORD                                             *
+     F*87-89 - ERROR MSGS                                             *
+     F*91-93 - WORK                                                   *
+     F*   99 - WORK                                                   *
+     F*U7-U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   START  - PROCESS START SCREEN                               *
+     F*   REVIEW - PROCESS REVIEW SCREEN                              *
+     F*   UPDATE - PROCESS UPDATE SCREEN                              *
+     F*   FILL   - READ RECORDS TO THE SUBFILE                        *
+     F*   VALIDK - VALIDATE KEY INPUT - START/REVIEW SCREEN           *
+     F*   VALIDD - VALIDATE DETAIL INPUT - UPDATE SCREEN              *
+     F*   UPDFLS - UPDATE EXCCY DETAIL + TRAILER, + COMMIT THEM       *
+     F*   ZALIGN - CHECK SCREEN ENTRY IN ALPHA FIELD IS NUMERIC       *
+     F*   *PSSR  - DEFAULT ERROR HANDLING                             *
+     F*   INITRC - INITIALISE DATA                                    *
+     F*   UPDAT  - MOVE SCREEN ENTRIES INTO DATA FIELDS               *
+     F*   ZTNLU1 - GET NEXT TRANSACTION NUMBER FROM DATA AREA         *
+     F*   INFSR  - FILE ERROR HANDLING                                *
+     F****INST***-*GET*INSTALLATION*CONTROL*RECORD*(TABTB10)***********   S01117
+     F*   INST   - GET INSTALLATION CONTROL RECORD (SDCURRPD)         *   S01117
+     F*   CHKSEL - Check for "?" selection                            *   S01117
+     F*   SPFCHK - SPF check that user authorised to action           *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E* ARRAYS
+     E                    CPY@    1   1 80
+     E                    ERR        19  4
+     E**ERROR CODES
+     E                    EXT         8  1
+     E**EXTEL CCY FORMAT SPLIT INTO SINGLE CHARACTERS FOR VALIDATION
+     E                    MSG     1   2 50
+     E**RECORD UPDATE ERROR MESSAGE
+     E*
+0136 E                    ZA1        16  1               ZALIGN INPUT
+0137 E                    ZA2        16  1               ZALIGN OUTPUT
+      /EJECT
+     I*
+     ISCRMSG      DS                          1  76
+     I                                        1  76 ERR
+     I                                        1  76 ERRMSG
+     I*
+     IINFDS       DS
+     I*
+     I* DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     I                                     *STATUS  STATUS
+     I*
+     IPAGEN       DS
+     I*
+     I* DATA STRUCTURE FOR SUBFILE SCREEN HANDLING
+     I*
+     I                                    B 378 3790LSSRN
+     I*
+     I***LDA*****   UDS                            256                    S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+      *                                                                   S01117
+     ILDA         DS                            256                       S01117
+      *                                                                   S01117
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+      ** after each database error handling.                              S01117
+      *                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+     I                                       51 306 DET
+     I**
+     IPSDS       SDS
+     I**      DATA AREA FOR PROGRAM STATUS DISK AREA
+     I                                     *PROGRAM #PGM
+     I                                      201 208 #FILE
+     I                                      244 253 WID
+     I                                      254 263 USRID
+     I*
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                   S01117
+     IRUNDT       DS                                                      S01117
+      *                                                                   S01117
+      ** RUNDAT data area                                                 S01117
+      *                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     IZMUSER      DS                             17                       S01117
+      *                                                                   S01117
+      ** Menu user data area                                              S01117
+      *                                                                   S01117
+     I                                       11  13 DFTBRC                S01117
+     I                                       17  17 BANKAU                S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      *                                                                   S01117
+      ** Bank Details                                                     S01117
+      *                                                                   S01117
+     ISDCURR    E DSSDCURRPD                                              S01117
+      *                                                                   S01117
+      ** Currency Details                                                 S01117
+      *                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                   S01117
+      ** Short data structure for access programs (200 long)              S01117
+      *                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01117
+      *                                                                   S01117
+      ** Long data structure for access programs (800 long)               S01117
+      *                                                                   S01117
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C*
+     C* PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE3106'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+      ** Check system date format, DDMMYY or MMDDYY.                      S01117
+      *                                                                   S01117
+     C           DATF      COMP 'M'                      98               S01117
+      *                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                         20               S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+      ** Read in ZMUSER data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   ZMUSER                                    S01117
+     C*
+     C**********           MOVEL'SE3106'  HBPGM   8        *FOR CALL MHELPS01199
+     C*
+     C* PREPARE COMIT TEXT
+     C*
+     C                     MOVEL'SE'      MDID
+     C                     MOVEL'SE3106'  PGMN
+     C                     MOVELWID       WSIDX
+     C                     MOVELUSRID     USIDX
+     C*
+     C* GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C                     EXSR INST
+     C***********                                                         S01117
+      *******DB*Error*if*no*record*found.*                                S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                        B1             S01117
+     C***********          MOVE '01'      #BASE            ***************S01117
+     C***********          MOVEL'TABTB10' #FILE            ** DBERROR 01 *S01117
+     C***********          MOVELTABKEY    #KEY             ***************S01117
+      ***********                                                         S01117
+     C***********          EXSR *PSSR                                     S01117
+      ***********                                                         S01117
+     C***********          END                             E1             S01117
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C* DO UNTIL F3 - access required screen
+     C*
+     C           *INKC     DOUEQ'1'                        *B1 CK 3
+     C           *INU7     OREQ '1'                        *OR DBERR
+     C*
+     C           *IN10     CASEQ'1'       START
+     C           *IN11     CASEQ'1'       REVIEW
+     C           *IN12     CASEQ'1'       UPDATE
+     C*
+     C                     END                             *CAS END
+     C                     END                             *E1
+     C*
+     C* If database error seton U8 and LR
+     C*
+     C           *INU7     IFEQ '1'                         B1
+     C                     MOVEL'1'       *INU8            *PGM ERROR
+     C                     END                              E1
+     C                     SETON                         LR*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      *****************************************************************
+      **                                                              *
+      **  START                                                       *
+      **                                                              *
+      *****************************************************************
+     C*
+     C           START     BEGSR                           *
+     C*
+     C                     Z-ADD3         LNNBRK            pos. cursor
+     C                     Z-ADD35        PSNBRK
+     C                     MOVEA'000'     *IN,10           *
+     C                     MOVEA'01'      *IN,01            Subfile dsp
+     C                     SETON                     0720
+     C                     SETOF                     06
+     C           *IN88     IFEQ '0'                         B1
+     C                     MOVEA'000000'  *IN,19            setof err.ind
+     C                     SETOF                     0589
+     C                     SETON                     20
+     C*
+     C                     MOVEL*BLANK    ACTN
+     C                     MOVEL*BLANK    EXCNS
+     C                     MOVEL*BLANK    EXCAS
+     C                     MOVEL*BLANK    CCYS
+     C                     MOVEL*BLANK    EXFMS
+     C                     MOVEL*BLANK    NARRS
+     C                     MOVEL*BLANK    ERRMSG
+     C                     END                              E1
+     C                     SETOF                     88
+     C*
+     C* Do until end of program or change of screen requested
+     C*
+     C           *INKC     DOUEQ'1'                        *B1
+     C           *INKL     OREQ '1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C* Start screen output
+     C*
+     C**********           WRITESUBFLCTL                   *                                  CAAA03
+     C                     WRITEMESSAGES                   *
+     C                     WRITESUBFLCTL                   *                                  CAAA03
+     C                     READ SUBFLCTL                 99*
+     C                     MOVELERRMSG    HERCD 160
+     C*
+     C* F3, HELP or ENTER pressed
+     C*
+     C* F3 -  Do no processing
+     C*
+     C           *INKC     IFNE '1'                        B2
+     C**HELP*********                                                     S01199
+     C********** *IN19     IFEQ '1'                        B3             S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C* ENTER
+     C**********           ELSE                            X3             S01199
+     C*
+     C           *INKL     IFEQ '1'                        B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            X4
+      *                                                                   S01117
+      ** Check for '?'s                                                   S01117
+      *                                                                   S01117
+     C                     EXSR CHKSEL                                    S01117
+      *                                                                   S01117
+      ** Only do processing if no ? entered otherwise loop to redisplay   S01117
+      *                                                                   S01117
+     C           @SEL      IFEQ 0                                         S01117
+     C*
+     C*Validate key input
+     C*
+     C                     EXSR VALIDK
+     C*
+     C*Determine next screen from action code, if input valid.
+     C*
+     C           *IN89     IFEQ '0'                        B5
+     C           ACTN      IFEQ 'E'                        B6
+     C                     MOVE '1'       *IN11
+     C                     ELSE                            X6
+     C                     MOVE '1'       *IN12
+     C                     END                             E6
+     C                     END                             E5
+     C                     END                                            S01117
+     C                     END                             E4
+     C**********           END                             E3             S01199
+     C                     END                             E2
+     C*
+     C                     END                             *DOUNTIL
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  REVIEW                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           REVIEW    BEGSR
+     C*
+     C                     MOVEA'000'     *IN,10           *
+     C                     MOVE '0'       *IN20            *
+     C                     Z-ADD*ZERO     EXKN    30
+     C                     MOVE *BLANK    EXKA    2
+     C                     MOVE *BLANK    EXKM    3
+     C*
+     C* Do until change of screen requested
+     C*
+     C           *INKC     DOUEQ'1'                        *B1
+     C           *IN10     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C                     Z-ADD0         RRN
+     C                     Z-ADD0         DSPREC
+     C                     MOVEA'00'      *IN,01
+     C                     MOVE '0'       *IN04
+     C                     MOVE '0'       *IN88
+     C                     MOVE '1'       *IN25
+     C                     MOVE '0'       *IN07
+     C                     WRITESUBFLCTL
+     C*
+     C* Numeric field entered
+     C*
+     C           EXCNS     IFNE *BLANK                      B2
+     C                     MOVELEXCNN     EXKN
+     C           EXKN      SETLLEXCCYDF                    *           R
+     C                     ELSE                             X2
+     C*
+     C* Alphameric currency used
+     C*
+     C           EXCAS     IFNE *BLANK                      B3
+     C                     MOVELEXCAS     EXKA
+     C           EXKA      SETLLEXCCYAF                    *           R
+     C                     ELSE                             X3
+     C*
+     C* MIDAS currency used
+     C*
+     C           CCYS      IFNE *BLANK                      B4
+     C                     MOVELCCYS      EXKM
+     C                     ELSE                             X4
+     C                     MOVE *BLANK    EXKM
+     C                     END                              E4
+     C           EXKM      SETLLEXCCYMF                    *           R
+     C                     END                              E3
+     C                     END                              E2
+     C*
+     C* READ IN DETAILS-FILL UP SUBFILE
+     C*
+     C                     Z-ADD0         RRN     40
+     C                     MOVEA'110'     *IN,01
+     C*
+     C* Do until roll up no longer required
+     C*
+     C           *IN16     DOUEQ'0'                          B2
+     C                     MOVE '0'       *IN88
+     C*
+     C           *IN03     IFEQ '0'                          B3
+     C*
+     C*
+     C           RRN       IFEQ *ZERO                        B4
+     C                     Z-ADD1         DSPREC  40
+     C                     ELSE                              X4
+     C           1         ADD  RRN       DSPREC
+     C                     END                               E4
+     C*
+     C                     EXSR FILL
+     C*
+     C                     ELSE                            *X3
+     C                     SETON                         87
+     C*
+     C                     END                             *E3DOUEQ RRN
+     C*
+     C* If no record found output error message and not subfile
+     C*
+     C           *IN25     IFEQ '1'                         B3
+     C                     SETOF                       0102
+     C                     WRITESUBFLCTL                   *
+     C                     SETON                       0289
+     C                     MOVELMSG,2     ERRMSG
+     C                     END                              E3
+     C*
+     C* Review screen output
+     C*
+     C**********           WRITESUBFLCTL                   *                                  CAAA03
+     C                     WRITEMESSAGES                   *
+     C                     WRITESUBFLCTL                   *                                  CAAA03
+     C                     READ SUBFLCTL                 99*
+     C                     MOVELERRMSG    HERCD
+     C                     SETOF                         87
+     C*
+     C                     END                             *E2 DN,UP
+     C*
+     C* F3, F12,HELP, record select
+     C*
+     C* F3
+     C           *INKC     IFNE '1'                          B2
+     C* F12
+     C           *INKL     IFEQ '1'                          B3
+     C                     MOVE '1'       *IN10
+     C                     MOVE *BLANK    ERRMSG
+     C                     SETOF                       8889
+     C                     ELSE                              X3
+     C**HELP*****                                                         S01199
+     C********** *IN19     IFEQ '1'                          B4           S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**RECORD*SELECT********
+     C**********           ELSE                              X4           S01199
+     C*
+     C* Record select validation
+     C*
+     C                     EXSR VALIDK
+     C*
+     C           *IN89     IFEQ '0'                          B5 VALID
+     C           ACTN      IFEQ 'E'                          B6 REVIEW
+     C                     MOVE '1'       *IN11
+     C                     ELSE                              X6 UPDATE
+     C                     MOVE '1'       *IN12
+     C                     MOVE '0'       *IN11
+     C                     MOVE '1'       *IN07
+     C                     END                               E6
+     C                     ELSE                              X5 INVAL
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN88
+     C*
+     C                     END                               E5
+     C**********           END                               E4           S01199
+     C                     END                               E3
+     C                     END                               E2
+     C                     END                               E1
+     C*
+     C* Check subfile is clear before next screen
+     C*
+     C                     MOVEA'00'      *IN,01
+     C                     WRITESUBFLCTL
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FILL                                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FILL      BEGSR
+     C*
+     C                     Z-ADD0         COUNT   20
+     C                     DO   12        COUNT             B1
+     C*
+     C* Do until page is full
+     C* but read first record for next page to check EOF
+     C*
+     C           *IN04     IFEQ '0'                         B2
+     C*
+     C           RECI      DOUEQ'D'                         B3
+     C           *IN03     OREQ '1'
+     C           EXCNS     IFNE *BLANK                      B4
+     C                     READ EXCCYDF                  03*
+     C                     ELSE                             X4
+     C           EXCAS     IFNE *BLANK                      B5
+     C                     READ EXCCYAF                  03
+     C                     ELSE                             X5
+     C                     READ EXCCYMF                  03
+     C                     END                              E5
+     C                     END                              E4
+     C                     END                              E3
+     C                     END                              E2
+     C*
+     C* If any records read setof no records indicator
+     C*
+     C  N03                SETOF                         25
+     C*
+     C* Check count
+     C*
+     C                     SETOF                         04
+     C           COUNT     IFEQ 12                          B2
+     C                     SETON                         04
+     C                     END                              E2
+     C*
+     C           *IN03     IFEQ '0'                         B2
+     C           *IN04     ANDEQ'0'
+     C*
+     C                     ADD  1         RRN
+     C                     WRITESUBFLREC
+     C                     END                              E2
+     C*
+     C  N03                END                             *E1 IN99=0
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  UPDATE                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UPDATE    BEGSR
+     C*
+     C                     Z-ADD9         LNNBRD
+     C                     Z-ADD35        PSNBRD
+     C                     SETON                     050702*PROTECT/NDS
+     C                     SETOF                     01    *SUBFILE
+     C                     MOVEA'000'     *IN,10
+     C                     MOVEA'00000'   *IN,20
+     C                     MOVEL*BLANK    ERRMSG
+     C*
+     C* Get record off file and store TNLU for check at update time
+     C*
+     C                     Z-ADD*ZERO     STNLU   50
+     C           EXCNN     CHAINEXCCYDF              99    *
+     C           *IN99     IFEQ '0'                         B1
+     C                     Z-ADDTNLU      STNLU
+     C                     END                              E1
+     C*
+     C* IF INSERT (NEW OR OVER DELETED RECORD) INITIALIZE RECORD DETAIL
+     C*
+     C           ACTN      IFEQ 'I'                         B1
+     C           *IN99     OREQ '1'
+     C*
+     C* INITIALIZE ALL FIELDS ON THE RECORD (IE ZEROIZE/BLANK OUT)
+     C*
+     C                     EXSR INITRC
+     C                     ELSE                             X1
+     C           EXCNN     CHAINEXCCYD               99
+     C                     MOVELEXCA      EXCAS
+     C                     MOVELCCY       CCYS
+     C                     MOVELNREX      NARRS
+     C                     MOVELEXFM      EXFMS
+     C*
+     C                     END                             *E1
+     C*
+     C* IF DELETE PROTECT FIELDS
+     C*
+     C           ACTN      IFEQ 'D'                         B1
+     C                     MOVE '1'       *IN06            *PROTECT/NDS
+     C                     END                              E1
+     C*
+     C* Do until end or change of screen requested
+     C*
+     C           *INKC     DOUEQ'1'                        *B1
+     C           *IN10     OREQ '1'
+     C           *IN11     OREQ '1'
+     C*
+     C                     WRITESUBFLCTL                   *
+     C**********           WRITERECDETLS                   *                                  CAAA03
+     C                     WRITEMESSAGES                   *
+     C                     WRITERECDETLS                   *                                  CAAA03
+     C                     READ RECDETLS                 99*
+     C                     MOVELERRMSG    HERCD
+     C*
+     C**F3,*F12,*HELP********************
+     C* F3, F12.
+     C*
+     C* F3
+     C           *INKC     IFNE '1'                         B2
+     C* F12
+     C           *INKL     IFEQ '1'                         B3
+     C                     MOVE '1'       *IN10
+     C**HELP*******                                                       S01199
+     C**********           ELSE                             X3            S01199
+     C********** *IN19     IFEQ '1'                         B4            S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**NOT*F3*F12*HELP*********
+     C* NOT F3,F12
+     C                     ELSE                            X4
+     C*
+     C* Validate detail screen input
+     C*
+     C           ACTN      IFNE 'D'                        B5
+     C                     EXSR VALIDD                     *VAL.DETAILS
+     C                     END                             E5
+     C*
+     C           *IN89     IFEQ '0'                        B5 VALID
+     C           *IN31     ANDEQ'0'
+     C           ACTN      IFEQ 'I'                        B6
+     C           ACTN      OREQ 'A'
+     C************INKD     OREQ '1'                                       E26590
+     C           *INKJ     OREQ '1'                                       E26590
+     C                     EXSR UPDFLS
+     C                     MOVE '1'       *IN10
+     C                     END                             E6          D
+     C                     END                             E5          D
+     C*
+     C                     END                             E4
+     C**********           END                             E3             S01199
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  VALIDK                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALIDK    BEGSR
+     C*
+     C* V A L I D A T E    K E Y   I N P U T
+     C*
+     C** VALIDATE KEY INPUT
+     C*
+     C                     Z-ADD0         S
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN89
+     C                     MOVEA'000000'  *IN,19
+     C                     MOVEL*BLANK    ERRMSG
+     C*
+     C* Action code input - must be I,A,E or D
+     C*
+     C           ACTN      IFNE 'I'                        B1
+     C           ACTN      ANDNE'A'
+     C           ACTN      ANDNE'E'
+     C           ACTN      ANDNE'D'
+     C                     ADD  1         S
+     C                     MOVE ' 100'    ERR,S
+     C                     MOVE '1'       *IN21
+     C*
+     C                     ELSE                            X1
+     C*
+     C                     EXSR SPFCHK                                    S01117
+      *                                                                   S01117
+     C           EXCNS     IFNE *BLANK                     B2
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE EXCNS     ZFIELD
+     C                     Z-ADD3         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     SETOF                     99
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    EXCNN   30
+     C                     END                              E2
+     C           *IN99     IFEQ '1'                         B2
+     C           EXCNS     OREQ *BLANK
+     C           ACTN      ANDNE'E'
+     C                     ADD  1         S
+     C                     MOVE ' 101'    ERR,S
+     C                     MOVE '1'       *IN22
+     C                     END                              E2
+     C*
+     C* ACTION NOT ENQUIRE
+     C*
+     C           ACTN      IFNE 'E'                         B2
+     C*
+     C* Validate numeric currency
+     C*
+     C           EXCNN     CHAINEXCCYD               91    *
+     C*
+     C* Error if insert but already on file
+     C*
+     C           *IN91     IFEQ '0'                         B3
+     C           RECI      ANDEQ'D'
+     C           ACTN      ANDEQ'I'
+     C                     ADD  1         S
+     C                     MOVE ' 102'    ERR,S
+     C                     MOVE '1'       *IN22
+     C                     END                              E3
+     C*
+     C* Error if not insert & not on file
+     C*
+     C           ACTN      IFNE 'I'                         B3
+     C           *IN91     ANDEQ'1'
+     C           ACTN      ORNE 'I'
+     C           RECI      ANDEQ'*'
+     C                     ADD  1         S
+     C                     MOVE ' 103'    ERR,S
+     C                     MOVE '1'       *IN22
+     C                     END                              E3
+     C*
+     C*  Validate alphameric currency
+     C*
+     C           EXCAS     CHAINEXCCA                92    *
+     C*
+     C*  Error if insert but already on file
+     C*
+     C           *IN92     IFEQ '0'                         B3
+     C           RECI      ANDEQ'D'
+     C           ACTN      ANDEQ'I'
+     C                     ADD  1         S
+     C                     MOVE ' 104'    ERR,S
+     C                     MOVE '1'       *IN23
+     C                     END                              E3
+     C*
+     C*  Error if not insert & not on file
+     C*
+     C           ACTN      IFNE 'I'                         B3
+     C           *IN92     ANDEQ'1'
+     C           EXCAS     ANDNE*BLANK
+     C           ACTN      ORNE 'I'
+     C           RECI      ANDEQ'*'
+     C           ACTN      OREQ 'I'
+     C           EXCAS     ANDEQ*BLANK
+     C                     ADD  1         S
+     C                     MOVE ' 105'    ERR,S
+     C                     MOVE '1'       *IN23
+     C                     END                              E3
+     C*
+     C*  Validate MIDAS currency
+     C*
+     C                     MOVEL*BLANK    MCCYS   3
+     C           CCYS      IFNE *BLANK                      B3
+     C                     MOVELCCYS      MCCYS
+     C***********CCYS      CHAINTABTG10              93    *              S01117
+     C**N93******RECI      COMP 'D'                  9393                 S01117
+      *                                                                   S01117
+      ** Access currency file SDCURRPD                                    S01117
+      *                                                                   S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM CCYS      @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     MOVE '1'       *IN93                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C           ACTN      IFEQ 'I'                         B4
+     C           *IN93     ANDEQ'1'
+     C           ACTN      OREQ 'A'
+     C           *IN93     ANDEQ'1'
+     C                     ADD  1         S
+     C                     MOVE ' 106'    ERR,S
+     C                     MOVE '1'       *IN24
+     C                     END                              E4
+     C                     END                              E3
+     C*
+     C* Action code - E
+     C*
+     C*Validate alphameric/MIDAS currency combination
+     C*(if MIDAS ccy entered)
+     C*
+     C                     ELSE                             X2
+     C           EXCAS     IFNE *BLANK                      B3
+     C           EXCAS     CHAINEXCCA                92    *
+     C           CCYS      IFNE *BLANK                      B4
+     C*
+     C*Error if alphameric currency not on file
+     C*
+     C           *IN92     IFEQ '1'                         B5
+     C                     ADD  1         S
+     C                     MOVEL' 107'    ERR,S
+     C                     MOVEA'1'       *IN,23
+     C                     ELSE                             X5
+     C*
+     C*Error if invalid alphameric/MIDAS currency combination
+     C*
+     C           CCYS      IFNE CCY                         B6
+     C                     ADD  1         S
+     C                     MOVEL' 108'    ERR,S
+     C                     MOVEA'11'      *IN,23
+     C                     END                              E6
+     C*
+     C                     END                              E5
+     C                     END                              E4
+     C                     END                              E3
+     C*
+     C*Validate numeric/MIDAS currency combination
+     C*(if MIDAS ccy entered)
+     C*
+     C           EXCNS     IFNE *BLANK                      B3
+     C           EXCNN     CHAINEXCCYD               91    *
+     C           CCYS      IFNE *BLANK                     *B4
+     C*
+     C*Error if numeric currency not on file
+     C*
+     C           *IN91     IFEQ '1'                         B5
+     C                     ADD  1         S
+     C                     MOVEL' 109'    ERR,S
+     C                     MOVEA'1'       *IN,22
+     C                     ELSE                             X5
+     C*
+     C*Error if invalid numeric/MIDAS currency combination
+     C*
+     C           CCYS      IFNE CCY                         B6
+     C                     ADD  1         S
+     C                     MOVEL' 110'    ERR,S
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN24
+     C                     END                              E6
+     C*
+     C                     END                             *E5
+     C                     END                             *E4
+     C*
+     C*Validate numeric/alphameric currency combination
+     C*
+     C           EXCAS     IFNE *BLANK                     *B4
+     C           *IN91     IFEQ '0'                        *B5
+     C           EXCAS     ANDNEEXCA
+     C                     ADD  1         S
+     C                     MOVEL' 111'    ERR,S
+     C                     MOVEA'11'      *IN,22
+     C                     END                             *E5
+     C                     END                             *E4
+     C                     END                             *E3
+     C                     END                             *E2
+     C                     END                              E1
+     C*
+     C           S         IFNE *ZERO                       B1
+     C                     MOVE '1'       *IN89
+     C                     END                              E1
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  VALIDD                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALIDD    BEGSR
+     C*
+     C** VALIDATE DETAIL INPUT
+     C*
+     C                     Z-ADD0         S       20
+     C                     Z-ADD0         C       10
+     C                     Z-ADD0         D       10
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN89
+     C                     MOVEA'000000'  *IN,19
+     C                     MOVEL*BLANK    ERRMSG
+     C*
+     C*Setup array for extel format to validate each character
+     C*Zeroise all counters
+     C*
+     C                     Z-ADD0         ICNT    10
+     C                     Z-ADD0         PCNT    10
+     C                     Z-ADD0         FCNT    10
+     C                     Z-ADD0         NCNT    10
+     C                     Z-ADD0         MCNT    10
+     C*
+     C*Move extel format onto array and validate each element
+     C*
+     C                     MOVEAEXFMS     EXT
+     C*
+     C*Error if no entry made
+     C*
+     C           EXFMS     IFEQ *BLANK                     B1
+     C                     ADD  1         S
+     C                     MOVEL' 200'    ERR,S
+     C                     GOTO ENDERR
+     C*
+     C                     ELSE                            X1
+     C*
+     C*Error if any entry other than I,P,F,N or M made
+     C*
+     C           C         DOUEQ8                           B2
+     C                     ADD  1         C
+     C           C         IFLT 8                           B3
+     C           C         ADD  1         D
+     C                     END                              E3
+     C*
+     C*
+     C           EXT,C     IFNE 'I'                         B3
+     C           EXT,C     ANDNE'P'
+     C           EXT,C     ANDNE'F'
+     C           EXT,C     ANDNE'N'
+     C           EXT,C     ANDNE'M'
+     C                     ADD  1         S
+     C                     Z-ADD8         C
+     C                     MOVEL' 201'    ERR,S
+     C                     GOTO ENDERR
+     C*
+     C                     END                              E3
+     C                     END                              E2
+     C                     Z-ADD0         C       10
+     C                     Z-ADD0         D       10
+     C*
+     C*Validate order of characters
+     C* Integers never followed by underccys or denominators
+     C*
+     C           C         DOUEQ8                           B2
+     C                     ADD  1         C
+     C           C         IFLT 8                           B3
+     C           C         ADD  1         D
+     C                     END                              E3
+     C           EXT,C     IFEQ 'I'                         B3
+     C                     ADD  1         ICNT
+     C           EXT,D     IFEQ 'P'                         B4
+     C           EXT,D     OREQ 'M'
+     C                     ADD  1         S
+     C                     Z-ADD8         C
+     C                     MOVEL' 202'    ERR,S
+     C                     GOTO ENDERR
+     C                     END                              E4
+     C                     END                              E3
+     C*
+     C* Underccys never followed by integers or denominators
+     C*
+     C           EXT,C     IFEQ 'P'                         B3
+     C                     ADD  1         PCNT
+     C           EXT,D     IFEQ 'I'                         B4
+     C           EXT,D     OREQ 'M'
+     C                     ADD  1         S
+     C                     Z-ADD8         C
+     C                     MOVEL' 203'    ERR,S
+     C                     GOTO ENDERR
+     C                     END                              E4
+     C                     END                              E3
+     C*
+     C* Fractions only followed by fractions
+     C*
+     C           EXT,C     IFEQ 'F'                         B3
+     C                     ADD  1         FCNT
+     C           EXT,D     IFNE 'F'                         B4
+     C                     ADD  1         S
+     C                     Z-ADD8         C
+     C                     MOVEL' 204'    ERR,S
+     C                     GOTO ENDERR
+     C                     END                              E4
+     C                     END                              E3
+     C*
+     C* Numerators followed only by the same or denominators
+     C*
+     C           EXT,C     IFEQ 'N'                         B3
+     C                     ADD  1         NCNT
+     C           EXT,D     IFNE 'N'                         B4
+     C           EXT,D     ANDNE'M'
+     C                     ADD  1         S
+     C                     Z-ADD8         C
+     C                     MOVEL' 205'    ERR,S
+     C                     GOTO ENDERR
+     C                     END                              E4
+     C                     END                              E3
+     C*
+     C* Denominators followed only by denominators
+     C*
+     C           EXT,C     IFEQ 'M'                         B3
+     C                     ADD  1         MCNT
+     C           EXT,D     IFNE 'M'                         B4
+     C                     ADD  1         S
+     C                     Z-ADD8         C
+     C                     MOVEL' 206'    ERR,S
+     C                     GOTO ENDERR
+     C                     END                              E4
+     C                     END                              E3
+     C*
+     C                     END                              E2
+     C*
+     C*Check counters are correct
+     C* If fractions there must be integers or undercurrencies
+     C*
+     C           FCNT      IFNE 0                           B2
+     C           ICNT      ANDEQ0
+     C           PCNT      ANDEQ0
+     C           NCNT      ORNE 0
+     C           ICNT      ANDEQ0
+     C           PCNT      ANDEQ0
+     C                     ADD  1         S
+     C                     MOVEL' 207'    ERR,S
+     C                     GOTO ENDERR
+     C                     END                              E2
+     C*
+     C* Numerators must equal denominators
+     C*
+     C           NCNT      IFNE MCNT                        B2
+     C                     ADD  1         S
+     C                     MOVEL' 208'    ERR,S
+     C                     GOTO ENDERR
+     C                     END                              E2
+     C*
+     C* Undercurrencies are only allowed if a MIDAS ccy entered
+     C* or valid MIDAS ccy exists on record.
+     C*
+     C           PCNT      IFNE 0                           B2
+     C           MCCYS     IFEQ *BLANK                      B3
+     C           CCY       ANDEQ*BLANK
+     C                     ADD  1         S
+     C                     MOVEL' 209'    ERR,S
+     C                     END                              E3
+     C                     END                              E2
+     C*
+     C                     END                              E1
+     C*
+     C           ENDERR    TAG
+     C*
+     C           S         IFNE 0                           B1
+     C                     MOVE '1'       *IN89
+     C                     MOVE '1'       *IN31
+     C                     END                              E1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  UPDFLS                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UPDFLS    BEGSR
+     C*
+     C*  U P D A T E   F I L E S
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C           EXCNN     CHAINEXCCYD               60    *
+     C           *IN60     IFEQ '0'                         B1
+     C           TNLU      IFNE STNLU                       B2
+     C                     Z-ADD01021     STATUS
+     C                     EXSR INFSR                      *ERROR PROC
+     C                     END                              E2
+     C                     END                              E1
+     C*
+     C* TRANSLATE RECORD DETAILS FROM SCREEN LAYOUT TO FILE LAYOUT
+     C*
+     C           ACTN      IFEQ 'D'                        B1 DELETE
+     C************INKD     ANDEQ'1'                                       E26590
+     C           *INKJ     ANDEQ'1'                                       E26590
+     C                     MOVEL'*'       RECIN   1
+     C                     MOVEL'D'       CHTP
+     C                     ELSE                            X1 ADD/AMEND
+     C                     MOVEL'D'       RECIN
+     C                     END                             E1
+     C                     Z-ADDRUND      LCD
+     C                     MOVELNATN      TNLU
+     C           ACTN      IFEQ 'I'                        B1 INSERT
+     C           *IN60     ANDEQ'1'
+     C           ACTN      OREQ 'I'
+     C           *IN60     ANDEQ'0'
+     C           RECI      ANDEQ'*'
+     C                     MOVEL'I'       CHTP
+     C                     END                             E1
+     C*
+     C*
+     C           ACTN      IFEQ 'A'                        B1 AMEND
+     C                     MOVEL'I'       CHTP
+     C                     END                             E1
+     C*
+     C                     EXSR UPDAT
+     C   60                WRITEEXCCYDF
+     C  N60                UPDATEXCCYDF
+     C*
+     C           1         SETLLEXCCYZF
+     C                     READ EXCCYZF                  99
+     C*
+     C           *IN99     IFEQ '1'                                       E16750
+     C                     EXSR *PSSR                                     E16750
+     C*                                                                   E16750
+     C                     ELSE                                           E16750
+     C*                                                                   E16750
+     C           ACTN      IFEQ 'I'                        B1
+     C                     ADD  1         NINS
+     C                     ADD  1         NORE
+     C                     END                             E1
+     C           ACTN      IFEQ 'D'                        B1
+     C************INKD     ANDEQ'1'                                       E26590
+     C           *INKJ     ANDEQ'1'                                       E26590
+     C                     ADD  1         NDEL
+     C                     SUB  1         NORE
+     C                     END                             E1
+     C*
+     C                     UPDATEXCCYZF
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END                                            E16750
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.     *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C**
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C**
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C**
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C**
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C**
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C**
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C**
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C**
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C**
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C**
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C**
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C**
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C**
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C**
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C**
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C**
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C**
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C**
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C**
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C**                                                   BLANKS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C**
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C**
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **    DEFAULT ERROR HANDLING                                    *
+      **                                                              *
+      **    CALLED FROM:  anywhere                                    *
+      **    CALLS:        returns.                                    *
+      **                                                              *
+      *****************************************************************
+     C           *PSSR     BEGSR                                       ***
+      **
+     C           WERROR    IFNE 'Y'
+     C                     MOVE 'Y'       WERROR  1
+     C                     DUMP
+     C        NU8          SETON                       U7U8
+      **
+     C           *LOCK     IN   LDA
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+      **
+     C                     MOVEL#PGM      DBPGM
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL#FILE     DBFILE
+     C                     MOVEL#BASE     DBASE
+     C                     OUT  LDA
+      **
+     C                     END
+      **
+     C                     SETON                         LR
+     C                     RETRN
+      **
+     C                     ENDSR
+      **
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C*                                                               *
+     C*   INITRC                                                      *
+     C*                                                               *
+      *****************************************************************
+     C*
+     C           INITRC    BEGSR
+     C*
+     C* INITIALIZE ALL DATA ON RECORD
+     C*
+     C                     MOVEL*BLANK    EXCA
+     C                     MOVEL*BLANK    CCY
+     C                     MOVEL*BLANK    NREX
+     C                     MOVEL*BLANK    EXFM
+     C                     Z-ADD*ZERO     EXCN
+     C                     Z-ADD*ZERO     XINC
+     C                     Z-ADD*ZERO     XUNC
+     C                     Z-ADD*ZERO     XDCC
+     C                     Z-ADD*ZERO     XNMC
+     C                     Z-ADD*ZERO     XDNC
+     C                     Z-ADD*ZERO     LCD
+     C                     Z-ADD*ZERO     TNLU
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  UPDAT                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UPDAT     BEGSR
+     C*
+     C* UPDATE ALL DATA ON RECORD
+     C*
+     C                     MOVELRECIN     RECI
+     C                     MOVELEXCAS     EXCA
+     C                     MOVELCCYS      CCY
+     C                     MOVELNARRS     NREX
+     C                     MOVELEXFMS     EXFM
+     C                     Z-ADDEXCNN     EXCN
+     C                     Z-ADDICNT      XINC
+     C                     Z-ADDPCNT      XUNC
+     C                     Z-ADDFCNT      XDCC
+     C                     Z-ADDNCNT      XNMC
+     C                     Z-ADDMCNT      XDNC
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ZTNLU1                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C* GO TO DATA AREA FOR NEXT AVAILABLE TRANSACTION NUMBER
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   FILE EXCEPTION/ERROR HANDLING SUBROUTINE                   *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR
+     C**
+     C**   CHECK ERROR TYPE
+     C**
+     C           STATUS    IFEQ 01021
+     C**
+     C**   CHAIN TO FILE TO GET CURRENT DETAILS
+     C**
+     C           EXCNN     CHAINEXCCYD               99    *
+     C**
+     C           *IN,99    IFEQ '0'
+     C**
+     C**   ROLL BACK UPDATES ALREADY DONE
+     C**
+     C                     ROLBK
+     C**
+     C**   RECORD ALREADY EXISTS
+     C**
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'A'       ACTN
+     C                     ELSE
+     C                     MOVEL'E'       ACTN
+     C                     END
+     C                     MOVELMSG,1     ERRMSG
+     C                     MOVE '1'       *IN89
+     C**
+     C                     MOVEL'*DETC'   EXTTAG  6
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ENDSREXTTAG
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**  TO READ THE INSTALLATION CONTROL DATA RECORD.               *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           INST      BEGSR                           *** ZSYSTEM ***
+     C**
+     C***********          MOVEL'01    '  TABKEY 12                       S01117
+     C***********          MOVE '     10' TABKEY                          S01117
+     C***********          READ TABTB10                  99               S01117
+     C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01117
+      *                                                                   S01117
+      ** Access bank details                                              S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C*****************************************************************
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      * CHKSEL - Subroutine to check for question marks.              *   S01117
+      *                                                               *   S01117
+      * Called by: START                                              *   S01117
+      *                                                               *   S01117
+      * Calls: None                                                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           CHKSEL    BEGSR                                          S01117
+      *                                                                   S01117
+     C                     Z-ADD0         @SEL    10                      S01117
+      *                                                                   S01117
+     C                     MOVELCCYS      @QMK    1                       S01117
+     C           @QMK      IFEQ '?'                                       S01117
+     C                     Z-ADD1         @SEL                            S01117
+      *                                                                   S01117
+      ** Access currency file SDCURRPD                                    S01117
+      *                                                                   S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM '?'       @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C           @RTCD     IFEQ '*NOSEL'                                  S01117
+     C                     MOVE *BLANK    CCYS                            S01117
+     C                     ELSE                                           S01117
+     C                     MOVE A6CYCD    CCYS                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      ********************************************************************S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      * SPFCHK - Security Profile Facility check.                     *   S01117
+      *          Subroutine to check that the user is authorised to   *   S01117
+      *          the selected action.                                 *   S01117
+      *                                                               *   S01117
+      * Called by: VALIDK                                             *   S01117
+      *                                                               *   S01117
+      * Calls: None                                                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           SPFCHK    BEGSR                                          S01117
+      *                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+      *                                                                   S01117
+      ** If multibranching then check action code against dft branch      S01117
+      *                                                                   S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM ACTN      @ZACTN  1                       S01117
+     C                     PARM DFTBRC    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+      *                                                                   S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         S                               S01117
+     C                     MOVE ' 304'    ERR,S                           S01117
+     C                     MOVE '1'       *IN,21                          S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ELSE                                           S01117
+      *                                                                   S01117
+      ** If not multibranching then just check action code                S01117
+      *                                                                   S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM ACTN      @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+      *                                                                   S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         S                               S01117
+     C                     MOVE ' 302'    ERR,S                           S01117
+     C                     MOVE '1'       *IN21                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      ********************************************************************S01117
+**  CPY@
+(c) Finastra International Limited 2001
+** MSG
+ Record has been updated by another workstation
+ No records to display

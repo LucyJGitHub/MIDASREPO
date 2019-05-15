@@ -1,0 +1,104 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CPP for FNDUPDSRC')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000050 - CPP for FNDUPDSRC                               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015  *CREATE    Date 20Apr12              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT015 - New utility to replace UPDSRC.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &WRKLIB &SRC &STR &CASE &STRLEN)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&WRKLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRC) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&STR) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CASE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0)
+ 
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Depending on the mode prompt the relevant command. */
+             IF         COND(&MODE *EQ '*FND') THEN(DO)
+                CALL       PGM(UTC000051) PARM(&WRKLIB &SRC &STR &CASE +
+                             &STRLEN)
+             ENDDO
+ 
+             IF         COND(&MODE *EQ '*AMD') THEN(DO)
+                RTVJOBA    JOB(&JOB) USER(&USER)
+                OVRDBF     FILE(UTSTMTPD) TOFILE(&WRKLIB/UTSTMTPD)
+                OVRDBF     FILE(UTMBRSPD) TOFILE(&WRKLIB/UTMBRSPD)
+                CALL       PGM(UT000051) PARM(&JOB &USER)
+                DLTOVR     FILE(UTSTMTPD UTMBRSPD)
+             ENDDO
+ 
+             IF         COND(&MODE *EQ '*UPD') THEN(DO)
+                CALL       PGM(UTC000052) PARM(&WRKLIB)
+             ENDDO
+ 
+/* Check job switches to see where an error happened. */
+             IF         COND(%SWITCH(1XXXXXXX)) THEN(DO)
+                SNDPGMMSG  MSG('Error in *FND mode; check logs and +
+                             dumps.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF         COND(%SWITCH(XX1XXXXX)) THEN(DO)
+                SNDPGMMSG  MSG('Error in *AMD mode; check logs and +
+                             dumps.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF         COND(%SWITCH(XXXX1XXX)) THEN(DO)
+                SNDPGMMSG  MSG('Error in *UPD mode; check logs and +
+                             dumps.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

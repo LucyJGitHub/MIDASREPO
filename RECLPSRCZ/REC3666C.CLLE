@@ -1,0 +1,196 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas RE Generate I/E Entries Task Split')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Retail Module                                         */
+/*                                                                   */
+/*       REC3666C -  RE Generate I/E Entries Task Split              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE093  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE093 - Tactical COB changes REC3666                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MBR &MODE &CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&WKSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(3)
+ 
+ /* Declare parameters for AOSARD */
+ 
+             DCL        VAR(&RTCD)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SAR)    TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CRE028) TYPE(*CHAR) LEN(1)  VALUE('N')
+ 
+ /* Declare parameters to AOSVALR0 */
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE('       +
+                          ')
+             DCL        VAR(&POP01) TYPE(*CHAR) LEN(20) +
+                          VALUE('RetailAccrualSummary')
+             DCL        VAR(&POP02) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP03) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP04) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP05) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP06) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP07) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP08) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP09) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP10) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVL01) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL02) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL03) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL04) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL05) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL06) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL07) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)
+ 
+             DCLF       FILE(TABTBRE)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+             RCVF       RCDFMT(TABTBREF)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000 RNX0000) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('REC3666C - Generation of I/E Entries +
+                          Task Split') TOMSGQ(MRUNQ)
+ 
+/* Check if CRE028 is installed */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SAR)  VALUE('CRE028')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+ 
+             IF         COND(&RTCD = '       ') +
+                 THEN(CHGVAR VAR(&CRE028) VALUE('Y'))
+ 
+/* Check if the current setting of RetailAccrualSummary is 'Y' */
+ 
+             CALL       PGM(AOSVALR0) PARM(&PRTCD &POP01 &PVL01 +
+                          &POP02 &PVL02 &POP03 &PVL03 &POP04 &PVL04 +
+                          &POP05 &PVL05 &POP06 &PVL06 &POP07 &PVL07 +
+                          &POP08 &PVL08 &POP09 &PVL09 &POP10 &PVL10)
+ 
+/* Set performance ovverides for sequential processing */
+ 
+             OVRDBF     FILE(REACRD) SEQONLY(*YES 100)
+ 
+             OVRDBF     FILE(ACRLAR) FRCRATIO(500) NBRRCDS(1000) +
+                          SEQONLY(*YES 2000)
+ 
+/* Determine sequence number fromthe task split sequence which */
+/* has 0100x where X is task # */
+ 
+             CHGVAR     VAR(&WKSEQ) VALUE(&CSEQ)
+ 
+/* Set Job switches */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             IF         COND(&MODE *EQ 'TWO') THEN(DO)
+                OVRDBF     FILE(GEIERHH) TOFILE(GEIER2HH)
+ 
+                IF         COND((&ACSM *NE 'Y') *AND (&PRTCD *EQ +
+                             '       ') *AND (&PVL01 *NE 'Y')) +
+                             THEN(DO)
+                      OVRDBF     FILE(GEIERPD) TOFILE(GEIER2PD)
+                ENDDO
+                ELSE       CMD(DO)
+                   IF         COND((&ACSM *EQ 'Y') *OR ((&PRTCD *EQ +
+                                '       ') *AND (&PVL01 *EQ 'Y'))) +
+                                THEN(DO)
+                      OVRDBF     FILE(GEIERPD) TOFILE(GEIER2PD0)
+                   ENDDO
+                ENDDO
+ 
+                OVRDBF     FILE(GEIERZZ) TOFILE(GEIER2ZZ)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+             IF         COND((&ACSM *EQ 'Y') *OR ((&PRTCD *EQ +
+                          '       ') *AND (&PVL01 *EQ 'Y'))) THEN(DO)
+                OVRDBF     FILE(GEIERPD) TOFILE(GEIERPD0)
+             ENDDO
+ 
+             ENDDO
+ 
+             OVRDBF FILE(ACRLZZ) TOFILE(RTZZ) MBR(ACRL)
+ 
+ /* COND is ONE */
+ 
+             IF         COND(&MODE *EQ 'ONE') THEN(DO)
+                IF         COND(   ((&ACSM *NE 'Y')          +
+                              *AND (&CRE028 *EQ 'N'))        +
+                                 *OR                         +
+                              ((&ACSM *NE 'Y')               +
+                              *AND (&CRE028 *EQ 'Y')         +
+                              *AND (&PRTCD *EQ '       ')    +
+                              *AND (&PVL01 *NE 'Y'))  )      +
+                              THEN(DO)
+                   OVRDBF FILE(GEIERPD) NBRRCDS(300) SEQONLY(*YES 300)
+                ENDDO
+                ELSE CMD(DO)
+                   OVRDBF FILE(GEIERPD) TOFILE(GEIERPD0) NBRRCDS(300) +
+                          SEQONLY(*YES 300)
+                ENDDO
+             ENDDO
+ 
+/* COND is TWO */
+ 
+             IF         COND(&MODE *EQ 'TWO') THEN(DO)
+                IF         COND(  ((&ACSM *NE 'Y')          +
+                              *AND (&CRE028 *EQ 'N'))       +
+                                        *OR                 +
+                                  ((&ACSM *NE 'Y')          +
+                              *AND (&CRE028 *EQ 'Y')        +
+                              *AND (&PRTCD *EQ '       ')   +
+                              *AND (&PVL01 *NE 'Y'))      ) +
+                           THEN(DO)
+                   OVRDBF          FILE(GEIERPD) TOFILE(GEIER2PD) +
+                                      NBRRCDS(300) SEQONLY(*YES 300)
+                ENDDO
+                ELSE CMD(DO)
+                   OVRDBF          FILE(GEIERPD) TOFILE(GEIER2PD0) +
+                                      NBRRCDS(300) SEQONLY(*YES 300)
+                ENDDO
+             ENDDO
+ 
+             CALL       PGM(RE3666)
+ 
+/* Check if all is OK: No database error. */
+/* No account balance error etc */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             COMMIT
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program REC3666C ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             RETURN
+             ENDPGM

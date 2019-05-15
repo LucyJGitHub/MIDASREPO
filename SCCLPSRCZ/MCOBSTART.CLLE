@@ -1,0 +1,50 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB Start Main close of business phase')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       MCOBSTART - Midas CB Start Main CoB                         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1092065          Date 15Mar13              */
+/*                      CCB020  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/* ------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1092065A - COB proceeded and continue running bypassing   */
+/*                    the initial error regarding unauthorized       */
+/*                    transactions                                   */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2012')
+ 
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGDTAARA  DTAARA(MPHAS *ALL) VALUE('C')
+             SCWRTJREG  EVENT(MPHAS) FLAG(C) TEXT('MPHAS changed +
+                          from A to C')                                               /*AR1092065A*/
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination processing */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Program MCOBSTART ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

@@ -1,0 +1,307 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Audit Letters Rquest - Input')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0340B - RETAIL AUDIT LETTERS REQUEST EXTRACT               *
+0007 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*      1993                                                     *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413             Date 13Apr93               *
+      *                                    Date                       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*  S01413  -  Header Box Standardised                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FRE0340EXIF  E           K        DISK
+     FSDCUSTL5IF  E           K        DISK
+0022 FSDCUSTL4IF  E           K        DISK
+0023 FRQSTLHH O   E                    DISK
+0023 FRQSTLDD O   E                    DISK
+0023 FRQSTLZZ O   E                    DISK
+     F*
+     F****************************************************************
+     F*    FUNCTION OF INDICATORS.
+     F*
+     F*       70      INDICATES END OF READE OPERATION
+     F*       98      DATE FORMAT  -- ON  =  MMDDYY
+     F*       99      ANY OF THE ABOVE ERRORS EXIST.
+     F*          U7   DATA BASE ERROR :: INSTL. CTL REC. NOT FOUND
+     F*          U8   DATA BASE ERROR.
+     F*          LR   END  PROGRAM.
+     F*
+     F****************************************************************
+     E                    CPY@    1   1 80
+     I@CUSTFT
+     I              BBCUST                          CUST
+     I              BBPAIN                          PARIND
+     I*
+     I@CUSTFR
+     I              BBCUST                          CUST
+     I*
+     I*    DATA  AREA FOR  DBASE ERROR MESSAGE.
+     I*    LOCAL DATA AREA
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJRDNB                          RUND
+     I              BJDFIN                          DATF
+     I              BJMRDT                          RUNA
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5
+     C*
+     C*****************************************************
+     C**           INDEX  TO  SUBROUTINES
+     C**
+     C**    1.  CHILD  :::  FINDS ALL CHILDREN OF A PARENT.
+     C**    2.  BRALL  :::  WHEN ALL CUSTOMERS OF ONE OR ALL
+     C**                    BRANCHES ARE REQUESTED.
+     C**    3.  EXCPTN :::  OUTPUTS DETAILS TO RQSTLDD.
+     C**    4.  INIT   :::  RESETS INDICATORS AND CLEAR FIELDS.
+     C**    5.  *PSSR  :::  HANDLES ABNORMAL ERROR CONDITIONS.
+     C**
+     C*****************************************************
+     C**
+     C**    * PROGRAM (MAIN RTN.)  BEGINS :::
+     C**
+     C**      I.   GET INSTALLATION CTL REC. IF NOT FOUND,
+     C**           DATA BASE ERR. SETON  U7 & U8. SETON LR.
+     C**           ACCESS SDBANKPD/ICD TO OBTAIN RUNDATE.
+     C**
+     C**
+     C**           FOR DATABASE ERROR REFERENCE
+     C**
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'RE0340B 'DBPGM
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8   ***********
+     C                     Z-ADD1         DBASE             DB ERROR 01 **
+     C                     MOVE 'SDBANKPD'DBFILE            ***********
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR *PSSR
+     C                     GOTO JOBEND
+     C                     END
+     C*
+     C**
+     C**   SYSTEM DATE FORMAT : *IN98 = 1 IF MMDDYY.
+     C           DATF      COMP 'M'                      98
+     C**
+     C**
+     C**     II.   INITIALIZE WORK/KEY FLDS
+     C**           WRITE OUT HEADER RECORD TO RQSTLHH
+     C                     EXSR INIT
+     C                     MOVE 'H'       RECI
+     C                     WRITERQSTLHHF
+     C                     Z-ADD1         NOREC   50
+     C**
+     C**
+     C**         OPTION                  IMPLICATION
+     C**         ------                  -----------
+     C**          '1'         SINGLE CUSTOMER AT A REQUESTED BRANCH
+     C**                         OR ALL BRANCHES
+     C**          '2'         SINGLE PARENT AT A REQUESTED BRANCH
+     C**                         OR ALL BRANCHES
+     C**          '3'         ALL CUSTOMERS AT A REQUESTED BRANCH
+     C**                         OR ALL BRANCHES
+     C**
+     C**
+     C**    III.   DO LOOP TILL THE END OF FILE REACHED.
+     C**
+     C           SEQNO     SETLLRE0340E1
+     C           *IN01     DOWEQ'0'
+     C**
+     C           SEQNO     READERE0340E1                 01
+     C           *IN01     IFEQ '0'
+     C**
+     C           OPTION    IFEQ '1'
+     C                     MOVE CNUMB     CNUM
+     C                     EXSR EXCPTN
+     C                     ELSE
+     C           OPTION    IFEQ '2'
+     C                     EXSR CHILD
+     C                     ELSE
+     C           OPTION    IFEQ '3'
+     C                     EXSR BRALL
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C**
+     C**     IV.   OUTPUT TRAILER RECORD TO FILE.
+     C**
+     C                     ADD  1         NOREC
+     C                     MOVE 'T'       RECI
+     C                     Z-ADDNOREC     NORE1
+     C                     WRITERQSTLZZF
+     C**
+     C**     V.   END PROGRAM.
+     C**
+     C           JOBEND    TAG                             *** JOBEND ***
+     C                     SETON                     LR
+     C**
+     C**    *****   PROGRAM (MAIN RTN.)  ENDS.
+     C**
+     C*****************************************************
+0338 C*
+     C**    SUBROUTINE (2) :::  CHILD
+0339 C**        TO  READ ALL THE CHILDREN FOR A REQUESTED PARENT.
+     C**
+     C**---------------------------------------------------------------
+0341 C           CHILD     BEGSR                                        **
+0344 C*
+0345 C*       FIRST OUTPUT A RECORD TO RQSTLDD FOR THE PARENT
+0346 C*
+     C                     MOVE 'P'       PARIN
+     C                     MOVE CNUMB     CNUM
+0351 C                     EXSR EXCPTN
+     C                     MOVE ' '       PARIN
+0354 C*
+0355 C*       SET LOWER LIMITS ON THE PARENT/CUSTOMER FILE
+0356 C*
+0359 C           CNUMB     SETLLSDCUSTL4
+0360 C*
+0361 C           READ      TAG                             ** READ TAG **
+0362 C*
+0363 C                     SETOF                         70
+     C*
+     C           *IN70     DOWEQ'0'
+0364 C           CNUMB     READESDCUSTL4                 70
+     C           *IN70     IFEQ '0'
+     C                     MOVE CUST      CNUM
+0389 C                     EXSR EXCPTN
+     C                     END
+     C                     END
+0392 C*
+0392 C*
+0393 C                     ENDSR
+0394 C*
+0395 C********************************************************************
+     C**    SUBROUTINE (2) :::  BRALL
+     C**        TO  READ ALL CUSTOMERS FOR ONE OR MORE BRANCHES.
+     C**
+     C**---------------------------------------------------------------
+0399 C           BRALL     BEGSR                                        **
+0400 C*
+     C           *LOVAL    SETLLSDCUSTL5
+0411 C*
+0412 C*     READ THROUGH SDCUSTL5 FILE AND OUTPUT A RECORD TO
+0413 C*     PF/RQSTLDD FOR EACH RELEVANT LIVE CUSTOMER.
+0414 C*
+0415 C                     SETOF                       70
+     C*
+     C           *IN70     DOWEQ'0'
+0416 C                     READ SDCUSTL5                 70
+0420 C*
+     C           *IN70     IFEQ '0'
+     C                     MOVE CUST      CNUM
+     C                     MOVE PARIND    PARIN
+0430 C                     EXSR EXCPTN
+     C                     END
+0431 C*
+     C                     END
+0433 C*
+0434 C                     ENDSR
+0435 C*
+0436 C********************************************************************
+     C**    SUBROUTINE (3) :::  EXCPTN
+     C**        TO  OUTPUT DETAIL RECORDS TO RQSTLDD.
+     C**
+     C**---------------------------------------------------------------
+0440 C           EXCPTN    BEGSR                                       N *
+0441 C*
+     C                     MOVE 'D'       RECI
+0442 C                     WRITERQSTLDDF
+0445 C*
+0446 C           NOREC     ADD  1         NOREC
+0447 C*
+0448 C                     ENDSR
+0449 C*
+0436 C********************************************************************
+     C**    SUBROUTINE (4) :::  INIT
+     C**        TO  INIT OUTPUT FIELDS.
+     C**
+     C**---------------------------------------------------------------
+     C           INIT      BEGSR
+0179 C*
+0178 C                     MOVE 'N'       DLIN
+0178 C                     MOVE 'N'       CLIN
+0178 C                     MOVE 'Y'       RTIN
+0179 C*
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C*
+     C**    SUBROUTINE (5) :::  *PSSR
+     C**        TO HANDLE ABNORMAL ERROR CONDITIONS
+     C**
+     C**    CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C**
+     C**    CALLS: NOTHING
+     C**
+     C**---------------------------------------------------
+     C*
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,538 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SC Switchable features ins/del precheck')
+      *****************************************************************
+      *                                                               *
+      *  Midas - System Control Module                                *
+      *                                                               *
+      *  SC3010X - Precheck Switchable Features at Insert/Delete.     *
+      *                                                               *
+      *  Function:  This program checks that a switchable feature     *
+      *             is eligible to be switched on or off. The code    *
+      *             for the checks are contained in one of three      *
+      *             /COPYs (Core, Regional and Customer). A return    *
+      *             code is passed back to the calling program, 'Y'   *
+      *             for insert/delete allowed and 'N' for not         *
+      *             allowed.                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD004             Date 31Mar99               *
+      *                 CSC010             Date 12May99               *
+      *                 CCB008             Date 12Oct98               *
+      *                 CSC007             Date 08May98               *
+      *                 CEU032             Date 18Nov98               *
+      *                 CAP004             Date 01Oct98               *
+      *                 CTI002             Date 23Sep98               *
+      *                 CAP003             DATE 05Aug98               *
+      *                 CSW014             DATE 05FEB98               *
+      *                 CEU005             DATE 05FEB98               *
+      *                 129765             Date 25Feb98               *
+      *                 CAC003             DATE 16OCT97               *
+      *                 CFF003             DATE 16OCT97               *
+      *                 CAC001             DATE 16OCT97               *
+      *                 CRT003             DATE 22JUL96               *
+      *                 CRT002             DATE  1DEC95               *
+      *                 S01408             DATE 07AUG95               *
+      *                 CRT001             DATE 28FEB95               *
+      *                 S01488             DATE 05AUG94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD004 - BTS enhancement (recompiled over changed SC3010XCOR)*
+      *  CSC010 - Disable/enable switchable features processing.      *
+      *  CCB008 - Synon Closedown Project (CB):                       *
+      *           - File removed from CB model.                       *
+      *  CEU032 - EMU SE Redenominated Security Codes Maintenance.    *
+      *           (recompiled)                                        *
+      *  CAP004 - Midas APIs phase 3: make CAP004 dependent on CAP002 *
+      *           (recompiled over changed SC3010XCOR).
+      *  CTI002 - Make installation of CTI002 dependent upon Trade    *
+      *           Innovation being active.                            *
+      *           (recompiled over changed SC3010XCOR).               *
+      *  CSC007 - Switchable Features Enhancements phase 2.           *
+      *           Amendments to Switchable Features suite of          *
+      *           programs to allow switching on via passwords.       *  *
+      *           New code to coincide with these amendments are      *  *
+      *           under CSC005.                                       *  *
+      *  CAP003 - Midas APIs phase 2: make CAP003 dependent on CAP002 *
+      *           (recompiled over changed SC3010XCOR).
+      *  CSW014 - Allow entry of ERI Info for non-EMU users           *
+      *           Recompiled over changed /COPY                       *
+      *  CEU005 - EMU SE Settlement Ccy Conversion - Recompiled       *
+      *           over changed /COPY.                                 *
+      *  127965 - Recompiled for changes in SC3010XCOR.               *
+      *  CAC003 - PCA Development 3 - Recompiled over changed /COPY.  *
+      *  CFF003 - OTC Enhancements 2 - Recompiled over changed /COPY. *
+      *  CAC001 - PCA Development - Recompiled over changed /COPYs.   *
+      *  CRT003 - Recompiled for changes in SC3010XCOR.               *
+      *  CRT002 - Recompiled for changes in SC3010XCOR.               *
+      *  S01408 - Hooks moved to WNCPYSRC from SCCPYSRC:              *
+      *           - SC3010XCUS                                        *
+      *           - SC3010XREG                                        *
+      *  CRT001 - RTS Development - Recompiled over changed /COPYs.   *
+      *  S01488 - New program created for this change.                *
+      *                                                               *
+      *****************************************************************
+     FSCSARXL0IF  E           K        DISK                               CSC007
+     FSCSARXL2IF  E           K        DISK                               CSC007
+     FSDMMIDL1IF  E           K        DISK                               CSC007
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY SCCPYSRC,SC3010ICOR
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ISCSARD    E DSSCSARDPD
+      *
+      * Midas Modules file data structure
+     ISDMMOD    E DSSDMMODPD
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I :  Action Code
+     I                                        1   1 P1ANCD
+     IP2PARM      DS
+      * I :  Switchable Feature Number
+     I                                        1   6 P2SARN
+     IP3PARM      DS
+      * O :  Allow INS/DEL of Feature
+     I                                        1   1 P3AIDF
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1ANCD    PARM           WP0001  1        Action Code
+     C           P2SARN    PARM           WP0002  6        Switchable Feat
+     C           P3AIDF    PARM P3AIDF    WP0003  1        Allow INS/DEL o
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Switchable Feature Prechk
+      * SC3010X Precompiler - Switchable Features  *
+      * Copyright Statement 1994 - Standard functions  *
+      * Default DSs for Prechecks - Switchable Features  *
+      *
+      * Switchable Features file data structure
+      * 00/Copy Member SC3010XFPG - Switchable Features  *
+     C/COPY WNCPYSRC,SC3010XFPG
+      * 00/Copy Member SC3010XEPG - Switchable Features  *
+     C/COPY WNCPYSRC,SC3010XEPG
+      * 00/Copy Member SC3010XIPG - Switchable Features  *
+     C/COPY WNCPYSRC,SC3010XIPG
+      ****** Initialise P1AIDF Code to 'Y'.                               CSC007
+     C******               MOVEL'Y'       P3AIDF           Allow INS/DEL oCSC007
+      *                                                                   CSC007
+      * Set up Parameter List for calling AOSARDR0                        CSC007
+      *                                                                   CSC007
+     C           PPARM     PLIST                                          CSC007
+     C                     PARM *BLANKS   @RTCD   7                       CSC007
+     C                     PARM '*VERIFY' @OPTN   7                       CSC007
+     C                     PARM           @SARD   6                       CSC007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSC007
+      *                                                                   CSC007
+      * Set up Key List for accessing logical files SCSARXL0,             CSC007
+      * and SCSARXL2.                                                     CSC007
+      *                                                                   CSC007
+     C           KPOS      KLIST                                          CSC007
+     C                     KFLD           ACSARN  6                       CSC007
+     C                     KFLD           ACRECI  1                       CSC007
+      *                                                                   CSC007
+      * Set up key for reading files (whether inserts or deletes).        CSC007
+      *                                                                   CSC007
+     C                     MOVELP2SARN    ACSARN                          CSC007
+     C                     MOVEL'D'       ACRECI                          CSC007
+      *                                                                   CSC007
+      *****************************************************************   CSC007
+      * Checking dependencies for switching on a new switchable feature   CSC007
+      *****************************************************************   CSC007
+      *                                                                   CSC007
+     C           'I'       IFEQ P1ANCD                                    CSC007
+      * '+' means 'enable' a disabled feature                             CSC010
+     C           '+'       OREQ P1ANCD                                    CSC010
+      *                                                                   CSC007
+      * Execute main dependency checking sub-routine.                     CSC007
+      *                                                                   CSC007
+     C                     EXSR DEPCHK                                    CSC007
+     C                     ENDIF                                          CSC007
+      *                                                                   CSC007
+      **************************************************************      CSC007
+      * Processing to check for switching off a new feature               CSC007
+      **************************************************************      CSC007
+      *                                                                   CSC007
+     C           'D'       IFEQ P1ANCD                                    CSC007
+      * '-' means 'disable' an active feature                             CSC010
+     C           '-'       OREQ P1ANCD                                    CSC010
+     C                     MOVE 'Y'       ALLOW                           CSC007
+     C           ACSARN    CHAINSCSARXL2             82                   CSC007
+      *                                                                   CSC007
+      *  No dependency on dependency file                                 CSC007
+      *                                                                   CSC007
+     C           *IN82     IFEQ *ON                                       CSC007
+     C                     MOVE ACSARN    DDON                            CSC007
+     C                     ENDIF                                          CSC007
+      *                                                                   CSC007
+      *  dependency on dependency file                                    CSC007
+      *                                                                   CSC007
+     C           *IN82     IFEQ *OFF                                      CSC007
+      *
+      * Save pointer to this file                                         CSC007
+      *                                                                   CSC007
+     C                     MOVE DDON      DDDON   6                       CSC007
+     C           *IN77     DOWEQ*OFF                                      CSC007
+      *                                                                   CSC007
+      * Check whether the feature may be switched off
+      *
+     C           DSON      IFEQ 'NONDEL'                                  CSC010
+     C                     MOVE 'N'       ALLOW                           CSC010
+     C                     LEAVE                                          CSC010
+     C                     ENDIF                                          CSC010
+     C           RECI      IFEQ 'D'                                       CSC007
+     C           DOFF      ANDNE'OFF'                                     CSC007
+     C                     MOVE DSON      @SARD                           CSC007
+     C                     CALL 'AOSARDR0'PPARM                           CSC007
+     C           @RTCD     IFEQ *BLANKS                                   CSC007
+     C                     MOVE DSON      ACSARN                          CSC007
+     C                     EXSR DEPCHK                                    CSC007
+     C           ALLOW     IFEQ 'N'                                       CSC007
+     C                     LEAVE                                          CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+     C           DDDON     READESCSARXL2                 77               CSC007
+     C                     ENDDO                                          CSC007
+     C                     ENDIF                                          CSC007
+     C           ALLOW     IFEQ 'Y'                                       CSC007
+     C           P1ANCD    ANDEQ'D'                                       CSC010
+     C                     CALL 'SC3100'                                  CSC007
+     C                     PARM *BLANKS   PASS   16                       CSC007
+     C                     PARM *BLANKS   W0RTN   7                       CSC007
+     C                     PARM           DDON                            CSC007
+     C                     PARM 'D'       MODE    1                       CSC007
+     C                     PARM *BLANKS   CORE    2                       CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+      *
+      **************************************************************      CSC007
+      * Set up parameters to be passed out                                CSC007
+      **************************************************************      CSC007
+      **Insert/Delete*allowed?********************                        CSC007
+      * Insert/Delete (or Enable/Disable) allowed?                        CSC010
+      * -----------------------------------------                         CSC007
+      *
+     C           ALLOW     IFEQ 'Y'                                       CSC007
+     C                     MOVEL'Y'       P3AIDF                          CSC007
+     C                     ELSE                                           CSC007
+     C                     MOVEL'N'       P3AIDF                          CSC007
+     C                     ENDIF                                          CSC007
+      *                                                                   CSC007
+      * Core precheck /COPY.
+      * Core SF Precheck /COPY - Switchable Features  *
+     C/COPY SCCPYSRC,SC3010XCOR
+      * Local (Regional)  precheck /COPY.
+      * Regional SF Precheck - Switchable Features  *
+     C/COPY WNCPYSRC,SC3010XREG
+      * Customer specific precheck /COPY.
+      * Customer SF Precheck - Switchable Features  *
+     C/COPY WNCPYSRC,SC3010XCUS
+      *================================================================
+      *================================================================
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+      *                                                                   CSC007
+      ****************************************                            CSC007
+      * Dependency Checking for switching on *                            CSC007
+      ****************************************                            CSC007
+     C           DEPCHK    BEGSR                                          CSC007
+      *                                                                   CSC007
+      * Find the first occurrence of the switchable feature on the        CSC007
+      * dependencies file.                                                CSC007
+      * The file SCSARXL0 is used to find which other features or         CSC007
+      * modules need to be switched on first.                             CSC007
+      *                                                                   CSC007
+     C           KPOS      CHAINSCSARXL0             82                   CSC007
+     C           *IN82     IFEQ *OFF                                      CSC007
+     C                     MOVE *BLANKS   WSEQ    2                       CSC007
+     C                     MOVE SEQ       WSEQ                            CSC007
+     C                     ENDIF                                          CSC007
+      *                                                                   CSC007
+      * If indicator 82 is on, no record is found; i.e., this             CSC007
+      * feature does not depend upon anything else being switched on.     CSC007
+      *                                                                   CSC007
+      *                                                                   CSC007
+     C           *IN82     IFEQ *ON                                       CSC007
+     C                     MOVE 'Y'       ALLOW                           CSC007
+     C                     ELSE                                           CSC007
+      *                                                                   CSC007
+      * The first occurence states the logical nature of the dependency   CSC007
+      * with other features or modules within the sequence number.        CSC007
+      * Possible values: 'A' = and, 'O' = or.                             CSC007
+      *                                                                   CSC007
+      * Default the 'ALLOW' flag as per the logical type 'A' or 'O'.      CSC007
+      *                                                                   CSC007
+     C                     EXSR LOGDFT                                    CSC007
+      *                                                                   CSC007
+      * If Logical Type = 'A', then all required features and modules     CSC007
+      * must satisfy the conditions for the feature to be switched        CSC007
+      * on.                                                               CSC007
+      * If Logical Type = 'O', then a minimum of one condition needs      CSC007
+      * to be satisfied.                                                  CSC007
+      *                                                                   CSC007
+     C           *IN77     DOWEQ*OFF                                      CSC007
+     C           DTYPE     IFEQ 'S'                                       CSC007
+     C           RECI      ANDEQ'D'                                       CSC007
+      *                                                                   CSC007
+      * Call sub-routine which checks for switchable features             CSC007
+      * dependencies                                                      CSC007
+      *                                                                   CSC007
+     C                     EXSR SARCHK                                    CSC007
+     C                     ELSE                                           CSC007
+     C           DTYPE     IFEQ 'M'                                       CSC007
+     C           RECI      ANDEQ'D'                                       CSC007
+      *                                                                   CSC007
+      * Call sub-routine which checks for module                          CSC007
+      * dependencies                                                      CSC007
+      *                                                                   CSC007
+     C                     EXSR MODCHK                                    CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+     C           KPOS      READESCSARXL0                 77               CSC007
+      *                                                                   CSC007
+      * Check if there are more dependencies on the file for this         CSC007
+      * feature, with another sequence number                             CSC007
+      *                                                                   CSC007
+     C           WSEQ      IFNE SEQ                                       CSC007
+     C           *IN77     ANDEQ*OFF                                      CSC007
+     C           ALLOW     IFEQ 'N'                                       CSC007
+     C                     MOVE *BLANKS   WSEQ                            CSC007
+     C                     MOVE SEQ       WSEQ                            CSC007
+      *                                                                   CSC007
+      * Reset the ALLOW flag, as the logical type might have changed      CSC007
+      *                                                                   CSC007
+     C                     EXSR LOGDFT                                    CSC007
+     C                     ELSE                                           CSC007
+     C                     MOVE 'Y'       ALLOW                           CSC007
+     C                     LEAVE                                          CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDDO                                          CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDSR                                          CSC007
+      ***************************************************************     CSC007
+      *  Defaults the logical type for 'A' or 'O' processing        *     CSC007
+      *  The defaults are set up like this so control can drop out  *     CSC007
+      *  the main checking loop as soon as the flag is changed.     *     CSC007
+      ***************************************************************     CSC007
+     C           LOGDFT    BEGSR                                          CSC007
+     C           LOGT      IFEQ 'A'                                       CSC007
+     C                     MOVE 'Y'       ALLOW   1                       CSC007
+     C                     ELSE                                           CSC007
+     C                     MOVE 'N'       ALLOW                           CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDSR                                          CSC007
+     C*****************************************************************   CSC007
+     C*  Checks if switchable features are dependent on any other     *   CSC007
+     C*  switchable features being switched on or off first, or a     *   CSC007
+     C*  particular release level.                                    *   CSC007
+     C*****************************************************************   CSC007
+     C           SARCHK    BEGSR                                          CSC007
+     C***********'D'       IFEQ P1ANCD                                    CSC007
+     C           P1ANCD    IFEQ 'D'                                       CSC010
+     C           P1ANCD    OREQ '-'                                       CSC010
+     C           DDON      ANDEQDDDON                                     CSC007
+     C                     MOVE 'IGNORE'  @RTCD                           CSC007
+     C                     EXSR TYPCHK                                    CSC007
+     C                     ELSE                                           CSC007
+     C                     MOVE DDON      @SARD                           CSC007
+     C                     CALL 'AOSARDR0'PPARM                           CSC007
+     C                     EXSR TYPCHK                                    CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDSR                                          CSC007
+     C****************************************************************    CSC007
+      * As soon as a a required condition is not met                 * e  CSC007
+      * when the logical type is AND, drop out of processing         *    CSC007
+      ****************************************************************    CSC007
+     C           TYPCHK    BEGSR                                          CSC007
+     C           LOGT      IFEQ 'A'                                       CSC007
+     C           @RTCD     IFNE *BLANKS                                   CSC007
+     C           DOFF      ANDNE'OFF'                                     CSC007
+      *                                                                   CSC007
+      * if the feature must be off to continue processing                 CSC007
+      *                                                                   CSC007
+     C           @RTCD     OREQ *BLANKS                                   CSC007
+     C           DOFF      ANDEQ'OFF'                                     CSC007
+     C                     MOVE 'N'       ALLOW                           CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+      *                                                                   CSC007
+      * As soon as a required condition is not met when the               CSC007
+      * logical type is OR, drop out of processing and allow the          CSC007
+      * feature to be inserted.                                           CSC007
+      *                                                                   CSC007
+     C           LOGT      IFEQ 'O'                                       CSC007
+     C           @RTCD     IFEQ *BLANKS                                   CSC007
+     C           DOFF      ANDNE'OFF'                                     CSC007
+      *                                                                   CSC007
+      * if the feature must be off to continue processing                 CSC007
+      *                                                                   CSC007
+     C           @RTCD     ORNE *BLANKS                                   CSC007
+     C           DOFF      ANDEQ'OFF'                                     CSC007
+     C                     MOVE 'Y'       ALLOW                           CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDSR                                          CSC007
+      ********************************************************            CSC007
+     C*  Checks if switchable features are dependent on any  *            CSC007
+     C*  modules being switched on first                     *            CSC007
+      ********************************************************            CSC007
+     C           MODCHK    BEGSR                                          CSC007
+     C           MDSN      CHAINSDMMIDL1             78                   CSC007
+     C           *IN78     IFEQ *ON                                       CSC007
+     C                     MOVE 'N'       ALLOW                           CSC007
+     C                     ELSE                                           CSC007
+     C           LOGT      IFEQ 'A'                                       CSC007
+     C           FOMMIN    IFEQ 'N'                                       CSC007
+     C           DOFF      ANDNE'OFF'                                     CSC007
+      *                                                                   CSC007
+      * if the feature must be off to continue processing                 CSC007
+      *                                                                   CSC007
+     C           FOMMIN    OREQ 'Y'                                       CSC007
+     C           DOFF      ANDEQ'OFF'                                     CSC007
+     C                     MOVE 'N'       ALLOW                           CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+     C           LOGT      IFEQ 'O'                                       CSC007
+     C           FOMMIN    IFEQ 'N'                                       CSC007
+     C           DOFF      ANDNE'OFF'                                     CSC007
+      *                                                                   CSC007
+      * if the feature must be off to continue processing                 CSC007
+      *                                                                   CSC007
+     C           FOMMIN    OREQ 'Y'                                       CSC007
+     C           DOFF      ANDEQ'OFF'                                     CSC007
+     C                     MOVE 'N'       ALLOW                           CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDIF                                          CSC007
+     C                     ENDSR                                          CSC007
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+     C                     MOVEL'N'       W0PMT   1
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SC3010XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SC3010XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY CBCPYSRC,CBPSSRINS
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SC3010XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

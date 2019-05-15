@@ -1,0 +1,535 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EMU Dealing Base Ccy Conversion detail entry')
+      *****************************************************************
+      *                                                               *
+      *  Midas - E.M.U. Module                                        *
+      *                                                               *
+      *  EU0500  - Base Currency for Dealing Conversion Details       *
+      *            Maintenance program                                *
+      *                                                               *
+      *  Function:  This prompt program will be selected off an input *
+      *  (I/C)      cycle menu option (under 'System maintenance      *
+      *             menu'), when the base currency for dealing        *
+      *             conversion is required to take place in the       *
+      *             following COB.                                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU009   *CREATE   Date 12Feb98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CEU009 - EMU Base Currency For Dealing Conversion            *
+      *                                                               *
+      *****************************************************************
+      *
+      ** BCD Conversion Prompt Screen
+      *
+     FEU0500DFCF  E                    WORKSTN      KINFSR *PSSR
+      *
+      ** BCD Conversion Details
+      *
+     FEUDBCEL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      ****************************************************************
+      *  FUNCTION OF INDICATORS                                      *
+      *                                                              *
+      *  01 - Error in Run Conversion field                          *
+      *  02 - Error in Old Base Currency for Dealing field           *
+      *  03 - Error in New Base Currency for Dealing field           *
+      *  04 - Do not allow input to any field                        *
+      *  25 - Used by display file for SFLEND keyword                *
+      *  KC - Function 3 indicator                                   *
+      ****************************************************************
+      /SPACE 3
+      ****************************************************************
+      *  S U B R O U T I N E    I N D E X                            *
+      *                                                              *
+      *  SRINIT - program initialization                             *
+      *  SRSDET - process screen details                             *
+      *  SRCUR  - call access object AOCURRR0                        *
+      *  *PSSR  - handles database errors                            *
+      *  SRMCLR - clears the message subfile                         *
+      *  ZASNMS - handles all messages                               *
+      ****************************************************************
+      /EJECT
+      * Copyright array
+     E                    CPY@    1   1 80
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+      * External data structure for database error details
+     ILDA       E DSLDA                         256
+      *
+      * External data structure for Bank details
+     ISDBANK    E DSSDBANKPD
+      *
+      * External data structure for General Ledger details
+     ISDGELR    E DSSDGELRPD
+      *
+      * External data structure for Currency details
+     ISDCURR    E DSSDCURRPD
+      *
+      * External data structure for Dealing details
+     ISDDEAL    E DSSDDEALPD
+     I              QQACCD                          QQACD1                                    CGL029
+      *
+      * Access objects - short data structure
+     IDSFDY     E DSDSFDY
+      *
+      * Access objects - long data structure
+     IDSSDY     E DSDSSDY
+      /EJECT
+      *
+      ** Calculation Specification
+      *
+      ** Main processing
+      *
+      * Perform program initialization
+     C                     EXSR SRINIT
+      *
+      * Display and validate screen
+     C                     EXSR SRSDET
+      *
+      * Perform file updates
+     C                     EXSR SRUPDT
+      *
+      * End program
+     C                     MOVE *ON       *INLR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT -  Program Initialization                             *
+      *                                                               *
+      *  Called by   :  Main Processing                               *
+      *  Calls       :  none                                          *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     MOVEL##PGM     DBPGM
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      * Retrieve bank ICD
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  'PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      * Retrieve General Ledger ICD
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR  'PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      * Retrieve Dealing ICD
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR  'PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *
+      ** Set up date field for screen
+      *
+     C                     MOVE BJMRDT    SRUNA
+      *
+      * Set up message file name
+     C                     MOVEL'EUMSGF  'ZAMSGF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSDET - Process screen details                              *
+      *                                                               *
+      *  Called by:     Main Processing                               *
+      *  Calls:         SRMCLR - Clears the message subfile           *
+      *                 ZASNMS - Handles all messages                 *
+      *                 SRCUR  - Call access object AOCURRR0          *
+      *                                                               *
+      *****************************************************************
+     C           SRSDET    BEGSR
+      *
+      * Read Base Currency Conversion details file
+     C                     READ EUDBCEL0                 05
+      *
+      * If file is empty, details have not yet been entered.
+      * Check whether Base Currency for Dealing is defined as an
+      * EMU "In" currency
+     C           *IN05     IFEQ *ON
+     C                     MOVELBNCYDL    WCCY    3
+     C                     EXSR SRCUR
+      *
+      * If the Base Currency for Dealing was not found then report
+      * a database error
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBKEY
+     C                     MOVEL'001'     DBASE             *DBERR 01*
+     C                     MOVELBNCYDL    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C           A6INCY    IFNE 'Y'
+      *
+      * Currency is not an "In" currency, therefore entry is not
+      * allowed. Protect all screen fields and display message
+     C                     MOVE *ON       *IN04
+     C                     MOVEL'EUM0501' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * else record found, check whether conversion has already
+      * been run (conversion date > 0).
+     C                     ELSE
+     C                     MOVE RCON      SRCON
+     C                     MOVELODBC      SODBC
+     C                     MOVELNDBC      SNDBC
+      *
+      * Conversion has already been run so entry is not allowed
+     C           CDAT      IFGT 0
+     C                     MOVE *ON       *IN04
+     C                     MOVEL'EUM0502' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Display screen until either F3 is requested or all fields
+      * are valid
+     C           *INKC     DOWEQ*OFF
+     C           WVAL      ANDNE'Y'
+      *
+     C                     WRITEEU0500C0
+     C                     EXFMTEU0500X0
+      *
+      * If F3 not pressed, validate screen fields
+     C           *INKC     IFEQ *OFF
+      *
+      * If fields are protected, entry not allowed hence no validation
+      * necessary
+     C           *IN04     IFEQ *OFF
+      *
+      * Clear message subfile
+     C                     EXSR SRMCLR
+      *
+      * Run Conversion validation
+     C                     EXSR VARCON
+      *
+      * Old Base Currency for Dealing validation
+     C                     EXSR VAODBC
+      *
+      * New Base Currency for Dealing validation
+     C                     EXSR VANDBC
+      *
+      * Check for any validation errors
+     C           *IN01     IFEQ *OFF
+     C           *IN02     ANDEQ*OFF
+     C           *IN03     ANDEQ*OFF
+     C                     MOVE 'Y'       WVAL    1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VARCON - Validation of Run Conversion field                  *
+      *                                                               *
+      *  Called by   :  SRSDET - Process screen details               *
+      *  Calls       :  ZASNMS - handles all messages                 *
+      *                                                               *
+      *****************************************************************
+     C           VARCON    BEGSR
+      *
+      * Reset error indicator
+     C                     MOVE *OFF      *IN01
+      *
+      * Run Conversion must be 'Y' or 'N'
+     C           SRCON     IFNE 'Y'
+     C           SRCON     ANDNE'N'
+     C                     MOVE *ON       *IN01
+     C                     MOVEL'EUM0503' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VAODBC - Validation of Old Base Currency for Dealing         *
+      *                                                               *
+      *  Called by   :  SRSDET - Process screen details               *
+      *  Calls       :  ZASNMS - handles all messages                 *
+      *                                                               *
+      *****************************************************************
+     C           VAODBC    BEGSR
+      *
+      * Reset error indicator
+     C                     MOVE *OFF      *IN02
+      *
+      * Mandatory field
+     C           SODBC     IFEQ *BLANKS
+     C                     MOVE *ON       *IN02
+     C                     MOVEL'EUM0504' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      * Must be valid currency
+     C           *IN02     IFEQ *OFF
+     C                     MOVELSODBC     WCCY
+     C                     EXSR SRCUR
+     C           PRTCD     IFNE *BLANKS
+      *
+      * If subfile selection was taken and no selection made
+      * treat as if blank field
+     C           PRTCD     IFEQ '*NOSEL '
+     C                     MOVE *BLANKS   SODBC
+     C                     MOVE *ON       *IN02
+     C                     MOVEL'EUM0504' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      * else invalid entry made
+     C                     ELSE
+     C                     MOVE *ON       *IN02
+     C                     MOVEL'EUM0505' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      * else move returned currency code into screen field
+     C                     ELSE
+     C                     MOVELA6CYCD    SODBC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Must equal Base Currency for Dealing
+     C           *IN02     IFEQ *OFF
+     C           SODBC     IFNE BNCYDL
+     C                     MOVE *ON       *IN02
+     C                     MOVEL'EUM0506' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VANDBC - Validation of New Base Currency for Dealing         *
+      *                                                               *
+      *  Called by   :  SRSDET - Process screen details               *
+      *  Calls       :  ZASNMS - handles all messages                 *
+      *                                                               *
+      *****************************************************************
+     C           VANDBC    BEGSR
+      *
+      * Reset error indicator
+     C                     MOVE *OFF      *IN03
+      *
+      * Mandatory field
+     C           SNDBC     IFEQ *BLANKS
+     C                     MOVE *ON       *IN03
+     C                     MOVEL'EUM0507' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      * Must be valid currency
+     C           *IN03     IFEQ *OFF
+     C                     MOVELSNDBC     WCCY
+     C                     EXSR SRCUR
+     C           PRTCD     IFNE *BLANKS
+      *
+      * If subfile selection was taken and no selection made
+      * treat as if blank field
+     C           PRTCD     IFEQ '*NOSEL '
+     C                     MOVE *BLANKS   SNDBC
+     C                     MOVE *ON       *IN03
+     C                     MOVEL'EUM0507' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      * else invalid entry made
+     C                     ELSE
+     C                     MOVE *ON       *IN03
+     C                     MOVEL'EUM0508' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      * else move returned currency code into screen field
+     C                     ELSE
+     C                     MOVELA6CYCD    SNDBC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Must be different currency than Old Dealing Base Ccy
+     C           *IN03     IFEQ *OFF
+     C           *IN02     ANDEQ*OFF
+     C           SNDBC     IFEQ SODBC
+     C                     MOVE *ON       *IN03
+     C                     MOVE *ON       *IN02
+     C                     MOVEL'EUM0514' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Must equal Euro Currency
+     C           *IN03     IFEQ *OFF
+     C           SNDBC     IFNE BKEURO
+     C                     MOVE *ON       *IN03
+     C                     MOVEL'EUM0509' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCUR - Subroutine to call AOCURRR0                          *
+      *                                                               *
+      *  Called by   :  SRSDET - Process screen details               *
+      *  Calls       :  AOCURRR0 - Access object for SDCURRPD         *
+      *                                                               *
+      *****************************************************************
+     C           SRCUR     BEGSR
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WCCY      PCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDT - Update PF/EUDBCEPD                                  *
+      *                                                               *
+      *  Called by   :  Main Processing                               *
+      *  Calls       :  none                                          *
+      *                                                               *
+      *****************************************************************
+     C           SRUPDT    BEGSR
+      *
+      * Skip file updating if exit was requested
+     C           *INKC     IFEQ *OFF
+      *
+      * Move screen fields to file fields
+     C                     MOVE SRCON     RCON
+     C                     MOVELSODBC     ODBC
+     C                     MOVELSNDBC     NDBC
+      *
+      * If record already exists then update else write new record
+     C           *IN05     IFEQ *OFF
+     C                     UPDATEUDBCED0
+     C                     ELSE
+      *
+      * Initialize remaining file fields
+     C                     MOVEL'BCDE'    BCDE
+     C                     Z-ADD0         CDAT
+     C                     WRITEEUDBCED0
+     C                     ENDIF
+      *
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C                     ROLBK
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR                           ** *PSSR9 **
+      *
+      ********************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMCLR - Clear Message Subfile                               *
+      *                                                               *
+      *  Called by   :  SRSDET  - Process screen details              *
+      *  Calls       :  Y2CLMSC - Clear Program Message Queue         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMCLR    BEGSR                           ** SRMCLR **
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C           SRMCL9    ENDSR                           ** SRMCL9 **
+      /EJECT
+      *
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send Message to Program Message Queue               *
+      *                                                               *
+      *  Called by   :  SRSDET  - Process screen details              *
+      *  Calls       :  Y2SNMGC - Send a Message                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+      *
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZASNM9    ENDSR                           ** ZASNM9 **
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,475 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas GL Review Postings Profit Centres')
+     A********************************************************************
+     A*                                                                  *
+     A*  Midas GENERAL LEDGER MODULE                         *
+     A*                                                                  *
+     A*      DSPF/GL1582DF - REVIEW POSTINGS PROFIT CENTRE               *
+     A*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                                  *
+      *  Last Amend No. MD038953           Date 03Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 156040             Date 10Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 075323             Date 10Oct94               *
+     A*                     S01314           DATE 16APR91                *
+     A*                     BHF266           DATE 18JUL90                *
+     A*                                                                  *
+     A********************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     A*  156040  -  Cannot distinguish between postings for same         *
+     A*             Profit Centre, account and date.                     *
+     A*    075323  -  Incorrect dec places and account details output    *
+     A*               on Profit Centre reports because incorrect posting *
+     A*               accessed if RRN on APOSTPD greater than 9999. Fix  *
+     A*               is to increase the size of the Relative Record No. *
+     A*               field (now held in hidden field on screen).        *
+     A*      S01314 - CHANGES MADE DURING PTF INCORPORATION -            *
+     A*               INCORRECT APPLICATION OF FIX BHF266 - NOT ONLY     *
+     A*               SHOULD THE SUBFILE BE NON DISPLAY IT SHOULD ALSO   *
+     A*               BE WRITE PROTECTED.                                *
+     F*      BHF266 - WHEN ICDR SPECIFIES THAT PRFC CHANGE FUNCTION IS   *BHF266
+     F*               NOT AVAILABLE, THE SUBFILE SHOULD NOT BE DISPLAYED *BHF266
+     A********************************************************************
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CF03(01)
+     A                                      CF12(02)
+     A                                      PRINT(MPRINT)
+     A          R GLHEADER                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A            USRID         10A  O 01 02
+     A                                  1 13'GL1582'
+     A            SWSID         10   O 02 02
+     A N51                              1 24'AMEND POSTINGS'' PROFIT CENTRE'
+     A                                      DSPATR(HI UL)
+     A  51                              1 24'REVIEW POSTINGS'' PROFIT CENTRE'
+     A                                      DSPATR(HI UL)
+     A            SRUNA          7A  O 01 72
+     A                                 02 71TIME
+     A          R GL1582F1
+     A                                      OVERLAY
+     A* Branch
+     A* Profit Centre
+     A* Customer
+     A* Currency
+     A* Account code
+     A* Account sequence
+     A* Retail Account No.
+     A* From Date
+     A* To Date
+     A* Whole screen
+     A  50                              4 24'Branch Code'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A  50        FLD001         3   B  4 45TEXT('Branch Code')
+     A  10                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A                                  6 24'Profit Centre'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A            FLD002         4   B  6 45TEXT('Profit Centre')
+     A  11                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A  52                              8 17'Either'
+     A                                      DSPATR(HI)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A                                  8 24'Account Details'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A                                 10 30'Customer'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A            FLD003        10   B 10 45TEXT('Customer No. or Shortname')
+     A  12
+     AO 25
+     AO 16                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A                                 11 30'Currency Code'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A            FLD004         3   B 11 45TEXT('Currency Code')
+     A  13
+     AO 25
+     AO 16                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A                                 12 30'Account Code'
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A**Start of change CGL029
+     A**********  FLD005         4   B 12 45TEXT('Account Code')                              CGL029
+     A            FLD005        10   B 12 45TEXT('Account Code')
+     A**End of change CGL029
+     A  14
+     AO 25
+     AO 16                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A                                 13 30'Account Seq'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A            FLD006         2   B 13 45TEXT('Account Sequence No')
+     A  15
+     AO 25
+     AO 16                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A  52                             15 17'Or'
+     A                                      DSPATR(HI)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A  52                             15 24'Retail Account No.'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A  52        FLD007        10   B 15 45TEXT('Retail Account No.')
+     A  25
+     AO 17                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A                                 17 24'From Date'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A N98                             17 34'DDMMYY'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A  98                             17 34'MMDDYY'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A            FLD008         6   B 17 45TEXT('From Date')
+     A  18                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A                                 19 24'To Date'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A N98                             19 34'DDMMYY'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A  98                             19 34'MMDDYY'
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND)
+     A*                                                    /BHF266/
+     A            FLD009         6   B 19 45TEXT('To Date')
+     A  19                                  DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70********                          DSPATR(ND)
+     A*                                                    /S01314/
+     A**69*******
+     A**70N51*****                          DSPATR(ND)
+     A  69
+     AO 70N51                               DSPATR(ND PR)
+     A*                                                    /S01314/
+     A*                                                    /BHF266/
+     A*
+     A*                                                    /BHF266/
+     A**70*******                      21 13'THIS INPUT FUNCTION IS NOT AVAILA-
+     A***********                           BLE AS INSTALLATION'
+     A  69
+     AO 70N51                          21 16'THIS FUNCTION IS NOT AVAILABLE AS-
+     A                                       INSTALLATION'
+     A*                                                    /BHF266/
+     A                                      DSPATR(RI PC)
+     A*                                                    /BHF266/
+     A**70*******                      22 12'CONTROL SPECIFIES THAT PROFIT CENT-
+     A***********                           RES ARE NOT AMENDABLE'
+     A  69                             22 14'CONTROL SPECIFIES THAT PROFIT CENT-
+     A                                      RES ARE NOT USED'
+     A                                      DSPATR(RI PC)
+     A  70N51N69                       22 12'CONTROL SPECIFIES THAT PROFIT CENT-
+     A                                      RES ARE NOT AMENDABLE'
+     A*                                                    /BHF266/
+     A                                      DSPATR(RI PC)
+     A*
+     A  20        ERR1          70   O 23  5DSPATR(RI PC)
+     A                                 24  1'F3=End'
+     A*
+     A          R GL1582F2
+     A                                      OVERLAY
+     A* All requested?
+     A* New Profit Centre
+     A* Whole screen
+     A  50                              3 10'Branch'
+     A  50        SBRCA          3   O  3 17DSPATR(HI)
+     A  50        SBRNM         30   O  3 21
+     A                                  4  7'Please either enter ''Y'' for sele-
+     A                                      cted postings or enter'
+     A  23
+     AO 51                                  DSPATR(ND)
+     A                                  4 62'ALL'
+     A                                      DSPATR(HI)
+     A  23
+     AO 51                                  DSPATR(ND)
+     A                                  4 65'here'
+     A  23
+     AO 51                                  DSPATR(ND)
+     A            FLD010         3   B  4 70TEXT('All Requested?')
+     A N26                                  DSPATR(UL)
+     A  21                                  DSPATR(RI PC)
+     A  23
+     AO 51
+     AO 26                                  DSPATR(PR)
+     A  23
+     AO 51                                  DSPATR(ND)
+     A                                  5  7'Please enter the new profit centre-
+     A                                       here'
+     A  23
+     AO 51                                  DSPATR(ND)
+     A            FLD011         4   B  5 70TEXT('New Profit Centre')
+     A N26                                  DSPATR(UL)
+     A  22                                  DSPATR(RI PC)
+     A  23
+     AO 51
+     AO 26                                  DSPATR(PR)
+     A  23
+     AO 51                                  DSPATR(ND)
+     A*
+     A*                                              Begin /156040/
+     A************                      7 14'Sel'
+     A**51********                          DSPATR(ND)
+     A************                      7 18'PRFC  Date      Account Number'
+     A**52********                      7 54'Retail Account'
+     A**********R*GL1582F3                  TEXT('Subfile to select postings')
+     A************                          SFL
+     A**09********                          SFLNXTCHG
+     A************
+     A************FLD014         1   B  8 15TEXT('Select?')
+     A*N26********                          DSPATR(UL)
+     A**27********                          DSPATR(RI PC)
+     A**51********
+     A*O*26*******                           DSPATR(PR)
+     A**51********                          DSPATR(ND)
+     A************
+     A************FLD015         4   O  8 18TEXT('Current Profit Centre')
+     A************                          DSPATR(HI)
+     A************
+     A************FLD016         7   O  8 24TEXT('Posting Date')
+     A************                          DSPATR(HI)
+     A************
+     A************FLD017        18   O  8 34TEXT('Account Number')
+     A************                          DSPATR(HI)
+     A************
+     A************FLD018        10   O  8 55TEXT('Retail Account')
+     A************                          DSPATR(HI)
+     A*N52********                          DSPATR(ND)
+     A**Start of change CGL029
+     A**********                        7  3'Sel'                                             CGL029
+     A                                  7  2'Sel'
+     A**End of change CGL029
+     A  51                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********                        7  7'PRFC  Date     Account Number'                   CGL029
+     A**********                        7 42'Posting Amount       Reference'                  CGL029
+     A                                  7  6'PRFC Date    Account Number'
+     A                                  7 44'Posting Amount      Reference'
+     A**End of change CGL029
+     A          R GL1582F3                  TEXT('Subfile to select postings')
+     A                                      SFL
+     A  09                                  SFLNXTCHG
+     A*
+     A**Start of change CGL029
+     A**********  FLD014         1   B  8  4TEXT('Select?')                                   CGL029
+     A            FLD014         1   B  8  3TEXT('Select?')
+     A**End of change CGL029
+     A N26                                  DSPATR(UL)
+     A  27                                  DSPATR(RI PC)
+     A  51
+     AO 26                                  DSPATR(PR)
+     A  51                                  DSPATR(ND)
+     A*
+     A**Start of change CGL029
+     A**********  FLD015         4   O  8  7TEXT('Current Profit Centre')                     CGL029
+     A            FLD015         4   O  8  6TEXT('Current Profit Centre')
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A*
+     A**Start of change CGL029
+     A**********  FLD016         7   O  8 13TEXT('Posting Date')                              CGL029
+     A            FLD016         7   O  8 11TEXT('Posting Date')
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A*
+     A**Start of change CGL029
+     A**********  FLD017        18   O  8 22TEXT('Account Number')                            CGL029
+     A            FLD017        24   O  8 19TEXT('Account Number')
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A*
+     A            FLD018        10   H      TEXT('Retail Account')
+     A*
+     A**Start of change CGL029
+     A**********  FLD021        19   O  8 42TEXT('Posting Amount')                            CGL029
+     A            FLD021        19   O  8 44TEXT('Posting Amount')
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A*
+     A**Start of change CGL029
+     A**********  FLD022        15   O  8 63TEXT('Deal Reference')                            CGL029
+     A            FLD022        15   O  8 64TEXT('Deal Reference')
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A*                                              End   /156040/
+     A*
+      *                                              Begin /075323/
+     A************FLD019         4  0O  8 66TEXT('Relative Record Number')
+     A************                          DSPATR(ND)
+     A************FLD020        10   O  8 71TEXT('Historic or Live Posting?')
+     A************                          DSPATR(ND)
+     A            FLD019        10  0H      TEXT('Relative Record Number')
+     A            FLD020        10   H      TEXT('Historic or Live Posting?')
+      *                                              End   /075323/
+     A*
+     A          R GL1582F4                  TEXT('Subfile controller for Profit-
+     A                                       centre review screen')
+     A                                      SFLCTL(GL1582F3)
+     A                                      SFLSIZ(500)
+     A                                      SFLPAG(14)
+     A  05                                  SFLCLR
+     A  06                                  SFLDSPCTL
+     A  07                                  SFLDSP
+     A  08                                  SFLEND
+     A                                      OVERLAY
+     A            SDREC1         3  0H      SFLRCDNBR
+     A  23                             22 23'NO RECORDS FOUND FOR YOUR REQUEST'
+     A                                      DSPATR(RI PC)
+     A  28                             22 03'ONLY RECORDS UP TO'
+     A                                      DSPATR(RI)
+     A  28        MDATE          7   O 22 22DSPATR(RI)
+     A  28                             22 30'HAVE BEEN DISPLAYED'
+     A                                      DSPATR(RI)
+     A  28N51                          22 50'ENTER ''ALL'' TO PROCESS ALL'
+     A                                      DSPATR(RI)
+     A  28N51                          23 03'POSTINGS ORIGINALLY REQUESTED, OR-
+     A                                       RENEW YOUR REQUEST WITH ALTERNATIV-
+     A                                      E DATES'
+     A                                      DSPATR(RI)
+     A  26                             22 22'Press enter to confirm these chang-
+     A                                      es'
+     A                                      DSPATR(RI)
+     A  24        ERR2          70   O 23  5DSPATR(RI)
+      ** Start of Change MD038953
+     A**********                       24  1'Press F3=End, or F12=Init-                     MD038953
+     A                                 24  1'Press F3=End  or F12=Init-
+      ** End of Change MD038953
+     A                                      ial screen'
+     A*

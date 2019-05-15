@@ -1,0 +1,1025 @@
+     H        1   Y                       F
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ABS ER Guarantees det. gen./Provision update')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas -  European Reporting                                  *
+      *                                                               *
+      *  ERLU75 - Guarantees det. gen./provision update               *
+      *                                                               *
+      *  Function:  This program generates the guaranty records       *
+      *             (type 004)                                        *
+      *                                                               *
+      *  Called By: ERC0702 - Interface to FRS component              *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 225555             Date 01Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 06May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX046             Date 31Oct02               *
+      *                 187689             Date 19Dec00               *
+      *                 ULX008             Date 25Feb00               *
+      *                 ULX012             Date 09Feb00               *
+      *                 147340             Date 16Nov98               *
+      *                 CAD012             Date 28Aug98               *
+      *                 133948             Date 24Jul98               *
+      *                 ULX004             Date 26Mar97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      * 225555 - Add discount/premium amount, amount to amortize      *
+      *          and 'Prix d'Acquisition'. Recompile over changed     *
+      *          ERLUTRPD.                                            *
+      *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX046 - Circulars 2002/170-174-175 Integration              *
+      *           Recompiled due to changes in file layout            *
+      *  187689 - "GRD" currency in EMU                               *
+      *  ULX008 - CSSF Statuatory Reporting : Commissariat aux Bourses*
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  ULX012 - Pledges and Multiple Guarantors Management          *
+      *           Recompile only due to changes in PF/SDCUSTX6        *
+      *  147340 - Provision amounts wrongly split according to repay. *
+      *  CAD012 - To retrieve midas currency code with SWIFT code     *
+      *  133948 - Correction amount wrongly calculated (problem       *
+      *           133949 solved by 133948 fix)                        *
+      *  ULX004 - Capital Adequacy                                    *
+      *         - IML Circular 97/138                                 *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+     F* VD - ER I.C.D.
+     F***ERICDRL1IF**E           K        DISK                                                CER001
+     FERICDXL1IF  E           K        DISK                                                   CER001
+     F* EX - ER Product extract
+     F***ERLUTRL0UF**E           K        DISK                                                CER001
+     FERLTRXL0UF  E           K        DISK                                                   CER001
+     F            ERLUTRF0                          KRENAMEERLUTRFU
+     F* RT - Guarantees extract
+     F***ERGUEXL3IF**E           K        DISK                                                CER001
+     FERGUCXL3IF  E           K        DISK                                                   CER001
+     F* RT - Guarantees extract
+     F***ERCURRL1IF  E           K        DISK                            187689
+     F*** VR - Currency Codes table                                       187689
+     FSDCURRL1IF  E           K        DISK                               187689
+     F* A6 - Currency Codes table                                         187689
+     F***ERCURRL2IF**E           K        DISK                                         CAD012 CER001
+     FERCCYXL1IF  E           K        DISK                                                   CER001
+     F* VR - SWIFT currency codes                                         CAD012
+     F***SDBRCHX6IF**E           K        DISK                                                CER001
+     FSDBRX4PDIF  E           K        DISK                                                   CER001
+     F* VE - Branch codes extension file
+     F***ERCTRYL1IF**E           K        DISK                                                CER001
+     FERCTYXL0IF  E           K        DISK                                                   CER001
+     F* VQ - Country codes
+     F***SDCUSTX6IF**E           K        DISK                                                CER001
+     FSDCUX4PDIF  E           K        DISK                                                   CER001
+     F* VF - Customer extension file
+     F***ERLUTRPDO***E           K        DISK                                                CER001
+     FERLTRXPDO   E           K        DISK                                                   CER001
+     F* EX - ER Product extract
+      /EJECT
+      *
+      ** Currency details
+      *
+     E                    TCCY      200  3   TCRD   18
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZDATE9Z1
+      *
+     IERLUTRFU
+     I              EXRECT                          RNRECT
+     I              EXCCYL                          RNCCYL
+     I              EXOROC                          RNOROC
+     I              EXCUCL                          RNCUCL
+     I              EXECOS                          RNECOS
+     I              EXAMNT                          RNAMNT
+     I              EXLAMT                          RNLAMT
+     I              EXCORA                          RNCORA
+     I              EXCORL                          RNCORL
+     I              EXCUST                          RNCUST
+     I              EXGA14                          RNGA14
+     I              EXGURN                          RNGURN
+     I              EXGUAT                          RNGUAT
+     I              EXRKCV                          RNRKCV
+     I              EXCNCZ                          RNCNCZ
+      *
+      /EJECT
+      /COPY ZSRSRC,ZDAT10Z1
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ***  DS to set-up used to secure reference key
+     IKYUTSR      DS
+      *
+     I                                        1   6 DSCUST
+     I                                        7   9 DSCURR
+     I**********                             10  13 DSACOD                                    CER001
+     I**********                             14  15 DSACSQ                                    CER001
+     I**********                             16  18 DSBRCA                                    CER001
+     I                                       10  19 DSACOD                                    CER001
+     I                                       20  21 DSACSQ                                    CER001
+     I                                       22  24 DSBRCA                                    CER001
+      *
+     I                                        1   6 DSTREF
+      *
+     I                                        1   5 DSFTNO
+      *
+     I                                        1  10 DSBHSC
+     I                                       11  13 DSBHBA
+     I                                       14  15 DSBHBK
+     I                                       16  16 DSBHMK
+     I                                       17  18 DSBLNK
+      *
+      ***  DS used to retrieve used to secure reference key
+     IEXORIG      DS
+      *
+     I                                        1   4 DRORIG
+      *
+     I                                        6  11 DRCUST
+     I                                       12  14 DRCURR
+     I**********                             15  18 DRACOD                                    CER001
+     I**********                             19  20 DRACSQ                                    CER001
+     I                                       15  24 DRACOD                                    CER001
+     I                                       25  26 DRACSQ                                    CER001
+      *
+     I                                        6  11 DRTREF
+      *
+     I                                       12  16 DRFTNO
+      *
+     I                                        6   7 DRBHBK
+     I                                        8  17 DRBHSC
+     I                                       20  20 DRBHMK
+     I                                       18  20 DRREPA                147340
+      *
+      ** Currency details - Rate, Multiply/Divide indicator, SWIFT currency
+      *
+     I            DS
+     I                                        1  18 WWCRDT
+     I                                        1  138WWSPRT
+     I                                       14  14 WWMDIN
+     I                                       15  150WWNBDP
+     I                                       16  18 WWSWCY
+      *
+      ** Error messages
+      *
+     I              'ARRAY TCCY IS FULL'  C         WWERR1
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           LASTSQ  60       Output Parm
+      *                                                   (last seq num)
+      *
+      ** Read through ERLUTRL0 until EOF
+      *
+     C**********           READ ERLUTRL0                 38                                   CER001
+     C                     READ ERLTRXL0                 38                                   CER001
+      *
+     C           *IN38     IFEQ *OFF                       B1
+      *
+      ** Convert the report date in 5 Packed
+      *
+     C                     Z-ADDEXREPD    ZZDTIN
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    W#REPD           B1
+     C                     ENDIF                           E1
+      *
+     C           *IN38     DOWEQ*OFF                       B1
+      *
+      ** Reset working fields
+      *
+     C                     Z-ADD0         W#CORA
+     C                     Z-ADD0         W#CORL
+      *
+     C                     MOVE *BLANKS   KYUTSR
+     C                     MOVE RNCUST    KYRCUS
+     C                     SELEC                           B2
+      *
+      ** Set up keys to retrieve guaranty details
+      *
+      ** Accounts
+      *
+     C           DRORIG    WHEQ 'GLAC'
+     C                     MOVE 'G'       KYUTSI
+     C                     MOVE DRCUST    DSCUST
+     C                     MOVE DRCURR    DSCURR
+     C                     MOVE DRACOD    DSACOD
+     C                     MOVE DRACSQ    DSACSQ
+     C                     MOVE EXBRCD    DSBRCA
+      *
+      ** Money market loans
+      *
+     C           DRORIG    WHEQ 'MMDL'
+     C                     MOVE 'D'       KYUTSI
+     C                     MOVE DRTREF    DSTREF
+      *
+      ** Customer lending loans and Participations purchased
+      *
+     C           DRORIG    WHEQ 'LECL'
+     C           DRORIG    OREQ 'LEPP'
+     C                     MOVE 'L'       KYUTSI
+     C                     MOVE DRTREF    DSTREF
+      *
+      ** Negotiable assets purchased
+      *
+     C           DRORIG    WHEQ 'MMNA'
+     C                     MOVE 'N'       KYUTSI
+     C                     MOVE DRTREF    DSTREF
+      *
+      ** Facilities
+      *
+     C           DRORIG    WHEQ 'FCLT'
+     C                     MOVE 'F'       KYUTSI
+     C                     MOVE DRFTNO    DSFTNO
+      *
+      ** Book position
+      *
+     C           DRORIG    WHEQ 'SECU'
+     C                     MOVE 'P'       KYUTSI
+     C                     MOVE DRBHSC    DSBHSC
+     C                     MOVE EXBRCD    DSBHBA
+     C                     MOVE DRBHBK    DSBHBK
+     C                     MOVE DRBHMK    DSBHMK
+      *
+     C                     ENDSL                           E2
+      *
+      ** Access Guaranty details
+      *
+     C********** K3GUEX    CHAINERGUEXL3             39                                       CER001
+     C           K3GUEX    CHAINERGUCXL3             39                                       CER001
+      *
+      ** If no guaranty details,
+      *
+     C           *IN39     IFEQ *ON                        B2
+      *
+      ** For a retail account, the 'used to secured' indicator could be
+      ** 'G' (general ledger format) or 'R' (retail format) following
+      ** the guaranty input.
+      *
+     C           KYUTSI    IFEQ 'G'                        B3
+     C                     MOVE 'R'       KYUTSI
+     C********** K3GUEX    CHAINERGUEXL3             39                                       CER001
+     C           K3GUEX    CHAINERGUCXL3             39                                       CER001
+     C                     ENDIF                           E3
+      *
+      ** A loan could be secured by the loan reference, or its facility
+      ** reference
+      *
+     C           KYUTSI    IFEQ 'L'                        B3
+     C                     MOVE 'F'       KYUTSI
+     C                     MOVE EXFCUS    KYRCUS
+     C                     MOVE *BLANKS   KYUTSR
+     C                     MOVELEXFACT    DSFTNO
+     C                     MOVE EXFCNO    DSFTNO
+     C********** K3GUEX    CHAINERGUEXL3             39                                       CER001
+     C           K3GUEX    CHAINERGUCXL3             39                                       CER001
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C           *IN39     IFEQ *OFF                       B2
+      *
+      ***  Process guarantee/provision record
+      *
+     C           *IN39     DOWEQ*OFF                       B3
+      *
+     C                     EXSR SRPROC
+      *
+      ** Read the next gurarnty corresponding to the account/transaction
+      *
+     C********** K3GUEX    READEERGUEXL3                 39                                   CER001
+     C           K3GUEX    READEERGUCXL3                 39                                   CER001
+      *
+      ** For a retail account, the 'used to secured' indicator could be
+      ** 'G' (general ledger format) or 'R' (retail format) following
+      ** the guaranty input.
+      *
+     C           *IN39     IFEQ *ON                        B4
+     C           KYUTSI    ANDEQ'G'
+     C                     MOVE 'R'       KYUTSI
+     C********** K3GUEX    CHAINERGUEXL3             39                                       CER001
+     C           K3GUEX    CHAINERGUCXL3             39                                       CER001
+     C                     ENDIF                           E4
+      *
+     C                     ENDDO                           E3
+      *
+      ** In case of 'Specific provision', update the correction amount
+      *
+     C           W#CORA    IFNE 0                          B3
+     C           W#CORL    ORNE 0
+     C                     Z-ADDW#CORA    RNCORA
+     C                     Z-ADDW#CORL    RNCORL
+     C                     UPDATERLUTRFU
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+      ** Read the next ER extract record
+      *
+     C**********           READ ERLUTRL0                 38                                   CER001
+     C                     READ ERLTRXL0                 38                                   CER001
+     C                     ENDDO                           E1
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls: SRCALC                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ***  Manage guarantee details if:
+      *
+      **      - The reporting date should be included between the start
+      **        date and the end date of the guaranty.
+      *
+     C           RTSTDT    IFLE W#REPD                     B1
+     C           RTENDT    ANDGEW#REPD
+      *
+      **      - Used to secure reference is not a facitlity
+      *
+     C           KYUTSI    IFNE 'F'                        B2
+      *
+      **      - Used to secure reference is a facitlity,
+      **        with used to secure loan = 'N',
+      **        for a facility
+      *
+     C           KYUTSI    OREQ 'F'                        B2
+     C           RTUTSL    ANDEQ'N'
+     C           DRORIG    ANDEQ'FCLT'
+      *
+      **      - Used to secure reference is a facitlity,
+      **        with used to secure loan = 'Y',
+      **        for a loan
+      **        (Rmk. KYUTSI is 'F' only for a facitity or a loan without
+      **         guarantee)
+      *
+     C           KYUTSI    OREQ 'F'
+     C           RTUTSL    ANDEQ'Y'
+     C           DRORIG    ANDNE'FCLT'
+      *
+      ** If 'Specific provision',
+      *
+     C           RTSBYI    IFEQ 'S'                        B3
+      ****                                                                133948
+      ***Calculate the correction amounts for the 'Specific provision'    133948
+      ****                                                                133948
+     C****       RNAMNT    MULT RTGCPE    W#AMNT                          133948
+     C****                 DIV  100       W#AMNT    H                     133948
+     C****                 ADD  W#AMNT    W#CORA                          133948
+      ****                                                                133948
+     C****       RNLAMT    MULT RTGCPE    W#AMNT                          133948
+     C****                 DIV  100       W#AMNT    H                     133948
+     C****                 ADD  W#AMNT    W#CORL                          133948
+      *                                                                   147340
+      ** Calculate the correction amounts for the 'Specific provision'    147340
+      *                                                                   147340
+     C           DRREPA    IFEQ 'REP'                      B4             147340
+      *                                                                   147340
+     C           RNAMNT    MULT RTGCPE    W#AMNT                          147340
+     C                     DIV  100       W#AMNT    H                     147340
+     C                     ADD  W#AMNT    W#CORA                          147340
+      *                                                                   147340
+     C           RNLAMT    MULT RTGCPE    W#AMNT                          147340
+     C                     DIV  100       W#AMNT    H                     147340
+     C                     ADD  W#AMNT    W#CORL                          147340
+      *                                                                   147340
+     C                     ELSE                            X4             147340
+      *                                                                   133948
+      ** Retrieve provision currency details                              133948
+      *                                                                   133948
+     C                     Z-ADD1         X                               133948
+     C           RTUTSC    LOKUPTCCY,X                   88               133948
+     C           *IN88     IFEQ *OFF                       B4             133948
+     C           *LOCK     IN   LDA                                       133948
+     C                     Z-ADD5         DBASE                           133948
+     C***********          MOVEL'ERCURRL1'DBFILE                    133948187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELRTUTSC    DBKEY                           133948
+     C                     MOVELPGM       DBPGM                           133948
+     C                     OUT  LDA                                       133948
+     C                     EXSR *PSSR                                     133948
+     C                     ENDIF                           E4             133948
+      *                                                                   133948
+     C                     MOVE TCRD,X    WWCRDT                          133948
+     C                     Z-ADDWWSPRT    @@RAT1 138                      133948
+     C                     MOVE WWMDIN    @@MDI1  1                       133948
+      *                                                                   133948
+      ** Convert the provision amount in 3 decimal positions              133948
+      *                                                                   133948
+     C           RTGAMT    MULT 1000      WWGAMT 160                      133948
+     C           WWNBDP    IFGT 0                          B4             133948
+     C                     DO   WWNBDP                     B5             133948
+     C                     DIV  10        WWGAMT                          133948
+     C                     ENDDO                           E5             133948
+     C                     ENDIF                           E4             133948
+      *                                                                   133948
+      ** Convert the provision amount in Reporting currency               133948
+      *                                                                   133948
+     C                     Z-ADDWERSPR    @@RAT2 138       ER CCY spot rate33948
+     C                     MOVE WERMDI    @@MDI2  1        ER CCY Mult/Div1ind.8
+      *                                                                   133948
+     C                     Z-ADDWWGAMT    INAMNT 160                      133948
+     C                     EXSR SRCALC                                    133948
+     C                     ADD  OUTAMT    W#CORL                          133948
+     C                     ADD  WWGAMT    W#CORA                          133948
+      *                                                                   147340
+     C                     END                             E4             147340
+      *
+      ** Otherwise (Guaranty)
+      *
+     C                     ELSE                            X3
+      *
+      ** Record type
+     C                     Z-ADD4         EXRECT
+      *
+      ** ISO currency code
+      *
+     C                     Z-ADD1         X
+     C           RTGCCY    LOKUPTCCY,X                   88
+     C           *IN88     IFEQ *OFF                       B4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C***********          MOVEL'ERCURRL1'DBFILE                          187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELRTGCCY    DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E4
+     C                     MOVE TCRD,X    WWCRDT
+     C                     MOVE WWSWCY    EXCCYL
+     C                     Z-ADDWWSPRT    WGCSPR 138       Guar. CCY spot rate
+     C                     MOVE WWMDIN    WGCMDI  1        Guar. CCY Mult/Div.
+     C                     MOVE WWNBDP    WGCNDP  10       Guar. CCY NB.Dec.Pos.
+      *
+      ** Code origin operation
+      *
+     C********** RTBRCA    CHAINSDBRCHX6             88                                       CER001
+     C           RTBRCA    CHAINSDBRX4PD             88                                       CER001
+     C           *IN88     IFEQ *ON                        B4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C**********           MOVEL'SDBRCHX6'DBFILE                                              CER001
+     C                     MOVEL'SDBRX4PD'DBFILE                                              CER001
+     C                     MOVELRTBRCA    DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E4
+     C                     MOVE VEOROC    EXOROC
+      *
+      ** ISO counterparty country code
+      *
+     C********** RTGCTY    CHAINERCTRYL1             88                                       CER001
+     C           RTGCTY    CHAINERCTYXL0             88                                       CER001
+     C           *IN88     IFEQ *ON                        B4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C**********           MOVEL'ERCTRYL1'DBFILE                                              CER001
+     C                     MOVEL'ERCTYXL0'DBFILE                                              CER001
+     C                     MOVELRTGCTY    DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E4
+     C                     MOVELVQISOC    EXCUCL
+      *
+      ** Customer number
+      *
+     C                     MOVE RTGVBY    EXCUST
+      *
+      ** Counterparty sector code
+      *
+     C********** EXCUST    CHAINSDCUSTX6             88                                       CER001
+     C           EXCUST    CHAINSDCUX4PD             88                                       CER001
+     C           *IN88     IFEQ *ON                        B4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C**********           MOVEL'SDCUSTX6'DBFILE                                              CER001
+     C                     MOVEL'SDCUX4PD'DBFILE                                              CER001
+     C                     MOVELRTGVBY    DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E4
+     C***********          Z-ADDVFECOS    EXECOS                          ULX004
+     C                     Z-ADDVFNCOS    EXECOS                          ULX004
+      *                                                                   187689
+     C                     SELEC                                          187689
+      *                                                                   187689
+     C           VFSMRS    WHEQ *BLANKS                                   187689
+     C                     MOVE EXECOS    EXECO6                          187689
+     C                     MOVEL'00'      EXECO6                          187689
+      *                                                                   187689
+     C           VFSMRS    WHEQ 'Y'                                       187689
+     C                     MOVE '01'      EXECO6                          187689
+     C                     MOVELEXECOS    EXECO6                          187689
+      *                                                                   187689
+     C           VFSMRS    WHEQ 'N'                                       187689
+     C                     MOVE '02'      EXECO6                          187689
+     C                     MOVELEXECOS    EXECO6                          187689
+      *                                                                   187689
+     C                     ENDSL                                          187689
+      *
+      ** Identification of guarantor
+      *
+     C                     MOVELVFCRNM    EXGURN
+      *
+      ** Guarantee code
+      *
+     C                     MOVE RTGCOD    EXGA14
+      *
+      ** For facility, we have to use the guaranty amount caluclated
+      ** by ER0960 instead of the book value.
+      ** Following the Used to Secure Loans indicator, the guaranty
+      ** amount is:
+      **  - N -> part of facility amount used by loans(s)
+      **  - Y -> part of facility amount available.
+      *
+     C           DRORIG    IFEQ 'FCLT'                     B4
+      *
+      ** Retrieve Used to Secure Currency details
+      *
+     C                     Z-ADD1         X
+     C           RTUTSC    LOKUPTCCY,X                   88
+     C           *IN88     IFEQ *OFF                       B5
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE
+     C***********          MOVEL'ERCURRL1'DBFILE                          187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELRTUTSC    DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E5
+      *
+     C                     MOVE TCRD,X    WWCRDT
+     C                     Z-ADDWWSPRT    @@RAT1 138
+     C                     MOVE WWMDIN    @@MDI1  1
+      *
+      ** Convert the Used to Secure amount in 3 decimal positions
+      *
+     C           RTUTSA    MULT 1000      WWUTSA 160
+     C           WWNBDP    IFGT 0                          B5
+     C                     DO   WWNBDP                     B6
+     C                     DIV  10        WWUTSA
+     C                     ENDDO                           E6
+     C                     ENDIF                           E5
+      *
+      ** Calculate the guaranty amount in guaranty currency
+      *
+      ** Used to secure Currency is the Guaranty currency
+      *
+     C           RTUTSC    IFEQ RTGCCY                     B5
+      *
+     C                     Z-ADDWWUTSA    OUTAMT
+      *
+     C                     ELSE                            X5
+      *
+      ** Otherwise,
+      ** Convert the Used to Secure amount in Guaranty currency
+      *
+     C                     Z-ADDWGCSPR    @@RAT2 138       Guar. CCY spot rate
+     C                     MOVE WGCMDI    @@MDI2  1        Guar. CCY Mult/Div.
+      *
+     C                     Z-ADDWWUTSA    INAMNT 160
+     C                     EXSR SRCALC
+      *
+     C                     ENDIF                           E5
+      *
+      ** Calculate the book value in foreign currency
+      *
+     C           OUTAMT    MULT RTGCPE    EXAMNT    H
+     C                     DIV  100       EXAMNT    H
+      *
+      ** Guaranty currency is the Reporting currency
+      *
+     C           RTGCCY    IFEQ VDCCYC                     B5
+      *
+      ** Load book value in foreign currency in book value in reporting CCY
+      ** (avoid calculation and rounding error)
+      *
+     C                     Z-ADDEXAMNT    EXLAMT
+      *
+      ** Otherwise,
+      *
+     C                     ELSE                            X5
+      *
+      ** Calculate the guaranty amount in reporting currency
+      *
+      ** Used to secure Currency is the Reporting currency
+      *
+     C           RTUTSC    IFEQ VDCCYC                     B6
+      *
+     C                     Z-ADDWWUTSA    OUTAMT
+      *
+     C                     ELSE                            X6
+      *
+      ** Otherwise,
+      ** Convert the Used to Secure amount in Reporting currency
+      *
+     C                     Z-ADDWERSPR    @@RAT2 138       ER CCY spot rate
+     C                     MOVE WERMDI    @@MDI2  1        ER CCY Mult/Div ind.
+      *
+     C                     Z-ADDWWUTSA    INAMNT 160
+     C                     EXSR SRCALC
+      *
+     C                     ENDIF                           E6
+      *
+      ** Calculate the Book Value in Reporting currency
+      *
+     C           OUTAMT    MULT RTGCPE    EXLAMT    H
+     C                     DIV  100       EXLAMT    H
+      *
+     C                     ENDIF                           E5
+      *
+      ** Otherwise (not Facility)
+      *
+     C                     ELSE                            X4
+      *
+      ** Retrieve Transaction Currency details
+      *
+      **  Retrieve Midas currency code first                              CAD012
+      *                                                                   CAD012
+     C********** RNCCYL    CHAINERCURRL2             88                                CAD012 CER001
+     C           RNCCYL    CHAINERCCYXL1             88                                       CER001
+     C                     SETOF                     88                   CAD012
+      *                                                                   CAD012
+     C                     Z-ADD1         X
+     C***********RNCCYL    LOKUPTCCY,X                   88               CAD012
+     C           VRCYCD    LOKUPTCCY,X                   88               CAD012
+     C           *IN88     IFEQ *OFF                       B5
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE
+     C***********          MOVEL'ERCURRL1'DBFILE                          187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELRNCCYL    DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E5
+      *
+     C                     MOVE TCRD,X    WWCRDT
+     C                     Z-ADDWWSPRT    @@RAT1 138       Trans.CCY spot rate
+     C                     MOVE WWMDIN    @@MDI1  1        Trans.CCY Mult/Div.
+      *
+      ** Convert the Transaction Book Value in Guaranty currency if necessary
+      *
+     C***********RNCCYL    IFEQ RTGCCY                     B5             CAD012
+     C           VRCYCD    IFEQ RTGCCY                     B5             CAD012
+      *
+     C                     Z-ADDRNAMNT    OUTAMT
+      *
+     C                     ELSE                            X5
+      *
+     C                     Z-ADDWGCSPR    @@RAT2 138       Guar. CCY spot rate
+     C                     MOVE WGCMDI    @@MDI2  1        Guar. CCY Mult/Div.
+      *
+     C                     Z-ADDRNAMNT    INAMNT 160
+     C                     EXSR SRCALC
+      *
+     C                     ENDIF                           E5
+      *
+      ** Calculate the Guaranty Book Value in Guaranty currency
+      *
+     C           OUTAMT    MULT RTGCPE    EXAMNT    H
+     C                     DIV  100       EXAMNT    H
+      *
+      ** Book value in reporting currency,
+      *
+      ** DO NOT USE RNLAMT AMOUNT -> ROUNDING PROBLEMS
+      *
+      ** The Guaranty currency is the Reporting currency
+      *
+     C           RTGCCY    IFEQ VDCCYC                     B5
+      *
+     C                     Z-ADDEXAMNT    EXLAMT
+      *
+     C                     ELSE                            X5
+      *
+      ** Convert the transaction Book Value in Reporting currency if necessary
+      *
+     C           RNCCYL    IFEQ VDCCYC                     B6
+      *
+     C                     Z-ADDRNAMNT    OUTAMT
+      *
+     C                     ELSE                            X6
+      *
+     C                     Z-ADDWERSPR    @@RAT2 138       ER CCY spot rate
+     C                     MOVE WERMDI    @@MDI2  1        ER CCY Mult/Div ind.
+      *
+     C                     Z-ADDRNAMNT    INAMNT 160
+     C                     EXSR SRCALC
+      *
+     C                     ENDIF                           E6
+      *
+      ** Calculate the Guaranty Book Value in Reporting currency
+      *
+     C           OUTAMT    MULT RTGCPE    EXLAMT    H
+     C                     DIV  100       EXLAMT    H
+      *
+     C                     ENDIF                           E5
+      *
+     C                     ENDIF                           E4
+      *
+      ** To avoid problems, round amount according currency decimal positions
+      *
+      ** Guaranty book Value in Guaranty currency
+      *
+     C                     SELEC
+     C           WGCNDP    WHEQ 0
+     C                     DIV  1000      EXAMNT    H
+     C                     MULT 1000      EXAMNT
+     C           WGCNDP    WHEQ 1
+     C                     DIV  100       EXAMNT    H
+     C                     MULT 100       EXAMNT
+     C           WGCNDP    WHEQ 2
+     C                     DIV  10        EXAMNT    H
+     C                     MULT 10        EXAMNT
+     C                     ENDSL
+      *
+      ** Guaranty book Value in Reporting currency
+      *
+     C                     SELEC
+     C           WERNDP    WHEQ 0
+     C                     DIV  1000      EXLAMT    H
+     C                     MULT 1000      EXLAMT
+     C           WERNDP    WHEQ 1
+     C                     DIV  100       EXLAMT    H
+     C                     MULT 100       EXLAMT
+     C           WERNDP    WHEQ 2
+     C                     DIV  10        EXLAMT    H
+     C                     MULT 10        EXLAMT
+     C                     ENDSL
+      *
+      ** Guarantee type
+      *
+     C                     SELEC
+      *
+      ** Bonds, Shares -> (T)itres
+      *
+     C           EXGA14    WHEQ 13                         B4
+     C           EXGA14    OREQ 14
+     C           EXGA14    OREQ 17                                        ULX004
+     C                     MOVE 'T'       EXGUAT
+      *
+      ** Mortgage -> (H)ypothèque
+      *
+     C           EXGA14    WHEQ 15                         B4
+     C           EXGA14    OREQ 16
+     C                     MOVE 'H'       EXGUAT
+      *
+      ** Personnal guarantee -> (P)ersonnal guaranty
+      *
+     C           EXGA14    WHEQ 20                         B4
+     C                     MOVE 'P'       EXGUAT
+      *
+     C                     OTHER                           X4
+      *
+      ** (F)inancial
+     C                     MOVE 'F'       EXGUAT
+     C                     ENDSL                           E4
+      *
+      ** Degree of risk coverage
+      *
+     C                     Z-ADDRTGCPE    EXRKCV
+      *
+      ** Nationality of counterparty
+      *
+     C                     MOVELEXCUCL    EXCNCZ
+      *
+     C                     ADD  1         LASTSQ
+     C                     Z-ADDLASTSQ    EXSEQN
+      *
+     C                     WRITEERLUTRF0
+      *
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Called by: SRPROC                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCALC    BEGSR
+      *
+     C                     Z-ADD0         OUTAMT 248
+      *
+     C           @@MDI1    IFEQ 'M'
+     C           @@MDI2    ANDEQ'D'
+     C           @@RAT1    MULT @@RAT2    WWRAT  138
+     C           INAMNT    MULT WWRAT     OUTAMT    H
+     C                     ENDIF
+      *
+     C           @@MDI1    IFEQ 'M'
+     C           @@MDI2    ANDEQ'M'
+     C           INAMNT    MULT @@RAT1    OUTAMT
+     C           OUTAMT    DIV  @@RAT2    OUTAMT    H
+     C                     ENDIF
+      *
+     C           @@MDI1    IFEQ 'D'
+     C           @@MDI2    ANDEQ'D'
+     C           INAMNT    MULT @@RAT2    OUTAMT
+     C           OUTAMT    DIV  @@RAT1    OUTAMT    H
+     C                     ENDIF
+      *
+     C           @@MDI1    IFEQ 'D'
+     C           @@MDI2    ANDEQ'M'
+     C           @@RAT1    MULT @@RAT2    WWRAT
+     C           INAMNT    DIV  WWRAT     OUTAMT    H
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Called by: Program initialisation                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *LIKE     DEFN RTRCUS    KYRCUS
+     C           *LIKE     DEFN RTUTSI    KYUTSI
+     C           *LIKE     DEFN EXCORA    W#CORA
+     C           *LIKE     DEFN EXCORL    W#CORL
+     C           *LIKE     DEFN EXAMNT    W#AMNT
+     C           *LIKE     DEFN RTSTDT    W#REPD
+      *
+     C           K3GUEX    KLIST
+     C                     KFLD           KYRCUS
+     C                     KFLD           KYUTSI
+     C                     KFLD           KYUTSR
+      *
+      **  Access ER ICD to retrieve local Ccy & Xrate v/s Base ccy :
+      *
+     C********** 'LU'      CHAINERICDRL1             88                                       CER001
+     C           'LU'      CHAINERICDXL1             88                                       CER001
+     C           *IN88     IFEQ *ON                        B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE
+     C**********           MOVEL'ERICDRL1'DBFILE                                              CER001
+     C                     MOVEL'ERICDXL1'DBFILE                                              CER001
+     C                     MOVEL'LU'      DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+      **  Load currency details in an array
+      *
+     C                     Z-ADD*ZEROS    X       30
+      *
+     C************LOVAL    SETLLERCURRL1                                  187689
+     C***********          READ ERCURRL1                 88               187689
+     C           *LOVAL    SETLLSDCURRL1                                  187689
+     C                     READ SDCURRL1                 88               187689
+      *
+     C           *IN88     DOWEQ*OFF                       B1
+     C           X         ANDLT200
+      *
+     C                     ADD  1         X
+     C***********          MOVE VRCYCD    TCCY,X           Currency       187689
+     C***********          Z-ADDVRSPRT    WWSPRT           Spot rate      187689
+     C***********          MOVE VRMDIN    WWMDIN           Mult/Div ind.  187689
+     C***********          Z-ADDVRNBDP    WWNBDP           Nb.Decimal Posi187689
+     C***********          MOVE VRSWCY    WWSWCY           Swift CCY      187689
+     C                     MOVE A6CYCD    TCCY,X           Currency       187689
+     C                     Z-ADDA6SPRT    WWSPRT           Spot rate      187689
+     C                     MOVE A6MDIN    WWMDIN           Mult/Div ind.  187689
+     C                     Z-ADDA6NBDP    WWNBDP           Nb.Decimal Posi187689
+     C                     MOVE A6SWCY    WWSWCY           Swift CCY      187689
+     C                     MOVE WWCRDT    TCRD,X
+      *
+      ** Reporting currency details
+      *
+     C***********VDCCYC    IFEQ VRCYCD                     B2             187689
+     C***********          Z-ADDVRSPRT    WERSPR 138       ER Spot rate   187689
+     C***********          MOVE VRMDIN    WERMDI  1        ER Mult/Div.   187689
+     C***********          Z-ADDVRNBDP    WERNDP  10       ER Nb.Decimal P187689
+     C           VDCCYC    IFEQ A6CYCD                     B2             187689
+     C                     Z-ADDA6SPRT    WERSPR 138       ER Spot rate   187689
+     C                     MOVE A6MDIN    WERMDI  1        ER Mult/Div.   187689
+     C                     Z-ADDA6NBDP    WERNDP  10       ER Nb.Decimal P187689
+     C                     ENDIF                           E2
+      *
+     C***********          READ ERCURRL1                 88               187689
+     C                     READ SDCURRL1                 88               187689
+      *
+     C                     ENDDO                           E1
+      *
+      ** If the TCCY array is too small to contain all currency,
+      ** data base error.
+      *
+     C           *IN88     IFEQ *OFF                       B1
+     C           X         ANDEQ200
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE
+     C***********          MOVEL'ERCURRL1'DBFILE                          187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELWWERR1    DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDAT10Z2
+      /EJECT
+      *
+      ** Array File Trans. change to ERLTRXPD instead of ERLUTRPD                             CER001
+      *
+** FILE TRANS. ERLUTRPD FILE TO REMOVE ALL NON STANDARD CHARACTERS
+*EQUATE ERLTRXPD
+*EQUATE C144504EC551C552C554C956C164C368406A406FC571C572C5744079407A407D407E407F
+*EQUATE C181C282C383C484C585C686C787C888C989D191D292D393D494D595D696D797D898D999
+*EQUATE E2A2E3A3E4A4E5A5E6A6E7A7E8A8E9A940E0E4FE
+**  CPY@
+(C) Copyright Finastra International Limited, 1997
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

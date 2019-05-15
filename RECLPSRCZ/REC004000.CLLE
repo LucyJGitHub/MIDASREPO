@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Submit Passbook Printing Job in I/C')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC004000 - Submit Passbook Printing Job in I/C             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1079983          Date 18Jan13              */
+/*                      CCB020             Date 06Aug12              */
+/*                      CRE072  *CREATE    Date 30Jun11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1079983 - ABC Job not running                             */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       CRE072 - BankFusion Midas Teller Related Changes            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PHASEOFDAY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Retrieve system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+ 
+/** Retrieve phase of day */
+ 
+             RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASEOFDAY)
+ 
+/** Submit background job */
+ 
+/**********  IF         COND(&PHASEOFDAY *EQ 'A') THEN(DO)                             */ /*CCB020*/
+/**********  IF         COND((&PHASEOFDAY *EQ 'A') *AND +
+                            (&PHASEOFDAY *EQ 'G')) THEN(DO)          */         /*CCB020 AR1079983*/
+             IF         COND((&PHASEOFDAY *EQ 'A') *OR +
+                            (&PHASEOFDAY *EQ 'G')) THEN(DO)                            /*AR1079983*/
+             CHGVAR     VAR(&JOBNAME) VALUE('PSBK_ON_' *CAT &PREFIX)
+             SBMJOB     CMD(CALL PGM(REC004001)) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD)
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          REC004000 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ ENDPGM:
+             ENDPGM

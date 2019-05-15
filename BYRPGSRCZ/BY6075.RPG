@@ -1,0 +1,1297 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BOE Futures/Options PL Trades Extract/Valdtn')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY6075 - Futures/Options PL Trades Extract/Validation        *
+      *                                                               *
+      *  Called By: BYC6075 - Futures/Options PL Trades Ext./Val.     *
+      *                                                               *
+      *  (c) Finastra International Limited 2004                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 LLN021/02          Date 03Mar04               *
+      *                 LLN021/022         Date 02MAR04               *
+      *                 LLN021             Date 04Dec03               *
+      *                 LLN016             Date 04Dec03               *
+      *                 179320             Date 13Nov03               *
+      *                 171161             Date 13Nov03               *
+      *                 167631             Date 13Nov03               *
+      *                 LLN012             Date 03Nov03               *
+      *                 LLN021  *CREATE    Date 13Nov03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Amendment History                                            *
+      *  -----------------                                            *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN022 - BOE Upgrade to MidasPlus                            *
+      *  LLN021/027 -  Setup Transaction Reference field with         *
+      *                Instrument Type. This will ensure BY6080       *
+      *                summarises data correctly.                     *
+      *  LLN021/022 - Add more category code processing.              *
+      *  LLN021 - Outputting wrong field                              *
+      *  LLN016 - Upgrade BoE to DBAR3.                               *
+      *  179320 - Details are not being extracted in a single branch  *
+      *           environment because the branch code work field      *
+      *           ULBRCA is not being set up.                         *
+      *  171161 - Duplicate Entries reported when supplementary       *
+      *           product code is extracted.                          *
+      *  167631 - Set up overflow indicator when writing details to   *
+      *           BY6075D1.                                           *
+      *  LLN012 - Financial Services Authority - Liquidity Report     *
+      *  LLN021 - BoE Profit and Loss return                          *
+      *                                                               *
+      *****************************************************************
+      *
+     FMXMEFFT1IF  E           K        DISK         KINFSR *PSSR
+     F            MXDEFFTP0                         KRENAMEMXMEFFT0
+     F                                              KINFDS INFDS1
+      *  Midas MX Monthly Events - Futures/Options
+      *
+     FSDCURRL0IF  E           K        DISK         KINFSR *PSSR
+      *  Currency details
+      *
+     FSDBRCHL1IF  E           K        DISK         KINFSR *PSSR
+      *  Branches
+      *
+     FTRANS   IF  E           K        DISK         KINFSR *PSSR
+      *  Transactions
+      *
+     FBYBRCHY0IF  E           K        DISK         KINFSR *PSSR                              LLN016
+      *  Branches to be extracted for BoE Reporting                                           LLN016
+      *
+     FSDCUHSL2IF  E           K        DISK         KINFSR *PSSR
+      *  Historic SPOT Currency rates
+      *
+     FBYFFEXPPIF  E           K        DISK         KINFSR *PSSR
+      *  Futures/Options Extract Details File
+      *
+     FBYRPDTPPIF  E                    DISK         KINFSR *PSSR      UC
+      *  Extract Date File
+      *
+     FBYEXIEPPO   E                    DISK         KINFSR *PSSR
+      *  Bank of England Extract PL File - (Uses member BYEXFFM)
+      *
+     FBY6075P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL1
+      *  Bank of England Validation Report - Valid
+      *
+     FBY6075P2O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL6
+      *  Bank of England Validation Report - Invalid
+      *
+      /EJECT
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    @CPY    1   1 80
+     E                    @CCY      200  3
+     E                    @CYD      200 13 8             Currencies - SPOT rate historic
+     E                    @CYR      200  1               Currencies - SPOT rate mult/div
+     E                    @TAC      200 15 0             Total assets - ccy
+     E                    @TAS      200 15 0             Total assets - sterling
+     E                    @TLC      200 15 0             Total liabilities - ccy
+     E                    @TLS      200 15 0             Total liabilities - STG
+      *
+      /SPACE 3
+     C/EJECT
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data Structure using Currency Details
+     ISDCURR    E DSSDCURRPD                200
+      *
+      ** Data Structure for Customer Details
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Data Structure for Bank of England Customer Details
+     ISDCUS7    E DSBYCUSTX0                                                                  LLN016
+      *
+      ** Data Structure for extra customer details returned by BY9110
+      *       ULLISO  - ISO Code of customer's country of location
+      *       ULRISO  - ISO Code of customer's country of citizenship
+      *       ULRWCD  - Weighting amount
+     ISDCUSX      DS
+     I                                        1   2 ULLISO
+     I                                        3   4 ULRISO
+     I                                        5   80ULRWCD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ULPGMN
+     I                                      244 253 ULWSID
+     I                                      254 263 ULUSER
+      *
+      * File information data structure (for database files only)
+     IINFDS1    E DSY2I1DSP
+      *
+      * First DS For Access Programs, Short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      * DS For Access Programs, Long Data Structure
+     IDSSDY     E DSDSSDY
+      *
+      * Data structure for retrieval of data from DTAARA/RUNDAT
+     IRUNDAT    E DSRUNDAT
+      *
+      *  File Information Data Structure for BY6075P1
+     ISPOOL1      DS
+     I                                    B 123 1240ULNUM1
+     I                                    B 188 1890ULOVF1
+     I                                    B 367 3680ULCLN1
+      *
+      *  File Information Data Structure for BY2010P6
+     ISPOOL6      DS
+     I                                    B 123 1240ULNUM6
+     I                                    B 188 1890ULOVF6
+     I                                    B 367 3680ULCLN6
+      *
+      *  Input parameters data structure
+      *
+     II#DTA       DS                            256
+      *                                       From Currency & amount
+     I                                        1   3 I#FCCY
+     I                                    P   4  110I#FAMT
+      *                                       To Currency & amount
+     I                                       12  14 I#TCCY
+     I                                    P  15  220I#TAMT
+      *                                       Rate and multi/div ind.
+     I                                       23  23 I#MDIN
+     I                                    P  24  368I#RATE
+      *                            Output     Rate and multi/div ind.
+      *                                       If no in rate
+     I                                       37  37 O#MDIN
+     I                                    P  38  508O#RATE
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LMAIN - Main Processing                            *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *  Main Processing
+     C                     EXSR #LMAIN
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#LMAIN - Main Processing                                   *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:      SR/#LBRCH - Branch Processing                     *
+      *                                                               *
+      *****************************************************************
+     C           #LMAIN    BEGSR                           ** SR/#LDETL**
+      *
+     C           *LOVAL    SETLLSDBRCHL1
+     C                     READ SDBRCHL1                 88
+     C           *IN88     DOWEQ*OFF
+      *
+      *  Branch processing
+     C                     EXSR #LBRCH
+      *
+      *  Process Deals if branch to be included
+     C           ULIBOE    IFEQ 'Y'
+     C           ULBRCA    SETLLMXMEFFT1
+     C           ULBRCA    READEMXMEFFT1                 89
+     C           *IN89     DOWEQ*OFF
+      *
+      * Process according to mode
+     C           ULMODE    IFEQ 'INTERIM'
+     C           ULMODE    OREQ 'EXTRACT'
+     C           ULMODE    OREQ 'LIST   '
+      *
+      * Load SPOT details, if needed
+     C           EVDT      IFNE ULEVDT
+     C                     EXSR #LDCYS
+     C                     MOVE EVDT      ULEVDT  50
+     C                     ENDIF
+      *
+      *  Clear File Format
+     C                     CLEARBYEXIED0
+      *
+      * Set Up Extract Information
+     C                     EXSR #GETDL
+      *
+     C                     ENDIF
+      *
+     C           ULBRCA    READEMXMEFFT1                 89
+     C                     ENDDO
+      *
+      *
+     C                     ENDIF
+     C                     READ SDBRCHL1                 88
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#LBRCH - Processing For New Branch                         *
+      *                                                               *
+      * Called by:  SR/#LMAIN - Main Processing                       *
+      *                                                               *
+      * Calls:      SR/#LRPTT - Final Report Processing               *
+      *                                                               *
+      *****************************************************************
+     C           #LBRCH    BEGSR                           ** SR/#LBRCH**
+      *
+      *  Reset flag
+     C                     MOVE 'N'       ULIBOE           Include branch
+      *
+      *  If single branch all records must be extracted
+     C           AGMBIN    IFEQ 'N'
+     C                     MOVE 'Y'       ULIBOE
+     C                     MOVE A8BRCD    ULBRCA  3                       179320
+      *
+      *  Multi-branch processing
+     C                     ELSE
+      *
+      *  If files open report currency summaries and close files
+     C           ULOPNF    IFEQ 'Y'
+     C                     EXSR #LRPTT
+     C                     ENDIF
+     C                     MOVE A8BRCD    ULBRCA                          LLN012
+      *
+      *   Check if new branch is to be included in report extract
+     C           ULBRCA    CHAINBYBRCHY0             90                                       LLN016
+     C           *IN90     IFEQ *OFF
+     C                     MOVELA8IBOE    ULIBOE
+     C                     ENDIF
+      *
+      *   Reset open flag and page numbers
+     C                     MOVE 'N'       ULOPNF  1
+     C                     Z-ADD0         PAGE1
+     C                     Z-ADD0         PAGE2
+      *
+      *   Include branch in Bank of England Extract
+     C           ULIBOE    IFEQ 'Y'
+      *
+      *  Open printer files for new branch
+     C                     MOVE 'Y'       ULOPNF  1
+     C                     OPEN BY6075P1
+     C                     OPEN BY6075P2
+      *
+      *  RCF processing for printer file BY6075P1
+     C                     Z-ADDULNUM1    ULSFNO
+     C**********           CALL 'ZSFILE'                                                      LLN021
+     C**********           PARM           ULRSEQ  5                                           LLN021
+     C**********           PARM           ULBRCA  3                                           LLN021
+     C**********           PARM 'BY6075P1'ULFNAM 10                                           LLN021
+     C**********           PARM           ULSFNO  60                                          LLN021
+     C**********           PARM           ULRTCD  7                                           LLN021
+     C********** ULRTCD    IFNE *BLANK                                                        LLN021
+     C**********           MOVEL'*NONE'   DBKEY            ************                       LLN021
+     C**********           MOVEL'ZSFILE  'DBFILE           * DBERR 01 *                       LLN021
+     C**********           Z-ADD1         DBASE            ************                       LLN021
+     C**********           EXSR #LDBER                                                        LLN021
+     C**********           ENDIF                                                              LLN021
+      *  RCF processing for printer file BY6075P2
+     C**********           Z-ADDULNUM6    ULSFNO                                              LLN021
+     C**********           CALL 'ZSFILE'                                                      LLN021
+     C**********           PARM           ULRSEQ                                              LLN021
+     C**********           PARM           ULBRCA                                              LLN021
+     C**********           PARM 'BY6075P2'ULFNAM                                              LLN021
+     C**********           PARM           ULSFNO                                              LLN021
+     C**********           PARM           ULRTCD                                              LLN021
+     C********** ULRTCD    IFNE *BLANK                                                        LLN021
+     C**********           MOVEL'*NONE'   DBKEY            ************                       LLN021
+     C**********           MOVEL'ZSFILE  'DBFILE           * DBERR 02 *                       LLN021
+     C**********           Z-ADD2         DBASE            ************                       LLN021
+     C**********           EXSR #LDBER                                                        LLN021
+     C**********           ENDIF                                                              LLN021
+      *
+      *  Write report headings to BY6075P1 and BY6075P2
+     C                     MOVE L0RPDA    L#RPDA
+     C                     MOVE A8BRCD    L#BRCD
+     C                     MOVE A8BRNM    L#BRNM
+     C                     WRITEBY6075H1
+     C                     WRITEBY6075H2
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Reset currency summary totals
+     C                     Z-ADD0         @TAC
+     C                     Z-ADD0         @TLC
+     C                     Z-ADD0         @TAS
+     C                     Z-ADD0         @TLS
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #GETDL - Get Extract Details                                  *
+      *                                                               *
+      * Called by:  SR/#LMAIN - Main Processing                       *
+      *                                                               *
+      * Calls:                                                        *
+      *         SR/#LNAFM - Format NA Deal Details                    *
+      *         SR/#LRPXT - Report/Extract Details                    *
+      *                                                               *
+      *****************************************************************
+     C           #GETDL    BEGSR                           ** SR/#GETDL**
+      *
+      *  Format work fields for extract
+     C                     EXSR #FORMT
+      *
+      *  Report/Extract details
+     C                     EXSR #LRPXT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #FORMT - Format Work Fields For Deals                         *
+      *                                                               *
+      * Called by:  SR/#GETDL - Get Details                           *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #FORMT    BEGSR                           ** SR/#FORMT**
+      *
+     C                     MOVE *OFF      *IN38
+      *
+     C                     MOVE 'B'       L8RTYP
+     C                     MOVE A8BICN    L8CUST
+     C                     MOVE EVCY      L8CYCD
+     C                     MOVE *BLANKS   L8TRAN
+     C                     MOVELISTT      L8TRAN                                              LLN021
+     C                     MOVE BRHA      L8BRCD
+      *
+      * Customer details
+      *
+     C                     MOVE A8BICN    ULCNUM
+      *
+     C           ULCNUM    IFNE ULPCUS                     Previous customer
+      *
+     C                     MOVE ULCNUM    ULCUST
+     C                     CLEARSDCUST
+     C                     CLEARSDCUS7
+     C                     CLEARSDCUSX
+     C                     CALL 'BY9110'
+     C                     PARM           ULCUST           Customer number
+     C                     PARM           SDCUST           SDCUSTPD details
+     C                     PARM           SDCUS7           BYCUSTX0 details
+     C                     PARM           SDCUSX           Extra details
+     C                     PARM 0         ULERR1  70
+     C                     PARM *BLANK    ULRTCD           Return code
+     C           ULRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGMN    DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 02 *
+     C                     MOVEL'BY9110  'DBFILE           ************
+     C                     Z-ADD02        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  Set customer valid flag
+     C           ULERR1    IFNE 0
+     C                     MOVE 'N'       UVALD   1        Invalid customer
+     C                     ELSE
+     C                     MOVE 'Y'       UVALD            Valid customer
+     C                     ENDIF
+      *
+      * Save customer
+     C                     MOVELULCNUM    ULPCUS           Previous customer
+      * Customer Number
+     C                     MOVELULCNUM    L8CUST
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL'FF'      L8MMOD
+      *
+     C                     MOVE *BLANKS   L8DDAT
+     C                     MOVE *BLANKS   L8VDAT
+     C                     MOVE *BLANKS   L8MDAT
+     C                     MOVE '0'       L8MCAT
+     C                     MOVELBBCOLC    L8ISOC
+     C                     MOVELBBCNCZ    L8RISO
+     C                     MOVELBBLICD    L8LIND
+     C                     MOVELBBLINC    L8LINS
+     C                     MOVELEVCY      L8CCYS
+      *
+     C           EVCY      IFEQ 'GBP'
+     C                     MOVEL'Y'       L8NNSI
+     C                     ELSE
+     C                     MOVEL'N'       L8NNSI
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   L8STGI
+      *
+      * Product Code
+      *
+     C                     Z-ADD0         L8PCOD
+      *
+     C                     Z-ADD0         KPROC   10
+      *
+     C           TRFR      CHAINTRANS                78
+      *
+     C           *IN78     IFEQ *OFF
+     C                     MOVELBOKC      KBOOK   2
+     C                     ELSE
+     C                     MOVE *BLANKS   KBOOK
+     C                     ENDIF
+      *
+     C                     MOVELISTT      KMKCC   2
+     C                     MOVE ISTT      KINST   3
+     C                     MOVELBBLINC    KLINS   20
+     C                     MOVELBBLICD    KMIND   3
+      *
+     C           KFFEX0    KLIST
+     C                     KFLD           KPROC
+     C                     KFLD           KBOOK
+     C                     KFLD           KMKCC
+     C                     KFLD           KINST
+     C                     KFLD           KLINS
+     C                     KFLD           KMIND
+      *
+     C           KFFEX0    CHAINBYFFEXD0             78
+     C           *IN78     IFEQ *ON
+     C                     MOVE *BLANKS   KMIND
+     C           KFFEX0    CHAINBYFFEXD0             78
+     C                     ENDIF
+     C           *IN78     IFEQ *ON
+     C                     MOVE *BLANKS   KLINS
+     C           KFFEX0    CHAINBYFFEXD0             78
+     C                     ENDIF
+      *
+      * Invalid if no record found
+     C           *IN78     IFEQ *ON
+     C                     MOVE *ON       *IN38
+     C                     MOVE 'N'       UVALD   1
+     C                     GOTO CONT
+     C                     ENDIF
+      *
+      * Product code setup: the LF filters out the non relevant event codes
+      *
+     C******************** Z-ADDL9CHRG    L8PCOD                          LLN021
+     C           DECATC    IFEQ '37'                                      LLN021
+     C           DECATC    OREQ '38'                                      LLN021
+     C                     Z-ADDL9CCHG    L8PCOD                          LLN021
+     C                     ENDIF                                          LLN021
+      *
+     C           DECATC    IFEQ '39'                                      LLN021
+     C           DECATC    OREQ '40'                                      LLN021
+     C           DECATC    OREQ '41'                                      LLN021
+     C                     Z-ADDL9PRLS    L8PCOD                          LLN021
+     C                     ENDIF                                          LLN021
+      *                                                                   LLN021
+      * Invalid if product code is 0
+     C           L8PCOD    IFEQ 0
+     C                     MOVE 'N'       UVALD
+     C                     MOVE *ON       *IN38
+     C                     ENDIF
+      *
+     C           CONT      TAG
+      *
+      * Move fields from MXMEFFB1 into output fields
+      * Scaled ccy amount
+     C                     Z-ADDEVAM      L8CUAS
+      *
+      * Convert amount in Base Currency equivalent
+      *
+     C                     MOVE EVCY      I#FCCY
+     C                     Z-ADDEVAM      I#FAMT
+      *
+     C                     Z-ADD1         #
+     C           EVCY      LOKUP@CCY,#                   90
+     C                     Z-ADD@CYD,#    I#RATE
+     C                     MOVE @CYR,#    I#MDIN
+      *
+     C                     MOVELBJCYCD    I#TCCY
+     C                     Z-ADD0         I#TAMT
+      *
+     C                     CALL 'AOCCYCV0'
+     C                     PARM *BLANKS   ULRTCD
+     C                     PARM '*F*T*RAT'W0ACT   8
+     C           I#DTA     PARM I#DTA     P0DTA 256
+      *
+     C           ULRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGMN    DBPGM            ************
+     C                     MOVEL'I#DTA'   DBKEY            * DBERR 13 *
+     C                     MOVEL'AOCCYCV0'DBFILE           ************
+     C                     Z-ADD13        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Convert Base currency equivalent into GBP equivalent
+      *
+     C                     MOVE BJCYCD    I#FCCY
+     C                     Z-ADDI#TAMT    I#FAMT
+      *
+     C                     Z-ADD1         #
+     C           'GBP'     LOKUP@CCY,#                   90
+     C                     Z-ADD@CYD,#    I#RATE
+     C                     MOVE @CYR,#    I#MDIN
+      *
+     C           I#MDIN    IFEQ 'D'
+     C                     MOVE 'M'       I#MDIN
+     C                     ELSE
+     C                     MOVE 'D'       I#MDIN
+     C                     ENDIF
+      *
+     C                     MOVEL'GBP'     I#TCCY
+     C                     Z-ADD0         I#TAMT
+      *
+     C                     CALL 'AOCCYCV0'
+     C                     PARM *BLANKS   ULRTCD
+     C                     PARM '*F*T*RAT'W0ACT   8
+     C           I#DTA     PARM I#DTA     P0DTA 256
+      *
+     C           ULRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGMN    DBPGM            ************
+     C                     MOVEL'I#DTA'   DBKEY            * DBERR 13 *
+     C                     MOVEL'AOCCYCV0'DBFILE           ************
+     C                     Z-ADD13        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDI#TAMT    L8SGAM
+      *
+     C                     MOVE *BLANKS   L8SIO
+     C                     MOVE 'Y'       L8INTB
+     C                     MOVE *BLANKS   L8ODIN
+     C                     MOVELBBCSSN    L8CSSN
+     C                     MOVE BBPCNB    L8PCNB
+     C                     MOVE *BLANKS   L8MBSE
+     C                     Z-ADD0         L8CPNR
+     C                     Z-ADD0         L8MKTS
+     C                     Z-ADD0         L8SMKV
+     C                     Z-ADD0         L8MKDC
+     C                     Z-ADD0         L8SMXD
+     C                     Z-ADD0         L8MXDD
+     C                     Z-ADD0         L8MKCC
+     C                     Z-ADD0         L8SMXC
+     C                     Z-ADD0         L8MXCD
+     C                     MOVE *BLANKS   L8OPHW
+     C                     Z-ADD0         L8OPCS
+     C                     Z-ADD0         L8SOPC
+     C                     Z-ADD0         L8OMPS
+     C                     Z-ADD0         L8SOMP
+      *
+     C                     MOVELISTT      WISTT   2
+     C           WISTT     IFEQ *BLANKS
+     C                     MOVEL'1'       L8OTCX
+     C                     ELSE
+     C                     MOVEL'2'       L8OTCX
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   L8ONUD
+     C                     MOVE *BLANKS   L8ONUP
+     C                     Z-ADD0         L8CTYP
+     C                     Z-ADD0         L8DTYP
+     C                     Z-ADD0         L8DRVT
+     C                     MOVE 'N'       L8ELIG
+     C                     MOVE *BLANKS   L8NETI
+     C                     Z-ADD0         L8RWCD
+     C                     MOVE 'N'       L8HAIN
+     C                     MOVE *BLANKS   L8GTEE
+     C                     MOVE *BLANKS   L8QUAL
+     C                     MOVE *BLANKS   L8CNTP
+     C                     MOVE *BLANKS   L8BTEX
+     C                     MOVE *BLANKS   L8LREX
+     C                     MOVE 'P'       L8ETYP
+     C                     MOVE L9PRLS    L8FEET
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#LRPXT - Report/Extract Processing                         *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      *                                                               *
+      *                                                               *
+      *                                                               *
+      * Calls:      SR/#LRPT1 - Report Valid Details to BY6075P1      *
+      *             SR/#LRPT6 - Report Valid Details to BY6075P2      *
+      *                                                               *
+      *****************************************************************
+     C           #LRPXT    BEGSR                           ** SR/#LRPXT**
+      *
+      *  Format report fields
+     C                     EXSR #LRPTD
+      *
+      *  No report for product code = 9998
+     C           ULPCOD    IFNE 9998
+      *
+      *  Details are valid - report details to BY6075P1
+     C           UVALD     IFEQ 'Y'
+     C           L8PCOD    ANDNE9999
+      *
+      *    Report details to BY6075P1
+     C                     EXSR #LRPT1
+      *
+      *    Create extract record if extract mode
+     C           ULMODE    IFEQ 'EXTRACT'
+     C                     EXSR #LXTRC
+     C                     ENDIF
+      *
+      *  Details are invalid - report details to BY6075P2
+     C                     ELSE
+     C                     EXSR #LRPT6
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LXTRC - Create Extract Record                                *
+      *                                                               *
+      * Called by: Sr/#LRPXT - Report/Extract Details                 *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #LXTRC    BEGSR                           ** SR/#LXTRC**
+      *
+     C                     WRITEBYEXIED0
+      *
+      *  Accumulate total assets and liabilities
+      *
+     C                     Z-ADD1         #
+     C           L8CYCD    LOKUP@CCY,#                   90
+     C           L8PCOD    IFGE 1100
+     C           L8PCOD    ANDLE1960
+     C                     ADD  L8CUAS    @TAC,#
+     C                     ADD  L8SGAM    @TAS,#
+     C                     ENDIF
+     C           L8PCOD    IFGE 2100
+     C           L8PCOD    ANDLE3990
+     C                     ADD  L8CUAS    @TLC,#
+     C                     ADD  L8SGAM    @TLS,#
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#LRPTT - Final Reporting                                   *
+      *                                                               *
+      * Called by:  SR/#LBRCH - Change of Branch Processing           *
+      *             SR/#LTERM - Termination Processing                *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           #LRPTT    BEGSR                           ** SR/#LRPTT**
+      *
+      *  No details to report
+     C           ULRPT1    IFNE 'Y'
+     C                     WRITEBY6075E1               90
+     C                     ENDIF
+     C           ULRPT2    IFNE 'Y'
+     C                     WRITEBY6075E2               90
+     C                     ENDIF
+      *
+      *   Report currency summary if EXTRACT mode on BY6075P1
+     C           ULMODE    IFEQ 'EXTRACT'
+     C           ULRPT1    ANDEQ'Y'
+      *
+      *    Write heading
+     C                     WRITEBY6075R1               90
+      *
+      *    Write detail record for each currency
+     C                     Z-ADD1         #
+     C                     Z-ADD0         ULTOTA
+     C                     Z-ADD0         ULTOTL
+     C           @CCY,#    DOWNE*BLANK
+     C           #         ANDLT200
+     C           #         OCUR SDCURR
+      *
+     C           @TAC,#    IFNE 0
+     C           @TLC,#    ORNE 0
+     C                     MOVE A6CYCD    L#CYCD           Currency
+     C                     MOVE A6CYNM    L#CYNM           Currency name
+     C                     CALL 'ZSEDIT'
+     C                     PARM @TAC,#    ULAMNT
+     C                     PARM A6NBDP    ULNBDP
+     C                     PARM 'J'       ULECOD
+     C                     PARM           ULAMTA           Total assets - ccy
+     C                     MOVE ULAMTA    L#TLAC
+     C                     CALL 'ZSEDIT'
+     C                     PARM @TAS,#    ULAMNT
+     C                     PARM UL$NDP    ULNBDP
+     C                     PARM 'J'       ULECOD
+     C                     PARM           ULAMTA           Total assets - STG
+     C                     MOVE ULAMTA    L#TLAS
+     C                     CALL 'ZSEDIT'
+     C                     PARM @TLC,#    ULAMNT
+     C                     PARM A6NBDP    ULNBDP
+     C                     PARM 'J'       ULECOD
+     C                     PARM           ULAMTA           Total liabs. - ccy
+     C                     MOVE ULAMTA    L#TLLC
+     C                     CALL 'ZSEDIT'
+     C                     PARM @TLS,#    ULAMNT
+     C                     PARM UL$NDP    ULNBDP
+     C                     PARM 'J'       ULECOD
+     C                     PARM           ULAMTA           Total liabs. - STG
+     C                     MOVE ULAMTA    L#TLLS
+      *
+      *    Report details
+     C                     WRITEBY6075S1               90
+     C           ULCLN1    IFGT ULOVF1                     Overflow
+     C                     WRITEBY6075R1
+     C                     ENDIF
+      *
+      *    Accumulate total assets and liabilities in sterling
+     C                     ADD  @TAS,#    ULTOTA
+     C                     ADD  @TLS,#    ULTOTL
+     C                     ENDIF
+      *
+     C                     ADD  1         #
+     C                     ENDDO
+      *
+      *
+      *   Report overall asset and libilities totals
+     C                     CALL 'ZSEDIT'
+     C                     PARM ULTOTA    ULAMNT
+     C                     PARM UL$NDP    ULNBDP
+     C                     PARM 'J'       ULECOD
+     C                     PARM           ULAMTA           Total assets - STG
+     C                     MOVE ULAMTA    L#TOTA
+     C                     CALL 'ZSEDIT'
+     C                     PARM ULTOTL    ULAMNT
+     C                     PARM UL$NDP    ULNBDP
+     C                     PARM 'J'       ULECOD
+     C                     PARM           ULAMTA           Total liabs. - STG
+     C                     MOVE ULAMTA    L#TOTL
+     C           ULCLN1    IFGT ULOVF1                     Overflow
+     C                     WRITEBY6075R1
+     C                     ENDIF
+     C                     WRITEBY6075T1               90
+      *
+     C                     ENDIF
+      *
+      *
+      *
+      *  Write end of report
+     C                     WRITEBY6075Z1               90
+     C                     WRITEBY6075Z2               90
+      *
+      *  Close reports
+     C                     CLOSEBY6075P1
+     C                     CLOSEBY6075P2
+      *
+      *  Reset report indicators and page numbers
+     C                     MOVE 'N'       ULOPNF
+     C                     MOVE 'N'       ULRPT1
+     C                     MOVE 'N'       ULRPT2
+     C                     Z-ADD0         PAGE1
+     C                     Z-ADD0         PAGE2
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDBER - Database Error Handling                              *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           #LDBER    BEGSR                           ** #LDBER **
+      *
+      *  Update LDA with details of error
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGMN    DBPGM
+     C                     OUT  LDA
+      *
+      *  Report data base error details
+     C                     WRITEBY6075F2
+      *
+      *  Terminate program
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFNE 'Y'
+     C                     MOVE 'Y'       ULERRI  1
+     C                     MOVE 'Y'       ULRTCD  7
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #LTERM    BEGSR                           ** SR/#LTERM**
+      *
+      *  Final reporting
+     C           ULOPNF    IFEQ 'Y'
+     C                     EXSR #LRPTT
+     C                     ENDIF
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULMODE  7        Run mode
+     C                     PARM           ULRSEQ  5        Report sequence
+     C                     PARM           ULRTCD           Return code
+      *
+      *  Initialise work fields
+     C                     EXSR #LDEFN
+      *
+      *  Set report indicator according to mode
+     C           ULMODE    IFEQ 'EXTRACT'
+     C                     MOVE *ON       *IN21
+     C                     ELSE
+     C                     MOVE *OFF      *IN21
+     C                     ENDIF
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C                     PARM           SDBANK
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C                     MOVEL'*NONE '  DBKEY            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 14 *
+     C                     Z-ADD14        DBASE            ************
+     C                     EXSR #LDBER
+     C                     ENDIF
+      *
+      *  Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+      *  Copyright statement
+     C                     MOVEA@CPY      ULCPY@ 80
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+      *
+      ** Define and initialise work fields
+     C                     Z-ADD0         #       50
+     C                     Z-ADD0         X       20
+      *
+      *  Get the extract date
+     C                     OPEN BYRPDTPP
+     C           1         CHAINBYRPDTPP             90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'*NONE '  DBKEY            ************
+     C                     MOVEL'BYRPDTPP'DBFILE           * DBERR 19 *
+     C                     Z-ADD19        DBASE            ************
+     C                     EXSR #LDBER
+     C                     ENDIF
+     C                     CLOSEBYRPDTPP
+      *
+      * Check if multi-branching
+     C                     IN   RUNDAT
+     C                     UNLCKRUNDAT
+      *  Single branch:
+     C           AGMBIN    IFNE 'Y'
+     C                     MOVE 'Y'       ULOPNF  1
+     C                     MOVE *OFF      *IN20
+      *
+      *  RCF processing for printer file BY6075P1
+     C                     OPEN BY6075P1
+     C                     Z-ADDULNUM1    ULSFNO
+     C**********           CALL 'ZSFILE'                                                      LLN021
+     C**********           PARM           ULRSEQ                                              LLN021
+     C**********           PARM           ULBRCA                                              LLN021
+     C**********           PARM 'BY6075P1'ULFNAM                                              LLN021
+     C**********           PARM           ULSFNO                                              LLN021
+     C**********           PARM           ULRTCD                                              LLN021
+     C********** ULRTCD    IFNE *BLANK                                                        LLN021
+     C********** *LOCK     IN   LDA                                                           LLN021
+     C**********           MOVELULPGMN    DBPGM            ************                       LLN021
+     C**********           MOVEL'*NONE'   DBKEY            * DBERR 19 *                       LLN021
+     C**********           MOVEL'ZSFILE  'DBFILE           ************                       LLN021
+     C**********           Z-ADD19        DBASE                                               LLN021
+     C**********           OUT  LDA                                                           LLN021
+     C**********           EXSR *PSSR                                                         LLN021
+     C**********           ENDIF                                                              LLN021
+      *
+      *  RCF processing for printer file BY6075P2
+     C**********           OPEN BY6075P2                                                      LLN021
+     C**********           Z-ADDULNUM6    ULSFNO                                              LLN021
+     C**********           CALL 'ZSFILE'                                                      LLN021
+     C**********           PARM           ULRSEQ                                              LLN021
+     C**********           PARM           ULBRCA                                              LLN021
+     C**********           PARM 'BY6075P2'ULFNAM                                              LLN021
+     C**********           PARM           ULSFNO                                              LLN021
+     C**********           PARM           ULRTCD                                              LLN021
+     C********** ULRTCD    IFNE *BLANK                                                        LLN021
+     C**********           MOVEL'*NONE '  DBKEY            ************                       LLN021
+     C**********           MOVEL'ZSFILE  'DBFILE           * DBERR 20 *                       LLN021
+     C**********           Z-ADD20        DBASE            ************                       LLN021
+     C**********           EXSR #LDBER                                                        LLN021
+     C**********           ENDIF                                                              LLN021
+      *
+      *  Write report headings to BY6075P1 and BY6075P2
+     C                     MOVE L0RPDA    L#RPDA
+     C                     WRITEBY6075H1
+     C                     WRITEBY6075H2
+      *
+      *  Multi branching indicator
+     C                     ELSE
+     C                     MOVE *ON       *IN20
+     C                     ENDIF
+      *
+      *  Load currency details
+     C                     Z-ADD0         #
+     C           *IN90     DOWEQ*OFF
+     C           #         ANDLT200
+     C                     ADD  1         #
+     C           #         OCUR SDCURR
+     C                     READ SDCURRL0                 90
+     C           *IN90     IFEQ *OFF
+     C                     MOVE A6CYCD    @CCY,#
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *  Get decimal places for sterling currency code
+     C                     Z-ADD1         #
+     C           BJCYCD    LOKUP@CCY,#                   90
+     C           *IN90     IFEQ *ON
+     C           #         OCUR SDCURR
+     C                     Z-ADDA6NBDP    UL$NDP
+     C                     ELSE
+     C           200       OCUR SDCURR
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           L8CYCD
+     C           SDCURR    PARM           DSSDY
+     C           P@RTCD    IFNE *BLANK                     Error on call
+     C                     MOVELBJCYCD    DBKEY            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 21 *
+     C                     Z-ADD21        DBASE            ************
+     C                     EXSR #LDBER
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    UL$NDP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#LRPTD - Format Report Details                             *
+      *                                                               *
+      * Called by:  SR/#LRPXT - Report/Extract Details                *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #LRPTD    BEGSR                           ** SR/#LRPTD**
+      *
+      *  Reset report indicators
+     C                     MOVEA'00000000'*IN,30
+      *
+      *  Set up report fields
+     C                     MOVELA8BICN    L#CNUM           Customer
+     C                     MOVE BBCRNM    L#CRNM           Customer report name
+     C                     MOVELEVCY      L#CYCD           Currency
+     C                     MOVELL8ISOC    L#LISO
+     C                     MOVELL8RISO    L#RISO
+     C                     MOVELL8RISO    L#CISO
+     C                     MOVELL8LIND    L#INDC
+     C                     MOVELL8LINS    L#INSC
+     C                     CALL 'ZSEDIT'
+     C                     PARM L8CUAS    ULAMNT
+     C                     PARM A6NBDP    ULNBDP
+     C                     PARM 'J'       ULECOD
+     C                     PARM           ULAMTA
+     C                     MOVE ULAMTA    L#CUAS           Currency amount
+     C                     CALL 'ZSEDIT'
+     C                     PARM L8SGAM    ULAMNT
+     C                     PARM UL$NDP    ULNBDP
+     C                     PARM 'J'       ULECOD
+     C                     PARM           ULAMTA           Sterling equivalent
+     C                     MOVE ULAMTA    L#SGAM
+     C                     MOVE L8PCOD    L#PCOD
+      *
+      *  Set indicator to report extract criteria not found
+     C           L8PCOD    IFEQ 9999
+     C                     MOVE *ON       *IN41
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#LRPT1 - Write Details to BY6075P1                         *
+      *                                                               *
+      * Called by:  SR/#LRPXT - Report/Extract Details                *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #LRPT1    BEGSR                           ** SR/#LRPT1**
+      *                                                                   171161
+      ** Reset customer report indicator                                  171161
+     C                     MOVE *OFF      *IN30                           171161
+      *
+      *  Check if customer has changed since customer last printed
+     C           ULCNUM    IFNE ULCUS1
+     C                     MOVE *ON       *IN30
+     C                     MOVE ULCNUM    ULCUS1
+     C                     ENDIF
+     C*
+      *  Write details to report
+     C           ULCLN1    IFGT ULOVF1
+     C           *INOF     OREQ *ON                                       167631
+     C                     WRITEBY6075H1
+     C                     MOVE *ON       *IN30
+     C                     ENDIF
+     C                     WRITEBY6075D1               OF                 167631
+      *
+      *  Set flag to indicate details written
+     C           ULRPT1    IFNE 'Y'
+     C                     MOVE 'Y'       ULRPT1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * SR/#LRPT6 - Write Details to BY6075P2                         *
+      *                                                               *
+      * Called by:  SR/#LRPXT - Report/Extract Details                *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #LRPT6    BEGSR                                       **
+      *
+      *  Set indicators to report details of invalid details
+     C                     MOVE ULERR1    ULERR2
+     C                     MOVEAULERR2    *IN,31
+      *
+      *  Determine no. of errors to be reported for overflow check
+     C                     Z-ADD0         X
+     C   31                ADD  1         X
+     C   32                ADD  1         X
+     C   33                ADD  1         X
+     C   34                ADD  1         X
+     C   35                ADD  1         X
+     C   36                ADD  1         X
+     C   37                ADD  1         X
+      *
+      *  Write details to report
+     C           ULOVF6    SUB  ULCLN6    ULLDIF
+     C                     SUB  X         ULLDIF
+     C           ULLDIF    IFLT 5
+     C           ULCNUM    ANDNEULCUS2
+     C           ULLDIF    ORLT 0
+     C           ULCNUM    ANDEQULCUS2
+     C                     WRITEBY6075H2
+     C                     WRITEBY6075D2
+     C                     ELSE
+     C           ULCNUM    IFNE ULCUS2
+     C                     WRITEBY6075D2               90
+     C                     ENDIF
+     C                     ENDIF
+     C                     WRITEBY6075D3               90
+      *
+      * Save customer last printed
+     C                     MOVE ULCNUM    ULCUS2
+      *
+      *  Set flag to indicate details written
+     C           ULRPT2    IFNE 'Y'
+     C                     MOVE 'Y'       ULRPT2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           #LDEFN    BEGSR                           ** SR/#LDEFN**
+      *
+      *  Copyright statement
+     C                     MOVEA@CPY      ULCPY@ 80
+      *
+      ** Define and initialise work fields
+     C                     Z-ADD0         #       50
+     C                     Z-ADD0         X       20
+     C                     Z-ADD0         ULSFNO  60       Spool file no.
+     C                     Z-ADD0         ULDAYN  50       Date - Midas day no.
+     C                     Z-ADD0         ULDATE  60       Date - DDMMYY
+     C                     Z-ADD0         ULTOTA 150       Total assets
+     C                     Z-ADD0         ULTOTL 150       Total liabilities
+     C                     Z-ADD0         ULMPER  50       Category period date
+     C                     Z-ADD0         ULINAM 150       In amount
+     C                     Z-ADD0         ULOTAM 150       Out amount
+     C                     Z-ADD0         ULAMNT 150       Amount
+     C                     Z-ADD0         ULVDAT  50       Value date
+     C                     Z-ADD0         ULMDAT  50       Maturity dat
+     C                     Z-ADD0         ULNOTS  50       Notice date
+     C**********           Z-ADD0         ULACOD  40       A/C code                           LLN022
+     C                     Z-ADD0         ULACOD 100       A/C code                           LLN022
+     C                     Z-ADD0         ULLDIF  30       Line difference
+     C                     Z-ADD0         ULERR1  70       Error indicators
+     C                     MOVE *BLANK    ULERRI  1        Error indicators
+     C                     MOVE *BLANK    UVALD   1        Valid deal
+     C                     MOVE *BLANK    ULRPT1  1        Details reported
+     C                     MOVE *BLANK    ULRPT2  1        Details reported
+     C                     MOVE *BLANK    ULOPNF  1        Files opened
+     C                     MOVE *BLANK    ULPROC  1        Process account
+     C                     MOVE *BLANK    ULBRCA  3        Branch code
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+     C                     MOVE *BLANK    ULDATA  7        Date - DDMMMYY
+     C                     MOVE *BLANK    ULLOCN  3        Location
+     C                     MOVE *BLANK    ULAMTA 21        Edited amount field
+     C                     MOVE *BLANK    ULECOD  1        Edit code
+     C                     MOVE *BLANK    ULFNAM 10        File name
+     C                     MOVE *BLANK    ULERR2  7        Error indicators
+     C                     MOVE *BLANK    ULODIN  1        overdue ind tors
+     C                     MOVE *BLANK    ULRISO  2        risk countrytors
+     C                     MOVE *BLANK    UPLISO  2        Cust countrytors
+     C                     MOVE *BLANK    UPRISO  2        Risk countrytors
+     C                     MOVE *BLANK    WWRISO  2        work countrytors
+     C                     MOVE *BLANK    ULCSNO  6        work cust notors
+     C                     MOVE *BLANK    ULINBR  1        Int bearing tors
+     C                     MOVE *BLANK    ULACDA  4        Account code - alpha
+     C                     MOVE *BLANK    ULASQA  2        Account seq. - alpha
+     C           *LIKE     DEFN A8BICN    ULCNUM           Customer
+     C           *LIKE     DEFN A8BICN    ULCUS1           Customer Print 1
+     C           *LIKE     DEFN A8BICN    ULCUS2           Customer Print 2
+     C           *LIKE     DEFN A8BICN    ULPCUS           Previous customer
+     C           *LIKE     DEFN EVCY      ULCYCD           Currency
+     C           *LIKE     DEFN BBCUST    ULCUST           Customer
+     C           *LIKE     DEFN L8PCOD    ULPCOD           Product code
+     C           *LIKE     DEFN L8CUAS    ULCUAS           Currency amount
+     C           *LIKE     DEFN L8SGAM    ULSGAM           Sterling equivalent
+     C           *LIKE     DEFN L8MMOD    ULMMOD           Module id.
+     C           *LIKE     DEFN L8MCAT    ULMCAT           Maturity category
+     C           *LIKE     DEFN L8LIND    ULLIND           Industry code
+     C           *LIKE     DEFN A8IBOE    ULIBOE           Include branch
+     C           *LIKE     DEFN A6NBDP    ULNBDP           No. of decimal places
+     C           *LIKE     DEFN A6NBDP    UL$NDP           Sterling dec. places
+     C           *LIKE     DEFN EVCY      ULFCCY           From currency
+     C           *LIKE     DEFN EVCY      ULTCCY           To currency
+      *
+      *  Key List Definitions
+      *  ====================
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#LDCYS - Load Currency SPOT details (historic)             *
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #LDCYS    BEGSR                           ** SR/#LDCYS**
+      *
+     C                     Z-ADD0         #
+      *
+     C           PKEY2     KLIST
+     C                     KFLD           @CCY,#
+     C                     KFLD           EVDT
+      *
+     C           1         DO   200       #
+      *
+     C           PKEY2     SETLLSDCUHSL2                 90
+     C   90      PKEY2     READESDCUHSL2                 90
+     C  N90                READPSDCUHSL2                 90
+      *
+     C           *IN90     IFEQ *OFF
+     C                     Z-ADDG2SPRT    @CYD,#
+     C                     MOVE G2MDIN    @CYR,#
+     C                     ELSE
+     C                     Z-ADD0         @CYD,#
+     C                     MOVE *BLANKS   @CYR,#
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2004

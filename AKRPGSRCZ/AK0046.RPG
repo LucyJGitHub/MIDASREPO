@@ -1,0 +1,1833 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK Contingent facility account key generator')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Lending Module                                       *
+      *                                                               *
+      *  AK0046 - Contingent Facility Account Key Generator           *
+      *                                                               *
+      *  Function:  This program will generate sets of account keys   *
+      *  ( I/C )    for each input combination of:                    *
+      *                                                               *
+      *             Facility type, Facility type indicator (Facility/ *
+      *             Commitment/Guidance), Participated Indicator, and *
+      *             Resource Indicator.                               *
+      *                                                               *
+      *             The new Account Keys ara as follows:              *
+      *                                                               *
+      *             xxxF_PR_I ---> Facility Start or Reactivation     *
+      *             xxxF_PR_I ---> Facility Increase                  *
+      *             xxxF_PR_D ---> Facility Decrease                  *
+      *             xxxF_PR_D ---> Facility Expiry or Closure         *
+      *             xxxF_PR_D ---> Facility Type Change               *
+      *             xxxF_PR_I ---> Facility Type Change               *
+      *             xxxF_PR_A ---> Loan or Part Purchased Drawdown    *
+      *             xxxF_PR_A ---> Loan or Part Purchased PI          *
+      *             xxxF_PR_R ---> Loan or Part Purchased Repayment   *
+      *             xxxF_PR_R ---> Loan or Part Purchased Write-off   *
+      *             xxxF_PR_R ---> Loan or Part Purchased Maturity    *
+      *             xxxF_PR_A ---> Loan or Part Purchased Int. Cap.   *
+      *             xxxF___MA ---> Manual Utilisation Start Event     *
+      *             xxxF___MA ---> Manual Utilisation Increase        *
+      *             xxxF___MR ---> Manual Utilisation End Event       *
+      *             xxxF___MR ---> Manual Utilisation Decrease        *
+      *                                                               *
+      *             where:                                            *
+      *              xxx  --> is the facility                         *
+      *               'F' --> is the facility/commitment/guidance Ind.*
+      *               'P' --> is for participated. Will correspond to *
+      *                       the shares which are being funded by    *
+      *                       syndicate members.                      *
+      *               'R' --> is the recourse indicator on the funded *
+      *                       participants table.                     *
+      *               'M' --> indicates that this is an account key   *
+      *                       coming off from manual utilisation event*
+      *               'D' --> corresponds to a decrease in the        *
+      *                       facility amount,                        *
+      *               'I' --> to an increase, 'A' corresponds to a    *
+      *                       loan drawdown and                       *
+      *               'R' --> to a loan repayment                     *
+      *                                                               *
+      *  Called By: AKC40 - Lending Account Keys Generator CLP        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 AR787620           Date 10Jun11               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG21811           Date 05Jan09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 237335             Date 26Feb06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 218252             Date 27Jun03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 209431             Date 13Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 195799             Date 17Jul01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 191056             Date 27Mar01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 175746             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 146525             Date 18Nov98               *
+      *                 CLE007  *CREATE    Date 11Sep97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,AKH00013                                 *
+      *             WNCPYSRC,AKH00014                                 *
+      *             WNCPYSRC,AKH00015                                 *
+      *             WNCPYSRC,AKH00016                                 *
+      *             WNCPYSRC,AKH00017                                 *
+      *             WNCPYSRC,AKH00018                                 *
+      *             WNCPYSRC,AKH00019                                 *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  BUG21811 - Account Codes Missing                             *
+      *  237335 - Remove validation of interest accrual summary       *
+      *           indicator against posting reference 3.              *
+      *           Applied fix 222639.                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CLE106 - Syndications Manager.                               *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  218252 -  Database error and incorrect error message in      *
+      *            Contingent Facility Account Key Generation.        *
+      *  209431 -  Error message in Contingent Facility Account Key   *
+      *            Generation                                         *
+      *  195799 -  Display error message if the account code does not *
+      *            have a type of 'C', nor is it in a 'CN' section.   *
+      *            Added new error message USR5012 with the text:     *
+      *            "Either Account Code Type or Account Section must  *
+      *            be contingent" and replaced other missing messages.*
+      *  191056 -  GENERATE xxxC_P___A , xxxC_P___I keys.             *
+      *  175746 -  A, R and D account keys were set up incorrectly.   *
+      *  146525 -  Syndication and Recourse Enhancements              *
+      *            Display file also changed so that only two account *
+      *            codes require input, Contingent Facillity Debit    *
+      *            and Contingent Facility Contra. Coding has been    *
+      *            changed so all account keys generated reference    *
+      *            these accounts.                                    *
+      *  CLE007 -  Customer Lending Enhancement - Others              *
+      *                                                               *
+      *****************************************************************
+      *
+     FZACKEYALO   E           K        DISK         KINFSR *PSSR
+      **  Account Keys Work File
+      *
+     FAK0046DFCF  E                    WORKSTN
+      **  Contingent Facility Account Key Generator - DSPF
+     F/COPY WNCPYSRC,AKH00013
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    10 - Error in Facility Type field                          *
+      *    11 - Error in Facility Type Indicator field                *
+      *    12 - Error in Participated Indicator field                 *
+      *    13 - Error in Recourse Indicator field                     *
+      *    14 - Error in Facility Increase Account field              *
+      *    15 - Error in Posting Reference ( Facility Increase) field *
+      *    16 - Error in Facility Decrease Account fiel               *
+      *    17 - Error in Posting Reference (Facility Decrease) field  *
+      *    18 - Error in Loan Increase Account field                  *
+      *    19 - Error in Posting Reference (Loan Increase) field      *
+      *    20 - Error in Loan Decrease Account field                  *
+      *    21 - Error in Posting Reference (Loan Decrease) field      *
+      *                                                               *
+      *    31 - Proctect first screen details                         *
+      *                                                               *
+      *    32 - First screen error indicator                          *
+      *    33 - Second screen error indicator                         *
+      *                                                               *
+      *    41 - Narrative Code missing                                *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    MNAR        5  2               Miss Narr. Codes
+     E                    NARC    5   5  2               Req. Narr. Codes
+     E/SPACE 3
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM #PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IACCKEY      DS
+     I/COPY WNCPYSRC,AKH00014
+     I                                        2  11 UAKEY
+     I                                        1   1 URECI
+     I                                        2   4 UFTYP
+     I                                        5   5 UFIND
+     I                                        6   6 UZZZ5
+     I                                        7   7 UPART
+     I                                        8   8 URECO
+     I                                        9   9 UZZZ8
+     I                                       10  10 UZZM9
+     I                                       11  11 UAIDR
+     I                                       12  13 UZZ002
+     I**********                             14  170UACD1                                     CGL029
+     I**********                             18  210UACD2                                     CGL029
+     I**********                             22  250UACD3                                     CGL029
+     I**********                             26  290UACD4                                     CGL029
+     I**********                             30  330UACD5                                     CGL029
+     I**********                             34  370UACD6                                     CGL029
+     I**********                             38  39 UNCD1                                     CGL029
+     I**********                             40  41 UNCD2                                     CGL029
+     I**********                             42  43 UNCD3                                     CGL029
+     I**********                             44  45 UNCD4                                     CGL029
+     I**********                             46  47 UNCD5                                     CGL029
+     I**********                             48  49 UNCD6                                     CGL029
+     I**********                             50  500UPRF1                                     CGL029
+     I**********                             51  510UPRF2                                     CGL029
+     I**********                             52  520UPRF3                                     CGL029
+     I**********                             53  530UPRF4                                     CGL029
+     I**********                             54  540UPRF5                                     CGL029
+     I**********                             55  550UPRF6                                     CGL029
+     I**********                             56  89 UZZ034                                    CGL029
+     I**********                             90  920ULCD                                      CGL029
+     I**********                             93  93 UCHTP                                     CGL029
+     I**********                             94  960UTNLU                                     CGL029
+     I                                       14  230UACD1                                     CGL029
+     I                                       24  330UACD2                                     CGL029
+     I                                       34  430UACD3                                     CGL029
+     I                                       44  530UACD4                                     CGL029
+     I                                       54  630UACD5                                     CGL029
+     I                                       64  730UACD6                                     CGL029
+     I                                       74  75 UNCD1                                     CGL029
+     I                                       76  77 UNCD2                                     CGL029
+     I                                       78  79 UNCD3                                     CGL029
+     I                                       80  81 UNCD4                                     CGL029
+     I                                       82  83 UNCD5                                     CGL029
+     I                                       84  85 UNCD6                                     CGL029
+     I                                       86  860UPRF1                                     CGL029
+     I                                       87  870UPRF2                                     CGL029
+     I                                       88  880UPRF3                                     CGL029
+     I                                       89  890UPRF4                                     CGL029
+     I                                       90  900UPRF5                                     CGL029
+     I                                       91  910UPRF6                                     CGL029
+     I                                       92 125 UZZ034                                    CGL029
+     I                                      126 1280ULCD                                      CGL029
+     I                                      129 129 UCHTP                                     CGL029
+     I                                      130 1320UTNLU                                     CGL029
+     I/COPY WNCPYSRC,AKH00015
+     IPGMSGF      DS
+     I I            'GBSDUSRMSG'              1  10 ZAMSGF
+      **  Program message file
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External data structure for Bank Details
+      *
+     ISDFACT    E DSSDFACTPD
+      **  External data structure for Facility Types Details
+      *
+     ISDACOD    E DSSDACODPD
+      **  External data structure for Account Code Details
+      *
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACC1                                    CGL029
+      **  External data structure for General Ledger Details
+      *
+     ISDNARR    E DSSDNARRPD
+      **  External data structure for Narrative Codes Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+      *
+      *****************************************************************
+     C/TITLE  Main Process
+      *****************************************************************
+      *
+      ** Perform Initial Processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Process while F3 is not pressed and
+      ** account-key-gen indicator is *OFF
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *IN07     ANDEQ*OFF
+      *
+      ** Perform first screen processing
+      *
+     C                     EXSR SRFRST
+      *
+      ** Perform second screen processing only
+      ** if F3 is not pressed and first screen
+      ** error indicator is *OFF
+      *
+     C           *INKC     IFEQ *OFF
+     C           *IN32     ANDEQ*OFF
+     C                     EXSR SRSCND
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Perform End of Program Processing
+      *
+     C                     EXSR SRENDP
+      *
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Initial processing                                   *
+      *                                                               *
+      * Called by: Main Process                                       *
+      *                                                               *
+      * Calls    : *PSSR - Error Processing Subroutine                *
+      *            AOBANKR0 - Bank details access program             *
+      *            AOFACTR0 - Facility type details access program    *
+      *            AOACODR0 - Account code details access program     *
+      *            AOGELRR0 - General ledger details access program   *
+      *            AONARRR0 - Narrative codes details access program  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Define Local Data Area and Installation Control Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Set *ON *IN98, if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ** Setup Screen Title Fields
+      *
+     C                     MOVE USER      SUSER
+     C                     MOVE WSID      SWSID
+     C                     MOVE AGMRDT    SRUNA
+      *
+      ** Access Bank Details (SDBANKPD)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file (SDBANKPD)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 01 *
+     C                     MOVEL'*FIRST  'DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access General Ledger Details (SDGELRPD)
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Data base error in file (SDGELRPD)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVEL'SDGELRPD'DBFILE           * DBERR 02 *
+     C                     MOVEL'*FIRST  'DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check that all required Narrative Codes are present
+      ** on SDNARRPD.
+      *
+     C                     MOVE *OFF      *IN41
+     C                     Z-ADD1         X       10
+      *
+     C           X         DOWLE5
+      *
+     C                     CALL 'AONARRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM NARC,X    @NRCD   2
+     C           SDNARR    PARM SDNARR    DSFDY
+      *
+      ** Hande Database Error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'SDNARRPD'DBFILE           * DBERR 03 *
+     C                     MOVEL@NRCD     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Narrative code not found, set on error indicator
+      *
+     C           @RTCD     IFEQ '*NRF   '
+     C                     MOVE NARC,X    MNAR,X
+     C                     ENDIF
+      *
+     C                     ADD  1         X
+      *
+     C                     ENDDO
+      *
+      ** Check if there are missing narrative codes, if so,
+      ** Set *ON missing narrative codes indicator
+      *
+     C                     MOVE *BLANKS   WMNAR  10
+     C                     MOVEAMNAR      WMNAR
+     C           WMNAR     IFNE *BLANKS
+     C                     MOVE *ON       *IN41
+     C                     ENDIF
+      *
+      ** Clear all fields to send messages to message queue.
+      *
+     C                     MOVEL*BLANK    ZAPGMQ           Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *
+      ** Set OFF Account key generated indcator (*IN07)
+      *
+     C                     MOVE *OFF      *IN07
+      *
+     C/COPY WNCPYSRC,AKH00016
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * SRFRST - First Screen Processing                              *
+      *                                                               *
+      * Called by: Main Process                                       *
+      *                                                               *
+      * Calls    : ZASNMS   - Send message to program message queue   *
+      *            Y2CLMSC  - Clear program message queue             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFRST    BEGSR
+      *
+      ** Display error message(s)
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Display initial screen format
+      *
+     C                     EXFMTAK0046F0
+      *
+      ** Clear program message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** Set *OFF first screen error indicators (*IN10 - *IN13 & *IN32)
+      *
+     C                     MOVEA'0000'    *IN,10
+     C                     MOVE *OFF      *IN32
+     C/COPY WNCPYSRC,AKH00017
+      *
+      ** If F3 is not pressed, validate first screen details
+      *
+     C           *INKC     IFEQ *OFF
+      *
+      ** Narrative code missing
+      *
+     C           *IN41     IFEQ *ON
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'USR1776 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Facility Type must be entered
+      *
+     C           SFTYPE    IFEQ *BLANKS
+     C                     MOVE *ON       *IN10
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'USR2652 'ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ** Facility type when entered must be a valid
+      ** record in PF/SDFACTPD
+      *
+     C                     ELSE
+     C                     CALL 'AOFACTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM SFTYPE    @FCTY   3
+     C           SDFACT    PARM SDFACT    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE AMFCTY    SFTYPE
+     C                     ENDIF
+      *
+      ** Hande Database Error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C           @RTCD     ANDNE'*NOSEL '                                                     218252
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVE *ON       *IN32
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVEL'SDFACTPD'DBFILE           * DBERR 04 *
+     C                     MOVEL@NRCD     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Facility Type  not found in PF/SDFACTPD
+      *
+     C           @RTCD     IFEQ '*NRF   '
+     C                     MOVE *ON       *IN10
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'USR2653 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** No value selected                                                                    218252
+      *                                                                                       218252
+     C           @RTCD     IFEQ '*NOSEL '                                                     218252
+     C                     MOVE *ON       *IN10                                               218252
+     C                     MOVE *ON       *IN32                                               218252
+     C                     MOVEL'USR5000 'ZAMSID                                              218252
+     C                     EXSR ZASNMS                                                        218252
+     C                     ENDIF                                                              218252
+      *                                                                                       218252
+     C                     ENDIF
+      *
+      ** Facility Type Indicator must be entered
+      *
+     C           SFTYPI    IFEQ *BLANK
+     C                     MOVE *ON       *IN11
+     C                     MOVE *ON       *IN32
+     C**********           MOVEL'USR5000 'ZAMSID                                              218252
+     C                     MOVEL'USR5003 'ZAMSID                                              218252
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Facility Type Indicator when entered must be
+      ** "F", "C" or "G"
+      *
+     C           SFTYPI    IFNE *BLANK
+     C           SFTYPI    ANDNE'F'
+     C           SFTYPI    ANDNE'C'
+     C           SFTYPI    ANDNE'G'
+     C                     MOVE *ON       *IN11
+     C                     MOVE *ON       *IN32
+     C**********           MOVEL'USR5001 'ZAMSID                                              218252
+     C                     MOVEL'USR5008 'ZAMSID                                              218252
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Participated Indicator field must be "Y" or "N"                  146525
+      ************                                                        146525
+     C***********SPARTI    IFNE 'Y'                                       146525
+     C***********SPARTI    ANDNE'N'                                       146525
+     C***********          MOVE *ON       *IN12                           146525
+     C***********          MOVE *ON       *IN32                           146525
+     C***********          MOVEL'USR5002 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      ** Recourse Indicator field must be "Y" or "N"                      146525
+      ***********                                                         146525
+     C***********SRECOI    IFNE 'Y'                                       146525
+     C***********SRECOI    ANDNE'N'                                       146525
+     C***********          MOVE *ON       *IN13                           146525
+     C***********          MOVE *ON       *IN32                           146525
+     C***********          MOVEL'USR5003 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      *
+     C/COPY WNCPYSRC,AKH00018
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * SRSCND - Second Screen Processing                             *
+      *                                                               *
+      * Called by: Main Process                                       *
+      *                                                               *
+      * Calls    : ZASNMS   - Send message to program message queue   *
+      *            Y2CLMSC  - Clear program message queue             *
+      *            SRVALD   - Second screen fields validation         *
+      *            SRAKGN   - Account keys generation process         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSCND    BEGSR
+      *
+      ** Initialise second screen fields
+      *
+     C                     MOVE *BLANKS   SFINCR
+     C                     MOVE *BLANKS   SFINPR
+     C                     MOVE *BLANKS   SFDECR
+     C                     MOVE *BLANKS   SFDEPR
+     C***********          MOVE *BLANKS   SLINCR                          146525
+     C***********          MOVE *BLANKS   SLINPR                          146525
+     C***********          MOVE *BLANKS   SLDECR                          146525
+     C***********          MOVE *BLANKS   SLDEPR                          146525
+      *
+      ** Set *OFF second screen error indicators (*IN14 - *IN21)
+      *
+     C                     MOVEA'00000000'*IN,14
+      *
+      ** Process second screen until F3 or F12 is pressed
+      ** OR second screen error indicator is *OFF
+      *
+     C           *INKC     DOUEQ*ON
+     C           *INKL     OREQ *ON
+     C           *IN33     OREQ *OFF
+      *
+      ** Display error message(s)
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Display initial screen format
+      *
+     C                     EXFMTAK0046F1
+      *
+      ** Clear program message queue
+      *
+     C                     EXSR SRCLR
+      *
+      ** F3 or F12 is not pressed
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      ** Validate second screen details
+      *
+     C                     EXSR SRVALD
+      *
+      ** If second screen error indicator if *OFF,
+      ** Perform Account Keys Generation processing
+      *
+     C           *IN33     IFEQ *OFF
+     C                     EXSR SRAKGN
+     C                     MOVE *ON       *IN07
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * SRVALD - Second screen fields validation                      *
+      *                                                               *
+      * Called by: SRSCND - Second screen process                     *
+      *                                                               *
+      * Calls    :                                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+      ** Set *OFF second screen error indicators (*IN14 - *IN21)
+      *
+     C                     MOVEA'00000000'*IN,14
+     C                     MOVE *OFF      *IN33                                               209431
+      *
+      **  1. Validate Facility Increase Account Code
+      *
+     C           SFINCR    IFNE *BLANKS
+      *
+      ** Retrieve account code details
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C**********           PARM SFINCR    @ACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM SFINCR    @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+      ** Hande Database Error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVE *ON       *IN33
+     C                     Z-ADD5         DBASE            ************
+     C                     MOVEL'SDACODPD'DBFILE           * DBERR 05 *
+     C                     MOVEL@ACOD     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If Account Code is not found, send error message
+      *
+     C           @RTCD     IFEQ '*NRF   '
+     C                     MOVE *ON       *IN14
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR4239 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** If Account Code is found
+      *
+     C           @RTCD     IFEQ *BLANKS
+      *
+     C                     MOVE A5ACCD    SFINCR
+      *
+      ** Check if Title Only Indicator is "Y", if so, send error msg.
+      *
+     C           A5TOIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN14
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR4239 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ***Check*if*Account*Type*is*not*"C"**if*so,*send*error*msg.**                           195799
+      ** Must be a contingent account; if Account Type is not "C",                            195799
+      ** and Account Section is not "CN", display error message.                              195799
+      *
+     C           A5ACTY    IFNE 'C'
+     C           A5ACSC    ANDNE'CN'                                                          195799
+     C                     MOVE *ON       *IN14
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR5012 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  2. Validate Facility Increase Account Posting Reference
+      *
+     C           SFINPR    IFNE *BLANK
+      *
+     C           SFINCR    IFEQ *BLANKS
+     C                     MOVE *ON       *IN15
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR5004 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           SFINPR    IFNE '1'
+     C           SFINPR    ANDNE'3'
+     C           SFINPR    ANDNE'4'                                       146525
+     C           SFINPR    ANDNE'5'                                       146525
+     C                     MOVE *ON       *IN15
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR2664 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C********** SFINPR    IFEQ '3'                                                           237335
+     C********** BKAKSI    ANDEQ'Y'                                                           237335
+     C**********           MOVE *ON       *IN15                                               237335
+     C**********           MOVE *ON       *IN33                                               237335
+     C**********           MOVEL'USR4268 'ZAMSID                                              237335
+     C**********           EXSR ZASNMS                                                        237335
+     C**********           ENDIF                                                              237335
+      *
+      ** Facility Increase Posting Reference is blank
+      *
+     C                     ELSE
+      *
+      ** Facility Increase Code is not blank
+      *
+     C           SFINCR    IFNE *BLANKS
+     C                     MOVE *ON       *IN15
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR5005 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  3. Validate Facility Decrease Account
+      *
+     C           SFDECR    IFNE *BLANK
+      *
+      ** Retrieve account code details
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C**********           PARM SFDECR    @ACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM SFDECR    @ACOD                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+      ** Hande Database Error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVE *ON       *IN33
+     C                     Z-ADD6         DBASE            ************
+     C                     MOVEL'SDACODPD'DBFILE           * DBERR 06 *
+     C                     MOVEL@ACOD     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Account Code not found
+      *
+     C           @RTCD     IFEQ '*NRF   '
+     C                     MOVE *ON       *IN16
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR4239 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Account code is found
+      *
+     C           @RTCD     IFEQ *BLANK
+      *
+     C                     MOVE A5ACCD    SFDECR
+      *
+     C           A5TOIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN16
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR4239 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Must be a contingent account; if Account Type is not "C",                            195799
+      ** and Account Section is not "CN", display error message.                              195799
+      *                                                                                       195799
+     C           A5ACTY    IFNE 'C'
+     C           A5ACSC    ANDNE'CN'                                                          195799
+     C                     MOVE *ON       *IN16
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR5012 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  4. Validate Facility Decrease Account Posting Reference
+      *
+     C           SFDEPR    IFNE *BLANK
+      *
+     C           SFDECR    IFEQ *BLANKS
+     C                     MOVE *ON       *IN17
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR5006 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           SFDEPR    IFNE '1'
+     C           SFDEPR    ANDNE'3'
+     C           SFDEPR    ANDNE'4'                                       146525
+     C           SFDEPR    ANDNE'5'                                       146525
+     C                     MOVE *ON       *IN17
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR2664 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C********** SFDEPR    IFEQ '3'                                                           237335
+     C********** BKAKSI    ANDEQ'Y'                                                           237335
+     C**********           MOVE *ON       *IN17                                               237335
+     C**********           MOVE *ON       *IN33                                               237335
+     C**********           MOVEL'USR4268 'ZAMSID                                              237335
+     C**********           EXSR ZASNMS                                                        237335
+     C**********           ENDIF                                                              237335
+      *
+      ** Facility Decrease Posting Reference is blank
+      *
+     C                     ELSE
+      *
+      ** Facility Decrease Code is not blank
+      *
+     C           SFDECR    IFNE *BLANKS
+     C                     MOVE *ON       *IN17
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR5007 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *                                                                   146525
+      **Following code is obsolete due to removal of Loan increase        146525
+      **and Loan decrease fields and posting references from display      146525
+      **file.                                                             146525
+      *                                                                   146525
+      **  5. Validate Loan Increase Account
+      ***********                                                         146525
+     C***********SLINCR    IFNE *BLANKS                                   146525
+      ***********                                                         146525
+      ** Retrieve account code details                                    146525
+      ***********                                                         146525
+     C***********          CALL 'AOACODR0'                                146525
+     C***********          PARM *BLANKS   @RTCD   7                       146525
+     C***********          PARM '*KEY    '@OPTN   7                       146525
+     C***********          PARM SLINCR    @ACOD   4                       146525
+     C***********SDACOD    PARM SDACOD    DSFDY                           146525
+      ***********                                                         146525
+      ** Hande Database Error.                                            146525
+      ***********                                                         146525
+     C***********@RTCD     IFNE *BLANKS                                   146525
+     C***********@RTCD     ANDNE'*NRF   '                                 146525
+     C************LOCK     IN   LDA                                       146525
+     C***********          SETON                     U7U8LR               146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          Z-ADD7         DBASE            ************   146525
+     C***********          MOVEL'SDACODPD'DBFILE           * DBERR 07 *   146525
+     C***********          MOVEL@ACOD     DBKEY            ************   146525
+     C***********          OUT  LDA                                       146525
+     C***********          EXSR *PSSR                                     146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      ** Account Code not found                                           146525
+      ***********                                                         146525
+     C***********@RTCD     IFEQ '*NRF   '                                 146525
+     C***********          MOVE *ON       *IN18                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR4239 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      ** Account code is found                                            146525
+      ***********                                                         146525
+     C***********@RTCD     IFEQ *BLANKS                                   146525
+      ***********                                                         146525
+     C***********          MOVE A5ACCD    SLINCR                          146525
+      ***********                                                         146525
+     C***********A5TOIN    IFEQ 'Y'                                       146525
+     C***********          MOVE *ON       *IN18                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR4239 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********A5ACTY    IFNE 'C'                                       146525
+     C***********          MOVE *ON       *IN18                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR5012 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      **  6. Validate Loan Increase Account Posting Reference             146525
+      ***********                                                         146525
+     C***********SLINPR    IFNE *BLANK                                    146525
+      ***********                                                         146525
+     C***********SLINCR    IFEQ *BLANKS                                   146525
+     C***********          MOVE *ON       *IN19                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR5008 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********SLINPR    IFNE '1'                                       146525
+     C***********SLINPR    ANDNE'3'                                       146525
+     C***********SLINPR    ANDNE'4'                                       146525
+     C***********SLINPR    ANDNE'5'                                       146525
+     C***********          MOVE *ON       *IN19                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR2664 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********SLINPR    IFEQ '3'                                       146525
+     C***********BKAKSI    ANDEQ'Y'                                       146525
+     C***********          MOVE *ON       *IN19                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR4268 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      ** Facility Decrease Posting Reference is blank                     146525
+      ***********                                                         146525
+     C***********          ELSE                                           146525
+      ***********                                                         146525
+      ** Loan Increase Code is not blank                                  146525
+      ***********                                                         146525
+     C***********SLINCR    IFNE *BLANKS                                   146525
+     C***********          MOVE *ON       *IN19                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR5009 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      *7.    VALIDate Loan Decrease Account                               146525
+      ************                                                        146525
+     C************LDECR    IFNE *BLANKS                                   146525
+      ************                                                        146525
+      ** Retrieve account code details                                    146525
+      ***********                                                         146525
+     C***********          CALL 'AOACODR0'                                146525
+     C***********          PARM *BLANKS   @RTCD   7                       146525
+     C***********          PARM '*KEY    '@OPTN   7                       146525
+     C***********          PARM SLDECR    @ACOD   4                       146525
+     C***********SDACOD    PARM SDACOD    DSFDY                           146525
+      ***********                                                         146525
+      ** Hande Database Error.                                            146525
+      ***********                                                         146525
+     C***********@RTCD     IFNE *BLANKS                                   146525
+     C***********@RTCD     ANDNE'*NRF   '                                 146525
+     C************LOCK     IN   LDA                                       146525
+     C***********          SETON                     U7U8LR               146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          Z-ADD8         DBASE            ************   146525
+     C***********          MOVEL'SDACODPD'DBFILE           * DBERR 08 *   146525
+     C***********          MOVEL@ACOD     DBKEY            ************   146525
+     C***********          OUT  LDA                                       146525
+     C***********          EXSR *PSSR                                     146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      ** Account Code not found                                           146525
+      ***********                                                         146525
+     C***********@RTCD     IFEQ '*NRF   '                                 146525
+     C***********          MOVE *ON       *IN20                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR4239 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      ** Account code is found                                            146525
+      ***********                                                         146525
+     C***********@RTCD     IFEQ *BLANKS                                   146525
+      ***********                                                         146525
+     C***********          MOVE A5ACCD    SLDECR                          146525
+      ***********                                                         146525
+     C***********A5TOIN    IFEQ 'Y'                                       146525
+     C***********          MOVE *ON       *IN20                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR4239 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********A5ACTY    IFNE 'C'                                       146525
+     C***********          MOVE *ON       *IN20                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR5012 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********          ENDIF                                          146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      **  8. Validate Loan Decrease Account Posting Reference             146525
+      ***********                                                         146525
+     C***********SLDEPR    IFNE *BLANK                                    146525
+      ***********                                                         146525
+     C***********SLDECR    IFEQ *BLANKS                                   146525
+     C***********          MOVE *ON       *IN21                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR5010 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********SLDEPR    IFNE '1'                                       146525
+     C***********SLDEPR    ANDNE'3'                                       146525
+     C***********SLDEPR    ANDNE'4'                                       146525
+     C***********SLDEPR    ANDNE'5'                                       146525
+     C***********          MOVE *ON       *IN21                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR2664 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********SLDEPR    IFEQ '3'                                       146525
+     C***********BKAKSI    ANDEQ'Y'                                       146525
+     C***********          MOVE *ON       *IN21                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR4268 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+      ** Loan Decrease Posting Reference is blank                         146525
+      ***********                                                         146525
+     C***********          ELSE                                           146525
+      ***********                                                         146525
+      ** Facility Decrease Code is not blank                              146525
+      ***********                                                         146525
+     C***********SLDECR    IFNE *BLANKS                                   146525
+     C***********          MOVE *ON       *IN21                           146525
+     C***********          MOVE *ON       *IN33                           146525
+     C***********          MOVEL'USR5011 'ZAMSID                          146525
+     C***********          EXSR ZASNMS                                    146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C***********          ENDIF                                          146525
+      ***********                                                         146525
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * SRAKGN - Account Key Generation Processing                    *
+      *                                                               *
+      * Called by: SRSCND - Second screen processing                  *
+      *                                                               *
+      * Calls    : SRACUP - Account keys update processing            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAKGN    BEGSR
+      *
+      ** Initialise Account key field to blank
+      *
+     C                     MOVE *BLANKS   UAKEY
+      *
+      ** Move Facility Type fiel to position 1 - 3
+      *
+     C                     MOVE SFTYPE    UFTYP
+      *
+      ** Move Facility Type Indicator to position 4
+      *
+     C                     MOVE SFTYPI    UFIND
+     C/COPY WNCPYSRC,AKH00019
+      *
+      ***If*Participation*Indicator*field*is*"Y",*****************        146525
+      ***Move*'P'*to*position*6***********************************        146525
+      ************************************************************        146525
+     C***********SPARTI    IFEQ 'Y'                                       146525
+     C***********          MOVE 'P'       UPART                           146525
+     C***********          ENDIF                                          146525
+      ************************************************************        146525
+      ***If*Recourse**Indicator*field*is*"Y",*********************        146525
+      ***Move*'R'*to*position*7***********************************        146525
+      ************************************************************        146525
+     C***********SRECOI    IFEQ 'Y'                                       146525
+     C***********          MOVE 'R'       URECO                           146525
+     C***********          ENDIF                                          146525
+      *
+      ***1.*Generate*Account*Key*for*xxxF_PR__I*******************        146525
+      ** 1A. Generate Account Key for xxxF_____I                          146525
+      *
+      **    Move 'I' to position 10
+      *
+     C                     MOVE 'I'       UAIDR
+      *
+     C           SFINCR    IFNE *BLANK
+     C***********          MOVE SFINCR    UACD4                           146525
+     C                     MOVE SFINCR    UACD1                           146525
+     C***********          MOVE 'F1'      UNCD4                           146525
+     C                     MOVE 'F1'      UNCD1                           146525
+     C***********          MOVE SFINPR    UPRF4                           146525
+     C                     MOVE SFINPR    UPRF1                           146525
+     C***********          MOVE SFDECR    UACD1                           146525
+     C                     MOVE SFDECR    UACD4                           146525
+     C           SFDECR    IFNE *BLANKS
+     C***********          MOVE '01'      UNCD1                           146525
+     C                     MOVE '01'      UNCD4                           146525
+     C***********          MOVE SFDEPR    UPRF1                           146525
+     C                     MOVE SFDEPR    UPRF4                           146525
+     C                     ELSE
+     C***********          MOVE *BLANKS   UNCD1                           146525
+     C                     MOVE *BLANKS   UNCD4                           146525
+     C***********          MOVE *BLANKS   UPRF1                           146525
+     C                     MOVE *BLANKS   UPRF4                           146525
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Perform Account Keys Update Processing
+      *
+     C                     EXSR SRACUP
+      *                                                                   146525
+      ** Generate Account Keys for syndication and participation          146525
+      *                                                                   146525
+     C                     EXSR SRSYND                                    146525
+      *
+      ***2.*Generate Account*Key*for*xxxF_PR__D***************************146525
+      ** 2A. Generate Account Key for xxxF_____D                          146525
+      *
+      **    Move 'D' to position 10
+      *
+     C                     MOVE 'D'       UAIDR
+      *
+      ** The field SFDECR is the Contra account code                      175746
+      *                                                                   175746
+     C           SFDECR    IFNE *BLANKS
+     C***********          MOVE SFDECR    UACD4                           146525
+     C                     MOVE SFDECR    UACD1                           146525
+     C***********          MOVE '01'      UNCD4                           146525
+     C                     MOVE '01'      UNCD1                           146525
+     C***********          MOVE SFDEPR    UPRF4                           146525
+     C                     MOVE SFDEPR    UPRF1                           146525
+     C***********          MOVE SFINCR    UACD1                           146525
+     C***********          MOVE SFINCR    UACD4                 146525    175746
+     C                     ELSE                                           175746
+     C                     MOVE *BLANKS   UNCD1                           175746
+     C                     MOVE *BLANKS   UPRF1                           175746
+     C                     ENDIF                                          175746
+      *                                                                   175746
+      ** The field SFINCR is the Debit account code                       175746
+      *                                                                   175746
+     C           SFINCR    IFNE *BLANKS
+     C                     MOVE SFINCR    UACD4                           175746
+     C***********          MOVE 'F2'      UNCD1                           146525
+     C***********          MOVE 'F2'      UNCD1                 146525    175746
+     C                     MOVE 'F2'      UNCD4                           175746
+     C***********          MOVE SFINPR    UPRF1                           146525
+     C***********          MOVE SFINPR    UPRF1                 146525    175746
+     C                     MOVE SFINPR    UPRF4                           175746
+     C                     ELSE
+     C***********          MOVE *BLANKS   UNCD1                           146525
+     C                     MOVE *BLANKS   UNCD4                           146525
+     C***********          MOVE *BLANKS   UPRF1                           146525
+     C                     MOVE *BLANKS   UPRF4                           146525
+     C                     ENDIF
+     C***********          ENDIF                                          175746
+      *
+      ** Perform Account Keys Update Processing
+      *
+     C                     EXSR SRACUP
+      *                                                                   146525
+      ** Generate Account Keys for syndication and participation          146525
+      *                                                                   146525
+     C                     EXSR SRSYND                                    146525
+      *
+      ***3.*Generate*Account*Key*for*xxxF_PR__A***************************146525
+      ** 3A. Generate Account Key for xxxF___A                            146525
+      *
+      **    Move 'A' to position 10
+      *
+     C                     MOVE 'A'       UAIDR
+      *
+     C***********SLINCR    IFNE *BLANKS                                   146525
+     C           SFINCR    IFNE *BLANKS                                   146525
+     C***********          MOVE SLINCR    UACD4                           146525
+     C***********          MOVE SFINCR    UACD1                 146525    175746
+     C                     MOVE SFINCR    UACD4                           175746
+     C***********          MOVE 'F3'      UNCD4                           146525
+     C***********          MOVE 'F3'      UNCD1                 146525    175746
+     C                     MOVE 'F3'      UNCD4                           175746
+     C***********          MOVE SLINPR    UPRF4                           146525
+     C***********          MOVE SFINPR    UPRF1                 146525    175746
+     C                     MOVE SFINPR    UPRF4                           175746
+     C***********          MOVE SLDECR    UACD1                           146525
+     C***********          MOVE SFDECR    UACD4                 146525    175746
+     C                     ELSE                                           175746
+     C                     MOVE *BLANKS   UNCD4                           175746
+     C                     MOVE *BLANKS   UPRF4                           175746
+     C                     ENDIF                                          175746
+      *                                                                   175746
+     C***********SLDECR    IFNE *BLANKS                                   146525
+     C           SFDECR    IFNE *BLANKS                                   146525
+     C                     MOVE SFDECR    UACD1                           175746
+     C***********          MOVE '01'      UNCD1                           146525
+     C***********          MOVE '01'      UNCD4                 146525    175746
+     C                     MOVE '01'      UNCD1                           175746
+     C***********          MOVE SLDEPR    UPRF1                           146525
+     C***********          MOVE SFDEPR    UPRF4                 146525    175746
+     C                     MOVE SFDEPR    UPRF1                           175746
+     C                     ELSE
+     C***********          MOVE *BLANKS   UNCD1                           146525
+     C***********          MOVE *BLANKS   UNCD4                 146525    175746
+     C                     MOVE *BLANKS   UNCD1                           175746
+     C***********          MOVE *BLANKS   UPRF1                           146525
+     C***********          MOVE *BLANKS   UPRF4                 146525    175746
+     C                     MOVE *BLANKS   UPRF1                           175746
+     C                     ENDIF
+     C***********          ENDIF                                          175746
+      *
+      ** Perform Account Keys Update Processing
+      *
+     C                     EXSR SRACUP
+      *                                                                   146525
+     C                     EXSR SRRESY                                    146525
+      *
+      ***4.*Generate*Account*Key*for*xxxF_PR__R***************************146525
+      ** 4A. Generate Account Key for xxxF_____R                          146525
+      *
+      **    Move 'R' to position 10
+      *
+     C                     MOVE 'R'       UAIDR
+      *
+     C***********SLDECR    IFNE *BLANKS                                   146525
+     C           SFDECR    IFNE *BLANKS                                   146525
+     C***********          MOVE SLDECR    UACD4                           146525
+     C***********          MOVE SFDECR    UACD1                 146525    175746
+     C                     MOVE SFDECR    UACD4                           175746
+     C***********          MOVE '01'      UNCD4                           146525
+     C***********          MOVE '01'      UNCD1                 146525    175746
+     C                     MOVE '01'      UNCD4                           175746
+     C***********          MOVE SLDEPR    UPRF4                           146525
+     C***********          MOVE SFDEPR    UPRF1                 146525    175746
+     C                     MOVE SFDEPR    UPRF4                           175746
+     C***********          MOVE SLINCR    UACD1                           146525
+     C***********          MOVE SFINCR    UACD4                 146525    175746
+     C                     ELSE                                           175746
+     C                     MOVE *BLANKS   UNCD4                           175746
+     C                     MOVE *BLANKS   UPRF4                           175746
+     C                     ENDIF                                          175746
+      *                                                                   175746
+     C***********SLINCR    IFNE *BLANKS                                   146525
+     C           SFINCR    IFNE *BLANKS                                   146525
+     C                     MOVE SFINCR    UACD1                           175746
+     C***********          MOVE 'F4'      UNCD1                           146525
+     C***********          MOVE 'F4'      UNCD4                 146525    175746
+     C                     MOVE 'F4'      UNCD1                           175746
+     C***********          MOVE SLINPR    UPRF1                           146525
+     C***********          MOVE SFINPR    UPRF4                 146525    175746
+     C                     MOVE SFINPR    UPRF1                           175746
+     C                     ELSE
+     C***********          MOVE *BLANKS   UNCD1                           146525
+     C***********          MOVE *BLANKS   UNCD4                 146525    175746
+     C                     MOVE *BLANKS   UNCD1                           175746
+     C***********          MOVE *BLANKS   UPRF1                           146525
+     C***********          MOVE *BLANKS   UPRF4                 146525    175746
+     C                     MOVE *BLANKS   UPRF1                           175746
+     C                     ENDIF
+     C***********          ENDIF                                          175746
+      *
+      ** Perform Account Keys Update Processing
+      *
+     C                     EXSR SRACUP
+      *                                                                   146525
+     C                     EXSR SRRESY                                    146525
+      *
+      ** 5. Generate Account Key for xxxF____MA
+      *
+      ** Move blank to position 6 and 7
+      *
+     C                     MOVE *BLANKS   UPART
+     C                     MOVE *BLANKS   URECO
+      *
+      ** Move 'M' to position 9
+      *
+     C                     MOVE 'M'       UZZM9
+      *
+      **    Move 'A' to position 10
+      *
+     C                     MOVE 'A'       UAIDR
+      *
+     C***********SLINCR    IFNE *BLANKS                                   146525
+     C           SFINCR    IFNE *BLANKS                                   146525
+     C***********          MOVE SLINCR    UACD4                           146525
+     C***********          MOVE SFINCR    UACD1                 146525    175746
+     C                     MOVE SFINCR    UACD4                           175746
+     C***********          MOVE 'F3'      UNCD4                           146525
+     C***********          MOVE 'F3'      UNCD1                 146525    175746
+     C                     MOVE 'F3'      UNCD4                           175746
+     C***********          MOVE SLINPR    UPRF4                           146525
+     C***********          MOVE SFINPR    UPRF1                 146525    175746
+     C                     MOVE SFINPR    UPRF4                           175746
+     C***********          MOVE SLDECR    UACD1                           146525
+     C***********          MOVE SFDECR    UACD4                 146525    175746
+     C                     ELSE                                           175746
+     C                     MOVE *BLANKS   UNCD4                           175746
+     C                     MOVE *BLANKS   UPRF4                           175746
+     C                     ENDIF                                          175746
+      *                                                                   175746
+     C***********SLDECR    IFNE *BLANKS                                   146525
+     C           SFDECR    IFNE *BLANKS                                   146525
+     C                     MOVE SFDECR    UACD1                           175746
+     C***********          MOVE '01'      UNCD1                           146525
+     C***********          MOVE '01'      UNCD4                 146525    175746
+     C                     MOVE '01'      UNCD1                           175746
+     C***********          MOVE SLDEPR    UPRF1                           146525
+     C***********          MOVE SFDEPR    UPRF4                 146525    175746
+     C                     MOVE SFDEPR    UPRF1                           175746
+     C                     ELSE
+     C***********          MOVE *BLANKS   UNCD1                           146525
+     C***********          MOVE *BLANKS   UNCD4                 146525    175746
+     C                     MOVE *BLANKS   UNCD1                           175746
+     C***********          MOVE *BLANKS   UPRF1                           146525
+     C***********          MOVE *BLANKS   UPRF4                 146525    175746
+     C                     MOVE *BLANKS   UPRF1                           175746
+     C                     ENDIF
+     C***********          ENDIF                                          175746
+      *
+      ** Perform Account Keys Update Processing
+      *
+     C                     EXSR SRACUP
+      *                                                                   146525
+     C                     EXSR SRSYND                                    146525
+      *
+      ** 6. Generate Account Key for xxxF____MR
+      *
+      **    Move 'R' to position 10
+      *
+     C                     MOVE 'R'       UAIDR
+      *
+     C***********SLINCR    IFNE *BLANKS                                   146525
+     C           SFINCR    IFNE *BLANKS                                   146525
+     C***********          MOVE SLINCR    UACD4                           146525
+     C***********          MOVE SFINCR    UACD4                 146525    175746
+     C                     MOVE SFINCR    UACD1                           175746
+     C***********          MOVE '01'      UNCD4                           175746
+     C                     MOVE 'F4'      UNCD1                           175746
+     C***********          MOVE SLINPR    UPRF4                           146525
+     C***********          MOVE SFINPR    UPRF4                 146525    175746
+     C                     MOVE SFINPR    UPRF1                           175746
+     C***********          MOVE SLDECR    UACD1                           146525
+     C***********          MOVE SFDECR    UACD1                 146525    175746
+     C                     ELSE                                           175746
+     C                     MOVE *BLANKS   UNCD1                           175746
+     C                     MOVE *BLANKS   UPRF1                           175746
+     C                     ENDIF                                          175746
+      *                                                                   175746
+     C***********SLDECR    IFNE *BLANKS                                   146525
+     C           SFDECR    IFNE *BLANKS                                   146525
+     C                     MOVE SFDECR    UACD4                           175746
+     C***********          MOVE 'F4'      UNCD1                           175746
+     C                     MOVE '01'      UNCD4                           175746
+     C***********          MOVE SLDEPR    UPRF1                           146525
+     C***********          MOVE SFDEPR    UPRF1                 146525    175746
+     C                     MOVE SFDEPR    UPRF4                           175746
+     C                     ELSE
+     C***********          MOVE *BLANKS   UNCD1                           175746
+     C                     MOVE *BLANKS   UNCD4                           175746
+     C***********          MOVE *BLANKS   UPRF1                           175746
+     C                     MOVE *BLANKS   UPRF4                           175746
+     C                     ENDIF
+     C***********          ENDIF                                          175746
+      *
+      ** Perform Account Keys Update Processing
+      *
+     C                     EXSR SRACUP
+      *                                                                   146525
+     C                     EXSR SRSYND                                    146525
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * SRACUP - Account Keys Update Processing                       *
+      *                                                               *
+      * Called by: SRAKGN - Account Keys Generation Processing        *
+      *                                                               *
+      * Calls    : NONE                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACUP    BEGSR
+      *
+     C                     MOVE 'D'       RECI
+     C*********************MOVE UAKEY     AKEY                                                CDL038
+     C                     MOVELUAKEY     AKEY                                                CDL038
+     C                     MOVE UACD1     ACD1
+     C                     Z-ADD*ZERO     ACD2
+     C                     Z-ADD*ZERO     ACD3
+     C                     MOVE UACD4     ACD4
+     C                     Z-ADD*ZERO     ACD5
+     C                     Z-ADD*ZERO     ACD6
+     C                     MOVE UNCD1     NCD1
+     C                     MOVE *BLANKS   NCD2
+     C                     MOVE *BLANKS   NCD3
+     C                     MOVE UNCD4     NCD4
+     C                     MOVE *BLANKS   NCD5
+     C                     MOVE *BLANKS   NCD6
+     C                     MOVE UPRF1     PRF1
+     C                     Z-ADD*ZERO     PRF2
+     C                     Z-ADD*ZERO     PRF3
+     C                     MOVE UPRF4     PRF4
+     C                     Z-ADD*ZERO     PRF5
+     C                     Z-ADD*ZERO     PRF6
+      *
+     C                     WRITEZACKEYAF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * SRENDP - End Processing                                       *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls    : NONE                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENDP    BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * ZASNMS - Send message to program message queue                *
+      *                                                               *
+      * Called by: SRFRST - First screen processing                   *
+      *            SRSCND - Second screen processing                  *
+      *                                                               *
+      * Calls    : Y2SNMGC                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM #PGM      ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *****************************************************************   146525
+      *                                                               *   146525
+      * SRCLFD- Clear Fields for Debits and Credits                   *   146525
+      *                                                               *   146525
+      * Called by: SRAKGN - Account Key Generation                    *   146525
+      *                                                               *   146525
+      *  Calls    : None                                              *   146525
+      *                                                               *   146525
+      *****************************************************************   146525
+      *                                                                   146525
+     C           SRCLFD    BEGSR                                          146525
+      *                                                                   146525
+     C                     MOVE *BLANKS   UACD1                           146525
+     C                     MOVE *BLANKS   UNCD1                           146525
+     C                     MOVE *BLANKS   UPRF1                           146525
+     C                     MOVE *BLANKS   UACD4                           146525
+     C                     MOVE *BLANKS   UNCD4                           146525
+     C                     MOVE *BLANKS   UPRF4                           146525
+      *                                                                   146525
+     C                     ENDSR                                          146525
+      *****************************************************************   146525
+      *                                                               *   146525
+      * SRSYND- Create Syndication account keys for increase          *   146525
+      *         decrease, manual utilisation keys                     *   146525
+      *                                                               *   146525
+      * Called by: SRAKGN - Account Key Generation                    *   146525
+      *                                                               *   146525
+      *  Calls    : SRCLFD                                            *   146525
+      *                                                               *   146525
+      *****************************************************************   146525
+      *                                                                   146525
+     C           SRSYND    BEGSR                                          146525
+      *                                                                   146525
+      ** 1B. Generate Account Key for xxxF___S_I or xxxF___SMA            146525
+      *                                                                   146525
+     C                     MOVE 'S'       UZZZ8                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                   146525
+      ** 1C. Generate Account Key for xxxF_P_S_I or xxxF_P_SMA            146525
+      *                                                                   146525
+     C**********           EXSR SRCLFD                                               146525 BUG21811
+      *                                                                   146525
+     C                     MOVE 'P'       UPART                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                   191056
+      ** 1CX** Generate Account Key for xxxF_P___I or xxxF_P__MA          191056
+      *                                                                   191056
+     C                     MOVE *BLANK    UZZZ8                           191056
+      *                                                                   191056
+      ** Perform Account Keys Update Processing                           191056
+      *                                                                   191056
+     C                     EXSR SRACUP                                    191056
+     C                     MOVE 'S'       UZZZ8                           191056
+      *                                                                   146525
+      ** 1D. Generate Account Key for xxxF_I_S_I or xxxF_I_SMA            146525
+      *                                                                   146525
+     C                     MOVE 'I'       UPART                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                                       CLE106
+      ** Syndications account keys for increase, decrease, manual util keys                   CLE106
+      ** 1E. Generate account key xxxF_S_S_I or xxxF_S_SMA                                    CLE106
+      *                                                                                       CLE106
+     C                     MOVE 'S'       UPART                                               CLE106
+     C                     MOVE 'S'       UZZZ8                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                                       CLE106
+      ** 1F. Generate account key xxxF_R_S_I or xxxF_R_SMA                                    CLE106
+      *                                                                                       CLE106
+     C                     MOVE 'R'       UPART                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                                       CLE106
+      ** 1G. Generate account key xxxF_R___I or xxxF_R__MA                                    CLE106
+      *                                                                                       CLE106
+     C                     MOVE *BLANK    UZZZ8                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                   146525
+     C                     MOVE *BLANK    UPART                           146525
+     C                     MOVE *BLANK    UZZZ8                           146525
+      *                                                                   146525
+     C                     ENDSR                                          146525
+      *****************************************************************   146525
+      *                                                               *   146525
+      * SRRESY- Create Syndication and recourse account keys for      *   146525
+      *         increase, decrease, manual utilisation keys           *   146525
+      *                                                               *   146525
+      * Called by: SRAKGN - Account Key Generation                    *   146525
+      *                                                               *   146525
+      *  Calls    : SRRESY                                            *   146525
+      *                                                               *   146525
+      *****************************************************************   146525
+      *                                                                   146525
+     C           SRRESY    BEGSR                                          146525
+      *                                                                   146525
+      ** 3B. Generate Account Key for xxxF__R__A                          146525
+      *                                                                   146525
+     C                     MOVE 'R'       URECO                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                   146525
+     C                     MOVE *BLANK    URECO                           146525
+      *                                                                   146525
+      ** 3C. Generate Account Key for xxxF___S_A                          146525
+      *                                                                   146525
+     C                     MOVE 'S'       UZZZ8                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                   146525
+      ** 3C. Generate Account Key for xxxF__RS_A                          146525
+      *                                                                   146525
+     C                     MOVE 'R'       URECO                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                   146525
+     C                     MOVE *BLANK    URECO                           146525
+      *                                                                   146525
+      *                                                                   146525
+      ** 3D. Generate Account Key for xxxF_P_S_A                          146525
+      *                                                                   146525
+     C**********           EXSR SRCLFD                                               146525 BUG21811
+      *                                                                   146525
+     C                     MOVE 'P'       UPART                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                   146525
+      ** 3DX *** Generate Account Key for xxxF_P___A                      191056
+      *                                                                   191056
+     C                     MOVE *BLANK    UZZZ8                           191056
+      *                                                                   191056
+      ** Perform Account Keys Update Processing                           191056
+      *                                                                   191056
+     C                     EXSR SRACUP                                    191056
+     C                     MOVE 'S'       UZZZ8                           191056
+      *                                                                   191056
+      ** 3E. Generate Account Key for xxxF___S_A                          146525
+      *                                                                   146525
+     C                     MOVE 'R'       URECO                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                   146525
+     C                     MOVE *BLANK    URECO                           146525
+      *                                                                   146525
+      ** 3D. Generate Account Key for xxxF_I_S_A                          146525
+      *                                                                   146525
+     C                     MOVE 'I'       UPART                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                   146525
+      ** 3E. Generate Account Key for xxxF_IRS_A                          146525
+      *                                                                   146525
+     C                     MOVE 'R'       URECO                           146525
+      *                                                                   146525
+      ** Perform Account Keys Update Processing                           146525
+      *                                                                   146525
+     C                     EXSR SRACUP                                    146525
+      *                                                                                       CLE106
+      ** Syndication and recourse account keys for increase, decrease, manual util keys       CLE106
+      ** 3F. Generate Account Key for xxxF_S_S_A                                              CLE106
+      *                                                                                       CLE106
+     C                     MOVE 'S'       UPART                                               CLE106
+     C                     MOVE 'S'       UZZZ8                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                                       CLE106
+      ** 3G. Generate Account Key for xxxF_SRS_A                                              CLE106
+      *                                                                                       CLE106
+     C                     MOVE 'R'       URECO                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                                       CLE106
+      ** 3H. Generate Account Key for xxxF_R_S_A                                              CLE106
+      *                                                                                       CLE106
+     C                     MOVE 'R'       UPART                                               CLE106
+     C                     MOVE *BLANK    URECO                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                                       CLE106
+      ** 3I. Generate Account Key for xxxF_RRS_A                                              CLE106
+      *                                                                                       CLE106
+     C                     MOVE 'R'       URECO                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                                       CLE106
+      ** 3J. Generate Account Key for xxxF_R___A                                              CLE106
+      *                                                                                       CLE106
+     C                     MOVE *BLANK    URECO                                               CLE106
+     C                     MOVE *BLANK    UZZZ8                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                                       CLE106
+      ** 3K. Generate Account Key for xxxF_RR__A                                              CLE106
+      *                                                                                       CLE106
+     C                     MOVE 'R'       URECO                                               CLE106
+      *                                                                                       CLE106
+      ** Perform Account Keys Update Processing                                               CLE106
+      *                                                                                       CLE106
+     C                     EXSR SRACUP                                                        CLE106
+      *                                                                   146525
+     C                     MOVE *BLANK    UPART                           146525
+     C                     MOVE *BLANK    URECO                           146525
+     C                     MOVE *BLANK    UZZZ8                           146525
+      *                                                                   146525
+     C                     ENDSR                                          146525
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRCLR - Clear message on program message queue                *
+      *                                                               *
+      * Called by: SRFRST - First screen processing                   *
+      *            SRSCND - Second screen processing                  *
+      *                                                               *
+      *  Calls    : Y2CLMSC                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCLR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  NARC - Required Narrative Code
+01F1F2F3F4

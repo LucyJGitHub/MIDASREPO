@@ -1,0 +1,685 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IRM Extract Filter')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Interest Risk Management Module                  *
+     F*                                                               *
+     F*  RM0510 - IRM Extract Filter                                  *
+     F*                                                               *
+     F*  Function:  This program determines whether a transaction     *
+     F*  (COB)      or group of transactions read by the calling      *
+     F*             extract program is to be extracted to Tmark.      *
+     F*             This decision is made according to attributes of  *
+     F*             the transaction passed as parameters to this      *
+     F*             program, and information held on the IRM Extract  *
+     F*             Filter File.                                      *
+     F*                                                               *
+     F*  Called By: RM0100 - Foreign Exchange Tmark Extract           *
+     F*             RM0110 - Money Market Tmark Extract               *
+     F*             RM0120 - FRA/IRS Tmark Extract                    *
+     F*             RM0130 - Customer Lending Tmark Extract           *
+     F*             RM0140 - Securities Trading Tmark Extract         *
+     F*             RM0150 - Futures Tmark Extract                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CRM001  *CREATE    Date 06Feb95               *
+      *                 XNNNNN             Date DDMmmYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CRM001 - Midas/Tmark Interface                               *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSDIRMFL1IF  E           K        DISK         KINFSR *PSSR
+     F** IRM Extract Filter File
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   30  - Read/Chain fail on SDIRMFL1                           *
+     F*   31  - LOKUP indicator                                       *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   #LTERM - Determine Termination Criteria                     *
+     F*   #LOMIT - Determine Omission Criteria                        *
+     F*   #LTSTR - Test for Termination                               *
+     F*   #LTSOM - Test for Omission                                  *
+     F*                                                               *
+     F*   *PSSR  - Standard Error Processing                          *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E*
+     E                    ENT     1   7 15
+     E** Array containing entity
+     E*
+     E                    BRC        99  3
+     E** 'Branches to omit' array
+     E*
+     E                    PRF        99  4
+     E** 'Profit Centres to omit' array
+     E*
+     E                    BOK        99  2
+     E** 'Books to omit' array
+     E*
+     E                    DLT       499  4
+     E** 'Deal Types/Subtype to Omit' array
+     E*
+     E                    LNT       499  4
+     E** 'Loan Types/Subtypes to Omit' array
+     E*
+     E                    SEC        99  3
+     E** 'Security Investment Types to Omit' array
+     E*
+     E                    FUT        99  3
+     E** 'Futures Instrument Types to Omit' array
+     E*
+     I/EJECT
+     IPDTST       DS                              4
+     I                                        1   2 WDLTY
+     I*
+     IPLTST       DS                              4
+     I                                        1   2 WLNTY
+     C/EJECT
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PBRCA   3
+     C                     PARM           PPRFC   4
+     C                     PARM           PBOKC   2
+     C                     PARM           PDTST
+     C                     PARM           PLTST
+     C                     PARM           PINVT   3
+     C                     PARM           PISTT   3
+     C                     PARM           PRTCD   7
+     C*
+     C**  Key list for SDIRMFL1
+     C*
+     C           KENCD     KLIST
+     C                     KFLD           WENTY  15
+     C                     KFLD           WCODE  10
+     C*
+     C*****************************************************************
+     C**  M A I N   P R O C E S S I N G
+     C*****************************************************************
+     C*
+     C                     MOVE *BLANKS   PRTCD
+     C                     MOVE '**'      WTYGN   4
+     C*
+     C**  If this is the first call of this program
+     C*
+     C           WFRST     IFNE 'N'
+     C                     MOVE 'N'       WFRST   1
+     C*
+     C**  Determine Termination Criteria
+     C*
+     C                     EXSR #LTERM
+     C*
+     C**  Determine Omission Criteria
+     C*
+     C                     EXSR #LOMIT
+     C*
+     C                     END
+     C*
+     C**  Test for Termination
+     C*
+     C                     EXSR #LTSTR
+     C*
+     C           PRTCD     IFEQ '*END'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C**  Test for Omission
+     C*
+     C                     EXSR #LTSOM
+     C*
+     C**  Return to calling program
+     C*
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LTERM - Subroutine to determine termination criteria         *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LTERM    BEGSR                           ** #LTERM SR **
+     C*
+     C**  For Entity of 'BRANCH' and Code of '***'
+     C*
+     C                     MOVE ENT,1     WENTY  15
+     C                     MOVE *BLANKS   WCODE  10
+     C                     MOVEL'***'     WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*END   ' PRTCD
+     C                     END
+     C*
+     C**  For Entity of 'PROFIT CENTRE' and Code of '****'
+     C*
+     C                     MOVE ENT,2     WENTY
+     C                     MOVEL'****'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*END   ' PRTCD
+     C                     END
+     C*
+     C**  For Entity of 'BOOK' and Code of '**'
+     C*
+     C                     MOVE ENT,3     WENTY
+     C                     MOVE *BLANKS   WCODE
+     C                     MOVEL'**'      WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*END   ' PRTCD
+     C                     END
+     C*
+     C**  For Entity of 'DEAL TYPE/STYPE' and Code of '****'
+     C*
+     C                     MOVE ENT,4     WENTY
+     C                     MOVEL'****'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'YES'     WOMDL   3
+     C                     END
+     C*
+     C**  For Entity of 'DEAL TYPE/STYPE' and Codes for Foreign
+     C**  Exchange Deals...
+     C*
+     C                     MOVEL'FP**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WFPCD   1
+     C                     END
+     C*
+     C                     MOVEL'FS**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WFSCD   1
+     C                     END
+     C*
+     C                     MOVEL'CX**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WCXCD   1
+     C                     END
+     C*
+     C                     MOVEL'PI**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WPICD   1
+     C                     END
+     C*
+     C                     MOVEL'SI**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WSICD   1
+     C                     END
+     C*
+     C                     MOVEL'SW**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WSWCD   1
+     C                     END
+     C*
+     C**  If access for FP/FS/CX/PI/SI/SW succeed, set 'Omit Foreign
+     C**  Exchange Deals' to 'YES'
+     C*
+     C           WFPCD     IFEQ 'Y'
+     C           WFSCD     ANDEQ'Y'
+     C           WCXCD     ANDEQ'Y'
+     C           WPICD     ANDEQ'Y'
+     C           WSICD     ANDEQ'Y'
+     C           WSWCD     ANDEQ'Y'
+     C                     MOVE 'YES'     WOMFX   3
+     C                     END
+     C*
+     C**  For Entity of 'DEAL TYPE/STYPE' and Codes for Loan and
+     C**  Deposit Deals...
+     C*
+     C                     MOVEL'IP**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WIPCD   1
+     C                     END
+     C*
+     C                     MOVEL'TI**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WTICD   1
+     C                     END
+     C*
+     C                     MOVEL'CL**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WCLCD   1
+     C                     END
+     C*
+     C                     MOVEL'LN**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WLNCD   1
+     C                     END
+     C*
+     C                     MOVEL'DL**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WDLCD   1
+     C                     END
+     C*
+     C                     MOVEL'IT**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WITCD   1
+     C                     END
+     C*
+     C                     MOVEL'TD**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WTDCD   1
+     C                     END
+     C*
+     C                     MOVEL'CD**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WCDCD   1
+     C                     END
+     C*
+     C                     MOVEL'CI**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WCICD   1
+     C                     END
+     C*
+     C**  If access for IP/TI/CL/LN/DL/IT/TD/CD/CI succeed, set
+     C**  'Omit Loan and Deposit Deals' to 'YES'
+     C*
+     C           WIPCD     IFEQ 'Y'
+     C           WTICD     ANDEQ'Y'
+     C           WCLCD     ANDEQ'Y'
+     C           WLNCD     ANDEQ'Y'
+     C           WDLCD     ANDEQ'Y'
+     C           WITCD     ANDEQ'Y'
+     C           WTDCD     ANDEQ'Y'
+     C           WCDCD     ANDEQ'Y'
+     C           WCICD     ANDEQ'Y'
+     C                     MOVE 'YES'     WOMLD   3
+     C                     END
+     C*
+     C**  For Entity of 'DEAL TYPE/STYPE' and Codes for FRA and
+     C**  IRS Deals...
+     C*
+     C                     MOVEL'FR**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WFRCD   1
+     C                     END
+     C*
+     C                     MOVEL'RS**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WRSCD   1
+     C                     END
+     C*
+     C                     MOVEL'RX**'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       WRXCD   1
+     C                     END
+     C*
+     C**  If access for FR/RS/RX succeed, set 'Omit FRA and IRS
+     C**  Deals' to 'YES'
+     C*
+     C           WFRCD     IFEQ 'Y'
+     C           WRSCD     ANDEQ'Y'
+     C           WRXCD     ANDEQ'Y'
+     C                     MOVE 'YES'     WOMFR   3
+     C                     END
+     C*
+     C**  For Entity of 'LOAN TYPE/STYPE' and Code of '****'
+     C*
+     C                     MOVE ENT,5     WENTY
+     C                     MOVEL'****'    WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'YES'     WOMCL   3
+     C                     END
+     C*
+     C**  For Entity of 'SECURITY INVTYP' and Code of '***'
+     C*
+     C                     MOVE ENT,6     WENTY
+     C                     MOVE *BLANKS   WCODE
+     C                     MOVEL'***'     WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'YES'     WOMSE   3
+     C                     END
+     C*
+     C**  For Entity of 'FUTURES INSTTYP' and Code of '***'
+     C*
+     C                     MOVE ENT,7     WENTY
+     C                     MOVEL'***'     WCODE
+     C           KENCD     CHAINSDIRMFL1             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'YES'     WOMFU   3
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LOMIT - Subroutine to determine omission criteria            *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LOMIT    BEGSR                           ** #LOMIT SR **
+     C*
+     C**  Initialise work fields for array index
+     C*
+     C                     Z-ADD1         A       20
+     C                     Z-ADD1         B       20
+     C                     Z-ADD1         C       20
+     C                     Z-ADD1         D       30
+     C                     Z-ADD1         E       30
+     C                     Z-ADD1         F       20
+     C                     Z-ADD1         G       20
+     C*
+     C           *LOVAL    SETLLSDIRMFL1
+     C                     READ SDIRMFL1                 30
+     C*
+     C**  Do while not end of file
+     C*
+     C           *IN30     DOWEQ'0'
+     C*
+     C                     SELEC
+     C*
+     C           FNIETY    WHEQ ENT,1
+     C                     MOVELFNETFC    BRC,A
+     C                     ADD  1         A
+     C*
+     C           FNIETY    WHEQ ENT,2
+     C                     MOVELFNETFC    PRF,B
+     C                     ADD  1         B
+     C*
+     C           FNIETY    WHEQ ENT,3
+     C                     MOVELFNETFC    BOK,C
+     C                     ADD  1         C
+     C*
+     C           FNIETY    WHEQ ENT,4
+     C                     MOVELFNETFC    DLT,D
+     C                     ADD  1         D
+     C*
+     C           FNIETY    WHEQ ENT,5
+     C                     MOVELFNETFC    LNT,E
+     C                     ADD  1         E
+     C*
+     C           FNIETY    WHEQ ENT,6
+     C                     MOVELFNETFC    SEC,F
+     C                     ADD  1         F
+     C*
+     C           FNIETY    WHEQ ENT,7
+     C                     MOVELFNETFC    FUT,G
+     C                     ADD  1         G
+     C*
+     C                     ENDSL
+     C*
+     C**  Read next record
+     C*
+     C                     READ SDIRMFL1                 30
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LTSTR - Subroutine to test for termination                   *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LTSTR    BEGSR                           ** #LTSTR SR **
+     C*
+     C**  If Deal Type/Subtype parameter is not blank and 'Omit all
+     C**  deals' is 'YES'
+     C*
+     C           PDTST     IFNE *BLANKS
+     C           WOMDL     ANDEQ'YES'
+     C*
+     C**  Or, if Loan Type/Subtype paramter is not blank and 'Omit
+     C**  Customer Loans' is 'YES'
+     C*
+     C           PLTST     ORNE *BLANKS
+     C           WOMCL     ANDEQ'YES'
+     C*
+     C**  Or, if Security Investment Type parameter is not blank and
+     C**  'Omit Security Trades' is 'YES'
+     C*
+     C           PINVT     ORNE *BLANKS
+     C           WOMSE     ANDEQ'YES'
+     C*
+     C**  Or, if Futures Instrument Type parameter is not blank and
+     C**  'Omit Future Trades' is 'YES'
+     C*
+     C           PISTT     ORNE *BLANKS
+     C           WOMFU     ANDEQ'YES'
+     C*
+     C                     MOVE '*END   ' PRTCD
+     C*
+     C                     END
+     C*
+     C**  If Deal Type is 'FP/FS/CX/PI/SI/SW' and 'Omit Foreign
+     C**  Exchange Deals' is 'YES'
+     C*
+     C           WOMFX     IFEQ 'YES'
+     C           WDLTY     IFEQ 'FP'
+     C           WDLTY     OREQ 'FS'
+     C           WDLTY     OREQ 'CX'
+     C           WDLTY     OREQ 'PI'
+     C           WDLTY     OREQ 'SI'
+     C           WDLTY     OREQ 'SW'
+     C                     MOVE '*END   ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C**  If Deal Type is 'IP/TI/CL/LN/DL/IT/TD/CD/CI' and 'Omit
+     C**  Loan and Deposit Deals' is 'YES'
+     C*
+     C           WOMLD     IFEQ 'YES'
+     C           WDLTY     IFEQ 'IP'
+     C           WDLTY     OREQ 'TI'
+     C           WDLTY     OREQ 'CL'
+     C           WDLTY     OREQ 'LN'
+     C           WDLTY     OREQ 'DL'
+     C           WDLTY     OREQ 'IT'
+     C           WDLTY     OREQ 'TD'
+     C           WDLTY     OREQ 'CD'
+     C           WDLTY     OREQ 'CI'
+     C                     MOVE '*END   ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C**  If Deal Type is 'FR/RS/RX' and 'Omit FRA and IRS Deals'
+     C**  is 'YES'
+     C*
+     C           WOMFR     IFEQ 'YES'
+     C           WDLTY     IFEQ 'FR'
+     C           WDLTY     OREQ 'RS'
+     C           WDLTY     OREQ 'RX'
+     C                     MOVE '*END   ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LTSOM - Subroutine to test for omission                      *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LTSOM    BEGSR                           ** #LTSOM SR **
+     C*
+     C**  Branch
+     C*
+     C           PBRCA     IFNE *BLANKS
+     C           PBRCA     LOKUPBRC                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C**  Profit Centre
+     C*
+     C           PPRFC     IFNE *BLANKS
+     C           PPRFC     LOKUPPRF                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C**  Book
+     C*
+     C           PBOKC     IFNE *BLANKS
+     C           PBOKC     LOKUPBOK                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C**  Deal Type/Subtype
+     C*
+     C           PDTST     IFNE *BLANKS
+     C*
+     C           PDTST     LOKUPDLT                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     ELSE
+     C                     MOVELWDLTY     WTYGN
+     C           WTYGN     LOKUPDLT                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Loan Type/Subtype
+     C*
+     C           PLTST     IFNE *BLANKS
+     C*
+     C           PLTST     LOKUPLNT                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     ELSE
+     C                     MOVELWLNTY     WTYGN
+     C           WTYGN     LOKUPDLT                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Security Investment Type
+     C*
+     C           PINVT     IFNE *BLANKS
+     C           PINVT     LOKUPSEC                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C**  Futures Instrument Type
+     C*
+     C           PISTT     IFNE *BLANKS
+     C           PISTT     LOKUPFUT                      31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*OMIT  ' PRTCD
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*                                                               *
+     C* Called by: Any file or program error                          *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     DUMP
+     C                     MOVE '*ERROR ' PRTCD
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  CPY@ - Copyright Statement
+(c) Finastra International Limited 2001
+**  ENT - Array for Entity
+BRANCH
+PROFIT CENTRE
+BOOK
+DEAL TYPE/STYPE
+LOAN TYPE/STYPE
+SECURITY INVTYP
+FUTURES INSTTYP

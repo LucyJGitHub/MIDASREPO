@@ -1,0 +1,185 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas RP PB Retrieve position in Meridian message.')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Private Banking Module                              */
+/*                                                                   */
+/*       RPC1305 - Retrieve position in Meridian message             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*       Prev Amend No. CPB002  *CREATE    Date 01Jun99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CPB002 - Meridian DBA Middleware Replication Customization. */
+/*                Midas/TOF Interface.                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SCRIPTNAME &IMAGENAME &FIELDNAME +
+                          &FIELDTYPE &TRANSDATA &FIELDPOSA +
+                          &FIELDLENGA &FIELDVALUE &RETURNCODE)
+ 
+/*-------------------------------------------------------------------*/
+/*  Parameters declaration.                                          */
+/*-------------------------------------------------------------------*/
+ 
+             DCL        VAR(&ScriptName) TYPE(*CHAR) LEN(10) +
+                          /* Script name. */
+             DCL        VAR(&ImageName)  TYPE(*CHAR) LEN(32) +
+                          /* Image name. */
+             DCL        VAR(&FieldName)  TYPE(*CHAR) LEN(10) +
+                          /* Field Name. */
+             DCL        VAR(&FieldType)  TYPE(*CHAR) LEN(1) +
+                          /* Field Type. */
+             DCL        VAR(&TransData)  TYPE(*CHAR) LEN(4000) +
+                          /* Meridian message data. */
+             DCL        VAR(&FieldPosA)  TYPE(*CHAR) LEN(7) +
+                          /* Field position - character. */
+             DCL        VAR(&FieldLengA)  TYPE(*CHAR) LEN(4) +
+                          /* Field lenght - character. */
+             DCL        VAR(&FieldPos)   TYPE(*DEC)  LEN(7 0) +
+                          /* Field position - decimal. */
+             DCL        VAR(&FieldLeng)   TYPE(*DEC)  LEN(4 0) +
+                          /* Field lenght - decimal. */
+             DCL        VAR(&Position)   TYPE(*CHAR) LEN(4) +
+                          /* Field position. */
+             DCL        VAR(&FieldValue) TYPE(*CHAR) LEN(9999) +
+                          /* Field value. */
+             DCL        VAR(&ReturnCode) TYPE(*CHAR) LEN(10) +
+                          /* Return code. */
+ 
+/*-------------------------------------------------------------------*/
+/*  Variables declaration.                                           */
+/*-------------------------------------------------------------------*/
+ 
+             DCL        VAR(&Type)       TYPE(*CHAR) LEN(1) +
+                          /* type of job environment. */
+             DCL        VAR(&Msgdta)     TYPE(*CHAR) LEN(128) +
+                          /* Message text sent to MRUNQ MOPERQ. */
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+/*-------------------------------------------------------------------*/
+/*  Global monitor message.                                          */
+/*-------------------------------------------------------------------*/
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*-------------------------------------------------------------------*/
+/*  Retrieve type of job environment:                                */
+/*       - 0 indicates that the job is running as a batch job.       */
+/*       - 1 indicates an interactive job.                           */
+/*-------------------------------------------------------------------*/
+ 
+             RTVJOBA    TYPE(&Type)
+ 
+/*-------------------------------------------------------------------*/
+/*  Set switches U7 and U8 off.                                      */
+/*-------------------------------------------------------------------*/
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*-------------------------------------------------------------------*/
+/*  Create LDA, if not present.                                      */
+/*-------------------------------------------------------------------*/
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                                AUT(*EXCLUDE)
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  Override Meridian scripts file with appropriate member.          */
+/*-------------------------------------------------------------------*/
+ 
+             OVRDBF     FILE(MDBASCRIPT) MBR(&ScriptName) POSITION(*START)
+ 
+/*-------------------------------------------------------------------*/
+/*  Call Retrieve Messaqe Position module.                           */
+/*-------------------------------------------------------------------*/
+ 
+             CALLPRC    (RP1305) PARM(&ScriptName &ImageName +
+                          &TransData &FieldName &FieldType +
+                          &FieldPosA &FieldLengA &FieldValue &ReturnCode)
+ 
+/*-------------------------------------------------------------------*/
+/*  If any error occurred while retrieving position in message.      */
+/*-------------------------------------------------------------------*/
+ 
+             IF         COND(&ReturnCode *NE ' ') THEN(DO)
+                   RCVMSG     MSGTYPE(*LAST) MSG(&Msgdta)
+                   IF         COND(&Type = '0') THEN(DO)
+                         SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(&Msgdta) +
+                                      TOMSGQ(MOPERQ)
+                   ENDDO
+                   ELSE       CMD(DO)
+                        SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                                     MSGDTA(&Msgdta) TOPGMQ(*PRV)
+                   ENDDO
+                   GOTO CMDLBL(ENDPGM)
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  If job is running as an interactive job, display position.       */
+/*-------------------------------------------------------------------*/
+ 
+             IF         COND(&Type = '1') THEN(DO)
+                   CHGVAR     VAR(&FieldPos) VALUE(&FieldPosA)
+                   CHGVAR     VAR(%BIN(&Position)) VALUE(&FieldPos)
+                   CHGVAR     VAR(&MSGDTA)   VALUE(&ImageName *CAT &FieldName +
+                                              *CAT &Position *CAT &FieldValue)
+                   SNDPGMMSG  MSGID(RP00028) MSGF(PBUSRMSG) +
+                                MSGDTA(&MSGDTA) TOPGMQ(*PRV)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/*-------------------------------------------------------------------*/
+/*  Abnormal Termination.                                            */
+/*-------------------------------------------------------------------*/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CHGVAR     VAR(&Msgdta) +
+                          VALUE('RPC1305 - Retrieve position in Meridian +
+                                message - ended abnormally. See job log')
+ 
+             IF         COND(&Type = '0') THEN(DO)
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(&Msgdta) +
+                                TOMSGQ(MOPERQ)
+                   MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+             ELSE       CMD(DO)
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                                 MSGDTA(&Msgdta) TOPGMQ(*PRV)
+                   MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+             CHGVAR     VAR(&ReturnCode) VALUE('Abnormal')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*-------------------------------------------------------------------*/
+/*  End processing.                                                  */
+/*-------------------------------------------------------------------*/
+ 
+ ENDPGM:
+ 
+             RETURN

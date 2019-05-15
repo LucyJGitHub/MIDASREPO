@@ -1,0 +1,254 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Populate intermediate files for SPF upg')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000120 - Populate intermediate files for SPF upgrade     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD030791           Date 26Sep14              */
+/*                      MD019885           Date 04Apr14              */
+/*                      AR883210           Date 21Dec11              */
+/*                      CBF005   *CREATE   Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD030791 - Bridge optioni SPRF fail during system setup     */
+/*                  Remove MD019885 code changes                     */
+/*       MD019885 - Upload bank permissions before SPF upload        */
+/*                - Applied for MD026157                             */
+/*       AR883210 - Additional Deliverables for BF                   */
+/*       CBF005 - BF Infrastructure: Single Security User Maintenance*/
+/*                Profile                                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GPFXSVAL)
+ 
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&GSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&STMSTR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&GENPGM) TYPE(*CHAR) LEN(10) +
+                          VALUE('SMC000120')
+ 
+             DCLF       FILE(UPGSVALJ0)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International +
+                          Limited 2011')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/** Create and rename temporary source file for RUNSQLSTM. */
+ 
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC000120')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/** Create Midas Info Screen data area in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG MSGID(CPF2105)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          TEXT('Midas Info Screen Data Area')
+ 
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&GSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM(&GENPGM 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/** Save library list and set up global library list. */
+             SAVLIBL    SAVDTL(SMC000120L)
+/**********  CALL       PGM(GPC000016) PARM(&GSBSID) */                                 /*AR883210*/
+                                                                                        /*MD019885*/
+/***Make*sure,*all*bank-specific*menu*items*have*been*uploaded********/                 /*MD019885*/
+/************CALL*******PGM(SM000065)*PARM('CUST')********************/                 /*MD019885*/
+ 
+/** Users populate SMBFUDPD.  Select only users that */
+/** exist on both user and action code files.        */
+             CLRPFM     FILE(SMBFUDPD)
+             CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFUDPD +
+                          (UDRECI, UDUSER, UDDESC, UDREFU, UDSECL)')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
+             CHGVAR     VAR(&STMSTR) VALUE('select RECI, USRP, +
+                          USER1, REFUSR, SECL from V_GALLUSER a +
+                          where exists')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             CHGVAR     VAR(&STMSTR) VALUE('(select b.USRP from +
+                          V_GALLMAC b where a.USRP = b.USRP)')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+/** Menu items; populate SMBFMNPD but only with active menu items. */
+             CPYF       FROMFILE(SFMENUJ0) TOFILE(SMBFMNPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             CPYF       FROMFILE(GPMENUJ0) TOFILE(SMBFMNPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)
+/** Retrieve menu item description from GPMTXTPD. */
+             CHGVAR     VAR(&STMSTR) VALUE('update SMBFMNPD a set +
+                          a.MIINAR =')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
+/**********  CHGVAR     VAR(&STMSTR) VALUE('(select b.MIINAR from +
+                          GPMTXTPD b where a.MIINDX = b.MIINDX)') */                    /*AR883210*/
+             CHGVAR     VAR(&STMSTR) VALUE('VALUE((select b.MIINAR +
+                          from GPMTXTPD b where a.MIINDX = +
+                          b.MIINDX), '' '')')                                           /*AR883210*/
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+/** Active menu codes and actions (permissions); populate SMBFACPD. */
+             CLRPFM     FILE(SMBFACPD)
+             CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFACPD +
+                          (ACUSER, ACINDX, ACBRCH, ACAC01, ACAC02, +
+                          ACAC03, ACAC04,')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
+             CHGVAR     VAR(&STMSTR) VALUE('ACAC05, ACAC06, ACAC07, +
+                          ACAC08, ACAC09, ACAC10)')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             CHGVAR     VAR(&STMSTR) VALUE('select USRP, INDX, BRCB, +
+                          ACA1, ACA2, ACA3, ACA4, ACA5, ACA6, ACA7,')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             CHGVAR     VAR(&STMSTR) VALUE('ACA8, ACA9, ACA10 from +
+                          V_GALLMAC  a where exists')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             CHGVAR     VAR(&STMSTR) VALUE('(select * from SMBFUDPD +
+                          b where a.USRP = b.UDUSER) and exists')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             CHGVAR     VAR(&STMSTR) VALUE('(select * from SMBFMNPD +
+                          c where a.INDX = c.MIINDX)')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+/** Update description from GPMTXTPD. */
+             CHGVAR     VAR(&STMSTR) VALUE('update SMBFACPD a set +
+                          a.ACINAR = (select b.MIINAR from +
+                          GPMTXTPD b where')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
+             CHGVAR     VAR(&STMSTR) VALUE('a.ACINDX = b.MIINDX)')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+/** Call program to sort the Action Codes so that they */
+/** will always be in the same order.                  */
+             CALL       PGM(SM000032)
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Insert unique user / branch combination records into file. */
+             CLRPFM     FILE(SMBFUBPD)
+             CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFUBPD +
+                          (UBUSER, UBBRCH) select distinct')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
+             CHGVAR     VAR(&STMSTR) VALUE('ACUSER, ACBRCH from +
+                          SMBFACPD')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+/** Insert unique user / action code combination records into file. */
+             CLRPFM     FILE(SMBFUAPD)
+             CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFUAPD +
+                          (UAUSER, UAINDX, UAAC01, UAAC02, UAAC03, +
+                          UAAC04, UAAC05,')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
+             CHGVAR     VAR(&STMSTR) VALUE('UAAC06, UAAC07, UAAC08, +
+                          UAAC09, UAAC10, UAINAR) select distinct +
+                          ACUSER, ACINDX,')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             CHGVAR     VAR(&STMSTR) VALUE('ACAC01, ACAC02, ACAC03, +
+                          ACAC04, ACAC05, ACAC06, ACAC07, ACAC08, +
+                          ACAC09, ACAC10,')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             CHGVAR     VAR(&STMSTR) VALUE('ACINAR from SMBFACPD')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+/** Insert user / reference user combination records into file. */
+             CLRPFM     FILE(SMBFRUPD)
+             CHGVAR     VAR(&STMSTR) VALUE('insert into SMBFRUPD +
+                          (RUREFU, RUUSER, RURECI)')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
+             CHGVAR     VAR(&STMSTR) VALUE('select distinct UDREFU, +
+                          UDUSER, UDRECI from SMBFUDPD')
+             CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+/** Call program to build report on user and branches. */
+             CALL       PGM(SM000047)
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Call program to build report on user, menu codes and actions. */
+             CALL       PGM(SM000048)
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Call program to build report for user and reference user. */
+             CALL       PGM(SM000033)
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Restore library list. */
+             RSTLIBL    SAVEDLIBL(SMC000120L)
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(&GENPGM) +
+                          MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog / dump for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM(&GENPGM 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

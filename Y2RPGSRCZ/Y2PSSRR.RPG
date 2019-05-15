@@ -1,0 +1,563 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - (module name) Module                                 *
+      *                                                               *
+      *  mmnnnn - (Program Name)                                      *
+      *                                                               *
+      *  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 XNNNNN  *CREATE    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  nnnnnn - (fix details)                                       *
+      *                                                               *
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Y2 R2.1.1 Process *PSSR information')
+     H/TITLE YAPPOBJ Process *PSSR information
+     Z* CRTRPGPGM  IGNDECERR(*YES)
+     H* System        : SYNON/2  SHIPPED ROUTINE
+     H* AUTHOR        : J P Lodge
+     H* DATE          : 1988
+      *  (c) Finastra International Limited 2001                      *
+     H*================================================================
+     H* SYNOPSIS:
+     H*    Receives PGMDS + n INFDSs on program error (*PSSR)
+     H*    determine if file error, which INFDS is responsible
+     H*
+     H* WARNING:
+     H*    This program accepts a variable number of parameters
+     H*    to allow it to handle RPG programs with anything from
+     H*    zero to fifty files.  All references to any of the optional
+     H*    parameters have to be very closely controlled by checking
+     H*    the number of parameters actually passed.
+      *================================================================
+     F********************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     I##PDS      SDS                            429
+     I* This Program's data structure.
+     I                                        1  10 ##PGM
+     I                                       11  150##STS
+     I                                       16  200##PVS
+     I                                       21  28 ##STM
+     I                                       29  36 ##RTN
+     I                                       37  390##NPM
+      * ##NPM = number of parameters passed to here
+      *       = number of file INFDSs + 4
+     I                                       40  42 ##EXT
+     I                                       43  46 ##EXN
+     I                                       47  50 ##MIN
+     I                                       51  80 ##WRK
+     I                                       81  90 ##LIB
+     I                                       91 170 ##EXD
+     I                                      171 174 ##LEX
+     I                                      175 200 ##0000
+     I                                      201 208 ##FIL
+     I                                      209 243 ##FER
+     I                                      244 253 ##JOB
+     I                                      254 263 ##USR
+     I                                      264 2690##JNM
+     I                                      270 2750##UDT
+     I                                      276 2810##JDT
+     I                                      282 2870##JTM
+     I                                      288 293 ##CDT
+     I                                      294 299 ##CTM
+     I                                      300 303 ##CLV
+     I                                      304 313 ##SRF
+     I                                      314 323 ##SRL
+     I                                      324 333 ##SRM
+     I                                      334 429 ##0001
+     I*
+     I@#PDS       DS                            429
+     I* Calling program's PGMDS
+     I                                        1  10 @#PGM
+     I                                       11  150@#STS
+     I                                       16  200@#PVS
+     I                                       21  28 @#STM
+     I                                       29  36 @#RTN
+     I                                       37  390@#NPM
+     I                                       40  42 @#EXT
+     I                                       43  46 @#EXN
+     I                                       47  50 @#MIN
+     I                                       51  80 @#WRK
+     I                                       81  90 @#LIB
+     I                                       91 170 @#EXD
+     I                                      171 174 @#LEX
+     I                                      175 200 @#0000
+     I                                      201 208 @#FIL
+      * @#FIL = Name of file which caused last error
+     I                                      209 243 @#FER
+     I                                      244 253 @#JOB
+     I                                      254 263 @#USR
+     I                                      264 2690@#JNM
+     I                                      270 2750@#UDT
+     I                                      276 2810@#JDT
+     I                                      282 2870@#JTM
+     I                                      288 293 @#CDT
+     I                                      294 299 @#CTM
+     I                                      300 303 @#CLV
+     I                                      304 313 @#SRF
+     I                                      314 323 @#SRL
+     I                                      324 333 @#SRM
+     I                                      334 429 @#0001
+     I*
+     I@@IDS       DS                            528
+     I* Formatted INFDS for general use
+     I                                        1   8 @@FIL
+      * @@FIL = Name of this file
+     I                                        9   9 @@OPN
+     I                                       10  10 @@EOF
+     I                                       11  15 @@STS
+     I                                       16  21 @@OCD
+     I                                       22  29 @@RTN
+     I                                       30  37 @@STM
+     I                                       38  42 @@SPE
+     I                                       38  45 @@FMT
+     I                                       46  52 @@MID
+     I                                       53  56 @@MIN
+     I                                       57  66 @@0000
+     I                                       81  82 @@OTP
+     I                                       83  92 @@FVN
+     I                                       93 102 @@LVN
+     I                                      103 112 @@SVN
+     I                                      113 122 @@SLV
+     I                                    B 123 1240@@SNB
+     I                                    B 125 1260@@RCL
+     I                                    B 127 1280@@RC2
+     I                                      129 138 @@MVN
+     I                                      139 146 @@0001
+     I                                    B 147 1480@@FTP
+     I                                      149 151 @@LOC
+     I*
+     I* Calling program's INFDS's (from 0 to 50)
+     I@IDS01      DS                            528
+     I@IDS02      DS                            528
+     I@IDS03      DS                            528
+     I@IDS04      DS                            528
+     I@IDS05      DS                            528
+     I@IDS06      DS                            528
+     I@IDS07      DS                            528
+     I@IDS08      DS                            528
+     I@IDS09      DS                            528
+     I@IDS10      DS                            528
+     I@IDS11      DS                            528
+     I@IDS12      DS                            528
+     I@IDS13      DS                            528
+     I@IDS14      DS                            528
+     I@IDS15      DS                            528
+     I@IDS16      DS                            528
+     I@IDS17      DS                            528
+     I@IDS18      DS                            528
+     I@IDS19      DS                            528
+     I@IDS20      DS                            528
+     I@IDS21      DS                            528
+     I@IDS22      DS                            528
+     I@IDS23      DS                            528
+     I@IDS24      DS                            528
+     I@IDS25      DS                            528
+     I@IDS26      DS                            528
+     I@IDS27      DS                            528
+     I@IDS28      DS                            528
+     I@IDS29      DS                            528
+     I@IDS30      DS                            528
+     I@IDS31      DS                            528
+     I@IDS32      DS                            528
+     I@IDS33      DS                            528
+     I@IDS34      DS                            528
+     I@IDS35      DS                            528
+     I@IDS36      DS                            528
+     I@IDS37      DS                            528
+     I@IDS38      DS                            528
+     I@IDS39      DS                            528
+     I@IDS40      DS                            528
+     I@IDS41      DS                            528
+     I@IDS42      DS                            528
+     I@IDS43      DS                            528
+     I@IDS44      DS                            528
+     I@IDS45      DS                            528
+     I@IDS46      DS                            528
+     I@IDS47      DS                            528
+     I@IDS48      DS                            528
+     I@IDS49      DS                            528
+     I@IDS50      DS                            528
+      /EJECT
+     C*****************************************************************
+     C           *ENTRY    PLIST                           Entry parameters
+     C                     PARM           P0RTN   7        O: Return code
+     C                     PARM           P1LABL  6        O: Exit label
+     C                     PARM           P2SEV   2        I: Error severity
+     C                     PARM           @#PDS            I: Program DS
+     C                     PARM           @IDS01           I: INFDS #1
+     C                     PARM           @IDS02           I: INFDS #2
+     C                     PARM           @IDS03           I: INFDS #3
+     C                     PARM           @IDS04           I: INFDS #4
+     C                     PARM           @IDS05           I: INFDS #5
+     C                     PARM           @IDS06           I: INFDS #6
+     C                     PARM           @IDS07           I: INFDS #7
+     C                     PARM           @IDS08           I: INFDS #8
+     C                     PARM           @IDS09           I: INFDS #9
+     C                     PARM           @IDS10           I: INFDS #10
+     C                     PARM           @IDS11           I: INFDS #11
+     C                     PARM           @IDS12           I: INFDS #12
+     C                     PARM           @IDS13           I: INFDS #13
+     C                     PARM           @IDS14           I: INFDS #14
+     C                     PARM           @IDS15           I: INFDS #15
+     C                     PARM           @IDS16           I: INFDS #16
+     C                     PARM           @IDS17           I: INFDS #17
+     C                     PARM           @IDS18           I: INFDS #18
+     C                     PARM           @IDS19           I: INFDS #19
+     C                     PARM           @IDS20           I: INFDS #20
+     C                     PARM           @IDS21           I: INFDS #21
+     C                     PARM           @IDS22           I: INFDS #22
+     C                     PARM           @IDS23           I: INFDS #23
+     C                     PARM           @IDS24           I: INFDS #24
+     C                     PARM           @IDS25           I: INFDS #25
+     C                     PARM           @IDS26           I: INFDS #26
+     C                     PARM           @IDS27           I: INFDS #27
+     C                     PARM           @IDS28           I: INFDS #28
+     C                     PARM           @IDS29           I: INFDS #29
+     C                     PARM           @IDS30           I: INFDS #30
+     C                     PARM           @IDS31           I: INFDS #31
+     C                     PARM           @IDS32           I: INFDS #32
+     C                     PARM           @IDS33           I: INFDS #33
+     C                     PARM           @IDS34           I: INFDS #34
+     C                     PARM           @IDS35           I: INFDS #35
+     C                     PARM           @IDS36           I: INFDS #36
+     C                     PARM           @IDS37           I: INFDS #37
+     C                     PARM           @IDS38           I: INFDS #38
+     C                     PARM           @IDS39           I: INFDS #39
+     C                     PARM           @IDS40           I: INFDS #40
+     C                     PARM           @IDS41           I: INFDS #41
+     C                     PARM           @IDS42           I: INFDS #42
+     C                     PARM           @IDS43           I: INFDS #43
+     C                     PARM           @IDS44           I: INFDS #44
+     C                     PARM           @IDS45           I: INFDS #45
+     C                     PARM           @IDS46           I: INFDS #46
+     C                     PARM           @IDS47           I: INFDS #47
+     C                     PARM           @IDS48           I: INFDS #48
+     C                     PARM           @IDS49           I: INFDS #49
+     C                     PARM           @IDS50           I: INFDS #50
+     C********************************************************************
+      *
+     C                     MOVE *BLANK    P0RTN            Return code
+      *
+      * Load INFDS of file causing the error into @@IDS
+      * which is a formatted area for ease of reading the
+      * program dump.
+      *
+     C                     EXSR AAFILE
+      *
+      * Perform RPG formatted dump
+      *
+     C                     DUMP
+      *
+      * Determine return action from error severity
+      * Assumptions:
+      *  00 - 29  are monitored and will cope.
+      *  30 - 89  are monitored but cannot or will not cope.
+      *  90 - 99  are unmonitored and cannot cope.
+      *
+     C           P2SEV     IFGE '30'
+     C                     MOVE '*CANCL'  P1LABL
+     C                     ELSE
+     C                     MOVE *BLANK    P1LABL
+     C                     END
+      *
+      * Terminate this program and return to caller
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C********************************************************************
+      *
+     CSR         AAFILE    BEGSR
+     C*===================================================================
+     C* Determine which if any file caused the error
+     C* and load its INFDS into the formatted dump area
+     C*===================================================================
+      *
+     C                     MOVE *BLANK    @@IDS
+      *
+      * Case 1: No file datastructures passed
+     C           ##NPM     CABLT5         AAEXIT
+      *
+      * Case 2: No file caused the error
+     C           @#FIL     CABEQ*BLANK    AAEXIT
+      *
+      * Case 3: Try each passed infds in turn looking for a match
+      *         on file name.
+     C           ##NPM     IFGT 4
+     C                     MOVE @IDS01    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 5
+     C                     MOVE @IDS02    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 6
+     C                     MOVE @IDS03    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 7
+     C                     MOVE @IDS04    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 8
+     C                     MOVE @IDS05    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 9
+     C                     MOVE @IDS06    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 10
+     C                     MOVE @IDS07    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 11
+     C                     MOVE @IDS08    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 12
+     C                     MOVE @IDS09    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 13
+     C                     MOVE @IDS10    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 14
+     C                     MOVE @IDS11    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 15
+     C                     MOVE @IDS12    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 16
+     C                     MOVE @IDS13    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 17
+     C                     MOVE @IDS14    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 18
+     C                     MOVE @IDS15    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 19
+     C                     MOVE @IDS16    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 20
+     C                     MOVE @IDS17    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 21
+     C                     MOVE @IDS18    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 22
+     C                     MOVE @IDS19    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 23
+     C                     MOVE @IDS20    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 24
+     C                     MOVE @IDS21    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 25
+     C                     MOVE @IDS22    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 26
+     C                     MOVE @IDS23    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 27
+     C                     MOVE @IDS24    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 28
+     C                     MOVE @IDS25    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 29
+     C                     MOVE @IDS26    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 30
+     C                     MOVE @IDS27    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 31
+     C                     MOVE @IDS28    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 32
+     C                     MOVE @IDS29    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 33
+     C                     MOVE @IDS30    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 34
+     C                     MOVE @IDS31    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 35
+     C                     MOVE @IDS32    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 36
+     C                     MOVE @IDS33    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 37
+     C                     MOVE @IDS34    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 38
+     C                     MOVE @IDS35    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 39
+     C                     MOVE @IDS36    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 40
+     C                     MOVE @IDS37    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 41
+     C                     MOVE @IDS38    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 42
+     C                     MOVE @IDS39    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 43
+     C                     MOVE @IDS40    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 44
+     C                     MOVE @IDS41    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 45
+     C                     MOVE @IDS42    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 46
+     C                     MOVE @IDS43    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 47
+     C                     MOVE @IDS44    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 48
+     C                     MOVE @IDS45    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 49
+     C                     MOVE @IDS46    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 50
+     C                     MOVE @IDS47    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 51
+     C                     MOVE @IDS48    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 52
+     C                     MOVE @IDS49    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+     C           ##NPM     IFGT 53
+     C                     MOVE @IDS50    @@IDS
+     C           @@FIL     CABEQ@#FIL     AAEXIT
+     C                     END
+      *
+      * Case 4: Cannot find file in error - blank it out
+     C                     MOVE *BLANK    @@IDS
+      *
+     C*===================================================================
+     CSR         AAEXIT    ENDSR

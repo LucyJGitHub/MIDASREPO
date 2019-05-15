@@ -1,0 +1,125 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Interest Scale Retail extract')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - User Defined Correspondence                         */
+/*                                                                   */
+/*       CGC7260 - Interest Scale Retail extract                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR866945           Date 18Nov11              */
+/*                      CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR866945 - Interest scale report details generated are      */
+/*                  wrong (Child:AR866947)                           */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2011')
+ 
+             DCL        VAR(&RUN_DATE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&NEXT_DAY) TYPE(*CHAR) LEN(5)
+/**********  DCL        VAR(&QRYSEL)   TYPE(*CHAR) LEN(100) */                          /*AR866945*/
+             DCL        VAR(&QRYSEL)   TYPE(*CHAR) LEN(120)                             /*AR866945*/
+             DCL        VAR(&CNAM)     TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')                  /*AR866945*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST')                   /*AR866945*/
+             DCL        VAR(&AORETL) TYPE(*CHAR) LEN(200)                               /*AR866945*/
+             DCL        VAR(&CSEQ)     TYPE(*DEC)  LEN(5)
+             DCL        VAR(&MEM)      TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(SDBANKPD)
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA if it does not already exist */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD AS400 Local +
+                          Date Area'))
+ 
+/* Set-off Database Error Switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+/* Send a message to say the component is running */
+ 
+             SNDPGMMSG  MSG('CGC7260 - Interest Scale Retail extract') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Read the SDBANKPD file for the rundate and next day */
+             RCVF
+ 
+             OVRDBF     FILE(REHISPS) SHARE(*YES)
+ 
+/*  Set the date as alpha and the select fields */
+             CHGVAR     VAR(&RUN_DATE) VALUE(&BJRDNB)
+             CHGVAR     VAR(&NEXT_DAY) VALUE(&BJDNWD)
+             CALL       PGM(AORETLR0) PARM(&RTCD &OPTN &AORETL)                         /*AR866945*/
+             IF         COND(&RTCD *NE '       ') THEN(DO)                              /*AR866945*/
+                          GOTO CMDLBL(ABNOR)                                            /*AR866945*/
+             ENDDO                                                                      /*AR866945*/
+             IF         COND(%SST(&AORETL 19 1) *EQ 'Y') THEN(DO)                       /*AR866945*/
+             CHGVAR     VAR(&QRYSEL) VALUE('(HISD *GE ' *CAT +
+                          &RUN_DATE *CAT ') *AND (HISD *LT ' *CAT +
+                          &NEXT_DAY *CAT ') *AND (RECI = "S") *and +
+                          (SCICI = "Y") *AND (SDICI = "Y")')
+             ENDDO                                                                      /*AR866945*/
+             ELSE       CMD(DO)                                                         /*AR866945*/
+             CHGVAR     VAR(&QRYSEL) VALUE('((HISD - 1) *GE ' *CAT +
+                          &RUN_DATE *CAT ') *AND ((HISD - 1) *LT ' *CAT +
+                          &NEXT_DAY *CAT ') +
+                          *AND (RECI = "S") *and +
+                          (SCICI = "Y") *AND (SDICI = "Y")')                            /*AR866945*/
+             ENDDO                                                                      /*AR866945*/
+ 
+ 
+/* Open the query file with a selection */
+             OPNQRYF    FILE((REHISPS)) QRYSLT(&QRYSEL)
+ 
+/* Call the extract program */
+             CALL       PGM(CG7260)
+ 
+/* Close the query file */
+ 
+             CLOF       OPNID(REHISPS)
+ 
+/* Database error handling */
+ 
+             IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
+                RTVDTAARA   DTAARA(LDA (134 50))   RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                    TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC7260 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/* Normal termination */
+ 
+ END:        ENDPGM

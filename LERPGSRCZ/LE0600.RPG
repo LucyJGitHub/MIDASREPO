@@ -1,0 +1,1727 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Print Past Due Notices')                      *
+0001 H***********                                                         S01117
+0002 F*
+0003 F*****************************************************************
+0004 F*                                                               *
+0005 F*  Midas - Customer Lending Module                          *
+0006 F*                                                               *
+0007 F*  LE0600 - PRINT PAST DUE NOTICES                              *
+0008 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *   S01117
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      *                 BUG13346           Date 19Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11790           Date 27Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 208370             Date 27Nov02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01465             Date 22Mar94               *
+      *                 065961             Date 22Feb94               *
+     F*                 056424             DATE 10SEP93               *   S01392
+     F*                 S01392             DATE 07OCT92               *   S01392
+     F*                 BHF395             DATE 30APR91               *
+     F*                 LN0007             DATE 27APR90               *
+     F*                 S01194             DATE 10JAN90               *   S01194
+     F*                 S01117             DATE.17/08/89              *   S01117
+0011 F*                 E14806             DATE.30/11/88              *
+0011 F*                 E12160             DATE.18/04/88              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CRE026 - Consumer Banking                                    *
+      *  BUG13346 - Use customer number from CLOAN                    *
+      *  BUG11790 - Customer field COCUCL should not equal to         *
+      *             '000000' to avoid database error.                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  208370 - Show the interest past due regardless of repayment  *
+      *           type.                                               *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+     F*  S01465 - BLI Lending Enhancements                            *
+     F*  065961 - Cust name and address shd be printed on Past Due    *
+     F*           Notices.                                            *
+     F*  056424 - Do not print 'No Details' on P1 report as this      *
+     F*           is a confirmation - audit details should not be     *
+     F*           printed on a confirmation, and 'No notices to       *
+     F*           print' is already output to the AU report.          *
+     F*         - Define page size in print file, not in L-SPECS.     *
+     F*  S01392 - JAPANESE SUB MODULE ENHANCEMENTS                    *   S01392
+     F*  BHF395 - ONLY PRINT END OF REPORT IF THERE HAS BEEN          *   BHF395
+     F*         - OUTPUT TO P1 PRINTER FILE                           *   BHF395
+     F*  LN0007 - USE OF ALTERNATIVE ADDRESS INCORRECTLY CODED        *
+     F*  S01194 - STANDING DATA CHANGES.                              *   S01194
+     F*  S01117 - MULTIBRANCHING                                      *   S01117
+     F*  E14806 - REPORT TITLE / PAGE NUMBER NOT PRINTED.             *   E14806
+     F*  E12160 - END-OF-FILE AFTER TABLE FILE CURRENCIES RECORDS     *   E12160
+     F*           READ CAUSES DBASE ERROR                             *   E12160
+0010 F*                                                               *
+0013 F*****************************************************************
+0014 F*
+0015 F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+0013 F********************************************************************
+0014 F*
+0015 F*
+0016 F*STCU***IP**F      64 12AI     2 DISK                               S01117
+0016 FPSTCU   IP  F      64 15AI     1 DISK                               S01117
+     FLELOANLYIS  E           K        DISK                                                   CLE134
+     FLEPDUEL2IF  E           K        DISK                           UC                      CLE134
+0016 F*CLOAN***IF  F     458  7AI     2 DISK                       S01465 CLE011
+     FCLOAN   IF  F    1310  7AI     2 DISK                               CLE011
+0017 F*TABLE***IF  F      96 12AI     2 DISK                              S01194
+0018 F*CLINT***IF  F     256  7AI     2 DISK                              S01194
+     FSDCURRPDIF  E                    DISK                               S01194
+0019 F*E0600P2O** F      85           LPRINTER                    S01124  S01117
+0019 F***LE0600P1O***F      85     LPRINTER      KINFDS SPOOL   UC S01117 056424
+0019 F*E0600P1O** F     132            PRINTER                    S01124  S01117
+     F/COPY WNCPYSRC,LE0600F001
+     FLE0600P1O   F      85            PRINTER      KINFDS SPOOL      UC  056424
+     F/COPY WNCPYSRC,LE0600F002
+0019 FLE0600AUO   F     132            PRINTER      KINFDS SPOOLU         S01117
+0019 FLENTTX  O   F      73            DISK                           U1
+0020 F*
+0020 F*
+0021 F*
+0022 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0023 F**
+0024 F* 01            SORTED PAST DUE - HEADER
+0025 F* 02                            - DETAIL
+0026 F* 03                            - TRAILER
+0027 F* 04                            - CATCHALL
+      * 05            Loans with PDCLs                                                        CLE134
+0028 F**
+0029 F**05******      TABLE FILE - ICD1                                   S01194
+0030 F**11******                 - ICD5                                   S01194
+0031 F**06******                 - BRANCH CODE RECORD                     S01194
+0032 F**07******                 - CURRENCY RECORD 1                      S01194
+0033 F**08******                 - CATCHALL                               S01194
+0034 F**
+0035 F**09******      CLIENT FILE- RECORD B-Z                             S01194
+0036 F**10******                 - CATCHALL                               S01194
+0036 F**12******                 - CUSTOMER STANDING DATA RECORD          S01194
+0037 F**
+0038 F*   L1          CHANGE OF CURRENCY
+0039 F*   L2          CHANGE OF BRANCH
+0040 F**
+0041 F*      15       FIRST CYCLE
+0042 F**
+0043 F*      16       WORK INDICATOR - FOR CCY ARRAYS
+0044 F*      17       CCY FOUND IN ARRAY
+0045 F*      18       CCY BLANK ON INPUT
+0034 F*      19       LIVE CCY RECORD READ                                E12160
+0046 F**
+0047 F*      23       NO TELEXES GENERATED
+0047 F*      24       TELEX GENERATION
+0047 F*      25       NO PAST DUE NOTICE REQUIRED
+0048 F*      26       REPAYMENT TYPE 1
+0049 F*      30-37    BITS 0-7 ON
+0050 F*      38       AT LEAST ONE NOTICE PRINTED
+0051 F*******39*******ALTERNATE*N+A*NOT*FOUND*-*DEFAULT*TO*B***********                       CLE134
+      *      39       BITS 0 AND 7 ON, REPRESENTING NINTH                                     CLE134
+0052 F*******40*      END OF TABLE FILE IN READ OPERATION                 S01194
+0053 F*******41*      BRANCH CODE INVALID OR BLANK ON INPUT               S01117
+0054 F*******42*      CHAIN TO CLIENT FILE FAILED                         S01194
+0055 F*       50      PRINT BRANCH NAME
+0056 F*
+     F*      65       MULTIBRANCHING = 'Y'                                S01117
+     F*                                                                   S01117
+     F*      75       INPUT FILE HAS AT LEAST ONE RECORD                  S01117
+     F*      76       PRINTER FILE HAS HAD SOME OUTPUT                    BHF395
+0057 F*      80/83    CCY DECIMAL PLACES
+0058 F**
+0059 F*             U8 FILE CONTROLS NOT BALANCE
+0060 F*          U7+U8 DATABASE ERROR
+0061 F*
+0062 E*
+0063 E                    ACY       150  3               CURRENCY CODES
+0064 E                    ADP       150  1 0             CCY DEC PLACES
+     E/COPY WNCPYSRC,LE0600E001
+     E                    CNM       150 14               CURRENCY NAMES
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1                                               S01392
+0065 E*
+0066 E**********          TEXT    1  10 49               TEXT FOR TELEX1                      CLE134
+0066 E**********          UNDR    1   8 49               UNDERLINE TEXT                       CLE134
+      *
+      ** TEXT FOR TELEX1
+      ** UNDERLINE TEXT
+      *
+     E                    TEXT    1  11 49                                                    CLE134
+     E                    UNDR    1   9 49                                                    CLE134
+0069 E**
+0071 L*E0600P2*42FL 42OL                                        S01124    S01117
+     E                    CPY@    1   1 80
+0071 L***LE0600P1*42FL*42OL                                        S01117 056424
+0072 I*
+0073 I*
+0074 I**  SORTED PAST DUE FILE - HEADER
+0075 I*
+0076 IPSTCU   NS  01   1 CH
+0077 I                                        1   1 RECI
+0078 I*
+0079 I*
+0080 I**  SORTED PAST DUE FILE - DETAIL
+0081 I*
+0082 I        NS  02   1 CD
+0083 I                                        1   1 RECI
+0084 I**********                              2   70LNRF                                      CLE148
+     I                                        2   7 LNRF    M1                                CLE148
+0085 I                                        8  120VDAT
+0086 I                                       13  150LASN
+0087 I***********                            16  180BRCD  L2        41    S01117
+0087 I**********                             16  18 BRCA  L2        41                 S01117 CLE134
+     I                                       16  18 BRCA  L2M3      41                        CLE134
+0088 I                                       19  21 CCY   L1        18
+0089 I**********                             22  270CNUM                                      CSD027
+0089 I**********                             22  27 CNUM                               CSD027 CLE134
+     I                                       22  27 CNUM    M2                                CLE134
+0090 I                                    P  28  340PPDU
+0091 I                                       35  350REPT
+0092 I                                       36  36 PDRQ
+0093 I                                       37  37 NACD
+0094 I                                       38  38 PDBI
+0095 I                                    P  39  450INPD
+0096 I                                       46  46 WTIN
+0096 I                                       54  550PTYP
+0097 I*
+0098 I*
+0099 I**  SORTED PAST DUE FILE - TRAILER
+0100 I*
+0101 I        NS  03   1 CT
+0102 I                                        1   1 RECI
+0103 I                                    P   2   40NORE
+     I/COPY WNCPYSRC,LE0600I002
+0104 I*
+0105 I*
+0106 I**  SORTED PAST DUE FILE - CATCHALL
+0107 I*
+0108 I        NS  04
+0109 I                                        1   1 RECI
+      *                                                                                       CLE134
+     ICLOANCLF    05                                                                          CLE134
+     I                                              LNRF    M1                                CLE134
+     I                                              CNUM    M2                                CLE134
+     I                                              BRCA  L2M3      41                        CLE134
+     I                                              CCY   L1        18                        CLE134
+     I              COCU                            COCUCL                                    CLE134
+      *                                                                                       CLE134
+     ILEPDUED0                                                                                CLE134
+      *                                                                                       CLE134
+      ** Rename where > 6 chars                                                               CLE134
+      *                                                                                       CLE134
+     I              YTKPACL                         TKPACL                                    CLE134
+     I              YTKPABR                         TKPABR                                    CLE134
+     I              YTKPAAC                         TKPAAC                                    CLE134
+     I              YTKPASE                         TKPASE                                    CLE134
+     I              YTKPACY                         TKPACY                                    CLE134
+     I              YTKIACL                         TKIACL                                    CLE134
+     I              YTKIABR                         TKIABR                                    CLE134
+     I              YTKIAAC                         TKIAAC                                    CLE134
+     I              YTKIASE                         TKIASE                                    CLE134
+     I              YTKIACY                         TKIACY                                    CLE134
+     I*                                                                   S01465
+     I** Loans file - Detail                                              S01465
+     I*                                                                   S01465
+     ICLOAN   NS       1 CD   8 CA                                        S01465
+     I       OR        1 CM   8 CA                                        S01465
+     I       OR        1 CR   8 CA                                        S01465
+     I                                       12  17 CNUML                                   BUG13346
+     I                                       21  21 LTYP1                                     CLE134
+     I                                    P  50  560CPAML                                     CLE134
+     I**********                            437 4420COCUCL                             S01465 CSD027
+     I                                      437 442 COCUCL                                    CSD027
+     I/COPY WNCPYSRC,LE0600I001
+0110 I*
+0111 I*
+0112 I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*1.               S01194
+0113 I*
+0114 I*TABLE***NS  05   1 CD   2 C0   3 C1                                S01194
+0115 I*******AND      12 C1  13 C0                                        S01194
+0116 I**********                              1   1 RECI                  S01194
+0117 I**********                              2   30RECT                  S01194
+0118 I**********                             12  130RCDE                  S01194
+0119 I**********                             14  66 TITL                  S01194
+0120 I**********                             67  67 DATF                  S01194
+0121 I***********                            68  700DFBR                  S01194
+0121 I**********                             71  71 TLXM                  S01194
+0122 I**********                             74  74 MODI1                 S01194
+0123 I**********                             75  75 MODI2                 S01194
+0124 I**********                             76  76 MODI3                 S01194
+0125 I**********                          P  77  790RUND                  S01194
+0126 I**********                             80  86 RUNA                  S01194
+0127 I**********                             87  870SFLG                  S01194
+0128 I**********                          P  90  920LCD                   S01194
+0129 I**********                             93  93 CHTP                  S01194
+0130 I**********                          P  94  960TNLU                  S01194
+0131 I*
+0132 I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*5.               S01194
+0133 I*
+0134 I*TABLE***NS  11   1 CD   2 C0   3 C1                                S01194
+0135 I*******AND      12 C4  13 C0                                        S01194
+0136 I**********                              1   1 RECI                  S01194
+0137 I**********                              2   30RECT                  S01194
+0138 I**********                             12  130RCDE                  S01194
+0139 I**********                             18  210CSAC                  S01194
+0140 I**********                             22  22 TLII                  S01194
+0141 I**********                             23  23 MCRI                  S01194
+0142 I**********                          P  24  250MCEP                  S01194
+0143 I**********                             26  270MCLP                  S01194
+0144 I**********                             28  28 FRDI                  S01194
+0145 I**********                             29  29 BRCF                  S01194
+0146 I**********                             30  350PSCN                  S01194
+0147 I***********                            36  380DLBR                  S01194
+0148 I**********                             39  420FRPA                  S01194
+0149 I**********                             43  460FRPC                  S01194
+0150 I**********                             47  49 USCY                  S01194
+0151 I**********                             50  52 STCY                  S01194
+0152 I**********                          P  53  553MBGE                  S01194
+0153 I**********                             57  57 FFNY                  S01194
+0154 I**********                             58  58 OURC                  S01194
+0155 I**********                             59  59 BRNC                  S01194
+0156 I**********                             60  60 LCYN                  S01194
+0157 I**********                             61  61 ETBI                  S01194
+0158 I**********                             62  640LSTT                  S01194
+0159 I**********                             71  71 NAAI                  S01194
+0160 I**********                             75  77 CLRC                  S01194
+0161 I**********                             78  78 PRSW                  S01194
+0162 I**********                             79  79 PRCI                  S01194
+0163 I**********                             80  80 PRCA                  S01194
+0164 I**********                             81  81 PRTX                  S01194
+0165 I**********                             82  82 PRFW                  S01194
+0166 I**********                             83  83 PRBW                  S01194
+0167 I**********                          P  87  892TAXR                  S01194
+0168 I**********                          P  90  920LCD                   S01194
+0169 I**********                             93  93 CHTP                  S01194
+0170 I**********                          P  94  960TNLU                  S01194
+0171 I*
+0172 I************                                                        S01117
+0173 I*****TABLE*FILE*-*BRANCH*CODES*RECORD.*                             S01117
+0174 I************                                                        S01117
+0175 I********NS* 06   1 CD   2 C1   3 C0                                 S01117
+0176 I***********                             1   1 RECI                  S01117
+0177 I***********                             2   30RECT                  S01117
+0178 I***********                            11  130BRCD                  S01117
+0178 I***********                            11  13 BRCA                  S01117
+0179 I***********                            14  43 BRNM                  S01117
+0180 I***********                            44  490BICN                  S01117
+0181 I***********                            50  51 LOCC                  S01117
+0182 I***********                            52  53 CMPY                  S01117
+0182 I***********                            52  54 CMPYM                 S01117
+0183 I***********                         P  90  920LCD                   S01117
+0184 I***********                            93  93 CHTP                  S01117
+0185 I***********                         P  94  960TNLU                  S01117
+0171 I*
+0186 I*
+0187 I************                                                        S01194
+0188 I*****TABLE*FILE*-*CURRENCIES RECORD 1.                              S01194
+0189 I************                                                        S01194
+0190 I********NS  07   2 C2   3 C0                                        S01194
+0191 I**********                              1   1 RECI                  S01194
+0192 I**********                              2   30RECT                  S01194
+0193 I**********                             10  12 CCY                   S01194
+0194 I**********                             13  130SREC                  S01194
+0195 I**********                             14  27 CCNM                  S01194
+0196 I**********                          P  28  348SPOT                  S01194
+0197 I**********                             35  37 CCYS                  S01194
+0198 I**********                             38  380CDP                   S01194
+0199 I**********                             39  390TNOT                  S01194
+0200 I**********                             40  40 DCCY                  S01194
+0201 I**********                             41  44 SRC1                  S01194
+0202 I**********                             45  48 SRC2                  S01194
+0203 I**********                             49  520TACC                  S01194
+0204 I**********                             53  560TEQV                  S01194
+0205 I**********                             57  600SWQV                  S01194
+0206 I**********                             61  640TAC4                  S01194
+0207 I**********                             65  680TAC5                  S01194
+0208 I**********                             69  69 HIND                  S01194
+0209 I**********                          P  70  768PART                  S01194
+0210 I**********                             77  780SSNO                  S01194
+0211 I**********                          P  79  858ERLC                  S01194
+0212 I**********                             86  860MDIN                  S01194
+0213 I**********                             87  870MDIA                  S01194
+0214 I**********                             88  880MDIB                  S01194
+0215 I**********                          P  90  920LCD                   S01194
+0216 I**********                             93  93 CHTP                  S01194
+0217 I**********                          P  94  960TNLU                  S01194
+0218 I*
+0219 I*****TABLE*FILE*-*CATCHALL*                                         S01194
+0220 I**********                                                          S01194
+0221 I********NS  08                                                      S01194
+0222 I*
+0223 I*
+0224 I*****CLIENT*FILE*-*CUSTOMER*NAME*AND*ADDRESS*RECORD.                S01194
+0225 I*
+0226 I*CLINT***NS  09   1 CD   8NCA                                       S01194
+0227 I**********                              1   1 RECI                  S01194
+0228 I**********                              2   70CNUM                  S01194
+0229 I**********                              8   8 RCDT                  S01194
+0230 I**********                              9  43 CNA1                  S01194
+0231 I**********                             44  78 CNA2                  S01194
+0232 I**********                             79 113 CNA3                  S01194
+0233 I**********                            114 148 CNA4                  S01194
+0234 I**********                            149 160 TELF                  S01194
+0235 I**********                            161 172 TELX                  S01194
+0236 I**********                            173 174 CLOC                  S01194
+0237 I**********                            240 249 CTWN                  S01194
+0238 I**********                          P 250 2520LCD                   S01194
+0239 I**********                            253 253 CHTP                  S01194
+0240 I**********                          P 254 2560TNLU                  S01194
+0223 I*
+0224 I*****CLIENT*FILE*-*CUSTOMER*STANDING*DATA*RECORD.                   S01194
+0225 I*
+0226 I********NS  12   1 CD   8 CA                                        S01194
+0227 I**********                              9  28 CRNM                  S01194
+0228 I**********                             29  38 CTWN                  S01194
+0229 I**********                             69  80 CSIO                  S01194
+0230 I**********                            244 244 TLEN                  S01194
+0231 I**********                            245 245 TLXR                  S01194
+0241 I*
+0242 I*
+0243 I*
+0244 I*****CLIENT*FILE*-*CATCHALL                                         S01194
+0245 I*
+0246 I********NS  10                                                      S01194
+0247 I*
+     ISDCURRD0
+      **  EXTERNAL DS FOR CURRENCY DETAILS                                S01194
+     I              A6NBDP                          CDP                   S01194
+     I              A6CYCD                          CCY                   S01194
+     I              A6CYNM                          CCNM                  S01194
+      *                                                                   S01194
+0248 I*    LOCAL DATA AREA FOR DATABASE ERROR REFERENCES
+0249 I*
+0250 ILDA        UDS                            256
+0251 I***********                           134 138 DBFILE                S01117
+0252 I***********                           139 167 DBKEY                 S01117
+0253 I***********                           168 175 DBPGM                 S01117
+0254 I***********                           176 1770DBASE                 S01117
+0251 I                                      134 141 DBFILE                S01117
+0252 I                                      142 170 DBKEY                 S01117
+0253 I                                      171 180 DBPGM                 S01117
+0254 I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I**                                                                  S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDCUST    E DSSDCUSTPD                                              S01194
+     I**  EXTERNAL DS FOR CUSTOMER DETAILS                                S01194
+     I              BBCRNM                          CRNM                  S01194
+     I              BBCRTN                          CTWN                  S01194
+      *
+     ISDALTN    E DSSDALTNPD                                              S01194
+     I**  EXTERNAL DS FOR ALTERNATIVE NAMES AND ADDRESSES                 S01194
+     I              BCCNA1                          CNA1                  S01194
+     I              BCCNA2                          CNA2                  S01194
+     I              BCCNA3                          CNA3                  S01194
+     I              BCCNA4                          CNA4                  S01194
+     I*                                                                   S01194
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+      **  EXTERNAL DS FOR BRANCH CODE DETAILS                             S01117
+     I              A8BRCD                          BRCA                  S01194
+     I              A8BRNM                          BRNM                  S01194
+     I              QQDFAC                          QQDFA1                                    CGL029
+     ISDMMOD    E DSSDMMODPD                                              S01194
+      **  EXTERNAL DS FOR BRANCH CODE DETAILS                             S01194
+     I*
+     ISDTRAD    E DSSDTRADPD                                              S01194
+     I**  EXTERNAL DS FOR TRADING DETAILS                                 S01194
+     I              BLBNOC                          BRNC                  S01194
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01194
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01194
+     I              BJURPT                          TITL                  S01194
+     I**                                                                  S01465
+     ISCSARD    E DSSCSARDPD                                              S01465
+     I* SAR FILE DETAILS ACCESSED VIA ACCESS PROGRAM  AOSARDR0            S01465
+      *
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+0349 I/SPACE 3                                                            S01117
+     C                     MOVEACPY@      BIS@   80
+     C*                                                                   S01465
+     C** Field definitions                                                S01465
+     C*                                                                   S01465
+     C           *LIKE     DEFN CNUM      SVCNUM                          S01465
+     C           *LIKE     DEFN CRNM      SVCRNM                          S01465
+     C           *LIKE     DEFN CTWN      SVCTWN                          S01465
+     C*
+     C** PARAMETER LIST FOR PROGRAM 'AOBANKR0'                            S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C**                                                                  S01117
+     C** PARAMETER LIST FOR PROGRAM 'AOTRADR0'                            S01194
+     C           PLISTB    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDTRAD    PARM SDTRAD    DSFDY                           S01194
+     C** PARAMETER LIST FOR PROGRAM 'AOMMODR0'                            S01194
+     C           PLISTC    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01194
+     C**                                                                  S01117
+     C** PARAMETER LIST FOR PROGRAM 'AOCUSTR0'                            S01194
+     C           PLIST1    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C                     PARM           CKEY   10                       S01194
+     C                     PARM           KEYSTS  7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C** PARAMETER LIST FOR PROGRAM 'AOALTNR0'                            S01194
+     C           PLIST2    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C                     PARM           ALTKEY  6                       S01194
+     C                     PARM           AZCD    1                       S01194
+     C           SDALTN    PARM SDALTN    DSFDY                           S01194
+0257 C********************************************************************
+0258 C******     FIRST CYCLE/HEADER PROCESSING       *********************
+0259 C*
+0260 C   15                GOTO ENDFC
+0261 C                     SETON                     15
+     C**                                                                  S01117
+     C*     Hard code program to process 'ALL' branches                   S01117
+     C**                                                                  S01117
+     C                     MOVE 'ALL'     BRNCH   3                       S01117
+     C**                                                                  S01117
+     C**                                                                  S01117
+     C*     IN THE DATAAREA RUNDAT                                        S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C/COPY WNCPYSRC,LE0600C024
+     C*    DEFINE LDA                                                     S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+0262 C*
+0263 C* COUNT HEADER RECORD READ
+0264 C*
+     C/COPY WNCPYSRC,LE0600C033
+0265 C   01                Z-ADD1         NRIN    50
+0266 C*
+0267 C*    SET UP DATABASE ERROR REFERENCE
+0268 C*
+0269 C                     MOVE 'LE0600  'DBPGM
+0270 C                     MOVE ' '       BLANKS 29
+0271 C                     MOVE BLANKS    DBKEY
+0272 C*
+0273 C**READ*TABLE*FILE*-*ACCESS*ICD1                                     S01194
+0274 C*
+0275 C**********           MOVEL'01    '  TABKEY 12                       S01194
+0276 C**********           MOVE '    10'  TABKEY                          S01194
+0277 C********** TABKEY    SETLLTABLE                                     S01194
+0278 C**********           READ TABLE                    40 40=END OF FILES01194
+     C*                                                                   S01465
+     C** Access SAR details file to determine if                          S01465
+     C** core feature (S01465) is switched ON                             S01465
+     C*                                                                   S01465
+     C                     CALL 'AOSARDR0'                                S01465
+     C                     PARM *BLANKS   @RTCD   7                       S01465
+     C                     PARM '*VERIFY' @OPTN   7                       S01465
+     C                     PARM 'S01465'  @SARD   6                       S01465
+     C           SCSARD    PARM SCSARD    DSFDY                           S01465
+     C                     MOVE 'N'       S01465  1                       S01465
+     C*                                                                   S01465
+     C** If core feature is switched ON, set a variable field to          S01465
+     C** condition the rest of the processing                             S01465
+     C*                                                                   S01465
+     C           @RTCD     IFEQ *BLANKS                                   S01465
+     C                     MOVE 'Y'       S01465                          S01465
+     C                     ELSE                                           S01465
+     C*                                                                   S01465
+     C** else, database error (return code other than *NRF)               S01465
+     C*                                                                   S01465
+     C           @RTCD     IFNE '*NRF   '                                 S01465
+     C                     MOVEL'LE0600 ' DBPGM                           S01465
+     C                     MOVEL'SCSARDPD'DBFILE           ************   S01465
+     C                     MOVEL'*VERIFY' DBKEY            * DBERR 09 *   S01465
+     C                     Z-ADD09        DBASE            ************   S01465
+     C                     SETON                     U7U8LR               S01465
+     C                     GOTO ENDD                                      S01465
+     C                     END                                            S01465
+     C                     END                                            S01465
+     C/COPY WNCPYSRC,LE0600C001
+     C**   ACCESS BANK DETAILS                                            S01194
+     C**                                                                  S01194
+     C                     CALL 'AOBANKR0'PLISTA                          S01194
+0279 C*                                                                   S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     MOVE 'SDBANKPD'DBFILE                          S01194
+     C                     Z-ADD01        DBASE             (**DBASE 01**)S01194
+0287 C                     GOTO ENDD                                      S01194
+     C                     END
+     C*                                                                   S01194
+     C                     CALL 'AOMMODR0'PLISTC                          S01194
+0279 C*                                                                   S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     MOVE 'SDMMODPD'DBFILE                          S01194
+     C                     Z-ADD11        DBASE             (**DBASE 11**)S01194
+0287 C                     GOTO ENDD                                      S01194
+     C                     END
+     C*                                                                   S01194
+3355 C**                                                                  S01194
+0280 C* DATABASE ERROR IF LIVE RECORD NOT FOUND
+0281 C*
+0282 C**N05*****                                                          S01194
+0283 C*OR*40****            SETON                     U7U8LR              S01194
+0284 C***U7*U8**           MOVE 'TABLE'   DBFILE                          S01194
+0285 C***U7*U8**           MOVELTABKEY    DBKEY                           S01194
+0286 C***U7*U8**           Z-ADD01        DBASE             (**DBASE 01**)S01194
+0287 C***U7*U8**           GOTO ENDD                                      S01194
+0288 C*
+0289 C           DATF      COMP 'M'                      98 (FOR ZDATE2)
+0290 C**
+0291 C*****ACCESS*ICD-5*FOR*BRANCH*NAME*IND.*                             S01194
+0291 C*    ACCESS TRADING DATA FOR BRANCH NAME IND.                       S01194
+0292 C**
+0293 C**********           MOVE '40'      TABKEY                          S01194
+0294 C********** TABKEY    SETLLTABLE                                     S01194
+0295 C**********           READ TABLE                    40               S01194
+0296 C**********                                                          S01194
+0297 C**N11*****                                                          S01194
+0298 C*OR*40****            SETON                     U7U8LR              S01194
+0299 C***U7*U8**           MOVE 'TABLE'   DBFILE                          S01194
+0300 C***U7*U8**           MOVELTABKEY    DBKEY                           S01194
+0301 C***U7*U8**           Z-ADD6         DBASE            (**DBASE 06**) S01194
+0302 C***U7*U8**           GOTO ENDD                                      S01194
+     C                     CALL 'AOTRADR0'PLISTB                          S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVE 'SDTRADPD'DBFILE           *************  S01194
+     C                     Z-ADD6         DBASE            ** DBASE 06**  S01194
+     C                     SETON                     U7U8LR ************  S01194
+     C                     GOTO ENDD                                      S01194
+     C                     END                                            S01194
+0294 C**                                                                  S01117
+     C*    SETON INDICATOR FOR OUTPUT IF MBIN = 'YES'                     S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     65                   S01117
+     C                     END                                            S01117
+0303 C**
+0304 C           BRNC      COMP 'Y'                      50
+0305 C*
+0306 C* ACCESS CCY RECORDS AND LOAD ARRAYS
+0307 C**********           MOVE BLANKS    TABKEY                          S01194
+0308 C**********           MOVEL'20'      TABKEY                          S01194
+0309 C********** TABKEY    SETLLTABLE                                     S01194
+0310 C                     Z-ADD0         Y       30
+0311 C*
+0312 C           CCYLOP    TAG                             **CCYLOP TAG**
+0313 C**********           SETOF                     071640               S01194
+0313 C                     SETOF                       1640               S01194
+0314 C**********           READ TABLE                    40 40=END OF FILES01194
+0314 C                     READ SDCURRPD                 40 40=END OF FILES01194
+0315 C**N07*****                                                          S01194
+0316 C*OR*40****            GOTO CCYEND                                   S01194
+0316 C   40                GOTO CCYEND                                    S01194
+0317 C********** RECI      COMP 'D'                      16               S01194
+0318 C**N16*****           GOTO CCYLOP                                    S01194
+0319 C********** SREC      COMP 1                        16               S01194
+0320 C**N16*****           GOTO CCYLOP                                    S01194
+     C                     SETON                     19                   E12160
+0321 C           Y         ADD  1         Y
+     C                     MOVE CCNM      CNM,Y
+     C/COPY WNCPYSRC,LE0600C002
+0322 C                     MOVE CCY       ACY,Y
+     C/COPY WNCPYSRC,LE0600C004
+0323 C                     Z-ADDCDP       ADP,Y
+     C/COPY WNCPYSRC,LE0600C029
+0324 C           Y         COMP 150                    16
+0325 C   16                GOTO CCYLOP
+0326 C*
+0327 C           CCYEND    TAG                             **CCYEND TAG**
+0328 C*
+0329 C**IF*END*OF*FILE,*DATABASE*ERROR*********************               E12160
+0330 C***40******          SETON                     U7U8LR               E12160
+0258 C* IF END OF FILE AND NO LIVE CCY RECORD FOUND, DATABASE ERROR       E12160
+     C   40N19             SETON                     U7U8LR               E12160
+     C   U7 U8             MOVE 'SDCURRPD'DBFILE                          S01194
+0332 C   U7 U8             MOVE CCY       DBKEY                           S01194
+0331 C***U7*U8**           MOVE 'TABLE'   DBFILE                          S01194
+0332 C***U7*U8**           MOVELTABKEY    DBKEY                           S01194
+0333 C   U7 U8             Z-ADD02        DBASE             (**DBASE 02**)
+0334 C   U7 U8             GOTO ENDD
+0335 C*
+0336 C                     Z-ADD10        D       20
+     C                     Z-ADD11        E       20                                          CLE134
+0336 C***01******          GOTO ENDD                                      S01117
+0336 C   01                GOTO ENDL                                      S01117
+0337 C*
+0338 C/SPACE 3
+0339 C********************************************************************
+0340 C******     MAIN PROCESSING                     *********************
+0341 C*
+0342 C           ENDFC     TAG                             ** ENDFC TAG **
+0343 C*
+0344 C*
+0345 C                     SETOF                     2526
+0346 C                     SETOF                     303132
+0347 C                     SETOF                     333435
+0348 C                     SETOF                     3637
+     C                     SETOF                     39                                       CLE134
+0349 C*
+0350 C*
+0351 C*
+0352 C* COUNT DETAIL & TRAILER RECORDS
+0353 C*
+     C/COPY WNCPYSRC,LE0600C034
+0354 C   02
+0355 COR 03      NRIN      ADD  1         NRIN
+0356 C*
+0357 C* IF NOT DETAIL RECORD, SKIP MAIN PROCESSING
+0358 C*
+     C**N02*****                                                                       S01117 CLE134
+     C  N02N05                                                                                CLE134
+0359 C***03********                                                       S01117
+     COR 03                                                               S01117
+0360 COR 04                GOTO ENDD
+0361 C*
+0362 C*
+0363 C********************************************************************
+0364 C******     DETAIL PROCESSING                   *********************
+0365 C*
+     C** MULTIBRANCH OUTPUT TEST                                          S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C**                                                                  S01117
+     C           *INL2     IFEQ '1'                                       S01117
+     C/COPY WNCPYSRC,LE0600C008
+     C                     CLOSELE0600P1                                  S01117
+     C/COPY WNCPYSRC,LE0600C009
+     C*                                                                   S01117
+     C**                                                                  S01117
+     C*       IF MBIN=YES, AND A LEVEL BREAK,                             S01117
+     C*       OPEN LE0600P1                                               S01117
+     C**                                                                  S01117
+     C                     SETON                       75                 S01117
+     C                     SETOF                       76                 BHF395
+     C/COPY WNCPYSRC,LE0600C010
+     C                     OPEN LE0600P1                                  S01117
+     C/COPY WNCPYSRC,LE0600C011
+     C**                                                                  S01117
+     C**  ENSURE TOTALS SPOOL FILE RECORDED BY RCF                        S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C                     OUT  LDA                                       S01117
+      *                                                                   S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM BRCA      SENTY                           S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+      *                                                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM        S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C** RETRIEVE BRANCH NAME                                             S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVEL@DSNB     DBKEY            ***************S01117
+     C                     MOVEL'010'     DBASE            ** DBASE  10 **S01117
+     C                     MOVE *BLANKS   BRNM             ***************S01117
+     C                     GOTO ENDD                                      S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ELSE                                           S01117
+     C**                                                                  S01117
+     C*       IF MBIN='N' AND FIRST CYCLE,                                S01117
+     C*       OPEN LE0600P1                                               S01117
+     C**                                                                  S01117
+     C           P1OP      IFNE 'Y'                                       S01117
+     C                     SETON                     75                   S01117
+     C                     MOVE 'Y'       P1OP    1                       S01117
+     C/COPY WNCPYSRC,LE0600C012
+     C                     OPEN LE0600P1                                  S01117
+     C/COPY WNCPYSRC,LE0600C013
+     C**                                                                  S01117
+     C*       ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM                           S01117
+     C                     OUT  LDA                                       S01117
+      *                                                                   S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+      *                                                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM        S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+0367 C**AT*CHANGE*OF*BRANCH*ACCESS*BRANCH*NAME*                           S01117
+0368 C**DATABASE*ERROR*IF*NOT*FOUND*OR*BLANK*ON*INPUT*                    S01117
+0377 C***********BCOD******COMP*BRCA*                4141                 S01117
+0378 C*
+0379 C***L2*40***                                                         S01117
+     C*OR*L2*41**           SETON                     U7U8LR              S01117
+0380 C*R*L2*41***                                                         S01117
+0381 C*R*L2N06***          SETON                     U7U8LR  (*DBASE 03*) S01117
+0382 C***L2*U7*U8          Z-ADD03        DBASE                           S01194
+0383 C***L2*U7*U8          MOVE 'TABLE'   DBFILE                          S01194
+0384 C***L2*U7*U8          MOVELTABKEY    DBKEY                           S01194
+0385 C***L2*U7*U8          GOTO ENDD                                      S01194
+0386 C*                                                                   S01194
+0387 C* AT L1, LOOK UP CCY ARRAYS FOR DECIMAL PLACES
+0388 C*
+0389 C   L1                SETOF                     808182
+0390 C   L1                SETOF                     8317
+0391 C*
+0392 C   L1                Z-ADD1         X       30
+0393 C   L1      CCY       LOKUPACY,X                    17  17=FOUND
+0394 C*
+     C   L1 17             MOVE CNM,X     CCNME  14
+     C/COPY WNCPYSRC,LE0600C030
+     C*
+0395 C   L1 17   ADP,X     COMP 1                      8081
+0396 C   L1 17
+0397 CANN80N81   ADP,X     COMP 3                      8283
+0398 C*
+0399 C* IF NOT FOUND, OR BLANK ON INPUT, DATABASE ERROR
+0400 C*
+0401 C   L1 18
+0402 COR L1N17             SETON                     U7U8LR  (*DBASE 04*)
+0403 C   L1 U7 U8          Z-ADD04        DBASE
+0404 C***L1*U7*U8          MOVE 'TABLE'   DBFILE                          S01194
+0404 C   L1 U7 U8          MOVE 'SDCURRPD'DBFILE                          S01194
+0405 C   L1 U7 U8          MOVELCCY       DBKEY                           S01194
+0405 C***L1*U7*U8          MOVELCCY       DBKY1   4                       S01194
+0406 C***L1*U7*U8          MOVE '1'       DBKY1                           S01194
+0407 C***L1*U7*U8          MOVEL'20      'DBKY2  12                       S01194
+0408 C***L1*U7*U8          MOVE DBKY1     DBKY2                           S01194
+0409 C***L1*U7*U8          MOVELDBKY2     DBKEY                           S01194
+0410 C   L1 U7 U8          GOTO ENDD
+0411 C*
+0412 C* TEST TELEX INTERFACE'EXISTENCE
+0413 C*
+     C           *IN05     IFEQ *OFF                                                          CLE134
+     C                     MOVELLNRF      CLOKEY                                            BUG13346
+     C                     MOVE 'A'       CLOKEY                                            BUG13346
+     C           CLOKEY    CHAINCLOAN                99                                     BUG13346
+      *                                                                                     BUG13346
+      ** Database error if no record found                                                  BUG13346
+      *                                                                                     BUG13346
+     C           *IN99     IFEQ '1'                                                         BUG13346
+     C                     MOVEL'CLOAN   'DBFILE                                            BUG13346
+     C                     MOVELCLOKEY    DBKEY                                             BUG13346
+     C                     Z-ADD12        DBASE                                             BUG13346
+     C                     SETON                     U7U8LR                                 BUG13346
+     C                     GOTO ENDD                                                        BUG13346
+     C                     ELSE                                                             BUG13346
+     C                     MOVELCNUML     CNUM                                              BUG13346
+     C                     ENDIF                                                            BUG13346
+     C                     ENDIF                                                              CLE134
+0414 C                     MOVE '0'       *IN24
+0415 C**********           TESTB'3'       TLXM           24               S01194
+0415 C           BGMTMI    COMP 'Y'                      24               S01194
+     C********** *IN24     IFEQ '1'                                       065961
+     C**********           MOVELCNUM      CLINKY                          S01194
+     C**********           MOVE 'A'       CLINKY                          S01194
+     C********** CLINKY    CHAINCLINT                42    = NOT FOUND    S01194
+     C                     MOVELCNUM      CKEY                            S01194
+     C                     CALL 'AOCUSTR0'PLIST1                          S01194
+     C**N42***** RECI      COMP 'D'                  4242                 S01194
+     C********** *IN42     IFEQ '1'                                       S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETON                     U7U8LR
+     C                     Z-ADD7         DBASE
+     C**********           MOVE 'CLINT'   DBFILE                          S01194
+     C**********           MOVELCLINKY    DBKEY             DBASE 7       S01194
+     C                     MOVE 'SDCUSTPD'DBFILE                          S01194
+     C                     MOVELCKEY      DBKEY             DBASE 7       S01194
+     C                     GOTO ENDD
+     C                     END
+     C**********           TESTB'3'       TLXR           24               S01194
+     C***24*****           TESTB'1'       TLEN           24               S01194
+     C           *IN24     IFEQ '1'                                       065961
+     C           BBCMTI    COMP 'Y'                      24               S01194
+     C   24      BBLETI    COMP 'Y'                      24               S01194
+     C                     END
+     C  NU1                SETOF                         24
+0411 C*
+0412 C* TEST PAST DUE BIT SETTINGS. IF ALL OFF, NO NOTICE TO PRINT
+0413 C*
+     C           *IN05     IFEQ *ON                                                           CLE134
+     C                     EXSR PDCL                                                          CLE134
+      *                                                                                       CLE134
+     C                     ELSE                                                               CLE134
+0414 C                     TESTB'01234567'PDBI       25
+0415 C   25                GOTO ENDD
+0416 C*
+0417 C* CHECK PAST DUE NOTICE REQUIRED IND.
+0418 C*
+0419 C           PDRQ      COMP 'Y'                  2525
+0420 C   25                GOTO ENDD
+     C                     ENDIF                                                              CLE134
+     C/COPY WNCPYSRC,LE0600C032
+     C**
+     C**    IF PAST DUE AMOUNTS ARE ZERO, DO NOT PRINT PAST DUE NOTICES
+     C**
+     C           PPDU      COMP 0                        25
+     C   25      INPD      COMP 0                        25
+     C   25                GOTO ENDD
+0421 C*
+0422 C* ACCESS FURTHER DETAILS FOR NOTICES
+0423 C*
+0424 C* ACCESS CUST. NAME/ADDRESS ACCORDING TO CODE
+0425 C*
+0426 C**********           MOVE BLANKS    CLINKY  7                       S01194
+0427 C**********           MOVE NACD      CLINKY                          S01194
+0428 C**********           MOVELCNUM      CLINKY                          S01194
+0429 C           CUST      TAG                             ** CUST TAG ***S01194
+0430 C********** CLINKY    CHAINCLINT                42    42-NOT FOUND   S01194
+     C*
+     C* CHECK VALUE OF ALTERNATE NAME & ADDRESS CODE IS NOT EQUAL TO 'B'  LN0007
+     C* IFEQ 'B' BYPASS ALTERNATE NAME & ADDRESS VALIDATION               LN0007
+     C           NACD      IFNE 'B'                                       LN0007
+     C*
+     C                     MOVE NACD      AZCD                            S01194
+     C                     MOVELCNUM      ALTKEY                          S01194
+     C                     CALL 'AOALTNR0'PLIST2                          S01194
+     C                     END                                            LN0007
+     C*                                                                   S01194
+     C* IF ALTERNATE NAME AND ADDRESS NOT FOUND USE SDCUSTPD ADDRESS      S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C           NACD      OREQ 'B'                                       LN0007
+     C                     MOVE BBCNA1    CNA1                            S01194
+     C                     MOVE BBCNA2    CNA2                            S01194
+     C                     MOVE BBCNA3    CNA3                            S01194
+     C                     MOVE BBCNA4    CNA4                            S01194
+     C                     END                                            S01194
+     C*                                                                   S01465
+     C** If core feature is swithced ON, chain to CLOAN file to get       S01465
+     C** customer confirmation field                                      S01465
+     C*                                                                   S01465
+     C           S01465    IFEQ 'Y'                                       S01465
+     C           *IN05     ANDEQ*OFF                                                          CLE134
+     C                     MOVELLNRF      CLOKEY  7                       S01465
+     C                     MOVE 'A'       CLOKEY                          S01465
+     C           CLOKEY    CHAINCLOAN                99                   S01465
+     C*                                                                   S01465
+     C** Database error if no record found                                S01465
+     C*                                                                   S01465
+     C           *IN99     IFEQ '1'                                       S01465
+     C                     MOVEL'CLOAN   'DBFILE           ************   S01465
+     C                     MOVELCLOKEY    DBKEY            * DBERR 08 *   S01465
+     C                     Z-ADD08        DBASE            ************   S01465
+     C                     SETON                     U7U8LR               S01465
+     C                     GOTO ENDD                                      S01465
+     C**********           ELSE                                                        S01465 CLE134
+     C                     ENDIF                                                              CLE134
+     C                     ENDIF                                                              CLE134
+     C*                                                                   S01465
+     C** Else, if customer confirmation field is not blank, then access   S01465
+     C** customer details and print name and address instead of loan      S01465
+     C** customer name and address                                        S01465
+     C*                                                                   S01465
+     C********** COCUCL    IFNE *ZERO                                                  S01465 CSD027
+     C           COCUCL    IFNE *BLANKS                                                       CSD027
+     C           COCUCL    ANDNE'000000'                                                    BUG11790
+     C                     MOVELCOCUCL    CKEY   10                       S01465
+     C                     MOVE CNUM      SVCNUM                          S01465
+     C                     MOVE CRNM      SVCRNM                          S01465
+     C                     MOVE CTWN      SVCTWN                          S01465
+     C*                                                                   S01465
+     C** Call program to access customer details                          S01465
+     C*                                                                   S01465
+     C                     CALL 'AOCUSTR0'PLIST1                          S01465
+     C           @RTCD     IFNE *BLANKS                                   S01465
+     C                     SETON                     99                   S01465
+     C                     END                                            S01465
+     C           *IN99     IFEQ '1'                                       S01465
+     C                     MOVEL'SDCUSTPD'DBFILE                          S01465
+     C                     MOVE CKEY      DBKEY                           S01465
+     C                     Z-ADD7         DBASE            DBASE 7        S01465
+     C                     SETON                     U7U8LR               S01465
+     C                     GOTO ENDD                                      S01465
+     C                     ELSE                                           S01465
+     C                     MOVELBBCNA1    CNA1                            S01465
+     C                     MOVELBBCNA2    CNA2                            S01465
+     C                     MOVELBBCNA3    CNA3                            S01465
+     C                     MOVELBBCNA4    CNA4                            S01465
+     C                     MOVE SVCNUM    CNUM                            S01465
+     C                     MOVE SVCRNM    CRNM                            S01465
+     C                     MOVE SVCTWN    CTWN                            S01465
+     C                     END                                            S01465
+     C                     END                                            S01465
+     C**********           END                                                         S01465 CLE134
+     C**********           END                                                         S01465 CLE134
+0431 C*
+0432 C**IF*ALTERNATE*NAME*AND*ADDRESS*NOT*FOUND*DEFAULT*TO*B*RECORD*      S01194
+0433 C**DATABASE*ERROR*ONLY*IF*B*RECORD*NOT*FOUND.***                     S01194
+0434 C*
+0435 C**N09*****           MOVE CLINKY    CHECK   1                       S01194
+0436 C**N09***** CHECK     COMP 'B'                  3939                 S01194
+0437 C**N09*39**           MOVE 'B'       CLINKY                          S01194
+0438 C**N09*39**           GOTO CUST                                      S01194
+0439 C*
+0440 C**N09*****                                                          S01194
+0441 C*OR*42****            SETON                     U7U8LR (*DBASE 05*) S01194
+0442 C***U7*U8**           Z-ADD05        DBASE                           S01194
+0443 C***U7*U8**           MOVE 'CLINT'   DBFILE                          S01194
+0444 C***U7*U8**           MOVELCLINKY    DBKEY                           S01194
+0445 C***U7*U8**           GOTO ENDD                                      S01194
+0446 C*
+0447 C*
+0448 C* CHECK REPAYMENT TYPE
+0449 C*
+0450 C********** REPT      COMP 1                        26                                   208370
+      *                                                                                       208370
+     C           INPD      IFNE 0                                                             208370
+     C                     MOVE '1'       *IN26                                               208370
+     C                     ENDIF                                                              208370
+      *                                                                                       208370
+     C/COPY WNCPYSRC,LE0600C026
+0451 C*
+0452 C* CONVERT VALUE DATE TO DATE FORMAT (OUTPUT ZADATE)
+0453 C*
+     C           *IN05     IFEQ *OFF                                                          CLE134
+0454 C                     Z-ADDVDAT      ZDAYNO
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDRCSD      ZDAYNO                                              CLE134
+     C                     ENDIF                                                              CLE134
+0455 C                     EXSR ZDATE2
+     C/COPY WNCPYSRC,LE0600C027
+0456 C**
+     C*  ARRANGE DATES INTO DDMMYY FORMAT FOR OUTPUT TO TELEX FILE
+     C*
+     C                     MOVE ZYEAR     ZWRK4
+     C                     MOVELZMTH      ZWRK4
+     C                     MOVE ZWRK4     TXDATE  60
+     C                     MOVELZDAY      TXDATE
+     C/COPY WNCPYSRC,LE0600C025
+     C*
+0457 C**   CALC TOTAL AMOUNT PAST DUE
+0458 C**
+0459 C           PPDU      ADD  INPD      TPD    130
+     C/COPY WNCPYSRC,LE0600C031
+0460 C*
+0461 C* CHECK INDIVIDUAL BITS FOR WHICH NOTICE(S) TO PRINT
+0461 C*                           *IN24 ON ===> TELEX PRINT
+0462 C*
+0463 C                     TESTB'0'       PDBI           30
+     C   30                TESTB'7'       PDBI       30                                       CLE134
+     C/COPY WNCPYSRC,LE0600C014
+0464 C   30                EXCPT
+     C   30N76             SETON                     76                   BHF395
+0464 C   30 24             EXCPTTLX
+0464 C   30 24             ADD  1         TELEX   30
+0465 C                     SETOF                     30
+0466 C                     TESTB'1'       PDBI           31
+     C/COPY WNCPYSRC,LE0600C015
+0467 C   31                EXCPT
+     C   31N76             SETON                     76                   BHF395
+0464 C   31 24             EXCPTTLX
+0464 C   31 24             ADD  1         TELEX
+0468 C                     SETOF                     31
+0469 C                     TESTB'2'       PDBI           32
+     C/COPY WNCPYSRC,LE0600C016
+0470 C   32                EXCPT
+     C   32N76             SETON                     76                   BHF395
+0464 C   32 24             EXCPTTLX
+0464 C   32 24             ADD  1         TELEX
+0471 C                     SETOF                     32
+0472 C                     TESTB'3'       PDBI           33
+     C/COPY WNCPYSRC,LE0600C006
+0473 C   33                EXCPT
+     C   33N76             SETON                     76                   BHF395
+0464 C   33 24             EXCPTTLX
+0464 C   33 24             ADD  1         TELEX
+0474 C                     SETOF                     33
+0475 C                     TESTB'4'       PDBI           34
+     C/COPY WNCPYSRC,LE0600C007
+0476 C   34                EXCPT
+     C   34N76             SETON                     76                   BHF395
+0464 C   34 24             EXCPTTLX
+0464 C   34 24             ADD  1         TELEX
+0477 C                     SETOF                     34
+0478 C                     TESTB'5'       PDBI           35
+     C/COPY WNCPYSRC,LE0600C017
+0479 C   35                EXCPT
+     C   35N76             SETON                     76                   BHF395
+0464 C   35 24             EXCPTTLX
+0464 C   35 24             ADD  1         TELEX
+0480 C                     SETOF                     35
+0481 C                     TESTB'6'       PDBI           36
+     C/COPY WNCPYSRC,LE0600C018
+0482 C   36                EXCPT
+     C   36N76             SETON                     76                   BHF395
+0464 C   36 24             EXCPTTLX
+0464 C   36 24             ADD  1         TELEX
+0483 C                     SETOF                     36
+0484 C                     TESTB'7'       PDBI           37
+     C   37                TESTB'0'       PDBI       37                                       CLE134
+     C/COPY WNCPYSRC,LE0600C019
+0485 C   37                EXCPT
+     C   37N76             SETON                     76                   BHF395
+0464 C   37 24             EXCPTTLX
+0464 C   37 24             ADD  1         TELEX
+0486 C                     SETOF                     37
+      *                                                                                       CLE134
+     C                     TESTB'07'      PDBI           39                                   CLE134
+     C   39                EXCPT                                                              CLE134
+     C   39N76             SETON                     76                                       CLE134
+     C   39 24             EXCPTTLX                                                           CLE134
+     C   39 24             ADD  1         TELEX                                               CLE134
+     C                     SETOF                     39                                       CLE134
+0487 C*
+0488 C* SET INDICATOR FOR AT LEAST ONE NOTICE PRINTED BY PROGRAM
+0489 C*
+0490 C***********          SETON                     38                   S01117
+0490 C                     SETON                     3843                 S01117
+0491 C*
+0492 C*
+0493 C*
+0494 C           ENDD      TAG                             ** ENDD TAG **
+0495 C/SPACE 3
+0496 C*
+0497 C*
+0498 C********************************************************************
+0499 C******     TRAILER PROCESSING                  *********************
+0500 C*
+0501 C* COMPARE RECORDS COUNTED WITH TRAILER VALUE
+0502 C* IF NOT EQUAL, SETON U8
+0503 C*
+0504 C   03      NRIN      COMP NORE                 U8U8
+0505 C*
+0506 C* IF HAVE BEEN NO NOTICES TO PRINT, OUTPUT MESSAGE
+0507 C* (SEE OUTPUT)
+0508 C*
+     C* IF NO TELEXES GENERATED, OMIT "TOTAL TELEX RECORDS" NARRATIVE ON
+     C* MPRINT
+     C           ENDL      TAG                                            S01117
+     C*                                                                   S01117
+     C**  GENERATE 'END OF REPORT' FOR P1                                 S01117
+     C*                                                                   S01117
+     C/COPY WNCPYSRC,LE0600C020
+     C***L2******             EXCPTENDR                             S01117BHF395
+     CL2 76                EXCPTENDR                                      BHF395
+     CLR         TELEX     COMP 0                        23
+0509 C*
+0510 C/SPACE 3
+     C**                                                                  S01117
+     C**                                                                  S01117
+     C*   ENSURE TOTALS SPOOL FILE RECORDED BY RCF                        S01117
+     C**                                                                  S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     CLR                   OUT  LDA                                       S01117
+     C**                                                                  S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ                             S01117
+     CLR                   PARM *BLANKS   SENTY                           S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU                          S01117
+     CLR                   PARM           ZSERR   1                       S01117
+     C**                                                                  S01117
+     CLR         *LOCK     IN   LDA                                       S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALL PROGRAM          S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     C**                                                                  S01117
+     C*     IF P1 FILE NT OPEN (BECAUSE NO RECORDS READ) THEN OPEN IT     S01117
+     C**                                                                  S01117
+     CLRN75                EXSR #ZZ                                       S01117
+     C*     EXCUTE ERROR ROUTINE IF DATABASE ERROR EXISTS                 S01117
+     C**                                                                  S01117
+     CLR U7 U8             EXSR *PSSR                                     S01117
+0401 C*                                                                   S01117
+      *****************************************************************                       CLE134
+     C           PDCL      BEGSR                                                              CLE134
+      *                                                                                       CLE134
+      ** Set bits in PDBI to correspond with value of Reporting Past Due                      CLE134
+      ** Classification: thus, set 1st bit on if value is 1, 2nd bit if                       CLE134
+      ** value is 2, etc. If value is 9 set 1st and last bits.                                CLE134
+      ** If value is 0 all bits are left off.                                                 CLE134
+      *                                                                                       CLE134
+     C                     BITOF'01234567'PDBI                                                CLE134
+     C                     SELEC                                                              CLE134
+     C           RCAT      WHEQ 1                                                             CLE134
+     C                     BITON'0'       PDBI                                                CLE134
+     C           RCAT      WHEQ 2                                                             CLE134
+     C                     BITON'1'       PDBI                                                CLE134
+     C           RCAT      WHEQ 3                                                             CLE134
+     C                     BITON'2'       PDBI                                                CLE134
+     C           RCAT      WHEQ 4                                                             CLE134
+     C                     BITON'3'       PDBI                                                CLE134
+     C           RCAT      WHEQ 5                                                             CLE134
+     C                     BITON'4'       PDBI                                                CLE134
+     C           RCAT      WHEQ 6                                                             CLE134
+     C                     BITON'5'       PDBI                                                CLE134
+     C           RCAT      WHEQ 7                                                             CLE134
+     C                     BITON'6'       PDBI                                                CLE134
+     C           RCAT      WHEQ 8                                                             CLE134
+     C                     BITON'7'       PDBI                                                CLE134
+     C           RCAT      WHEQ 9                                                             CLE134
+     C                     BITON'07'      PDBI                                                CLE134
+     C                     ENDSL                                                              CLE134
+      *                                                                                       CLE134
+      ** Get the principal and interest amounts from the PDCL loans.                          CLE134
+      ** First save origin loan Customer Confirmation field.                                  CLE134
+      *                                                                                       CLE134
+     C                     MOVE COCUCL    COCUSV  6                                           CLE134
+      *                                                                                       CLE134
+     C                     Z-ADD0         PPDU                                                CLE134
+     C                     Z-ADD0         INPD                                                CLE134
+     C           LNRF      SETLLLEPDUEL2                                                      CLE134
+     C           LNRF      READELEPDUEL2                 99                                   CLE134
+     C           *IN99     DOWEQ*OFF                                                          CLE134
+      *                                                                                       CLE134
+     C                     MOVELYPLON     CLOKEY  7                                           CLE134
+     C                     MOVE 'A'       CLOKEY                                              CLE134
+     C           CLOKEY    CHAINCLOAN                99                                       CLE134
+      *                                                                                       CLE134
+     C           *IN99     IFEQ *OFF                                                          CLE134
+     C           LTYP1     IFEQ 'X'                                                           CLE134
+     C                     Z-ADDCPAML     PPDU                                                CLE134
+     C                     ENDIF                                                              CLE134
+     C           LTYP1     IFEQ 'Y'                                                           CLE134
+     C                     Z-ADDCPAML     INPD                                                CLE134
+     C                     ENDIF                                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           LNRF      READELEPDUEL2                 99                                   CLE134
+     C                     ENDDO                                                              CLE134
+      *                                                                                       CLE134
+      ** Restore Customer Confirmation field.                                                 CLE134
+      *                                                                                       CLE134
+     C                     MOVE COCUSV    COCUCL                                              CLE134
+      *                                                                                       CLE134
+     C                     ENDSR                                                              CLE134
+      *                                                                                       CLE134
+0511 C********************************************************************
+     C*                                                                   S01117
+     C*                                                                   S01117
+     C* SUBROUTINE : #ZZ                                                  S01117
+     C*                                                                   S01117
+     C* CALLED BY MAIN PROCESSING DURING TOTAL TIME CALCULATIONS IF       S01117
+     C* THE P1 FILES HAVE NOT ALREADY BEEN OPENED (IE, IF THERE ARE       S01117
+     C* NO RECORDS READ AND THEREFORE FILES OPENING NOT PERFORMED)        S01117
+     C**                                                                  S01117
+0454 C           #ZZ       BEGSR                           *** NODETL *** S01117
+     C**                                                                  S01117
+     C                     MOVE 'Y'       P1OP                            S01117
+     C/COPY WNCPYSRC,LE0600C021
+     C                     OPEN LE0600P1                                  S01117
+     C/COPY WNCPYSRC,LE0600C022
+      *                                                                   S01117
+     C*                                                                   S01117
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF                         S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C                     OUT  LDA                                       S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM *BLANKS   SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+      *                                                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C***********                                                  S01117 056424
+     C***OUTPUT*'NO*DETAILS*TO*REPORT'*IN*P1***********************S01117 056424
+     C***********          EXCPTNODTL                              S01117 056424
+     C**                                                                  S01117
+     C*                                                                   S01117
+0466 C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C/COPY WNCPYSRC,LE0600C028
+      ********************************************************************                    CLE134
+     C           *INZSR    BEGSR                                                              CLE134
+      *                                                                                       CLE134
+     C           *ENTRY    PLIST                                                              CLE134
+     C                     PARM           PRERUN 10                                           CLE134
+      *                                                                                       CLE134
+     C           PRERUN    IFEQ 'NEWCOB'                                                      CLE134
+     C                     OPEN LEPDUEL2                                                      CLE134
+     C                     ELSE                                                               CLE134
+     C                     FEOD LELOANLY                                                      CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     ENDSR                                                              CLE134
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C/COPY WNCPYSRC,LE0600C003
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C/COPY WNCPYSRC,LE0600C005
+     C********************************************************************S01117
+     C/COPY ZSRSRC,ZDATE2Z4                                               S01392
+     C********************************************************************S01117
+     C/COPY WNCPYSRC,LE0600C023
+0602 O*
+0603 O*
+0604 O**
+0605 O**
+     O/COPY WNCPYSRC,LE0600O001
+0606 O*E0600P2E** 10                                            S01124    S01117
+0606 OLE0600P1E   10                                                      S01117
+0607 O                       50BRNM      60
+0608 O        E   12
+     O/COPY WNCPYSRC,LE0600O006
+0609 O                                    9 'DATE'
+0610 O                         RUNA      18
+     O/COPY WNCPYSRC,LE0600O007
+0611 O                                   67 'LOAN NUMBER -'
+0612 O                         LNRF      74
+     O/COPY WNCPYSRC,LE0600O003
+0613 O        E   15
+0614 O                       30          18 'F I R S T'
+0615 O                       31          18 'S E C O N D'
+0616 O                       32          18 'T H I R D'
+0617 O                       33          18 'F O U R T H'
+0618 O                       34          18 'F I F T H'
+0619 O                       35          18 'S I X T H'
+0620 O                       36          18 'S E V E N T H'
+0621 O                       37          18 'E I G H T H'
+     O                       39          18 'N I N T H'                                       CLE134
+0622 O                                   45 'P A S T   D U E   N O T '
+0623 O                                   50 'I C E'
+0623 O                 24                75 '** TELEX GENERATED **'
+0624 O        E   16
+0625 O                       30          18 '---------'
+0626 O                       31          18 '-----------'
+0627 O                       32          18 '---------'
+0628 O                       33          18 '-----------'
+0629 O                       34          18 '---------'
+0630 O                       35          18 '---------'
+0631 O                       36          18 '-------------'
+0632 O                       37          18 '------------'
+     O                       39          18 '---------'                                       CLE134
+0633 O                                   42 '------------------------'
+0634 O                                   50 '--------'
+0635 O        E   18
+0636 O                                   29 'YOUR REPAYMENT FOR THE A'
+0637 O                                   37 'MOUNT OF'
+     O/COPY WNCPYSRC,LE0600O008
+0638 O                       80PPDU      56 ' ,   ,   ,   , 0 '
+0639 O                       81PPDU      56 '   ,   ,   , 0 . '
+0640 O                       82PPDU      56 '  ,   ,   , 0 .  '
+0641 O                       83PPDU      56 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,LE0600O009
+0642 O***                      CCY       60
+0643 O        E 2      26
+0644 O                                   29 'PLUS ACCRUED INTEREST OF'
+     O/COPY WNCPYSRC,LE0600O010
+0645 O                       80INPD      56 ' ,   ,   ,   , 0 '
+0646 O                       81INPD      56 '   ,   ,   , 0 . '
+0647 O                       82INPD      56 '  ,   ,   , 0 .  '
+0648 O                       83INPD      56 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,LE0600O011
+0649 O        E 1
+0650 O                                   56 '- - - - - - - - -'
+0651 O        E 1
+0652 O                                   26 'TOTAL AMOUNT PAST DUE'
+     O/COPY WNCPYSRC,LE0600O012
+0653 O                       80TPD       56 ' ,   ,   ,   , 0 '
+0654 O                       81TPD       56 '   ,   ,   , 0 . '
+0655 O                       82TPD       56 '  ,   ,   , 0 .  '
+0656 O                       83TPD       56 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,LE0600O013
+     O                         CCNME     71
+0657 O        E 1
+0658 O                                   28 'HAS BEEN PAST DUE SINCE'
+0659 O                         ZADATE    36
+     O/COPY WNCPYSRC,LE0600O004
+0660 O        E   36
+0661 O                         CNA1      45
+0662 O        E   37
+0663 O                         CNA2      45
+0664 O        E   38
+0665 O                         CNA3      45
+0666 O        E   39
+0667 O                         CNA4      45
+     O/COPY WNCPYSRC,LE0600O020
+     O        E  210   L2 38 65ENDR                                       S01117
+     O                                   50 '*** END OF REPORT FOR'       S01117
+     O                                   58 ' BRANCH '                    S01117
+     O                         BRCA      61                               S01117
+     O                                   65 ' ***'                        S01117
+     O        E  210   L2N65 38ENDR                                       S01117
+     O                                   62 '*** END OF REPORT ***'       S01117
+     O/COPY WNCPYSRC,LE0600O002
+     O***LE0600P1E***03           NODTL                            S01117 056424
+0671 O*****************                  12 'REF LE0600P1'         S01117 056424
+0672 O*****************        TITL      67                        S01117 056424
+0673 O*****************        RUNA      76                        S01117 056424
+     O********E*33*****        NODTL                               S01117 056424
+0675 O*****************                 45 '** NO PAST DUE NOTICES'S01117 056424
+0676 O*****************                  57 'TO PRINT **'          S01117 056424
+     O********E**3*****        NODTL                               S01117 056424
+     O*****************65                50 '*** END OF REPORT FOR'S01117 056424
+     O*****************65                58 ' BRANCH '             S01117 056424
+     O*****************65      BRNCH     61                        S01117 056424
+     O*****************65                65 ' ***'                 S01117 056424
+     O****************N65                62 '*** END OF REPORT ***'S01117 056424
+0668 O***
+0606 OLENTTX  E                TLX
+0607 O                                    1 'D'
+0608 O***********              BRCD       4                               S01117
+0608 O                         BRCA       4                               S01117
+0609 O                         CNUM      10
+0610 O                         PTYP      12
+0611 O                         TXDATE    18
+0612 O                         CCY       21
+0612 O                         LNRF      27
+0612 O                                   28 'F'
+0612 O                                   29 'C'
+0612 O                                   70 'I'
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0607 O                                   24 'CUSTOMER LENDING PAST DU'
+     O                                   31 'E TELEX'
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0608 O                                    2 'TO'
+0609 O                         CRNM      38
+0610 O                         CTWN      50
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0608 O                                    2 'TO'
+0609 O                 30      TEXT,1    49
+0609 O                 31      TEXT,2    49
+0609 O                 32      TEXT,3    49
+0609 O                 33      TEXT,4    49
+0609 O                 34      TEXT,5    49
+0609 O                 35      TEXT,6    49
+0609 O                 36      TEXT,7    49
+0609 O                 37      TEXT,8    49
+     O                 39      TEXT,9    49                                                   CLE134
+0610 O                         CCY       59
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73
+0613 O        E                TLX
+0609 O                 30      UNDR,1    49
+0609 O                 31      UNDR,2    49
+0609 O                 32      UNDR,3    49
+0609 O                 33      UNDR,4    49
+0609 O                 34      UNDR,5    49
+0609 O                 35      UNDR,6    49
+0609 O                 36      UNDR,7    49
+0609 O                 37      UNDR,8    49
+     O                 39      UNDR,9    49                                                   CLE134
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0609 O**********               TEXT,9    49                                                   CLE134
+     O                         TEXT,D    49                                                   CLE134
+     O/COPY WNCPYSRC,LE0600O014
+0638 O                       80PPDU      68 ' ,   ,   ,   , 0 '
+0639 O                       81PPDU      68 '   ,   ,   , 0 . '
+0640 O                       82PPDU      68 '  ,   ,   , 0 .  '
+0641 O                       83PPDU      68 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,LE0600O015
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E        26      TLX
+0609 O**********               TEXT,D    49                                                   CLE134
+     O                         TEXT,E    49                                                   CLE134
+0638 O                       80INPD      68 ' ,   ,   ,   , 0 '
+     O/COPY WNCPYSRC,LE0600O016
+0639 O                       81INPD      68 '   ,   ,   , 0 . '
+0640 O                       82INPD      68 '  ,   ,   , 0 .  '
+0641 O                       83INPD      68 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,LE0600O017
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E        26      TLX
+0609 O                                   69 '- - - - - - - - - -'
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0609 O                                   26 'TOTAL AMOUNT PAST DUE'
+0638 O                       80TPD       68 ' ,   ,   ,   , 0 '
+     O/COPY WNCPYSRC,LE0600O018
+0639 O                       81TPD       68 '   ,   ,   , 0 . '
+0640 O                       82TPD       68 '  ,   ,   , 0 .  '
+0641 O                       83TPD       68 ' ,   ,   , 0 .   '
+     O/COPY WNCPYSRC,LE0600O019
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0609 O                                   29 'HAS BEEN PAST DUE SINCE'
+0641 O                         ZADATE    40
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O                                   20 'SPECIAL INSTRUCTIONS'
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O                         CNA1      35
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O                         CNA2      35
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O                         CNA3      35
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0613 O        E                TLX
+0612 O                         CNA4      35
+0612 O                                   70 '*'
+0612 O***********              BRCD      73                               S01117
+0612 O                         BRCA      73                               S01117
+0718 O*
+0669 O***
+0670 O*E0600P1D** 08   03N38                                        S01124E14806
+0670 O*E0600P1T**203   LRN38NU7                                     E14806S01117
+     OLE0600AUT  203   LR                                                 S01117
+0671 O***********                        12 'REF LE0600'                  S01117
+     O                                   19 'REFERENCE LE0600AU'          S01117
+0672 O***********              TITL      67                               E14806
+0673 O***********              RUNA      76                               E14806
+0672 O                         TITL      89                               E14806
+     O                                  104 'DATE'                        E14806
+0673 O                         RUNA     113                               E14806
+     O                                  122 'PAGE'                        E14806
+     O                         PAGE1    127                               E14806
+     O/COPY WNCPYSRC,LE0600O005
+0674 O********D** 14   03N38                                              E14806
+0675 O***********                        45 '** NO PAST DUE NOTICES'      E14806
+0676 O***********                        57 'TO PRINT **'                 E14806
+     O********T**1     LRN38NU7                                     E14806S01117
+     O***********                        74 'PAST DUE NOTICES'      E14806S01117
+     O********T**2     LRN38NU7                                     E14806S01117
+     O***********                        74 '----------------'      E14806S01117
+     O********T** 14   LRN38NU7                                     E14806S01117
+0675 O***********                E14806  70 '*** NO PAST DUE NOTICES'     S01117
+0676 O***********                        83 'TO PRINT ***'          E14806S01117
+0677 O***********                                                         S01117
+0678 O***********                                                         S01117
+0679 O********D** 06   U7 U8                                              E14806
+0680 O***********                        12 'REF LE0600'                  E14806
+0681 O***********              TITL      67                               E14806
+0682 O***********              RUNA      76                               E14806
+0683 O********D*22     U7 U8                                              E14806
+0684 O***********                        39 'REFERENCE LE0600'            E14806
+0685 O***********                        59 'DATABASE ERROR AT'           E14806
+0686 O***********              DBASE     62                               E14806
+0687 O********D**      U7 U8                                              E14806
+0688 O***********                        33 'FILENAME'                    E14806
+0689 O***********              DBFILE    39                               E14806
+0690 O***********                        45 'KEY'                         E14806
+0691 O***********              DBKEY     75                               E14806
+0692 O***********                                                         S01117
+0693 O***********                                                         S01117
+0694 O***********                                                         S01117
+0695 O********T**205   LR                                                 S01117
+0696 O************                       12 'REF LE0600'                  S01117
+0697 O************             TITL      67                               E14806
+0698 O************             RUNA      76                               E14806
+0697 O***********              TITL      89                         E14806S01117
+     O***********                       104 'DATE'                  E14806S01117
+0698 O***********              RUNA     113                         E14806S01117
+     O***********                       122 'PAGE'                  E14806S01117
+     O***********              PAGE     127                         E14806S01117
+0699 O        T  1     LR
+0700 O***********                        42 'PAST DUE NOTICES  -'         E14806
+0701 O***********                        57 'FILE CONTROLS'               E14806
+0700 O                                   62 'PAST DUE NOTICES  -'         E14806
+0701 O                                   77 'FILE CONTROLS'               E14806
+0702 O        T  3     LR
+0703 O***********                        44 '---------------------'       E14806
+0704 O***********                        57 '-------------'               E14806
+0703 O                                   64 '---------------------'       E14806
+0704 O                                   77 '-------------'               E14806
+0683 O********T*22     U7 U8                                        E14806S01117
+0684 O***********                        39 'REFERENCE LE0600'      E14806S01117
+0685 O***********                        59 'DATABASE ERROR AT'     E14806S01117
+0686 O***********              DBASE     62                         E14806S01117
+0687 O********T**      U7 U8                                        E14806S01117
+0688 O***********                        33 'FILENAME'              E14806S01117
+0689 O***********              DBFILE    39                         E14806S01117
+0690 O***********                        45 'KEY'                   E14806S01117
+0691 O***********              DBKEY     75                         E14806S01117
+0705 O********T**1     LR                                                 E14806
+0705 O        T  120   LR                                                 E14806
+0706 O                                   26 'S/PSTCU - RUN CONTROLS'
+0707 O        T  2     LR
+0708 O                                   26 '----------------------'
+0709 O        T  2     LR
+0710 O                                   28 'TOTAL RECORDS ON FILE'
+     O                                   42 '- CONTROL REC'               E14806
+0711 O                   NU7   NORE  3   48
+0712 O        T  2     LR
+0713 O                                   28 'TOTAL RECORDS ON FILE'
+0714 O                                   41 '- CALCULATED'
+0715 O                         NRIN  3   48
+0716 O                 U8NU7             67 '** DIFFERENCE **'
+0717 O*
+0709 O        T  2     LR U1N23
+0710 O                                   26 'TOTAL TELEX RECORDS'
+0711 O                         TELEX 3   48
+     O        T 21     U7 U8                                              S01117
+     O                                   39 'REFERENCE LE0600'            S01117
+     O                                   59 'DATABASE ERROR AT'           S01117
+     O                         DBASE     66                               S01117
+     O        T        U7 U8                                              S01117
+     O                                   33 'FILENAME'                    S01117
+     O                         DBFILE    44                               S01117
+     O                                   51 'KEY'                         S01117
+     O                         DBKEY     83                               S01117
+     O        T  2     LRN75                                              S01117
+     O                                   45 '*NO PAST DUE NOTICES'        S01117
+     O                                   57 'TO PRINT **'                 S01117
+     O********T**3     LR                                           E14806S01117
+     O***********                        72 '*** END OF REPORT'     E14806S01117
+     O***********                        76 '***'                   E14806S01117
+0717 O*
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   TEXT - TEXT FOR TELEX1
+     F I R S T   P A S T  D U E  N O T I C E
+     S E C O N D   P A S T  D U E  N O T I C E
+     T H I R D   P A S T  D U E  N O T I C E
+     F O U R T H   P A S T  D U E  N O T I C E
+     F I F T H   P A S T  D U E  N O T I C E
+     S I X T H   P A S T  D U E  N O T I C E
+     S E V E N T H   P A S T  D U E  N O T I C E
+     E I G H T   P A S T  D U E  N O T I C E
+     N I N T H   P A S T  D U E  N O T I C E                                                  CLE134
+     THIS IS TO INFORM YOU THAT YOUR REPAYMENT OF
+     PLUS ACCRUED INTEREST OF
+**   UNDR - UNDERLINE OF THE FIRST 8 ELEMENTS OF TEXT
+     - - - - - - - - - - - - - - - - - - - -
+     - - - - - - - - - - - - - - - - - - - - -
+     - - - - - - - - - - - - - - - - - - - -
+     - - - - - - - - - - - - - - - - - - - - -
+     - - - - - - - - - - - - - - - - - - - -
+     - - - - - - - - - - - - - - - - - - - -
+     - - - - - - - - - - - - - - - - - - - - - -
+     ------- - - - - - - - - - - - - - - - -
+     - - - - - - - - - - - - - - - - - - - -                                                  CLE134
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

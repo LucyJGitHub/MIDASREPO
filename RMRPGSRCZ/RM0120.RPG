@@ -1,0 +1,868 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IRM FRA/IRS Tmark Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Interest Risk Management Module                  *
+     F*                                                               *
+     F*  RM0120 - FRA/IRS Tmark Extract                               *
+     F*                                                               *
+     F*  Function:  This program extracts data from the FRA/IRS deals *
+     F*  (COB)      file DEALSDG for download to Tmark.               *
+     F*                                                               *
+     F*  Called By: RMC0120 - FRA/IRS Tmark Extract Control Program   *
+     F*                                                               *
+     F*  Calls    : RM0510 - IRM Extract Filter                       *
+     F*             RM0520 - Write to Transaction Extract File        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL028             Date 07Feb05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 095017             Date 24Oct95               *
+      *                 CRM001             Date 06Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+     F*  095017 - REMOVE CURRENCY CODE FROM BASE RATE AS NOT          *
+     F*           REQUIRED BY TMARK.                                  *
+     F*  CRM001 - Midas/Tmark Interface                               *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FDEALSDG IF  E                    DISK         KINFSR *PSSR
+     F** FRA/IRS Deal Details
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   30  - Read fail on DEALSDG                                  *
+     F*   35  - Test bit indicator                                    *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   #LINIT - Initialisation subroutine                          *
+     F*   #LCACL - Calculate FRA Floating Rate Implied Reset Term     *
+     F*   #LFIXD - Setup FRA Fixed Rate fields on the Interim         *
+     F*            Transaction Extract file                           *
+     F*   #LFLTG - Setup FRA Floating Rate fields on the Interim      *
+     F*            Transaction Extract file                           *
+     F*   #LPAYM - Setup IRS Pay fields on the Interim Transaction    *
+     F*            Extract file                                       *
+     F*   #LRECV - Setup IRS Receive fields on Interim Transaction    *
+     F*            Extract file                                       *
+     F*                                                               *
+     F*   *PSSR  - Standard Error Processing                          *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E*
+     I/EJECT
+     I            DS
+     I                                        1   4 WDTST
+     I                                        1   2 DTYP
+     I                                        3   4 DLST
+     I*
+     ILDA       E DSLDA                         256
+     I**  Local data area for database error details
+     I*
+     ID@ITEX    E DSRMITEXPD
+     I**  Data structure for Interim Transaction Extract File details
+     I**  Rename fields common to DEALSDG
+     I*
+     I              CNUM                            DCNUM
+     I              BRCA                            DBRCA
+     I              BOKC                            DBOKC
+     I              DDAT                            DDDAT
+     I              VDAT                            DVDAT
+     I              MDAT                            DMDAT
+     I              PRFC                            DPRFC
+     I*
+     IWDATA     E DSDSSDY
+     I**  Data structure to hold the outgoing record format
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Data structure for bank details
+     I*
+     ISDRISK    E DSSDRISKPD
+     I**  Data structure for risk management details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs
+     I*
+     C/EJECT
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Define work fields
+     C*
+     C           *LIKE     DEFN BRCA      WSVBR
+     C           *LIKE     DEFN PRFC      WSVPR
+     C           *LIKE     DEFN BOKC      WSVBK
+     C           *LIKE     DEFN DTYP      WSVDT
+     C           *LIKE     DEFN DLST      WSVDS
+     C*
+     C*****************************************************************
+     C**  M A I N   P R O C E S S I N G
+     C*****************************************************************
+     C*
+     C**  Perform initialisation
+     C*
+     C                     EXSR #LINIT
+     C*
+     C                     READ DEALSDG                  30
+     C*
+     C**  Do while not end of file
+     C*
+     C           *IN30     DOWEQ'0'
+     C*
+     C**  On a change of branch, profit centre, book code, deal
+     C**  type or deal subtype
+     C*
+     C           BRCA      IFNE WSVBR
+     C           PRFC      ORNE WSVPR
+     C           BOKC      ORNE WSVBK
+     C           DTYP      ORNE WSVDT
+     C           DLST      ORNE WSVDS
+     C*
+     C                     CALL 'RM0510'
+     C                     PARM           BRCA
+     C                     PARM           PRFC
+     C                     PARM           BOKC
+     C                     PARM           WDTST
+     C                     PARM *BLANKS   WLTST   4
+     C                     PARM *BLANKS   WINVT   3
+     C                     PARM *BLANKS   WISTT   3
+     C                     PARM *BLANKS   WRTCD   7
+     C*
+     C**  Check value of return code
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C           WRTCD     IFEQ '*END'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C**  Save current values
+     C*
+     C                     MOVE BRCA      WSVBR
+     C                     MOVE PRFC      WSVPR
+     C                     MOVE BOKC      WSVBK
+     C                     MOVE DTYP      WSVDT
+     C                     MOVE DLST      WSVDS
+     C*
+     C                     ENDIF
+     C*
+     C**  Process only live and not to be omitted records
+     C*
+     C           WRTCD     IFNE '*OMIT'
+     C           RECI      ANDEQ'D'
+     C*
+     C**  If Forward Rate Agreement deal type and value date is
+     C**  greater than the rundate
+     C*
+     C           DTYP      IFEQ 'FR'
+     C           VDAT      ANDGTBJRDNB
+     C*
+     C**  Clear fields on Interim Transaction Extract File
+     C*
+     C                     CLEARD@ITEX
+     C*
+     C**  Setup all fields for the fixed side of the deal
+     C*
+     C                     EXSR #LFIXD
+     C*
+     C**  Write a record on Transaction Extract File for the fixed side
+     C*
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    WDATA
+     C                     PARM *BLANKS   WRTCD
+     C*
+     C**  Check if error occurred
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Clear fields on Interim Transaction Extract File
+     C*
+     C                     CLEARD@ITEX
+     C*
+     C**  Calculate the implied (rate) reset term for the floating side
+     C*
+     C                     EXSR #LCALC
+     C*
+     C**  Setup all fields for the floating side of the deal
+     C*
+     C                     EXSR #LFLTG
+     C*
+     C**  Write a record on Transaction Extract File for floating side
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    WDATA
+     C                     PARM *BLANKS   WRTCD
+     C*
+     C**  Check if error occurred
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  If deal type is 'RS' or 'RX'
+     C*
+     C           DTYP      IFEQ 'RS'
+     C           DTYP      OREQ 'RX'
+     C*
+     C**  Clear fields on Interim Transaction Extract File
+     C*
+     C                     CLEARD@ITEX
+     C*
+     C**  Setup all fields for the payment side of the deal
+     C*
+     C                     EXSR #LPAYM
+     C*
+     C**  Write a record on Transaction Extract File for payment side
+     C*
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    WDATA
+     C                     PARM *BLANKS   WRTCD
+     C*
+     C**  Check if error occurred
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Clear fields on Interim Transaction Extract File
+     C*
+     C                     CLEARD@ITEX
+     C*
+     C**  Setup all fields for the receipt side of the deal
+     C*
+     C                     EXSR #LRECV
+     C*
+     C**  Write a record on Transaction Extract File for receipt side
+     C*
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    WDATA
+     C                     PARM *BLANKS   WRTCD
+     C*
+     C**  Check if error occurred
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Read next record
+     C                     READ DEALSDG                  30
+     C*
+     C                     ENDDO
+     C*
+     C**  Seton LR and return to calling program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT - Subroutine to perform initial processing             *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: *PSSR                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR                           ** #LINIT SR **
+     C*
+     C**  Set up database error details
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0120'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C**  Get bank details using access object
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Check if error occurred
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           **************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERROR 01 *
+     C                     Z-ADD1         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Get risk management details (IRM ICD) using access object
+     C*
+     C                     CALL 'AORISKR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDRISK    PARM SDRISK    DSFDY
+     C*
+     C**  Check if error occurred
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDRISKPD'DBFILE           **************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERROR 02 *
+     C                     Z-ADD2         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LCALC - Subroutine to calculate FRA Floating Rate Implied    *
+     C*          Reset Term                                           *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LCALC    BEGSR                           ** #LCALC SR **
+     C*
+     C**  Calculate tenor to determine the implied reset term
+     C*
+     C           MDAT      SUB  VDAT      WTENR   50
+     C*
+     C                     SELEC
+     C**  Yearly
+     C           WTENR     WHGT 360
+     C                     MOVEL'Y'       RETM
+     C**  Semi-annual
+     C           WTENR     WHGT 175
+     C                     MOVEL'X'       RETM
+     C**  Quarterly
+     C           WTENR     WHGT 87
+     C                     MOVEL'Q'       RETM
+     C**  Monthly
+     C                     OTHER
+     C                     MOVEL'M'       RETM
+     C*
+     C                     ENDSL
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LFIXD - Subroutine to setup FRA fields on the Interim        *
+     C*          Transaction Extract file for the fixed side of deal  *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LFIXD    BEGSR                           ** #LFIXD SR **
+     C*
+     C**  Trade ID (Deal number)
+     C                     MOVELDLNO      TMID
+     C*
+     C**  Leg ID
+     C           BYSL      IFEQ 'B'
+     C                     MOVEL'P'       LEG
+     C                     ELSE
+     C                     MOVEL'R'       LEG
+     C                     ENDIF
+     C*
+     C**  Instrument Type
+     C                     MOVE 'FR'      IRTY
+     C*
+     C**  Customer number
+     C**********           Z-ADDCNUM      DCNUM                                               CSD027
+     C                     MOVE CNUM      DCNUM                                               CSD027
+     C*
+     C**  Branch code
+     C                     MOVE BRCA      DBRCA
+     C*
+     C**  Profit Centre
+     C                     MOVE PRFC      DPRFC
+     C*
+     C**  Book code
+     C                     MOVE BOKC      DBOKC
+     C*
+     C**  Currency (Our currency)
+     C                     MOVE UCUCY     CCY
+     C*
+     C**  Index Type
+     C                     MOVE 'F'       IDXT
+     C*
+     C**  Deal date
+     C                     Z-ADDDDAT      DDDAT
+     C*
+     C**  Value date
+     C                     Z-ADDVDAT      DVDAT
+     C*
+     C**  Maturity date
+     C                     Z-ADDMDAT      DMDAT
+     C*
+     C**  Principal (Our principal amount)
+     C                     Z-ADDUPAMT     PCPL
+     C*
+     C**  Interest Rate (Our/Their spread rate)
+     C           BYSL      IFEQ 'B'
+     C                     Z-ADDURTSP     INTR
+     C                     ELSE
+     C                     Z-ADDTRTSP     INTR
+     C                     ENDIF
+     C*
+     C**  Next Interest Payment Date (Maturity date)
+     C                     Z-ADDMDAT      NIDT
+     C*
+     C**  Interest Holiday Rule
+     C                     MOVEL'AS'      IHOL
+     C*
+     C**  Interest Holiday Adjustment Rule
+     C                     MOVE 'A'       IHAR
+     C*
+     C**  Interest Calculation Basis (Our interest calculation basis)
+     C                     Z-ADDUICBS     ICBS
+     C*
+     C**  Interest Method
+     C                     MOVE 'YAR'     INTM
+     C*
+     C**  Principal Indicator
+     C                     MOVE 'N'       PRPI
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LFLTG - Subroutine to setup FRA fields on the Interim        *
+     C*          Transaction Extract file for the floating side       *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LFLTG    BEGSR                           ** #LFLTG SR **
+     C*
+     C**  Trade ID (Deal number)
+     C                     MOVELDLNO      TMID
+     C*
+     C**  Leg ID
+     C           BYSL      IFEQ 'S'
+     C                     MOVEL'P'       LEG
+     C                     ELSE
+     C                     MOVEL'R'       LEG
+     C                     ENDIF
+     C*
+     C**  Instrument Type
+     C                     MOVE 'FR'      IRTY
+     C*
+     C**  Customer number
+     C**********           Z-ADDCNUM      DCNUM                                               CSD027
+     C                     MOVE CNUM      DCNUM                                               CSD027
+     C*
+     C**  Branch code
+     C                     MOVE BRCA      DBRCA
+     C*
+     C**  Profit Centre
+     C                     MOVE PRFC      DPRFC
+     C*
+     C**  Book code
+     C                     MOVE BOKC      DBOKC
+     C*
+     C**  Currency (Our currency)
+     C                     MOVE UCUCY     CCY
+     C*
+     C**  Index
+     C           BYSL      IFEQ 'S'
+     C******************** MOVELUCUCY     INDX                            095017
+     C******************** MOVE UBRTT     INDX                            095017
+     C                     MOVELUBRTT     INDX                            095017
+     C                     ELSE
+     C******************** MOVELTCUCY     INDX                            095017
+     C******************** MOVE TBRTT     INDX                            095017
+     C                     MOVELTBRTT     INDX                            095017
+     C                     ENDIF
+     C*
+     C**  Deal date
+     C                     Z-ADDDDAT      DDDAT
+     C*
+     C**  Value date
+     C                     Z-ADDVDAT      DVDAT
+     C*
+     C**  Maturity date
+     C                     Z-ADDMDAT      DMDAT
+     C*
+     C**  Principal (Our principal amount)
+     C                     Z-ADDUPAMT     PCPL
+     C*
+     C**  Rollover Date (Value date)
+     C                     Z-ADDVDAT      RLDT
+     C*
+     C**  Rate Fix Days (Our/Their floating rate fix Days)
+     C           BYSL      IFEQ 'S'
+     C                     Z-ADDUFRFD     FRFD
+     C                     ELSE
+     C                     Z-ADDTFRFD     FRFD
+     C                     ENDIF
+     C*
+     C**  Next Interest Payment Date (Maturity date)
+     C                     Z-ADDMDAT      NIDT
+     C*
+     C**  Interest Holiday Rule
+     C                     MOVEL'AS'      IHOL
+     C*
+     C**  Interest Holiday Adjustment Rule
+     C                     MOVE 'A'       IHAR
+     C*
+     C**  Interest Calculation Basis (Our interest calculation basis)
+     C                     Z-ADDUICBS     ICBS
+     C*
+     C**  Interest Method
+     C                     MOVE 'YAR'     INTM
+     C*
+     C**  Principal Indicator
+     C                     MOVE 'N'       PRPI
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LPAYM - Subroutine to setup IRS fields on the Interim        *
+     C*          Transaction Extract file for payment side            *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LPAYM    BEGSR                           ** #LPAYM SR **
+     C*
+     C**  Trade ID (Deal number)
+     C                     MOVELDLNO      TMID
+     C*
+     C**  Leg ID
+     C                     MOVEL'P'       LEG
+     C*
+     C**  Instrument Type
+     C                     MOVE 'SW'      IRTY
+     C*
+     C**  Customer number
+     C**********           Z-ADDCNUM      DCNUM                                               CSD027
+     C                     MOVE CNUM      DCNUM                                               CSD027
+     C*
+     C**  Branch code
+     C                     MOVE BRCA      DBRCA
+     C*
+     C**  Profit Centre
+     C                     MOVE PRFC      DPRFC
+     C*
+     C**  Book code
+     C                     MOVE BOKC      DBOKC
+     C*
+     C**  Currency (Our currency)
+     C                     MOVE UCUCY     CCY
+     C*
+     C**  Index type
+     C           UBRTT     IFEQ *ZEROS
+     C                     MOVE 'F'       IDXT
+     C                     ENDIF
+     C*
+     C**  Index
+     C           UBRTT     IFNE *ZEROS
+     C******************** MOVELUCUCY     INDX                            095017
+     C******************** MOVE UBRTT     INDX                            095017
+     C                     MOVELUBRTT     INDX                            095017
+     C                     ENDIF
+     C*
+     C**  Deal date
+     C                     Z-ADDDDAT      DDDAT
+     C*
+     C**  Value date (Our start/last interest pay date)
+     C                     Z-ADDUSLIP     DVDAT
+     C*
+     C**  Maturity date
+     C                     Z-ADDMDAT      DMDAT
+     C*
+     C**  Principal (Our principal amount)
+     C                     Z-ADDUPAMT     PCPL
+     C*
+     C**  Interest Rate (Our effective interest rate)
+     C                     Z-ADDUEINR     INTR
+     C*
+     C**  If Our Base Rate Type is not equal to zero
+     C*
+     C           UBRTT     IFNE *ZEROS
+     C*
+     C**  Base Rate (Our base rate)
+     C                     Z-ADDUBRTE     BRTE
+     C*
+     C**  Rate/Spread (Our spread rate)
+     C                     Z-ADDURTSP     RTSP
+     C*
+     C**  Spread indicator (Our spread indicator)
+     C                     MOVE USPIN     SPIN
+     C*
+     C**  Rollover Frequency (Our interest rate change frequency)
+     C                     MOVE UICFR     RLFQ
+     C*
+     C**  Rollover Date
+     C           UNICD     IFNE *ZEROS
+     C                     Z-ADDUNICD     RLDT
+     C                     ELSE
+     C                     Z-ADDMDAT      RLDT
+     C                     ENDIF
+     C*
+     C**  Rollover Day (Our int. rate change freq. day)
+     C                     Z-ADDUICFD     RLDY
+     C*
+     C**  Reset Term (Our int. rate change freq.)
+     C                     MOVELUICFR     RETM
+     C*
+     C**  Rate Fix Days (Our Floating Rate Fix Days)
+     C                     Z-ADDUFRFD     FRFD
+     C*
+     C                     ENDIF
+     C*
+     C**  Interest Payment Frequency (Our int. payment freq.)
+     C                     MOVE UIPFR     IPFR
+     C*
+     C**  Next Interest Payment Date (Our next int. pay. date)
+     C                     Z-ADDUNIPD     NIDT
+     C*
+     C**  Interest Base Date (Our int. payment base date)
+     C                     Z-ADDUIPBD     IBDT
+     C*
+     C**  Interest Freq. Day in Month (Our int. payment. freq. day)
+     C                     Z-ADDUIPFD     INTF
+     C*
+     C**  Interest Holiday Rule
+     C                     MOVEL'AS'      IHOL
+     C*
+     C**  Interest Holiday Adjustment Rule
+     C                     MOVE 'A'       IHAR
+     C*
+     C**  Interest Calculation Basis (Our interest calculation basis)
+     C                     Z-ADDUICBS     ICBS
+     C*
+     C**  Interest Method
+     C                     MOVE 'YAR'     INTM
+     C*
+     C**  Principal Indicator
+     C           DTYP      IFEQ 'RS'
+     C                     MOVE 'N'       PRPI
+     C                     ELSE
+     C                     MOVE 'Y'       PRPI
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LRECV - Subroutine to setup IRS fields on the Interim        *
+     C*          Transaction Extract file for receipt side            *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LRECV    BEGSR                           ** #LRECV SR **
+     C*
+     C**  Trade ID (Deal number)
+     C                     MOVELDLNO      TMID
+     C*
+     C**  Leg ID
+     C                     MOVEL'R'       LEG
+     C*
+     C**  Instrument Type
+     C                     MOVE 'SW'      IRTY
+     C*
+     C**  Customer number
+     C**********           Z-ADDCNUM      DCNUM                                               CSD027
+     C                     MOVE CNUM      DCNUM                                               CSD027
+     C*
+     C**  Branch code
+     C                     MOVE BRCA      DBRCA
+     C*
+     C**  Profit Centre
+     C                     MOVE PRFC      DPRFC
+     C*
+     C**  Book code
+     C                     MOVE BOKC      DBOKC
+     C*
+     C**  Currency (Their currency)
+     C                     MOVE TCUCY     CCY
+     C*
+     C**  Index type
+     C           TBRTT     IFEQ *ZEROS
+     C                     MOVE 'F'       IDXT
+     C                     ENDIF
+     C*
+     C**  Index
+     C           TBRTT     IFNE *ZEROS
+     C******************** MOVELTCUCY     INDX                            095017
+     C******************** MOVE TBRTT     INDX                            095017
+     C                     MOVELTBRTT     INDX                            095017
+     C                     ENDIF
+     C*
+     C**  Deal date
+     C                     Z-ADDDDAT      DDDAT
+     C*
+     C**  Value date (Their start/last interest pay date)
+     C                     Z-ADDTSLIP     DVDAT
+     C*
+     C**  Maturity date
+     C                     Z-ADDMDAT      DMDAT
+     C*
+     C**  Principal (Their principal amount)
+     C                     Z-ADDTPAMT     PCPL
+     C*
+     C**  Interest Rate (Their effective interest rate)
+     C                     Z-ADDTEINR     INTR
+     C*
+     C**  If Their Base Rate Type is not equal to zero
+     C*
+     C           TBRTT     IFNE *ZEROS
+     C*
+     C**  Base Rate (Their base rate)
+     C                     Z-ADDTBRTE     BRTE
+     C*
+     C**  Rate/Spread (Their spread rate)
+     C                     Z-ADDTRTSP     RTSP
+     C*
+     C**  Spread indicator (Their spread indicator)
+     C                     MOVE TSPIN     SPIN
+     C*
+     C**  Rollover Frequency (Their interest rate change frequency)
+     C                     MOVE TICFR     RLFQ
+     C*
+     C**  Rollover Date
+     C           TNICD     IFNE *ZEROS
+     C                     Z-ADDTNICD     RLDT
+     C                     ELSE
+     C                     Z-ADDMDAT      RLDT
+     C                     ENDIF
+     C*
+     C**  Rollover Day (Their int. rate change freq. day)
+     C                     Z-ADDTICFD     RLDY
+     C*
+     C**  Reset Term (Their int. rate change freq.)
+     C                     MOVELTICFR     RETM
+     C*
+     C**  Rate Fix Days (Their Floating Rate Fix Days)
+     C                     Z-ADDTFRFD     FRFD
+     C*
+     C                     ENDIF
+     C*
+     C**  Interest Payment Frequency (Their int. payment freq.)
+     C                     MOVE TIPFR     IPFR
+     C*
+     C**  Next Interest Payment Date (Their next int. pay. date)
+     C                     Z-ADDTNIPD     NIDT
+     C*
+     C**  Interest Base Date (Their int. payment base date)
+     C                     Z-ADDTIPBD     IBDT
+     C*
+     C**  Interest Freq. Day in Month (Their int. payment. freq. day)
+     C                     Z-ADDTIPFD     INTF
+     C*
+     C**  Interest Holiday Rule
+     C                     MOVEL'AS'      IHOL
+     C*
+     C**  Interest Holiday Adjustment Rule
+     C                     MOVE 'A'       IHAR
+     C*
+     C**  Interest Calculation Basis (Our interest calculation basis)
+     C                     Z-ADDTICBS     ICBS
+     C*
+     C**  Interest Method
+     C                     MOVE 'YAR'     INTM
+     C*
+     C**  Principal Indicator
+     C           DTYP      IFEQ 'RS'
+     C                     MOVE 'N'       PRPI
+     C                     ELSE
+     C                     MOVE 'Y'       PRPI
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*                                                               *
+     C* Called by: Any file or program errors                         *
+     C*            Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  CPY@ - Copyright Statement
+(c) Finastra International Limited 2001

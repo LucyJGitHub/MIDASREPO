@@ -1,0 +1,169 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Maintain Account Code Conversion Table')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Program                              */
+/*                                                                   */
+/*       SMC000050 - Manintain Account Code Conversion Table         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK025             Date 17Aug06              */
+/*                      CSM007 *C *CREATE  Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CPK025 - MidasPlus 1.3 packaging.  Enhancement to make      */
+/*                padding of account codes more flexible.            */
+/*       CSM007 - Conversion of Account Codes                        */
+/*                Created to display all the Account Codes and allow */
+/*                them to be changed                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ACTION &PADDING)
+ 
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(9)
+/**********  DCL        VAR(&PADDING) TYPE(*CHAR) LEN(7)                               */ /*CPK025*/
+             DCL        VAR(&PADDING) TYPE(*CHAR) LEN(1)                                  /*CPK025*/
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZERO1) TYPE(*CHAR) LEN(1) VALUE('0')                         /*CPK025*/
+             DCL        VAR(&ZERO2) TYPE(*CHAR) LEN(2) VALUE('00')                        /*CPK025*/
+             DCL        VAR(&ZERO3) TYPE(*CHAR) LEN(3) VALUE('000')                       /*CPK025*/
+             DCL        VAR(&ZERO4) TYPE(*CHAR) LEN(4) VALUE('0000')                      /*CPK025*/
+             DCL        VAR(&ZERO5) TYPE(*CHAR) LEN(5) VALUE('00000')                     /*CPK025*/
+             DCL        VAR(&ZERO6) TYPE(*CHAR) LEN(6) VALUE('000000')                    /*CPK025*/
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')                        /*CPK025*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+             IF         COND(&ACTION *EQ '*MAINTAIN') THEN(DO)
+                CALL       PGM(SM000050)
+             ENDDO
+ 
+             IF         COND(&ACTION *EQ '*POPULATE') THEN(DO)
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+                DLTF       FILE(QTEMP/RUNSQLSTM)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/RUNSQL)
+                MONMSG     MSGID(CPF0000)
+                CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                             MBR(RUNSQLSTM) TEXT('Temporary source +
+                             file for SMC000050')
+                RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                             NEWOBJ(RUNSQL)
+ 
+/* Clear the file SMAC10PD */
+                CLRPFM     FILE(SMAC10PD)
+ 
+/* Fill the file SMAC10PD using SQL. */
+                CHGVAR     VAR(&STM_STR) VALUE('INSERT INTO SMAC10PD +
+                             (ACOD4) SELECT E.A5ACCD FROM SDACODPD AS E')
+ 
+/* Call standard program to write to source file ... */
+                CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+ 
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+/**********  MONMSG     MSGID(SQL9010)                                                 */ /*CPK025*/
+ 
+/**********  IF         COND(&PADDING *EQ '*BEFORE') THEN(DO)                          */ /*CPK025*/
+/**********                                                                            */ /*CPK025*/
+/**Fill*the*field*ACOD10*in*SMAC10PD*padding*the*field*before**/ /*                    */ /*CPK025*/
+/**********  CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +                     */ /*CPK025*/
+/**********               ACOD10 = ''000000'' CONCAT ACOD4')                           */ /*CPK025*/
+/**********                                                                            */ /*CPK025*/
+/**Call*standard*program*to*write*to*source*file*...**/ /*                             */ /*CPK025*/
+/**********        CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                    */ /*CPK025*/
+/**********                                                                            */ /*CPK025*/
+/**********  ENDDO                                                                     */ /*CPK025*/
+/**********  IF         COND(&PADDING *EQ '*AFTER') THEN(DO)                           */ /*CPK025*/
+/**********                                                                            */ /*CPK025*/
+/**Fill*the*field*ACOD10*in*SMAC10PD*padding*the*field*After***/ /*                    */ /*CPK025*/
+/**********  CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +                     */ /*CPK025*/
+/**********               ACOD10 = ACOD4 CONCAT ''000000''')                           */ /*CPK025*/
+/**********                                                                            */ /*CPK025*/
+/**Call*standard*program*to*write*to*source*file*...**/ /*                             */ /*CPK025*/
+ 
+/* Build SQL statement based on leading number of zeroes. */                              /*CPK025*/
+                IF         COND(&PADDING *EQ '0') THEN(DO)                                /*CPK025*/
+                   CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +
+                                ACOD10 = ACOD4 CONCAT' *BCAT &QUOTE *TCAT +
+                                &ZERO6 *TCAT &QUOTE)                                      /*CPK025*/
+                ENDDO
+                IF         COND(&PADDING *EQ '1') THEN(DO)                                /*CPK025*/
+                   CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +
+                                ACOD10 =' *BCAT &QUOTE *TCAT &ZERO1 *TCAT +
+                                &QUOTE *BCAT 'CONCAT ACOD4 CONCAT' *BCAT +
+                                &QUOTE *TCAT &ZERO5 *TCAT &QUOTE)                         /*CPK025*/
+                ENDDO                                                                     /*CPK025*/
+                IF         COND(&PADDING *EQ '2') THEN(DO)                                /*CPK025*/
+                   CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +
+                                ACOD10 =' *BCAT &QUOTE *TCAT &ZERO2 *TCAT +
+                                &QUOTE *BCAT 'CONCAT ACOD4 CONCAT' *BCAT +
+                                &QUOTE *TCAT &ZERO4 *TCAT &QUOTE)                         /*CPK025*/
+                ENDDO                                                                     /*CPK025*/
+                IF         COND(&PADDING *EQ '3') THEN(DO)                                /*CPK025*/
+                   CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +
+                                ACOD10 =' *BCAT &QUOTE *TCAT &ZERO3 *TCAT +
+                                &QUOTE *BCAT 'CONCAT ACOD4 CONCAT' *BCAT +
+                                &QUOTE *TCAT &ZERO3 *TCAT &QUOTE)                         /*CPK025*/
+                ENDDO                                                                     /*CPK025*/
+                IF         COND(&PADDING *EQ '4') THEN(DO)                                /*CPK025*/
+                   CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +
+                                ACOD10 =' *BCAT &QUOTE *TCAT &ZERO4 *TCAT +
+                                &QUOTE *BCAT 'CONCAT ACOD4 CONCAT' *BCAT +
+                                &QUOTE *TCAT &ZERO2 *TCAT &QUOTE)                         /*CPK025*/
+                ENDDO                                                                     /*CPK025*/
+                IF         COND(&PADDING *EQ '5') THEN(DO)                                /*CPK025*/
+                   CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +
+                                ACOD10 =' *BCAT &QUOTE *TCAT &ZERO5 *TCAT +
+                                &QUOTE *BCAT 'CONCAT ACOD4 CONCAT' *BCAT +
+                                &QUOTE *TCAT &ZERO1 *TCAT &QUOTE)                         /*CPK025*/
+                ENDDO                                                                     /*CPK025*/
+                IF         COND(&PADDING *EQ '6') THEN(DO)                                /*CPK025*/
+                   CHGVAR     VAR(&STM_STR) VALUE('UPDATE SMAC10PD SET +
+                                ACOD10 =' *BCAT &QUOTE *TCAT &ZERO6 *TCAT +
+                                &QUOTE *BCAT 'CONCAT ACOD4')                              /*CPK025*/
+                ENDDO                                                                     /*CPK025*/
+ 
+                CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+ 
+/* Run the SQL statement Populate the file              */
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+/**********        MONMSG     MSGID(SQL9010)                                           */ /*CPK025*/
+ 
+                CALL       PGM(SM000050)
+             ENDDO
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             ENDPGM

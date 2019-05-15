@@ -1,0 +1,968 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Teller ID codes aud/req report')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                             *
+      *                                                               *
+      *  SD0690P -   RTS Teller Indentifiers Listing.                 *
+      *                                                               *
+      *  Function:  This program prints the records on the RTS        *
+      *             Teller Identifiers File.                          *
+      *                                                               *
+      *  Called By:-                                                  *
+      *              FCC0202 Input Cycle On Request                   *
+      *              FCC0204 COB On Request                           *
+      *              SD0541X COB Audit                                *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 095626             Date  8Nov95               *
+      *                 CRT001             Date 31Mar95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  161457 - Report does not show decimal places and does not    *
+      *           suppress leading zeros for cash/non-cash transaction*
+      *           limits.                                             *
+      *  095626 - RCF will not work as the spool file number was      *
+      *           initialised before the spool file was opened.       *
+      *  CRT001 - New program for Retail Teller System.               *
+      *                                                               *
+      *****************************************************************
+      *
+     F/COPY WNCPYSRC,SD0690PFPG
+      *
+     FSDTELDL1IF  E           K        DISK
+      ** Teller IDs by sort seq number
+      *
+     FSDBANKL1IF  E           K        DISK
+      ** Bank Details              Retrieval index
+      *
+     FSDFCTLL0UF  E           K        DISK
+      ** Standing Data Controls    Update index
+      *
+     FSDFCTLL1IF  E           K        DISK
+      ** Standing Data Controls    Retrieval Index
+      *
+     FSDCURRL1IF  E           K        DISK                                                   161457
+     F                                              KINFDS ID0003                             161457
+     F                                              KINFSR *PSSR                              161457
+      * RTV : Midas SD Currency codes retrieval                                               161457
+     FSD0690PMO   E                    PRINTER                        UC
+     F                                              KINFDS INFDS$
+      * Teller IDs Aud/Req Print file
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      * 70-72 - Governs Printing of Window Function Fields            *
+      *    85 - Updat Lo Indicator - No Record Held For Update        *
+      *    90 - Call Lo Indicator - Called Program Terminates In Error*
+      *         Chain Hi Indicator - Record Not Found                 *
+      *    99 - Lokup Indicator                                       *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  ZZINIT - Define Work Fields, gets Rundate, report titles and *
+      *           checks for DB Error on SDBANKL1                     *
+      *  WTRERR - DB Error handling routine. Calls SDC540P using parm *
+      *           WUWFLG containing 'E' to indicate Error             *
+      *  WRTDTL - Print Header and Details                            *
+      *  SBCHRC - Retrieves Audit Details from SDFCTLL1 and checks    *
+      *           for DB Errors whilst Chaining and Updating.         *
+      *  WTRERR - Program database error routine                      *
+      *  *PSSR  - Program exception error routine                     *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    UAR        53  1               Audit/Request Tit
+     E                    ULN        53  1               Underline
+     E                    UARRAY  1   2 26               Report Title
+      *
+     E/COPY WNCPYSRC,SD0690PEPG
+      *
+     E                    @CN     1  10 25               Long constants.
+      *
+     I/COPY WNCPYSRC,SD0690PIPG
+      *
+      /EJECT
+      ** Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      ** Program data structure.
+     IJBDTTM      DS
+      ** Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS$    E DSY2I$DSP
+      ** Printer file information data structure.
+      *
+     IID0003      DS                            528                                           161457
+      * File information data structure                                                       161457
+      *                                                                                       161457
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area holding Some Instalation Control Details.
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       12  12 DFF
+      /EJECT
+      *
+      ** Parameter declarations.
+     IP1PARM      DS
+      ** I:    Audit/Request Status Ind
+     I                                        1   1 P1ARSI
+      *
+     IP2PARM      DS
+      ** I:    Sequence number
+     I                                        1   5 P2RSQN
+      *
+     IP3PARM      DS
+      ** I:    Entity
+     I                                        1   3 P3ENTY
+      *
+     I            DS
+      *                                       1 132 ZAMSDA
+      ** Message data for 'Database Error (ICD)'
+      ** Filename
+     I                                        1  10 ZA0001
+      *                                                                                       161457
+      * Message data for 'Database Error (ICD)'                                               161457
+      * Filename                                                                              161457
+     I                                        1  10 ZA0002                                    161457
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA
+      *
+      ** Data structure to redefine override indicators
+     I                                        1  25 FROVRI
+     I                                        1   1 #DBLDB
+     I                                        2   2 #DBLCR
+     I                                        3   3 #DRFDR
+     I                                        4   4 #DRFCR
+     I                                        5   5 #DINAC
+     I                                        6   6 #DBRLQ
+     I                                        7   7 #DBDDT
+     I                                        8   8 #DINFD
+     I                                        9   9 #DEXOD
+     I                                       10  10 #DMNBL
+     I                                       11  11 #DSTCQ
+     I                                       12  12 #DCQOR
+     I                                       13  13 #DCQPR
+     I                                       14  14 #DTLLM
+     I                                       15  15 #DERAT
+     I                                       16  16 #DBRDF
+     I                                       17  17 #DACCL
+     I                                       18  18 #DNWKD
+     I                                       19  19 #DINBV
+     I                                       20  20 #DNAGL
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C           P1ARSI    PARM           WP0001  1        Audit/Request S
+     C           P2RSQN    PARM           WP0002  5        Sequence number
+     C                     PARM           @@PARM  1        Dummy Parm
+     C           P3ENTY    PARM           WP0003  3        Entity
+      *****************************************************************
+      ** Initialise
+     C                     EXSR ZZINIT
+      *
+      ** Establish starting position.
+     C           *LOVAL    SETLL@TELDL1
+      *
+      ** Read first record
+     C                     READ @TELDL1                  80
+      *
+     C/COPY WNCPYSRC,SD0690PRSP
+      *
+      ** Initialise no of Calculated Records
+     C                     Z-ADD*ZERO     ZTNCRC
+      * Print report body.
+     C           *IN80     DOWEQ'0'
+      ** Print report detail line.
+     C                     EXSR WRTDTL
+      *
+      ** Read next record
+     C                     READ @TELDL1                  80
+      *
+     C/COPY WNCPYSRC,SD0690PRSP
+      *
+     C                     ENDDO
+      *
+      ** If Audit/Request Status Ind is Audit Mode (Parm = A)
+      ** or if No Details to Report on SD0690PM
+     C           P1ARSI    IFEQ @CN,01
+     C           ZTNCRC    OREQ *ZERO
+      *
+      ** Retrieve Audit Details from  Standing Data Controls
+     C           KRSSA     KLIST
+     C                     KFLD           AHFLNM           Filename
+      ** Move fields to key list.
+     C                     MOVEL@CN,05    AHFLNM           Filename
+     C           KRSSA     CHAIN@AHREAV              90
+      *
+      ** If SD control file record not found
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SD0690P' DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CN,05    DBKEY
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDFCTLL1'DBFILE           *  DBERR 002  *
+     C                     OUT  LDA                        ***************
+      *
+      ** Write header(s).
+     C                     MOVE WUMRDT    ##MRDT
+     C                     MOVEL'SD0690P' ##PGM
+      *
+     C                     EXSR WRTERR
+     C                     EXSR *PSSR
+      *
+      ** Else SD control file record found
+     C                     ELSE
+      *
+      ** Load No. of Records On File, No Inserts, Amends & Deletes
+     C                     Z-ADDAHNORC    WUNORF
+     C                     Z-ADDAHNOIN    WUNOIN
+     C                     Z-ADDAHNOAM    WUNOAM
+     C                     Z-ADDAHNODL    WUNODL
+     C                     ENDIF
+      *
+      ** Check whether Calculated of Records equal to No of Records on file
+     C           WUWKNB    IFNE WUNORF
+     C                     MOVEL@CN,02    WUWFLG
+     C                     ELSE
+      ** Check whether Number of Records Printed is zero ( No details on AU)
+     C           ZTNCRC    IFEQ 0
+     C                     MOVE 'Z'       WUWFLG
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Audit printfile override - Standing Data Controls
+     C                     CALL 'SDC540P'              90  Audit printfile
+     C                     PARM @CN,07    WQ0009 10        *PROGRAM
+     C                     PARM WUWFLG    WQ0010  1        Work flag
+     C                     PARM WUNOIN    WQ0011  50       No of Records I
+     C                     PARM WUNOAM    WQ0012  50       No of Records A
+     C                     PARM WUNODL    WQ0013  50       No of records D
+     C                     PARM WUWKNB    WQ0014  50       work number
+     C                     PARM WUNORF    WQ0015  50       No of Records o
+     C                     PARM WUARTL    WQ0016 53        Audit/Request T
+     C                     PARM WUUNDL    WQ0017 53        Underline
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Work flag is Incorrect
+     C           WUWFLG    IFEQ @CN,02
+      *
+      * File Control Error U8 - Standing Data Controls  *
+     C                     MOVE *ON       *INU8
+      *
+     C                     ELSE
+      *
+     C                     EXSR SBCHRC
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,SD0690PPER
+      *
+      ** Print Page Header, Final Totals & 'End of Report'
+      ** if details to report on SD0690P
+     C           FLAGP1    IFEQ 'Y'
+     C                     WRITEZZFINTTL
+     C                     WRITEZZENDRPT
+     C                     ENDIF
+      *
+      ** Exit program & Return
+     C                     MOVEL*BLANK    P0RTN
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      */TITLE SR/WRTDTL                                               *
+      *****************************************************************
+      *                                                               *
+      *  WRTDTL - Print Header and Details                            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Pgm Calls: ZDATE2 - Check File Date                          *
+      *             Y2RVCNR- Retrieve Alpha of Last Change            *
+      *   SR Calls: *PSSR  - Program Exception Error Routine          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTDTL    BEGSR
+      *                                                                                       161457
+      * Format cash transaction limit in base currency layout.                                161457
+      * Move right cash trans - RTS Teller id file  *                                         161457
+     C                     MOVE *BLANKS   WUZASF           ZALIGN Screen Field                161457
+     C                     MOVE FRCHTL    WUZASF           ZALIGN Screen Field                161457
+      * ZEDIT Screen Field - Standard Functions  *                                            161457
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Field                 161457
+     C           WUZASF    PARM WUZASF    WQ0001 16        ZALIGN Screen Field                161457
+     C                     PARM WUZAND    WQ0002  10       ZALIGN No Of Dec Pl                161457
+      *                                                                                       161457
+     C           *IN90     IFEQ '1'                                                           161457
+      * Call to program ended in error                                                        161457
+     C                     MOVEL'Y2U0032' W0RTN                                               161457
+     C                     MOVEL*BLANKS   W0CLPG 10                                           161457
+     C                     MOVEL'ZEDIT'   W0CLPG                                              161457
+      * Send message '*Error occured on CALL...'                                              161457
+     C                     MOVEL'Y2U0032' ZAMSID                                              161457
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              161457
+     C                     MOVELW0CLPG    ZAMSDA           Message data                       161457
+     C                     EXSR ZASNMS                                                        161457
+     C                     END                                                                161457
+      *                                                                                       161457
+      * Zalign Cash trans limit - RTS Teller id file  *                                       161457
+      *                                                                                       161457
+      * Format non-cash transaction limit in base currency layout.                            161457
+      * Move right non cash trans - RTS Teller id file  *                                     161457
+     C                     MOVE *BLANKS   WUZASF           ZALIGN Screen Field                161457
+     C                     MOVE FRNCTL    WUZASF           ZALIGN Screen Field                161457
+      * ZEDIT Screen Field - Standard Functions  *                                            161457
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Field                 161457
+     C           WUZASF    PARM WUZASF    WQ0003 16        ZALIGN Screen Field                161457
+     C                     PARM WUZAND    WQ0004  10       ZALIGN No Of Dec Pl                161457
+      *                                                                                       161457
+     C           *IN90     IFEQ '1'                                                           161457
+      * Call to program ended in error                                                        161457
+     C                     MOVEL'Y2U0032' W0RTN                                               161457
+     C                     MOVEL*BLANKS   W0CLPG 10                                           161457
+     C                     MOVEL'ZEDIT'   W0CLPG                                              161457
+      * Send message '*Error occured on CALL...'                                              161457
+     C                     MOVEL'Y2U0032' ZAMSID                                              161457
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              161457
+     C                     MOVELW0CLPG    ZAMSDA           Message data                       161457
+     C                     EXSR ZASNMS                                                        161457
+     C                     END                                                                161457
+      *
+      ** Load detail line.
+     C                     Z-ADDFRLCD     XRLCD            Last Change Dat
+     C                     MOVE FRTYLC    XRTYLC           Type of Last Ch
+     C*************        Z-ADDFRCHTL    XRCHTL           Cash Tran Limit                    161457
+     C*************        Z-ADDFRNCTL    XRNCTL           NonCash TranLim                    161457
+     C                     MOVE WQ0001    XRCHTL           Cash Tran Limit                    161457
+     C                     MOVE WQ0003    XRNCTL           NonCash TranLim                    161457
+     C                     MOVE FRTLID    XRTLID           Teller Id
+     C                     MOVE FRTLBC    XRTLBC           Tel Branch Code
+     C                     Z-ADDFRTLMG    XRTLMG           Tel. Menu Group
+     C                     Z-ADDFRTLSL    XRTLSL           Teller Security
+     C                     Z-ADDFRTLTO    XRTLTO           Menu Time Out
+     C                     MOVE FRSPVI    XRSPVI           Supervisor Ind.
+     C                     MOVE FRDEPC    XRDEPC           Teller  Default
+     C                     MOVELFRTLNM    XRTLNM           Teller Name
+      *
+     C                     MOVE #DBLDB    XRBLDB           Block Debit Ind
+     C                     MOVE #DBLCR    XRBLCR           Block Credit In
+     C                     MOVE #DRFDR    XRRFDR           Refer Debit Ind
+     C                     MOVE #DRFCR    XRRFCR           Refer Credit
+     C                     MOVE #DINAC    XRINAC           Inactive A/c
+     C                     MOVE #DBRLQ    XRBRLQ           Bankrupt/Liq'n
+     C                     MOVE #DBDDT    XRBDDT           Bad Debt
+     C                     MOVE #DINFD    XRINFD           Insuff. Fund
+     C                     MOVE #DEXOD    XREXOD           Exceeding OD
+     C                     MOVE #DMNBL    XRMNBL           Min Balance
+     C                     MOVE #DSTCQ    XRSTCQ           Stopped Cheque
+     C                     MOVE #DCQOR    XRCQOR           Chq outof range
+     C                     MOVE #DCQPR    XRCQPR           Chq Presented
+     C                     MOVE #DTLLM    XRTLLM           Teller Limit
+     C                     MOVE #DERAT    XRERAT           Exchange Rate
+     C                     MOVE #DBRDF    XRBRDF           BranchDifferent
+     C                     MOVE #DACCL    XRACCL           A/c Closing
+     C                     MOVE #DNWKD    XRNWKD           Non-Working Day
+     C                     MOVE #DINBV    XRINBV           Invalid BackVal
+     C                     MOVE #DNAGL    XRNAGL           No Assoc GL cod
+     C                     MOVEL*BLANK    XRACDT           Alpha change da
+     C                     MOVEL*BLANK    XRALCH           Alpha of last c
+     C                     MOVEL*BLANK    XRWFFR           Window Function
+     C                     MOVEL*BLANK    XRWF1R           Window Function
+     C                     MOVEL*BLANK    XRWF2R           Window Function
+      *
+      ** Set Print Record flag To 'Y'
+     C                     MOVEL'Y'       PRTFLG
+      *
+      ** Count Detail Records
+     C                     ADD  1         WUWKNB           Work number
+      *
+      ** If Audit/Request Status Ind is Audit Mode (Parm = 'A')
+      ** AND Last Change Date *NE run day number
+     C           WUARSI    IFEQ @CN,01
+     C           XRLCD     ANDNEWURDNB
+      *
+      ** Set print record flag  = 'N'
+     C                     MOVEL'N'       PRTFLG
+     C                     ENDIF
+      *
+      ** If record is to be printed add 1 to No Of Calculated Records
+     C           PRTFLG    IFEQ 'Y'
+     C                     ADD  1         ZTNCRC
+      *
+      ** Set FLAGP1 Details Print File Flag (SD0690PM)
+     C                     MOVEL'Y'       FLAGP1
+     C                     ENDIF
+      *
+      ** Check File Date - Rundate
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM XRLCD     WQ0005  50       Work Midas Date
+     C                     PARM WUDFF     WQ0006  1        date format fla
+     C           WUWCDT    PARM *ZERO     WQ0007  60       Work Converted
+     C           XRACDT    PARM *BLANK    WQ0008  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** PAR.alpha of last change = Condition name of PAR.Type of Last Change
+     C                     CALL 'Y2RVCNR'              90
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1100584   Y2LSNO  70       List number
+     C                     PARM XRTYLC    W0INVL 20        Type of Last Ch
+     C                     PARM ' '       W0VLMP  1        Value mapped?
+     C           XRALCH    PARM           W0CNNM 25        Alpha of last c
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,SD0690PPDR
+      *
+     C           PRTFLG    IFEQ 'Y'
+      *
+      ** Convert fields to external form.
+     C                     MOVEL'0'       *IN72
+     C           XRWFFR    IFEQ *BLANK
+     C                     MOVEL'1'       *IN72
+     C                     ENDIF
+      *
+     C                     MOVEL'0'       *IN71
+     C           XRWF1R    IFEQ *BLANK
+     C                     MOVEL'1'       *IN71
+     C                     ENDIF
+      *
+     C                     MOVEL'0'       *IN70
+     C           XRWF2R    IFEQ *BLANK
+     C                     MOVEL'1'       *IN70
+     C                     ENDIF
+      *
+      * For First Record that is to be written to the details printer file.
+     C           FLAGP1    IFEQ 'Y'
+     C           ZTNCRC    ANDEQ1
+     C                     OPEN SD0690PM
+      *
+      ** ZSFILE - write report rqs - Standard functions *
+      *
+     C                     Z-ADD@$FNB     WUSFNB  60                      095626
+      *                                                                   095626
+     C                     CALL 'ZSFILE'               90
+     C                     PARM P2RSQN    UURSQN  5        RCF seq no.
+     C                     PARM P3ENTY    UUENTY  3        Entity
+     C                     PARM @$FVN     UUSFNM 10        Spool file name
+     C                     PARM WUSFNB    UUSFNB  60       Spool file no.
+     C           WUZSER    PARM *BLANK    UUZSER  1        ZSFILE error
+      *
+      ** Call to program ended in error
+     C           *IN90     IFEQ '1'
+     C           WUZSER    OREQ 'Y'
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Print page header.
+     C                     WRITEZZPAGHDR
+      *
+      ** Print detail.
+     C                     WRITEZZDTLRCD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      */TITLE SR/SBCHRC                                               *
+      *****************************************************************
+      *                                                               *
+      *  SBCHRC - Retrieves Audit Details from SDFCTLL1 and checks    *
+      *           for DB Errors whilst Chaining and Updating.         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Pgm Calls: None                                              *
+      *   SR Calls: *PSSR  - Program Exception Error Routine          *
+      *             WRTERR - Program Database Error Routine           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SBCHRC    BEGSR
+      *
+      ** If Audit/Request Status Ind is Audit Mode
+     C           WUARSI    IFEQ @CN,01
+      * Define Keylist.
+     C           KLCHSB    KLIST
+     C                     KFLD           AHFLNM           Filename
+      ** Move fields to key list.
+     C                     MOVEL@CN,05    AHFLNM           Filename
+      ** Check that a record for SDTELDPD exists on the standing data
+      ** controls file.
+     C           KLCHSB    CHAIN@AHREAU              90
+      *
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SD0690P' DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CN,05    DBKEY
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDFCTLL1'DBFILE           *  DBERR 003  *
+     C                     OUT  LDA                        ***************
+      *
+      ** Write header(s).
+      *
+     C                     MOVE WUMRDT    ##MRDT
+     C                     MOVEL'SD0690P' ##PGM
+      *
+     C                     EXSR WRTERR
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Processing after DBF read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      *
+      ** If Audit/Request Status Ind is Audit Mode (Parm = A)
+     C           P1ARSI    IFEQ @CN,01
+      *
+      ** Move Non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADD*ZERO     AHNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     AHNOAM           No. of Amends
+     C                     Z-ADD*ZERO     AHNODL           No. of Deletes
+      *
+     C                     UPDAT@AHREAU                85
+      *
+      ** If SD control file record update not successful
+     C           *IN85     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SD0690P' DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CN,05    DBKEY
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDFCTLL0'DBFILE           *  DBERR 004  *
+     C                     OUT  LDA                        ***************
+      *
+      ** Write header(s).
+      *
+     C                     MOVE WUMRDT    ##MRDT
+     C                     MOVEL'SD0690P' ##PGM
+      *
+     C                     EXSR WRTERR
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      */TITLE SR/ZZINIT                                               *
+      *****************************************************************
+      *                                                               *
+      *  ZZINIT - Define Work Fields. Gets Rundate, report titles and *
+      *           Bank details (checks for DB Error).                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Pgm Calls: ZSFILE - Spool File Numbers File                  *
+      *   SR Calls: *PSSR  - Program Exception Error Routine          *
+      *             WRTERR - Program Database Error Routine           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZZINIT    BEGSR
+      *
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+      ** Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      ** Define Audit/Request Status Ind
+     C                     MOVEL*BLANK    WUARSI  1
+      ** Move Audit/Request Status Ind to Work Field
+     C                     MOVELP1ARSI    WUARSI           Audit/Request S
+      ** Define work number
+     C                     Z-ADD*ZERO     WUWKNB  50
+      * Define work field ZALIGN Screen Fun Field                                             161457
+     C                     MOVEL*BLANK    WUZASF 16                                           161457
+      * Define work field ZALIGN No Of Decimals                                               161457
+     C                     Z-ADD*ZERO     WUZAND  10                                          161457
+      * Define work field Currency Code                                                       161457
+     C                     MOVEL*BLANK    WUCYCD  3                                           161457
+      * Define work field Number of Decimal Places                                            161457
+     C                     Z-ADD*ZERO     WUNBDP  10                                          161457
+      ** Define run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      ** Define date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      ** Define Work Converted Date
+     C                     Z-ADD*ZERO     WUWCDT  60
+      ** Define No of Records on file
+     C                     Z-ADD*ZERO     WUNORF  50
+      ** Define No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      ** Define No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      ** Define No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      ** Define Field Work Flag
+     C                     MOVEL*BLANK    WUWFLG  1
+      ** Define Audit/Request Title
+     C                     MOVEL*BLANK    WUARTL 53
+      ** Define Underline
+     C                     MOVEL*BLANK    WUUNDL 53
+      ** Define No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      ** Define Midas Rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      ** Define ZSFILE error
+     C                     MOVEL*BLANK    WUZSER  1
+      ** Define PRTFLG Print Record Flag
+     C                     MOVEL*BLANK    PRTFLG  1
+      ** Define FLAGP1 Details Print File Flag (SD0690PM)
+     C                     MOVEL'N'       FLAGP1  1
+      *
+      ** Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      *
+      ** Define SD Local Data Area
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Obtain Midas Rundate
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB
+     C                     MOVE DFF       WUDFF
+      *                                                                                       161457
+      * Get Base Currency - Bank Details  *                                                   161457
+     C                     EXSR SBRVGN                                                        161457
+      * Get Number of Dec Places - Currency Codes  *                                          161457
+     C                     EXSR SCRVGN                                                        161457
+     C                     Z-ADDWUNBDP    WUZAND           ZALIGN No Of De                    161457
+      *
+      ** Calculate End of Text Point
+     C                     Z-ADD1         U       20
+     C                     MOVEA@CN,10    UAR,U
+      *
+     C           *IN99     DOWEQ'0'
+     C           ' '       LOKUPUAR,U                    99
+     C                     ADD  1         U
+     C           UAR,U     COMP ' '                      99
+     C                     ENDDO
+      *
+     C           P1ARSI    IFEQ 'A'
+     C                     MOVELUARRAY,1  UTEMP  26
+     C                     MOVEAUTEMP     UAR,U
+     C                     ADD  26        U
+     C                     ELSE
+      *
+     C                     MOVEAUARRAY,2  UAR,U            * IF A THIRD
+     C                     ADD  7         U                OPTION TO ARRAY
+     C                     ENDIF                           IS ADDED A
+      *                                                    TEMP STORAGE
+      *                                                    * IS REQUIRED.
+      **  Store Text in USTORE Field
+      *
+     C                     MOVEAUAR       USTORE 53
+     C                     MOVE *BLANKS   UAR
+      *
+     C           53        SUB  U         UB      20
+     C           UB        DIV  2         UB
+     C                     MVR            UR      10
+     C           UB        ADD  U         U
+     C           U         SUB  1         U
+      *
+      **  Insert Underline to Array
+      **
+     C                     MOVEA*ALL'-'   ULN,UB
+     C                     MOVEA*BLANKS   ULN,U
+      *
+     C           UB        IFGT 0
+     C                     MOVEAUSTORE    UAR,UB
+     C                     ELSE
+     C                     MOVEAUSTORE    UAR
+     C                     ENDIF
+      *
+      **  Move Array VAlue To Printfile Text Field
+      *
+     C                     MOVEAUAR       ##ARTL 53
+     C                     MOVEAUAR       WUARTL
+     C                     MOVEAULN       ##UNDL 53
+     C                     MOVEAULN       WUUNDL
+      *
+      ** Get Bank Title - Bank Details
+     C           KRSSC     KLIST
+     C                     KFLD           BJBANK           Bank
+      *
+     C                     MOVEL@CN,09    BJBANK           Bank
+      *
+     C           KRSSC     CHAIN@BJREEF              90
+      *
+      ** Chain To SDBANKPD Unsuccesful
+     C           *IN90     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SD0690P' DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CN,09    DBKEY
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *  DBERR 001  *
+     C                     OUT  LDA                        ***************
+      *
+      ** Write header(s).
+     C                     MOVE WUMRDT    ##MRDT
+     C                     MOVEL'SD0690P' ##PGM
+      *
+     C                     EXSR WRTERR
+     C                     EXSR *PSSR
+      *
+      ** Chain To SDBANKPD Succesful
+     C                     ELSE
+      *
+      ** Load User Report Title
+     C                     MOVELBJURPT    ##URPT           User Report Tit
+     C                     ENDIF
+      *
+      ** Set up spool file number - Standard functions *
+      *
+     C***********          Z-ADD@$FNB     WUSFNB  60                      095626
+      *
+     C/COPY WNCPYSRC,SD0690PCPG
+      *
+     C           ZZEXIT    ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/WTRERR
+      *****************************************************************
+      *                                                               *
+      * WTRERR - Program database error routine.                      *
+      *                                                               *
+      * Called by: Main Processing, SBCHRC and ZZINIT.                *
+      *                                                               *
+      *  Pgm Calls:*SDC540P- Audit Print File Override                *
+      *   SR Calls: *PSSR  - Program Exception Error Routine          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTERR    BEGSR
+      *
+      ** Audit printfile override - Standing Data Controls
+     C                     CALL 'SDC540P'              90  Audit printfile
+     C                     PARM @CN,07    WQ0009 10        *PROGRAM
+     C                     PARM 'E'       WQ0010  1        Error Flag
+     C                     PARM *ZERO     WQ0011  50       Dummy Parm.
+     C                     PARM *ZERO     WQ0012  50       Dummy Parm.
+     C                     PARM *ZERO     WQ0013  50       Dummy Parm.
+     C                     PARM *ZERO     WQ0014  50       Dummy Parm.
+     C                     PARM *ZERO     WQ0015  50       Dummy Parm.
+     C                     PARM WUARTL    WQ0016 53        Audit/Request T
+     C                     PARM WUUNDL    WQ0017 53        Underline
+      *
+     C           *IN90     IFEQ '1'
+      ** Call to program ended in error.
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *================================================================                       161457
+     CSR         SCRVGN    BEGSR                                                              161457
+      *================================================================                       161457
+      * Get Number of Dec Places - Currency Codes  *                                          161457
+      *================================================================                       161457
+     C                     MOVEL*BLANK    W0RTN   7                                           161457
+      * Define keylist                                                                        161457
+     C           KRSSB     KLIST                                                              161457
+     C                     KFLD           A6CYCD           Currency Code                      161457
+      * Move fields to key list                                                               161457
+     C                     MOVELWUCYCD    A6CYCD           Currency Code                      161457
+     C           KRSSB     CHAIN@A6REA3              90    *                                  161457
+     C           *IN90     IFEQ '1'                                                           161457
+      * Data record not found                                                                 161457
+     C                     MOVEL'USR0071' W0RTN   7                                           161457
+      * USER: Processing if Data record not found                                             161457
+     C                     MOVEL'Y2U0005' W0RTN            *Return code                       161457
+     C                     GOTO SCEXIT                                                        161457
+     C                     END                                                                161457
+      *                                                                                       161457
+     C           *IN90     IFEQ '0'                                                           161457
+      * USER: Process Data record                                                             161457
+     C                     MOVEL'Y2U0003' W0RTN            *Return code                       161457
+     C                     Z-ADDA6NBDP    WUNBDP           Number of Decim                    161457
+     C                     END                                                                161457
+      *================================================================                       161457
+     CSR         SCEXIT    ENDSR                                                              161457
+      *****************************************************************                       161457
+     CSR         SBRVGN    BEGSR                                                              161457
+      *================================================================                       161457
+      * Get Base Currency - Bank Details  *                                                   161457
+      *================================================================                       161457
+     C                     MOVEL*BLANK    W0RTN   7                                           161457
+      * Move fields to key list                                                               161457
+     C                     MOVE *BLANK    BJBANK           Bank                               161457
+     C                     MOVEL'BANK'    BJBANK           Bank                               161457
+     C           KRSSC     CHAIN@BJREEF              90    *                                  161457
+     C           *IN90     IFEQ '1'                                                           161457
+      * Data record not found                                                                 161457
+     C                     MOVEL'USR0197' W0RTN   7                                           161457
+      * USER: Processing if Data record not found                                             161457
+     C                     MOVEL'Y2U0005' W0RTN            *Return code                       161457
+      * Setup message data for message                                                        161457
+     C                     MOVEL'SDBANKPD'ZA0002           Filename                           161457
+      * Send message 'Database Error (ICD)'                                                   161457
+     C                     MOVEL'USR0377' ZAMSID                                              161457
+     C                     EXSR ZASNMS                                                        161457
+     C                     SETON                     99    *                                  161457
+      *                                                                                       161457
+     C                     GOTO SBEXIT                     *QUIT                              161457
+     C                     GOTO SBEXIT                                                        161457
+     C                     END                                                                161457
+      *                                                                                       161457
+     C           *IN90     IFEQ '0'                                                           161457
+      * USER: Process Data record                                                             161457
+      * PAR = DB1 By name                                                                     161457
+     C                     MOVELBJCYCD    WUCYCD           Currency Code                      161457
+     C                     END                                                                161457
+      *================================================================                       161457
+     CSR         SBEXIT    ENDSR                                                              161457
+      *****************************************************************                       161457
+     CSR         ZASNMS    BEGSR                                                              161457
+      *================================================================                       161457
+      * Send message to program's message queue                                               161457
+      *================================================================                       161457
+     C           ZAPGMQ    IFEQ *BLANK                                                        161457
+     C                     MOVEL##PGM     ZAPGMQ                                              161457
+     C                     END                                                                161457
+      * If no message file specified, use default                                             161457
+     C           ZAMSGF    IFEQ *BLANK                                                        161457
+     C                     MOVELZADFMF    ZAMSGF                                              161457
+     C                     END                                                                161457
+     C                     CALL 'Y2SNMGC'                                                     161457
+     C                     PARM           ZAPGMQ 10        Program queue                      161457
+     C                     PARM           ZAPGRL  5        Rel queue                          161457
+     C                     PARM           ZAMSID  7        Message ID                         161457
+     C                     PARM           ZAMSGF 10        Message file                       161457
+     C                     PARM           ZAMSDA132        Message data                       161457
+     C                     PARM           ZAMSTP  7        Message type                       161457
+      * Clear all fields for default mechanism next time                                      161457
+     C                     MOVEL*BLANK    ZAPGMQ                                              161457
+     C                     MOVEL*BLANK    ZAPGRL                                              161457
+     C                     MOVEL*BLANK    ZAMSID                                              161457
+     C                     MOVEL*BLANK    ZAMSGF                                              161457
+     C                     MOVEL*BLANK    ZAMSDA                                              161457
+     C                     MOVEL*BLANK    ZAMSTP                                              161457
+      *================================================================                       161457
+     CSR         ZAEXIT    ENDSR                                                              161457
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: Main Processing, WRTDTL, SBCHRC and ZZINIT.        *
+      *                                                               *
+      *  Pgm Calls: None                                              *
+      *   SR Calls: None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     O*
+     O/COPY WNCPYSRC,SD0690POPG
+     O*
+**   Array Entries For Report Title
+MAINTENANCE - AUDIT REPORT
+LISTING
+** @CN Long constants used in program.
+A
+N
+Y
+0
+SDTELDPD
+Y2U0005
+SD0690AU
+Y2U0021
+BANK
+TELLER IDENTIFIERS

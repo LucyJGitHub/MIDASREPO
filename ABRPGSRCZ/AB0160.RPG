@@ -1,0 +1,204 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AB Deals file reorganization')                   *
+     F*****************************************************************
+     F*                                                               *
+     A*  Midas - Arbitrage
+     F*                                                               *
+     F*  AB0160 - AB DEALS FILE REORGANISATION                        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27892           Date 19Jul10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 13Jan06               *
+      *                 CDL038             Date 10May05               *
+      *                 228542             Date 23Jul04               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E25554             Date 18JUL91               *
+      *                 E20774             Date 15MAR90               *
+     F*                 E17063             DATE 03/05/89              *
+     F*                 AB0246             DATE 12/05/88              *
+     F*                                                               *
+     F*****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG27892 - Loan Number already exists error                  *
+      *  CSD027 - Recompiled due to PF changes.                       *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  228542 - RGZPFM command has changed at V5R3                  *
+      *           - Note: array physically deleted:                   *
+      *             RGZPFM FILE(XXXXXXXX)                             *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+     F*  E25554 - Release 10 changes                                  *
+     F*                                                               *
+     F*  E20774 - REPLACE QCAEXEC WITH QCMDEXC                        *   E20774
+     F*                                                               *
+     F*  E17063 - Recompiled using IGNDECERR(*YES).                   *
+     F*                                                               *
+     F*  AB0246  -  EMPTY FILE SHOULD NOT BE REORGANISED              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  CREATION PARAMETERS                                          *
+     F*                                                               *
+******** SNPDUMP(*NONE) CODELIST(*NONE) IGNDECERR(*NO)              : *   E17063
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*      60          General indicator
+     F*      61          PSSR control indicator
+     F*      62          CHAIN to ABDEALL2 file                                             BUG27892
+     F*
+     F****************************************************************
+     F/EJECT
+     FABDEALLLUF  E           K        DISK         KINFSR *PSSR      UC
+     FABDEALL2UF  E           K        DISK         KINFSR *PSSR      UC                    BUG27892
+     F/COPY WNCPYSRC,ABH00011
+     E*
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT
+     E                    CPY@    1   1 80
+     E********************@P     21  21  1               QCAEXEC COMMAND  E20774
+     E**********          @P     21  21  1               QCMDEXC COMMAND               E20774 228542
+      /EJECT
+     E/COPY WNCPYSRC,ABH00012
+      *****************************************************************
+      *                                                               *
+      * MAIN     - control process                                    *
+      *                                                               *
+      * CALLS    #A       - Reorganize ABDEALLL                       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C                     EXSR #A
+      *
+     C                     MOVE '1'       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #A       - Reorganize MMDELDPP                           *
+      *  02  *PSSR    - error processing                              *
+      *                                                               *
+      * EXTERNAL ROUTINE                                              *
+      ***03**QCAEXEC**-*execute*CL*command                            *   E20774
+      *  03  QCMDEXC  - execute CL command                            *   E20774
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - Delete ABDEALLL deleted records                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C/COPY WNCPYSRC,ABH00013
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           DLKEY     KLIST                                                            BUG27892
+     C                     KFLD           KFD38   60                                        BUG27892
+     C                     KFLD           KSD38   60                                        BUG27892
+      *                                                                                     BUG27892
+     C                     OPEN ABDEALL2                                                    BUG27892
+     C                     OPEN ABDEALLL
+     C                     READ ABDEALP0                 60
+      *
+     C           *IN60     IFEQ '1'                                       AB0246
+     C                     MOVE 'Y'       @NOREC  1                       AB0246
+     C                     END                                            AB0246
+      *
+      ** Process all the records in the file
+     C           *IN60     DOWEQ'0'                        B1
+      *
+      ** If matured, deleted, or logically deleted then physically del
+     C           JPDSTS    IFEQ 'M'                        B*2
+     C           JPDDLT    OREQ 'D'                        X*2
+     C           JPDLTF    OREQ '*'                        X*2
+     C                     DELETABDEALP0                   **2
+      *                                                                                     BUG27892
+      ** Delete extension record                                                            BUG27892
+      *                                                                                     BUG27892
+     C                     Z-ADDJPFD38    KFD38                                             BUG27892
+     C                     Z-ADDJPSD38    KSD38                                             BUG27892
+     C           DLKEY     CHAINABDEALL2             62                                     BUG27892
+     C  N62                DELETABDELQD0                                                    BUG27892
+     C/COPY WNCPYSRC,ABH00014
+     C                     END                             E*2
+      *
+     C                     READ ABDEALP0                 60*1
+     C                     END                             E1
+      ** close the file
+     C                     CLOSEABDEALL2                                                    BUG27892
+     C                     CLOSEABDEALLL
+     C/COPY WNCPYSRC,ABH00015
+      *
+      ** reorganize the physical file member
+     C           @NOREC    IFNE 'Y'                                       AB0246
+     C**********           MOVEA'ABDEALPP'@P,13                                               228542
+     C*********************CALL 'QCAEXEC'                                 E20774
+     C**********           CALL 'QCMDEXC'                                              E20774 228542
+     C**********           PARM           @P                                                  228542
+     C**********           PARM 21        @P2    155                                          228542
+     C                     MOVEL'SCC00'   PGM    10                                           228542
+     C                     MOVE '0060 '   PGM                                                 228542
+     C                     MOVEL'ABDEALPP'RGZFIL 10                                           228542
+     C                     MOVEL'*FIRST'  RGZMBR 10                                           228542
+     C                     CALL PGM                                                           228542
+     C                     PARM           RGZFIL                                              228542
+     C                     PARM           RGZMBR                                              228542
+      *                                                                                     BUG27892
+     C                     MOVEL'ABDEALQD'RGZFIL                                            BUG27892
+     C                     CALL PGM                                                         BUG27892
+     C                     PARM           RGZFIL                                            BUG27892
+     C                     PARM           RGZMBR                                            BUG27892
+     C                     END                                            AB0246
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - error processing                                   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           *IN61     IFNE '1'
+     C                     MOVE '1'       *IN61
+      *
+     C                     DUMP
+     C*
+     C                     END
+      *
+     C           #PSSR9    ENDSR                           #PSSR9 TAG
+      *
+      *****************************************************************
+      /EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

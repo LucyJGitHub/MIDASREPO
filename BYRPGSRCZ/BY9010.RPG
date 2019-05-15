@@ -1,0 +1,354 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Extension files housekeeping program')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY9010 - Extension Files Housekeeping Program                *
+      *                                                               *
+      *  Function:  This program removes extension file records which *
+      *             do not have a corresponding master file record    *
+      *                                                               *
+      *  Called By: BYC9010                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 1997                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 LLN016             Date 15May00               *
+      *                 LLN012             Date 30Sep99               *
+      *                 LLN012             Date 05May99               *
+      *                 139245             Date 21Jul98               *
+      *                 LLN008             Date 23Oct97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  LLN016 - Upgrade BoE to DBAR3.                               *
+      *  LLN012 - Additional BoE Changes (Patch B)                    *
+      *  LLN012 - Recompile due to change in PF/SDCUSTX7              *
+      *  139245 - Ignore unsed formats from LF/CLOAN                  *
+      *  LLN008 - Recompile due to change in LF/SDBOOKY8              *
+      *                                                               *
+      *****************************************************************
+      *  Indicators used:                                             *
+      *                                                               *
+      *  87 - SETLL indicator                                         *
+      *  88 - General work indicator                                  *
+      *  89 - SETLL indicator                                         *
+      *  90 - General work indicator                                  *
+      *                                                               *
+      *****************************************************************
+      *
+      * File description for files defined
+     F*LOANY8*UF**E*****               DISK         KINFSR *PSSR          LLN016
+     FBYLOANY0UF  E                    DISK         KINFSR *PSSR          LLN016
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANHHF                          KIGNORE               139245
+     F            CLOANZ1F                          KIGNORE               139245
+     F*DBOOKY8UF**E******              DISK         KINFSR *PSSR          LLN016
+     FBYBOOKY0UF  E                    DISK         KINFSR *PSSR          LLN016
+     F*EALDY9*UF**E****                DISK         KINFSR *PSSR    LLN012LLN016
+     FBYNASPY0UF  E                    DISK         KINFSR *PSSR          LLN016
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR          LLN012
+     F            DEALSDAF                          KIGNORE               LLN012
+     F            DEALSDBF                          KIGNORE               LLN012
+     F            DEALSDCF                          KIGNORE               LLN012
+     F            DEALSDEF                          KIGNORE               LLN012
+     F            DEALSDFF                          KIGNORE               LLN012
+     F            DEALSDGF                          KIGNORE               LLN012
+      /EJECT
+      *
+      *  Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+     IBYLOAND0                                                            LLN020
+     I              LFMAT                           L1FMAT                LLN020
+      *                                                                   LLN020
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data Structure using Book codes file format
+     ISDBOOK    E DSSDBOOKPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ULPGM
+     I                                      244 253 ULWSID
+     I                                      254 263 ULUSER
+      *
+      * File information data structures(for database files only)
+     IINFDS1    E DSY2I1DSP
+      *
+      *
+      /EJECT
+      *****************************************************************
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LDETL - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *****************************************************************
+      *
+      *
+      *  Detail Processing
+     C                     EXSR #LDETL
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      * #LDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls: #LDEAL - Check for matching deal record                *
+      *        #LLOAN - Check for matching loan record                *
+      *        #LBOOK - Verify book code                              *
+      *****************************************************************
+      *
+     C           #LDETL    BEGSR                           ** SR/#LDETL**
+      *
+      ** Process loans extension file
+     C                     EXSR #LLOAN
+      *                                                                   LLN112
+      ** Process deals extension file                                     LLN112
+     C                     EXSR #LDEAL                                    LLN112
+      *
+      ** Process book codes extension file
+     C                     EXSR #LBOOK
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LLOAN - Check for matching loan record.                      *
+      *                                                               *
+      * Called by: #LDETL - Detail processing                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           #LLOAN    BEGSR                           ** SR/#LLOAN**
+      *
+     C**********           READ CLOANY8                  90                             LLN016
+     C                     READ BYLOANY0                 90                             LLN016
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Check file for a matching record
+     C                     MOVE LLNRF     LNRF
+     C           LNRF      SETLLCLOANCLF                 89
+      *
+      ** Delete record from extension file if no match is found
+     C           *IN89     IFEQ *OFF
+     C**********           DELETCLOANY8                                                 LLN016
+     C                     DELETBYLOANY0                                                LLN016
+     C                     ENDIF
+      *
+     C**********           READ CLOANY8                  90                             LLN016
+     C                     READ BYLOANY0                 90                             LLN016
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************   LLN012
+      *                                                               *   LLN012
+      * #LDEAL - Check for matching loan record.                      *   LLN012
+      *                                                               *   LLN012
+      * Called by: #LDETL - Detail processing                         *   LLN012
+      *                                                               *   LLN012
+      * Calls: None                                                   *   LLN012
+      *****************************************************************   LLN012
+      *                                                                   LLN012
+     C           #LDEAL    BEGSR                           ** SR/#LDEAL** LLN012
+      *                                                                   LLN012
+     C**********           READ DEALDY9                  88         LLN012LLN016
+     C                     READ BYNASPY0                 88               LLN016
+     C           *IN88     DOWEQ*OFF                                      LLN012
+      *                                                                   LLN012
+      ** Check file for a matching record                                 LLN012
+     C                     MOVELLDLNO     DLNO                            LLN012
+     C           DLNO      SETLLDEALS                    87               LLN012
+      *                                                                   LLN012
+      ** Delete record from extension file if no match is found           LLN012
+     C           *IN87     IFEQ *OFF                                      LLN012
+     C**********           DELETDEALDY9                             LLN016LLN016
+     C                     DELETBYNASPY0                                  LLN016
+     C                     ENDIF                                          LLN012
+      *                                                                   LLN012
+     C**********           READ DEALDY9                  88         LLN016LLN016
+     C                     READ BYNASPY0                 88               LLN016
+     C                     ENDDO                                          LLN012
+      *                                                                   LLN012
+     C                     ENDSR                                          LLN012
+      *                                                                   LLN012
+      /EJECT                                                              LLN012
+      *****************************************************************
+      *                                                               *
+      * #LBOOK - Check if book code exists.                           *
+      *                                                               *
+      * Called by: #LDETL - Detail processing                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           #LBOOK    BEGSR                           ** SR/#LBOOK**
+      *
+     C***********          READ SDBOOKY8                 90                              LLN016
+     C                     READ BYBOOKY0                 90                              LLN016
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Check book code
+     C                     CALL 'AOBOOKR0'
+     C                     PARM           P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           LBKCD            Book code
+     C                     PARM           SDBOOK
+      *
+      ** Database error
+     C           P@RTCD    IFEQ '*ERROR '
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGM     DBPGM            ***********
+     C                     MOVEL'SDBOOKL1'DBFILE           * DBERR 2 *
+     C                     MOVELLBKCD     DBKEY            ***********
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete record from extension file if book code not valid
+     C           P@RTCD    IFEQ '*NRF   '
+     C***********          DELETSDBOOKY8                                                 LLN016
+     C                     DELETBYBOOKY0                                                 LLN016
+     C                     ENDIF
+      *
+     C***********          READ SDBOOKY8                 90                              LLN016
+     C                     READ BYBOOKY0                 90                              LLN016
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                           ** SR/#LTERM**
+      *
+      *  Terminate program
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                           ** SR/#LDEFN**
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANK    ULRTCD  1        Return code
+     C                     MOVE *BLANK    ULERRI  1        Pgm error indicator
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+     C                     MOVEACPY@      ULCPY@ 80
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Return to calling program
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULRTCD           Return code
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C                     PARM           SDBANK
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 1997

@@ -1,0 +1,218 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+     C*  Last Amend No. 101578             Date 17Apr01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  Prev Amend No. CRT001  *CREATE    DATE 28FEB95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  101578 - Core fix concerning Mult/Div indicator              *
+     C*  CRT001 - Retail Teller System.                               *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*   RTCCYX SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER  *
+     C*   CURRENCY USING AN EXCHANGE RATE BETWEEN THE TWO CURRENCIES  *
+     C*                                                               *
+     C*                                                               *
+     C*   INPUT  FIELDS                                               *
+     C*       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                *
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                      *
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR     *
+     C*                      NOTE: FIELD EITHER SET UP IN SR/ZCCYCN   *
+     C*                      OR IF M / D INDICATOR FOR NON BASE CCY   *
+     C*       ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CCY   *
+     C*       ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CCY     *
+     C*       ZCCYF   3A     FROM CURRENCY                            *
+     C*       ZCCYT   3A     TO CURRENCY                              *
+     C*       ZRATEF 138     SPOT RATE FOR 'FROM' CURRENCY            *
+     C*       ZRATET 138     SPOT RATE FOR 'TO' CURRENCY              *
+     C*       ZMDINF  1A     MULTIPLY/DIVIDE INDICATOR FOR 'FROM' CCY *
+     C*       ZMDINT  1A     MULTIPLY/DIVIDE INDICATOR FOR 'TO' CCY   *
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                      *
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR     *
+     C*                                                               *
+     C*   OUTPUT  FIELDS                                              *
+     C*       ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED   *
+     C*                      AMOUNT)                                  *
+     C*                                                               *
+     C*   WORK FIELDS                                                 *
+     C*       ZWKPX   10     POWER INDEX                              *
+     C********ZWK153*153                                              *   101578
+     C*       ZWK183 183                                              *   101578
+     C*                                                               *
+     C*   ALSO REQUIRED                                               *
+     C*       POWER ARRAY                                             *
+     C*                                                               *
+     C*   CALLED BY:                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RTCCYX    BEGSR                           *** RTCCYX ***
+     C*
+     C** Define all fields
+     C*
+     C                     Z-ADDZAMTF     ZAMTF  150
+     C                     MOVE ZCCYF     ZCCYF   3
+     C                     MOVE ZCCYT     ZCCYT   3
+     C                     Z-ADDZRATEF    ZRATEF 138
+     C                     Z-ADDZRATET    ZRATET 138
+     C                     MOVE ZMDINF    ZMDINF  1
+     C                     MOVE ZMDINT    ZMDINT  1
+     C                     Z-ADDZCDPF     ZCDPF   10
+     C                     Z-ADDZCDPT     ZCDPT   10
+     C                     Z-ADDZAMTT     ZAMTT  150
+     C                     Z-ADDZCRSRT    ZCRSRT 138
+     C                     MOVE ZCRSMD    ZCRSMD  1
+     C*
+     C** If 'FROM' currency equal to 'to' currency set amount in 'TO' Curr
+     C** Equal to amount in 'FROM' currency
+     C*
+     C           ZCCYF     IFEQ ZCCYT
+     C                     Z-ADDZAMTF     ZAMTT
+     C                     Z-ADD1         ZCRSRT
+     C                     MOVE 'M'       ZCRSMD
+     C                     GOTO ZCCEND
+     C                     END
+     C*
+     C** Initialize cross exchange rate (ZCRSSRT) TO ZERO
+     C*
+     C                     Z-ADD*ZEROS    ZCRSRT
+     C*
+     C** If mult/div indic. for 'FROM' is = MULT/DIV indic for 'TO' indic
+     C**   and spot rate for 'TO' currency (ZRATET) is not = zero
+     C*
+     C           ZMDINF    IFEQ ZMDINT
+     C           ZRATET    ANDNE*ZEROS
+     C           ZRATEF    DIV  ZRATET    ZCRSRT
+     C*
+     C** If MULT/DIV indic for 'FROM' is not= MULT/DIV indic for 'TO' ind
+     C** or spot rate for 'TO' currency (ZRATET) is  = zero
+     C*
+     C                     ELSE
+     C           ZRATEF    MULT ZRATET    ZCRSRT
+     C                     END
+     C*
+     C** Move MULT/DIV indic for 'FROM' currency to cross rate MULT/DIV
+     C** indicator (ZCRSMD)
+     C*
+     C********** ZMDINF    IFEQ '1'                                       101578
+     C**********           MOVEL'M'       ZCRSMD                          101578
+     C**********           ELSE                                           101578
+     C**********           MOVEL'D'       ZCRSMD                          101578
+     C**********           END                                            101578
+     C*                                                                   101578
+     C                     MOVELZMDINF    ZCRSMD                          101578
+     C**  Define other fields
+     C*
+     C                     Z-ADDZWKPX     ZWKPX   10
+     C**********           Z-ADDZWK153    ZWK153 153                      101578
+     C                     Z-ADD0         ZWK183 183                      101578
+     C*
+     C**  If cross exchange rate is equal to zero
+     C**  set ZAMTT to *zero and EXIT
+     C*
+     C           ZCRSRT    IFEQ 0
+     C                     Z-ADD*ZEROS    ZAMTT
+     C                     GOTO ZCCEND
+     C                     END
+     C*
+     C**  If decimal places for 'FROM' currency (ZCDPF) equals
+     C**  decimal places for 'TO' currency
+     C*
+     C           ZCDPF     IFEQ ZCDPT
+     C*
+     C**  If cross rate Multiply/Divide indicator equals 'D'
+     C**  set amount in 'TO' equal to amount in 'FROM' currency
+     C**  (ZAMTF) divided by cross exchange rate
+     C*
+     C           ZCRSMD    IFEQ 'D'
+     C                     Z-ADDZAMTF     ZAMTT
+     C           ZAMTT     DIV  ZCRSRT    ZAMTT     H
+     C                     END
+     C*
+     C**  If cross rate Multiply/Divide indicator equals 'M'
+     C**  set amount in 'TO' equal to amount in 'FROM' currency
+     C**  (ZAMTF) multiplied by cross exchange rate
+     C*
+     C           ZCRSMD    IFEQ 'M'
+     C                     Z-ADDZAMTF     ZAMTT
+     C           ZAMTT     MULT ZCRSRT    ZAMTT     H
+     C                     END
+     C                     END
+     C*
+     C**  If the decimal places for 'FROM' currency (ZCDPF) is not
+     C**  equal to the decimal places for 'TO' currency
+     C*
+     C           ZCDPF     IFNE ZCDPT
+     C*
+     C**  Subtract decimal places 'FROM' from decimal places 'TO'
+     C**  in power
+     C*
+     C           ZCDPT     SUB  ZCDPF     ZWKPX
+     C           ZWKPX     ADD  4         Z       10
+     C*
+     C**  If power element (8,4) less than 1
+     C*
+     C           POWER,Z   IFLT 1
+     C*
+     C**  Multiply amount in 'FROM' currency by element in power array
+     C*
+     C********** POWER,Z   MULT ZAMTF     ZWK153                          101578
+     C           POWER,Z   MULT ZAMTF     ZWK183                          101578
+     C*
+     C**  Set amount in 'TO' equal to amount work field ZWK153
+     C**  divided by cross exchange rate
+     C*
+     C           ZCRSMD    IFEQ 'D'
+     C********** ZWK153    DIV  ZCRSRT    ZAMTT     H                     101578
+     C           ZWK183    DIV  ZCRSRT    ZAMTT     H                     101578
+     C                     END
+     C*
+     C**  Set amount in 'TO' equal to amount work field ZWK153
+     C**  multiplied by cross exchange rate
+     C*
+     C           ZCRSMD    IFEQ 'M'
+     C********** ZWK153    MULT ZCRSRT    ZAMTT     H                     101578
+     C           ZWK183    MULT ZCRSRT    ZAMTT     H                     101578
+     C                     END
+     C                     END
+     C*
+     C**  If power element (8,4) greater or equal to 1
+     C*
+     C           POWER,Z   IFGE 1
+     C*
+     C**  Multiply amount in 'FROM' currency by element in power array
+     C*
+     C           ZAMTF     MULT POWER,Z   ZAMTF
+     C*
+     C**  Test cross Mult/Div indicator
+     C*
+     C           ZCRSMD    IFEQ 'D'
+     C*
+     C**  Set amount in 'TO' equal to amount in 'FROM' currency
+     C**  divided by cross exchange rate
+     C*
+     C           ZAMTF     DIV  ZCRSRT    ZAMTT     H
+     C                     END
+     C*
+     C**  Test cross Mult/Div indicator
+     C*
+     C           ZCRSMD    IFEQ 'M'
+     C*
+     C**  Set amount in 'TO' equal to amount in 'FROM' currency
+     C**  multiplied by cross exchange rate
+     C*
+     C           ZAMTF     MULT ZCRSRT    ZAMTT     H
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           ZCCEND    ENDSR
+     C*
+     C*****************************************************************

@@ -1,0 +1,236 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Balance Statements - Start Task Split')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC3320T1 - Midas GL Balance Statements - Start Task Split  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD038448           Date 13Jul16              */
+/*                      MD037383           Date 10Feb16              */
+/*                      CGL049             Date 17Feb15              */
+/*                      MD024120           Date 19Aug14              */
+/*                      CGL142             Date 06Aug12              */
+/*                      CGL120   *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD038448 - Stamp Tax postings are not in CLEARPD and ledger */
+/*                  balance is not updated. Copy record to GLGESTPD  */
+/*                  as this file is used later by GL0349.            */
+/*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
+/*                  Stamp Tax (CER049) processing.                   */
+/*                  Rework that component to make it 'Task Split'    */
+/*                  compliant.                                       */
+/*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
+/*       MD024120 - GLC3320 Performance Issues                       */
+/*       CGL142 - Tactical COB changes GL                            */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLC3320')
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACBAPD')
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACBIPD')
+             DCL        VAR(&NAME1) TYPE(*CHAR) LEN(5) VALUE('ACBAL')
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('ACBALSERVE')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
+             DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&WKCUR) TYPE(*DEC) LEN(10 0)                                /*MD024120*/
+             DCL        VAR(&WKDLT) TYPE(*DEC) LEN(10 0)                                /*MD024120*/
+             DCL        VAR(&WKTOT) TYPE(*DEC) LEN(10 0)                                /*MD024120*/
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)                   /*MD024120*/
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)                               /*MD024120*/
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)                     /*MD024120*/
+ 
+             DCLF       FILE(CBCMPNLC)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ. */
+ 
+             SNDPGMMSG  MSG('GLC3320T1 - Balance Statements - Start +
+                          Task Split') TOMSGQ(MRUNQ)
+ 
+/* Clear ACNTDLPD on first run of GLC332T1 */
+ 
+             IF         COND(&CSEQ = 1) THEN(DO)
+                CLRPFM     FILE(ACNTDLPD)
+             ENDDO
+ 
+             IF         COND(&POSTNUM = '3') THEN(DO)
+                RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
+                IF         COND(&CURRCD = 0) THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/* Determine full DTAQLIB library name. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/**Clear*index*file.*/                                                                  /*MD024120*/
+/* Clear index and temporary trailer files. */                                          /*MD024120*/
+ 
+             CLRPFM     FILE(&INDEXFL)
+             CLRPFM     FILE(GLSTMTZX)                                                  /*MD024120*/
+             CLRPFM     FILE(GLABEXZY)                                                  /*MD024120*/
+ 
+              IF         COND(&CSEQ *EQ 10) THEN(DO)                                    /*MD037383*/
+             CLRPFM     FILE(GLGESTPD)                                                  /*MD037383*/
+             CPYF       FROMFILE(GLSTDTPD) TOFILE(GLGESTPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                /*MD038448*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(GLGESTPD))                                               /*MD038448*/
+             ENDDO                                                                      /*MD037383*/
+                                                                                        /*MD037383*/
+/* Remove all members from driving file. */
+ 
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Clear main data queue. */
+ 
+             CALL       PGM(QCLRDTAQ) PARM(&RCVDTAQ  '*LIBL')
+                                                                                        /*MD024120*/
+/* Retrieve number of records */                                                        /*MD024120*/
+                                                                                        /*MD024120*/
+/*           IF         COND(&POSTNUM = '2' *OR &POSTNUM = '3' *OR +
+                          &POSTNUM = '4') THEN(DO)                         /*MD024120*/ /* CGL049 */
+             IF         COND(&POSTNUM = '2' *OR &POSTNUM = '3' *OR &POSTNUM = '4' +
+                          *OR &POSTNUM = '6') THEN(DO) /* CGL049 */
+                RTVMBRD    FILE(ZACCNTAB) NBRCURRCD(&WKCUR) +
+                             NBRDLTRCD(&WKDLT)                                          /*MD024120*/
+             ENDDO                                                                      /*MD024120*/
+             ELSE (DO)                                                                  /*MD024120*/
+                RTVMBRD    FILE(ACCNTAB) NBRCURRCD(&WKCUR) +
+                             NBRDLTRCD(&WKDLT)                                          /*MD024120*/
+             ENDDO                                                                      /*MD024120*/
+                                                                                        /*MD024120*/
+             CHGVAR     VAR(&WKTOT) VALUE(&WKCUR + &WKDLT)                              /*MD024120*/
+ 
+/* Retrieve number of sub-tasks. */
+ 
+ CHAIN:
+             RCVF
+             CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
+             IF         COND((&DHCOTT *NE &CNAME) *OR (&NAME2_N *NE +
+                          &CSEQ)) THEN(DO)
+                GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+/* Start commitment control for feeder program */                                       /*MD024120*/
+                                                                                        /*MD024120*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                     /*MD024120*/
+                                                                                        /*MD024120*/
+/* Add all members and create data queues. */
+ 
+             CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
+ LOOP:
+             IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
+                GOTO       CMDLBL(START)
+             ENDDO
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
+             ADDPFM     FILE(&DRIVER) MBR(&MEMBER)
+                                                                                        /*MD024120*/
+/* Override and populate member in driving file */                                      /*MD024120*/
+                                                                                        /*MD024120*/
+             OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER) +
+                          OVRSCOPE(*JOB)                                                /*MD024120*/
+             CALL       PGM(GL3320T2) PARM(&DHTSNO &WKTOT)                              /*MD024120*/
+             DLTOVR     FILE(&DRIVER) LVL(*JOB)                                         /*MD024120*/
+                                                                                        /*MD024120*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD024120*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD024120*/
+             ENDDO                                                                      /*MD024120*/
+ 
+/**Create*data*queue*if*it*doesn't*already*exist**/                                     /*MD024120*/
+/**and*set*authorities.**/                                                              /*MD024120*/
+/*********************************************************************/                 /*MD024120*/
+/**********  CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)         */                 /*MD024120*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                      */                 /*MD024120*/
+/**********     CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)         */                 /*MD024120*/
+/**********  ENDDO                                                   */                 /*MD024120*/
+/**********  CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)         */                 /*MD024120*/
+ 
+             IF         COND(&LOOP *EQ 1) THEN(DO)
+                CHGVAR     VAR(&NAME2_N) VALUE(01000)
+                CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
+             ENDDO
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
+             CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
+             GOTO       CMDLBL(LOOP)
+ 
+ START:
+ 
+/*           IF         COND(&POSTNUM *NE '2' *AND &POSTNUM *NE '3' +
+                          *AND &POSTNUM *NE '4') THEN(DO)   */ /* CGL049 */
+             IF         COND(&POSTNUM *NE '2' *AND &POSTNUM *NE '3' *AND &POSTNUM +
+                          *NE '4' *AND &POSTNUM *NE '6') THEN(DO) /* CGL049 */
+              IF         COND(&CSEQ *NE 10) THEN(DO)                                    /*MD037383*/
+                CLRPFM     FILE(RECAPM)
+                MONMSG     MSGID(CPF0000)
+             ENDDO                                                                      /*MD037383*/
+             ENDDO
+             CLRPFM     FILE(ABEXHH)
+             CLRPFM     FILE(ABEXAG)
+             CLRPFM     FILE(ABEXZY)
+ 
+ /* Write Header & Trailer ABEXHH, ABEXZY */
+ 
+             CALL       PGM(GL3320T1)
+                                                                                          /*CGL142*/
+/* Initialise STMTHH, STMTZX, STMTAH, REANX1PD and CACCNTAB files */                      /*CGL142*/
+                                                                                          /*CGL142*/
+             IF         COND(&POSTNUM *EQ ' ' *AND &CSEQ = 001 *OR +
+                          &POSTNUM *EQ '1') THEN(DO)                                      /*CGL142*/
+                                                                                          /*CGL142*/
+             CLRPFM     FILE(STMTHH)                                                      /*CGL142*/
+             CLRPFM     FILE(STMTAH)                                                      /*CGL142*/
+             CLRPFM     FILE(STMTZX)                                                      /*CGL142*/
+             CLRPFM     FILE(CACCNTAB)                                                    /*CGL142*/
+             CLRPFM     FILE(REANX1PD)                                                    /*CGL142*/
+             CALL       PGM(GL06002)                                                      /*CGL142*/
+             ENDDO                                                                        /*CGL142*/
+                                                                                          /*CGL142*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program GLC3320T1 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDCMTCTL                                                                  /*MD024120*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD024120*/
+             ENDPGM

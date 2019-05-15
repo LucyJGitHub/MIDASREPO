@@ -1,0 +1,97 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Stop Confirmations Print')                       *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas Customer Lending Module                                LE0010
+     F*                                                                  *
+     F*     LE0140 - STOP CONFIRMATIONS PRINT                            *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E10023             Date 25/11/86              *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+     F*     E10029  -  PROGRAM LOOPS DURING REQUEST PRINTING OF          *E10029
+     F*                'ALL LOANS CONFIRMATION' AT I/C.                  *E10029
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FLTRIX   UF  F      40            DISK
+     E                    CPY@    1   1 80
+     I*    LOAN TRANSACTIONS INDEX FILE - HEADER RECORD.
+     I*
+     ILTRIX   NS  01   1 CH
+     I                                       33  330STPI        02
+     I        NS
+     I*
+     C                     MOVEACPY@      BIS@   80
+     C*    ONE CYCLE ONLY - SET ON LR
+     C*
+     C*********************GOTO END                                       E10029
+     C           LOOP      TAG                             ***  LOOP   ***
+     C                     TIME           MTIME   60
+     C                     MOVELMTIME     MIN     40
+     C           MIN       COMP MINS                 0202
+     C  N02                GOTO LOOP
+     C*
+     C*    WHEN 1 MINUTE HAS ELAPSED, CHECK LTRIX HEADER AGAIN
+     C*
+     C                     Z-ADDMIN       MINS    40
+ 156 C*  LOCK HDR BY READ & DUMMY UPDATE
+2156 C                     EXSR HDRCHN
+     C  N01                SETON                     U8
+     C*    IF FIVE MINUTES HAVE ELAPSED IT IS VERY LIKELY THAT
+     C*    THE PRINT PROGRAM TERMINATED BEFORE STPI WAS SET TO '1'.
+     C*    IF SO THEN SET STPI TO '0' AND TERMINATE TO STOP
+     C*    THIS PROGRAM LOOPING INDEFINITELY.
+     C                     ADD  1         FIVE    10
+     C           FIVE      COMP 5                        66
+     C   66                EXCPT
+     C   66                GOTO END
+     C  NU8                EXCPT
+     C  NLR                SETON                     02
+     C                     SETON                     LR
+     C   02NU8             GOTO LOOP
+     C           END       TAG
+ 251 C********************************************************************
+ 252 C*
+ 253 C*    ROUTINE TO ACCESS LTRIX RELATIVE FILE HEADER RECORD AND
+ 242 C*    DUMMY UPDATE/LOCK TO PREVENT EXTERNAL UPDATE.
+ 254 C*
+3255 C           HDRCHN    BEGSR                           *** HDRCHN ***
+ 256 C*
+3259 C           1         CHAINLTRIX                U8
+3248 C  NU8                EXCPTRECLCK
+ 245 C*
+3247 C  NU8      1         CHAINLTRIX                U8
+ 260 C*
+3261 C                     ENDSR
+ 262 C*
+ 263 C********************************************************************
+     OLTRIX   E
+     O                      NLR          33 '1'
+     O                    66 LR          33 '0'
+ 943 O*
+ 944 O*    DUMMY UPDATE FROM SUBRTN HDRCHN
+4945 O        E                RECLCK
+4942 O*************************STPI                                       E10029
+4942 O                         STPI      33                               E10029
+ 943 O*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

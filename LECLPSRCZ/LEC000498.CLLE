@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Generate Random Repayment Keys')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000498 - Generate random repayment account keys for PDP  */
+/*                   Available Balance Computation                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE164 *CREATE     Date 18Aug14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ITER &JOBN &RUNT &RAND)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2014')
+ 
+             DCL        VAR(&ITER) TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&JOBN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&XTER) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RUNT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RAND) TYPE(*CHAR) LEN(1)
+ 
+/** Reset Indicators */
+             CHGJOB     SWS(00000000)
+ 
+/** Create data area LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CHGVAR     VAR(&XTER) VALUE(&ITER)
+             IF         COND(&RUNT *EQ '1') THEN(DO)
+             CALL       PGM(LE000498) PARM(&XTER &RAND)
+             ENDDO
+ 
+             IF         COND(&RUNT *EQ '2') THEN(DO)
+             SBMJOB     CMD(CALL PGM(LE000498) PARM(&XTER &RAND)) +
+                          JOB(&JOBN)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+DBERR:       SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited')
+ENDPGM

@@ -1,0 +1,654 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RM Forward transaction generation')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Interest Risk Management Module                      *
+      *                                                               *
+      *  RM0400 - Forward Transaction Generation                      *
+      *                                                               *
+      *  Function:  This program will use the interim transaction     *
+      *  (COB)      and events extract files to extrapolate loan and  *
+      *             deposit principal and interest details into the   *
+      *             future.  For each period of constant principal    *
+      *             and interest details, a record will be written to *
+      *             the appropriate (e.g. customer lending or money   *
+      *             market) transaction extract file                  *
+      *                                                               *
+      *  Called By: RMC0110 - Money Market Tmark Extract Control      *
+      *                       Program                                 *
+      *             RMC0130 - Customer Lending Tmark Extract Control  *
+      *                                                               *
+      *  Calls    : RM0520 - Write to Transaction Extract File        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247544             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CIR013             Date 25Apr05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 182370             Date 05Jun01               *
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 103623             Date 13Jun96               *
+      *                 CRM001 *CREATE     Date 06Feb95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
+      *           processing as amended by 242286.  (Recompile)       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over ZDLINT and ZCBDYS.                   *
+      *  182370 - Incorrect calculation of number of days for calcu-  *
+      *           lation basis 6. Amended /COPY such that for calcu-  *
+      *           lation basis 6, the number of days per year is      *
+      *           equal to 366 when the year in question is a leap    *
+      *           year, and 365 days/year for non-leap years. Calcu-  *
+      *           lation was made so that processing would be in-line *
+      *           with that of /COPY ZINTDY.                          *
+      *  CSD006 - Use DSSDY for call to AOBSRTR0.                     *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to ZCBDYS changes                    *
+      *  103623 - Repayment type 3 is not processed correctly. The    *
+      *           check should be that the interest amount is less    *
+      *           than or equal to the principal when calculating the *
+      *           interest and principal to be repayed.               *
+      *  CRM001 - Midas/Tmark Interface                               *
+      *                                                               *
+      *****************************************************************
+     F*
+     FRMITEXPDIF  E                    DISK         KINFSR *PSSR
+     F** IRM Interim Transactions Extract File
+     F*
+     FRMIEEXL1IF  E           K        DISK         KINFSR *PSSR
+     F** IRM Interim Events Extract File
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   21    - End of file for RMITEXPD                            *
+     F*   22    - End of file for RMIEEXL1                            *
+     F*   98    - Date format is MMDDYY                               *
+     F*                                                               *
+     F*   U7,U8 - Database error                                      *
+     F*   LR    - Last record indicator                               *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   #LINIT - Initialisation subroutine                          *
+     F*   #LSEXT - Setup fields on the interim transaction extract    *
+     F*   #LEVNT - Determine effect of event                          *
+     F*   #LCINT - Calculate current interest rate                    *
+     F*   *PSSR  - Standard Error Processing                          *
+     F*   ZDLINT - Calculate interest between two dates               *
+     F*   ZCBDYS - Calculation basis days                             *
+     F*   ZDATE2 - Convert day number to date                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZDATE9Z1                                               182370
+     E*
+     I/EJECT
+     IRMIEEXD0
+     I** Rename fields similar to RMITEXPD
+     I              VDAT                            KVDAT
+     I              RTSP                            KRTSP
+     I              SPIN                            KSPIN
+     I*
+     I            DS
+     I** Segregate index value
+     I                                        1   5 WINDX
+     I                                        1   3 KCYCD
+     I                                        4   5 KBSRC
+     I*
+     ID@ITEX    E DSRMITEXPD
+     I**  Data structure for Interim Transaction Extract File details
+     I*
+     ILDA       E DSLDA                         256
+     I**  Local data area for database error details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Data structure for bank details
+     I*
+     ISDBSRT    E DSSDBSRTPD
+     I** Data structure for base rate codes
+     I*
+     IDSFDY     E DSDSFDY
+     I** Short data structure for access programs
+     I*
+     IDSSDY     E DSDSSDY
+     I** Long data structure for access programs
+     I*
+     I/COPY ZSRSRC,ZDATE9Z2                                               182370
+     I/COPY ZSRSRC,ZDAT10Z1                                               182370
+      *                                                                   182370
+      ** Data structure for subroutine ZCBDYS                             182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT1                182370
+     I                                        1   40ZZYYA                 182370
+     I                                        5   60ZZMMA                 182370
+     I                                        7   80ZZDDA                 182370
+      *                                                                   182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT2                182370
+     I                                        1   40ZZYYB                 182370
+     I                                        5   60ZZMMB                 182370
+     I                                        7   80ZZDDB                 182370
+      *                                                                   182370
+     C/EJECT
+     C*****************************************************************
+     C*             S T A R T   O F   P R O G R A M                   *
+     C*****************************************************************
+     C*
+     C** Perform initialisation
+     C*
+     C                     EXSR #LINIT
+     C*
+     C                     READ RMITEXPD                 21
+     C*
+     C** Process until no more RMITEXPD record exists
+     C*
+     C           *IN21     DOWEQ'0'
+     C**********           MOVELTMID      WLOAN   60                                          CLE148
+     C                     MOVELTMID      WLOAN   6                                           CLE148
+     C*
+     C** For each loan reference, at least one event should exist
+     C** If none, report a database error
+     C*
+     C           WLOAN     SETLLRMIEEXD0
+     C           WLOAN     READERMIEEXD0                 22
+     C*
+     C           *IN22     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0400'  DBPGM
+     C                     MOVEL'RMIEEXPD'DBFILE           **************
+     C                     MOVELWLOAN     DBKEY            * DBERROR 02 *
+     C                     Z-ADD2         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** Initialise the value date and sequence number for the loan
+     C*
+     C                     Z-ADDMDAT      WMDAT
+     C                     Z-ADDVDAT      WLVDT
+     C                     Z-ADD0         WSQNB
+     C*
+     C** Initialise the following program maintained fields
+     C*
+     C                     MOVELINDX      WINDX
+     C                     Z-ADDPCPL      WPCPL
+     C                     Z-ADDINTR      WINTR
+     C                     Z-ADDBRTE      WBRTE
+     C                     Z-ADDRTSP      WRTSP
+     C                     MOVE SPIN      WSPIN
+     C                     Z-ADDICBS      WICBS
+     C                     Z-ADDIACD      WIACD
+     C                     Z-ADDAITC      WAITC
+     C                     Z-ADDIPRD      WIPRD
+     C                     Z-ADDICTD      WICTD
+     C*
+     C** Process until no more records in RMIEEXL1 or sequence
+     C** number is 99
+     C*
+     C           *IN22     DOWEQ'0'
+     C           WSQNB     ANDLT98
+     C*
+     C** If the value date from RMIEEXL1 is different from the last
+     C** value date processed, and principal is not zero, write a
+     C** record to the transaction extract file via a call to RM0520
+     C*
+     C           KVDAT     IFNE WLVDT
+     C           WPCPL     ANDGT*ZEROS
+     C                     ADD  1         WSQNB
+     C                     EXSR #LSEXT
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    DSSDY
+     C                     PARM *BLANKS   WRTCD   7
+     C*
+     C** If RM0520 returned with an error, execute *PSSR
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** Set the last value date equal to the value date from RMIEEXL1
+     C*
+     C                     Z-ADDKVDAT     WLVDT
+     C                     ENDIF
+     C*
+     C** Process the event from RMIEEXPD
+     C*
+     C                     EXSR #LEVNT
+     C*
+     C           WLOAN     READERMIEEXD0                 22
+     C                     ENDDO
+     C*
+     C** If the value date from RMIEEXL1 is different from the last
+     C** value date processed, and principal is not zero, write the
+     C** final record to RMTREXPD before processing the next loan
+     C*
+     C           KVDAT     IFNE WLVDT
+     C           WPCPL     ANDGT*ZEROS
+     C                     ADD  1         WSQNB
+     C                     EXSR #LSEXT
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    DSSDY
+     C                     PARM *BLANKS   WRTCD   7
+     C*
+     C** If RM0520 returned with an error, execute *PSSR
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     READ RMITEXPD                 21
+     C                     ENDDO
+     C*
+     C** Seton LR and return to calling program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT - Subroutine to perform initial processing             *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: *PSSR                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C** Set up database error details
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0400'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C** Get bank details using access object
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0400'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERROR 01 *
+     C                     Z-ADD1         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** Check system date
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C** Define similar fields
+     C*
+     C           *LIKE     DEFN PRSQ      WSQNB
+     C           *LIKE     DEFN VDAT      WLVDT
+     C           *LIKE     DEFN MDAT      WMDAT
+     C           *LIKE     DEFN PCPL      WPCPL
+     C           *LIKE     DEFN INTR      WINTR
+     C           *LIKE     DEFN BRTE      WBRTE
+     C           *LIKE     DEFN RTSP      WRTSP
+     C           *LIKE     DEFN SPIN      WSPIN
+     C           *LIKE     DEFN ICBS      WICBS
+     C           *LIKE     DEFN IACD      WIACD
+     C           *LIKE     DEFN AITC      WAITC
+     C           *LIKE     DEFN IPRD      WIPRD
+     C           *LIKE     DEFN ICTD      WICTD
+     C           *LIKE     DEFN ICTD      WINTD
+     C           *LIKE     DEFN ICTD      WIREP
+     C           *LIKE     DEFN PRAM      WPREP
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LSEXT - Setup fields on the interim transaction extract file *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LSEXT    BEGSR
+     C*
+     C                     MOVELLNRF      TMID
+     C                     MOVE WSQNB     TMID
+     C                     MOVELWINDX     INDX
+     C                     Z-ADDWLVDT     VDAT
+     C           *IN22     IFEQ '0'
+     C                     Z-ADDKVDAT     MDAT
+     C                     ELSE
+     C                     Z-ADDWMDAT     MDAT
+     C                     ENDIF
+     C                     Z-ADDWPCPL     PCPL
+     C                     Z-ADDWINTR     INTR
+     C                     Z-ADDWBRTE     BRTE
+     C                     Z-ADDWRTSP     RTSP
+     C                     MOVELWSPIN     SPIN
+     C                     Z-ADDWLVDT     RLDT
+     C                     Z-ADDKVDAT     NIDT
+     C                     Z-ADDWICBS     ICBS
+     C                     Z-ADDWIACD     IACD
+     C                     Z-ADDWAITC     AITC
+     C                     Z-ADDWIPRD     IPRD
+     C                     Z-ADDWICTD     ICTD
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LEVNT - Determine the effect of the event                    *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: #LCINT - Calculate current interest rate               *
+     C*        *PSSR  - Program exception error routine               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LEVNT    BEGSR
+     C*
+     C** If the value date from RMIEEXPD is greater than the current
+     C** interest accrual date, determine the the new accrued interest
+     C** to control date and new interest accrual date
+     C*
+     C           KVDAT     IFGT WIACD
+     C*
+     C** Calculate the interest between the 2 dates
+     C*
+     C                     Z-ADDWIACD     ZCBSDT
+     C                     Z-ADDKVDAT     ZCBEDT
+     C                     Z-ADDWPCPL     ZDLAMT
+     C                     Z-ADDWINTR     ZDLRAT
+     C                     Z-ADDWICBS     ZCBCBS
+     C                     EXSR ZDLINT
+     C*
+     C                     ADD  ZDLOUT    WAITC
+     C                     Z-ADDKVDAT     WIACD
+     C                     END
+     C*
+     C** Set the current interest due to current accrued interest to
+     C** control date less the current interest p/r to date, current
+     C** interest capitalised to date and tax deducted to date
+     C*
+     C           WAITC     SUB  WIPRD     WINTD
+     C                     SUB  WICTD     WINTD
+     C                     SUB  TAXD      WINTD
+     C*
+     C** Set the values of the principal and interest depending on
+     C** the amendment type specified
+     C*
+     C                     SELEC
+     C*
+     C** ... principal increase
+     C*
+     C           AMTP      WHEQ 'PI'
+     C                     ADD  PRAM      WPCPL
+     C*
+     C** ... principal decrease
+     C*
+     C           AMTP      WHEQ 'PD'
+     C                     SUB  PRAM      WPCPL
+     C*
+     C** ... settle interest
+     C*
+     C           AMTP      WHEQ 'SI'
+     C                     ADD  WINTD     WIPRD
+     C                     Z-ADD0         WINTD
+     C*
+     C** ... capitalise interest
+     C*
+     C           AMTP      WHEQ 'CI'
+     C                     ADD  WINTD     WICTD
+     C                     ADD  WINTD     WPCPL
+     C                     Z-ADD0         WINTD
+     C*
+     C           AMTP      WHEQ 'R1'
+     C           AMTP      OREQ 'R2'
+     C           AMTP      OREQ 'R3'
+     C*
+     C** ... repay principal first then outstanding accrued interest
+     C*
+     C           AMTP      IFEQ 'R1'
+     C                     Z-ADDWINTD     WIREP
+     C                     Z-ADDPRAM      WPREP
+     C                     ENDIF
+     C*
+     C** ... repay principal only
+     C*
+     C           AMTP      IFEQ 'R2'
+     C                     Z-ADD0         WIREP
+     C                     Z-ADDPRAM      WPREP
+     C                     ENDIF
+     C*
+     C** ... repay outstanding accrued interest first then principal
+     C*
+     C           AMTP      IFEQ 'R3'
+     C********** WINTD     IFGE PRAM                                      103623
+     C           WINTD     IFLE PRAM                                      103623
+     C                     Z-ADDWINTD     WIREP
+     C           PRAM      SUB  WINTD     WPREP
+     C                     ELSE
+     C                     Z-ADDPRAM      WIREP
+     C                     Z-ADD0         WPREP
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     ADD  WIREP     WIPRD
+     C                     SUB  WPREP     WPCPL
+     C*
+     C** ... rollover
+     C*
+     C           AMTP      WHEQ 'RO'
+     C*
+     C** Base rate code not zero
+     C*
+     C           BRTT      IFNE *ZEROS
+     C                     MOVE BRTT      KBSRC
+     C                     ENDIF
+     C*
+     C** If rate is floating, access the latest base rate from the file
+     C*
+     C           IDXT      IFEQ *BLANK
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*KEY  '  P@OPTN  7
+     C                     PARM KCYCD     P@CYCD  3
+     C                     PARM KBSRC     P@BSCR  2
+     C***********SDBSRT    PARM SDBSRT    DSFDY                           CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                           CSD006
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0400'  DBPGM
+     C                     MOVEL'SDBSRTPD'DBFILE           **************
+     C                     MOVELWINDX     DBKEY            * DBERROR 03 *
+     C                     Z-ADD3         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           BAVDNR    IFNE *ZEROS
+     C                     Z-ADDBANBRT    WBRTE
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Calculation basis from RMIEEXPD is not zero
+     C*
+     C           CALC      IFNE *ZEROS
+     C                     Z-ADDKRTSP     WRTSP
+     C                     MOVELKSPIN     WSPIN
+     C                     Z-ADDCALC      WICBS
+     C                     ENDIF
+     C*
+     C** Calculate the current interest rate
+     C*
+     C                     EXSR #LCINT
+     C*
+     C** ... spread change
+     C*
+     C           AMTP      WHEQ 'SC'
+     C                     Z-ADDKRTSP     WRTSP
+     C                     EXSR #LCINT
+     C*
+     C** ... base rate change
+     C*
+     C           AMTP      WHEQ 'BC'
+     C*
+     C** Base rate code not zero
+     C*
+     C           BRTT      IFNE *ZEROS
+     C                     MOVE BRTT      KBSRC
+     C                     ENDIF
+     C*
+     C** If rate is floating, access the latest base rate from the file
+     C*
+     C           IDXT      IFEQ *BLANK
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*KEY  '  P@OPTN  7
+     C                     PARM KCYCD     P@CYCD  3
+     C                     PARM KBSRC     P@BSCR  2
+     C***********SDBSRT    PARM SDBSRT    DSFDY                           CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                           CSD006
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0400'  DBPGM
+     C                     MOVEL'SDBSRTPD'DBFILE           **************
+     C                     MOVELWINDX     DBKEY            * DBERROR 04 *
+     C                     Z-ADD4         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           BAVDNR    IFNE *ZEROS
+     C                     Z-ADDBANBRT    WBRTE
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Calculate the current interest rate
+     C*
+     C                     EXSR #LCINT
+     C*
+     C                     ENDSL
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LCINT - Calculate current interest rate                      *
+     C*                                                               *
+     C* Called by: #LEVNT - Determine effect of event                 *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LCINT    BEGSR
+     C*
+     C                     SELEC
+     C*
+     C           WSPIN     WHEQ 'A'
+     C           WBRTE     ADD  WRTSP     WINTR
+     C*
+     C           WSPIN     WHEQ 'S'
+     C           WBRTE     SUB  WRTSP     WINTR
+     C*
+     C           WSPIN     WHEQ 'P'
+     C           WBRTE     MULT WRTSP     WINTR
+     C                     DIV  100       WINTR
+     C*
+     C                     ENDSL
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*                                                               *
+     C* Called by: Any file or program errors                         *
+     C*            Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDLINTZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZCBDYSZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT                                                              182370
+     C/COPY ZSRSRC,ZDATE9Z3                                               182370
+     C/EJECT                                                              182370
+     C/COPY ZSRSRC,ZDAT10Z2                                               182370
+**  CPY@ - Copyright Statement
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+     X/COPY ZSRSRC,ZDATE9Z4                                               182370

@@ -1,0 +1,735 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG MT5xx Deletion/cancellation ctrl')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *   MG9500 - DELETION/CANCELLATION PROCESSING                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+      *                 113352             Date 13FEB97               *
+      *                   CSW003           DATE 20NOV95               *
+      *                   094335           DATE 13NOV95               *
+      *                   S01401           DATE 17JUN93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   141572 - Recompile over changes in MGOREFPD                 *
+      *   113352 - Recompile over changes in MGOREFPD                 *
+      *   CSW003 - MT5xx Message Generation - Phase 2                 *
+      *   094335 - MT5xx cancellation process fix                     *
+      *   S01401 - WRITTEN FOR MT5XX MESSAGES GENERATION              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *****************************************************************
+     F*
+     F** MG MESSAGE REFERENCE FILE
+     FMGOREFL0IF  E           K        DISK
+     FMGOREF53IF  E           K        DISK                               094335
+     F            MGOREFD0                          KRENAMEMGOREFDF       094335
+     F                                              KINFSR *PSSR
+     F*
+     F*****************************************************************
+     F* Function of indicators
+     F*    10    EOF MGOREFL0
+     F*    11    MG9505 not  found
+     F*    12    MG9510 not  found
+     F*    13    MG5900 not  found
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     E*
+     E** USED FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     I**  Local data area
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DATA STRUCTURE FOR KEY TO MGOREFL0
+     I            DS
+     I                                        1  16 WWKEY
+     I                                        1   3 WW0103
+     I                                        1   7 WW0107
+     I                                        4   9 WW0409
+     I                                        4  13 WW0413
+     I                                       10  16 WW1016
+     I                                       14  16 WW1416
+     I                                        8  16 WW0816
+     I*
+     I** DATABASE ERROR KEY
+     I            DS
+     I                                        1  17 DBERR
+     I                                        1  16 WWTRNO
+     I                                       17  17 @ERCD
+     I*
+     I** DATA STRUCTURE FOR DBERROR ON CALL TO MG5900
+     IDBERR2      DS                             20
+     I                                        1   2 WW0102
+     I                                        3  17 WW0317
+     I*
+     I*****************************************************************
+     I/EJECT
+     C*****************************************************************
+     C*                   Index to subroutines                        *
+     C*   INIT  - initial process                                     *
+     C*   HEADR - access header reference record                      *
+     C*   CALL  - call cancellation / deletion programs               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   Main process                                                *
+     C*   Calls   INIT  - Initial process                             *
+     C*           HEADR - Access header reference record              *
+     C*           CALL  - Call cancellation / deletion programs       *
+     C*****************************************************************
+     C*
+     C** Parameters passed from extraction program
+     C           *ENTRY    PLIST
+     C                     PARM           @TNUM  10        midas trans. no
+     C                     PARM           @PROG   2        calling prog id
+     C                     PARM           @MODI   2        module id
+     C                     PARM           @TTYP   2        trans. type
+     C                     PARM           @RTNC   1        return code
+     C                     PARM           @SEQN   7        SEQUENCE NO
+     C                     PARM           @DATP  46        DATA TO PRINT
+     C                     PARM           CANDS  50        CANCEL. FIELDS
+     C                     PARM           CEDPRO  1                       094335
+     C                     PARM           CSW003  1                       CSW003
+     C*                                                                   094335
+     C           KEY       KLIST                                          094335
+     C                     KFLD           KTNUM  15                       094335
+     C                     KFLD           @TTYP                           094335
+     C*
+     C**  Perform initial process
+     C                     EXSR INIT
+     C*
+     C**  Do while transaction no. of LF/MGOREFL0 is equal to
+     C**  transaction no. of calling program and not blank, start
+     C**  of file has not been rached and message not successfully
+     C**  cancelled/deleted.
+     C                     MOVELMTRN      WWTEST 10
+     C           WWTEST    DOWEQ@TNUM
+     C           TNTP      ANDEQ@TTYP                                     094335
+     C           MTRN      ANDNE*BLANKS
+     C           *IN10     ANDEQ'0'
+     C           WWFLAG    ANDEQ'N'
+     C*
+     C** IF @PROG IS 'CE'
+     C           @PROG     IFEQ 'CE'
+     C*
+     C** IF MTPY IS '510'
+     C           MTPY      IFEQ '510'
+     C*
+     C                     MOVEL'Y'       FOUND   1
+     C*
+     C** CALL CANCELLATION/DELETION PROGRAMS
+     C                     EXSR CALL
+     C                     END
+     C*
+     C                     ELSE
+     C*                                                                   094335
+     C** Find if Cedel Message                                            094335
+     C           MTPY      IFNE '554'                                     094335
+     C                     MOVE *BLANKS   TST3                            094335
+     C                     MOVELWWTRNO    TST3                            094335
+     C           TST3      IFEQ '000'                                     094335
+     C           TST3      OREQ '001'                                     094335
+     C           TST3      OREQ '002'                                     CSW003
+     C           TST3      OREQ '003'                                     CSW003
+     C                     MOVE 'Y'       CEDPRO                          094335
+     C                     END                                            094335
+     C                     END                                            094335
+     C*
+     C** IF MTPY IS '554' OR '580'
+     C           MTPY      IFEQ '554'
+     C           MTPY      OREQ '580'
+     C*
+     C** ACCESS HEADER REFERENCE RECORD
+     C                     EXSR HEADR
+     C                     END
+     C*
+     C** IF MTPY IS '520', '521', '522', '523', '554' OR '580'
+     C           MTPY      IFEQ '520'
+     C           MTPY      OREQ '521'
+     C           MTPY      OREQ '522'
+     C           MTPY      OREQ '523'
+     C           MTPY      OREQ '554'
+     C           MTPY      OREQ '580'
+     C*
+     C                     MOVEL'Y'       FOUND
+     C*
+     C** CALL CANCELLATION/DELETION PROGRAMS
+     C                     EXSR CALL
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Read previous message on reference file
+     C           @TTYP     IFEQ 'PS'                                      094335
+     C                     READPMGOREFL0                 10
+     C                     ELSE                                           094335
+     C                     READPMGOREF53                 10               094335
+     C                     END                                            094335
+     C*
+     C** Store Transaction No. for comparison
+     C                     MOVELMTRN      WWTEST
+     C                     MOVELTRNO      WWTRNO
+     C                     MOVE *BLANKS   CEDPRO                          094335
+     C                     END
+     C*
+     C**  IF NO RECORD FOUND ON MGOREFL0
+     C           FOUND     IFNE 'Y'
+     C**       PRODUCE MT592 WITH FLD 20 & 21 IF NOT CEDEL PROCESSING
+     C           CEDPRO    IFNE 'Y'
+     C                     EXSR NOREC
+     C                     ELSE
+     C**       RESET RCDG IF CEDEL PROCESSING
+     C                     EXSR RESSR
+     C                     MOVEL'D'       @RTNC
+     C                     END
+     C                     END
+     C*
+     C** MESSAGE HAS BEEN SUCCESSFULLY CANCELLED/DELETED -
+     C           WWFLAG    IFEQ 'Y'
+     C**       AND TRANSACTION TYPE IS NOT 'PS'
+     C           @TTYP     ANDNE'PS'
+     C**       AND NOT CEDEL PROCESSING
+     C           @RTNC     ANDNE'C'
+     C** CALL MG5910 TO RESET CONG OR RCDG FIELDS TO 'N'
+     C*
+     C** FORMAT @TRAN AS FOLLOWS
+     C** CHARS 1-6 TO LEFTMOST 6 CHARS FROM TNUM PARAMETER
+     C** CHARS 7-12 TO BLANKS
+     C** CHAR    13 TO CHAR 10 FROM TNUM PARAMETER
+     C** CHARS 14-15 TO TTYP PARAMETER
+     C                     MOVE *BLANKS   WWTRAN 15
+     C                     MOVEL@TNUM     WWSIX   6
+     C                     MOVELWWSIX     WWTRAN
+     C                     MOVE @TNUM     WWONE   1
+     C                     MOVELWWONE     WWTHRE  3
+     C                     MOVE @TTYP     WWTHRE
+     C                     MOVE WWTHRE    WWTRAN
+     C                     CALL 'MG5910'               20
+     C                     PARM           @MODI   2
+     C                     PARM WWTRAN    @TRAN  15
+     C                     PARM           @PROG   2
+     C                     PARM 'C'       @MODE   1
+     C                     PARM *BLANKS   @CONG   1
+     C                     PARM *BLANKS   @RCDG   1
+     C                     PARM *BLANKS   @ERCD   1
+     C                     PARM           CSW003                          CSW003
+     C*
+     C** IF PROGRAM MG5910 NOT FOUND
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '007'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 007  *
+     C                     MOVEL'MG5910'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF ERROR DURING PROGRAM MG5910
+     C           @ERCD     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVE '008'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 008  *
+     C                     MOVELDBERR     DBKEY            * * * * * * * *
+     C                     MOVEL'MG5910'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C*
+     C** End program
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   INIT - initial process                                      *
+     C*   Called by - main process                                    *
+     C*   Calls                                                       *
+     C*****************************************************************
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL' '       FOUND   1
+     C*
+     C** IF @SEQN IS NOT BLANK AND @TTYP IS NOT PS, THIS IS A MT580 CEDEL
+     C           @SEQN     IFNE *BLANKS
+     C           @TTYP     ANDNE'PS'
+     C                     MOVE 'Y'       CEDPRO  1
+     C                     END
+     C*
+     C**  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'MG9500'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+     C*
+     C** INITIALISE KEY FOR MGOREFL0
+     C                     MOVE *BLANKS   WWKEY
+     C*
+     C** IF @MODI EQUALS 'SE' AND @TTYP EQUALS 'TR'
+     C           @MODI     IFEQ 'SE'
+     C           @TTYP     ANDEQ'TR'
+     C           CEDPRO    IFEQ *BLANKS
+     C                     MOVEL'SET'     WW0103
+     C                     MOVE *HIVAL    WW1016
+     C                     ELSE
+     C                     MOVEL'000'     WW0103
+     C                     MOVE @SEQN     WW1016
+     C                     END
+     C                     MOVEL@TNUM     WW0409
+     C                     END
+     C*
+     C** IF @MODI EQUALS 'SE' AND @TTYP EQUALS 'DM'
+     C           @MODI     IFEQ 'SE'
+     C           @TTYP     ANDEQ'DM'
+     C           CEDPRO    IFEQ *BLANKS
+     C                     MOVEL'SED'     WW0103
+     C                     MOVE *HIVAL    WW1016
+     C                     ELSE
+     C                     MOVEL'001'     WW0103
+     C                     MOVE @SEQN     WW1016
+     C                     END
+     C                     MOVEL@TNUM     WW0409
+     C                     END
+     C*
+     C** IF @MODI EQUALS 'SE' AND @TTYP EQUALS 'TS'                       CSW003
+     C           @MODI     IFEQ 'SE'                                      CSW003
+     C           @TTYP     ANDEQ'TS'                                      CSW003
+     C           CEDPRO    IFEQ *BLANKS                                   CSW003
+     C                     MOVEL'SEU'     WW0103                          CSW003
+     C                     MOVE *HIVAL    WW1016                          CSW003
+     C                     ELSE                                           CSW003
+     C                     MOVEL'003'     WW0103                          CSW003
+     C                     MOVE @SEQN     WW1016                          CSW003
+     C                     END                                            CSW003
+     C                     MOVEL@TNUM     WW0409                          CSW003
+     C                     END                                            CSW003
+     C*                                                                   CSW003
+     C** IF @MODI EQUALS 'SE' AND @TTYP EQUALS 'DN'                       CSW003
+     C           @MODI     IFEQ 'SE'                                      CSW003
+     C           @TTYP     ANDEQ'DN'                                      CSW003
+     C           CEDPRO    IFEQ *BLANKS                                   CSW003
+     C                     MOVEL'SEE'     WW0103                          CSW003
+     C                     MOVE *HIVAL    WW1016                          CSW003
+     C                     ELSE                                           CSW003
+     C                     MOVEL'002'     WW0103                          CSW003
+     C                     MOVE @SEQN     WW1016                          CSW003
+     C                     END                                            CSW003
+     C                     MOVEL@TNUM     WW0409                          CSW003
+     C                     END                                            CSW003
+     C*
+     C** IF @MODI EQUALS 'SE' AND @TTYP EQUALS 'PS'
+     C           @MODI     IFEQ 'SE'
+     C           @TTYP     ANDEQ'PS'
+     C                     MOVEL'SEC'     WW0103
+     C                     MOVEL@TNUM     WW0409
+     C                     MOVEL@SEQN     WW1016
+     C                     END
+     C*
+     C** IF WWKEY EQUALS BLANKS THEN ERROR
+     C           WWKEY     IFEQ *BLANKS
+     C           @TTYP     ANDEQ'PS'                                      094335
+     C                     MOVEL@MODI     WWERR   4
+     C                     MOVE @TTYP     WWERR
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVELWWERR     DBKEY            *  DBERR 001  *
+     C                     MOVEL'PARAMS.' DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Access last generated message for transaction number
+     C           @TTYP     IFNE 'PS'
+     C***********CEDPRO    ANDEQ*BLANKS                                   094335
+     C***********KEY       SETGTMGOREFD0               10                 094335
+     C***********          READPMGOREFD0                 10               094335
+     C                     MOVEL@TNUM     KTNUM                           094335
+     C           KEY       SETGTMGOREFDF               10                 094335
+     C                     READPMGOREFDF                 10               094335
+     C                     ELSE
+     C           WWKEY     SETLLMGOREFD0               10
+     C                     READ MGOREFD0                 10
+     C                     END
+     C                     MOVELTRNO      WWTRNO
+     C*
+     C** SET FLAG MESSAGE NOT SUCCESSFULLY DELETED/CANCELLED
+     C                     MOVE 'N'       WWFLAG  1
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   HEADR - Access header reference record if part of a         *
+     C*           multiple message                                    *
+     C*   Called by - main process                                    *
+     C*   Calls                                                       *
+     C*****************************************************************
+     C           HEADR     BEGSR
+     C*
+     C** Save transaction reference no., cancellation requested
+     C** and part deleted status of the message being processed
+     C                     MOVE TRNO      WWTRNO 16
+     C                     MOVE PTST      WWPTST  1
+     C                     MOVE CARQ      WWCARQ  1
+     C*
+     C** Check if a multiple message
+     C           TRNF      IFNE *BLANKS
+     C           TRNM      ORNE *BLANKS
+     C*
+     C           TRNF      IFEQ *BLANKS
+     C                     MOVELTRNO      TRNH   16
+     C                     ELSE
+     C                     MOVELTRNF      TRNH
+     C                     END
+     C*
+     C** Chain to header reference record
+     C           TRNH      CHAINMGOREFL0             10
+     C*
+     C** If a DB error , set up LDA and return to calling program
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVELTRNF      DBKEY            *  DBERR 002  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   CALL  - Call cancellation or deletion program               *
+     C*   Called by - main process                                    *
+     C*   Calls                                                       *
+     C*****************************************************************
+     C           CALL      BEGSR
+     C*                                                                   094335
+     C*  If message already deleted manually or by SWIFT interface        094335
+     C           MGSG      IFEQ '4'                                       094335
+     C                     MOVE 'Y'       WWFLAG                          094335
+     C                     END                                            094335
+     C*
+     C** If a live message
+B1   C           MGST      IFEQ 'CRTD'
+     C           MGST      OREQ 'AMND'
+     C*
+     C** If message not already deleted
+B2   C           WWPTST    IFNE 'D'
+     C*
+     C** Call Deletion program
+     C                     MOVELWWTRNO    @TRNO  16
+     C                     MOVE *BLANKS   @ERCD   1
+     C*
+     C                     CALL 'MG9505'               11
+     C                     PARM           @TRNO
+     C                     PARM           @ERCD
+     C*
+     C** IF PROGRAM NOT FOUND
+B3   C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 003  *
+     C                     MOVE *BLANKS   DBFILE           * * * * * * * *
+     C                     MOVEL'MG9505'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+E3   C                     END
+     C*
+     C** IF ERROR DURING CALLED PROGRAM
+B3   C           @ERCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 004  *
+     C                     MOVELDBERR     DBKEY            * * * * * * * *
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'MG9505'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+E3   C                     END
+     C*                                                                   094335
+     C*  SET FLAG MESSAGE SUCCESSFULLY DELETED/CANCELLED                  094335
+     C                     MOVE 'Y'       WWFLAG                          094335
+E2   C                     END
+     C*
+     C***SET*FLAG*MESSAGE*SUCCESSFULLY*DELETED/CANCELLED****************  094335
+     C***********          MOVE 'Y'       WWFLAG                          094335
+     C*
+E1   C                     END
+     C*
+     C** If message already sent or logically acknowledged ...
+B1   C           MGSG      IFEQ '2'
+     C           MGSG      OREQ '3'
+     C*
+     C** If message not already canceled
+     C**    and message not sent to CEDEL
+B2   C           WWCARQ    IFNE 'Y'
+     C           WWPTST    ANDNE'D'                                       094335
+B3   C***********CEDPRO    IFEQ 'Y'                                       094335
+     C* If previous message was sent to Cedel it should begin with '000'  094335
+     C*  or '001'                                                         094335
+     C                     MOVE *BLANKS   TST3    3                       094335
+     C                     MOVELWWTRNO    TST3                            094335
+     C           TST3      IFEQ '000'                                     094335
+     C           TST3      OREQ '001'                                     094335
+     C           TST3      OREQ '002'                                     CSW003
+     C           TST3      OREQ '003'                                     CSW003
+     C                     MOVE 'C'       @RTNC
+     C                     ELSE
+     C* Add new value for return code.                                    094335
+     C                     MOVE 'F'       @RTNC                           094335
+     C*
+     C** Call deletion program
+     C                     MOVELWWTRNO    @TRNO
+     C                     MOVE *BLANKS   @ERCD
+     C*
+     C                     CALL 'MG9510'               12
+     C                     PARM           @TRNO
+     C                     PARM           @PROG
+     C                     PARM           @MODI
+     C                     PARM           @TTYP
+     C                     PARM           @ERCD
+     C                     PARM *BLANKS   @DATP
+     C                     PARM           CANDS
+     C                     PARM           CSW003                          CSW003
+     C*
+     C** IF PROGRAM NOT FOUND
+B4   C           *IN12     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '005'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 005  *
+     C                     MOVE *BLANKS   DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+E4   C                     END
+     C*
+     C** IF ERROR DURING CALLED PROGRAM
+B4   C           @ERCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 006  *
+     C                     MOVELDBERR     DBKEY            * * * * * * * *
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+E4   C                     END
+E3   C                     END
+     C*                                                                   094335
+     C*  SET FLAG MESSAGE SUCCESSFULLY DELETED/CANCELLED                  094335
+     C                     MOVE 'Y'       WWFLAG                          094335
+E2   C                     END
+     C*
+     C***SET*FLAG*MESSAGE*SUCCESSFULLY*DELETED/CANCELLED************      094335
+     C***********          MOVE 'Y'       WWFLAG                          094335
+E1   C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   *PSSR - error handling                                      *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE 'E'       @RTNC
+     C                     SETON                         LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   NOREC - Process cancellation when no record found om MGOREF *
+     C*   Called by - main process                                    *
+     C*   Calls                                                       *
+     C*****************************************************************
+     C*
+     C           NOREC     BEGSR
+     C*
+     C**   RETRIEVE SEQUENCE NUMBERS ON TRANSACTION RECORD
+     C*
+     C**   FORMAT @TRAN AS FOLLOWS
+     C**   CHARS 1-6 TO POSITIONS 4-9 OF @TNUM
+     C**   CHARS 7-13 TO BLANKS
+     C**   CHARS 14-15 TO @TTYP
+     C                     MOVEL@TNUM     WWFL06  6
+     C                     MOVELWWFL06    WWTRAN 15
+     C                     MOVE @TTYP     WWTRAN
+     C*
+     C                     CALL 'MG5900'               21
+     C                     PARM           @MODI
+     C                     PARM WWTRAN    @TRAN  15
+     C                     PARM           @PROG
+     C                     PARM *BLANKS   @MODE   1
+     C                     PARM *ZEROS    @LSWS   70
+     C                     PARM *BLANKS   @ERCD   1
+     C                     PARM           CSW003                          CSW003
+     C*
+     C**    IF PROGRAM MG5900 NOT FOUND
+     C           *IN21     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '009'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 009  *
+     C                     MOVEL'MG9500'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**    IF ERROR DURING PROGRAM
+     C           @ERCD     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL@MODI     WW0102
+     C                     MOVEL@TRAN     WW0317
+     C                     MOVE '010'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 010  *
+     C                     MOVELDBERR2    DBKEY            * * * * * * * *
+     C                     MOVEL'MG9500'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** BUILD TRNO OF MESSAGE
+     C                     MOVEL@LSWS     WW1016
+     C                     MOVELWWKEY     @TRNO
+     C*
+     C** CALL DELETION PROGRAM
+     C                     CALL 'MG9510'               12
+     C                     PARM           @TRNO
+     C                     PARM           @PROG
+     C                     PARM           @MODI
+     C                     PARM           @TTYP
+     C                     PARM *BLANKS   @ERCD
+     C                     PARM *BLANKS   @DATP
+     C                     PARM           CANDS
+     C                     PARM           CSW003                          CSW003
+     C*
+     C**    IF PROGRAM NOT FOUND
+B3   C           *IN12     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '011'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 011  *
+     C                     MOVE *BLANKS   DBFILE           * * * * * * * *
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+E3   C                     END
+     C*
+     C**    IF ERROR DURING CALLED PROGRAM
+B3   C           @ERCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '012'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 012  *
+     C                     MOVELDBERR2    DBKEY            * * * * * * * *
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'MG9510'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+E3   C                     ELSE
+     C                     MOVE 'Y'       WWFLAG
+E3   C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   RESSR - Reset RCDG if CEDEL cancellation and no record on   *
+     C*           MGOREFL0                                            *
+     C*   Called by - main process                                    *
+     C*   Calls                                                       *
+     C*****************************************************************
+     C*
+     C           RESSR     BEGSR
+     C*
+     C** FORMAT @TRAN AS FOLLOWS
+     C** CHARS 1-6 TO LEFTMOST 6 CHARS FROM TNUM PARAMETER
+     C** CHARS 7-12 TO BLANKS
+     C** CHAR    13 TO CHAR 10 FROM TNUM PARAMETER
+     C** CHARS 14-15 TO TTYP PARAMETER
+     C                     MOVE *BLANKS   WWTRAN 15
+     C                     MOVEL@TNUM     WWSIX   6
+     C                     MOVELWWSIX     WWTRAN
+     C                     MOVE @TNUM     WWONE   1
+     C                     MOVELWWONE     WWTHRE  3
+     C                     MOVE @TTYP     WWTHRE
+     C                     MOVE WWTHRE    WWTRAN
+     C                     CALL 'MG5910'               20
+     C                     PARM           @MODI   2
+     C                     PARM WWTRAN    @TRAN  15
+     C                     PARM           @PROG   2
+     C                     PARM 'C'       @MODE   1
+     C                     PARM *BLANKS   @CONG   1
+     C                     PARM *BLANKS   @RCDG   1
+     C                     PARM *BLANKS   @ERCD   1
+     C                     PARM           CSW003                          CSW003
+     C*
+     C** IF PROGRAM MG5910 NOT FOUND
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '013'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 013  *
+     C                     MOVEL'MG5910'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF ERROR DURING PROGRAM MG5910
+     C           @ERCD     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVE '014'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 014  *
+     C                     MOVELDBERR     DBKEY            * * * * * * * *
+     C                     MOVEL'MG5910'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

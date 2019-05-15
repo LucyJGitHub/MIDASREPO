@@ -1,0 +1,146 @@
+      *****************************************************************
+/*STD *: PGMBASE                                                    : *
+/*EXI *: MODULE(IRFRACTL) ACTGRP(*CALLER)                           : *                       CPK016
+/*EXI *  TEXT('Midas IR FRA interface controller')                    *
+/*E*I *:*MODULE(IRFRACTL*)******************************************:**                       CPK016
+/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************:**                       CPK016
+      *****************************************************************
+      *                                                               *
+      *  Midas - FRA/IRS Dealing Module                               *
+      *                                                               *
+      *  IRFRACTL - Validate FRA Deals - Controlling program          *
+      *                                                               *
+      *  Function: This Program Validates FRA Deals for Input into    *
+      *            the Midas database.                                *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 CSF011A            Date 28Nov11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256564             Date 17Sep08               *
+      *                 247888             Date 18May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 242010             Date 15Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE031             Date 26Apr05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG7166            Date 12May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 TDA011             Date 31Mar04               *
+      *                 225362             Date 30Mar04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 222373             Date 06Nov03               *
+      *                 CAP084             Date 14Sep03               *
+      *                 CPK016             Date 29Jul03               *
+      *                 217684             Date 12May03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CRE008             Date 19Feb02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 196461             Date 22Apr02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      *                 199787             Date 06Nov01               *
+      *                 CSC011             Date 18Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 200400             Date 20Nov01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 179510             Date 09Nov00               *
+      *                 166888             Date 02Sep99               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR005             Date 21Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW097             Date 02Dec99               *
+      *                 CAP013             Date 07Sep99               *
+      *                 CAP011             Date 07Sep99               *
+      *                 170909             Date 07Sep99               *
+      *                 167475             Date 14Sep99               *
+      *                 162497             Date 21Jun99               *
+      *                 CAP033             Date 26Apr99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 168981             Date 20May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP006  *CREATE    Date 01Dec98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompile)                                         *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *            (Recompile)                                        *
+      *  256564 - Recompile due to PF changes done by fix 256330      *
+      *  247888 - Missing record in CLE025 files.                     *
+      *  242010 - Match entry parameters with the calling parameters  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG7166- Valid files do not match DEALSDG (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  TDA011 - Rate Fix Ccy writes to the wrong field (Recompile)  *
+      *  225362 - Recompile due to changes in module IRFRACTL.        *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  222373 - Recompile - Parameters corrected on program calls   *
+      *  CAP084 - API Wrappers.                                       *
+      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CRE008 - Cash Management (Recompile)                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  196461 - Recompiled due to changes in IRFRACTL module.       *
+      *  CAP056 - Automatic Authorisation of Interface Deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  199787 - Add Action Code parameter when calling ZASETINVAL   *
+      *  CSC011 - 24x7 Midas Availability (Recompiled)                *
+      *  200400 - Reverse fix 179510.  Recompile                      *
+      *  179510 - Recompiled due to changes to  IRFRACTL  module      *
+      *  166888 - Settlement Instructions - Pay Ordering Bank returns *
+      *           to defaulted value all the time. Apply GEMS 163745  *
+      *           However, 163745 only fixes the problem for 'A' and  *
+      *           'X' processing. Problem still exists for insert.    *
+      *           Need to default only the 1st time validation is     *
+      *           done. Do not re-default for subsequent validations. *
+      *           Due to this 163745 in its original form is no       *
+      *           longer required, now default required only for      *
+      *           'first time insert' (Recompile)                     *
+      *  CIR005 - FRA/IRS Business Day Conventions (Recompile)        *
+      *  CSW097 - Recompile over changed modules.                     *
+      *  CAP013 - Allow access by Midas transaction ID if not insert  *
+      *  CAP011 - Substitution of Midas database flds for externl i/fs*
+      *  170909 - Settlement instructions not updated on amendment    *
+      *  167475 - If FRA/IRS CTL functions fail, they loop.           *
+      *  162497 - Errors in processing of settlement instructions     *
+      *           (within ZASETINVAL and ZASETINSIN).                 *
+      *  CAP033 - Conversion of PM inputs into modular structure to   *
+      *           use as APIs.  Recompiled over changed modules.      *
+      *  168981 - SWIFT 1997 Changes for FRAIRS MT34* and MT36*.      *
+      *           (recompiled)                                        *
+      *  CAP006 - Created as part of the APISERVER breakdown          *
+      *                                                               *
+      *****************************************************************

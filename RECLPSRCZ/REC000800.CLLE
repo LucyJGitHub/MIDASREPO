@@ -1,0 +1,83 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DMLIB RE files Reorganisation')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       REC000800 - RE DMLIB Files Reorganisation                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD050374           Date 09Apr18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD040536           Date 05Sep16              */
+/*                      MD032067           Date 05Aug15              */
+/*                      MD030124 *Create   Date 08May15              */
+/*                      MDnnnnnn           Date nnXxxnn              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD050374  - Reorganize RECUSXQD                             */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD040536  - CUSEXCE never reorganized.                      */
+/*       MD032067 - New trailer files are never organized.           */
+/*                  Included the new trailer files for RGZPFM.       */
+/*       MD030124 - RECOMD has never been reorganized. Introduce     */
+/*                  new component to organize RE file in COB.        */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(70)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2015')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('REC000800 - RE DMLIB Files Reorganisation') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Reorganise files */
+ 
+             CALL       PGM(SCC000060) PARM('RECOMD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CALL       PGM(SCC000060) PARM('REHELZTD' '*FIRST')                        /*MD032067*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))                /*MD032067*/
+                                                                                        /*MD032067*/
+             CALL       PGM(SCC000060) PARM('RECUSZTD' '*FIRST')                        /*MD032067*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))                /*MD032067*/
+                                                                                        /*MD040536*/
+             CALL       PGM(SCC000060) PARM('CUSEXCE' '*FIRST')                         /*MD040536*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))                /*MD040536*/
+                                                                                        /*MD040536*/
+             CALL       PGM(SCC000060) PARM('RECUSXQD' '*FIRST')                        /*MD050374*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))                /*MD050374*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('REC000800 - RE DMLIB Files Reor+
+                          ganisation FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

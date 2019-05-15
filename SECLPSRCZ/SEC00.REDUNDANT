@@ -1,0 +1,332 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/********************************************************************/
+/*                                                                  */
+/*  Midas - Securities Trading Module                       */
+/*                                                                  */
+/*  SEC00 - INITIAL FILE SET UP                                     */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*  Prev Amend No. CEU017             DATE  06MAY98                 */
+/*                 CSE007             DATE  03FEB98                 */
+/*                 S01496             DATE  24OCT94                 */
+/*                 S01502             DATE  08JUL94                 */
+/*                 036796             DATE  10JAN94                 */
+/*                 E37170             DATE  25MAR92                 */
+/*                 E37037             DATE  12MAR92                 */
+/*                 E28746             DATE  20SEP91                 */
+/*                 S01322             DATE  31JAN91                 */
+/*                 S01117             DATE  10DEC90                 */
+/*                 E22608             DATE  04SEP90                 */
+/*                 E21663             DATE  20APR90                 */
+/*                 E17193             DATE  03AUG89                 */
+/*                 E16870             DATE  08MAR89                 */
+/*                 E14775             DATE  22SEP88                 */
+/*                 S01179             DATE  16SEP88                 */
+/*                 S01176             DATE  16AUG88                 */
+/*                 S01175             DATE  01JUL88                 */
+/*                 S01169             DATE  01JUN88                 */
+/*                 S03220             DATE  19MAY88                 */
+/*                 S01155             DATE  20APR88                 */
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*  CEU017 - Securities Redenomination Euro Changes                 */
+/*  CSE007 - Corporate Actions                                      */
+/*  S01496 - Incorporation of Private Bank. SE Enhancemnts (S10978) */
+/*  S01502 - BLI Telekurs Processing.  Recompiled due to change in  */
+/*           length of SESTAT, 133 long.                            */
+/*  036796 - OLPOS* AND PRONO FILES ARE NOW SET UP IN THE GL FILE   */
+/*           SETUP PROCESSING.                                      */
+/*  E37170 - File ECTLXL9 redundant                                 */
+/*  E37037 - Files BPEVEA, CPEVEA, DPEVEA and TREVEA are not        */
+/*           initialized.                                           */
+/*  E28746 - PF/SEEUCA and PF/SETLXA should be cleared before       */
+/*           calling SE0005.                                        */
+/*  S01322 - REMOVAL OF RT BOND                                     */
+/*  S01117 - MULTIBRANCHING                                         */
+/*  E22608 - RENAME ALL DL PROGRAMS TO GL                           */
+/*  E21663 - FOR MODE 0 I/C INITIATION, SETUP BLANK RTBOND          */
+/*           AUDIT RECORDS.                                         */
+/*  E17193 - FIELDS EOPM,EOMM AND EOPT ARE NOT SET UP               */
+/*           CORRECTLY.  ADD PROMPT TO GET THEM.                    */
+/*  E16870 - SESTAT REDEFINED AS 128 BYTES.                         */
+/*  E14775 - BOOKDA SHOULD NOT BE CLEARED AS MAY ALREADY            */
+/*           BE SET UP FOR FUTURES AND OPTIONS.                     */
+/*  S01179 - RELEASE.                                           */
+/*  S01176 - SECURITIES TRADING 3.1 (AUSTRALIA)                     */
+/*  S01175 - SECURITIES TRADING 3.1 (EXTEL)                         */
+/*  S01169 - SECURITIES TRADING 3.1 (BAER INCORPORATION)            */
+/*  S03220 - FUNDS TRANSFER                                         */
+/*  S01155 - SE INCORPORATION ERROR FIX.                            */
+/*                                                                  */
+/********************************************************************/
+/**/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**/                                                                  /*S01117*/
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75) +
+                          VALUE('Job Terminated - database in error')
+/**/
+             DCL        VAR(&EOPM) TYPE(*CHAR) LEN(5)                 /*E17193*/
+             DCL        VAR(&EOMM) TYPE(*CHAR) LEN(7)                 /*E17193*/
+             DCL        VAR(&EOPT) TYPE(*CHAR) LEN(5)                 /*E17193*/
+/**/                                                                  /*S01496*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*S01496*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*S01496*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                  /*S01496*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)             /*S01496*/
+             DCL        VAR(&S01496) TYPE(*CHAR) LEN(1)               /*S01496*/
+             DCL        VAR(&CSE007) TYPE(*CHAR) LEN(1)               /*CSE007*/
+             DCL        VAR(&CEU017) TYPE(*CHAR) LEN(1)               /*CEU017*/
+/**/                                                                  /*S01496*/
+             DCLF       FILE(SEC00ADF)                                /*E17193*/
+/**/
+/*           DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(256)            *E16870*/
+/************DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(128)*/  /*E16870 S01502*/
+             DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(133)           /*S01502*/
+/************DCL        VAR(&DLSTAT)  TYPE(*CHAR)  LEN(256)           /*036796*/
+/************DCL        VAR(&MMOD)    TYPE(*CHAR)  LEN(256)    /*S03220 036796*/
+/**/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*S01496*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*S01496*/
+             CHGVAR     VAR(&SAR) VALUE('S01496')                     /*S01496*/
+             CHGVAR     VAR(&S01496) VALUE('N')                       /*S01496*/
+/**/                                                                  /*S01496*/
+/**  Check if Jyske Enhancements is installed */                      /*S01496*/
+/**/                                                                  /*S01496*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*S01496*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*S01496*/
+                CHGVAR     VAR(&S01496) VALUE('Y')                    /*S01496*/
+             ENDDO                                                    /*S01496*/
+/**/                                                                  /*S01496*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CSE007*/
+             CHGVAR     VAR(&SAR) VALUE('CSE007')                     /*CSE007*/
+             CHGVAR     VAR(&CSE007) VALUE('N')                       /*CSE007*/
+/**/                                                                  /*CSE007*/
+/**  Check if Corporate Action is installed */                        /*CSE007*/
+/**/                                                                  /*CSE007*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*CSE007*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*CSE007*/
+                CHGVAR     VAR(&CSE007) VALUE('Y')                    /*CSE007*/
+             ENDDO                                                    /*CSE007*/
+/**/                                                                  /*CSE007*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CEU017*/
+             CHGVAR     VAR(&SAR) VALUE('CEU017')                     /*CEU017*/
+             CHGVAR     VAR(&CEU017) VALUE('N')                       /*CEU017*/
+/**/                                                                  /*CEU017*/
+/**  Check if Securities Redenomination is installed */               /*CEU017*/
+/**/                                                                  /*CEU017*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*CEU017*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*CEU017*/
+                CHGVAR     VAR(&CEU017) VALUE('Y')                    /*CEU017*/
+             ENDDO                                                    /*CEU017*/
+/**/                                                                  /*CEU017*/
+             SNDPGMMSG  MSG('INITIAL SECURITIES TRADING FILE SET-UP') +
+                          TOMSGQ(MOPERQ MRUNQ)
+/**/
+             CHGJOB     SWS(00000000)
+/**/
+             RTVDTAARA  DTAARA(SESTAT)  RTNVAR(&SESTAT)
+/**/
+             IF         COND(%SST(&SESTAT 28 1) = ' ') THEN(DO)
+/**/
+/*     SET UP MASTER FILE HEADERS & FILE CONTROL RECORDS           */
+/*              CLRPFM     FILE(BOOKDA) */                           /*E14775*/
+                CLRPFM     FILE(BKMTHA)
+                CLRPFM     FILE(BKPHDA)
+                CLRPFM     FILE(BKPHHA)
+                CLRPFM     FILE(BKPOSA)
+                CLRPFM     FILE(BPACHA)
+                CLRPFM     FILE(CAPRHA)
+                CLRPFM     FILE(CDEPPA)
+                CLRPFM     FILE(CLIABA)
+                CLRPFM     FILE(CNCTRA)
+                CLRPFM     FILE(CPOSNA)
+                CLRPFM     FILE(DPOSNA)
+                CLRPFM     FILE(DPTMVA)
+                CLRPFM     FILE(FUNDSAC)
+                CLRPFM     FILE(HSTTRA)
+ /*             CLRPFM     FILE(INVTPA)          */
+                CLRPFM     FILE(INVTPA)                               /*S01155*/
+                CLRPFM     FILE(LMTPA)
+ /*             CLRPFM     FILE(POSETA)          */                   /*S01155*/
+                CLRPFM     FILE(POSETA) MBR(POSETA)                   /*S01155*/
+                CLRPFM     FILE(POSETA) MBR(CPOSN1)                   /*S01155*/
+                CLRPFM     FILE(POSETA) MBR(CPOSN2)                   /*S01155*/
+                CLRPFM     FILE(POSETA) MBR(DPOSN1)                   /*S01155*/
+                CLRPFM     FILE(POSETA) MBR(DPOSN2)                   /*S01155*/
+                IF         COND(&S01496 *EQ 'Y') THEN(DO)             /*S01496*/
+                   CLRPFM     FILE(POSETA) MBR(REDEMP)                /*S01496*/
+                ENDDO                                                 /*S01496*/
+ /*             IF         COND(&CSE007 *EQ 'Y') THEN(DO)  /*CSE007*/ /*CEU017*/
+                IF         COND(&CSE007 *EQ 'Y' *OR &CEU017 *EQ 'Y') +
+                          THEN(DO)                                    /*CEU017*/
+                   CLRPFM     FILE(POSETA) MBR(CORPAC)                /*CSE007*/
+                ENDDO                                                 /*CSE007*/
+                CLRPFM     FILE(PRICEA)
+                CLRPFM     FILE(SEACKA)
+                CLRPFM     FILE(SECACA)
+ /*             CLRPFM     FILE(SECHGA)          */
+ /*             CLRPFM     FILE(SECTYA)          */
+ /*             CLRPFM     FILE(SECHGA)          */        /*S01155*/ /* +
+S01169*/
+                CLRPFM     FILE(SECTYA)                               /*S01155*/
+                CLRPFM     FILE(SECGTA)                               /*S01169*/
+                CLRPFM     FILE(SEEUCA)                               /*E28746*/
+                CLRPFM     FILE(SEDEVA)
+                CLRPFM     FILE(SEMKCA)
+                CLRPFM     FILE(SETLEA)
+                CLRPFM     FILE(SETLXA)                               /*E28746*/
+ /*             CLRPFM     FILE(SLIMA)           */
+                CLRPFM     FILE(SLIMA)                                /*S01155*/
+                CLRPFM     FILE(SNDEVA)
+ /*             CLRPFM     FILE(STDSEA)          */
+                CLRPFM     FILE(STDSEA)                               /*S01155*/
+                CLRPFM     FILE(TNRANAA)
+                CLRPFM     FILE(TRADSA)
+                CLRPFM     FILE(UDEPPA)
+ /*             CLRPFM     FILE(ECTLXL9)                         */   /*E37170*/
+                CLRPFM     FILE(ESETTST)
+                CLRPFM     FILE(EXVALZ)                               /*SO1169*/
+                CLRPFM     FILE(CUBRDA)                               /*S01169*/
+                CLRPFM     FILE(CPPRIA)                               /*S01176*/
+                CLRPFM     FILE(SEPCA)                                /*S01117*/
+                CLRPFM     FILE(BPEVEA)                               /*E37037*/
+                CLRPFM     FILE(CPEVEA)                               /*E37037*/
+                CLRPFM     FILE(DPEVEA)                               /*E37037*/
+                CLRPFM     FILE(TREVEA)                               /*E37037*/
+/**/
+                CALL       PGM(SE0005)
+/**/                                                                  /*E37037*/
+                INZPFM     FILE(BPEVEA) TOTRCDS(1)                    /*E37037*/
+                INZPFM     FILE(CPEVEA) TOTRCDS(1)                    /*E37037*/
+                INZPFM     FILE(DPEVEA) TOTRCDS(1)                    /*E37037*/
+                INZPFM     FILE(TREVEA) TOTRCDS(1)                    /*E37037*/
+/**/                                                                  /*E37037*/
+/**/
+/**/
+/*  BULK REFERENCE NUMBER FILE                                     */
+                CLRPFM     FILE(BLKRFD)                               /*S01169*/
+                INZPFM     FILE(BLKRFD) TOTRCDS(1)                    /*S01169*/
+/**/                                                                  /*E21663*/
+/* SET*UP*BLANK*RECORDS*IN*RTBOND*AUDIT*FILES*************** //*E21663  S01322*/
+ /*             CALL       PGM(SEC0103)                    */ /*E21663  S01322*/
+/**/
+/**/                                                                  /*S01155*/
+/* SET UP THE MULTI- MEMBERED FILE POSETA */                          /*S01155*/
+/**/                                                                  /*S01155*/
+             INZPFM     FILE(POSETA) MBR(POSETA) TOTRCDS(1)           /*S01155*/
+             INZPFM     FILE(POSETA) MBR(CPOSN1) TOTRCDS(1)           /*S01155*/
+             INZPFM     FILE(POSETA) MBR(CPOSN2) TOTRCDS(1)           /*S01155*/
+             INZPFM     FILE(POSETA) MBR(DPOSN1) TOTRCDS(1)           /*S01155*/
+             INZPFM     FILE(POSETA) MBR(DPOSN2) TOTRCDS(1)           /*S01155*/
+             IF         COND(&S01496 *EQ 'Y') THEN(DO)                /*S01496*/
+                INZPFM     FILE(POSETA) MBR(REDEMP) TOTRCDS(1)        /*S01496*/
+             ENDDO                                                    /*S01496*/
+ /*             IF         COND(&CSE007 *EQ 'Y') THEN(DO)  /*CSE007*/ /*CEU017*/
+                IF         COND(&CSE007 *EQ 'Y' *OR &CEU017 *EQ 'Y') +
+                          THEN(DO)                                    /*CEU017*/
+                INZPFM     FILE(POSETA) MBR(CORPAC) TOTRCDS(1)        /*CSE007*/
+             ENDDO                                                    /*CSE007*/
+/**/
+/**/
+/*  SET UP PROJECTED NOSTROS FILE & ON LINE POSITIONS FILE         */
+/*    IF NOT ALREADY DONE IN DEALING MODULE                        */
+/***************RTVDTAARA  DTAARA(DLSTAT)  RTNVAR(&DLSTAT)             *036796*/
+/***************IF         COND(%SST(&DLSTAT 1 5) = '     ') THEN(DO)  *036796*/
+/*    ERROR NUMBER REFERS TO LINE ABOVE                            */
+/******************CLRPFM     FILE(PRONTHH)                            *036796*/
+/******************CLRPFM     FILE(PRONTPP)                            *036796*/
+/******************CLRPFM     FILE(PRONTZX)                            *036796*/
+/******************CLRPFM     FILE(PRONOHH)                            *036796*/
+/******************CLRPFM     FILE(PRONOPN)                            *036796*/
+/******************CLRPFM     FILE(OLPOSHH)                            *036796*/
+/******************CLRPFM     FILE(OLPOSOA)                            *036796*/
+/******************CLRPFM     FILE(OLPOSOB)                            *036796*/
+/**/
+/******************OVRDBF     FILE(TABLE) TOFILE(TABDLEE)            * *S01117*/
+/******************OVRDBF     FILE(TABLC) TOFILE(TABDLEI)            * *S01117*/
+/**********        CALL       PGM(DL0610)                 **********/ /*E22608*/
+/******************CALL       PGM(GL0610)                      /*E22608 036796*/
+/**/
+/******************IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)         *036796*/
+/*********************OVRDBF     FILE(TABLE) TOFILE(TABDLEE)         * *S01117*/
+/**********           CALL       PGM(DL0575)              **********/ /*E22608*/
+/*********************CALL       PGM(GL0575)                   /*E22608 036796*/
+/**/
+/*********************IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)      *036796*/
+/************************OVRDBF     FILE(TABLE) TOFILE(TABDLEI)      * *S01117*/
+/**********              CALL       PGM(DL0580)           **********/ /*E22608*/
+/************************CALL       PGM(GL0580)                /*E22608 036796*/
+/*********************ENDDO                                            *036796*/
+/**/
+/******************ENDDO                                               *036796*/
+/**/
+/******************RTVDTAARA  DTAARA(MMOD)  RTNVAR(&MMOD)      /*S03220 036796*/
+/************IF COND(%SST(&MMOD 57 1) = 'Y') THEN(CALL FTC0270)/*S03220 036796*/
+/**/                                                                  /*S03220*/
+/******************CLRPFM     FILE(PRONTHH)                            *036796*/
+/******************CLRPFM     FILE(PRONTPP)                            *036796*/
+/******************CLRPFM     FILE(PRONTZX)                            *036796*/
+/**/
+/******************DLTOVR     FILE(TABLE)                            * *S01117*/
+/******************DLTOVR     FILE(TABLC)                            * *S01117*/
+/**/
+/******************IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)         *036796*/
+/******************   SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)              *036796*/
+/******************   GOTO       CMDLBL(ENDPGM)                        *036796*/
+/******************ENDDO                                               *036796*/
+/**/
+/***************ENDDO                                                  *036796*/
+/**/
+/*     SET UP SECURITIES TRADING MODULE DATA AREAS                 */
+     /****      CHGDTAARA  DTAARA(SESTAT (1 12)) VALUE('OLDNNNN00000') *E17193*/
+                CHGDTAARA  DTAARA(SESTAT (1 7)) VALUE('OLDNNNN')      /*E17193*/
+                CHGDTAARA  DTAARA(SESTAT (20 2)) VALUE('1N')
+                CHGDTAARA  DTAARA(SESTAT (27 13)) VALUE('NYN0000000000')
+                CHGDTAARA  DTAARA(SESTAT (40 12)) VALUE('0000000000N0')
+     /****      CHGDTAARA  DTAARA(SESTAT (54 7)) VALUE('N 00000')      *E17193*/
+                CHGDTAARA  DTAARA(SESTAT (54 2)) VALUE('N ')          /*E17193*/
+/**/         /* SEND/RECEIVE PROMPT SCREEN  E17193*/                  /*E17193*/
+ TAG01:      SNDRCVF    DEV(*FILE) RCDFMT(FMT1)                       /*E17193*/
+             IF         COND(&EOPM *EQ '     ') THEN(GOTO +
+                           CMDLBL(TAG01))                             /*E17193*/
+             IF         COND(&EOMM *EQ '       ') THEN(GOTO +
+                           CMDLBL(TAG01))                             /*E17193*/
+             IF         COND(&EOPT *EQ '     ') THEN(GOTO +
+                           CMDLBL(TAG01))                             /*E17193*/
+             CHGDTAARA DTAARA(SESTAT (8 5)) VALUE(&EOPM)              /*E17193*/
+             CHGDTAARA DTAARA(SESTAT (13 7)) VALUE(&EOMM)             /*E17193*/
+             CHGDTAARA DTAARA(SESTAT (56 5)) VALUE(&EOPT)             /*E17193*/
+/**/                                                                  /*E17193*/
+                RTVDTAARA  DTAARA(SESTAT) RTNVAR(&SESTAT)             /*S01179*/
+                CHGDTAARA  DTAARA(SETEMP) VALUE(&SESTAT)
+/**/
+                SNDPGMMSG  MSG('SECURITIES TRADING FILE SET-UP COMPLETE')  +
+                           TOMSGQ(MOPERQ MRUNQ)
+/**/
+             ENDDO
+/**/
+             ELSE       CMD(SNDPGMMSG MSG('SECURITIES TRADING FILES +
+                          ALREADY EXIST') +
+                          TOMSGQ(MOPERQ MRUNQ))
+/**/
+/*ENDPGM:****ENDPGM*******                                             *S01117*/
+ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM                                                   /*S01117*/

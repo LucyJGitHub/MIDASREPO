@@ -1,0 +1,531 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Gen. chasers for timed out msgs')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - CONFIRMATION MATCHING
+     F*                                                               *
+     F*  CF0060 - CHASER GENERATION (I/C)                             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CMG003             Date 04Oct12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 113352             Date 29Jan97               *
+     F*                 078777             DATE 27JAN98               *
+     F*                 062237             DATE 19JAN94               *
+     F*                 056741             DATE 14JAN94               *
+     F*                 S01412             DATE 14JUN93               *
+     F*                 E38191             DATE 03APR92               *
+     F*                 E36560             DATE 02MAR92               *
+     F*                 S01310             DATE 06DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CMG003 - SWIFT MT600 Message Generation                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CDL008 - Continuous Linked Settlement (recompile MGOREFPD)   *
+     F*  113352 - Set-up CIND (Century Flag) to correct year 2000     *
+     F*           display problem.                                    *
+     F*  078777 - Add Record Retention date to Chaser file for future *
+     F*           housekeeping purposes, for records of type 'Chaser  *
+     F*           not generated, msg not on file.'                    *
+     F*  062237 - Change QCMDEXC text in COM table referencing file   *
+     F*           MGOREFPD instead of CFMSIXL2                        *
+     F*  056741 - For field :11:, date should be the ISO (YYMMDD)     *
+     F*           date on which the original message was sent.        *
+     F*  S01412 - Amendments for the SWIFT September 1993 changes.    *
+     F*  E38191 - USE SDMGMEPD NOT SDMSDLPD                           *
+     F*  E36560 - UNWANTED '/' IN FIELD :11: - MFLD NOT BEING         *
+     F*           CLEARED OUT.                                        *
+     F*  S01310 - RE WRITTEN FOR SWIFT RATIONALISATION                *
+     F*                                                               *
+     F*****************************************************************
+     FMGOREFL0UF  E           K        DISK         KCOMIT       A
+     FMGOMSGPDUF  E           K        DISK         KCOMIT       A
+     FCFFEEDL0UF  E           K        DISK         KCOMIT
+     FSDBANKPDIF  E                    DISK
+     FSDCONFPDIF  E                    DISK
+     F*DMSDLPDIF**E********************DISK                               E38191
+     FSDMGMEPDIF  E                    DISK                               E38191
+     FSDCUSTL0IF  E           K        DISK
+     FCFCHSRPDO   E                    DISK         KCOMIT
+      *
+      * ID C  F  H  L    Function of indicators
+      *    10            LOKUP
+      *    30            EOF MGOREFL0
+      *    31            EOF CFFEEDL0
+      *    32            EOF MGOMSGPD
+      *    86            EOF SDCUSTPD
+      *****84************EOF SDMSDLPD                                     E38191
+      *    84            EOF SDMGMEPD                                     E38191
+      *    88            EOF SDCONFPD
+      *    89            EOF SDBANKPD
+      *    U7U8LR        DB error
+      *
+     E                    TXT     1   2 37
+     E                    COM     1   2 43
+     E                    TABMON 12  12  3   TABMM   2
+     E                    CPY@    1   1 80
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local Data Area - Database errors
+      *
+     IRUNDAT      DS                             13
+     I                                        1   7 RUND
+     I                                        1   1 @D
+     I                                        1   2 @DAY
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+      **  RUNDAT data area
+      *
+     I            DS
+     I                                        1   2 MODI
+     I I            'Q'                       3   3 @Q
+     I                                        4   5 @MM
+     I                                        6   7 @DD
+     I                                        8  130@TIME
+     I                                       14  16 @WSID
+     I                                        1  16 @GREF
+      **  TNRF generated for chaser
+      *
+     I            DS
+     I                                        1 132 PRLN
+     I                                        2  17 @REF
+     I                                       19  21 MTPY
+     I                                       24  43 BBCRNM
+     I                                       45  54 BBCRTN
+     I                                       57  72 RREL
+     I                                       74  790MGDE
+     I                                       82  870MGTM
+     I*****                                  19  87 @FLDS                 078777
+     I                                       19  73 @FLDS                 078777
+     I                                       80  87 @FLDS1                078777
+     I                                       90 132 @TEXT
+      **  CFCHSRPD format
+      *
+     I           SDS
+     I                                      244 253 @WID
+     I                                      254 263 USER
+      **  Workstation ID
+      *
+     IIMRF        DS                             16
+     I                                        1   8 @DEAL
+      **  Deal number from reference
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CMG003
+      ** Midas SD SAR Details                                                                 CMG003
+      *                                                                                       CMG003
+     IDSFDY     E DSDSFDY                                                                     CMG003
+      ** First DS for Access Programs, Short Data Structure                                   CMG003
+      *                                                                                       CMG003
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   CHAS  - generate chaser message                             *
+      *   OMSG  - Generate MGOREFL0 & MGOMSGPD chaser records         *
+      *   *PSSR - Error processing                                    *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           CHAS generate chaser message                        *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Read first feedback record
+     C                     READ CFFEEDL0                 31
+      *
+     C           *IN31     DOWEQ'0'                                   1
+      *
+      **  If TIMED OUT and CHASER NOT SENT
+     C           CPSX      IFEQ 02                                    2
+     C           CHSN      ANDNE'Y'
+     C           IMRF      CHAINMGOREFL0             30
+     C                     MOVE TRNO      STRNO  16
+     C                     EXSR CHAS
+     C                     END                                       E2
+      *
+      **  Read next feedback record
+     C                     READ CFFEEDL0                 31
+     C                     END                                       E1
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'CF0060'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           @D        IFEQ ' '
+     C                     MOVE '0'       @D
+     C                     END
+      *
+      **  Access SDBANKPD
+     C           1         CHAINSDBANKPD             89
+      *
+     C           *IN89     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Access SDCONFPD for release timed out chasers
+     C           1         CHAINSDCONFPD             88
+      *
+     C           *IN88     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVE 'FIRST'   DBKEY            * DB ERROR 02 *
+     C                     MOVE 'SDCONFPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Initialise constant fields
+     C                     BITOF'12345670'CR      1
+     C                     BITON'457'     CR
+     C                     BITOF'12345670'LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      *
+      **  Convert run date to YYMMDD
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZMDATE  6
+     C                     MOVE ZMDATE    @MGDE   60
+      *
+      ****Access*SDMSDLPD*for*history*retention*period                    E38191
+      **  Access SDMGMEPD for history retention period                    E38191
+     C***********1         CHAINSDMSDLPD             84                   E38191
+     C           1         CHAINSDMGMEPD             84                   E38191
+      *
+     C           *IN84     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 03 *
+     C**********           MOVEL'SDMSDLPD'DBFILE                          E38191
+     C                     MOVEL'SDMGMEPD'DBFILE                          E38191
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Convert history retention date to YYMMDD
+     C***********BJRDNB    ADD  BSDSMN    ZMDAY                           E38191
+     C           BJRDNB    ADD  ENDSMN    ZMDAY                           E38191
+     C                     CALL 'ZM0060'
+     C                     PARM           ZMDAY
+     C                     PARM           ZMDATE
+     C                     MOVE ZMDATE    @HRDT   6
+      *                                                                                       CMG003
+      ** Access SAR details to see if CMG003 is switched on                                   CMG003
+      *                                                                                       CMG003
+     C                     MOVE 'N'       CMG003  1                                           CMG003
+     C                     CALL 'AOSARDR0'                                                    CMG003
+     C                     PARM *BLANKS   PRTCD   7                                           CMG003
+     C                     PARM '*VERIFY' POPTN   7                                           CMG003
+     C                     PARM 'CMG003'  PSARD   6                                           CMG003
+     C           SCSARD    PARM SCSARD    DSFDY                                               CMG003
+      *                                                                                       CMG003
+     C           PRTCD     IFEQ *BLANKS                                                       CMG003
+     C                     MOVE 'Y'       CMG003                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   CHAS - Generate chaser message                              *
+      *   Calls - OMSG Generate MGOREFL0 & MGOMSGPD chaser records    *
+      *   Caled by main process                                       *
+      *****************************************************************
+      *
+     C           CHAS      BEGSR
+      *
+     C                     MOVE MTPY      SMTPY   3
+     C*                                                                   056741
+     C** If original message has not been transmitted, use MGDE;          056741
+     C** else use LADT.                                                   056741
+     C*                                                                   056741
+     C           MGSG      IFNE '2'                                       056741
+     C           MGSG      ANDNE'3'                                       056741
+     C                     MOVE MGDE      SMGDE   6
+     C                     ELSE                                           056741
+     C*                                                                   056741
+     C** Format LADT from DDMMMYY to YYMMDD                               056741
+     C*                                                                   056741
+     C                     MOVE LADT      @WRKY2  2                       056741
+     C                     MOVELLADT      @WRK5   5                       056741
+     C                     MOVEL@WRK5     @WRKD2  2                       056741
+     C                     MOVE @WRK5     @WRKM3  3                       056741
+     C                     MOVEL@WRKD2    @WRK1   1                       056741
+     C           @WRK1     IFEQ *BLANKS                                   056741
+     C                     MOVEL'0'       @WRKD2                          056741
+     C                     END                                            056741
+     C           @WRKM3    LOKUPTABMON    TABMM          10               056741
+     C                     MOVE TABMM     @WRKM2  2                       056741
+     C                     MOVEL@WRKY2    SMGDE                           056741
+     C                     MOVE @WRKD2    @WRK4   4                       056741
+     C                     MOVEL@WRKM2    @WRK4                           056741
+     C                     MOVE @WRK4     SMGDE                           056741
+     C                     END                                            056741
+     C*                                                                   056741
+      **  Format TRN
+      **  Module, MMDD, HHMMSS & workstation Id
+     C           @MMM      LOKUPTABMON    TABMM          10
+     C                     MOVE TABMM     @MM
+     C                     MOVE @DAY      @DD
+     C                     TIME           @TIME   60
+     C                     MOVEL@WID      @WSID   3
+      *
+      **  Ensure generation time differs from previous one to avoid
+      **  possibility of duplicate chaser references
+     C           @GREF     DOUNESGREF
+     C                     TIME           @TIME
+     C                     END
+     C                     MOVE @GREF     SGREF  16
+      *
+      **  If related index exists output "CHASER GENERATED" to CFCHSRPD
+      **  Otherwise output "CHASER NOT GENERATED..." and send message
+      **  to MOPERQ
+     C                     Z-ADD@MGDE     MGDE
+     C                     Z-ADD@TIME     MGTM
+     C                     MOVE *BLANKS   @TEXT
+      *
+      ** Set-up Message Generation  Century flag                          113352
+      *                                                                   113352
+     C                     MOVELMGDE      YY      20                      113352
+     C           YY        IFLT 72                                        113352
+     C                     MOVE '2'       CIND                            113352
+     C                     ELSE                                           113352
+     C                     MOVE '1'       CIND                            113352
+     C                     ENDIF                                          113352
+      *
+     C                     MOVE *BLANKS   BBCRNM
+     C                     MOVE *BLANKS   BBCRTN
+     C                     MOVE DECN      @WK6    6
+     C           @WK6      IFNE *BLANKS
+     C           @WK6      CHAINSDCUSTL0             86
+     C                     END
+      *
+     C           *IN30     IFEQ '0'
+     C                     MOVE @GREF     @REF
+     C                     MOVE IMRF      RREL
+     C                     MOVELTXT,1     @TEXT
+     C                     MOVE 'Y'       CHSN
+     C                     WRITECFCHSRD0
+      *
+     C                     UPDATCFFEEDD0
+     C                     EXSR OMSG
+      *
+     C                     COMIT
+      *
+     C                     ELSE
+     C                     MOVE IMRF      @REF
+     C                     MOVELTXT,2     @TEXT
+     C                     MOVE *BLANKS   @FLDS
+     C                     MOVE *BLANKS   @FLDS1                          078777
+     C                     MOVE @HRDT     MGDE                            078777
+     C                     MOVELCOM,1     @WK57  57
+     C                     MOVE IMRF      @WK57
+     C                     MOVEL@WK57     CMD   100
+     C                     MOVE COM,2     CMD
+     C                     Z-ADD100       LEN    155
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           LEN
+     C                     WRITECFCHSRD0
+      *
+     C                     COMIT
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  OMSG - Generate MGOREFL0 & MGOMSGPD chaser records           *
+      *  Called by main process                                       *
+      *****************************************************************
+      *
+     C           OMSG      BEGSR
+      *
+      **  Set up any fields which may differ from original MGOREFL0
+     C                     MOVEL@DEAL     MTRN
+     C                     MOVE *BLANKS   TNTP
+     C                     MOVE *BLANKS   SBTP
+     C                     MOVE *BLANKS   EVTP
+     C                     MOVE *BLANKS   NWBN
+     C           CMG003    IFEQ 'Y'                                                           CMG003
+     C           MTPY      ANDEQ'600'                                                         CMG003
+     C                     MOVE '695'     MTPY                                                CMG003
+     C                     ELSE                                                               CMG003
+     C                     MOVE '395'     MTPY
+     C                     ENDIF                                                              CMG003
+     C                     MOVE 'N'       MPRY
+     C                     MOVE '1'       MGSG
+     C                     MOVE 'CRTD'    MGST
+     C                     MOVE *BLANKS   LSCC
+     C                     MOVE *BLANKS   F57U
+     C                     MOVE *BLANKS   PTST
+     C                     MOVE *BLANKS   CARQ
+     C                     MOVE *BLANKS   MPDE
+     C                     MOVE @HRDT     HRDT
+     C                     MOVE RUND      LADT
+     C                     Z-ADD@TIME     LATM
+     C                     MOVE *BLANKS   RELD
+     C                     Z-ADD*ZEROS    RELT
+     C                     MOVE *BLANKS   RUSR
+     C                     MOVE *BLANKS   RWSN
+     C                     MOVE *BLANKS   AMTX
+     C                     MOVE *BLANKS   AMTS
+     C                     MOVE *BLANKS   SVDT
+     C                     MOVE *BLANKS   CCY
+     C                     Z-ADD*ZEROS    NSNO
+     C                     MOVE *BLANKS   SACN
+     C                     MOVE *BLANKS   AORR
+     C                     MOVE *BLANKS   DESI
+     C                     MOVE *BLANKS   NETI
+     C                     MOVE *BLANKS   DELC
+     C                     MOVE *BLANKS   DYST
+     C                     MOVE *BLANKS   RSID
+     C                     MOVE *BLANKS   MSE1
+     C                     MOVE *BLANKS   ELIN
+     C                     MOVE *BLANKS   SSAC
+     C                     MOVE *BLANKS   MIR
+     C                     MOVE *BLANKS   TSKS
+     C                     MOVE *BLANKS   TSKY
+     C                     Z-ADD*ZEROS    TSEQ
+      *
+      **  Release CHASERS?
+     C           DSRTOC    IFEQ 'Y'
+     C                     MOVE '2'       MGSG
+     C                     MOVE 'RSND'    MGST
+     C                     MOVE RUND      RELD
+     C                     Z-ADDLATM      RELT
+     C                     MOVE USER      RUSR
+     C                     MOVEL'CHA'     RWSN
+     C                     END
+      *
+     C                     MOVEL@GREF     TRNO
+     C                     WRITEMGOREFD0
+      *
+     C                     MOVE CRLF      CTRC
+     C                     MOVE *BLANKS   PTDL
+      *
+      **  Write TRN
+     C                     MOVE ':20: '   MTAG
+     C                     MOVE *BLANKS   MFLD
+     C                     MOVEL@GREF     MFLD
+     C                     WRITEMGOMSGD0
+      *
+     C                     MOVE ':21: '   MTAG
+     C                     MOVE *BLANKS   MFLD
+     C                     MOVELSTRNO     MFLD
+     C                     WRITEMGOMSGD0
+      *
+     C                     MOVE ':75: '   MTAG
+     C                     MOVE *BLANKS   MFLD
+     C                     MOVEL'/16/'    MFLD
+     C                     WRITEMGOMSGD0
+      *
+      **  Write message type & date
+     C***********          MOVE ':11: '   MTAG                            S01412
+     C                     MOVE ':11S:'   MTAG                            S01412
+     C                     MOVE *BLANKS   MFLD                            E36560
+     C                     MOVELSMTPY     MFLD
+     C                     WRITEMGOMSGD0
+      *
+     C                     MOVE *BLANKS   MTAG
+     C                     MOVE *BLANKS   MFLD                            E36560
+     C                     MOVELSMGDE     MFLD
+     C                     WRITEMGOMSGD0
+      *
+     C           IMRF      SETLLMGOMSGPD
+     C           PTDL      DOUNE'D'
+     C           *IN32     OREQ '1'
+     C           IMRF      READEMGOMSGPD                 32
+     C                     END
+      *
+     C           *IN32     DOWEQ'0'
+     C                     MOVE @GREF     TRNO
+     C                     WRITEMGOMSGD0
+      *
+     C           PTDL      DOUNE'D'
+     C           *IN32     OREQ '1'
+     C           IMRF      READEMGOMSGPD                 32
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  *PSSR - Error processing                                     *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     ROLBK
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+**  Text for output to CFCHSRPD
+CHASER GENERATED
+CHASER NOT GENERATED, MSG NOT ON FILE
+**  QCMDEXC command
+SNDMSG MSG('CHASER NOT GENERATED FOR XXXXXXXXXXXXXXXX
+ - MESSAGE NOT ON MGOREFPD') TOMSGQ(MOPERQ)
+**  TABMON TABMM
+JAN01FEB02MAR03APR04MAY05JUN06JUL07AUG08SEP09OCT10NOV11DEC12
+**  Object copyright
+(c) Finastra International Limited 2001

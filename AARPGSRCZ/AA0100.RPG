@@ -1,0 +1,556 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Analysis of A/C Postings Profit Centre')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Analytical Accounting Module                         *
+      *                                                               *
+      *  AA0100 - Analysis of Account Postings Profit Centre          *
+      *                                                               *
+      *  Function:  This program initialises the profit centre of     *
+      *             each retail and nostro accounts posting record    *
+      *             with the profit centre on the account.            *
+      *             Also fix problem with overprinting in position    *
+      *             113.                                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 03Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 23Feb99               *
+      *                 CTI002 Exposure Management / TI Interface     *
+      *                 CAC001 *CREATE     Date 01FEB96               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Switchable feature- if account narrative feature    *
+      *           is active the current account description shall be  *
+      *           replaced with the account narrative.                *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  CAC001 - Profit Centre Accounting Development                *
+      *                                                               *
+      *****************************************************************
+      *
+     FAAACPS  IP  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     FQSYSPRT O   F     132            PRINTER
+      /SPACE 3
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+      **  Copyright array
+      *
+     IAAACPSF
+     I                                              BRCA  L6
+     I                                              CCY   L5
+     I                                              ACOD  L4
+     I                                              CNUM  L3
+     I                                              ACSQ  L2
+     I                                              PRFC  L1
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency details
+      *
+     ISDACOD    E DSSDACODPD
+      **  Account code details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long Data Structure
+      *
+     ILDA       E DSLDA
+      ** Local data structure used for error handling
+      *
+     ISCSARD    E DSSCSARDPD                                              CSD005
+     I** MIDAS Switchable Features Accessed Via Access Program            CSD005
+     I*                                                                   CSD005
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+      ** Copyright array
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * First cycle
+      *
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     END
+      *
+      * If change of currency, access currency details
+      *
+     C           *INL5     IFEQ '1'
+     C                     EXSR SRCURR
+     C                     END
+      *
+      * If change of a/c code, access a/c code details
+      *
+     C           *INL4     IFEQ '1'
+     C                     EXSR SRACOD
+     C                     END
+     C           *IN60     CABEQ'0'       BYPASS
+      *
+      * Reset totals
+      *
+     C   L2                Z-ADD0         ACNTOT 150
+     C   L1                Z-ADD0         PRFTOT 150
+      *
+     C********** ASOC      COMP 0                    2020  *                                  CSD027
+     C           ASOC      COMP *BLANKS              2020  *                                  CSD027
+     C                     MOVE '0'       *IN25
+     C           OTTP      IFEQ *BLANK
+     C           OTST      ANDEQ*BLANK
+     C           OTRF      ANDEQ*BLANK
+     C                     MOVE '1'       *IN25
+     C                     END
+      *
+      * Sign posting amount
+      *
+     C           DRCR      IFEQ 1
+     C                     Z-SUBPSTA      PSTA
+     C                     END
+      *
+      * Value Date/Posting Date
+      *
+     C                     Z-ADDVALD      ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      * Update totals
+      *
+     C                     Z-ADDPAMT      #PAMT  150
+     C                     ADD  PSTA      ACNTOT
+     C                     ADD  PSTA      PRFTOT
+      *
+      * Write out posting details
+      *
+     C           *INU1     IFNE '1'
+     C           *INU1     OREQ '1'
+     C           PAMT      ANDNE0
+     C                     Z-ADD1         ##SLNN
+     C                     EXSR SRHEAD
+     C                     EXCPTDETAIL
+     C                     END
+      *
+     C           BYPASS    TAG
+      *
+      * Write out profit centre totals
+      *
+     CL1         *IN60     IFEQ '1'
+     CL1         *INU1     IFNE '1'
+     CL1         *INU1     OREQ '1'
+     CL1         PAMT      ANDNE0
+     CL1                   Z-ADD1         ##SLNN
+     CL1                   EXSR SRHEAD
+     CL1                   EXCPTPRFT
+     CL1                   END
+     CL1                   END
+      *
+      * Write out account totals
+      *
+     CL2         *IN60     IFEQ '1'
+     CL2         *INU1     IFNE '1'
+     CL2         *INU1     OREQ '1'
+     CL2         PAMT      ANDNE0
+     CL2                   Z-ADD0         LDBL
+     CL2         KACCNT    CHAINACCNTABF             99    *
+     CL2                   Z-ADD6         ##SLNN
+     CL2                   EXSR SRHEAD
+     CL2                   EXCPTACNT
+     CL2                   END
+     CL2                   END
+      *****************************************************************
+     C           SRCURR    BEGSR
+      *
+      ** Obtain currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM CCY       PKEY3   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD002       DBASE
+     C                     MOVELCCY       DBKEY
+     C                     MOVEL'AA0100'  DBPGM
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     END
+      *
+     C           A6NBDP    COMP 0                        30*
+     C           A6NBDP    COMP 1                        31*
+     C           A6NBDP    COMP 2                        32*
+     C           A6NBDP    COMP 3                        33*
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           SRACOD    BEGSR
+      *
+      ** Obtain a/c code details
+      *
+     C                     MOVELACOD      PKEY4
+     C                     CALL 'AOACODR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY'    POPTN
+     C**********           PARM           PKEY4   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM           PKEY4  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+      ** DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDACODPD'DBFILE
+     C                     Z-ADD003       DBASE
+     C                     MOVELACOD      DBKEY
+     C                     MOVEL'AA0100'  DBPGM
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     END
+      *
+      ** Select retail and nostro a/cs
+      *
+     C                     MOVEL'0'       *IN60
+     C           *INU2     IFEQ '1'
+     C                     MOVEL'1'       *IN60
+     C                     ELSE
+     C           A5ACTY    IFNE 'N'
+     C           A5ACTY    ANDNE'R'
+     C                     MOVEL'1'       *IN60
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           SRHEAD    BEGSR
+     C                     ADD  ##SLNN    ##LNNO
+     C           ##LNNO    IFGT 60
+     C                     Z-ADD4         ##LNNO
+     C                     ADD  ##SLNN    ##LNNO
+     C                     ADD  1         ##PGNO
+     C                     EXCPTHEADNG
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *                                                                   CSD005
+      *                                                                   CSD005
+     C           *NAMVAR   DEFN           LDA   256                       CSD005
+      *
+      ** Obtain bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD001       DBASE
+     C                     MOVELPOPTN     DBKEY
+     C                     MOVEL'AA0100'  DBPGM
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     END
+      *                                                                   CSD005
+      * Obtain switchable feature CSD005 status.                          CSD005
+      *                                                                   CSD005
+     C                     CALL 'AOSARDR0'                                CSD005
+     C                     PARM *BLANKS   @RTCD   7                       CSD005
+     C                     PARM '*VERIFY' @OPTN   7                       CSD005
+     C                     PARM 'CSD005'  @SARD   6                       CSD005
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD005
+      *                                                                   CSD005
+     C                     SELEC                                          CSD005
+     C           @RTCD     WHEQ *BLANK                                    CSD005
+     C                     MOVE *ON       *IN73                           CSD005
+     C           @RTCD     WHEQ '*NRF'                                    CSD005
+     C                     MOVE *OFF      *IN73                           CSD005
+     C                     OTHER                                          CSD005
+     C           *LOCK     IN   LDA                                       CSD005
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CSD005
+     C                     Z-ADD004       DBASE             *DBERROR 004* CSD005
+     C                     MOVEL@OPTN     DBKEY             ************* CSD005
+     C                     SETON                     U7U8LR               CSD005
+     C                     OUT  LDA                                       CSD005
+     C                     EXSR *PSSR                                     CSD005
+     C                     ENDSL                                          CSD005
+      *
+      * Key list for ACCNT
+      *
+     C           KACCNT    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+     C                     MOVEL'0'       *IN98
+     C                     MOVEL'Y'       ##INIT  1
+      *
+     C                     Z-ADD0         ##PGNO  50
+     C                     Z-ADD99        ##LNNO  50
+     C                     Z-ADD0         ##SLNN  50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                          CSD005
+      *                                                                   CSD005
+     C           @RUN      IFEQ *BLANK                                    CSD005
+     C                     MOVE 'Y'       @RUN    1                       CSD005
+     C                     DUMP                                           CSD005
+     C                     END                                            CSD005
+      *                                                                   CSD005
+     C                     MOVE *ON       *INU7                           CSD005
+     C                     MOVE *ON       *INU8                           CSD005
+     C                     MOVE *ON       *INLR                           CSD005
+     C                     RETRN                                          CSD005
+     C                     ENDSR                                          CSD005
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+     OQSYSPRT E   02           HEADNG
+     O                                   11 'REF. AA0100'
+     O                         BJURPT    90
+     O                                  107 'DATE'
+     O                         BJMRDT   115
+     O                                  126 'PAGE'
+     O                         ##PGNOZ  132
+     O        E 11             HEADNG
+     O                                    3 'BRC'
+     O                                    7 'CCY'
+     O**********                         12 'A/C'                                             CGL029
+     O**********                         18 'CUST'                                            CGL029
+     O**********                         22 'SQ'                                              CGL029
+     O**********                         27 'PRFC'                                            CGL029
+     O**********                         35 'SOURCE'                                          CGL029
+     O**********                         47 'TRAN TYP'                                        CGL029
+     O**********                         60 'TRAN S/TYP'                                      CGL029
+     O**********                         75 'TRAN REF'                                        CGL029
+     O**********                         79 'BK'                                              CGL029
+     O**********                         85 'ASOC'                                            CGL029
+     O**********                        103 'POSTING AMOUNT'                                  CGL029
+     O**********                        116 'POST DATE'                                       CGL029
+     O                                   14 'A/C'                                             CGL029
+     O                                   23 'CUST'                                            CGL029
+     O                                   28 'SQ'                                              CGL029
+     O                                   33 'PRFC'                                            CGL029
+     O                                   40 'SOURCE'                                          CGL029
+     O                                   52 'TRAN TYP'                                        CGL029
+     O                                   65 'TRAN S/TYP'                                      CGL029
+     O                                   79 'TRAN REF'                                        CGL029
+     O                                   90 'BK'                                              CGL029
+     O                                   95 'ASOC'                                            CGL029
+     O                                  114 'POSTING AMOUNT'                                  CGL029
+     O                                  128 'POST DATE'                                       CGL029
+     O        E 1              DETAIL
+     O                         BRCA       3
+     O                         CCY        7
+     O**********               ACOD      12                                                   CGL029
+     O**********               CNUM      19                                                   CGL029
+     O**********               ACSQ      22                                                   CGL029
+     O**********               PRFC      27                                                   CGL029
+     O**********               SPOS      35                                                   CGL029
+     O**********      N25      OTTP      49                                                   CGL029
+     O**********      N25      OTST      60                                                   CGL029
+     O**********      N25      OTRF      76                                                   CGL029
+     O**********       25      PNAR      69                                                   CGL029
+     O**********               BOKC      79                                                   CGL029
+     O**********       20      ASOC      86                                                   CGL029
+     O**********       30      PSTA     107 ' ,   ,   ,   , 0 -'                              CGL029
+     O**********       31      PSTA     107 '   ,   ,   , 0 . -'                              CGL029
+     O**********       32      PSTA     107 '  ,   ,   , 0 .  -'                              CGL029
+     O**********       33      PSTA     107 ' ,   ,   ,   . 0 -'                              CGL029
+     O**********               ZADATE   115                                                   CGL029
+     O                         ACOD      18                                                   CGL029
+     O                         CNUM      25                                                   CGL029
+     O                         ACSQ      28                                                   CGL029
+     O                         PRFC      33                                                   CGL029
+     O                         SPOS      41                                                   CGL029
+     O                N25      OTTP      54                                                   CGL029
+     O                N25      OTST      65                                                   CGL029
+     O                N25      OTRF      87                                                   CGL029
+     O                 25      PNAR      74                                                   CGL029
+     O                         BOKC      90                                                   CGL029
+     O                 20      ASOC      97                                                   CGL029
+     O                 30      PSTA     118 ' ,   ,   ,   , 0 -'                              CGL029
+     O                 31      PSTA     118 '   ,   ,   , 0 . -'                              CGL029
+     O                 32      PSTA     118 '  ,   ,   , 0 .  -'                              CGL029
+     O                 33      PSTA     118 ' ,   ,   ,   . 0 -'                              CGL029
+     O                         ZADATE   126                                                   CGL029
+     O        E 1              PRFT
+     O*******                  PRFC      27                               CSD005
+     O*******                            43 'POSTING TOTAL  '             CSD005
+     O*******                            67 '------------------------'    CSD005
+     O*******                            86 '------------------>'         CSD005
+     O                N73      PRFC      27                               CSD005
+     O                N73                43 'POSTING TOTAL  '             CSD005
+     O                N73                67 '------------------------'    CSD005
+     O                N73                86 '------------------>'         CSD005
+     O                 73      PRFC      55                               CSD005
+     O                 73                71 'POSTING TOTAL  '             CSD005
+     O                 73                86 ' ------------->'             CSD005
+     O**********       30      PRFTOT   107 '   ,   ,   ,   , 0 -'                            CGL029
+     O**********       31      PRFTOT   107 '  ,   ,   ,   , 0 . -'                           CGL029
+     O**********       32      PRFTOT   107 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O**********       33      PRFTOT   107 '   ,   ,   ,   . 0 -'                            CGL029
+     O                 30      PRFTOT   118 '   ,   ,   ,   , 0 -'                            CGL029
+     O                 31      PRFTOT   118 '  ,   ,   ,   , 0 . -'                           CGL029
+     O                 32      PRFTOT   118 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O                 33      PRFTOT   118 '   ,   ,   ,   . 0 -'                            CGL029
+     O        E 00             PRFT
+     O*******                  PRFC      27                               CSD005
+     O*******                            43 'POSTING TOTAL  '             CSD005
+     O*******                            67 '------------------------'    CSD005
+     O*******                            86 '------------------>'         CSD005
+     O                N73      PRFC      27                               CSD005
+     O                N73                43 'POSTING TOTAL  '             CSD005
+     O                N73                67 '------------------------'    CSD005
+     O                N73                86 '------------------>'         CSD005
+     O                 73      PRFC      55                               CSD005
+     O                 73                71 'POSTING TOTAL  '             CSD005
+     O                 73                86 ' ------------->'             CSD005
+     O**********       30      PRFTOT   107 '   ,   ,   ,   , 0 -'                            CGL029
+     O**********       31      PRFTOT   107 '  ,   ,   ,   , 0 . -'                           CGL029
+     O**********       32      PRFTOT   107 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O**********       33      PRFTOT   107 '   ,   ,   ,   . 0 -'                            CGL029
+     O                 30      PRFTOT   118 '   ,   ,   ,   , 0 -'                            CGL029
+     O                 31      PRFTOT   118 '  ,   ,   ,   , 0 . -'                           CGL029
+     O                 32      PRFTOT   118 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O                 33      PRFTOT   118 '   ,   ,   ,   . 0 -'                            CGL029
+     O        E 2              ACNT
+     O                         BRCA       3
+     O                         CCY        7
+     O                         ACOD      12
+     O                         CNUM      19
+     O                         ACSQ      22
+     O********                           27 'A/C'
+     O********                           43 'OPENING BALANCE'
+     O                N73                27 'A/C'
+     O                N73                43 'OPENING BALANCE'
+     O                 73                55 'A/C'
+     O                 73                71 'OPENING BALANCE'
+     O**********       30      #PAMT    107 '   ,   ,   ,   , 0 -'                            CGL029
+     O**********       31      #PAMT    107 '  ,   ,   ,   , 0 . -'                           CGL029
+     O**********       32      #PAMT    107 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O**********       33      #PAMT    107 '   ,   ,   ,   . 0 -'                            CGL029
+     O                 30      #PAMT    118 '   ,   ,   ,   , 0 -'                            CGL029
+     O                 31      #PAMT    118 '  ,   ,   ,   , 0 . -'                           CGL029
+     O                 32      #PAMT    118 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O                 33      #PAMT    118 '   ,   ,   ,   . 0 -'                            CGL029
+     O******  E 00             ACNT                                       CSD005
+     O******                   BRCA       3                               CSD005
+     O******                   CCY        7                               CSD005
+     O******                   ACOD      12                               CSD005
+     O******                   CNUM      19                               CSD005
+     O******                   ACSQ      22                               CSD005
+     O******                             27 'A/C'                         CSD005
+     O******                             43 'OPENING BALANCE'             CSD005
+     O******           30      #PAMT    107 '   ,   ,   ,   , 0 -'        CSD005
+     O******           31      #PAMT    107 '  ,   ,   ,   , 0 . -'       CSD005
+     O******           32      #PAMT    107 ' ,   ,   ,   , 0 .  -'       CSD005
+     O******           33      #PAMT    107 '   ,   ,   ,   . 0 -'        CSD005
+     O        E 1              ACNT
+     O******                             27 'A/C'                         CSD005
+     O******                             43 'POSTING TOTAL  '             CSD005
+     O*                                                                   CSD005
+     O                N73                27 'A/C'                         CSD005
+     O                N73                43 'POSTING TOTAL  '             CSD005
+     O*                                                                   CSD005
+     O                 73                55 'A/C'                         CSD005
+     O                 73                71 'POSTING TOTAL  '             CSD005
+     O**********       30      ACNTOT   107 '   ,   ,   ,   , 0 -'                     CSD005 CGL029
+     O**********       31      ACNTOT   107 '  ,   ,   ,   , 0 . -'                    CSD005 CGL029
+     O**********       32      ACNTOT   107 ' ,   ,   ,   , 0 .  -'                    CSD005 CGL029
+     O**********       33      ACNTOT   107 '   ,   ,   ,   . 0 -'                     CSD005 CGL029
+     O                 30      ACNTOT   118 '   ,   ,   ,   , 0 -'                            CGL029
+     O                 31      ACNTOT   118 '  ,   ,   ,   , 0 . -'                           CGL029
+     O                 32      ACNTOT   118 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O                 33      ACNTOT   118 '   ,   ,   ,   . 0 -'                            CGL029
+     O******* E 00             ACNT                                       CSD005
+     O*******                            27 'A/C'                         CSD005
+     O*******                            43 'POSTING TOTAL  '             CSD005
+     O*******          30      ACNTOT   107 '   ,   ,   ,   , 0 -'        CSD005
+     O*******          31      ACNTOT   107 '  ,   ,   ,   , 0 . -'       CSD005
+     O*******          32      ACNTOT   107 ' ,   ,   ,   , 0 .  -'       CSD005
+     O*******          33      ACNTOT   107 '   ,   ,   ,   . 0 -'        CSD005
+     O        E 1              ACNT
+     O*******                  A5ACCN    25                               CSD005
+     O*******                            27 'A/C'                         CSD005
+     O*******                            43 'LEDGER BALANCE '             CSD005
+     O                N73      A5ACCN    25                               CSD005
+     O                N73                27 'A/C'                         CSD005
+     O                N73                43 'LEDGER BALANCE '             CSD005
+     O                 73      A5NARR    50                               CSD005
+     O                 73                55 'A/C'                         CSD005
+     O                 73                71 'LEDGER BALANCE '             CSD005
+     O**********       30      LDBL     107 '   ,   ,   ,   , 0 -'                            CGL029
+     O**********       31      LDBL     107 '  ,   ,   ,   , 0 . -'                           CGL029
+     O**********       32      LDBL     107 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O**********       33      LDBL     107 '   ,   ,   ,   . 0 -'                            CGL029
+     O                 30      LDBL     118 '   ,   ,   ,   , 0 -'                            CGL029
+     O                 31      LDBL     118 '  ,   ,   ,   , 0 . -'                           CGL029
+     O                 32      LDBL     118 ' ,   ,   ,   , 0 .  -'                           CGL029
+     O                 33      LDBL     118 '   ,   ,   ,   . 0 -'                            CGL029
+     O******  E 00             ACNT                                       CSD005
+     O******                   A5ACCN    25                               CSD005
+     O******                             27 'A/C'                         CSD005
+     O******                             43 'LEDGER BALANCE '             CSD005
+     O******           30      LDBL     107 '   ,   ,   ,   , 0 -'        CSD005
+     O******           31      LDBL     107 '  ,   ,   ,   , 0 . -'       CSD005
+     O******           32      LDBL     107 ' ,   ,   ,   , 0 .  -'       CSD005
+     O******           33      LDBL     107 '   ,   ,   ,   . 0 -'        CSD005
+     O        E 2              ACNT
+     O                                   24 '------------------------'
+     O                                   48 '------------------------'
+     O                                   72 '------------------------'
+     O                                   96 '------------------------'
+     O                                  120 '------------------------'
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

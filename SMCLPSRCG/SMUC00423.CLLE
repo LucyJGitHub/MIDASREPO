@@ -1,0 +1,161 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('BankFusion Midas Zonal DI Layer Archive -Global')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMUC00423 - Addition of integration libraries               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD-35839A          Date 14Sep15              */
+/*                      MD-35427 *CREATE   Date 14Aug15              */
+/*                                                                   */
+/*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD-35839A- Create SAVF for the new DI layer library (GD,DD) */
+/*                  and addtl fix for bridge for DI layer            */
+/*       MD-35427 - Data Interchange Layer                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&GPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&INLLIBL) TYPE(*CHAR) LEN(2750)
+             DCL        VAR(&NEWLIBL) TYPE(*CHAR) LEN(2750)
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(3000)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(3000)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&IASPGRP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+ 
+/*           DCLF       FILE(SMSETUPD)                  */                            /*MD035839A*/
+             DCLF       FILE(SMSETULH)                                                /*MD035839A*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2015')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Retrieve global prefix and IASP values. */
+             CHGVAR     VAR(&SVALK1) VALUE('BrgMidasGlobalPrefix')
+             CHGVAR     VAR(&SVALK2) VALUE('IASPinstallation')
+             CHGVAR     VAR(&SVALK3) VALUE('IASPgroup')
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCODE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ')
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF         COND(&SVAL1 *EQ ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&GPFX) VALUE(%SST(&SVAL1 1 2))
+             ENDDO
+             IF         COND(%SST(&SVAL2 1 1) *EQ 'Y' *AND &SVAL3 = +
+                          ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(%SST(&SVAL2 1 1) *EQ 'Y') THEN(DO)
+                   CHGVAR     VAR(&IASPGRP) VALUE(%SST(&SVAL3 1 10))
+                ENDDO
+             ENDDO
+/* Set variables for library names. */
+             CHGVAR     VAR(&GTALIB) VALUE(&GPFX *TCAT 'GTALIB')
+             CHGVAR     VAR(&GBLIB) VALUE(&GPFX *TCAT 'GBLIB')
+             CHGVAR     VAR(&OWNER) VALUE(&GPFX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&GPFX *TCAT 'DATABASE')
+ 
+/* If the libraries don't already exist then create them. */
+             CHKOBJ     OBJ(&GBLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                IF         COND(&IASPGRP *EQ ' ') THEN(DO)
+                   CRTLIB     LIB(&GBLIB) TEXT('BankFusion Midas +
+                                Global Layer-Archive') AUT(*USE)
+                ENDDO
+                ELSE       CMD(DO)
+                   CRTLIB     LIB(&GBLIB) TEXT('Bankfusion Midas +
+                                Global Layer-Archive') AUT(*USE) +
+                                ASPDEV(&IASPGRP)
+                ENDDO
+                CHGOBJOWN  OBJ(&GBLIB) OBJTYPE(*LIB) NEWOWN(&OWNER)
+                CHGLIB     LIB(&GBLIB) CRTAUT(&AUTL)
+             ENDDO
+ 
+/* Read file to obtain the names of job descriptions. */
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* Identify if the jobd is global or zone */
+             CHGVAR     VAR(&LAYER) VALUE(%SST(&DFLIB 1 1))
+ 
+             IF         COND(&DFTYPE *NE '*JOBD' *OR &DFSTS *NE +
+                          ' ' *OR &LAYER *NE 'G') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             CHGVAR     VAR(&NEWLIBL) VALUE(' ')
+             CHGVAR     VAR(&CMD) VALUE(' ')
+             RTVJOBD    JOBD(&DFNAME) INLLIBL(&INLLIBL)
+             CHGJOBD    JOBD(&DFNAME) INLLIBL(*NONE)
+ 
+             CHGVAR     VAR(&STRPOS) VALUE(1)
+LOOP:
+             CHGVAR     VAR(&LIB) VALUE(%SST(&INLLIBL &STRPOS 10))
+/* Ignore libraries if they are already there. */
+             IF         COND(&LIB *EQ &GBLIB) THEN(DO)
+                CHGVAR     VAR(&STRPOS) VALUE(&STRPOS + 11)
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+             IF         COND(&LIB *EQ ' ') THEN(DO)
+                GOTO       CMDLBL(CHANGE)
+             ENDDO
+             IF         COND(&LIB *EQ &GTALIB) THEN(DO)
+                CHGVAR     VAR(&STRPOS) VALUE(&STRPOS + 11)
+                CHGVAR     VAR(&NEWLIBL) VALUE(&NEWLIBL *BCAT &LIB +
+                             *BCAT &GBLIB)
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+             CHGVAR     VAR(&NEWLIBL) VALUE(&NEWLIBL *BCAT &LIB)
+             CHGVAR     VAR(&STRPOS) VALUE(&STRPOS + 11)
+             IF         COND(&STRPOS *LT 2750) THEN(DO)
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+CHANGE:
+             CHGVAR     VAR(&CMD) VALUE('CHGJOBD JOBD(' *TCAT +
+                          &DFNAME *TCAT ') INLLIBL(' *TCAT &NEWLIBL +
+                          *TCAT ')')
+             CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

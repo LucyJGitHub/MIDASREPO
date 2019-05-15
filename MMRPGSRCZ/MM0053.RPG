@@ -1,0 +1,1288 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Revalue profit/loss')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MM Dealer Module
+     F*                                                               *
+     F*  MM0053 - REVALUE PROFIT & LOSS                               *
+     F*                                                               *
+     F*  Function: This program revalues existing live trades         *
+     F*  (I/C)     against current market interest rates and          *
+     F*  (I/C INIT)updates the the cost to close profit/loss.         *
+     F*                                                               *
+     F*  Called by: MM0029A - Revalue daily positions control (IC)    *
+     F*           : MM0101  - Start of day reorganisation (IC INT)    *
+     F*           : MM0102  - Start of day reorganisation (IC INT)    *
+     F*                                                               *
+     F*  Calls    : none                                              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG8605            Date 22Sep05               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 207588             Date 1AUg02                *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 04Oct01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 065473             DATE 22JUN94               *
+     F*                 046876             DATE 27JAN94               *
+     F*                 E46391             DATE 01FEB93               *
+     F*                 S01280             DATE 30NOV90               *
+     F*                 E20774             DATE 09APR90               *
+     F*                 S01194             DATE 05MAR90               *
+     F*                 E16251             DATE 24/01/89              *
+     F*                 E13957             DATE 24/10/88              *
+     F*                 E12796             DATE 06/04/88              *
+     F*                 S01149             DATE 17/02/86              *
+     F*                 S01136             DATE 28/11/86              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      * BUG8605 - SCC0411 failure on FDINTDLL/MM0053. I/C initiation  *
+      *           ended abnormally.  Skip the process of revaluation  *
+      *           if the CCY code does not exist in FDINTRPP instead  *
+      *           of treating as database error.  Applied fix 233731. *
+      *  207588 - The indicator that signals whether this program is  *
+      *           running or not must be reset to 'N' regardless of   *
+      *           any errors encountered within the program.          *
+      *  CPK014 - Release 4 packaging.  Rename of field which is too  *
+      *           long for OPM program.                               *
+     F*  065473 - The market rate displayed is completely false for   *
+     F*           certain dates.  Field COEF in subroutine MM1002 is  *
+     F*           changed to be larger, from 6N to 15N.               *
+     F*  046876 - If default Interest Calc. Basis is blank, output    *
+     F*           Database Error instead of Divide by Zero error.     *
+     F*  E46391 - This pgm is also called by MM0102 - amend           *
+     F*           details in header box                               *
+     F*  S01280 - Amend processing to deal only with deal types       *
+     F*           NA and LD.other deal types are processed by         *
+     F*           TM3340.                                             *
+     F*  E20774 - Replace QCAEXEC with QCMDEXC                        *
+     F*  S01194 - New Standing Data and Copyright statement.          *
+     F*  E16251 - If date to be processed in MM1000 is not run        *
+     F*           date, but is before the first date on the rates     *
+     F*           table, use the rate from the first record           *
+     F*  E13957 - Send message to MOPERQ if there is database         *
+     F*           error in program                                    *
+     F*  E12796 - Program recompiled due to change to PF/FDINTRPP     *
+     F*  S01149 - MM MODS - separate deal types L/D N/A               *
+     F*  S01136 - DRS incorporation FX/MM                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F**  Indicator Function Summary                                 *
+     F*                                                              *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   *
+     F*                                                              *
+     F********31*********EOF*ON*MMFWDDLL******************************    S01149
+     F*       31         EOF ON MMFWDDL1                             *    S01149
+     F*       32         Chain fail on MMFWDTLL                      *
+     F*       60         Chain fail on MMREVCLL                      *
+     F*                                                              *
+     F*       80         MM1000 End of file.                         *
+     F*       81         MM1000 Database error indicator.            *
+     F*                                                              *
+     F*       U6         PROGRAM ERROR                               *
+     F*       U7         DATA BASE OR EXCEPTION ERROR                *
+     F*       U8         DATA BASE OR EXCEPTION ERROR                *
+     F*                                                              *
+     F****************************************************************
+     F*                                                               *
+     F*  Description:                                                 *
+     F*                                                               *
+     F*     For each daily forward book record, calculates outright   *
+     F*     P/L for the net positions, accumulates for the currency   *
+     F*     and updates the Profit/loss figure for the currency.      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     FMMFWDDLLIF  E           K        DISK         KINFSR *PSSR
+     FMMREVCLLUF  E                    DISK         KINFSR *PSSR
+     FMMFWDTLLUF  E           K        DISK         KINFSR *PSSR A
+     F**FDICDRLLIF**E*********K********DISK*********KINFSR *PSSR      UC  S01194
+     F************TABTB11F**************************KIGNORE               S01194
+     F************TABTB20F**************************KIGNORE               S01194
+     F**FDCCYTLLIF**E*********K********DISK*********KINFSR *PSSR      UC  S01194
+     FFDINTDLLIF  E           K        DISK         KINFSR *PSSR
+      *
+     E**  COPYRIGHT ARRAY                                                 S01194
+     E                    CPY@    1   1 80                                S01194
+      *
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+      *                                                                   E13957
+      **  Command for sending error messages, etc.                        E13957
+     E                    @CM     1   1 80                                E13957
+     E*
+      *                                                                                       CPK014
+     IFDINTRP0                                                                                CPK014
+     I              HWTMESTMP                       HWTMST                                    CPK014
+      *
+      **  Local data area for data base errors.
+      *
+     I           UDS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      **  Program status data structure.
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I*
+     I**  DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+     I*
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+      *
+      **  Datastructure for System Run Date
+      *
+     I            DS
+     I                                        1   7 @SDATE
+     I                                        1   20@SDD
+     I                                        3   5 @SMMM
+     I                                        5   70@SYY
+      *
+      **  Datastructure for Value Date
+      *
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@VDYY
+     I                                        5   60@@VDMM
+     I                                        7   80@@VDDD
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I* DATA STRUCTURE FOR CURRENCY DETAILS                               S01194
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+      /EJECT
+      *
+      *****************************************************************
+      *                                                               *
+      * CONTROL PROCESSING - THIS ROUTINE CONTROLS THE WHOLE PROGRAM  *
+      *                                                               *
+      * CALLED BY :                                                   *
+      *                                                               *
+      * CALLS :      #A                                               *
+      *              #B                                               *
+      *              #C                                               *
+      *                                                               *
+      * USES :                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+      **  INITIAL PROCESSING.
+     C           @TERM     IFNE 'T'                        B1
+     C                     EXSR #A                         *1
+      *
+      **  MAIN PROCESSING
+     C           @TERM     IFNE 'E'                        B*2
+     C                     EXSR #B                         **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      **  FINAL PROCESSING
+     C                     EXSR #C
+      *
+     C           ENDPGM    TAG
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * SUBROUTINES USED                                              *
+      * ----------------                                              *
+      *                                                               *
+      *  1 #B      -  Main Processing                                 *
+      *  2 #BA     -  Write FWD Book Totals Record                    *
+      *  3 #BB     -  Obtain FWD Book Totals Record & initialisise it.*
+      *  4 MM1000  -  Calculate Forward MM Borrow and Lend rate       *
+      *  5 MM1002  -  Determine a Broken date rate                    *
+      *  6 ZA0680  -  Convert date to Midas day number                *
+      *  7 MM1011  -  Calculate no.of days in year for int.calc.mthd. *
+      *  8 #A      -  Initialisation                                  *
+      *  9 #C      -  Finalisation                                    *
+      * 10 *PSSR  -   PROGRAM EXCEPTION/ERROR SUBROUTINE              *
+      *                                                               *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #B  - THIS ROUTINE PERFORMS MAIN PROCESSING CONTROL.         *
+      *                                                               *
+      *  CALLED BY : CONTROL PROCESSING                               *
+      *                                                               *
+      *  CALLS :     #BA                                              *
+      *              #BB                                              *
+      *                                                               *
+      *    MM1000  - CALCULATE A FORWARD AND LEND BORROW RATE         *
+      *    MM1011  -  Calculate no.of days in year for int.calc.mthd. *
+      *    MM1002 - DETERMINE A BROKEN DATE RATE                      *
+      *    ZA0680 - CONVERT DATE TO MIDAS DAY NUMBER                  *
+      *                                                               *
+      *  USES :                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #B        BEGSR
+      *
+      ** exit if data base error has occurred.
+     C           *INU7     CABEQ'1'       #B9
+      *
+      **  SETLL ON DETAIL FILE
+      *
+     C           *LOVAL    SETLLMMFWDDLL
+     C                     Z-ADD0         HSDNIM
+      *                                                                   S01280
+      ** only process deal types NA + LD,others processed by TM3340.      S01280
+     C           HSLDNA    DOUEQ'NA'                       B1             S01280
+     C           HSLDNA    OREQ 'LD'                       B1             S01280
+     C           *IN31     OREQ '1'                        B1             S01280
+     C                     READ MMFWDDLL                 31
+     C                     END                             E1             S01280
+      *
+      *  PERFORM MAIN PROCESSING LOOP UNTIL EOF OR DATA BASE ERROR.
+      *
+     C           *IN31     DOWEQ'0'                        B1
+      *                                                    *1
+      *  IGNORE LOGICALLY DELETED RECORDS                  *1
+      *                                                    *1
+     C           HSDLTF    IFEQ *BLANK                     B*2
+      *                                                    **2
+      *  CHANGE IN CURRENCY                                **2
+      *                                                    **2
+     C           HSCCY     IFNE @PCCY                      B**3
+     C                     EXSR #BA                        ***3
+     C                     EXSR #BB                        ***3
+     C                     END                             E**3
+      *
+      *  DETERMINE MM SPOT DATE TO BE PASSED INTO MM1000
+      *
+     C*********************MOVELHSCCY     @KEY4   4        **2            S01194
+     C*********************MOVE '1'       @KEY4            **2            S01194
+     C*********************MOVEL'20'      @KEY12 12        **2            S01194
+     C*********************MOVE @KEY4     @KEY12           **2            S01194
+      *********************                                               S01194
+     C***********@KEY12****CHAINFDCCYTLL             60    **2            S01194
+      *********************                                               S01194
+     C********** *IN60*****IFEQ '1'                        B**3           S01194
+     C*********************MOVEL'FDCCYTLL'DBFILE           ***************S01194
+     C*********************MOVEL'004'     DBASE            *             *S01194
+     C*********************MOVEL@KEY12    DBKEY            * DBERROR 004 *S01194
+     C*********************MOVE '1'       *INU7            *             *S01194
+     C*********************MOVE '1'       *INU8            ***************S01194
+     C*********************GOTO #B9                        ***3           S01194
+     C*********************END                             E**3           S01194
+     C*                                                                   S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM HSCCY     @WRK3   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C*                                                                   S01194
+     C** IF THE CURRENCY DOES NOT EXIST DATA BASE ERROR                   S01194
+     C           @RTCD     IFNE *BLANK                     B3             S01194
+     C                     MOVEL'SDCURRPD'DBFILE           ***************S01194
+     C                     MOVE '004'     DBASE            *             *S01194
+     C                     MOVELHSCCY     DBKEY            * DB ERROR 004*S01194
+     C                     MOVE '1'       *INU7            *             *S01194
+     C                     MOVE '1'       *INU8            *             *S01194
+     C                     GOTO #B9                        ***************S01194
+     C                     END                             E3
+      *
+      *  CALCULATE BORROW & LEND RATES.
+      *
+     C*********************Z-ADDMSPD      @@MSPD           **2            S01194
+     C                     Z-ADDA6MMSD    @@MSPD           **2            S01194
+     C                     Z-ADDHSFBYY    @@VDYY           **2
+     C                     Z-ADDHSFBMM    @@VDMM           **2
+     C                     Z-ADDHSFBDD    @@VDDD           **2
+     C                     MOVELHSCCY     @@CCY   3        **2
+     C                     MOVEL'W'       @@INTM  1        **2
+     C                     EXSR MM1000                     **2
+     C           *INU7     IFEQ '1'                        B**3
+     C                     MOVE 'E'       @TERM            ***3
+     C                     MOVE '1'       *INLR            ***3
+     C                     GOTO #B9                        ***3
+     C                     END                             E**3
+     C*
+     C           *IN80     IFEQ '0'                                                          BUG8605
+     C           *IN81     ANDEQ'0'                                                          BUG8605
+      *                                                                                      BUG8605
+     C**  Find number of days in year for default int. calc. method
+     C*********************MOVE DICM      @@CALC           **2            S01194
+     C                     MOVE A6DICB    @@CALC           **2            S01194
+     C                     EXSR MM1011                     **2
+     C*                                                                   046876
+     C** Continue processing if no data base error occurred.              046876
+     C*                                                                   046876
+     C           *INU7     IFEQ '0'                                       046876
+     C           *INU8     ANDEQ'0'                                       046876
+      *                                                    **2
+      *  CALCULATE REVALUED PROFIT/LOSS                    **2
+      *                                                    **2
+     C                     Z-ADDHSDNMT    @A     150       **2
+     C           HSDNMT    IFLT *ZERO                      B**3
+     C                     MULT @@BORC    @A        H      ***3
+     C                     ELSE                            X**3
+     C                     MULT @@LERC    @A        H      ***3
+     C                     END                             E**3
+     C                     MULT @@PER     @A               **2
+     C           @A        DIV  @@DAYO    @A        H      **2
+     C           @A        DIV  100       @A        H      **2
+     C                     MULT -1        @A               **2
+      *                                                    **2
+      *  ACCUMMULATE REVALUED PROFIT/LOSS                  **2
+      *                                                    **2
+      **  DIVIDE HSDNIM BY 10 TO ACCOUNT FOR EXTRA
+      **  DECIMAL PLACE.
+     C           HSDNIM    DIV  10        @@DNIM 150H
+     C***                  ADD  @@DNIM    HVCCPL                          S01149
+     C***                  ADD  @A        HVCCPL           **2            S01149
+     C           HSLDNA    IFEQ 'LD'                       B**3           S01149
+     C                     ADD  @@DNIM    HVCPLL           ***3           S01149
+     C                     ADD  @A        HVCPLL           ***3           S01149
+     C                     ELSE                            X**3           S01149
+     C                     ADD  @@DNIM    HVCPLN           ***3           S01149
+     C                     ADD  @A        HVCPLN           ***3           S01149
+     C                     END                             E**3           S01149
+      *                                                                                      BUG8605
+     C                     ENDIF                                                             BUG8605
+      *                                                    **2
+     C                     END                             E*2
+      *  READ NEXT FORWARD BOOK DETAIL RECORD              *1
+      *                                                    *1
+      ** only process deal types NA + LD,others processed by DL3340.      S01280
+     C           HSLDNA    DOUEQ'NA'                       B*2            S01280
+     C           HSLDNA    OREQ 'LD'                       B*2            S01280
+     C           *IN31     OREQ '1'                        B*2            S01280
+     C                     READ MMFWDDLL                 31*1
+     C                     END                             E*2            S01280
+     C*                                                                   046876
+     C                     ELSE                                           046876
+     C                     MOVE '1'       *IN31                           046876
+     C                     END                                            046876
+      *                                                    *1
+     C                     END                             E1
+      *
+      *  WRITE LAST FORWARD BOOK TOTALS RECORD
+      *
+     C                     EXSR #BA
+      *
+     C           #B9       ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BA - THIS ROUTINE UPDATE THE FORWARD BOOK TOTALS RECORD     *
+      *                                                               *
+      *  CALLED BY : #B                                               *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *  USES :                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BA       BEGSR
+      *
+      ** exit if data base error has occurred.
+     C           *INU7     CABEQ'1'       #BA9
+      *
+      *  EXIT IF FIRST CHANGE IN CURRENCY
+     C           @PCCY     CABEQ*BLANK    #BA9
+      *
+     C                     Z-ADD@SDD      HVDLUP
+     C                     MOVEL@SMMM     HVMLUP
+     C                     Z-ADD@SYY      HVYLUP
+     C                     TIME           HVTLUP
+     C                     MOVEL'A'       HVCHTP
+     C*********************Z-ADDRUND      HVLCD                           S01194
+     C                     Z-ADDBJRDNB    HVLCD                           S01194
+     C                     MOVEL@USER     HVLUID
+      *
+      **  UPDATE FORWARD BOOK TOTALS RECORD.
+      *
+     C           *IN32     IFEQ '0'                        B1
+     C                     UPDATMMFWDTP0                   *1
+     C                     ELSE                            X1
+     C                     WRITEMMFWDTP0                   *1
+     C                     END                             E1
+      *
+      *
+     C           #BA9      ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BB - THIS ROUTINE GETS THE FORWARD BOOK TOTALS RECORD       *
+      *        AND INITIALISES THE REVALUED P/L.                      *
+      *                                                               *
+      *  CALLED BY : #B                                               *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *  USES :      @PCCY  - Currency Code from previous record.     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BB       BEGSR
+      *
+      ** exit if data base error has occurred.
+     C           *INU7     CABEQ'1'       #BB9
+      *
+      *  GET CURRENT CURRENCY'S FORWARD BOOK TOTALS RECORD
+      *
+     C                     MOVELHSCCY     HVCCY
+     C           HVCCY     CHAINMMFWDTLL             32
+     C           *IN32     IFEQ '1'                        B1
+     C                     MOVEL*BLANK    HVRCID           *1
+     C                     MOVEL*BLANK    HVDLTF           *1
+     C                     Z-ADD*ZERO     HVDLUP           *1
+     C                     MOVEL*BLANK    HVMLUP           *1
+     C                     Z-ADD*ZERO     HVYLUP           *1
+     C                     Z-ADD*ZERO     HVTLUP           *1
+     C                     MOVEL*BLANK    HVCHTP           *1
+     C                     Z-ADD*ZERO     HVLCD            *1
+     C                     MOVEL*BLANK    HVLUID           *1
+     C                     MOVELHSCCY     HVCCY            *1
+     C                     Z-ADD*ZERO     HVNSNV           *1
+     C                     Z-ADD*ZERO     HVNSFV           *1
+     C                     Z-ADD*ZERO     HVTFDL           *1
+     C                     Z-ADD*ZERO     HVTCIN           *1
+     C                     Z-ADD*ZERO     HVTCOT           *1
+     C****                 Z-ADD*ZERO     HVNCMT           *1             S01149
+     C****                 Z-ADD*ZERO     HVNIMT           *1             S01149
+     C                     Z-ADD*ZERO     HVNCML           *1             S01149
+     C                     Z-ADD*ZERO     HVNIML           *1             S01149
+     C                     Z-ADD*ZERO     HVNCMN           *1             S01149
+     C                     Z-ADD*ZERO     HVNIMN           *1             S01149
+     C                     Z-ADD*ZERO     HVTCND           *1
+     C                     Z-ADD*ZERO     HVMMFN           *1
+     C******               Z-ADD*ZERO     HVCCPL           *1             S01149
+     C                     Z-ADD*ZERO     HVCPLL           *1             S01149
+     C                     Z-ADD*ZERO     HVCPLN           *1             S01149
+     C                     END                             E1
+      *
+      *  INITIALISE REVALUED PROFIT/LOSS
+      *
+     C******               Z-ADD*ZERO     HVCCPL                          S01149
+     C                     Z-ADD*ZERO     HVCPLL                          S01149
+     C                     Z-ADD*ZERO     HVCPLN                          S01149
+     C                     MOVELHSCCY     @PCCY
+      *
+     C           #BB9      ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C* MM1000 - THIS SUBROUTINE CALCULATES FORWARD MONEY MARKET     *
+     C*          BORROW & LEND RATES.                                *
+     C*                                                              *
+     C* CALLED BY:                                                   *
+     C*                                                              *
+     C* CALLS :   ZA0680      CONVERT DATE TO MIDAS DAY NUMBER       *
+     C*       :   MM1002      DETERMINE A BROKEN DATE RATE           *
+     C*                                                              *
+     C* INPUT  :  @@VDT  VALUE DATE   'YYYYMMDD'               (8N)  *
+     C*           @@CCY  CURRENCY CODE                         (3A)  *
+     C*           @@INTM INTERPOLATION METHOD LINEAR/WEIGHTED  (1A)  *
+     C*           @@MSPD MONEY MARKET SPOT DATE                (8N)  *
+     C*                                                              *
+     C*                                                              *
+     C* OUTPUT :  @@BORC BORROW RATE                          (11N)  *
+     C*           @@LERC LEND RATE                            (11N)  *
+     C*           @@PER  DAYS IN PERIOD                        (5N)  *
+     C*                                                              *
+     C*                                                              *
+     C* ADDITIONAL WORK FIELDS USED WITHIN THIS ROUTINE :            *
+     C*                                                              *
+     C*     INPUT:   @@BORA - Borrow rate for start date.            *
+     C*              @@BORB - Borrow rate for end date.              *
+     C*              @@LERA - Lend rate for start date.              *
+     C*              @@LERB - Lend rate for end date.                *
+     C*              @@DYTA - Number of days to start date.          *
+     C*              @@DYTB - Number of days to end date.            *
+     C*              @@DYTC - Number of days to required date.       *
+     C*              @@DTIN - Field required by SR/ZA0680            *
+     C*              @@MDNO - Day # returned from SR/ZA0680          *
+     C*                                                              *
+     C*                                                              *
+     C**  Indicator Function Summary                                 *
+     C*                                                              *
+     C* ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     C* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*
+     C*       80         End of file indicator.                      * UT
+     C*       81         Database error indicator.                   *
+     C*                                                              *
+     C*                                                              *
+     C*****************************************************************
+     C*
+     C           MM1000    BEGSR
+     C*
+     C**  Initialisation - Set up the key list parameters.
+     C**                   Re-set fields.
+     C*
+     C           @@K11     KLIST
+     C                     KFLD           @@CCY
+     C                     KFLD           @@VDT
+     C*
+     C                     Z-ADD0         @@LERC 117
+     C                     Z-ADD0         @@BORC 117
+     C                     Z-ADD0         @@PER   50
+     C*
+     C**  Use the key of currency and date to determine if data base
+     C**  error has occurred.
+     C*
+     C           @@CCY     SETLLFDINTDLL             80
+     C  N80      @@CCY     READEFDINTDLL               8180
+     C           *IN80     IFEQ '1'                        B1
+     C           *IN81     OREQ '1'                        *1
+     C***********          GOTO M10008                     *1                                BUG8605
+     C                     GOTO M10009                                                       BUG8605
+     C                     END                             E1
+     C*
+     C**  Convert input date to MIDAS day number.
+     C*
+     C                     Z-ADD@@VDT     @@DTIN
+     C                     EXSR ZA0680
+     C                     Z-ADD@@MDNO    @@DYTC
+     C*
+     C                     Z-ADD@@MSPD    @@DTIN
+     C                     EXSR ZA0680
+     C                     Z-ADD@@MDNO    @@SPD1  50
+     C*
+     C** Calculate the period.
+     C*
+     C           @@DYTC    SUB  @@SPD1    @@PER
+     C*
+     C** MATCH DATE SITUATION.
+     C** IF     valid chain then calculate the number of days in
+     C**        the period, set up the output fields and terminate
+     C**        the process.
+     C*******    @@DYTC    IFEQ RUND                       B**3           E16251
+     C*                                                                   E16251
+     C**IF THE DATE IS BEFORE THE FIRST RECORD ON THE FILE, USE           E16251
+     C**THE FIRST RECORD                                                  E16251
+     C           @@VDT     IFLT HWPRDD                     B**3           E16251
+     C           @@CCY     SETLLFDINTDLL                   ***3           E16251
+     C                     READ FDINTDLL                 80***3           E16251
+     C                     MOVE HWBRRT    @@BORC           ***3           E16251
+     C                     MOVE HWLDRT    @@LERC           ***3           E16251
+     C                     GOTO M10009                     ***3           E16251
+     C                     END                             E**3           E16251
+     C** END
+     C*****NB:**LF/FDCCYTLL*should*have*been*accessed*in*mainline         S01194
+     C**********and MSPD obtained.                                        S01194
+     C*    NB:  SDCURRPD should have been accessed in mainline            S01194
+     C*         and A6MMSD obtained.                                      S01194
+     C*
+     C           @@K11     CHAINFDINTDLL             80
+     C           *IN80     IFEQ '0'                        B1
+     C                     MOVE HWBRRT    @@BORC           **2
+     C                     MOVE HWLDRT    @@LERC           **2
+     C                     GOTO M10009                     **2
+     C                     END                             E1
+     C*
+     C** Re-set the file pointer to record nearest the key.
+     C*
+     C           @@K11     SETGTFDINTDLL
+     C*
+     C** INPUT DATE EXCEEDS DATE ON FILE.
+     C** IF     the value input is greater than that on file for
+     C**          that currency IE: next currency accessed
+     C** THEN   access the largest dated record on LF/FDINTDLL
+     C**        using READP (NB: re-check currency)
+     C**        then calculate the number of days in the period,
+     C**        set up the output fields and terminate the process.
+     C** END
+     C*****NB:**LF/FDCCYTLL*should*have*been*accessed*in*mainline         S01194
+     C**********and*MSPD*obtained.                                        S01194
+     C*    NB:  SDCURRPD should have been accessed in mainline            S01194
+     C*         and A6MMSD obtained.                                      S01194
+     C**
+     C*
+     C                     READ FDINTDLL                 80
+     C           *IN80     IFEQ '1'                        B1
+     C           @@K11     SETGTFDINTDLL                   *1
+     C                     READPFDINTDLL                 80*1
+     C                     MOVE HWBRRT    @@BORC           *1
+     C                     MOVE HWLDRT    @@LERC           *1
+     C                     GOTO M10009                     *1
+     C                     ELSE                            X1
+     C           HWCCY     IFNE @@CCY                      B*2
+     C                     READPFDINTDLL                 80**2
+     C           @@CCY     IFEQ HWCCY                      B**3
+     C                     MOVE HWBRRT    @@BORC           ***3
+     C                     MOVE HWLDRT    @@LERC           ***3
+     C                     GOTO M10009                     ***3
+     C                     END                             E**3
+     C*
+     C** DATE BRACKET SITUATION.
+     C** IF     the value input does not match a record exactly
+     C**        and is infact bracketed by two records
+     C** THEN          execute subroutine MM10029 to calculate
+     C**               linear or weighted interpolation
+     C*
+     C                     ELSE                            X*2
+     C                     MOVE HWBRRT    @@BORB           **2
+     C                     MOVE HWLDRT    @@LERB           **2
+     C                     Z-ADDHWPRDD    @@DTIN           **2
+     C                     EXSR ZA0680                     **2
+     C                     Z-ADD@@MDNO    @@DYTB           **2
+     C*
+     C                     READPFDINTDLL                 81
+     C           HWCCY     IFNE @@CCY                      B**3
+     C                     MOVE '1'       *IN80            ***3
+     C***********          GOTO M10008                     ***3DBERROR 932                   BUG8605
+     C                     GOTO M10009                                                       BUG8605
+     C                     ELSE                            X**3
+     C                     MOVE HWBRRT    @@BORA           ***3
+     C                     MOVE HWLDRT    @@LERA           ***3
+     C                     Z-ADDHWPRDD    @@DTIN           ***3
+     C                     EXSR ZA0680                     ***3
+     C                     Z-ADD@@MDNO    @@DYTA           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C** Execute subroutine MM1002 to calculate the weighted or
+     C** linear rate value depending on the interpolation method
+     C** submitted by the user.
+     C*
+     C                     EXSR MM1002
+     C*
+     C                     GOTO M10009
+     C*
+     C***DATA*BASE*ERROR*SITUATION.***************************************                   BUG8605
+     C***Data*base*error*occured*either*because*the*file*was*empty*****.**                   BUG8605
+     C***OR*no*records*exist*on*file*for*that*currency.*******************                   BUG8605
+     C***********M10008****TAG********************************************                   BUG8605
+     C***********          MOVEL'FDINTDLL'DBFILE           *1                                BUG8605
+     C***********          MOVEL'932'     DBASE            ***************                   BUG8605
+     C***********          MOVEL@@CCY     DBKEY            *             *                   BUG8605
+     C***********          MOVE '1'       *INU7            * DBERROR 932 *                   BUG8605
+     C***********          MOVE '1'       *INU8            *             *                   BUG8605
+     C***********          ADD  0         @@MSPD  80       ***************                   BUG8605
+     C***********          GOTO M10009                                                       BUG8605
+     C*
+     C** Unexecuted processing to define fields used by this subroutine.
+     C                     MOVE @@MDNO    @@MDNO  50
+     C                     Z-ADD@@MSPD    @@MSPD  80                                         BUG8605
+     C*
+     C           M10009    ENDSR
+     C/EJECT
+      ****************************************************************
+      *                                                              *
+      *     MM1002 -  Determine a broken date rate                   *
+      *                                                              *
+      *     CALLS BY: MM1000                                         *
+      *                                                              *
+      *     CALLS:                                                   *
+      *                                                              *
+      *     INPUT:   @@BORA - Borrow rate for start date.            *
+      *              @@BORB - Borrow rate for end date.              *
+      *              @@LERA - Lend rate for start date.              *
+      *              @@LERB - Lend rate for end date.                *
+      *              @@DYTA - Number of days to start date.          *
+      *              @@DYTB - Number of days to end date.            *
+      *              @@DYTC - Number of days to required date.       *
+      *              @@INTM - Interpolation method required.         *
+      *                                                              *
+      *     OUTPUT:  @@BORC - Borrow rate for required date.         *
+      *              @@LERC - Lend rate for required date.           *
+      *                                                              *
+      *     USES:    @@TCSA - (Tc-Ta)                                *
+      *              @@TBSA - (Tb-Ta)                                *
+      *              @@RATA - Ra*Ta                                  *
+      *              @@RBTB - Rb*Tb                                  *
+      *              @@COEF - @@TBSA*Tc                              *
+      *              @@ELM1 - @@COEF*(@@RBTB-@@RATA)                 *
+      *              @@DLM1 - 1st element of equation.               *
+      *              @@DLM2 - 2nd element of equation.               *
+      *              @@EINT - Integer part of (RbTb-RaTa)*(Tc-Ta)    *
+      *              @@EDEC - Decimal part of (RbTb-RaTa)*(Tc-Ta)    *
+      *              @@DINT - @@EINT/@@COEF                          *
+      *              @@DDEC - @@EINT/@@COEF                          *
+      *                                                              *
+      ****************************************************************
+      **
+      **  This routine uses two equations:
+      **
+      **  1. Linear interpolation.
+      **
+      **                  Ra + (Tc-Ta)*(Rb-Ra)
+      **     Rc =              -------
+      **                       (Tb-Ta)
+      **
+      **
+      **  2. Weighted interpolation.
+      **
+      **                  TaRa    (Tc-Ta)  *(TbRb-TaRa)
+      **     Rc =         ---- + ----------
+      **                   Tc    (Tb-Ta)*Tc
+      **
+      **
+      **     where   Rc = rate at required no. of days forward.
+      **             Ra = rate at start no. of days forward.
+      **             Rb = rate at end no. of days forward.
+      **             Tc = required no. of days forward.
+      **             Ta = start no. of days forward.
+      **             Tb = end no. of days forward.
+      **
+      *
+      *
+     C           MM1002    BEGSR
+      *
+      **  Define and initialise fields used.
+     C                     Z-ADD@@BORA    @@BORA 117
+     C                     Z-ADD@@BORB    @@BORB 117
+     C                     Z-ADD@@LERA    @@LERA 117
+     C                     Z-ADD@@LERB    @@LERB 117
+     C                     Z-ADD@@DYTA    @@DYTA  50
+     C                     Z-ADD@@DYTB    @@DYTB  50
+     C                     Z-ADD@@DYTC    @@DYTC  50
+     C                     MOVE @@INTM    @@INTM  1
+      *
+     C                     Z-ADD*ZEROS    @@BORC 117
+     C                     Z-ADD*ZEROS    @@LERC 117
+      *
+     C                     Z-ADD*ZEROS    @@TCSA  50
+     C                     Z-ADD*ZEROS    @@TBSA  50
+     C                     Z-ADD*ZEROS    @@RATA 157
+     C                     Z-ADD*ZEROS    @@RBTB 157
+     C***********          Z-ADD*ZEROS    @@COEF  60                      065473
+     C                     Z-ADD*ZEROS    @@COEF 150                      065473
+     C                     Z-ADD*ZEROS    @@ELM1 157
+     C                     Z-ADD*ZEROS    @@DLM1 159
+     C                     Z-ADD*ZEROS    @@DLM2 159
+     C                     Z-ADD*ZEROS    @@EINT 100
+     C                     Z-ADD*ZEROS    @@EDEC  99
+     C                     Z-ADD*ZEROS    @@DINT 139
+     C                     Z-ADD*ZEROS    @@DDEC  99
+      *
+      **  Calculate     (Tc-Ta) and (Tb-Ta).
+     C           @@DYTC    SUB  @@DYTA    @@TCSA
+     C           @@DYTB    SUB  @@DYTA    @@TBSA
+      *
+      **  If the interpolation method field holds an 'L', the inter-
+      **  polation method is linear.
+     C           @@INTM    IFEQ 'L'                        B1
+      *
+      **  Calculate Borrow rate.
+      **  Calculate (Rb-Ra)*(Tc-Ta) - results placed in integer
+      **  and decimal fields to allow enough decimal places to maintain
+      **  accuracy and enough integers to prevent truncation.  The
+      **  fields are subsequently recombined into a field of the
+      **  correct size.
+     C           @@BORB    SUB  @@BORA    @@BORC           *1
+     C           @@BORC    MULT @@TCSA    @@EINT           *1
+     C           @@BORC    MULT @@TCSA    @@EDEC           *1
+      *
+      **  Calculate ((Rb-Ra)*(Tc-Ta))/(Tb-Ta)) + Ra.
+     C           @@EINT    DIV  @@TBSA    @@DINT           *1
+     C           @@EDEC    DIV  @@TBSA    @@DDEC           *1
+     C           @@DDEC    ADD  @@DINT    @@DLM2           *1
+     C           @@DLM2    ADD  @@BORA    @@BORC    H      *1
+      *
+      **  Calculate Lend rate.
+      **  Calculate (Rb-Ra)*(Tc-Ta) - results placed in integer
+      **  and decimal fields to allow enough decimal places to maintain
+      **  accuracy and enough integers to prevent truncation.  The
+      **  fields are subsequently recombined into a field of the
+      **  correct size.
+     C           @@LERB    SUB  @@LERA    @@LERC           *1
+     C           @@LERC    MULT @@TCSA    @@EINT           *1
+     C           @@LERC    MULT @@TCSA    @@EDEC           *1
+      *
+      **  Calculate ((Rb-Ra)*(Tc-Ta))/(Tb-Ta)) + Ra.
+     C           @@EINT    DIV  @@TBSA    @@DINT           *1
+     C           @@EDEC    DIV  @@TBSA    @@DDEC           *1
+     C           @@DDEC    ADD  @@DINT    @@DLM2           *1
+     C           @@DLM2    ADD  @@LERA    @@LERC    H      *1
+      *
+      **  The interpolation method is weighted.
+     C                     ELSE                            X1
+      *
+      **  Calculate     (Tb-Ta)*Tc
+     C           @@TBSA    MULT @@DYTC    @@COEF           *1
+      *
+      **  Calculate Borrow rate.
+      *
+      **  Calculate (RbTb-RaTa)
+     C           @@BORA    MULT @@DYTA    @@RATA           *1
+     C           @@BORB    MULT @@DYTB    @@RBTB           *1
+     C           @@RBTB    SUB  @@RATA    @@ELM1           *1
+      *
+      **  Calculate (RbTb-RaTa)*(Tc-Ta) - results placed in integer
+      **  and decimal fields to allow enough decimal places to maintain
+      **  accuracy and enough integers to prevent truncation.  The
+      **  fields are subsequently recombined into a field of the
+      **  correct size.
+     C           @@ELM1    MULT @@TCSA    @@EINT           *1
+     C           @@ELM1    MULT @@TCSA    @@EDEC           *1
+      *
+      **  Calculate ((RbTb-RaTa)*(Tc-Ta))/((Tb-Ta)*Tc)
+     C           @@EINT    DIV  @@COEF    @@DINT           *1
+     C           @@EDEC    DIV  @@COEF    @@DDEC           *1
+     C           @@DDEC    ADD  @@DINT    @@DLM2           *1
+      *
+      **  Calculate RaTa/Tc and add to the figure just calculated
+      **  to obtain the rate.
+     C           @@RATA    DIV  @@DYTC    @@DLM1           *1
+     C           @@DLM1    ADD  @@DLM2    @@BORC    H      *1
+      *
+      **  Calculate Lend rate.
+      *
+      **  Calculate (RbTb-RaTa)
+     C           @@LERA    MULT @@DYTA    @@RATA           *1
+     C           @@LERB    MULT @@DYTB    @@RBTB           *1
+     C           @@RBTB    SUB  @@RATA    @@ELM1           *1
+      *
+      **  Calculate (RbTb-RaTa)*(Tc-Ta) - results placed in integer
+      **  and decimal fields to allow enough decimal places to maintain
+      **  accuracy and enough integers to prevent truncation.  The
+      **  fields are subsequently recombined into a field of the
+      **  correct size.
+     C           @@ELM1    MULT @@TCSA    @@EINT           *1
+     C           @@ELM1    MULT @@TCSA    @@EDEC           *1
+      *
+      **  Calculate ((RbTb-RaTa)*(Tc-Ta))/((Tb-Ta)*Tc)
+     C           @@EINT    DIV  @@COEF    @@DINT           *1
+     C           @@EDEC    DIV  @@COEF    @@DDEC           *1
+     C           @@DDEC    ADD  @@DINT    @@DLM2           *1
+      *
+      **  Calculate RaTa/Tc and add to the figure just calculated
+      **  to obtain the rate.
+     C           @@RATA    DIV  @@DYTC    @@DLM1           *1
+     C           @@DLM1    ADD  @@DLM2    @@LERC    H      *1
+      *
+     C                     END                             E1
+      *
+     C           M10029    ENDSR                           **M10029**
+     C/EJECT
+     C*******************************************************************
+     C*
+     C* ZA0680 - THIS SUBROUTINE CONVERTS YYYYMMDD FORMAT DATE TO
+     C*          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)
+     C*
+     C* CALLED BY :
+     C*
+     C* CALLS :
+     C*
+     C* INPUT  : @@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)
+     C*
+     C* OUTPUT : @@MDNO MIDAS DAY NUMBER  (SIZE : 5N)
+     C*
+     C* USES :   @@CC   NUMBER OF CENTURIES IN DATE
+     C*          @@DAY  DAY NUMBER
+     C*          @@REM  REMAINDER FROM DIVIDE
+     C*          @@MTH  MONTH NUMBER
+     C*          @MD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+     C*                 MONTH
+     C*          @@WK2  WORK FIELD (2,0)
+     C*          @@WK5  WORK FIELD (5,0)
+     C*          @@YYYY YEAR (4 CHARACTER)
+     C*          @@YY   YEAR (2 CHARACTER)
+     C*          @YD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+     C*                 A FOUR YEAR PERIOD
+     C*
+     C*     LAST AMEND NO. ME1257              DATE 02/04/87                *
+     C*     When date input is zero set output date to zeroes               *
+     C*
+     C*******************************************************************
+     C*
+     C           ZA0680    BEGSR
+     C*
+     C**  CLEAR OUT ANY 'OLD' DATA IN FIELD
+     C                     Z-ADD0         @@MDNO  50
+     C*
+     C           @@DTIN    CABEQ0         ZA0689                          ME1257
+     C*
+     C**   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+     C**   WORK OUT THE NUMBER OF CENTURIES PASSED SINCE 1971,
+     C**   BY SUBTRACTING 1972 FROM THE YEAR FIELD.
+     C           @@YYYY    IFGE 2072                       B1
+     C           @@YYYY    SUB  1972      @@YYYY           *1
+     C*
+     C**   MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+     C**   THEN RESTORE THE YEAR WHICH WAS INPUT BACK TO THE
+     C**   ORIGINAL VALUE BEFORE CONTINUING WITH NORMAL CALCULATIONS.
+     C**
+     C           @@CC      MULT 36524     @@MDNO           *1
+     C           @@YYYY    ADD  1972      @@YYYY           *1
+     C                     END                             E1
+     C*
+     C           @@YYYY    ADD  28        @@WK2   20
+     C*
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+     C*
+     C**  CHECK REMAINDER AND MONTH NUMBER
+     C           @@REM     IFEQ 0                          B1
+     C           @@MTH     ANDGT2                          B1
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+     C           @@REM     IFNE 0                          B1
+     C                     ADD  @YD,@@REM @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  ADD MONTHS THIS YEAR
+     C                     ADD  @MD,@@MTH @@MDNO
+     C*
+     C**  ADD DAYS THIS MONTH
+     C                     ADD  @@DAY     @@MDNO
+     C*
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+      *****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   MM1011 - DETERMINE NUMBER OF DAYS IN A YEAR FOR DEFAULT     *
+     C*            INTEREST CALCULATION METHOD                        *
+     C*                                                               *
+     C*  CALLED BY    -                                               *
+     C*                                                               *
+     C*  CALLS        -                                               *
+     C*                                                               *
+     C*  FIELDS INPUT @@CALC  - DEFAULT INPUT CALCULATION METHOD      *
+     C*                                                               *
+     C*  FIELDS OUTPUT @@DAYO - DAYS IN YR FOR DFLT INTEREST CALC METH*
+     C*                                                               *
+     C*  WORKFIELDS           - NONE                                  *
+     C*                                                               *
+     C*****************************************************************
+     C           MM1011    BEGSR
+     C*
+     C** IF DFLT INTEREST CALCULATION METHOD '1' OR '4' SET DAYS IN
+     C** TO '365'
+     C           @@CALC    IFEQ '1'                        B1
+     C           @@CALC    OREQ '4'                        *1
+     C                     MOVE 365       @@DAYO           *1
+     C                     END                             E1
+     C*
+     C** IF DFLT INTEREST CALCULATION METHOD '2' '3' OR '5' SET DAYS IN
+     C** TO '360'
+     C           @@CALC    IFEQ '2'                        B1
+     C           @@CALC    OREQ '3'                        *1
+     C           @@CALC    OREQ '5'                        *1
+     C                     MOVE 360       @@DAYO           *1
+     C                     END                             E1
+     C*
+     C** IF DFLT INTEREST CALCULATION METHOD '6' SET DAYS IN YEAR '360'
+     C           @@CALC    IFEQ '6'                        B1
+     C                     MOVE 366       @@DAYO  30       *1
+     C                     END                             E1
+     C*                                                                   046876
+     C** If default interest calc. method is not 1 - 6, then no. of       046876
+     C** days will not be set up correctly - output Database Error.       046876
+     C** Note: This may occur if the basic details of this ccy were       046876
+     C** entered during ICD input, and the full details were not input    046876
+     C** afterwards.                                                      046876
+     C*                                                                   046876
+     C           @@DAYO    IFLE 0                                         046876
+     C                     MOVE '1'       *INU7            ***************046876
+     C                     MOVE '1'       *INU8            *             *046876
+     C                     MOVE 'E'       @TERM            *             *046876
+     C                     MOVE '1'       *INLR            * DB ERROR 05 *046876
+     C                     MOVEL'SDCURRPD'DBFILE           *             *046986
+     C                     MOVEL'005'     DBASE            ***************046876
+     C                     GOTO M10119                                    046876
+     C                     END                                            046876
+     C*
+     C**  SET ATTRIBUTES OF DEFAULT INTEREST CALCULATION METHOD
+     C                     MOVEL@@CALC    @@CALC  1
+     C*
+     C           M10119    ENDSR                           ***M10119***
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #A   - INITIAL PROCESSING                                    *
+      *                                                               *
+      *  CALLED BY : CONTROL PROCESSING                               *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *  USES :                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80                       S01194
+     C*
+     C**  RECEIVE TERMINATION INPUT PARAMETER
+     C           *ENTRY    PLIST
+     C                     PARM           @TERM   1
+      *
+      **   SET UP PROGRAM NAME IN *LDA IN CASE OF D/B ERROR
+     C                     MOVEL'MM0053'  DBPGM
+      *
+      *  INITIALISE PROGRAM VARIABLES
+      *
+     C                     MOVEL*BLANK    @PCCY   3
+      *
+     C*********************OPEN FDCCYTLL                                  S01194
+      *********************                                               S01194
+      ***OPEN*SINGLE*ACCESS*FILE                                          S01194
+      *********************                                               S01194
+     C*********************OPEN FDICDRLL                                  S01194
+      *********************                                               S01194
+      ***Set*up*key*to*obtain*format*TABTB10F*'01********10'              S01194
+      *********************                                               S01194
+     C*********************MOVEL*BLANK    @KEY   12                       S01194
+     C*********************MOVEL'01'      @KEY                            S01194
+     C*********************MOVE '10'      @KEY                            S01194
+      *********************                                               S01194
+      ***Chain*to*file LF/FDICDRLL*to*get*run*date                        S01194
+      ****IF*NOT*FOUND*OR*LOGICALLY*DELETED,*THIS*IS*A*DATA*BASE*ERROR.   S01194
+      *********************                                               S01194
+     C***********@KEY******CHAINFDICDRLL             80                   S01194
+     C********** *IN80*****IFEQ '1'                        B1             S01194
+     C***********RECI******ORNE 'D'                        *1             S01194
+     C*********************MOVE '1'       *INU7            ***************S01194
+     C*********************MOVE '1'       *INU8            *             *S01194
+     C*********************MOVE 'E'       @TERM            *             *S01194
+     C*********************MOVE '1'       *INLR            * DB ERROR 001*S01194
+     C*********************MOVEL'FDICDRLL'DBFILE           *             *S01194
+     C*********************MOVEL'001'     DBASE            *             *S01194
+     C*********************MOVEL@KEY      DBKEY            ***************S01194
+     C*********************GOTO #A9                        *1             S01194
+     C*********************END                             E1             S01194
+      *********************                                               S01194
+     C*********************MOVELRUNA      @SDATE                          S01194
+      *********************                                               S01194
+      ****CLOSE*SINGLE*ACCESS*FILE                                        S01194
+      *********************                                               S01194
+     C*********************CLOSEFDICDRLL                                  S01194
+     C*                                                                   S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C****Check for data base error.                                      S01194
+     C           @RTCD     IFNE *BLANK                     B1             S01194
+     C                     MOVE '1'       *INU7            ***************S01194
+     C                     MOVE '1'       *INU8            *             *S01194
+     C                     MOVE 'E'       @TERM            *             *S01194
+     C                     MOVE '1'       *INLR            * DB ERROR 001*S01194
+     C                     MOVEL'SDBANKPD'DBFILE           *             *S01194
+     C                     MOVEL'001'     DBASE            *             *S01194
+     C                     MOVEL@OPTN     DBKEY            ***************S01194
+     C                     GOTO #A9                        *              S01194
+     C                     END                             E1             S01194
+     C*                                                                   S01194
+     C                     MOVELBJMRDT    @SDATE                          S01194
+     C*                                                                   S01194
+      *
+      **  READ DRS - REVALUATION CONTROL DATA FILE.
+      **  IF NOT FOUND OR LOGICALLY DELETED, THIS IS A DATA BASE ERROR.
+     C           1         SETLLMMREVCLL
+     C                     READ MMREVCLL                 60
+     C           *IN60     IFEQ '1'                        B1
+     C           IDDLTF    ORNE ' '                        *1
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE 'E'       @TERM            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 002*
+     C                     MOVEL'MMREVCLL'DBFILE           *             *
+     C                     MOVEL'002'     DBASE            ***************
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+      *
+      **  TERMINATE PROGRAM IF IT IS ALREADY IN PROGRESS
+      *
+     C           IDRIPI    IFEQ 'Y'                        B1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INLR            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+      *
+      **  UPDATE PROGRAM IN PROGRESS FLAG TO 'Y'
+      *
+     C                     MOVEL'Y'       IDRIPI           *1
+     C                     UPDATMMREVCP0                   *1
+      *
+     C           #A9       ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #C   - FINAL PROCESSING                                      *
+      *                                                               *
+      *  CALLED BY : CONTROL PROCESSING                               *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *  USES :                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #C        BEGSR
+     C*
+     C**  EXIT IF TERMINATION PARAMETER IS 'T'
+     C           @TERM     IFEQ 'T'                        B1
+     C                     MOVE '1'       *INLR            *1
+     C                     GOTO #C9                        *1
+     C                     END                             E1
+      **********************************************************************                 BUG8605
+      ***exit*if*data*base*error*has*occurred.******************************                 BUG8605
+     C************INU7     CABEQ'1'       #C8                                                BUG8605
+      *
+      **  READ DRS - REVALUATION CONTROL DATA FILE.
+      **  IF NOT FOUND OR LOGICALLY DELETED, THIS IS A DATA BASE ERROR.
+     C           1         SETLLMMREVCLL
+     C                     READ MMREVCLL                 60
+      *                                                                                      BUG8605
+      ** Move compare of *INU7 to make sure a READ has been done before                      BUG8605
+      ** doing an update to file MMREVCPP.                                                   BUG8605
+      ** exit if data base error has occurred.                                               BUG8605
+      *                                                                                      BUG8605
+     C           *INU7     CABEQ'1'       #C8                                                BUG8605
+      *                                                                                      BUG8605
+     C           *IN60     IFEQ '1'                        B1
+     C           IDDLTF    ORNE ' '                        *1
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE 'E'       @TERM            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 003*
+     C                     MOVEL'MMREVCLL'DBFILE           *             *
+     C                     MOVEL'003'     DBASE            ***************
+     C                     GOTO #C8                        *1
+     C                     END                             E1
+      *
+      **  UPDATE PROGRAM IN PROGRESS FLAG TO 'Y'
+      *
+     C                     Z-ADD@SDD      IDDLUP
+     C                     MOVEL@SMMM     IDMLUP
+     C                     Z-ADD@SYY      IDYLUP
+     C                     TIME           IDTLUP
+     C                     MOVEL'A'       IDCHTP
+     C*********************Z-ADDRUND      IDLCD                           S01194
+     C                     Z-ADDBJRDNB    IDLCD                           S01194
+     C                     MOVEL@USER     IDLUID
+     C                     TIME           IDTLRV
+     C********** #C8       TAG                                            S01136
+      *                                                                                      BUG8605
+      **  MOVE LABEL #C8 HERE SO AS TO UPDATE REVALUATION IN                                 BUG8605
+      **  PROGRESS INDICATOR TO 'N'                                                          BUG8605
+      *                                                                                      BUG8605
+     C           #C8       TAG                                                               BUG8605
+     C                     MOVEL'N'       IDRIPI
+     C                     UPDATMMREVCP0
+      *
+     C***********#C8       TAG                                            S01136             BUG8605
+     C*                                                                   E13957
+     C** CHECK FOR DATABASE ERROR TO SEND MESSAGE TO MOPERQ               E13957
+     C           *INU7     IFEQ '1'                        B1             E13957
+     C**********           CALL 'QCAEXEC'                  *1      E13957 E20774
+     C                     CALL 'QCMDEXC'                  *1             E20774
+     C                     PARM           @CM,1            *1             E13957
+     C                     PARM 65        @QCALN 155       *1             E13957
+     C                     DUMP                            *1             E13957
+      *                                                                                       207588
+      ** Indicator must be reset to 'N' to signal that this pro                               207588
+      ** has already ended even if an error has occured.                                      207588
+      *                                                                                       207588
+     C           1         SETLLMMREVCLL                                                      207588
+     C                     READ MMREVCLL                 60                                   207588
+     C           *IN60     IFEQ *ON                                                           207588
+     C                     MOVEL'006'     DBASE                                               207588
+     C                     MOVEL'*FIRST  'DBKEY                                               207588
+     C                     MOVEL'MMREVCLL'DBFILE                                              207588
+     C                     ELSE                                                               207588
+     C                     MOVEL'N'       IDRIPI                                              207588
+     C                     UPDATMMREVCP0                                                      207588
+     C                     ENDIF                                                              207588
+      *                                                                                       207588
+     C                     END                             E1             E13957
+     C*                                                                   E13957
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C           #C9       ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - program error subroutine                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C**  SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     MOVE '1'       *INU6            *1
+     C*
+     C**  SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVEL'MM0053'  DBPGM            ***************
+     C                     MOVE '991'     DBASE            * DBERROR 991 *
+     C*                                                    ***************
+     C                     DUMP                            *1
+     C                     MOVE 'E'       @TERM            *1
+     C                     END                             E1
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR'*CANCL'                    PSSR9 TAG
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0680 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**       @CM      Messages when error                                     E13957
+SNDMSG  ('MM0053 has ended abnormally in batch.') TOMSGQ(MOPERQ)          E13957

@@ -1,0 +1,202 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input cycle initiation - I RE')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC041118 - Input Cycle Initiation RE                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD050374           Date 06Apr18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD050374 - Introduce purging for RECUSXQD                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CRT001) TYPE(*CHAR) LEN(1) VALUE('*')
+             DCL        VAR(&CRT002) TYPE(*CHAR) LEN(1) VALUE('*')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ')
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CRE041) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+/* Journalling variables */
+ 
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE( +
+                        'SCC041118')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0) VALUE(00001)
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Start Journalling */
+ 
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                           *CAT &CSEQA)
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                           FLAG('S') TEXT(&STEXT)
+ 
+/* Check if CRE041 is switched ON */
+ 
+             CHGVAR     VAR(&SARD) VALUE('CRE041')
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SFMT)
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                        VAR(&CRE041) VALUE('Y'))
+ 
+             CALL       PGM(REC7A) PARM('N' 'REC7A' X'00001F')
+             CALL       PGM(REC71)
+             CALL       PGM(REC04)
+ 
+/* Make backup copy of the Customer Exchange file */
+ 
+             IF         COND(&CRE041 *EQ 'Y') THEN(DO)
+ 
+/* Call RE0405 to do Historic Processing & Purging update */
+ 
+                CALL    PGM(RE0405)
+                IF      COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                        CMDLBL(DBETAG))
+                                                                                        /*MD050374*/
+/* Delete records from RECUSXQD where CE is not on CUSEXCE. */                          /*MD050374*/
+             SCRUNSQL   SQL('Delete from RECUSXQD where not exists +
+                    (Select * from CUSEXCE where IPDN= CUIPDN)')                        /*MD050374*/
+                                                                                        /*MD050374*/
+             ENDDO
+ 
+/*  Check if Retail Teller System is switched on */
+/*  Or Retail Branch Access is switched on */
+ 
+             CHGVAR     VAR(&CRT001) VALUE(' ')
+             CHGVAR     VAR(&CRT002) VALUE(' ')
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CRT001')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SFMT)
+ 
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CRT001) VALUE('Y')
+             ENDDO
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CRT002')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SFMT)
+ 
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CRT002) VALUE('Y')
+             ENDDO
+ 
+             IF         COND((&CRT001 *EQ 'Y') *OR (&CRT002 *EQ +
+                          'Y')) THEN(DO)
+             CALL       PGM(REC4203)
+             IF         COND((%SWITCH(XXXXXX1X)) *OR +
+                          (%SWITCH(XXXXXXX1))) THEN(GOTO +
+                          CMDLBL(DBETAG))
+             ENDDO
+ 
+             CHGDTAARA  DTAARA(RESTAT (7 5)) VALUE('NNNNN')
+             CHGDTAARA  DTAARA(RESTAT (15 2)) VALUE('NN')
+             CHGDTAARA  DTAARA(RESTAT (22 2)) VALUE('NN')
+ 
+/* Successful completion */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Database error processing */
+ 
+DBETAG:
+ 
+/* Retrieve database error information from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+             ENDDO
+ 
+/* Abnormal error processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('Program SCC041118 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ 
+/* Retrieve attributes of current job */
+ 
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)
+ 
+/* Retrieve the most recent journal entry sequence number for the */
+/* specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) +
+                        SEARCH(*DESCEND) JOB(&NBR/&USR/&JOB) +
+                        FROMENT(*LAST) TOENT(*FIRST) +
+                        RTNRCV(&SJRNRCVR) RTNSEQNBR(&START)
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+                CHGVAR     VAR(&START) VALUE(0)
+             ENDDO
+ 
+/* Determine starting journal sequence number of current job. */
+ 
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER( +
+                        &FJRNRCVR) SEQ(&FINISH)
+ 
+/* Remove journal changes. */
+ 
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                           THEN(DO)
+/**********     RMVJRNCHG  JRN(ICJRN) FILE((CUSEXCE)) +              */                 /*MD050374*/
+/**********            RCVRNG(&SJRNRCVR &FJRNRCVR) FROMENT(&START) + */                 /*MD050374*/
+/**********            TOENT(&FINISH)                                */                 /*MD050374*/
+                RMVJRNCHG  JRN(ICJRN) FILE((CUSEXCE) (RECUSXQD)) +
+                             RCVRNG(&SJRNRCVR &FJRNRCVR) +
+                             FROMENT(&START) TOENT(&FINISH)                             /*MD050374*/
+                MONMSG MSGID(CPF7049 CPF7042 CPF9801 CPF7041)
+             ENDDO
+ 
+ENDPGM:
+ 
+/* Write current journal sequence number to file SCJSEQPD */
+ 
+             CHGVAR     VAR(&STEXT) VALUE(' ')
+             CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM +
+                          *CAT &CSEQA)
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                           FLAG('E') TEXT(&STEXT)
+ 
+             ENDPGM

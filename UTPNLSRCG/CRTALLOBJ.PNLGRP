@@ -1,0 +1,286 @@
+.**********************************************************************
+.*STD    PNLBASE                                                      *
+.*EXI *  TEXT('Midas UT Help panel group for CRTALLOBJ')
+.**********************************************************************
+.*                                                                    *
+.*  Midas - Utilities                                                 *
+.*                                                                    *
+.*  CRTALLOBJ - Create objects from all source in a library command   *
+.*                                                                    *
+.*  (c) Finastra International Limited 2001                           *
+.*                                                                    *
+.* Bank Fusion Midas 1.4 Base -----------------------------------------
+.* Midas Plus 1.4 Base 04 ---------------------------------------------
+.*  Last Amend No. CUT011  *REWRITE   Date 29Nov07                    *
+.* Midas Plus 1.4 Base -----------------------------------------------*
+.* Midas Plus 1.3 ---------------- Base ------------------------------*
+.*  Prev Amend No. CPK018  *MOVED     Date 06Jan04                    *
+.* Midas Release 4.01 ------------------------------------------------*
+.*                 CSC011             Date 23May02                    *
+.* Midas Release 4 --------------- Base ------------------------------*
+.* Midas DBA 3.00 ---------------- Base ------------------------------*
+.*                 CAA015             Date 08Jul97                    *
+.*                                                                    *
+.* -------------------------------------------------------------------*
+.*                                                                    *
+.*  CUT011 - Rewrite of command.  Make it more flexible and easier to *
+.*           maintain.                                                *
+.*  CPK018 - MidasPlus packaging.  Creation of global layer.          *
+.*  CSC011 - Introduction of DZLIB for 24x7 availability.             *
+.*  CAA015 - Removal of Utilities library parameter.                  *
+.*                                                                    *
+.**********************************************************************
+:PNLGRP.
+.*
+:HELP name='CRTALLOBJ'.
+Create multiple objects (CRTALLOBJ) - Help
+:P.
+The CRTALLOBJ command allows a user to compile all source members from a
+specified library.  It is written to handle the idiosyncrasies inherent
+in a Midas system, allowing sections of the code to be compiled at one go
+and objects to be created in the correct order, according to normal object
+dependencies; for instance, logicals have to be created after physicals.
+:P.
+The command uses a file UTSRCTPD to determine the order in which the source
+is compiled.  This file can be changed to reflect changes to source files.
+:P.
+The use of this command does rely on a certain amount of pre-existing Midas
+knowledge as it is possible to choose combinations of source to be compiled
+that do not make practical sense.
+:P.
+The command uses the following process.  It works out what has been requested
+to be compiled.  If possible it will attempt to manipulate the library list
+but it will then display the library list (using EDTLIBL) so that this can be
+checked and changed if necessary.
+:P.
+Depending on what source types have been selected a job will be submitted for
+each source file.  The job will share the name of the source file.  If an
+object fails to create then the compile listing, if available, will be moved
+to an output queue called CRTALLOBJ which the utility will have created in
+the source file library.  In addition the job's log and a general report,
+UP008010P1, will be moved to this output queue.  If there are no failures
+then no job log is produced.
+:P.
+The CRTALLOBJ output queue is only created once so that no output is lost if
+CRTALLOBJ is run over the same source file library many times in succession
+which is normal.  Naturally this output queue should be deleted once all
+compiles have completed and been checked.
+:P.
+Outside of the individual submitted jobs a general report, also UP008010P1,
+may be produced.  This can be accessed by looking at the interactive job's
+spool files.
+:P.
+Objects are only created if the object does not already exist.  Service
+programs are submitted twice and will be recreated second time around even
+if the object already exists.
+:P.
+Finally, the utility populates a file called UTSRCCPD which lists the source
+files to be created during each run of CRTALLOBJ.  Each pass populates a
+uniquely named member (based on a timestamp) of the file but this member should
+be removed once all jobs have been submitted.
+:EHELP.
+.*
+:HELP name='CRTALLOBJ/SRCLIB'.
+Create multiple objects (CRTALLOBJ) - Help
+:XH3.Source library name (SRCLIB)
+:P.
+The name of the library containing the source.  This library must exist.
+:EHELP.
+.*
+:HELP name='CRTALLOBJ/JOBQLIB'.
+Create multiple objects (CRTALLOBJ) - Help
+:H3.Job queue and library (JOBQLIB)
+:P.
+The name of the library / job queue to which the submitted jobs are sent.  The
+combination of library and job queue must exist.
+:EHELP.
+.*
+:HELP name='CRTALLOBJ/MSGFLIB'.
+Create multiple objects (CRTALLOBJ) - Help
+:XH3.Lib. for multi-lang. msg. files (MSGFLIB)
+:P.
+This can contain the name of the library containing the multi-language
+files that Midas uses to create multi-language display files.
+:XH2.*NONE
+:P.
+This is the default value but it only has an impact if type *DEV is selected,
+in which case display files are not created multi-language.
+:P.
+:XH3.library-name
+:P.
+The library name containing the multi-language files used to create
+multi-language display files.  This library must exist but it is only
+validated if type *DEV was chosen for compilation.
+:P.
+:H3.
+Please note that this does not determine if multi-language is used in core
+or non-core mode.  This is picked up from the default on CRTOBJ and this should
+be checked beforehand.
+:EHELP.
+.*
+:HELP name='CRTALLOBJ/GLOBAL'.
+Create multiple objects (CRTALLOBJ) - Help
+:XH1.Global layer (GLOBAL)
+:P.
+This parameter is divided into two sections, database and non-database.  These
+determine what types of objects are created, where they are created and the
+authorities that are attached to the object.
+:P.
+:XH1.Global database
+:P.
+:XH3.Prefix for global database
+:P.
+Specify a two character prefix for the global database libraries.  This must
+contain a value if the 'Target for global database' parameter has a value of
+'*PFX' and there is at least one entry in the 'Database library' parameter.
+Depending on the entry in the 'Database library' parameter then a valid
+library must exist.  For instance, if '*GM' has been selected then library
+ggGMLIB must exist.
+:P.
+:XH3.Database library
+:P.
+The database is divided into the normal target global database libraries, *GM,
+*GP, *GTA and *GV.  A typical example of use would be to select *GM, *GP and
+*GTA, check the results and then select *GV.
+:P.
+:XH3.Target for global database
+:P.
+This defaults to *PFX which means the database objects will be created into
+the usual database libraries, ggGMLIB, ggGPLIB, etc.  A value must be entered
+into the 'Prefix for global database' parameter.
+:P.
+However, if required, the user can specify a library name in which to create
+the database objects.  If so, The 'Prefix for global database' parameter must
+be blank and the library must exist.
+:P.
+:XH3.Database owner
+:P.
+The owner of the created database objects.  *USER is the default which means
+that the object will be owned by the profile of the user running CRTALLOBJ.  If
+a specific profile is entered then it must exist.
+:P.
+:XH3.Database *PUBLIC authority
+:P.
+This matches the *PUBLIC requirements for CRTOBJ.  The options are *LIBCRTAUT,
+*ALL, *CHANGE, *USE, *EXCLUDE or the name of an authorisation list (in which
+case *PUBLIC will have *AUTL authority.  The default is *USE.  If an
+authorisation list name is entered then it must exist.
+:P.
+:XH1.Global non-database
+:P.
+:XH3.Type of source
+:P.
+Non-database is divided into several layers which correspond to the iSeries
+dependency of objects.  The types available are *DEV (display, printer and
+communication files), *CMD (commands and panel groups), *OPMMOD (OPM programs,
+ILE modules and SQL procedures), *SRVPGM (service programs) and *PGM (ILE
+programs).
+:P.
+All of these can be selected at one go or a more structured approach can be
+taken by doing a 'layer' at a time.
+:P.
+If *DEV is selected then the message file library (MSGFLIB) will be validated.
+:P.
+:XH3.Target for global non-db objs.
+:P.
+The name of the library into which the non-database objects are to be
+created.  This library must exist.
+:P.
+:XH3.Non-database owner
+:P.
+The owner of the created non-database objects.  *USER is the default which
+means that the object will be owned by the profile of the user running
+CRTALLOBJ.  If a specific profile is entered then it must exist.
+:P.
+:XH3.Non-database *PUBLIC authority
+:P.
+This matches the *PUBLIC requirements for CRTOBJ.  The options are *LIBCRTAUT,
+*ALL, *CHANGE, *USE, *EXCLUDE or the name of an authorisation list (in which
+case *PUBLIC will have *AUTL authority.  The default is *USE.  If an
+authorisation list name is entered then it must exist.
+:EHELP.
+.*
+:HELP name='CRTALLOBJ/ZONE'.
+Create multiple objects (CRTALLOBJ) - Help
+:XH1.Zone (ZONE)
+:P.
+This parameter is divided into two sections, database and non-database.  These
+determine what types of objects are created, where they are created and the
+authorities that are attached to the object.
+:P.
+:XH1.Zone database
+:P.
+:XH3.Prefix for zone database
+:P.
+Specify a two character prefix for the zone database libraries.  This must
+contain a value if the 'Target for zone database' parameter has a value of
+'*PFX' and there is at least one entry in the 'Database library' parameter.
+Depending on the entry in the 'Database library' parameter then a valid
+library must exist.  For instance, if '*DM' has been selected then library
+zzDMLIB must exist.
+:P.
+:XH3.Database library
+:P.
+The database is divided into the normal target zone database libraries, *DM,
+*DP, *DTA, *DV and *DZ.  A typical example of use would be to select *DM, *DP
+and *DTA, check the results and then select *DV.  *DZ could be run at any
+point.
+:P.
+:XH3.Target for zone database
+:P.
+This defaults to '*PFX' which means the database objects will be created into
+the usual database libraries, zzDMLIB, zzDPLIB, etc.  A value must be entered
+into the 'Prefix for zone database' parameter.
+:P.
+However, if required, the user can specify a library name in which to create
+the database objects.  If so, The 'Prefix for zone database' parameter must
+be blank and the library must exist.
+:P.
+:XH3.Database owner
+:P.
+The owner of the created zone objects.  *USER is the default which means
+that the object will be owned by the profile of the user running CRTALLOBJ.  If
+a specific profile is entered then it must exist.
+:P.
+:XH3.Database *PUBLIC authority
+:P.
+This matches the *PUBLIC requirements for CRTOBJ.  The options are *LIBCRTAUT,
+*ALL, *CHANGE, *USE, *EXCLUDE or the name of an authorisation list (in which
+case *PUBLIC will have *AUTL authority.  The default is *USE.  If an
+authorisation list name is entered then it must exist.
+:P.
+:XH1.Zone non-database
+:P.
+:XH3.Type of source
+:P.
+Non-database is divided into several layers which correspond to the iSeries
+dependency of objects.  The types available are *DEV (display, printer and
+communication files), *CMD (commands and panel groups), *OPMMOD (OPM programs,
+ILE modules and SQL procedures), *SRVPGM (service programs) and *PGM (ILE
+programs).
+:P.
+All of these can be selected at one go or a more structured approach can be
+taken by doing a 'layer' at a time.
+:P.
+If *DEV is selected then the message file library (MSGFLIB) will be validated.
+:P.
+:XH3.Target for zone non-db objs.
+:P.
+The name of the library into which the non-database objects are to be
+created.  This library must exist.
+:P.
+:XH3.Non-database owner
+:P.
+The owner of the created non-database objects.  *USER is the default which
+means that the object will be owned by the profile of the user running
+CRTALLOBJ.  If a specific profile is entered then it must exist.
+:P.
+:XH3.Non-database *PUBLIC authority
+:P.
+This matches the *PUBLIC requirements for CRTOBJ.  The options are *LIBCRTAUT,
+*ALL, *CHANGE, *USE, *EXCLUDE or the name of an authorisation list (in which
+case *PUBLIC will have *AUTL authority.  The default is *USE.  If an
+authorisation list name is entered then it must exist.
+:EHELP.
+.*
+:EPNLGRP.

@@ -1,0 +1,892 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas GL Ledger movements to S.O.B. enquire')          *
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas General Ledger Module                                  *
+     A*                                                               *
+     A*  GL4442DF - Account movements - to start of business.         *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD051859           Date 05Sep18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL186             Date 06Oct17               *
+      *                 MD036055A          Date 21Oct15               *
+      *                 MD034003           Date 14Jul15               *
+      *                 MD025751           Date 21Mar14               *
+      *                 CRE098             Date 02Dec13               *
+      *                 CGL145B            Date 01Oct13               *
+      *                 CGL131             Date 28Sep12               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26687           Date 09Nov09               *
+      *                 BUG24339           Date 17Jun09               *
+      *                 BUG24143           Date 02Jun09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 29Nov05               *
+      *                 BUG9014            Date 19Oct05               *
+      *                 BUG4738            Date 04Mar05               *
+      *                 CAAA03             Date 16Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 194699             Date 11Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 165546             Date 06Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 149619             DATE 10MAR99               *
+     A*                 124565             DATE 26FEB98               *
+      *                 116932             DATE 26FEB98               *
+     A*                 096486             DATE 04APR97               *
+     A*                 S01408             DATE 08OCT96               *
+     A*                 S01408             DATE 13MAY96               *
+     A*                 099186             DATE 18MAR96               *
+     A*                 081701             DATE 10MAR95               *
+     A*                 S01408             DATE 13JAN95               *
+     A*                 S01472             DATE 12MAR94               *
+     A*                 058797             DATE 18OCT93               *
+     A*                 E31803             DATE 13MAR92               *
+     A*                 LN1273             DATE 22MAY91               *
+     A*                 S01311             DATE 21MAY91               *
+     A*                 E23201             DATE 07AUG90               *
+     A*                 S01253             DATE 17APR90               *
+     A*                 BHF677             DATE 28SEP90               *
+     A*                 E19562             DATE 15FEB90               *
+     A*                 S01117             DATE 21JUN89               *
+     A*                 S01199             DATE 01JUN89               *
+     A*                                                               *
+     A*****************************************************************
+      *                                                               *
+      *  MD051859 - Footer Menu Options are missing in HATS           *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL186 - Customer Report Name on Enquiries                   *
+      *         - Add Cust Report Name to Account Movements & OSIC.   *
+      *  MD036055A - Extend narrative to 30 characters.               *
+      *  MD034003 - Posting narrative was truncated in account        *
+      *             movement enquiry                                  *
+      *  MD025751 - 2nd page of Account Mvmnt display shows just one  *
+      *             line and 3rd page also reflects this information  *
+      *  CRE098 - User-Defined Retail Transaction Types on Postings   *
+      *  CGL145B - Subsidiaries Daily Sweeping Forecast               *
+      *            Added hookd: CGL145_002, CGL145_030, CGL145_031,   *
+      *                         CGL145_032, CGL145_033, CGL145_034,   *
+      *                         CGL145_035, CGL145_036                *
+      *  CGL131 - Customer Account Balance Enquiry (with available    *
+      *           balance)                                            *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26687 - Enhancement of enquiries                          *
+      *  BUG24339 - Extended Narrative fields are unavailable         *
+      *  BUG24143 - Extended Narrative fields are unavailable         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9014 - Added fields REFER, FCLTY, AND ACUST to store in   *
+      *           subfile for correct retrieval of data for display.  *
+      *           Applied fix 201716.                                 *
+      *  BUG4738- Display Ledger Balance C/F in webface screen.       *
+      *  CAAA03 - Webfacing Changes                                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  194699 - Allow for non-display of text.                      *
+     F*  165546 - Changed to show profit centre if analytical         *
+     F*           accounting is switched on.                          *
+     A*  149619 - Add format ref to DDS for GUI identification.       *
+     A*  124565 - Recomplie to make sure @HPREF is well taken into    *
+     A*           account (see also GLC440, GLC442 and GL4442).       *
+     A*  116932 - '+' sign replaced by 'MORE...', so 'CR' is not      *
+     A*           overriden.                                          *
+     A*  096486 - Previous fix. (065890)                              *
+     A*           To enable user to enquire on FT Payments for FT     *
+     A*              payments.                                        *
+     A*  S01408 - Addition of Core Hook GL4442DF08                    *
+     A*           Addition of Core Hook GL4442DF07                    *
+     A*           Addition of Core Hook GL4442DF06                    *
+     A*           Addition of Core Hook GL4442DF05                    *
+     A*  S01408 - Addition of core hook GL4442DF04                    *
+     A*           Addition of core hook GL4442DF03                    *
+     A*           Addition of core hook GL4442DF02                    *
+     A*           Addition of core hook GL4442DF01                    *
+     A*  099186 - Cosmetic position changes to column headings.       *
+     A*  081701 - CHANGE BALANCE NARRATIVES FOR RETAIL A/CS           *
+     A*  S01408 - Addition of core hook GL4442DFDT                    *
+     A*           Addition of core hook GL4442DFRC                    *
+     A*           Addition of core hook GL4442ACTL                    *
+     A*  S01472 -  A/C movements enquiry to show batch number         *
+     F*  058797 - A/C Movements Enquiry is very slow if requested     *
+     F*           account has so many postings.                       *
+     F*           Fix: Build subfile one page at a time rather than   *
+     F*           build the whole subfile before any display.         *
+     A*  E31803 - THE PLUS SIGN INDICATING MORE DATA FOR THE ACCOUNT  *
+     A*           OVERWRITES THE DR/CR INDICATOR. REDUCE THE          *
+     A*           NARRATIVE FIELD TO BE DISPLAYED FROM 30 CHARS TO    *
+     A*           29 CHARS, MOVING THE AMT. 2 POSITION TO THE LEFT    *
+     A*           MAKING WAY FOR THE '+' SIGN & THE ENTIRE CR/DR      *
+     A*           INDICATOR.                                          *
+     A*                                                               *
+     A*  LN1273 - CORRECT SCREEN FUNCTION ON BRANCH INPUT FIELD       *
+     A*  S01311 - Amended for Exposure Management linked Enquiry      *
+     A*  E23201 - SUBFILE RECORD MOVED IN LINE WITH BROUGHT           *
+     A*           FORWARD BALANCE                                     *
+     A*  S01253 - RECOMPILED FOR MULTILANGUAGE SCREENS                *
+     A*  BHF677 - LEADING ZEROES SHOULD NOT BE SUPPRESSED FOR         *
+     A*           CHEQUE NUMBER (R10 FIX TO CORE ERROR)               *
+     A*  E19562 - ALL REFERENCES TO CMD 12 REPLACED WITH CMD 05       *
+     A*  S01117 - RELEASE 10 (MULTIBRANCHING)                         *
+     A*  S01199 - HELP MODIFICATIONS                                  *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A                                      REF(MFRFL)
+     A                                      PRINT(MPRINT)
+      ** Start of change CRE098
+     A                                      DSPSIZ(27 132 *DS4)                               CRE098
+      ** End of change CRE098
+     A                                      CF03
+      *                                                    /*S01311*/
+     A**********                            CF13
+     A**********                            CF15
+     A**********                            CF16
+     A N30                                  CF13
+     A N30                                  CF15
+     A N30                                  CF16
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_030                                                            CGL145B
+      ** End of change CGL145B
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DF05
+     A*                                                    End of   /*S01408*/
+     A  30                                  CF01
+     A*/COPY WNCPYSRC,GL4442DF10
+     A  30                                  CF12
+     A*/COPY WNCPYSRC,GL4442DF11
+      *                                                    /*S01311*/
+      *
+      *  Format: headings display
+      *
+     A          R HEADING
+     A                                      TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      PUTRETAIN
+     A            RUNA           7A  O  1  2
+     A*                                                    Begin of /*149619*/
+     A                                  1 13'GL4442F1'
+     A*                                                    End of   /*149619*/
+      ** Start of change CRE098
+     A**********                        1 31'ACCOUNT MOVEMENTS'
+     A                                  1 54'ACCOUNT MOVEMENTS'
+      ** End of change CRE098
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+      ** Start of change CRE098
+     A**********                        1 60TIME                                              CRE098
+     A**********                        1 70'WID'                                             CRE098
+     A**********  WSID           3A  O  1 74                                                  CRE098
+     A                                  1112TIME
+     A                                  1122'WID'
+     A            WSID           3A  O  1126
+      ** End of change CRE098
+      *
+      *  Format: static account and customer details
+      *
+     A          R STATIC1
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DF01
+     A*                                                    End of   /*S01408*/
+     A                                  2 20'Ledger Movements'
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A                                  2 37'- to start of business'
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A*                                                      /*S01117*/
+     A**********                        3 70'Branch'
+     A**********                            OVRATR
+     A*N20******                            DSPATR(ND)
+     A**********  BRCD      R        O  3 77DSPATR(HI)
+     A**********                            OVRDTA
+     A*N20******                            DSPATR(ND)
+     A*                                                      /*S01117*/
+      ** Start of change CGL186                                                               CGL186
+     A                                  3  2'Customer name'                                   CGL186
+     A                                      OVRATR                                            CGL186
+     A N20                                  DSPATR(ND)                                        CGL186
+     A            BBCRNM        20A  O  3 16                                                  CGL186
+     A                                      OVRDTA                                            CGL186
+     A                                      DSPATR(HI)                                        CGL186
+     A N20                                  DSPATR(ND)                                        CGL186
+      ** End of change CGL186                                                                 CGL186
+     A                                  4  2'Account'
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A*                                                      /*S01117*/
+     A            KBRC           3A  O  4 10DSPATR(HI)
+     A                                      OVRDTA
+     A  22
+     AON20                                  DSPATR(ND)
+     A**********  KCUS           6S 0O  4 10
+      * Begin /CSD027/
+     A**********  KCUS           6S 0O  4 14                                                  CSD027
+     A            KCUS           6A  O  4 14
+      * End /CSD027/
+     A*                                                      /*S01117*/
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N20                                  DSPATR(ND)
+     A*                                                      /*S01117*/
+     A**********  KCCY           3A  O  4 18
+     A            KCCY           3A  O  4 22
+     A*                                                      /*S01117*/
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A*                                                      /*S01117*/
+     A**********  KCOD           4S 0O  4 22
+     A**Start of change CGL029
+     A**********  KCOD           4S 0O  4 26                                                  CGL029
+     A            KCOD          10S 0O  4 26
+     A**End of change CGL029
+     A*                                                      /*S01117*/
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A*                                                      /*S01117*/
+     A**********  KASE           2S 0O  4 28
+     A**Start of change CGL029
+     A**********  KASE           2S 0O  4 32                                                  CGL029
+     A            KASE           2S 0O  4 38
+     A**End of change CGL029
+     A*                                                      /*S01117*/
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A*                                                      /*S01117*/
+     A**********  ANAM      R        O  4 30
+     A**Start of change CGL029
+     A**********  ANAM      R        O  4 36                                                  CGL029
+     A            ANAM      R        O  4 42
+     A**End of change CGL029
+     A*                                                      /*S01117*/
+     A                                      OVRDTA
+     A N20N15                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A*/COPY WNCPYSRC,GL4442DF21
+     A          R NOST1
+     A                                      OVERLAY
+     A                                      PUTOVR
+      ** Start of change CRE098
+     A**********                        5 61'Ledger'                                          CRE098
+     A                                  5 79'Ledger'
+      ** End of change CRE098
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+      ** Start of change CRE098
+     A**********                        5 68'Balance B/F'                                     CRE098
+     A                                  5 86'Balance B/F'
+      ** End of change CRE098
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A          R CLEAR1
+     A                                      OVERLAY
+     A*                                                     /S01311/
+     A***********                           PUTOVR
+     A                                  5  2'Accrued int.'
+     A  50
+     AON35
+     AON37                                  DSPATR(ND)
+     A            ACRINT        19A  O  5 15DSPATR(HI)
+     A  50
+     AON35
+     AON37                                  DSPATR(ND)
+     A                                  5 36'Ret a/c no.'
+     A  50
+     AON35                                  DSPATR(ND)
+     A            ACNO          10Y 0O  5 48DSPATR(HI)
+     A  50
+     AON35                                  DSPATR(ND)
+     A*                                                     /S01311/
+     A*                                               Begin /081701/
+     A***********                       5 60'Cleared'
+      ** Start of change CRE098
+     A**********                        5 61'Ledger'                                          CRE098
+     A                                  5 79'Ledger'
+      ** End of change CRE098
+     A*                                               End   /081701/
+     A*                                                     /S01311/
+     A***********                           OVRATR
+     A*                                                     /S01311/
+     A N20                                  DSPATR(ND)
+      ** Start of change CRE098
+     A**********                        5 68'Balance B/F'                                     CRE098
+     A                                  5 86'Balance B/F'
+      ** End of change CRE098
+     A*                                                     /S01311/
+     A***********                           OVRATR
+     A*                                                     /S01311/
+     A N20                                  DSPATR(ND)
+      ** Start of Change BUG4738                                                             BUG4738
+     A**********R NOST2                                                                      BUG4738
+     A**********                            OVERLAY                                          BUG4738
+     A**********                            PUTOVR                                           BUG4738
+     A**********                       20 31' Ledger Balance C/F'                            BUG4738
+     A**********                            OVRATR                                           BUG4738
+     A*N20******                            DSPATR(ND)                                       BUG4738
+     A**********  LEGER         22A  O 20 58DSPATR(HI)                                       BUG4738
+     A**********                            OVRDTA                                           BUG4738
+     A*N20******                            DSPATR(ND)                                       BUG4738
+     A**********R CLEAR2                                                                     BUG4738
+     A**********                            OVERLAY                                          BUG4738
+     A**********                            PUTOVR                                           BUG4738
+     A*                                               Begin /081701/
+     A***********                      20 31'Cleared Balance C/F'
+     A**********                       20 31' Ledger Balance C/F'                            BUG4738
+     A*                                               End   /081701/
+     A**********                            OVRATR                                           BUG4738
+     A*N20******                            DSPATR(ND)                                       BUG4738
+     A**********  STBCL         22A  O 20 58DSPATR(HI)                                       BUG4738
+     A**********                            OVRDTA                                           BUG4738
+     A*N20******                            DSPATR(ND)                                       BUG4738
+      ** End of change BUG4738                                                               BUG4738
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DF02
+     A*                                                    End of   /*S01408*/
+     A          R STATIC2
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DFDT
+     A*                                                    End of   /*S01408*/
+     A*                                                    Start of /*099186*/
+     A**********                        6  2'Posting  Value'
+     A                                  6  4'Posting  Value'
+     A*                                                    End of   /*099186*/
+     A                                      OVRATR
+     A  50
+     AON83                                  DSPATR(ND)
+     A*                                                    Start of /*099186*/
+     A**********                        6 18'Cheque    Movement'
+     A*                                            Start of  /165546/
+     A**********                        6 21'Cheque   Movement'
+     A N41                              6 21'Cheque   Movement'
+     A*                                             Start of /194699/
+     A                                      OVRATR
+     A  50
+     AON83                                  DSPATR(ND)
+     A*                                               End of /194699/
+     A*/COPY WNCPYSRC,GL4442DF24
+     A  41                              6 20'Profit Ctr Movement'
+     A*/COPY WNCPYSRC,GL4442DF25
+     A*                                            End of    /165546/
+     A*                                                    End of   /*099186*/
+     A                                      OVRATR
+     A  50
+     AON83                                  DSPATR(ND)
+     A*                                              Begin /S01472/
+     A*                                                    Start of /*099186*/
+     A**82******                        6 53'Batch'
+      ** Start of change CRE098
+     A**82******                        6 55'Batch'                                           CRE098
+     A  82                              6 70'Batch'
+      ** End of change CRE098
+     A*                                                    End of   /*099186*/
+     A                                      OVRATR
+     A  50
+     AON83                                  DSPATR(ND)
+      ** Start of change CRE098
+     A                                  6 57'Trans. Type'
+     A                                      OVRATR
+     A  50
+     AON83                                  DSPATR(ND)
+      ** End of change CRE098
+     A*                                                  Start of   /*165546*/
+     A**********  LEB           22A  O  6 58DSPATR(HI)
+      ** Start of change CRE098
+     A**********  LEB           22A  O  6 57DSPATR(HI)
+     A            LEB           22A  O  6 77DSPATR(HI)
+      ** End of change CRE098
+     A*                                                  End of     /*165546*/
+     A*                                              End   /S01472/
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DF03
+     A*                                                    End of   /*S01408*/
+      *
+      *  Format: subfile for posting records
+      *
+     A          R SFLRCD                    SFL
+      *                                                     /*S01311*/
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DF04
+     A*                                                    End of   /*S01408*/
+     A            OPTION         1A  B  7  2DSPATR(UL HI)
+     A*/COPY WNCPYSRC,GL4442DF23
+     A*                                              Begin /S01472/
+      ** Start of change CRE098
+     A**********  SFLDS2        75A  O  7  4TEXT('SFLREC')
+      ** Start of change MD025751
+     A**********  SFLDS2        95A  O  7  4TEXT('SFLREC')                                  MD025751
+      ** End of change MD025751
+      ** End of change CRE098
+     A*/COPY WNCPYSRC,GL4442DF22
+      ** Start of change MD025751
+     A**********                            DSPATR(HI)                                      MD025751
+     A            PSTDZ          7A  O  7  4DSPATR(HI)
+     A            VALDZ          7A  O  7 12DSPATR(HI)
+     A            @CHQN          8A  O  7 20DSPATR(HI)
+      ** Start of change MD034003
+     A**********  PNARZ         27A  O  7 29DSPATR(HI)                                      MD034003
+      ** Start of change MD036055A
+     A**********  PNARZ         29A  O  7 29DSPATR(HI)                                     MD036055A
+     A            PNARZ         30A  O  7 29DSPATR(HI)
+      ** End of change MD036055A
+      ** End of change MD034003
+     A            TRATZ          8A  O  7 59DSPATR(HI)
+     A            @ABTC          3A  O  7 71DSPATR(HI)
+     A            PSTAZ         19A  O  7 80DSPATR(HI)
+      ** End of change MD025751
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DFRC
+     A*                                                    End of   /*S01408*/
+     A**********                            DSPATR(HI)
+     A**********  PSTDZ          7A  O  7  2TEXT('POSTING DATE')
+     A**********  PSTDZ          7A  O  7  4TEXT('POSTING DATE')
+     A**********                            DSPATR(HI)
+     A**********  VALDZ          7A  O  7 10TEXT('VALUE DATE')
+     A**********  VALDZ          7A  O  7 12TEXT('VALUE DATE')
+     A**********                            DSPATR(HI)
+     A*                                                             /BHF677/
+     A**********  CHQN      R        O  7 18DSPATR(HI) EDTCDE(4)
+     A**********  @CHQN          8A  O  7 18DSPATR(HI)
+     A**********  @CHQN          8A  O  7 20DSPATR(HI)
+     A*                                                             /BHF677/
+     A**********  PNAR      R        O  7 27DSPATR(HI)
+     A*********        START OF CHANGE                     /E31803/
+     A*********   PNAR      R        O  7 29DSPATR(HI)
+     A*********   @PNAR         29A  O  7 29DSPATR(HI)
+     A*********        END OF CHANGE                       /E31803/
+     A*                                          START OF CHANGE E23201
+     A************PSTAZ         19A  O  7 59DSPATR(HI)
+     A*********        START OF CHANGE                     /E31803/
+     A*********   PSTAZ         19A  O  7 61DSPATR(HI)
+     A*********   PSTAZ         19A  O  7 59DSPATR(HI)
+     A*                                              End   /S01472/
+     A*********        END OF CHANGE                       /E31803/
+     A*                                            END OF CHANGE E23201
+     A            MODULE         2A  H
+      **Start of change BUG24143
+     A            ABTCH          3A  H
+     A            ABITM          3A  H
+      **End of change BUG24143
+      **Start of change BUG24339
+     A            PSTD           5  0H
+      **End of change BUG24339
+      *                                                     /*S01311*/
+     A*                                              Begin /096486/
+     A            @PYTP          2A  H
+     A**Start of change CGL029
+     A**********  @HPREF        15A  H                                                        CGL029
+     A            @HPREF        21A  H
+     A**End of change CGL029
+     A*                                              End   /096486/
+     A**Start of change BUG9014
+     A            REFER          3A  H
+     A            FCLTY          3A  H
+     A            ACUST          6A  H
+     A**End of change BUG9014
+     A*/COPY WNCPYSRC,GL4442DF17
+     A*
+      *
+      *  Format: subfile Control for selection criteria
+      *
+     A          R SFLCTLR                   SFLCTL(SFLRCD)
+     A*********              Start of change               /058797/
+     A*                                                     /*S01311*/
+     A***********                           SFLSIZ(0013)
+     A*********                             SFLSIZ(0130)
+     A*/COPY WNCPYSRC,GL4442DF18
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_002                                                            CGL145B
+      ** End of change CGL145B
+     A                                      SFLSIZ(0013)
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_031                                                            CGL145B
+      ** End of change CGL145B
+     A*                                                     /*S01311*/
+     A*                      End of change                 /058797/
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_002                                                            CGL145B
+      ** End of change CGL145B
+     A                                      SFLPAG(0012)
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_032                                                            CGL145B
+      ** End of change CGL145B
+     A*/COPY WNCPYSRC,GL4442DF19
+     A  02                                  SFLDSP
+     A  03                                  SFLDSPCTL
+     A N03N02
+     AO 50                                  SFLCLR
+     A*                      Start of change              /*116932*/
+     A* 04                                  SFLEND
+     A  04                                  SFLEND(*MORE)
+     A*                      End of change                /*116932*/
+     A  05                                  SFLMSGID(CPF5203 QCPFMSG)
+      *                                                     /*S01311*/
+     A*N04*02****                           ROLLUP(25)
+      *                                                     /*S01311*/
+     A*********              Start of change               /058797/
+     A N04 02                               ROLLUP(25)
+     A*                      End of change                 /058797/
+     A  50N83 01
+     A*                                                                /* E19562
+     AON50    01                            CF05
+     A*ON50****01**                         CF12              ********   *E19562
+     A*                                                                /* E19562
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A  50                                  ERASE(SFLRCD)
+     A            DSPREC         4S 0H      SFLRCDNBR
+      ** Start of Change BUG4738
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_002                                                            CGL145B
+      ** End of change CGL145B
+     A                                 20 31' Ledger Balance C/F'
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A            CBLNC         22A  O 20 58DSPATR(HI)
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_033                                                            CGL145B
+      ** End of change CGL145B
+      ** End of change BUG4738
+      *                                                     /*S01311*/
+     A***********                      21  2'Press HELP for enquiry'
+     A***********                      21 25'options'
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_002                                                            CGL145B
+      ** End of change CGL145B
+     A  30                             21  2'F1=Initial'
+     A  30                             21 14'F3=Exit'
+     A  30                             21 23'F5=Refresh'
+     A  30                             21 35'F12=Previous'
+     A N30                             21  2'F3=Exit'
+     A N30                             21 11'F5=Refresh'
+     A N30                             21 23'F13=Acct Details'
+     A N30                             21 41'F15=Proj Acct Movs'
+     A N30                             21 61'F16=Itms in Clearing'
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_034                                                            CGL145B
+      ** End of change CGL145B
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442ACTL
+     A*                                                    End of   /*S01408*/
+      *                                                     /*S01311*/
+     A                                 22  2'Enter Account'
+     A*/COPY WNCPYSRC,GL4442DF20
+      **Start of change BUG26687
+     A            OFKEY         31A  O 22 49
+     A                                      OVRDTA
+      **End of change BUG26687
+     A            CNUMR         10A  B 22 16
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  64                                  DSPATR(RI PC)
+     A*/COPY WNCPYSRC,GL4442DF12
+     A            CURRY          3A  B 22 27
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  64                                  DSPATR(RI)
+     A*/COPY WNCPYSRC,GL4442DF13
+     A**Start of change CGL029
+     A*********   ACCOD          4A  B 22 31                                                  CGL029
+     A            ACCOD         10A  B 22 31
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  64                                  DSPATR(RI)
+     A*/COPY WNCPYSRC,GL4442DF14
+     A**Start of change CGL029
+     A*********   ACSEQ          2A  B 22 36                                                  CGL029
+     A            ACSEQ          2A  B 22 42
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  64                                  DSPATR(RI)
+     A*/COPY WNCPYSRC,GL4442DF15
+     A*                                                      /*S01117*/
+     A**Start of change CGL029
+     A*********   BRNCH          3A  B 22 39                                                  CGL029
+     A            BRNCH          3A  B 22 45
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  52
+     AO 64                                  DSPATR(RI)
+     A  21                                  DSPATR(ND)
+     A*                                                      /*LN1273*/
+     A*/COPY WNCPYSRC,GL4442DF16
+     A  21                                  DSPATR(PR)
+     A*                                                      /*LN1273*/
+     A*                                                      /*S01117*/
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DF06
+     A*                                                    End of   /*S01408*/
+     A                                 23  2'Enter Posting Date'
+     A            POSDA          6A  B 23 21
+     A                                      OVRDTA
+     A N65                                  DSPATR(HI)
+     A  65                                  DSPATR(RI PC)
+     A                                 23 31'Amount'
+     A            PORM           1A  B 23 38
+     A                                      OVRDTA
+     A N66                                  DSPATR(HI)
+     A  66                                  DSPATR(RI)
+     A            AMONT         14A  B 23 40
+     A                                      OVRDTA
+     A N67                                  DSPATR(HI)
+     A  67                                  DSPATR(RI PC)
+     A*                                                  Start of   /*165546*/
+     A********                         23 59'Cheque No.'
+     A********    CQNMR          8A  B 23 70
+     A********                              OVRDTA
+     A*N68****                              DSPATR(HI)
+     A**68****                              DSPATR(RI PC)
+     A  41                             23 56'Profit Centre'
+     A N41                             23 59'Cheque No.'
+     A  41        PCAMR          4A  B 23 72
+     A  41                                  OVRDTA
+     A N68 41                               DSPATR(HI)
+     A  68 41                               DSPATR(RI PC)
+     A N41        CQNMR          8A  B 23 70
+     A N41                                  OVRDTA
+     A N68N41                               DSPATR(HI)
+     A  68N41                               DSPATR(RI PC)
+     A*                                                  End of     /*165546*/
+     A*
+     A*/COPY WNCPYSRC,GL4442DF09
+      ** Start of Change CAAA03
+     A**********  ERRDSP        76A  O 24 01DSPATR(HI RI)                                     CAAA03
+     A            ERRDSP        76A  O 24 01DSPATR(HI)
+     A  32
+     AO 50                                  DSPATR(RI)
+      ** End of change CAAA03
+     A                                      OVRDTA
+      *                                                     /*S01311*/
+     A*N50*******                           DSPATR(ND)
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DF07
+     A*                                                    End of   /*S01408*/
+     A N50N32                               DSPATR(ND)
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL4442DF08
+     A*                                                    End of   /*S01408*/
+      *                                                     /*S01311*/
+      **Start of Change CGL131
+      *
+      ** Format: static account and customer details
+      *
+     A          R STATICA
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                  2 30'-Ledger  Movements-'
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A                                  3 70'Branch'
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A            KBRC           3A  O  3 77
+     A                                      DSPATR(HI)
+     A N20                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  4  2'Account'
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A            KCUS           6A  O  4 11
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N20                                  DSPATR(ND)
+     A            KCCY           3A  O  4 18
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            KCOD          10S 0O  4 22
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            KASE           2S 0O  4 33
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            ANAM      R        O  4 36
+     A                                      OVRDTA
+     A N20N15                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A          R NOSTA
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A          R CLEARA
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A          R NOSTB
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A          R CLEARB
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A          R STATICB
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                  6  2'Posting  Value'
+     A                                      OVRATR
+     A  50
+     AON83                                  DSPATR(ND)
+     A N41                              6 18'Cheque    Movement'
+     A                                      OVRATR
+     A  50
+     AON83                                  DSPATR(ND)
+     A  41                              6 18'Profit Ctr Movement'
+     A                                      OVRATR
+     A  50
+     AON83                                  DSPATR(ND)
+      *
+      ** Format: subfile for posting records
+      *
+     A          R SFLRCDA                   SFL
+      ** Start of change MD025751
+     A**********  PSTDZ          7A  O  7  2TEXT('POSTING DATE')                            MD025751
+     A**********                            DSPATR(HI)                                      MD025751
+     A**********  VALDZ          7A  O  7 10TEXT('VALUE DATE')                              MD025751
+     A**********                            DSPATR(HI)                                      MD025751
+     A**********  CHQN      R        O  7 18DSPATR(HI) EDTCDE(4)                            MD025751
+     A**********  PNAR      R        O  7 27DSPATR(HI)                                      MD025751
+     A**********  PSTAZ         19A  O  7 59DSPATR(HI)                                      MD025751
+     A**********  OPTION         1A  B  7 79DSPATR(UL HI)                                   MD025751
+     A            OPTION         1A  B  7  2DSPATR(UL HI)
+     A            PSTDZ          7A  O  7  4DSPATR(HI)
+     A            VALDZ          7A  O  7 12DSPATR(HI)
+     A            @CHQN          8A  O  7 20DSPATR(HI)
+      ** Start of change MD034003
+     A**********  PNARZ         27A  O  7 29DSPATR(HI)                                      MD034003
+      ** Start of change MD036055A
+     A**********  PNARZ         29A  O  7 29DSPATR(HI)                                     MD036055A
+     A            PNARZ         30A  O  7 29DSPATR(HI)
+      ** End of change MD036055A
+      ** Start of change MD034003
+     A            TRATZ          8A  O  7 59DSPATR(HI)
+     A            @ABTC          3A  O  7 71DSPATR(HI)
+     A            PSTAZ         19A  O  7 80DSPATR(HI)
+      ** End of change MD025751
+     A            MODULE         2A  H
+     A            ABTCH          3A  H
+     A            ABITM          3A  H
+     A            PSTD           5  0H
+     A            @PYTP          2A  H
+     A            @HPREF        21A  H
+      *
+      ** Format: subfile Control for selection criteria
+      *
+     A          R SFLCTLRA                  SFLCTL(SFLRCDA)
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_002                                                            CGL145B
+      ** End of change CGL145B
+     A                                      SFLSIZ(0013)
+     A                                      SFLPAG(0012)
+      ** Start of change CGL145B
+     A*/COPY OFCPYSRCZ,CGL145_035                                                            CGL145B
+      ** End of change CGL145B
+     A  02                                  SFLDSP
+     A  03                                  SFLDSPCTL
+     A N03N02
+     AO 50                                  SFLCLR
+     A  04                                  SFLEND
+     A  05                                  SFLMSGID(CPF5203 QCPFMSG)
+      *
+     A N04 02                               ROLLUP(25)
+     A  50N83 01
+     AON50    01                            CF05
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A  50                                  ERASE(SFLRCD)
+     A            DSPREC         4S 0H      SFLRCDNBR
+      *
+      ** Start of change CGL145B
+     A**********/COPY*OFCPYSRCZ,CGL145_002**********                                CGL145B MD051859
+      ** End of change CGL145B
+     A  30                             21  2'F1=Initial'
+     A  30                             21 14'F3=Exit'
+     A  30                             21 23'F5=Refresh'
+     A  30                             21 35'F12=Previous'
+     A N30                             21  2'F3=Exit'
+     A N30                             21 11'F5=Refresh'
+     A N30                             21 23'F13=Acct Details'
+     A N30                             21 41'F15=Proj Acct Movs'
+     A N30                             21 61'F16=Itms in Clearing'
+     A N30 84                          21 83'F17=Forecast Balance'                          MD051859
+      ** Start of change CGL145B                                                            
+     A**********/COPY*OFCPYSRCZ,CGL145_036**********                                CGL145B MD051859
+      ** End of change CGL145B
+      *
+     A                                 22  2'Enter Account'
+     A            OFKEY         31A  O 22 49
+     A                                      OVRDTA
+     A            CNUMR         10A  B 22 16
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  64                                  DSPATR(RI PC)
+     A            CURRY          3A  B 22 27
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  64                                  DSPATR(RI)
+     A            ACCOD         10A  B 22 31
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  64                                  DSPATR(RI)
+     A            ACSEQ          2A  B 22 42
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  64                                  DSPATR(RI)
+      *
+     A            BRNCH          3A  B 22 45
+     A                                      OVRDTA
+     A N64                                  DSPATR(HI)
+     A  52
+     AO 64                                  DSPATR(RI)
+     A  21                                  DSPATR(ND)
+     A  21                                  DSPATR(PR)
+      *
+     A                                 23  2'Enter Posting Date'
+     A            POSDA          6A  B 23 21
+     A                                      OVRDTA
+     A N65                                  DSPATR(HI)
+     A  65                                  DSPATR(RI PC)
+     A                                 23 31'Amount'
+     A            PORM           1A  B 23 38
+     A                                      OVRDTA
+     A N66                                  DSPATR(HI)
+     A  66                                  DSPATR(RI)
+     A            AMONT         14A  B 23 40
+     A                                      OVRDTA
+     A N67                                  DSPATR(HI)
+     A  67                                  DSPATR(RI PC)
+      *
+     A  41                             23 56'Profit Centre'
+     A N41                             23 59'Cheque No.'
+     A  41        PCAMR          4A  B 23 72
+     A  41                                  OVRDTA
+     A N68 41                               DSPATR(HI)
+     A  68 41                               DSPATR(RI PC)
+     A N41        CQNMR          8A  B 23 70
+     A N41                                  OVRDTA
+     A N68N41                               DSPATR(HI)
+     A  68N41                               DSPATR(RI PC)
+      *
+     A            ERRDSP        76A  O 24 01DSPATR(HI RI)
+     A                                      OVRDTA
+      *
+     A N50N32                               DSPATR(ND)
+      **End of Change CGL131

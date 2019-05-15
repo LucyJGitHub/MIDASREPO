@@ -1,0 +1,561 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Delete Unused Position Profit Ctr')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0466  -  DELETE UNUSED POSITION PROFIT CENTRES               *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 02Oct96               *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*   P R O G R A M   D E S C R I P T I O N                       *
+     F*****************************************************************
+     F* Purpose:
+     F* This program runs in input cycle  initiation  to  delete  all
+     F* position  profit  centre  records  which  no  longer have any
+     F* positions associated with them.
+     F*
+     F* Called from : FFC01
+     F*
+     F* Process Index
+     F*        PROCESS     VALIDATE    UPDATE     WRITE
+     F*         P0001                                W0001
+     F*                                              W0002
+     F*
+     F/SPACE 5
+     F*
+     F* PROCESS NAME:  p0001 Delete Unused Position Profit Centres
+     F* For Each:      Next Day Set Up Run.
+     F* When:          Positions Beyond historical period  have  been
+     F* deleted.
+     F*
+     F* 1.      Read  LF/SDBANKPD  for  bank  title  and multi-branch
+     F*         indicator
+     F*
+     F* 2.   If record not found or not live
+     F*   2.1  Execute p9001 process db errors and end program
+     F*
+     F* 3.   Read first record from LF/FOPCK
+     F*
+     F* 5.   Do while records exist in LF/FOPCK
+     F*
+     F*   5.1  If this is the first record on the file
+     F*     5.1.1  Open Printer file and perform RCF processing
+     F*     5.1.2  Write headings to report FF0466P1 as per W0001
+     F*
+     F*   5.2  Otherwise
+     F*     5.2.1  If Multi-branching is Yes and the branch code on
+     F*            file has changed
+     F*
+     F*       5.2.1.1  Close Printer file
+     F*       5.2.1.2  Open Printer file and perform RCF processing
+     F*       5.2.1.3  Write headings to report FF0466P1 as per
+     F*                W0001
+     F*
+     F*   5.3  Access LF/POSTNK5 using branch code, book code and
+     F*        instrument code
+     F*
+     F*   5.4  If no live book positions record is found
+     F*     5.4.1  Write details line to report FF0466P1 as per W0001
+     F*     5.4.2  Delete record from LF/FOPCK
+     F*
+     F* 6.  Read first record from LF/FOPCC
+     F*
+     F* 7.  Do while records exist in LF/FOPCC
+     F*   7.1  If first record on file
+     F*     7.1.1  Open printer file and perform RCF processing
+     F*     7.1.2  Write headings to report FF0466P2 as per W0002
+     F*
+     F*   7.2  Otherwise
+     F*     7.2.1  If multi-branching indicator is Yes and the
+     F*            branch code on file has changed
+     F*       7.2.1.1  Close Printer file
+     F*       7.2.1.2  Open Printer file and perform RCF processing
+     F*       7.2.1.3  Write headings to report FF0466P2 as per W0002
+     F*
+     F*   7.3  Access LF/POSTNC2 using branch code, customer/broker
+     F*        code and instrument code
+     F*   7.4  If no live customer/broker positions record is found
+     F*     7.4.1  Write details line to report FF0466P2 as per W0002
+     F*     7.4.2  Delete record from LF/FOPCC
+     F*
+     F* 8.  Set on LR and end Program.
+     F*
+     F/SPACE 5
+     F*
+     F* PROCESS NAME:  W0001 Delete Book Positions Profit Centre -
+     F*                Audit Report
+     F* CONTENT
+     F* For Each:
+     F* When:
+     F* REF               FIELD               CONTENT
+     F* Title             Bank Title          off LF/SDBANKPD
+     F* Date              Date                off LF/SDBANKPD or
+     F*                                       RUNDAT
+     F* Page              Page Number
+     F* Branch Code       Branch Code
+     F* Book Code         Book Code           off lf/fopck
+     F* Instument Type    Instrument Type          "
+     F* Profit Centre     Profit Centre            "
+     F*
+     F/SPACE 5
+     F*
+     F* PROCESS NAME:  W0002 Delete Customer/Broker Positions  Profit
+     F*                Centre - Audit report
+     F*
+     F* CONTENT
+     F* For Each:
+     F* When:
+     F* REF               FIELD               CONTENT
+     F*
+     F* Title             Bank Title          off LF/SDBANKPD
+     F* Date              Date                off LF/SDBANKPD or
+     F*                                       RUNDAT
+     F* Page              Page Number
+     F* Branch Code       Branch Code
+     F* Customer/Broker   Customer/Broker     of lf/fopcc
+     F* Instument Type    Instrument Type           "
+     F* Profit Centre     Profit Centre             "
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     FFOPCK   UF  E           K        DISK
+     FFOPCC   UF  E           K        DISK
+     FPOSTNK5 IF  E           K        DISK
+     FPOSTNC2 IF  E           K        DISK
+     FFF0466P1O   E             72     PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FFF0466P2O   E             82     PRINTER                        UC
+     F                                              KINFDS SPOOL2
+     FFF0466AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+     F/EJECT
+     F*                  FUNCTION OF INDICATORS
+     F*                 ************************
+     F* ID F  C  H  L
+     F*
+     F*      35        MULTI BRANCHED ENVIROMENT
+     F*      70        END OF FILE FOR FOPCK
+     F*      71        NO BOOK POSITION PRESENT
+     F*      72        OVERFLOW FOR REPORT FF0466P1
+     F*      80        END OF FILE FOR FOPCC
+     F*      81        NO CUSTOMER/BROKER POSITION PRESENT
+     F*      82        OVERFLOW FOR REPORT FF0466P2
+     F*    U7+U8       Database Errors
+     F*
+     F/EJECT
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOL2      DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IP@FMT     E DSDSFDY
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+     I I
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      134 183 DBLOT
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I/EJECT
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C*****************************************************************
+     C* DEFINES THE KLIST'S USED
+     C*
+     C*****************************************************************
+     C*
+     C           KPOSTK    KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KBOKC   2
+     C                     KFLD           KISTT   5
+     C*
+     C           KPOSTC    KLIST
+     C                     KFLD           KBRCA
+     C**********           KFLD           KCBCD   60                                          CSD027
+     C                     KFLD           KCBCD   6                                           CSD027
+     C                     KFLD           KISTT
+     C*
+     C/EJECT
+     C*****************************************************************
+     C* MAIN PROCESSING                                               *
+     C*****************************************************************
+     C* INITIALISE PROGRAM
+     C                     EXSR INIT
+     C*
+     C** PROCESSING FOR THE BOOK POSITIONS PROFIT CENTRES
+     C*
+     C           *LOVAL    SETLLFOPCK
+     C                     READ FOPCK                    70
+     C           *IN70     DOWEQ'0'
+     C                     EXSR PROCK
+     C                     READ FOPCK                    70
+     C                     END
+     C*
+     C           FIRSTK    IFEQ 'N'
+     C                     WRITEFMTEND1
+     C                     END
+     C*
+     C** PROCESSING FOR THE CUSTOMER/BROKER POSITIONS PROFIT CENTRES
+     C*
+     C           *LOVAL    SETLLFOPCC
+     C                     READ FOPCC                    80
+     C           *IN80     DOWEQ'0'
+     C                     EXSR PROCC
+     C                     READ FOPCC                    80
+     C                     END
+     C*
+     C           FIRSTC    IFEQ 'N'
+     C                     WRITEFMTEND2
+     C                     END
+     C                     EXSR EXIT
+     C*****************************************************************
+     C* END OF MAIN PROCESSING
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* S U B R O U T I N E   D E S C R I P T I O N
+     C*
+     C*****************************************************************
+     C*
+     C* PROCK SR: PROCESS THE BOOK PROFIT CENTRE RECORD
+     C* PROCC SR: PROCESSES THE CUSTOMER/BROKER PROFIT CENTRES RECORD
+     C* OPNCL1 SR: OPENS AND CLOSES THE PRINTER FILE FOR THE BOOKS
+     C*            POSITIONS PROFIT CENTRES AUDIT REPORT
+     C* OPNCL2 SR: OPENS AND CLOSES THE PRINTER FILE FOR THE CUSTOMER/
+     C*            BROKER POSITIONS PROFIT CENTRES AUDIT REPORT
+     C* RCF SR: RECORDS THE SPOOL FILE DETAILS FOR RCF
+     C* BRCH SR: RETRIVES THE BRANCH NAME FOR MULTI BRANCH SYSTEMS
+     C* EXIT SR: EXITS FROM THE PROGRAM
+     C* DBERR SR: PROCESSES DATABASE ERRORS
+     C* INIT SR: INITIALISES THE PROGRAM
+     C*
+     C*****************************************************************
+     C* PROCK SR: PROCESS THE BOOK PROFIT CENTRE RECORD
+     C* CALLS: OPNCL1
+     C*****************************************************************
+     C           PROCK     BEGSR
+     C*
+     C                     MOVE BRCA      KBRCA
+     C                     MOVE BOKC      KBOKC
+     C                     MOVE ISTT      KISTT
+     C           KPOSTK    CHAINPOSTNK5              71
+     C* IF NO RECORD IS FOUND THEN WRITE DETAILS TO REPORT AND DELETE
+     C* THE RECORD
+     C           *IN71     IFEQ '1'
+     C                     EXSR OPNCL1
+     C                     WRITEFMTDTL1
+     C                     DELETFOPCK
+     C                     ELSE
+     C                     UPDATFOPCKDF
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* PROCC SR: PROCESSES THE CUSTOMER/BROKER PROFIT CENTRES RECORD
+     C* CALLS: OPNCL2
+     C*****************************************************************
+     C           PROCC     BEGSR
+     C*
+     C                     MOVE BRCA      KBRCA
+     C                     MOVE CBCD      KCBCD
+     C                     MOVE ISTT      KISTT
+     C           KPOSTC    CHAINPOSTNC2              81
+     C* IF NO RECORD IS FOUND THEN WRITE DETAILS TO REPORT AND DELETE
+     C* THE RECORD
+     C           *IN81     IFEQ '1'
+     C                     EXSR OPNCL2
+     C                     WRITEFMTDTL2
+     C                     DELETFOPCC
+     C                     ELSE
+     C                     UPDATFOPCCDF
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* OPNCL1 SR: OPENS AND CLOSES THE PRINTER FILE FOR THE BOOKS
+     C*            POSITIONS PROFIT CENTRES AUDIT REPORT
+     C* CALLS:     RCF - RECORDS SPOOL FILE FOR RCF
+     C*****************************************************************
+     C           OPNCL1    BEGSR
+     C*
+     C** IF THIS IS THE FIRST RECORD ON THE FILE THEN OPEN THE PRINTER
+     C** FILE
+     C*
+     C           FIRSTK    IFEQ 'Y'
+     C                     OPEN FF0466P1
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILE1    ZFILE  10
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     EXSR RCF
+     C*
+     C** IF IN A MULTI BRANCHED ENVIROMENT THEN NEED TO RETRIEVE THE
+     C** BRANCH NAME
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     EXSR BRCH
+     C                     END
+     C                     WRITEFMTHDR1
+     C                     MOVE 'N'       FIRSTK
+     C                     MOVE BRCA      BRCHS   3
+     C                     ELSE
+     C*
+     C** IF MULTI BRANCHED AND THE BRANCH CODE HAS CHANGED THEN CLOSE
+     C** AND OPEN PRINTER FILE
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           BRCHS     ANDNEBRCA
+     C                     WRITEFMTEND1
+     C                     CLOSEFF0466P1
+     C                     OPEN FF0466P1
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILE1    ZFILE
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     EXSR RCF
+     C                     SETOF                     72
+     C                     EXSR BRCH
+     C                     WRITEFMTHDR1
+     C                     MOVE BRCA      BRCHS
+     C                     END
+     C                     END
+     C* PRINT HEADINGS AS REQUIRED
+     C           *IN72     IFEQ '1'
+     C                     WRITEFMTHDR1
+     C                     SETOF                     72
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* OPNCL2 SR: OPENS AND CLOSES THE PRINTER FILE FOR THE CUSTOMER/
+     C*            BROKER POSITIONS PROFIT CENTRES AUDIT REPORT
+     C* CALLS:     RCF - RECORDS SPOOL FILE FOR RCF
+     C*****************************************************************
+     C           OPNCL2    BEGSR
+     C*
+     C** IF THIS IS THE FIRST RECORD ON THE FILE THEN OPEN THE PRINTER
+     C** FILE
+     C*
+     C           FIRSTC    IFEQ 'Y'
+     C                     OPEN FF0466P2
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILE2    ZFILE
+     C                     Z-ADDSFNUM2    ZSNUM
+     C                     EXSR RCF
+     C*
+     C** IF IN A MULTI BRANCHED ENVIROMENT THEN NEED TO RETRIEVE THE
+     C** BRANCH NAME
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     EXSR BRCH
+     C                     END
+     C                     WRITEFMTHDR2
+     C                     MOVE 'N'       FIRSTC
+     C                     MOVE BRCA      BRCHS
+     C                     ELSE
+     C*
+     C** IF MULTI BRANCHED AND THE BRANCH CODE HAS CHANGED THEN CLOSE
+     C** AND OPEN PRINTER FILE
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           BRCHS     ANDNEBRCA
+     C                     WRITEFMTEND2
+     C                     CLOSEFF0466P2
+     C                     OPEN FF0466P2
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILE2    ZFILE
+     C                     Z-ADDSFNUM2    ZSNUM
+     C                     EXSR RCF
+     C                     EXSR BRCH
+     C                     SETOF                     82
+     C                     WRITEFMTHDR2
+     C                     MOVE BRCA      BRCHS
+     C                     END
+     C                     END
+     C* PRINT HEADINGS AS REQUIRED
+     C           *IN82     IFEQ '1'
+     C                     WRITEFMTHDR2
+     C                     SETOF                     82
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* RCF SR: RECORDS THE SPOOL FILE DETAILS FOR RCF
+     C* CALLS:
+     C*****************************************************************
+     C           RCF       BEGSR
+     C* CALL ZSFILE TO RECORD THE SPOOL FILE FOR RCF
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           ZFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8
+     C                     EXSR EXIT
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* BRCH SR: RETRIVES THE BRANCH NAME FOR MULTI BRANCH SYSTEMS
+     C* CALLS:
+     C*****************************************************************
+     C           BRCH      BEGSR
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    P@FMT                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C* ERROR IN SDBRCHPD
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE *BLANKS   BRNM
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVEL'FF0466'  DBPGM
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVELBRCA      DBKEY
+     C                     MOVEL@OPTN     DBOPTN  7        ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* EXIT SR: EXITS FROM THE PROGRAM
+     C* CALLS:
+     C*****************************************************************
+     C           EXIT      BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* DBERR SR: PROCESSES DATABASE ERRORS
+     C* CALLS:    EXIT - EXIT FROM PROGRAM
+     C*****************************************************************
+     C           DBERR     BEGSR
+     C*
+     C** NEED TO OPEN PRINTER FILE AND LOG WITH
+     C** RCF BEFORE WRITING ERROR FORMAT
+     C*
+     C                     OPEN FF0466AU
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILEU    ZFILE
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     EXSR RCF
+     C*
+     C                     WRITEFMTERR
+     C                     DUMP
+     C*
+     C** SETON U7 AND U8 AND END PROGRAM
+     C*
+     C                     SETON                     U7U8
+     C                     EXSR EXIT
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* INIT SR: INITIALISES THE PROGRAM
+     C* CALLS:
+     C*****************************************************************
+     C           INIT      BEGSR
+     C*
+     C** DEFINE DATA AREAS LDA AND OBTAIN RUN DATE DETAILS
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C*
+     C                     IN   RUNDT
+     C*
+     C** OBTAIN USER REPORT TITLE FROM SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    P@FMT
+     C*
+     C           @RTCD     IFNE *BLANK
+     C*
+     C** WRITE ERROR DETAILS TO LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVEL'FF0466'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 01 *
+     C                     MOVEL@OPTN     DBOPTN           ***************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** CHECK BANKING ENVIROMENT TO SEE IF BRANCH IS DISPLAYED
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     35
+     C                     ELSE
+     C                     SETOF                     35
+     C                     END
+     C                     MOVE 'Y'       FIRSTK  1
+     C                     MOVE 'Y'       FIRSTC  1
+     C                     ENDSR
+     C*****************************************************************

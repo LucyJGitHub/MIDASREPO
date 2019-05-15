@@ -1,0 +1,1499 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Select cashflow details to be reported')      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module.                         *
+     F*                                                               *
+     F*  PM0810 - Select Cashflow Details to be reported              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 173909             Date 02Feb01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 09Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 085858             DATE 15MAR95               *
+     F*                 S01486             DATE 21JUN94               *
+     F*                 049421             DATE 22JAN93               *
+     F*                 S01313             DATE 06MAY92               *
+     F*                 47899      GB      DATE 30NOV92               *
+     F*                 B07932             DATE 06JUN91               *
+     F*                 R00300             DATE 16AUG90               *
+     F*                                                               *
+     F*****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*  173909 - Display existing parameter set up for amendments    *
+     F*  CPB001 -  'Private Banking' Module                           *
+     F*  085858 - For a specific account officer , customer/portfolio *
+     F*           Invalid setup                                       *
+     F*  S01486 - Portfolio Mnagement Upgrade to Release 10.          *
+     F*  049421 - HEADER BOX STANDARDISATION                          *
+     F*  S01313 - CHANGED FOR PORTFOLIO PERFORMANCE                   *
+     F*  47899  - WHEN CALLED FROM COB ON REQUEST REPORTING MENU,     *
+     F*           PROMPT SHOULD NOT PROVIDE OPTION INTERACTIVE        *
+     F*           OR BATCH                                            *
+     F*  B07932 - IF CUSTOMER *ALL PORTFOLIO REFERENCE MAY NOT        *
+     F*           BE 9997                                             *
+     F*  R00300 - Message file changes                                *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**SDBANKL1IF  E           K        DISK         KINFSR *PSSR        S01486
+     F*      PREFIX BJ
+     F**SDPORTL1IF  E                    DISK         KINFSR *PSSR        S01486
+     F*      PREFIX P9
+     FPMPORTLLIF  E           K        DISK         KINFSR *PSSR
+     F*      PREFIX PN
+     F**SDPLCSL2IF  E           K        DISK         KINFSR *PSSR        S01486
+     F*      PREFIX BB, QB
+     F**SDPLCSL3IF  E           K        DISK         KINFSR *PSSR        S01486
+     F*      PREFIX BB, QB
+     F**SDACOFL1IF  E           K        DISK         KINFSR *PSSR        S01486
+     F*      PREFIX AZ
+     F**SDDEPTL1IF  E           K        DISK         KINFSR *PSSR        S01486
+     F*      PREFIX AE
+     F**MUSER   IF  E           K        DISK         KINFSR *PSSR        S01486
+     F**
+     F**PM0810DDCF  E                    WORKSTN                          S01486
+     FPM0810DFCF  E                    WORKSTN                            S01486
+     F                                        WWRRN KSFILE PM0810E2
+     F**
+     F*==================================================================
+     F**                FUNCTION OF INDICATORS
+     F**
+     F****05***** - PM0810DD : PROTECT & NON-DISPLAY 'DEPARTMENT'         S01486
+     F****06***** - PM0810DD : PROTECT & NON-DISPLAY 'ACCOUNT OFFICER'    S01486
+     F**  07      - PM0810DD : PROTECT & NON-DISPLAY 'CUSTOMER'
+     F**                                           & 'PORTFOLIO REFERENCE'
+     F**  08      - PM0810DD : ERROR DURING HORIZON INPUT
+     F****09***** - PM0810DD : PROTECT & NON-DISPLAY 'INTERACTIVE/BATCH'  S01486
+     F**
+     F****21***** - PM0810DD : ERROR DURING DEPARTMENT INPUT              S01486
+     F****22***** - PM0810DD : ERROR DURING ACCOUNT OFFICER INPUT         S01486
+     F**  23      - PM0810DD : ERROR DURING CUSTOMER INPUT
+     F**  24      - PM0810DD : ERROR DURING PORFOLIO REFERENCE INPUT
+     F**  25      - PM0810DD : ERROR DURING 60 DAY DETAILED INPUT
+     F**  26      - PM0810DD : ERROR DURING MONTH TOTAL INPUT
+     F**  27      - PM0810DD : ERROR DURING YEAR TOTAL INPUT
+     F****28***** - PM0810DD : ERROR DURING INTERACTIVE/BATCH INPUT       S01486
+     F**  50      - PM0840DD : VLDCMDKEY
+     F**  52      - PM0840DD : SFLEND WHEN OFF
+     F**
+     F****71***** - ACCESS SDBANKL1                                       S01486
+     F****72***** - ACCESS SDPORTL1                                       S01486
+     F****73***** - ACCESS SDDEPTL1                                       S01486
+     F****74***** - ACCESS MUSER                                          S01486
+     F****75***** - ACCESS SDPLCSL2                                       S01486
+     F****76***** - ACCESS SDPLCSL3                                       S01486
+     F****77***** - ACCESS SDACOFL1                                       S01486
+     F**  78      - ACCESS PMPORTLL
+     F**  80      - ERROR
+     F**  81      - TESTN : ON WHEN NUMERIC ASSUMED
+     F**
+     F**  U7 U8   - DATABASE ERROR / DATABASE CONTROL ERROR
+     F**
+     F**  * 'WWAID' VALUES USED:
+     F**  03      - CF03
+     F**  RA      - ENTER
+     F**
+     F**  KC      - CMD/3
+     F**  LR      - LAST RECORD ON FILE
+     F**
+     F**                 *************************
+     F**                 ** INDICATORS NOT USED **
+     F**                 *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   --   --   --   --   --   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * --   --   --   --   --   --   --   --   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   -- *
+     F**      * 51   --   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * --   --   --   --   --   --   --   --   79   -- *
+     F**      * --   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     F**
+     F*==================================================================
+     F/EJECT
+     E*==================================================================
+     E**
+     E                    CPY@    1   1 80
+     E**
+     E*==================================================================
+     E/EJECT
+     I*==================================================================
+     I*
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I* Portfolio Definition Via Access Program                           S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I* Portfolio Customer Details Accessed Via Access Program            S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I* Bank Details Accesses Via Access Program                          S01486
+     I*                                                                   S01486
+     I***SDCUST****E*DSSDCUSTPD                                     S01486085858
+     I**Customer*Details*Accessed*Via*Access*Program****************S01486085858
+     I***********                                                   S01486085858
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* First DS For Access Programs, Short Data Structure                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* Second DS For Access Programs, Long Data Structure                S01486
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              CPB001
+     I* Module Details Accesses Via Access Program                        CPB001
+     I*                                                                   CPB001
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     ILDA         DS                            256
+     I***********                           132 141 WWFILE                S01486
+     I***********                           142 170 WWKEY                 S01486
+     I***********                           171 180 WWPGM                 S01486
+     I***********                           181 1830WWASE                 S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY                 S01486
+     I                                      171 180 DBPGM                 S01486
+     I                                      181 1830DBASE                 S01486
+     IRPARM       DS                            100                       S01486
+     I                                        1   6 OCUST                 S01486
+     I                                        7  10 OPTFR                 S01486
+     I                                       11  11 ODAYD                 S01486
+     I                                       12  12 OMOND                 S01486
+     I                                       13  13 OYEAR                 S01486
+     I*                                                                   S01486
+     IPSDS       SDS                                                      S01486
+     I                                      244 253 WKSTN                 S01486
+     I                                      254 263 USER                  S01486
+     I*
+     I****STATUS*DATA STRUCTURE FOR WRKSTN/USER ID'S:                     S01486
+     I***********SDS                                                      S01486
+     I***********                           244 253 WSID                  S01486
+     I***********                           254 263 USID                  S01486
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+     I**
+     I*=================================================================
+     I/EJECT
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -  CHIEF PROGRAM                                        *
+      * #INIT    -  INITIALIZE - ACCESS STANDING DATA                    *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      * #TITLE   -  FORMAT SCREEN TITLE                                  *
+      * #PROTC   -  DEFINE FIELDS TO PROTECT DURING INPUT                *
+      * #AID     -  TEST WHICH KEY IS PRESSED                            *
+      * #U1001   -  SET UP DEFAULT FIELDS                                *
+      * #V1001   -  VALIDATE SCREEN                                      *
+      * #RTRN    -  SET UP TO RETURN TO CALLING PROGRAM                  *
+      * *PSSR    -  DATABASE ERROR                                       *
+      * ZASNMS   -  Send messages                                        *R00300
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      **ZA0250***-**PERFORM MSGID CLEARING                               *R00300
+      **ZA0240***-**PERFORM MSGID FILLING                                *R00300
+      * Y2CLMSC  -  Clear program message queue                          *R00300
+      * Y2SNMGC  -  Send message to program message queue                *R00300
+      *                                                                  *
+      ********************************************************************
+     C**           MAIN PROGRAM  START
+     C**================================================================
+     C*
+     C**  DEFINE INPUT PARAMETERS:
+     C           *ENTRY    PLIST
+     C***********          PARM           WWCLP   7                       S01486
+     C***********          PARM           WWUSRP 10                       S01486
+     C***********          PARM           WWCYCL  1                       S01486
+     C***********          PARM           WWACOF  4                       S01486
+     C***********          PARM           WWPNP8  6                       S01486
+     C***********          PARM           WWPREF  4                       S01486
+     C***********          PARM           WWINBA  1                       S01486
+     C***********          PARM           WWRTRN  1                       S01486
+     C***********          PARM           GBCH    1                  47899S01486
+     C                     PARM           RSEQ    5                       S01486
+     C                     PARM           RLEV    1                       S01486
+     C                     PARM           RENT    3                       S01486
+     C                     PARM           RPARM                           S01486
+     C                     PARM           RACT    1                       S01486
+     C                     PARM           RCMD    1                       S01486
+     C*                                                                   S01486
+     C* Prepare LDA                                                       S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C                     MOVEL*BLANK    DBLOT                           S01486
+     C                     MOVEL'PM0810'  DBPGM                           S01486
+     C*
+     C**  DEFINE KEY LIST TO ACCESS PMPORTLL:
+     C           POKEY     KLIST
+     C                     KFLD           WWAEN1
+     C                     KFLD           WWPTFK
+     C*
+     C**  PERFORM INITIAL PROCESSING :
+     C           WWFRST    IFEQ *BLANK                     - B1
+     C                     EXSR #INIT
+     C                     END                             - E1
+     C*
+     C**  PROCESS REPORT SELECTION AND PROMPTS:
+     C                     EXSR #P1002
+     C*
+     C**  IF F3 PRESSED, SET RETURN CODE TO '1' AND TERMINATE PROGRAM:
+     C           WWAID     IFEQ '03'                       - B1
+     C***********          MOVE '1'       WWRTRN                          S01486
+     C                     MOVE '1'       *INLR
+     C                     MOVE 'E'       RCMD                            S01486
+     C***********          ELSE                            - X1           S01486
+     C***********          MOVE '0'       WWRTRN                          S01486
+     C                     END                             - E1
+     C*
+     C                     RETRN
+     C**================================================================
+     C*            MAIN PROGRAM  END
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    -  INITIALIZE - ACCESS STANDING DATA                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -  DATABASE ERROR                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -  CHIEF PROGRAM                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRRN    -  RELATIVE RECORD NUMBER                               *
+      * WWFRST   -  INITIALISATION INDICATOR                             *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           * #INIT BEGSR *
+     C*                                                    ***************
+     C**  PREPARE LDA:
+     C                     MOVEL'PM0810'  DBPGM  10
+     C**
+     C**
+     C**  SET UP PARAMETER TO RETRIEVE MESSAGE FROM MESSAGE FILE
+     C           PLLANG    PLIST
+     C                     PARM           MSMBR4  7
+     C                     PARM           MSGER  10
+     C                     PARM           MSGTXT 80
+     C***********          MOVEL'MLGBMSGF'MSGER                           S01486
+     C                     MOVEL'PMUSRMSG'MSGER                           S01486
+     C                     Z-ADD1         WWRRN   30
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C*                                                                   R00300
+     C**   Select the program MSGQ for error msg.                         R00300
+     C                     MOVEL'*'       TOPQ   10                       R00300
+     C                     MOVEL'*PRV'    TOPRQ   5                       R00300
+     C*                                                                   R00300
+     C**   Fill in fields for subroutine ZASNMS                           R00300
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue  R00300
+     C                     MOVEL'PMUSRMSG'ZAMSGF 10        Message file   R00300
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.    R00300
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.  R00300
+     C*                                                                   R00300
+     C                     MOVE 'Y'       WWFRST  1
+     C*
+     C**  GET BANK DETAILS:
+     C***********          READ SDBANKL1                 71               S01486
+      *                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*DBERR ' PRTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'01'      DBASE            ***************S01486
+     C                     MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *S01486
+     C                     MOVE *BLANKS   DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                             - E1           S01486
+     C**                                                                  CPB001
+     C**  GET MODULE DETAILS                                              CPB001
+     C**                                                                  CPB001
+     C                     CALL 'AOMMODR0'                                CPB001
+     C                     PARM '*DBERR ' PRTCD                           CPB001
+     C                     PARM '*FIRST ' @OPTN                           CPB001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB001
+     C*                                                                   CPB001
+     C           PRTCD     IFNE *BLANKS                                   CPB001
+     C           *LOCK     IN   LDA                                       CPB001
+     C                     MOVEL'05'      DBASE            ***************CPB001
+     C                     MOVEL'SDMMODPD'DBFILE           * DB ERROR 05 *CPB001
+     C                     MOVE *BLANKS   DBKEY            ***************CPB001
+     C                     OUT  LDA                                       CPB001
+     C                     EXSR *PSSR                                     CPB001
+     C                     ENDIF                                          CPB001
+     C*
+     C************IN71     IFEQ '1'                        - B1           S01486
+     C***********          MOVEL'01'      DBASE   30       ***************S01486
+     C***********          MOVEL'SDBANKL1'DBFILE 10        * DB ERROR 01 *S01486
+     C***********          MOVE *BLANKS   DBKEY  29        ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                             - E1           S01486
+     C*
+     C**  GET PM ICD:
+     C***********          READ SDPORTL1                 72               S01486
+     C************IN72     IFEQ '1'                        - B1           S01486
+     C***********          MOVEL'02'      DBASE            ***************S01486
+     C***********          MOVEL'SDPORTL1'DBFILE           * DB ERROR 02 *S01486
+     C***********          MOVEL' NONE '  DBKEY            ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                             - E1           S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+      *                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'02'      DBASE            ***************S01486
+     C                     MOVEL'SDPORTPD'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVE *BLANKS   DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                             - E1           S01486
+     C***********          MOVELBJMRDT    DDRUNA                          S01486
+     C*                                                    ***************
+     C                     ENDSR                           * #INIT ENDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #TITLE   -  FORMAT SCREEN TITLE                                  *
+      * #PROTC   -  DEFINE FIELDS TO PROTECT DURING INPUT                *
+      **ZA0250***-**PERFORM MSGID CLEARING                               *R00300
+      * Y2CLMSC  -  Clear program message queue                          *R00300
+      * #AID     -  TEST WHICH KEY IS PRESSED                            *
+      * #U1001   -  SET UP DEFAULT FIELDS                                *
+      * #V1001   -  VALIDATE SCREEN                                      *
+      * #RTRN    -  SET UP TO RETURN TO CALLING PROGRAM                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -  CHIEF PROGRAM                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    -  FUNCTION KEY                                         *
+      *                                                                  *
+      ********************************************************************
+     C           #P1002    BEGSR                           * #P1002 BGSR *
+     C*                                                    ***************
+      **  FORMAT SCREEN TITLE:
+     C                     EXSR #TITLE
+     C*
+     C****DEFINE*PROTECTED FIELDS:                                        S01486
+     C***********          EXSR #PROTC                                    S01486
+     C*
+     C**  DO UNTIL CMD/3 IS TAKEN,
+     C**  OR IF ENTER IS PRESSED AND VALIDATION SUCCESSFULY PERFORMED:
+     C           WWAID     DOUEQ'03'                       - B1
+     C           WWAID     OREQ 'RA'
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  REDISPLAY SCREEN WITH ERROR MESSAGES:
+     C                     WRITEPM0810F2
+     C                     EXFMTPM0810F1
+     C                     MOVE '0'       *IN80
+     C*********************CALL 'ZA0250'                                  R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ                            R00300
+     C                     PARM           TOPRQ                           R00300
+     C*
+     C**  CHECK KEY PRESSED:
+     C                     EXSR #AID
+     C*
+     C**  WHEN 'ENTER' PRESSED:
+     C           WWAID     IFEQ 'RA'                       - B2
+     C*
+     C*   SET UP DEFAULT VALUES:
+     C                     EXSR #U1001
+     C*
+     C**  SET ERROR INDICATORS OFF:
+     C***********          MOVE '0'       *IN21                           S01486
+     C***********          MOVE '0'       *IN22                           S01486
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C***********          MOVE '0'       *IN28                           S01486
+     C*
+     C**  VALIDATE SCREEN INPUT:
+     C                     EXSR #V1001
+     C*
+     C**  IF INPUT IS VALID AND ENTER PRESSED:
+     C           *IN80     IFEQ '0'                        - B3
+     C           WWAID     ANDEQ'RA'
+     C*
+     C**  PREPARE FIELDS FOR RETURN TO CALLING PROGRAM:
+     C                     EXSR #RTRN
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #P1002 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #TITLE   -  FORMAT SCREEN TITLE                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCLP    -  CL CALLING PROGRAM PARAMETER                         *
+      *                                                                  *
+      ********************************************************************
+     C           #TITLE    BEGSR                           * #TITLE BGSR *
+     C*                                                    ***************
+      ****CALLING*PROGRAM IS PMC0811:                                     S01486
+     C***********WWCLP     IFEQ 'PMC0410'                  - B1           S01486
+     C***********          MOVEL'PM90022' MSMBR4                          S01486
+     C***********          CALL 'SDRTVTXT'PLLANG                          S01486
+     C***********          MOVELMSGTXT    DDTITL                          S01486
+     C***********          END                             - E1           S01486
+     C*
+      **  CALLING PROGRAM IS PMC0812:
+     C***********WWCLP     IFEQ 'PMC0420'                  - B1           S01486
+     C***********          MOVEL'PM90023' MSMBR4                          S01486
+     C***********          CALL 'SDRTVTXT'PLLANG                          S01486
+     C***********          MOVELMSGTXT    DDTITL                          S01486
+     C***********          END                             - E1           S01486
+     C*
+      **  CALLING PROGRAM IS PMC0813:
+     C***********WWCLP     IFEQ 'PMC0430'                  - B1           S01486
+     C***********          MOVEL'PM90024' MSMBR4                          S01486
+     C***********          CALL 'SDRTVTXT'PLLANG                          S01486
+     C***********          MOVELMSGTXT    DDTITL                          S01486
+     C***********          END                             - E1           S01486
+     C*
+      **  RESET SCREEN DETAILS TO DEFAULTS:                               S01486
+     C***********          MOVEL'*ALL'    DDDPCD                          S01486
+     C***********          MOVEL'*ALL'    DDACOC                          S01486
+     C           OCUST     IFEQ '*ALL'                                    173909
+     C                     MOVEL*BLANKS   DDCUST
+     C                     ELSE                                           173909
+     C                     MOVELOCUST     DDCUST                          173909
+     C                     ENDIF                                          173909
+     C***********          MOVEL'*ALL'    DDCUST                          S01486
+     C           OPTFR     IFEQ '*ALL'                                    173909
+     C                     MOVE *BLANKS   DDPTFR                          S01486
+     C                     ELSE                                           173909
+     C                     MOVELOPTFR     DDPTFR                          173909
+     C                     ENDIF                                          173909
+     C***********          MOVEL'*ALL'    DDPTFR                          S01486
+     C           ODAYD     IFEQ *BLANKS                                   173909
+     C                     MOVE 'Y'       DDDAYD
+     C                     ELSE                                           173909
+     C                     MOVELODAYD     DDDAYD                          173909
+     C                     ENDIF                                          173909
+     C           OMOND     IFEQ *BLANKS                                   173909
+     C                     MOVE 'Y'       DDMONT
+     C                     ELSE                                           173909
+     C                     MOVELOMOND     DDMONT                          173909
+     C                     ENDIF                                          173909
+     C           OYEAR     IFEQ *BLANKS                                   173909
+     C                     MOVE 'Y'       DDYEAR
+     C                     ELSE                                           173909
+     C                     MOVELOYEAR     DDYEAR                          173909
+     C                     ENDIF                                          173909
+     C***********          MOVE 'B'       DDINBA                          S01486
+     C*                                                    ***************
+     C                     ENDSR                           * #TITLE EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #PROTC   -  DEFINE FIELDS TO PROTECT DURING INPUT                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCLP    -  CL CALLING PROGRAM PARAMETER                         *
+      * WWCYCL   -  PHASE OF DAILY CYCLE PARAMETER                       *
+      *                                                                  *
+      ********************************************************************
+     C***********#PROTC    BEGSR                           * #PROTC BGSR *S01486
+     C*
+     C****RESET*PROTECT INDICATORS                                        S01486
+     C***********          MOVE '0'       *IN05                           S01486
+     C***********          MOVE '0'       *IN06                           S01486
+     C***********          MOVE '0'       *IN07                           S01486
+     C*                                                                   S01486
+     C****WHEN*REPORT*IS CALLED PER ACCOUNT OFFICER DEPARTMENT:           S01486
+     C***********WWCLP     IFEQ 'PMC0410'                  - B1           S01486
+     C***********          MOVE '1'       *IN06                           S01486
+     C***********          MOVE '1'       *IN07                           S01486
+     C***********          END                             - E1           S01486
+     C*
+     C****WHEN*REPORT*IS CALLED PER ACCOUNT OFFICER:                      S01486
+     C***********WWCLP     IFEQ 'PMC0420'                  - B1           S01486
+     C***********          MOVE '1'       *IN05                           S01486
+     C***********          MOVE '1'       *IN07                           S01486
+     C***********          END                             - E1           S01486
+     C*
+     C****WHEN*REPORT*IS CALLED PER CUSTOMER AND PORTFOLIO:               S01486
+     C***********WWCLP     IFEQ 'PMC0430'                  - B1           S01486
+     C***********          MOVE '1'       *IN05                           S01486
+     C***********          END                             - E1           S01486
+     C*
+     C****WHEN*CLOSE OF BUSINESS DO NOT DISPLAY INTERACTIVE / BATCH       S01486
+     C****SELECTION OPTION:                                               S01486
+     C***********WWCYCL    IFEQ 'A'                        - B1           S01486
+     C***********WWCYCL    OREQ 'D'                        - B1           S01486
+     C***********          MOVE '0'       *IN09                           S01486
+     C***********          ELSE                                           S01486
+     C***********          MOVE '1'       *IN09                           S01486
+     C***********          END                             - E1           S01486
+     C***********GBCH      IFEQ '2'                        - B1      47899S01486
+     C***********          MOVE '1'       *IN09                      47899S01486
+     C***********          END                             - E1      47899S01486
+     C*                                                    ***************
+     C***********          ENDSR                           * #PROTC EDSR *S01486
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #AID     -  TEST WHICH KEY IS PRESSED                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    -  FUNCTION KEY                                         *
+      *                                                                  *
+      ********************************************************************
+     C           #AID      BEGSR                           * #AID BEGSR *
+     C*                                                    **************
+     C**  WHEN CMD/3 PRESSED:
+     C           *INKC     IFEQ '1'                        - B1
+     C                     MOVE '03'      WWAID   2
+     C                     END                             - E1
+     C*
+     C**  WHEN ENTER PRESSED:
+     C           *IN50     IFEQ '0'                        - B1
+     C                     MOVE 'RA'      WWAID
+     C                     END                             - E1
+     C*                                                    **************
+     C                     ENDSR                           * #AID ENDSR *
+     C*                                                    **************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #U1001   -  SET UP DEFAULT FIELDS                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCLP    -  CL CALLING PROGRAM PARAMETER                         *
+      *                                                                  *
+      ********************************************************************
+     C           #U1001    BEGSR                           * #U1001 BGSR *
+     C*                                                    ***************
+     C****WHEN*REPORT*IS CALLED PER ACCOUNT OFFICER DEPARTMENT:           S01486
+     C***********WWCLP     IFEQ 'PMC0410'                  - B1           S01486
+     C*
+     C***********DDDPCD    IFEQ *BLANK                     - B2           S01486
+     C***********          MOVEL'*ALL'    DDDPCD                          S01486
+     C***********          END                             - E2           S01486
+     C*
+     C***********          MOVE *BLANK    DDACOC                          S01486
+     C***********          MOVE *BLANK    DDCUST                          S01486
+     C***********          MOVE *BLANK    DDPTFR                          S01486
+     C*
+     C***********          END                             - E1           S01486
+     C*
+     C****WHEN*REPORT IS CALLED PER ACCOUNT OFFICER:                      S01486
+     C***********WWCLP     IFEQ 'PMC0420'                  - B1           S01486
+     C*
+     C***********          MOVE *BLANK    DDDPCD                          S01486
+     C*
+     C***********DDACOC    IFEQ *BLANK                     - B2           S01486
+     C***********          MOVEL'*ALL'    DDACOC                          S01486
+     C***********          END                             - E2           S01486
+     C*
+     C***********          MOVE *BLANK    DDCUST                          S01486
+     C***********          MOVE *BLANK    DDPTFR                          S01486
+     C***********          END                             - E1           S01486
+     C*
+     C****WHEN*REPORT IS CALLED PER CUSTOMER AND PORTFOLIO:               S01486
+     C***********WWCLP     IFEQ 'PMC0430'                  - B1           S01486
+     C*
+     C***********          MOVE *BLANK    DDDPCD                          S01486
+     C*
+     C           DDCUST    IFEQ *BLANK                     - B2
+     C                     MOVEL'*ALL'    DDCUST
+     C                     END                             - E2
+     C*
+     C           DDPTFR    IFEQ *BLANK                     - B2
+     C                     MOVEL'*ALL'    DDPTFR
+     C                     END                             - E2
+     C*
+     C***********          END                             - E1           S01486
+     C*
+     C           DDDAYD    IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       DDDAYD
+     C                     END                             - E1
+     C*
+     C           DDMONT    IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       DDMONT
+     C                     END                             - E1
+     C*
+     C           DDYEAR    IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       DDYEAR
+     C                     END                             - E1
+     C*
+     C***********DDINBA    IFEQ *BLANK                     - B1           S01486
+     C***********          MOVE 'B'       DDINBA                          S01486
+     C***********          END                             - E1           S01486
+     C*                                                    ***************
+     C                     ENDSR                           * #U1001 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #V1001   -  VALIDATE SCREEN                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **ZA0240***-**PERFORM MSGID FILLING                                *R00300
+      * ZASNMS   -  Send message to program message queue                *R00300
+      * *PSSR    -  DATABASE ERROR                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAGCD   -  DEPARTMENT                                           *
+      * WWUSRP   -  USER PROFILE PARAMETER                               *
+      * WWCYCL   -  PHASE OF DAILY CYCLE PARAMETER                       *
+      * WWFND    -  CUSTOMER NUMBER INDICATOR                            *
+      * WWFOUR   -  RIGHT ZONE CUSTOMER INPUT TEST                       *
+      * WWSIX    -  LEFT ZONE CUSTOMER INPUT TEST                        *
+      * WWCFLG   -  CUSTOMER NUMBER/SHORTNAME INDICATOR                  *
+      * WWCNUM   -  CUSTOMER (TO ACCESS SDPLCSL2)                        *
+      * WWAVC1   -  ACCOUNT OFFICER                                      *
+      * WWPTFK   -  PORTFOLIO REFERENCE(KEY FIELD TO ACCESS PMPORTLL)    *
+      * WWAEN1   -  CUSTOMER(KEY FIELD TO ACCESS PMPORTLL)               *
+      *                                                                  *
+      ********************************************************************
+     C           #V1001    BEGSR                           * #V1001 BGSR *
+     C*                                                    ***************
+     C                     MOVE 'N'       WWFND   1
+     C*
+     C**  CUSTOMER ENTERED MUST BE VALID (AS NUMBER OR AS SHORTNAME) OR
+     C**  TEXT *ALL TO BE A PORTFOLIO CUSTOMER;
+     C**  ELSE PERFORM ERROR 107:
+     C           DDCUST    IFNE '*ALL'                     - B1
+     C           DDCUST    ANDNE*BLANK
+     C*
+     C****CHECK*FOR NUMBER OR SHORTNAME INPUT:                            S01486
+     C***********          MOVE DDCUST    WWFOUR  4                       S01486
+     C***********          MOVELDDCUST    WWSIX   6                       S01486
+     C***********          TESTN          WWSIX      81                   S01486
+     C************IN81     IFEQ '1'                        - B2           S01486
+     C***********WWFOUR    ANDEQ*BLANK                                    S01486
+     C***********          MOVE 'Y'       WWCFLG  1                       S01486
+     C***********          ELSE                            - X2           S01486
+     C***********          MOVE 'N'       WWCFLG                          S01486
+     C***********          END                             - E2           S01486
+     C*
+     C****CUSTOMER NUMBER ENTERED HAS TO BE VALID:                        S01486
+     C***********WWCFLG    IFEQ 'Y'                        - B2           S01486
+     C***********          MOVELDDCUST    WWCNUM  6                       S01486
+     C***********WWCNUM    CHAINSDPLCSL2             75                   S01486
+     C*
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM DDCUST    PLCUS  10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C**
+     C************IN75     IFEQ '1'                        - B3           S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C***********QBPCUS    ORNE 'Y'                                       S01486
+     C                     MOVEL'PM81107' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN23
+     C                     ELSE                            - X3
+     C                     MOVE 'Y'       WWFND
+     C                     MOVE *BLANKS   DDCUST                          S01486
+     C                     MOVE QBCUST    DDCUST                          S01486
+     C                     MOVE QBCUST    OCUST                           S01486
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C**  OTHERWISE SHORTNAME ENTERED HAS TO BE VALID:
+     C***********WWCFLG    IFEQ 'N'                        - B2           S01486
+     C***********DDCUST    CHAINSDPLCSL3             76                   S01486
+     C*
+     C************IN76     IFEQ '1'                        - B3           S01486
+     C***********QBPCUS    ORNE 'Y'                                       S01486
+     C*********************MOVEL'PM81107' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81107' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN23                           S01486
+     C***********          ELSE                            - X3           S01486
+     C***********          MOVE 'Y'       WWFND                           S01486
+     C***********          END                             - E3           S01486
+     C*
+     C***********          END                             - E2           S01486
+     C*
+     C***********          END                             - E1           S01486
+     C********************************************************************
+     C*
+     C*   IF A/C OFFICER INPUT IS *ALL, CUSTOMER INPUT MUST ALSO BE TEXT
+     C*   *ALL, ELSE PERFORM ERROR 110:
+     C***********DDACOC    IFEQ '*ALL'                     - B1           S01486
+     C           RENT      IFEQ 'ALL'                      - B1           S01486
+     C           DDCUST    ANDNE'*ALL'
+     C           DDCUST    ANDNE*BLANK
+     C*
+     C*********************MOVEL'PM08111' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08111' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN23
+     C                     END                             - E1
+     C********************************************************************
+     C*
+     C****IF*HIGH LEVEL SECURITY REQUIRED, PERFORM ADDITIONAL VALIDATION, S01486
+     C****IF*CUSTOMER INPUT IS NEITHER TEXT *ALL NOR BLANK, TO CHECK THAT S01486
+     C****A/C*OFFICER IS AUTHORISED TO PRODUCE REPORTS ON CUSTOMER:       S01486
+     C****ELSE PERFORM ERROR 111:                                         S01486
+     C***********WWUSRP    CHAINMUSER                74                   S01486
+     C*
+     C************IN74     IFEQ '1'                        - B1           S01486
+     C***********          MOVE '03'      DBASE            ***************S01486
+     C***********          MOVEL' MUSER  'DBFILE           * DB ERROR 03 *S01486
+     C***********          MOVELWWUSRP    DBKEY            ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                             - E1           S01486
+     C*
+     C***********DDCUST    IFNE '*ALL'                     - B1           S01486
+     C***********DDCUST    ANDNE*BLANK                                    S01486
+     C***********P9HLVS    ANDEQ'Y'                                       S01486
+     C***********WWFND     ANDEQ'Y'                                       S01486
+     C*
+     C****IF*A/C OFFICER CODE ON MIDAS USER FILE NEITHER BLANK NOR *A NOR S01486
+     C****EQUAL TO CUSTOMER ACCOUNT OFFICER CODE:                         S01486
+     C***********ACOC      IFNE *BLANK                     - B2           S01486
+     C***********ACOC      ANDNE'*A'                                      S01486
+     C***********ACOC      ANDNEBBACOC                                    S01486
+     C*
+     C*********************MOVEL'PM81111' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81111' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN23                           S01486
+     C***********          END                             - E2           S01486
+     C*****          **************************************          *****
+     C*
+     C****IF*A/C OFFICER CODE ON MIDAS USER FILE IS BLANK AND A/C OFFICER S01486
+     C****DEPARTMENT NOT EQUAL TO DEPARTMENT OF SIGNED ON USER:           S01486
+     C***********ACOC      IFEQ *BLANK                     - B2           S01486
+     C*
+     C***********BBACOC    CHAINSDACOFL1             77                   S01486
+     C*
+     C************IN77     IFEQ '1'                        - B3           S01486
+     C*
+     C***********          MOVE '04'      DBASE            ***************S01486
+     C***********          MOVEL'SDACOFL1'DBFILE           * DB ERROR 04 *S01486
+     C***********          MOVELBBACOC    DBKEY            ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                             - E3           S01486
+     C*
+     C***********AZDPCD    IFNE DEPC                       - B3           S01486
+     C*
+     C*********************MOVEL'PM81109' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81109' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN23                           S01486
+     C***********          END                             - E3           S01486
+     C*
+     C***********          END                             - E2           S01486
+     C*
+     C***********          END                             - E1           S01486
+     C********************************************************************
+     C*
+     C**  SET UP DEFAULT VALUE FOR ACCOUNT OFFICER:
+     C***********DDACOC    IFEQ *BLANK                     - B1           S01486
+     C*
+     C***********DDCUST    IFEQ *BLANK                     - B2           S01486
+     C***********          MOVE *BLANK    DDACOC                          S01486
+     C***********          ELSE                            - X2           S01486
+     C*
+     C***********WWFND     IFEQ 'Y'                        - B3           S01486
+     C***********          MOVELBBACOC    DDACOC                          S01486
+     C***********          ELSE                            - X3           S01486
+     C***********          MOVEL'*ALL'    DDACOC                          S01486
+     C***********          END                             - E3           S01486
+     C*
+     C***********          END                             - E2           S01486
+     C*
+     C***********          END                             - E1           S01486
+     C********************************************************************
+     C*
+     C****ACCORDING TO THE CL CALLING PROGRAM,                            S01486
+     C****A/C*OFFICER CODE ENTERED MUST BE VALID OR TEXT *ALL,            S01486
+     C****ELSE*PERFORM ERROR 103:                                         S01486
+     C***********          MOVE 'Y'       WWFND1  1                       S01486
+     C***********DDACOC    IFNE '*ALL'                     - B1           S01486
+     C***********DDACOC    ANDNE*BLANK                                    S01486
+     C*
+     C****CHECK*THAT LAST TWO CHARACTERS OF ACCOUNT OFFICER CODE ARE BLANKS01486
+     C***********          MOVE DDACOC    WWCHK2  2                       S01486
+     C***********WWCHK2    IFEQ *BLANK                     - B2           S01486
+     C***********          MOVELDDACOC    WWAVC1  2                       S01486
+     C***********WWAVC1    CHAINSDACOFL1             77                   S01486
+     C*
+     C************IN77     IFEQ '1'                        - B3           S01486
+     C*********************MOVEL'PM81103' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81103' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN22                           S01486
+     C***********          MOVE 'N'       WWFND1                          S01486
+     C***********          END                             - E3           S01486
+     C*
+     C**  REPORT ERROR AS ACCOUNT OFFICER CODE DOES NOT END IN BLANKS:
+     C***********          ELSE                            - X2           S01486
+     C*********************MOVEL'PM81103' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81103' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN22                           S01486
+     C***********          MOVE 'N'       WWFND1                          S01486
+     C***********          END                             - E2           S01486
+     C*
+     C***********          END                             - E1           S01486
+     C********************************************************************
+     C*
+     C****CHECK*THAT ACCOUNT OFFICER ENTERED SAME AS ACCOUNT OFFICER      S01486
+     C****ALLOCATED TO CUSTOMER, ELSE PERFORM ERROR 104:                  S01486
+     C***********WWFND     IFEQ 'Y'                        - B1           S01486
+     C***********DDACOC    ANDNE'*ALL'                                    S01486
+     C***********DDACOC    ANDNE*BLANK                                    S01486
+     C***********WWAVC1    ANDNEBBACOC                                    S01486
+     C*
+     C*********************MOVEL'PM81104' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81104' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN22                           S01486
+     C***********          END                             - E1           S01486
+     C********************************************************************
+     C*
+     C****IF*HIGH LEVEL SECURITY REQUIRED, PERFORM ADDITIONAL VALIDATION  S01486
+     C****TO*CHECK THAT CURRENT USER IS AUTHORISED TO VIEW ALL CUSTOMERS, S01486
+     C****ELSE PERFORM ERROR 105;                                         S01486
+     C****OR TO VIEW DETAILS FOR ACCOUNT OFFICER ENTERED,                 S01486
+     C****ELSE PERFORM ERROR 106;                                         S01486
+     C***********P9HLVS    IFEQ 'Y'                        - B1           S01486
+     C*
+     C****IF A/C OFFICER CODE ENTERED IS '*ALL' AND A/C OFFICER CODE ON   S01486
+     C****MIDAS USER IS NOT '*A', PERFORM ERROR 105:                      S01486
+     C***********DDACOC    IFEQ '*ALL'                     - B2           S01486
+     C***********ACOC      ANDNE'*A'                                      S01486
+     C*
+     C*********************MOVEL'PM81105' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81105' ZAMSID                   R00300 S01486
+     C***********          EXSR ZASNMS                             R00300 S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN22                           S01486
+     C***********          END                             - E2           S01486
+     C********************************************************************
+     C**
+     C****IF*A/C OFFICER CODE ENTERED (NOT *ALL) AND NOT BLANK,           S01486
+     C****PERFORM ERROR 106:                                              S01486
+     C*
+     C***********DDACOC    IFNE '*ALL'                     - B2           S01486
+     C***********DDACOC    ANDNE*BLANK                                    S01486
+     C***********WWFND1    ANDEQ'Y'                                       S01486
+     C*
+     C****IF*A/C OFFICER CODE ON MIDAS USER FILE NOT BLANK AND NOT '*A'   S01486
+     C****AND**NOT EQUAL TO INPUT A/C OFFICER CODE:                       S01486
+     C***********ACOC      IFNE *BLANK                     - B3           S01486
+     C***********ACOC      ANDNE'*A'                                      S01486
+     C***********ACOC      ANDNEWWAVC1                                    S01486
+     C*
+     C*********************MOVEL'PM81106' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81106' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN22                           S01486
+     C***********          END                             - E3           S01486
+     C*****          **************************************          *****
+     C*
+     C****IF*A/C OFFICER CODE ON MIDAS USER FILE IS BLANK;                S01486
+     C****IF*DEPT CODE ON MIDAS USER FILE NOT EQUAL TO DEPT CODE          S01486
+     C****OF*INPUT A/C OFFICER CODE:                                      S01486
+     C***********ACOC      IFEQ *BLANK                     - B3           S01486
+     C***********DEPC      ANDNEAZDPCD                                    S01486
+     C*
+     C*********************MOVEL'PM81121' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81121' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN22                           S01486
+     C***********          END                             - E3           S01486
+     C*
+     C***********          END                             - E2           S01486
+     C*
+     C***********          END                             - E1           S01486
+     C********************************************************************
+     C*
+     C****DEPARTMENT CODE ENTERED MUST BE VALID OR TEXT *ALL              S01486
+     C****ELSE*PERFORM ERROR 100:                                         S01486
+     C***********          MOVE 'Y'       WWDPVL  1                       S01486
+     C***********DDDPCD    IFNE '*ALL'                     - B1           S01486
+     C***********DDDPCD    ANDNE*BLANK                                    S01486
+     C*
+     C****CHECK*THAT ONLY THREE CHARACTERS ENTERED FOR DEPARTMENT:        S01486
+     C***********          MOVE DDDPCD    WWCHK1  1                       S01486
+     C***********WWCHK1    IFEQ *BLANK                     - B2           S01486
+     C*
+     C***********          MOVELDDDPCD    WWDPCD  3                       S01486
+     C***********WWDPCD    CHAINSDDEPTL1             73                   S01486
+     C*
+     C************IN73     IFEQ '1'                        - B3           S01486
+     C*********************MOVEL'PM08110' MSGID  10                       R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM08110' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE 'N'       WWDPVL                          S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN21                           S01486
+     C***********          END                             - E3           S01486
+     C*
+     C****OUTPUT*ERROR BECAUSE 4 CHARACTER DEPARTMENT CODE ENTERED:       S01486
+     C***********          ELSE                            - X2           S01486
+     C*********************MOVEL'PM08110' MSGID  10                       R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM08110' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE 'N'       WWDPVL                          S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN21                           S01486
+     C***********          END                             - E2           S01486
+     C*
+     C***********          END                             - E1           S01486
+     C********************************************************************
+     C*
+     C****DURING INPUT CYCLE (PHASE OF DAILY CYCLE SET TO 'A');           S01486
+     C****IF HIGH LEVEL SECURITY REQUIRED, PERFORM ADDITIONAL VALIDATION  S01486
+     C**  TO CHECK THAT SIGNED ON USER IS AUTHORISED TO RUN CASHFLOW
+     C**  REPORTS FOR DEPARTMENT CODE ENTERED.
+     C**  OTHERWISE PERFORM ERROR 101 OR 102:
+     C***********WWCYCL    IFEQ 'A'                        - B1           S01486
+     C***********P9HLVS    ANDEQ'Y'                                       S01486
+     C*
+     C***********DDDPCD    IFNE *BLANK                     - B2           S01486
+     C*
+     C****IF*A/C*OFFICER CODE ON MIDAS USER FILE NOT BLANK AND NOT EQUAL  S01486
+     C****TO*'*A', PERFORM ERROR 101:                                     S01486
+     C***********ACOC      IFNE *BLANK                     - B3           S01486
+     C***********ACOC      ANDNE'*A'                                      S01486
+     C*
+     C*********************MOVEL'PM81101' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81101' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN21                           S01486
+     C***********          END                             - E3           S01486
+     C********************************************************************
+     C*
+     C****IF*DEPARTMENT CODE ON MIDAS USER FILE NOT BLANK AND NOT EQUAL   S01486
+     C****TO*DEPARTMENT CODE IN INPUT, PERFORM ERROR 102:                 S01486
+     C***********DEPC      IFNE *BLANK                     - B3           S01486
+     C***********DEPC      ANDNEDDDPCD                                    S01486
+     C***********WWDPVL    ANDEQ'Y'                                       S01486
+     C*
+     C*********************MOVEL'PM81102' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81102' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN21                           S01486
+     C***********          END                             - E3           S01486
+     C**
+     C***********          END                             - E2           S01486
+     C**
+     C***********          END                             - E1           S01486
+     C********************************************************************
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C**                                                                  CPB001
+     C           DDPTFR    IFEQ FCR997                                    CPB001
+     C           DDPTFR    OREQ FCR999                                    CPB001
+     C                     MOVEL'PBUSRMSG'ZAMSGF                          CPB001
+     C                     MOVEL'PB00111' ZAMSID                          CPB001
+     C                     EXSR ZASNMS                                    CPB001
+     C                     MOVEL'PMUSRMSG'ZAMSGF                          CPB001
+     C                     MOVE '1'       *IN80                           CPB001
+     C                     MOVE '1'       *IN24                           CPB001
+     C                     ELSE                                           CPB001
+     C           FCDP98    IFEQ 'N'                                       CPB001
+     C           DDPTFR    ANDEQFCR998                                    CPB001
+     C                     MOVEL'PBUSRMSG'ZAMSGF                          CPB001
+     C                     MOVEL'PB00112' ZAMSID                          CPB001
+     C                     EXSR ZASNMS                                    CPB001
+     C                     MOVEL'PMUSRMSG'ZAMSGF                          CPB001
+     C                     MOVE '1'       *IN80                           CPB001
+     C                     MOVE '1'       *IN24                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C**                                                                  CPB001
+     C                     ELSE                                           CPB001
+     C*
+     C**  WHEN PORTFOLIO 9997 IS NOT SELECTED FOR DISPLAY
+     C**  AND  REFERENCE TO PORTFOLIO 9997 IS INPUT;
+     C**  OR
+     C**  WHEN PORTFOLIO 9998 IS NOT SELECTED FOR DISPLAY
+     C**  AND  REFERENCE TO PORTFOLIO 9998 IS INPUT;
+     C**  PERFORM ERROR 112:
+     C***********P9DP97    IFEQ 'N'                        - B1           S01486
+     C***********DDPTFR    ANDEQP9R997                                    S01486
+     C***********P9DP98    OREQ 'N'                                       S01486
+     C***********DDPTFR    ANDEQP9R998                                    S01486
+     C           FCDP97    IFEQ 'N'                        - B1           S01486
+     C           DDPTFR    ANDEQFCR997                                    S01486
+     C           FCDP98    OREQ 'N'                                       S01486
+     C           DDPTFR    ANDEQFCR998                                    S01486
+     C*
+     C*********************MOVEL'PM81112' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM81112' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN24
+     C                     END                             - E1
+     C                     ENDIF                                          CPB001
+     C********************************************************************
+     C*
+     C**  IF CUSTOMER INPUT IS NEITHER TEXT '*ALL' NOR BLANK:
+     C           DDCUST    IFNE '*ALL'                     - B1
+     C           DDCUST    ANDNE*BLANK
+     C*
+     C**  IF PORTFOLIO REFERENCE ENTERED IS NEITHER TEXT '*ALL' NOR BLANK
+     C**  NOR ONE OF THE REFERENCES ATTACHED TO THE STANDARD PORTFOLIOS,
+     C**  THE REFERENCE ENTERED MUST BE VALID, FOR A LIVE PORTFOLIO.
+     C**  ELSE PERFORM ERROR 113:
+     C           DDPTFR    IFNE *BLANK                     - B2
+     C***********DDPTFR    ANDNEP9R997                                    S01486
+     C***********DDPTFR    ANDNEP9R998                                    S01486
+     C***********DDPTFR    ANDNEP9R999                                    S01486
+     C           DDPTFR    ANDNEFCR997                                    S01486
+     C           DDPTFR    ANDNEFCR998                                    S01486
+     C           DDPTFR    ANDNEFCR999                                    S01486
+     C           DDPTFR    OREQ FCR997                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           DDPTFR    OREQ FCR999                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C*
+     C           DDPTFR    IFNE '*ALL'                     - B3
+     C*
+     C                     MOVE DDPTFR    WWPTFK  4
+     C***********          MOVE BBCUST    WWAEN1  60                      085858
+     C**********           MOVE QBCUST    WWAEN1  60                                   085858 CSD027
+     C                     MOVE QBCUST    WWAEN1  6                                           CSD027
+     C           POKEY     CHAINPMPORTLL             78
+     C*
+     C           *IN78     IFEQ '1'                        - B4
+     C*
+     C*********************MOVEL'PM81113' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     MOVEL'PBUSRMSG'ZAMSGF                          CPB001
+     C                     MOVEL'PB00111' ZAMSID                          CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVEL'PM81113' ZAMSID                          R00300
+     C                     ENDIF                                          CPB001
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVEL'PMUSRMSG'ZAMSGF                          CPB001
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN24
+     C                     END                             - E4
+     C*
+     C***IF*REPORT REQUESTED DURING COB AND DATE PORTFOLIO CLOSED         S01486
+     C***IS*BEFORE DATE OF NEXT WORKING DAY OUTPUT ERROR                  S01486
+     C*
+     C************IN81     IFEQ '0'                        - B4           S01486
+     C***********PNDPCL    IFLT BJDNWD                     - B5           S01486
+     C***********WWCYCL    ANDNE'A'                                       S01486
+     C*********************MOVEL'PM81122' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81122' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN24                           S01486
+     C***********          END                             - E5           S01486
+     C***********          END                             - E4           S01486
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C********************************************************************
+     C*
+     C**  IF CUSTOMER ENTERED IS TEXT *ALL;
+     C**  IF PORTFOLIO REFERENCE ENTERED IS NEITHER TEXT *ALL NOR ONE
+     C**  OF THE REFERENCES ATTACHED TO THE STANDARD PORTFOLIOS;
+     C**  PERFORM ERROR 114:
+     C           DDCUST    IFEQ '*ALL'                     - B1
+     C           DDPTFR    ANDNE'*ALL'
+     C***********DDPTFR    ANDNEP9R997                                    B07932
+     C***********DDPTFR    ANDNEP9R998                                    S01486
+     C***********DDPTFR    ANDNEP9R999                                    S01486
+     C           DDPTFR    ANDNEFCR998                                    S01486
+     C           DDPTFR    ANDNEFCR999                                    S01486
+     C           DDPTFR    OREQ FCR999                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C*
+     C*********************MOVEL'PM81114' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     MOVEL'PBUSRMSG'ZAMSGF                          CPB001
+     C                     MOVEL'PB00111' ZAMSID                          CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVEL'PM81114' ZAMSID                          R00300
+     C                     ENDIF                                          CPB001
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVEL'PMUSRMSG'ZAMSGF                          CPB001
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN24
+     C                     END                             - E1
+     C*
+     C**  IF 60 DAY DETAILED HORIZON IS NEITHER 'Y' OR 'N' AS INPUT,
+     C**  PERFORM ERROR 115:
+     C           DDDAYD    IFNE 'Y'                        - B1
+     C           DDDAYD    ANDNE'N'
+     C*
+     C*********************MOVEL'PM81115' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM81115' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN25
+     C                     END                             - E1
+     C*
+     C**  IF MONTHLY TOTAL HORIZON IS NEITHER 'Y' OR 'N' AS INPUT,
+     C**  PERFORM ERROR 116:
+     C           DDMONT    IFNE 'Y'                        - B1
+     C           DDMONT    ANDNE'N'
+     C*
+     C*********************MOVEL'PM81116' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM81116' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN26
+     C                     END                             - E1
+     C*
+     C**  IF YEARLY TOTAL HORIZON IS NEITHER 'Y' OR 'N' AS INPUT,
+     C**  PERFORM ERROR 117:
+     C           DDYEAR    IFNE 'Y'                        - B1
+     C           DDYEAR    ANDNE'N'
+     C*
+     C*********************MOVEL'PM81117' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM81117' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN27
+     C                     END                             - E1
+     C*
+     C**  IF NEITHER 60 DAY DETAILED HORIZON NOR MONTHLY TOTAL HORIZON
+     C**  NOR YEARLY TOTAL HORIZON IS SELECTED,
+     C**  PERFORM ERROR 118:
+     C           DDDAYD    IFNE 'Y'                        - B1
+     C           DDMONT    ANDNE'Y'
+     C           DDYEAR    ANDNE'Y'
+     C*
+     C*********************MOVEL'PM81118' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM81118' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN27
+     C                     END                             - E1
+     C*
+     C**  IF INTERACTIVE/BATCH INDICATOR NEITHER 'I' NOR 'B',
+     C**  PERFORM ERROR 119:
+     C***********DDINBA    IFNE 'I'                        - B1           S01486
+     C***********DDINBA    ANDNE'B'                                       S01486
+     C*
+     C*********************MOVEL'PM81119' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C***********          MOVEL'PM81119' ZAMSID                    R00300S01486
+     C***********          EXSR ZASNMS                              R00300S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          MOVE '1'       *IN28                           S01486
+     C***********          END                             - E1           S01486
+     C*                                                    ***************
+     C                     ENDSR                           * #V1001 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #RTRN    -  SET UP TO RETURN TO CALLING PROGRAM                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDEPT   -  DEPARTMENT PARAMETER                                 *
+      * WWACOF   -  ACCOUNT OFFICER PARAMETER                            *
+      * WWAENB   -  CUSTOMER                                             *
+      * WWCUST   -  CUSTOMER PARAMETER                                   *
+      * WWPREF   -  PORTFOLIO REFERENCE PARAMETER                        *
+      * WW60DD   -  60 DAY DETAILED HORIZON PARAMETER                    *
+      * WWMOTT   -  MONTHLY HORIZON PARAMETER                            *
+      * WWYETT   -  YEARLY HORIZON PARAMETER                             *
+      * WWINBA   -  INTERACTIVE/BATCH PARAMETER                          *
+      *                                                                  *
+      ********************************************************************
+     C           #RTRN     BEGSR                           * #RTRN BEGSR *
+     C*                                                    ***************
+     C****WHICH*PARAMETER TO PASS FOR DEPARTMENT:                         S01486
+     C***********          MOVE DDDPCD    WWDEPT                          S01486
+     C*
+     C****WHICH*PARAMETER TO PASS FOR ACCOUNT OFFICER:                    S01486
+     C***********          MOVE DDACOC    WWACOF                          S01486
+     C*
+     C**  WHICH PARAMETER TO PASS FOR CUSTOMER:
+     C           DDCUST    IFNE *BLANK                     - B1
+     C                     MOVELDDCUST    WWCUST  4
+     C           WWCUST    IFEQ '*ALL'                     - B2
+     C***********          MOVEL'*ALL  '  WWPNP8                          S01486
+     C                     MOVEL'*ALL  '  WWPNP8  6                       S01486
+     C                     ELSE                            - X2
+     C                     MOVE QBCUST    WWPNP8
+     C                     END                             - E2
+     C                     ELSE                            - X1
+     C                     MOVE *BLANK    WWPNP8
+     C                     END                             - E1
+     C                     MOVE WWPNP8    OCUST                           S01486
+     C*
+     C**  WHICH PARAMETER TO PASS FOR PORTFOLIO REFERENCE:
+     C***********DDPTFR    IFEQ P9R997                     - B1           S01486
+     C           DDPTFR    IFEQ FCR997                     - B1           S01486
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9997'    WWPREF  4
+     C                     END                             - X1
+     C*
+     C***********DDPTFR    IFEQ P9R998                     - B1           S01486
+     C           DDPTFR    IFEQ FCR998                     - B1           S01486
+     C                     MOVE '9998'    WWPREF
+     C                     END                             - X1
+     C*
+     C***********DDPTFR    IFEQ P9R999                     - B1           S01486
+     C           DDPTFR    IFEQ FCR999                     - B1           S01486
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9999'    WWPREF
+     C                     END                             - X1
+     C*
+     C           DDPTFR    IFEQ *BLANK                     - B1
+     C                     MOVE *BLANK    WWPREF
+     C                     END                             - X1
+     C*
+     C***********DDPTFR    IFNE P9R997                     - B1           S01486
+     C***********DDPTFR    ANDNEP9R998                                    S01486
+     C***********DDPTFR    ANDNEP9R999                                    S01486
+     C           DDPTFR    IFNE FCR997                     - B1           S01486
+     C           DDPTFR    ANDNEFCR998                                    S01486
+     C           DDPTFR    ANDNEFCR999                                    S01486
+     C           DDPTFR    ANDNE*BLANK
+     C                     MOVE DDPTFR    WWPREF
+     C                     END                             - X1
+     C                     MOVE WWPREF    OPTFR                           S01486
+     C*
+     C**  WHICH PARAMETER TO PASS FOR HORIZON:
+     C***********          MOVE DDDAYD    WW60DD                          S01486
+     C***********          MOVE DDMONT    WWMOTT                          S01486
+     C***********          MOVE DDYEAR    WWYETT                          S01486
+     C                     MOVE DDDAYD    ODAYD                           S01486
+     C                     MOVE DDMONT    OMOND                           S01486
+     C                     MOVE DDYEAR    OYEAR                           S01486
+     C*
+     C**  WHICH PARAMETER TO PASS FOR INTERACTIVE/BATCH INDICATOR:
+     C***********          MOVE DDINBA    WWINBA                          S01486
+     C*                                                    ***************
+     C                     ENDSR                           * #RTRN ENDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+     C*****************************************************************   R00300
+     C*                                                               *   R00300
+     C* ZASNMS    - Send message to program message queue             *   R00300
+     C*                                                               *   R00300
+     C* CALLS     - Y2SNMGC                                           *   R00300
+     C*                                                               *   R00300
+     C* CALLED BY - #V1001 - Validate screen                          *   R00300
+     C*                                                               *   R00300
+     C*****************************************************************   R00300
+     C           ZASNMS    BEGSR                                          R00300
+     C*                                                                   R00300
+     C                     CALL 'Y2SNMGC'                                 R00300
+     C                     PARM           ZAPGM            Program queue  R00300
+     C                     PARM           ZAPGRL           Rel queue      R00300
+     C                     PARM           ZAMSID           Message Id.    R00300
+     C                     PARM           ZAMSGF           Message file.  R00300
+     C                     PARM           ZAMSDA           Message data.  R00300
+     C                     PARM           ZAMSTP           Message type.  R00300
+     C*                                                                   R00300
+     C** Clear all fields for default mechanism next time.                R00300
+     C                     MOVEL*BLANK    ZAPGM            Message queue  R00300
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSDA           Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP           Message type.  R00300
+     C*                                                                   R00300
+     C           ZASNM9    ENDSR                           ZASNM9 TAG     R00300
+     C*                                                                   R00300
+      /EJECT                                                              R00300
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    -  DATABASE ERROR                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    -  INITIALIZE - ACCESS STANDING DATA                    *
+      * #V1001   -  VALIDATE SCREEN                                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           * *PSSR BEGSR *
+     C*
+     C***UPDATE*LDA*WITH ERROR INFORMATION                                S01486
+     C*                                                                   S01486
+     C************NAMVAR   DEFN           LDA                             S01486
+     C************LOCK     IN   LDA                                       S01486
+     C***********          MOVELDBFILE    WWFILE                          S01486
+     C***********          MOVELDBKEY     WWKEY                           S01486
+     C***********          MOVELDBPGM     WWPGM                           S01486
+     C***********          MOVELDBASE     WWASE                           S01486
+     C***********          OUT  LDA                                       S01486
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C**  ROLL BACK CHANGES, PRINT DUMP AND CANCEL PROGRAM:
+     C                     DUMP
+     C                     RETRN
+     C*                                                    ***************
+     C                     ENDSR                           * *PSSR ENDSR *
+     C*                                                    ***************
+     C**=================================================================
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,510 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/********************************************************************/
+/*                                                                  */
+/*       Midas Standing Data Module                                 */
+/*                                                                  */
+/*      SDC26 - I.C.D. MAINTENANCE MODES 0 - 2                      */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*      Prev Amend No. CPK017            Date  10Oct03               */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                     CCB009            Date 01Jun00                */
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                     CPB001            DATE  25FEB00               */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                     094108            DATE  03OCT95              */
+/*                     081301            DATE  31MAY95              */
+/*                     S01408            DATE  10MAY95              */
+/*                     S01339            DATE  31JUL92              */
+/*                     S01382            DATE  31JUL92              */
+/*                     S01393            DATE  06AUG92              */
+/*                     E36605            DATE  02MAR92              */
+/*                     S01319            DATE  04NOV91              */
+/*                     S01343            DATE  15AUG91              */
+/*                     RT0159            DATE  26JUN91              */
+/*                     RT0036            DATE  30MAY91              */
+/*                     RT0025            DATE  30APR91              */
+/*                     LN0976            DATE  15NOV90              */
+/*                     LN0622            DATE  13AUG90              */
+/*                     LN0348            DATE  11JUN90              */
+/*                     S01194            DATE  09APR90              */
+/*                     S01117            DATE  23FEB90              */
+/*                     E16268            DATE  09 12/88             */
+/*                     E14427            DATE  10/10/88             */
+/*                     S01179            DATE  13/09/88             */
+/*                     S01168            DATE  24/07/88             */
+/*                     S01127            DATE  02/06/88             */
+/*                     S01158            DATE  27/05/88             */
+/*                     S01129            DATE  27/05/87             */
+/*                     S01147            DATE  01/12/87             */
+/*                     S01119            DATE  01/07/87             */
+/*                     E10259            DATE  15/01/87             */
+/*                     S01109            DATE  07/08/86             */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       CPK017 - Midas Plus packaging.                              */
+/*                Remove sending of 'ICDR' and checking of MSGQ      */
+/*                MSTATUS for any active users.                      */
+/*       CCB009 - Journal files throughout close of business         */
+/*      CPB001  -  Closedown SDMMODPD at the end of the program.    */
+/*      094108  -  If F12 taken during modules maintainance, there  */
+/*                 may be a value in the return code which causes   */
+/*                 this program to terminate abnormally, bypassing  */
+/*                 the remaining processing, but without informing  */
+/*                 the user that anything is wrong.                 */
+/*                 To fix, amend program as follows;                */
+/*                   add correct checks for error occuring          */
+/*                   add MONMSG and ABNOR processing to handle      */
+/*                    errors                                        */
+/*                   add messages for normal and abnormal terminat'n*/
+/*            Note - Because of the amount of amended and deleted   */
+/*                   code in the program, it has been code-stripped */
+/*                   and indented to make it legible. The fix       */
+/*                   details have been retained in the header box   */
+/*                   for reference.                                 */
+/*      081301  -  Addition of another parameter to SD9101R.        */
+/*      S01408  -  Addition of core hook SDC26MP1.                  */
+/*      S01339  -  REPLACE CALLS TO REDUNDANT PROGRAMS.             */
+/*      S01382  -  ADD SDOPTCPD AND SDMCFCPD TO THE LIST OF FILES   */
+/*                 TO BE JOURNALLED.                                */
+/*              -  REMOVE JOURNALLING OF REDUNDANT FILE SDSYLNPD.   */
+/*      S01393  -  ADD RISK MANAGEMENT FILE                         */
+/*      E36605  -  FILE CMSDUPP IS REDUNDANT (PROJECT HARRY CHG.)   */
+/*      S01319  -  Remove redundant processing                      */
+/*      S01343  -  SC/RR/SD MODULE RENAME PROJECT.                  */
+/*                 - L1BGIN RENAMED TO SCBEGIN                      */
+/*      RT0159  -  Messages should be sent via new Midas Info Screen*/
+/*      RT0036  -  VARIABLE USED FOR RETURN CODE IN CALLS TO RPGS   */
+/*                 WHERE A VALUE MAY BE INSERTED. VALUE MAY MEAN    */
+/*                 ERROR OR F3 OR F12 USED.  IF VALUE IS DETECTED   */
+/*                 END PROCESSING (ONLY SD9004X & SD9101R MIGHT PUT */
+/*                 VALUE INTO RETURN CODE).                         */
+/*              -  STOP PROCESSING IF SERIOUS ERROR OCCURS          */
+/*      RT0025  -  REMOVAL OF REDUNDANT CALL TO SD7535              */
+/*              -  FIX LN0976 REMOVED                               */
+/*      LN0976  -  REMOVAL OF REDUNDANT CALL TO SD9005X             */
+/*      LN0622  -  FILE CMSDUPP SHOULD BE JOURNALLED                */
+/*      LN0348  -  File PF/STDSIAA is no longer used and so does    */
+/*              -  not have to be journaled                         */
+/*      S01194  -  NEW STANDING DATA                                */
+/*      S01117  -  RELEASE 10 (NEW PROGRAM NAMES)                   */
+/*      E16268  -  JOURNALLING PROCESS IN THE ERROR SECTION         */
+/*                 SHOULD BE CONDITIONED ON THE PHASE BEING 'D'     */
+/*      E14427  -  CREATE JOURNAL AND RECEIVER IF NOT ALREADY THERE */
+/*      S01179  -  AS400 CONVERSION                                 */
+/*      S01168  -  INCORPORATION OF SD SYNON                        */
+/*      S01127  -  INCORPORATION OF FUTURES + OPTIONS               */
+/*                  MODULE - JOURNAL FILE TABTB80                   */
+/*                 ALSO PREVENTS BGNCMTCTL AND ENDCMTCTL            */
+/*                 AS THESE ARE CONTROLLED BY SCBEGIN / MIPGM.      */
+/*      S01158  -  POST INCORPORATION TESTING FIX                   */
+/*      S01129  -  SECURITIES TRADING II INCORPORATION.             *  *S01129*/
+/*                 FILES TABTB36,STDSIAA & TABLET5 NOT JOURNALLED   *  *S01129*/
+/*      S01147  -  RELEASE 22.                                      */
+/*      S01119  -  ADDITION OF TABTB70 FOR JOURNALLING              */
+/*      E10259  -  COMMITMENT CONTROL MAY ALREADY HAVE BEGUN        */
+/*                                                                  */
+/********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&SSF) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+/************DCL        VAR(&MIDAS) TYPE(*CHAR) LEN(05)                                */ /*CPK017*/
+/************DCL        VAR(&RMV) TYPE(*LGL) LEN(1) VALUE('0')                         */ /*CPK017*/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LIBR) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(1) VALUE('N')
+/************DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)  +                              */ /*CPK017*/
+/************           VALUE('SDC26 - Job cannot be run at this time. Other +         */ /*CPK017*/
+/************                  job(s) are active')                                     */ /*CPK017*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)                                   /*CPB001*/
+/*                                                                      CCB009*/
+/* Declare variable CCB009 - flag for switchable feature                CCB009*/
+/*                                                                      CCB009*/
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
+/*/COPY WNCPYSRC,SDC26003                                            */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO (ABNOR))
+/*                                                                      CCB009*/
+/** Check for Switchable feature CCB009.                                CCB009*/
+/*                                                                      CCB009*/
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)                            /*CCB009*/
+/**/
+/*    MAIN PROCESSING                             */
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             CHGJOB     SWS(00000000)
+/**/
+/**SEND*MESSAGE*'ICDR'*TO*MSGQ*MSPECIAL*TO*PREVENT*OTHER*JOBS*******/ /*               */ /*CPK017*/
+/**INITIATING*WHILST*I.C.D.*MAINTENENCE*IS*ACTIVE.******************/ /*               */ /*CPK017*/
+/**CHECK*IF*OTHER*JOB(S)*ARE*CURRENTLY*ACTIVE*BY*RECEIVING*MESSAGES*/ /*               */ /*CPK017*/
+/**FROM*MSGQ*MSTATUS.***********************************************/ /*               */ /*CPK017*/
+/************                                                                          */ /*CPK017*/
+/************SNDPGMMSG  MSG('ICDR') TOMSGQ(MSPECIAL)                                   */ /*CPK017*/
+/************CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)                                      */ /*CPK017*/
+/************RCVMSG     MSGQ(MSTATUS) RMV(*YES)                                        */ /*CPK017*/
+/************CHGVAR     VAR(&RMV) VALUE('1')                                           */ /*CPK017*/
+/************RCVMSG     MSGQ(MSTATUS) RMV(*NO) MSG(&MIDAS)                             */ /*CPK017*/
+/*/COPY WNCPYSRC,SDC26004                                            */
+/************                                                                          */ /*CPK017*/
+/******IF****     COND(&MIDAS *NE '     ') THEN(DO)                                    */ /*CPK017*/
+/*********SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)                                          */ /*CPK017*/
+/*********CALL PGM(SDC0700) PARM('SDC26' 'CANTRUNNOW' ' ')                             */ /*CPK017*/
+/******ENDDO                                                                           */ /*CPK017*/
+/************                                                                          */ /*CPK017*/
+/******ELSE*DO                                                                         */ /*CPK017*/
+/**/
+          RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+          RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+/**/
+          CHGVAR     VAR(&LIBR) VALUE(%SST(&SDSTAT 6 2))
+          CHGVAR     VAR(&JLIB) VALUE(&LIBR *TCAT 'JLIB')
+/**/
+/*/COPY WNCPYSRC,SDC26MP1                                            */
+/**/
+/* CREATE JOURNAL AND RECEIVER IF THEY DO NOT EXIST */
+/**/
+          CHKOBJ     OBJ(&JLIB/ICJRN) OBJTYPE(*JRN)
+          MONMSG     MSGID(CPF9801) EXEC(DO)
+             CHGVAR     VAR(&JRN) VALUE('Y')
+             CRTJRNRCV  JRNRCV(&JLIB/ICRCV001)
+             CRTJRN     JRN(&JLIB/ICJRN) JRNRCV(&JLIB/ICRCV001)
+          ENDDO
+/*/COPY WNCPYSRC,SDC26005                                            */
+/**/
+/*   MODE '0'   */
+/**/
+          IF         COND((%SST(&SDSTAT 1 5)) *NE 'SETUP') THEN(DO)
+/**/
+/*/COPY WNCPYSRC,SDC26006                                            */
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+             STRJRNPF   FILE(TABLETA TABTB10 TABTB11 TABTB20 TABTB30    +
+                          TABTB35 TABTB40 TABTB50 TABTB55 TABTE10 +
+                          TABTE20 TABTG10 TABTG20 TABLETR TABLETH +
+                          TABLETX TABTB70 MMODF TABTG40 TABTB36 +
+                          TABTB80 TABTB95 TABLET5 SDMMODPD SDBANKPD    +
+                          SDCLNDPD SDDEALPD SDEXPMPD SDFTFRPD +
+                          SDFODAPD SDFAISPD SDGELRPD SDBRCHPD +
+                          SDCUSTPD SDCURRPD SDCTRYPD SDMSDLPD +
+                          SDMTLXPD SDRETLPD SDSTRDPD SDFCTLPA +
+                          SDTRMAPD SDMCFCPD SDTRADPD CLINTCA CLINTCB    +
+                          CLINTCC TABLETR TABLETH SDOPTCPD) +
+                          JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*NONE)
+             MONMSG     MSGID(CPF7030)
+/*/COPY WNCPYSRC,SDC26001                                            */
+ 
+             STRJRNPF   FILE(SDLOCNPD) JRN(&JLIB/ICJRN) IMAGES(*BOTH   )
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(SDRISKPD) JRN(&JLIB/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*NONE)
+             MONMSG     MSGID(CPF7030)
+             ENDDO                                                    /*CCB009*/
+/*/COPY WNCPYSRC,SDC26007                                            */
+             OVRDBF     FILE(SDFCTLL0) SHARE(*NO)
+/**/
+/* INITIALISE ICD RECORDS BEFORE CALLING MODULES MAINTAINANCE */
+/**/
+            CALL       PGM(SD9005X) PARM('')
+            MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+               ROLLBACK
+               CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' ' ')
+               CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+               GOTO       CMDLBL(LABEL1)
+            ENDDO
+/**/
+/* CALL MODULES MAINTENANCE   */
+/**/
+             CALL       PGM(SD9004X) PARM('' &RTNCODE)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                ROLLBACK
+                CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' ' ')
+                CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+                GOTO       CMDLBL(LABEL1)
+             ENDDO
+/**/
+/* INITIALISE ALL ICD RECORDS FOR REQUIRED MODULES   */
+/**/
+             CALL       PGM(SD9005X) PARM('')
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                ROLLBACK
+                CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' ' '   )
+                CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+                GOTO       CMDLBL(LABEL1)
+             ENDDO
+/**/
+/*SET UP THE GLOBAL LOCATION CODE  */
+/**/
+             CALL       PGM(SD0550X) PARM('')
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                ROLLBACK
+                CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' ' '   )
+                CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+                GOTO       CMDLBL(LABEL1)
+             ENDDO
+/**/
+/* CALL BANK DETAILS MAINTENANCE  */
+/**/
+             CALL       PGM(SD9101R) PARM(&RTNCODE 'BANK' '     ')
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                ROLLBACK
+                CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' ' '   )
+                CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+                GOTO       CMDLBL(LABEL1)
+             ENDDO
+/**/
+LABEL1:
+             RTVJOBA    JOB(&JOB)
+             DLTOVR     FILE(*ALL)
+/*/COPY WNCPYSRC,SDC26008                                            */
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+             ENDJRNPF   FILE(*ALL) JRN(&JLIB/ICJRN)
+             ENDDO                                                    /*CCB009*/
+/*/COPY WNCPYSRC,SDC26009                                            */
+/**/
+/* If error has occurred, end journalling and commitment control   */
+/* and perform ABNOR processing.                                   */
+             IF         COND((&RTNCODE *EQ '*PSSR  ') *OR (&RTNCODE    +
+                          *EQ '*ERROR ')) THEN(GOTO CMDLBL(ABNOR))
+          ENDDO
+/**/
+/*   MODES '1' + '2'  */
+/**/
+          ELSE       CMD(DO)
+/**/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'D'))    +
+                          THEN(DO)
+                SNDPGMMSG  MSG('SDC26 - Job cannot be run at this +
+                             time. Phase of Day must be A or D.') +
+                             TOMSGQ(MOPERQ)
+                CALL       PGM(SDC0700) PARM('SDC26' 'CANTRUNAOD' '    ')
+             ENDDO
+/**/
+             ELSE       CMD(DO)
+/**/
+                IF         COND(&MPHAS *EQ 'A') THEN(DO)
+/**/
+/* IF SYSTEM SET UP IS COMPLETE, SEND MESSAGE TO USER */
+/**/
+                   RTVDTAARA  DTAARA(RUNDAT (11 1)) RTNVAR(&SSF)
+                   IF         COND(&SSF *EQ 'Y') THEN(DO)
+                     CALL       PGM(SDC0700) PARM('SDC26' 'CANTRUNSS   F' '')
+                     GOTO       CMDLBL(LABEL2)
+                   ENDDO
+/**/
+/* OTHERWISE, CALL EDIT  */
+/**/
+                   ELSE       CMD(DO)
+                      CALL       PGM(SDC9002) PARM('**')
+                      MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                         ROLLBACK
+                         CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' '')
+                         CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+                         GOTO       CMDLBL(LABEL2)
+                      ENDDO
+/**/
+                   ENDDO
+/**/
+LABEL2:
+                   RTVJOBA    JOB(&JOB)
+                   DLTOVR     FILE(*ALL)
+/**/
+/* If error has occurred, end journalling and commitment control   */
+/* and perform ABNOR processing.                                   */
+                   IF         COND((&RTNCODE *EQ '*PSSR  ') *OR (&RTNCODE +
+                                *EQ '*ERROR ')) THEN(GOTO CMDLBL(ABNOR))
+/**/
+                ENDDO
+/**/
+                ELSE       CMD(DO)
+/**/
+/*/COPY WNCPYSRC,SDC26010                                            */
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+                   STRJRNPF   FILE(TABLETA TABTB10 TABTB11 TABTB20 TABTB30 +
+                               TABTB35 TABTB40 TABTB50 TABTB55 TABTE10 +
+                               TABTE20 TABTG10 TABTG20 TABLETR TABLETH +
+                               TABLETX TABTB70 MMODF TABTG40 TABTB36 +
+                               TABTB80 TABTB95 TABLET5 SDMMODPD SDBANKPD +
+                               SDCLNDPD SDDEALPD SDEXPMPD SDFTFRPD +
+                               SDFODAPD SDFAISPD SDGELRPD SDBRCHPD +
+                               SDCUSTPD SDCURRPD SDCTRYPD SDMSDLPD +
+                               SDMTLXPD SDRETLPD SDSTRDPD SDFCTLPA +
+                               SDTRMAPD SDMCFCPD SDTRADPD CLINTCA +
+                               CLINTCB CLINTCC TABLETR TABLETH SDOPTCPD) +
+                               JRN(&JLIB/ICJRN) IMAGES(*BOTH) OMTJRNE(*NONE)
+                   MONMSG     MSGID(CPF7030)
+/*/COPY WNCPYSRC,SDC26002                                            */
+/**/
+                   STRJRNPF   FILE(SDRISKPD) JRN(&JLIB/ICJRN) +
+                               IMAGES(*BOTH) OMTJRNE(*NONE)
+                   MONMSG     MSGID(CPF7030)
+             ENDDO                                                    /*CCB009*/
+/*/COPY WNCPYSRC,SDC26011                                            */
+/**/
+                   OVRDBF     FILE(SDFCTLL0) SHARE(*NO)
+                   CALL       PGM(SD9004X) PARM('' &RTNCODE)
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                      ROLLBACK
+                      CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' ' '   )
+                      CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+                      GOTO       CMDLBL(LABEL3)
+                   ENDDO
+ 
+/* If return code is found then return to SCBEGIN ending           */
+/* journalling and commitment control                              */
+                   IF         COND((&RTNCODE *EQ '*PSSR  ') *OR (&RTNCODE    +
+                                *EQ '*ERROR ')) THEN(GOTO CMDLBL(LABEL3))
+/**/
+                   CALL       PGM(SD9101R) PARM(&RTNCODE 'BANK' 'SETUP')
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                      ROLLBACK
+                      CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' ' '   )
+                      CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+                      GOTO       CMDLBL(LABEL3)
+                   ENDDO
+ 
+/* If return code is found then return to SCBEGIN ending           */
+/* journalling and commitment control                              */
+                   IF         COND((&RTNCODE *EQ '*PSSR  ') *OR (&RTNCODE    +
+                                *EQ '*ERROR ')) THEN(GOTO CMDLBL(LABEL3))
+/**/
+/* INITIALISE ALL ICD RECORDS FOR REQUIRED MODULES */
+                   CALL       PGM(SD9005X) PARM('')
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                      ROLLBACK
+                      CALL       PGM(SDC0700) PARM('SDC26' 'TRANSFAIL' ' '   )
+                      CHGVAR     VAR(&RTNCODE) VALUE('*ERROR ')
+                      GOTO       CMDLBL(LABEL3)
+                   ENDDO
+/**/
+LABEL3:
+                   RTVJOBA    JOB(&JOB)
+                   DLTOVR     FILE(*ALL)
+/*/COPY WNCPYSRC,SDC26012                                            */
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+                   ENDJRNPF   FILE(*ALL) JRN(&JLIB/ICJRN)
+             ENDDO                                                    /*CCB009*/
+/*/COPY WNCPYSRC,SDC26013                                            */
+/**/
+/* If error has occurred, end journalling and commitment control   */
+/* and perform ABNOR processing.                                   */
+                   IF         COND((&RTNCODE *EQ '*PSSR  ') *OR (&RTNCODE +
+                                *EQ '*ERROR ')) THEN(GOTO CMDLBL(ABNOR))
+/**/
+                ENDDO
+/**/
+             ENDDO
+/**/
+          ENDDO
+/* */
+/* IF DATABASE ERROR OCCURS INFORMATION MESSAGE IS SENT TO USER     */
+          IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
+             ROLLBACK
+             RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+             CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 50))
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(&JOB)
+             GOTO       CMDLBL(ABNOR)
+          ENDDO
+/**/
+/******ENDDO*                                                                          */ /*CPK017*/
+/**/
+       GOTO       CMDLBL(END)
+/**/
+ABNOR:
+       SNDPGMMSG  MSG('SDC26 - Standing Data file setup termin +
+                    ated abnormally; see joblog for +
+                    details.') TOMSGQ(MOPERQ)
+       CALL       PGM(SDC0700) PARM('SDC26' 'SDSETUPABN' ' ')
+END:
+             CALL       PGM(AOMMODR0) PARM('*DBERR' '*FREE' &MMOD)                        /*CPB001*/
+             MONMSG     MSGID(CPF0000)                                                    /*CPB001*/
+                                                                                          /*CPB001*/
+/**/
+/**SEND*'MIDAS'*MESSAGE*TO*MSGQ*MSTATUS*THAT*WAS*REMOVED*AT*TOP*OF*/ /*                */ /*CPK017*/
+/**THIS*PROGRAM,*AND*RESET*MSGQ*STATUS.****************************/ /*                */ /*CPK017*/
+/******IF****     COND(&RMV) THEN(SNDPGMMSG MSG('MIDAS') +                             */ /*CPK017*/
+/************       TOMSGQ(MSTATUS))                                                   */ /*CPK017*/
+/************                                                                          */ /*CPK017*/
+/******CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)                                           */ /*CPK017*/
+/******MONMSG     MSGID(CPF0000)                                                       */ /*CPK017*/
+/************                                                                          */ /*CPK017*/
+/**REMOVE*'ICDR'*MSG*SENT*TO*MSPECIAL*AT*TOP*OF*PROGRAM,*AND*RESET*/ /*                */ /*CPK017*/
+/**MSGQ*STATUS.****************************************************/ /*                */ /*CPK017*/
+/******RCVMSG     MSGQ(MSPECIAL) RMV(*YES)                                             */ /*CPK017*/
+/******MONMSG     MSGID(CPF0000)                                                       */ /*CPK017*/
+/******CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)                                            */ /*CPK017*/
+/******MONMSG     MSGID(CPF0000)                                                       */ /*CPK017*/
+ 
+/*/COPY WNCPYSRC,SDC26014                                            */
+       IF         COND(&MPHAS *EQ 'D') THEN(DO)
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+          ENDJRNPF   FILE(*ALL) JRN(&JLIB/ICJRN)
+          MONMSG CPF0000
+         IF         COND(&JRN *EQ 'Y') THEN(DO)
+            DLTJRN     JRN(&JLIB/ICJRN)
+/**/
+/* CHANGE JOB ATTRIBUTES FOR INQMSGRPY SO THAT "RECEIVER NEVER HAD  */
+/* FULL SAVE" MESSAGES ARE ANSWERED AUTOMATICALLY BY THE PROGRAM,   */
+/* THEN CHANGE THE JOB AGAIN TO THE ORIGINAL STATE AFTER RECEIVERS  */
+/* HAVE BEEN DELETED                                                */
+/**/
+             CHGJOB     INQMSGRPY(*DFT)
+             DLTJRNRCV &JLIB/ICRCV001
+             CHGJOB     INQMSGRPY(*RQD)
+          ENDDO
+             ENDDO                                                    /*CCB009*/
+       ENDDO
+/*/COPY WNCPYSRC,SDC26015                                            */
+ 
+/* SEND NORMAL COMPLETION MESSAGE */
+ 
+       IF         COND((&RTNCODE *NE '*PSSR  ') *AND (&RTNCODE +
+                    *NE '*ERROR ') *AND (%SWITCH(XXXXXX00))) +
+                    THEN(DO)
+          SNDPGMMSG  MSG('SDC26 - Standing Data file setup +
+                       completed normally') TOMSGQ(MOPERQ)
+          MONMSG     MSGID(CPF0000 MCH0000)
+          CALL       PGM(SDC0700) PARM('SDC26' 'SDSETUPNOR' ' ')
+          MONMSG     MSGID(CPF0000 MCH0000)
+       ENDDO
+ 
+       RETURN
+       ENDPGM

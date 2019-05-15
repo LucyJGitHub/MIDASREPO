@@ -1,0 +1,496 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RT CUSTLEND production initiation I/F')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Midas/Q Module                                       *
+     F*                                                               *
+     F*         MQ531B -  Production Initiation I/Face for RTCUSTLEND *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. 171944             Date 26Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMQ001             Date 04Nov97               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  171944 - PII interface program errors on Valet to MidasQ     *
+     F*           submission.                                         *
+     F*  CMQ001 - MidasQ rationalisation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F* 01 - 24          Function Keys 01 to 24                       *
+     A* 50               Include Live Facilities is Invalid           *
+     A* 51               Include Reversed Facilities is Invalid       *
+     A* 52               Include Matured Facilities is Invalid        *
+     A* 53               Include Live Loans is Invalid                *
+     A* 54               Include Reversed Loans is Invalid            *
+     A* 55               Include Matured Loans is Invalid             *
+     F* 65               Position Cursor at ##LIVE                    *
+     F* 70               OPEN Fails - Must be a Batch job             *
+     F* 85               Command Key found in LOKUP Operation         *
+     F* 98               Error Occured in Validation.                 *
+     F* 99               Subfile End                                  *
+     F*                                                               *
+     F*****************************************************************
+     FMQ531BDFCF  E                    WORKSTN                        UC
+     F                                              KINFDS FINFDS
+     F*****************************************************************
+     F/EJECT
+      **
+      ** Array to retrieve function key number
+      **
+     E                    TAB1    1  24  1   TAB2    2
+      **
+      ** Copyright insertion.
+      **
+     E                    CPY@    1   1 80
+     E/EJECT
+      **
+      ** Program Status Data Structure
+      **
+     IPGMDS      SDS
+     I                                        1  10 #PGMQ
+      **
+      ** File Information Data Structure
+      **
+     IFINFDS      DS
+     I                                      369 369 KEY
+     I                                    B 370 3710ROWCOL
+      **
+      ** Title Data Structure
+      **
+     I#RNAME      DS                             13
+     I                                        1   2 A
+     I                                        3  12 CPY#NM
+     I                                       13  13 B
+      **
+      ** System definition data area - O#XA01
+      **
+     IO#XA01      DS                           1000
+      **
+      ** Bring in the system definition block
+      **
+     I/COPY O#XP04,O#SDBLOCKP
+      **
+      ** Permanent Interface Data Structure
+      **
+     ICPY#IA      DS                            200
+     I                                        1   3 $$FLIV
+     I                                        4   6 $$FREV
+     I                                        7   9 $$FEXP
+     I                                       10  12 $$LLIV
+     I                                       13  15 $$LREV
+     I                                       16  18 $$LMAT
+      **
+      ** Temporary Interface Data Structure
+      **
+     ITIF#UR      DS                            500
+      **
+      ** Copyright Array for compilation
+      **
+     IA@CPY       DS
+     I                                        1  80 CPY@
+     I/EJECT
+      **
+      ** Parameter List Declaration
+      **
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TIF#RC  1        Return code
+     C                     PARM           TIF#RN  70       Run number
+     C           CPY#NM    PARM           TIF#NM 10        Report name
+     C                     PARM           TIF#RD 40        Report title
+     C           CPY#IA    PARM           TIF#IA200        200 byte area
+     C                     PARM           TIF#UR           500 byte area
+     C                     PARM           TIF#NP  70       No.user params
+     C                     PARM           UPRM01  1        User param 1
+     C                     PARM           UPLN01 155       Length param 1
+     C                     PARM           UPRM02  1        User param2
+     C                     PARM           UPLN02 155       Length param 2
+     C                     PARM           UPRM03  1        User param 3
+     C                     PARM           UPLN03 155       Length param 3
+     C                     PARM           UPRM04  1        User param 4
+     C                     PARM           UPLN04 155       Length param 4
+     C                     PARM           UPRM05  1        User param 5
+     C                     PARM           UPLN05 155       Length param 5
+      **
+      ** Check whether running in batch mode. If so do nothing, as
+      ** interface program cannot be used in batch.
+      **
+     C                     CALL 'MQ541BC'
+     C                     PARM *BLANK    IBMODE  1
+      **
+      ** Only perform processing if in interactive mode ('1').
+      **
+     C           IBMODE    IFEQ '1'
+      **
+      ** Open Display File
+      **
+     C                     OPEN MQ531BDF               70
+      **
+      ** Initialise Program
+      **
+     C                     EXSR INIT
+      **
+      ** Display Screen
+      **
+     C           *IN98     DOUEQ'0'
+      **
+      ** Write to message subfile if an error has occured
+      **
+     C           *IN98     IFEQ '1'
+     C                     WRITEMSGCTL
+     C                     ELSE
+      **
+      ** If No errors, position cursor at ##FLIV
+      **
+     C                     SETON                     65
+     C                     END
+      **
+      ** Re-Initialsise Action Bar Header Text in Case it has Changed
+      **
+     C                     EXSR SACT
+      **
+      ** Execute Header Format
+      **
+     C                     EXFMT##HEAD
+      **
+      ** Clear Subfile Message Queue
+      ** And Set Off Error Message Indicators
+      **
+     C           *IN98     IFEQ '1'
+     C                     CALL 'ZA0250'
+     C                     SETOF                     985051
+     C                     SETOF                     525354
+     C                     SETOF                     55
+     C                     END
+     C                     SETOF                     65
+      **
+      ** Process Command Keys
+      **
+     C                     SETOF                       85
+     C           KEY       LOKUPTAB1      TAB2           85
+     C   85                MOVE TAB2      CMDKEY  2
+      **
+      ** Exit Pressed?
+      **
+     C           CMDKEY    IFEQ O#SCEX
+     C                     MOVE 'E'       TIF#RC
+     C                     SETOF                     98
+     C                     ELSE
+      **
+      ** Bypass Pressed?
+      **
+     C           CMDKEY    IFEQ O#SCBY
+     C                     MOVE 'B'       TIF#RC
+     C                     SETOF                     98
+     C                     ELSE
+      **
+      ** Enter Pressed
+      **
+     C                     EXSR VALD
+     C                     END
+     C                     END
+     C                     END
+      **
+      ** End Program
+      **
+     C                     CLOSEMQ531BDF
+      **
+      ** Batch mode, so no processing required except setting up
+      ***return code*'P'*indicating*normal*termination*of*program,                            171944
+      ** return code 'C' indicating normal termination of program,                            171944
+      ** and setting up temporary user interface with permanent values.
+      **
+     C                     ELSE
+     C*****************    MOVE 'P'       TIF#RC                                              171944
+     C                     MOVE 'C'       TIF#RC                                              171944
+     C                     MOVELCPY#IA    TIF#UR
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *
+     C           VALD      BEGSR
+      **
+      ** Enter Pressed, Check Cursor position
+      **
+     C           ROWCOL    DIV  256       ROW     20
+     C                     MVR            COL     20
+     C           ROW       IFEQ 1
+     C           COL       ANDEQ3
+     C           ROW       OREQ 2
+     C           COL       ANDNE1
+     C           COL       ANDNE12
+     C           COL       ANDNE23
+     C           COL       ANDNE34
+     C           COL       ANDNE45
+     C           COL       ANDNE56
+     C           COL       ANDNE67
+     C           COL       ANDNE74
+     C           COL       ANDNE80
+      **
+      ** Cursor in Action Bar, Send Error Message
+      **
+     C                     SETON                     98
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0013' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Enter Pressed, so Validate
+      **
+      ** Validate Live Facilities
+      **
+     C                     MOVEL##FLIV    IN1     1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##FLIV
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##FLIV
+     C                     END
+      **
+      ** Validate Reversed Facilities
+      **
+     C                     MOVEL##FREV    IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##FREV
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##FREV
+     C                     END
+      **
+      ** Validate Matured Facilities
+      **
+     C                     MOVEL##FEXP    IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##FEXP
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##FEXP
+     C                     END
+      **
+      ** Validate Live Loans
+      **
+     C                     MOVEL##LLIV    IN1     1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##LLIV
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##LLIV
+     C                     END
+      **
+      ** Validate Reversed Loans
+      **
+     C                     MOVEL##LREV    IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##LREV
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##LREV
+     C                     END
+      **
+      ** Validate Matured Loans
+      **
+     C                     MOVEL##LMAT    IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##LMAT
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##LMAT
+     C                     END
+      **
+      ** Live Facilities are not Valid
+      ** Send Error Message
+      **
+     C           ##FLIV    IFNE 'YES'
+     C           ##FLIV    ANDNE'NO '
+     C                     SETON                     9850
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0014' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Reversed Facilities are not Valid
+      ** Send Error Message
+      **
+     C           ##FREV    IFNE 'YES'
+     C           ##FREV    ANDNE'NO '
+     C                     SETON                     9851
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0015' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Matured Facilities are not Valid
+      ** Send Error Message
+      **
+     C           ##FEXP    IFNE 'YES'
+     C           ##FEXP    ANDNE'NO '
+     C                     SETON                     9852
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0016' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Live Loans are not Valid
+      ** Send Error Message
+      **
+     C           ##LLIV    IFNE 'YES'
+     C           ##LLIV    ANDNE'NO '
+     C                     SETON                     9853
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0017' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Reversed Loans are not Valid
+      ** Send Error Message
+      **
+     C           ##LREV    IFNE 'YES'
+     C           ##LREV    ANDNE'NO '
+     C                     SETON                     9854
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0018' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Matured Loans are not Valid
+      ** Send Error Message
+      **
+     C           ##LMAT    IFNE 'YES'
+     C           ##LMAT    ANDNE'NO '
+     C                     SETON                     9855
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0019' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Details are Valid If *IN98 is Off
+      **
+     C           *IN98     IFEQ '0'
+     C                     MOVE ##FLIV    $$FLIV
+     C                     MOVE ##FREV    $$FREV
+     C                     MOVE ##FEXP    $$FEXP
+     C                     MOVE ##LLIV    $$LLIV
+     C                     MOVE ##LREV    $$LREV
+     C                     MOVE ##LMAT    $$LMAT
+      **
+      ** Move changed data into temporary array, leaving existing data
+      ** in the permanent array
+      **
+     C                     MOVELCPY#IA    TIF#UR
+     C***********          MOVE 'P'       TIF#RC                                              171944
+     C                     MOVE 'C'       TIF#RC                                              171944
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Subroutine to Initialise Program
+      **
+     C           INIT      BEGSR
+      **
+      ** Initialise Data Structure Fields
+      **
+     C                     Z-ADD0         ROWCOL
+     C                     MOVE *BLANKS   KEY
+      **
+      ** Set Up Action Bar Header Text
+      **
+     C                     EXSR SACT
+     C                     MOVE '-'       #BOX1
+     C                     MOVE '-('      A
+     C                     MOVE ')'       B
+      **
+      ** Output Footer
+      **
+      **
+      ** Retrieve MIDAS/Q system definition block...
+      **
+     C           *NAMVAR   DEFN           O#XA01
+     C                     IN   O#XA01
+     C                     MOVELO#XA01    O#SDBK
+      **
+      ** Enable installation defined command keys required in this pgm.
+      **
+     C                     Z-ADDCEX       I       30       Exit
+     C                     MOVE '1'       *IN,I
+     C                     Z-ADDCBY       I                Bypass
+     C                     MOVE '1'       *IN,I
+     C                     WRITE##FOOT
+      **
+      ** Set up Screen Fields
+      **
+     C                     MOVE $$FLIV    ##FLIV
+     C                     MOVE $$FREV    ##FREV
+     C                     MOVE $$FEXP    ##FEXP
+     C                     MOVE $$LLIV    ##LLIV
+     C                     MOVE $$LREV    ##LREV
+     C                     MOVE $$LMAT    ##LMAT
+      **
+      ** Set up Message File
+      ** Set on Message Subfile end indicator.
+      **
+     C                     MOVE '1'       *IN99
+     **
+     C                     ENDSR
+     **
+     **  Subroutine to Set up Action Bar Header Text
+     **
+     C           SACT      BEGSR
+     C                     MOVEL'Report'  #BOX2
+     C                     MOVEL'Options' #BOX3
+     C                     MOVE *BLANKS   #BOX4
+     C                     MOVE *BLANKS   #BOX5
+     C                     MOVEL'Subsets' #BOX6
+     C                     MOVEL'House'   #BOX7
+     C                     MOVE 'keep '   #BOX7
+     C                     MOVEL'AS/400'  #BOX8
+     C                     MOVEL' Help'   #BOX9
+     C                     ENDSR
+     **
+     **
+     **
+** TAB1, TAB2 Array for command Key Usage
+ 01
+ 02
+ 03
+ 04
+ 05
+ 06
+ 07
+ 08
+ 09
+ 10
+ 11
+ 12
+£13
+¥14
+·15
+©16
+§17
+¶18
+¼19
+½20
+¾21
+[22
+]23
+¯24
+**  CPY@
+(c) Finastra International Limited 2001

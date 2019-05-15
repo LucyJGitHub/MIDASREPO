@@ -1,0 +1,1108 @@
+0001 H        1                                                           S01194
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Amount accrual ext report by account')           *
+0001 H***********                                                         S01194
+0002 F********************************************************************
+0003 F**                                                                **
+     F*  Midas GENERAL LEDGER MODULE
+0005 F**                                                                **
+0006 F**   GL1170 - AMOUNT ACCRUAL EXTRACT REPORT BY ACCOUNT            **
+0007 F**                                                                **
+      *  (c) Finastra International Limited 2001                      *
+0009 F**                                                                **
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL141             Date 12Dec12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL003             Date 17Dec96               *
+      *                 E36049             Date 10Mar92               *
+0010 F**                  E30564               DATE 30OCT91             **
+     F**                  RT0086               DATE 15MAY91             **
+     F**                  RT0087               DATE 15MAY91             **
+0010 F**                  BHF827               DATE 23NOV90             **
+0010 F**                  LN0075               DATE 05JUN90             **
+0010 F**                  S01194               DATE 10/03/89            **
+0010 F**                  S01117               DATE 10/03/89            **
+0011 F**                                                                **
+0012 F********************************************************************
+     F**                                                                **
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL141 - Amount Accruals Extended Narrative.                 *
+      *           Added Hooks: CGL141_037 to CGL141_043               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F**   CGL003  -  ADDITION OF FIELDS FOR ACCRUAL FREQUENCY ON
+     F**              AMOUNT ACCRUALS
+     F**   E36049  -  RCF BRANCH NOT SET CORRECTLY IN FCSFNOPD.         **
+     F**           -  DO NOT PRODUCE P1 REPORT WITH NO DETAILS.         **
+     F**   E30564  -  ADDITIONAL FIX TO BHF827 (SETOF *IN45)            **
+     F**   RT0086  -  MOVE ACCESS OF RUNDAT TO TOP OF PROGRAM.          **
+     F**   RT0087  -  ENSURE DATE OUTPUT AT TOP OF REPORT               **
+     F**   BHF827  -  NEEDS TO SET ON LR WHEN READ A BRANCH NOT TO      **
+     F**              REPORTED ON                                       **
+     F**   LN0075  -  READ OF HEADER AND TRAILER MOVED TO FIRST CYCLE   **
+     F**   S01194  -  NEW STANDING DATA                                 **
+     F**   S01117  -  MULTIBRANCHING - PLEASE NOTE THAT LF/AMAXA NO     **
+     F**              LONGER INCLUDES HEADER AND TRAILER RECORDS. THESE
+     F**              ARE NOW READ SEPARATELY.                          **
+0012 F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F/SPACE                                                              GL1170
+0014 F*AMAXA***IP**F      80  1AI     1 DISK                      GL1170  CGL003
+0014 F***AMAXA** IP  F      86  1AI     1 DISK                                         CGL003 CGL029
+     FAMAXA   IP  F      96  1AI     1 DISK                                                   CGL029
+0015 F*ABLE***IF* F      96 12AI     2 DISK                               S01194
+     FGL1170AUO   F     132            PRINTER      KINFDS SPOOLU         S01117
+0016 F*L1170P1O** F     132     OF     PRINTER                    S01124  S01117
+     FGL1170P1O   F     132     OF     PRINTER      KINFDS SPOOL1     UC  S01117
+0014 FAMAEXA  IF  E           K        DISK                               S01117
+0014 FAMAEXZ  IF  E           K        DISK                               S01117
+     F/COPY WNCPYSRC,GLH00549
+     F/COPY OFCPYSRCZ,CGL141_037                                                              CGL141
+0017 F/SPACE
+0018 F********************************************************************GL1170
+0019 F**01*******     SORTED AMOUNT ACCRUAL EXTRACT FILE HEADER           S01117
+0020 F* 02            SORTED AMOUNT ACCRUAL EXTRACT FILE DETAIL RECORD    GL1170
+0021 F**03*******     SORTED AMOUNT ACCRUAL EXTRACT FILE TRAILER          S01117
+0022 F* 04            CATCHALL                                            GL1170
+0023 F**05*******     TABLE FILE ICDR1                                    S01194
+0024 F**06*******     TABLE FILE CURRENCIES RECORD                        S01194
+0025 F*    20         DEBIT ACCOUNT ON AMAXA DETAIL RECORD                GL1170
+0026 F*   N20         CREDIT ACCOUNT ON AMAXA DETAIL RECORD               GL1170
+0027 F*       30      ZERO  DECIMAL PLACES FOR THIS CURRENCY              GL1170
+0028 F*       31      ONE   DECIMAL PLACE  FOR THIS CURRENCY              GL1170
+0029 F*       32      TWO   DECIMAL PLACES FOR THIS CURRENCY              GL1170
+0030 F*       33      THREE DECIMAL PLACES FOR THIS CURRENCY              GL1170
+0031 F*       40      NOT FIRST CYCLE CALCULATIONS                        GL1170
+     F*       45      ALLOW MULTIBRANCHING PRINTER FILE OUTPUT            S01117
+     F*       46      ACCRUAL FREQUENCY SWITCHABLE FEATURE PRESENT        CGL003
+     F*       47      ALL BRANCHES ARE REQUESTED FOR REPORTING            S01117
+     F*       48      CONSOLIDATED REPORT REQUESTED                       S01117
+     F*       49      MULTIBRANCH INDICATOR = 'Y'                         S01117
+0032 F********99*     TABLE CHAIN FAIL                                    S01194
+0032 F*       99      ACCESS FAIL                                         S01194
+0033 F*             L1CHANGE IN CUSTOMER NAME                             GL1170
+0034 F*             L2          ACCOUNT CODE                              GL1170
+0035 F*             L3          CURRENCY                                  GL1170
+     F*             L4          BRANCH                                    S01117
+0036 F*        U7 U8   DATABASE ERROR                                     GL1170
+0037 F*       NU7 U8   FILE CONTROLS OUT OF BALANCE                       GL1170
+0038 F********************************************************************GL1170
+0039 F/SPACE                                                              GL1170
+     E                    CPY@    1   1 80
+0040 E********************************************************************GL1170
+0041 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYGL1170
+0042 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYGL1170
+0043 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY GL1170
+     E/COPY WNCPYSRC,GLH00550
+     E/COPY OFCPYSRCZ,CGL141_038                                                              CGL141
+0044 E********************************************************************GL1170
+0045 E/SPACE                                                              GL1170
+0046 I********************************************************************GL1170
+0047 I********                                                            S01117
+0048 I**AMOUNT ACCRUAL EXTRACT HEADER RECORD                              S01117
+0049 I********                                                            S01117
+0050 I*MAXA***NS  01   1 CA                                               S01117
+0051 I********                                                            S01117
+0052 I***DETAIL RECORD                                                    S01117
+0053 I********                                                            S01117
+0054 I********NS  02   1 CD                                               S01117
+0050 IAMAXA   NS  02   1 CD                                               GL1170
+0055 I                                        1   1 RECI                  GL1170
+0056 I                                        2   4 CCY   L3              GL1170
+0057 I**********                              5   80ACOD  L2                           GL1170 CGL029
+     I                                        5   80ACODQQ                                    CGL029
+0058 I**********                              9  140CUST  L1              GL1170              CSD027
+0058 I                                        9  14 CUST  L1              GL1170              CSD027
+0059 I                                       15  200REFN                  GL1170
+0060 I                                       21  21 REFT                  GL1170
+0061 I                                       22  51 NARR                  GL1170
+0062 I                                    P  52  540SDAT                  GL1170
+0063 I                                    P  55  570MDAT                  GL1170
+0064 I                                    P  58  640AMRT                  GL1170
+0065 I                                       65  650DRCR            20    GL1170
+0066 I                                       66  670ACSQ                  GL1170
+     I                                       74  76 BRCA  L4              S01117
+     I                                       81  81 AMAPFQ                CGL003
+     I                                       82  830AMFDAY                CGL003
+     I                                    P  84  860AMAPDA                CGL003
+0057 I                                       87  960ACOD  L2                                  CGL029
+0067 I*********                                                           S01117
+0068 I***TRAILER RECORD                                                   S01117
+0069 I*********                                                           S01117
+0070 I********NS  03                                                      S01117
+0071 I********                            P   2   40NORE                  S01117
+0072 I*                                                                   GL1170
+0073 I*  CATCHALL                                                         GL1170
+0074 I*                                                                   GL1170
+0075 I        NS  04                                                      GL1170
+0076 I*                                                                   GL1170
+0077 I*****TABLE*FILE - INSTALLATION CONTROL DATA RECORD 1.               S01194
+0078 I*                                                                   GL1170
+0079 I*ABLE***NS* 05   2 C0   3 C1  12 C1                                 S01194
+0080 I*******AND*     13 C0                                               S01194
+0081 I***********                             1   1 RECI                  S01194
+0082 I***********                             2   30RECT                  S01194
+0083 I***********                            12  130RCDE                  S01194
+0084 I***********                            14  66 TITL                  S01194
+0085 I***********                            67  67 DATF                  S01194
+0086 I***********                            68  700DFBR                  S01194
+0087 I***********                            74  74 MODI1                 S01194
+0088 I***********                            75  75 MODI2                 S01194
+0089 I***********                            76  76 MODI3                 S01194
+0090 I***********                         P  77  790RUND                  S01194
+0091 I***********                            80  86 RUNA                  S01194
+0092 I***********                            87  870SFLG                  S01194
+0093 I***********                         P  90  920LCD                   S01194
+0094 I***********                            93  93 CHTP                  S01194
+0095 I***********                         P  94  960TNLU                  S01194
+0096 I*                                                                   GL1170
+0097 I*****TABLE*FILE - CURRENCIES RECORD 1.                              S01194
+0098 I*                                                                   GL1170
+0099 I*ABLE***NS* 06   1 CD   2 C2   3 C0                                 S01194
+0100 I*******AND*     13 C1                                               S01194
+0101 I***********                             1   1 RECI                  S01194
+0102 I***********                             2   30RECT                  S01194
+0103 I***********                            10  12 CCY                   S01194
+0104 I***********                            13  130SREC                  S01194
+0105 I***********                            14  27 CCNM                  S01194
+0106 I***********                         P  28  348SPOT                  S01194
+0107 I***********                            35  37 CCYS                  S01194
+0108 I***********                            38  380CDP                   S01194
+0109 I***********                            39  390TNOT                  S01194
+0110 I***********                            40  40 DCCY                  S01194
+0111 I***********                            41  44 SRC1                  S01194
+0112 I***********                            45  48 SRC2                  S01194
+0113 I***********                            49  520TACC                  S01194
+0114 I***********                            53  560TEQV                  S01194
+0115 I***********                            57  600SWQV                  S01194
+0116 I***********                            61  640TAC4                  S01194
+0117 I***********                            65  680TAC5                  S01194
+0118 I***********                            69  69 HIND                  S01194
+0119 I***********                         P  70  768PART                  S01194
+0120 I***********                            77  780SSNO                  S01194
+0121 I***********                         P  79  858ERLC                  S01194
+0122 I***********                            86  860MDIN                  S01194
+0123 I***********                            87  870MDIA                  S01194
+0124 I***********                            88  880MDIB                  S01194
+0125 I***********                         P  90  920LCD                   S01194
+0126 I***********                            93  93 CHTP                  S01194
+0127 I***********                         P  94  960TNLU                  S01194
+0128 I*                                                                   GL1170
+0129 I**CATCHALL*                                                         S01194
+0130 I*                                                                   GL1170
+0131 I********NS* 04                                                      S01194
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0132 I*                                                                   GL1170
+0133 I*  LOCAL DATA AREA DEFINED FOR DATABASE ERROR PROCESSING            GL1170
+0134 I*                                                                   GL1170
+0135 ILDA        UDS                            256                       GL1170
+0075 I***********                           134 138 DBFILE                S01194
+0076 I***********                           139 167 DBKEY                 S01194
+0077 I***********                           168 175 DBPGM                 S01194
+0078 I***********                           176 1770DBASE                 S01194
+0075 I                                      134 141 DBFILE                S01194
+0076 I                                      142 170 DBKEY                 S01194
+0077 I                                      171 180 DBPGM                 S01194
+0078 I                                      181 1830DBASE                 S01194
+     I**                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I**                                                                  S01117
+     ISPOOL1      DS                                                      S01117
+     I                                       83  90 SFILE1                S01117
+     I                                    B 123 1240SFNUM1                S01117
+     I*                                                                   S01117
+     ISPOOLU      DS                                                      S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I                                       83  90 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I*                                                                   S01194
+     IRUNDT       DS                                                      S01194
+     I** DATA AREA RUNDAT                                                 S01194
+     I                                        1   7 RUNA                  S01194
+     I                                    P   8  100RUND                  S01194
+     I                                       11  11 SSF                   S01194
+     I                                       12  12 DATF                  S01194
+     I                                       13  13 MBIN                  S01194
+     I*                                                                   S01194
+     ISDBRCH    E DSSDBRCHPD                                              S01194
+     I**   BRANCH DETAILS                                                 S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I**   CURRENCIES CODES                                               S01194
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I**   BANK DETAILS                                                   S01194
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     I/COPY WNCPYSRC,GLH00551
+     I/COPY OFCPYSRCZ,CGL141_039                                                              CGL141
+0140 I********************************************************************GL1170
+     I/EJECT                                                              S01194
+0141 C/SPACE                                                              GL1170
+0142 C********************************************************************GL1170
+     C**                                                                  S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           BRNCH   3                       S01117
+     C*    DEFINE LDA                                                     S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C**                                                            S01117LN0075
+     C** OBTAIN RUN DATE FROM RUNDAT                                      RT0086
+     C*                                                                   RT0086
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           RT0086
+     C                     IN   RUNDT                                     RT0086
+     C*                                                                   RT0086
+     C**  READ HEADER AND TRAILER SEPARATELY                        S01117LN0075
+     C**                                                            S01117LN0075
+     C************         READ AMAEXA                   99         S01117LN0075
+     C************IN99     IFNE '0'                                 S01117LN0075
+     C************         MOVEL'AMAEXA'  DBFILE             *******S01117LN0075
+     C************         MOVEL'005'     DBASE              * DBERR 005 *LN0075
+     C************         GOTO END                          *******S01117LN0075
+     C************         END                                      S01117LN0075
+     C************         READ AMAEXZ                   99         S01117LN0075
+     C************IN99     IFNE '0'                                 S01117LN0075
+     C************         MOVEL'AMAEXZ'  DBFILE             *******S01117LN0075
+     C************         MOVEL'006'     DBASE              * DBERR 001 *LN0075
+     C************         GOTO END                          *******S01117LN0075
+     C************         END                                      S01117LN0075
+     C************         MOVE EXCNT     NORE    50                S01117LN0075
+0144 C*                                                                   GL1170
+0143 C   40                GOTO ENDFC                                     GL1170
+     C                     MOVEACPY@      BIS@   80
+0144 C*                                                                   GL1170
+0145 C*  FIRST CYCLE CALCULATIONS                                         GL1170
+0146 C*                                                                   GL1170
+0147 C                     SETON                     40                   GL1170
+0148 C*                                                                   GL1170
+     C**                                                                  LN0075
+     C**  READ HEADER AND TRAILER SEPARATELY                              LN0075
+     C**                                                                  LN0075
+     C                     READ AMAEXA                   99               LN0075
+     C           *IN99     IFNE '0'                                       LN0075
+     C                     MOVEL'AMAEXA'  DBFILE             *******      LN0075
+     C                     MOVEL'005'     DBASE              *DB 05       LN0075
+     C                     GOTO END                          *******      LN0075
+     C                     END                                            LN0075
+     C                     READ AMAEXZ                   99               LN0075
+     C           *IN99     IFNE '0'                                       LN0075
+     C                     MOVEL'AMAEXZ'  DBFILE             *******      LN0075
+     C                     MOVEL'006'     DBASE              *DB 06       LN0075
+     C                     GOTO END                          *******      LN0075
+     C                     END                                            LN0075
+     C                     MOVE EXCNT     NORE    50                      LN0075
+     C*                                                                   LN0075
+0149 C***********          MOVE 'GL1170'  DBPGM                           S01194
+0149 C                     MOVEL'GL1170'  DBPGM                           S01194
+0150 C*                                                                   GL1170
+0151 C***********          EXSR ZSYSTM                     ****   1   ****S01194
+0152 C***99******          MOVE 'TABLE'   DBFILE                          S01194
+0153 C***99******          Z-ADD1         DBASE                           S01194
+0154 C***99******          MOVE ZTABKY    DBKEY                           S01194
+0155 C***99******          GOTO END                                       S01194
+0156 C*                                                                   S01194
+     C***OBTAIN RUN DATE FROM RUNDAT                               S01194 RT0086
+     C*****                                                        S01194 RT0086
+     C*****      *NAMVAR   DEFN RUNDAT    RUNDT                    S01194 RT0086
+     C*****                IN   RUNDT                              S01194 RT0086
+0681 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
+     C           DATF      IFEQ 'M'                                       S01194
+     C                     SETON                     98                   S01194
+     C                     ELSE                                           S01194
+     C                     SETOF                     98                   S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C**   CHECK MULTIBRANCHING INDICATOR AND TYPE OF REPORT REQUESTED    S01194
+     C                     SETOF                     474849               S01194
+     C*                                                                   S01194
+     C           MBIN      IFEQ 'Y'                        B1             S01194
+     C                     SETON                     49     1             S01194
+     C           BRNCH     IFEQ 'ALL'                      B2             S01194
+     C                     SETON                     47     2             S01194
+     C                     ELSE                            X2             S01194
+     C           BRNCH     IFEQ *BLANKS                    B3             S01194
+     C                     SETON                     48     3             S01194
+     C                     END                             E3             S01194
+     C                     END                             E2             S01194
+     C                     END                             E1             S01194
+0085 C*                                                                   S01194
+0086 C* ACCESS BANK DETAILS, DATABASE ERROR IF RETURN CODE NOT BLANK      S01194
+0087 C*                                                                   S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVEL'SDBANKPD'DBFILE             *************S01194
+     C                     MOVEL'001'     DBASE              * DBERR 001 *S01194
+     C                     MOVEL@OPTN     DBOPTN  7          *************S01194
+     C                     MOVEL@OPTN     DBKEY                           S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     SETON                     99                   S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+0158 C*                                                                   GL1170
+     C* ACCESS SWITCHABLE FEATURES FILE FOR ACCRUAL FREQUENCY ON          CGL003
+     C* AMOUNT ACCRUAL PROCESSING - CGL003                                CGL003
+     C*                                                                   CGL003
+     C                     CALL 'AOSARDR0'                                CGL003
+     C                     PARM *BLANKS   #RTCD   7                       CGL003
+     C                     PARM '*VERIFY' #OPTN   7                       CGL003
+     C                     PARM 'CGL003'  WSARD   6                       CGL003
+     C*                                                                   CGL003
+     C           #RTCD     IFNE *BLANK                                    CGL003
+     C           #RTCD     ANDNE'*NRF'                                    CGL003
+     C                     MOVEL'AOSARDR0'DBFILE                          CGL003
+     C                     Z-ADD3         DBASE                           CGL003
+     C                     MOVELWSARD     DBKEY                           CGL003
+     C                     MOVE #OPTN     DBOPTN  7                       CGL003
+     C                     SETON                     U7U8LR               CGL003
+     C                     EXSR *PSSR                                     CGL003
+     C                     GOTO END                                       CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C           #RTCD     IFEQ *BLANK                                    CGL003
+     C                     MOVE 'Y'       CGL003  1                       CGL003
+     C                     MOVE *ON       *IN46                           CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C/COPY WNCPYSRC,GLH00552
+     C/COPY OFCPYSRCZ,CGL141_040                                                              CGL141
+0159 C*                                                                   GL1170
+0160 C           ENDFC     TAG                             ** ENDFC TAG **GL1170
+0161 C*                                                                   GL1170
+0162 C*  ONLY LIVE RECORDS TO GO THROUGH PROCESSING                       GL1170
+0163 C*                                                                   GL1170
+0164 C  N02                GOTO END                                       GL1170
+     C*                                                                   S01117
+     C*  THE PRIMARY FILE HAS BEEN POSITIONED FOR THE ENTITY,             S01117
+     C*  SO IF THE 'ENTITY' ON FILE NOT THE SAME AS REQUESTED ENTITY      S01117
+     C*  GO TO THE END                                                    S01117
+     C*                                                                   S01117
+     C           *IN47     IFEQ '0'                                       S01117
+     C           *IN48     ANDEQ'0'                                       S01117
+     C           BRNCH     ANDNEBRCA                                      S01117
+     C                     GOTO END                                       S01117
+     C                     SETOF                     45                   E30564
+     C                     SETON                     LR                   BHF827
+     C                     END                                            S01117
+     C*                                                                   S01117
+0146 C** CONSOLIDATED REPORT OPENS OUTPUT FILE ONCE AND ONLY ONCE         S01117
+     C           BRNCH     IFEQ *BLANKS                    IF             S01117
+     C           *IN45     ANDNE'1'                                       S01117
+     C                     SETON                     45                   S01117
+     C                     OPEN GL1170P1                                  S01117
+     C                     Z-ADD0         PAGE                            S01117
+      *                                                                   S01117
+      **  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01117
+     C                     Z-ADDSFNUM1    SFNUM3  60                      S01117
+     C                     OUT  LDA                                       S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM *BLANKS   SENTY   3                       S01117
+     C                     PARM           SFILE1                          S01117
+     C                     PARM           SFNUM3                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME       S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C                     END                             FI             S01117
+      *                                                                   S01117
+      ** RESET ALL SUBTOTALS TO ZERO FOR EACH NEW BRANCH                  S01117
+     C           *INL4     IFEQ '1'                                       S01117
+     C                     Z-ADD*ZEROS    DEBTOT                          S01117
+     C                     Z-ADD*ZEROS    CRETOT                          S01117
+     C                     Z-ADD*ZEROS    DACTOT                          S01117
+     C                     Z-ADD*ZEROS    CACTOT                          S01117
+     C                     Z-ADD*ZEROS    DCYTOT                          S01117
+     C                     Z-ADD*ZEROS    CCYTOT                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C**  MULTIBRANCH TEST FOR OUTPUT                                     S01117
+     C*                                                                   S01117
+     C           *INL4     IFEQ '1'                                       S01117
+     C           BRNCH     ANDNE*BLANKS                                   S01117
+     C                     CLOSEGL1170P1                                  S01117
+     C           BRNCH     IFEQ 'ALL'                                     S01117
+     C           BRNCH     OREQ BRCA                                      S01117
+     C                     SETON                     45                   S01117
+     C*                                                                   S01117
+     C** OBTAIN BRANCH DETAILS WHEN IN MULTIBRANCH CASE                   S01117
+     C           *IN49     IFEQ '1'                        IF             S01117
+     C**********           CALL 'AOBRCHR0'                                             S01194 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM BRCA      @DSNB   3                       S01194
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        S01194 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVEL'SDBRCHPD'DBFILE             *************S01194
+     C                     MOVEL'003'     DBASE              * DBERR 003 *S01194
+     C                     MOVEL@OPTN     DBOPTN  7          *************S01194
+     C                     MOVELBRCA      DBKEY                           S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     SETON                     99                   S01194
+     C                     SETOF                     45                   S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+     C                     END                             FI             S01117
+     C                     OPEN GL1170P1                                  S01117
+     C                     Z-ADD0         PAGE                            S01117
+      *                                                                   S01117
+      **  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01117
+     C                     Z-ADDSFNUM1    SFNUM3  60                      S01117
+     C                     OUT  LDA                                       S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY   3                       S01117
+     C                     PARM           SFILE1                          S01117
+     C                     PARM           SFNUM3                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME       S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C                     SETOF                     45                   S01117
+     C                     SETON                     LR                   S01117
+     C                     GOTO END                                       S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+0165 C** RECORD LIVE RECORDS PROCESSED FOR LR                             GL1170
+0166 C   02                SETON                     50                   GL1170
+0167 C*                                                                   GL1170
+0168 C*  IF NEW CURRENCY ACCESS CURRENCY TABLE                            GL1170
+0169 C*                                                                   GL1170
+0170 C***L3******          MOVEL'20'      ZTABKY                          S01194
+0171 C***L3******          MOVELCCY       CCY1    4                       S01194
+0172 C***L3******          MOVE '1'       CCY1                            S01194
+0173 C***L3******          MOVE CCY1      ZTABKY                          S01194
+0174 C***L3******ZTABKY    CHAINTABLE                99    ***    2    ***S01194
+0175 C***L3N99***RECI      COMP 'D'                  9999                 S01194
+0176 C***99******          MOVE 'TABLE'   DBFILE                          S01194
+0177 C***99******          Z-ADD2         DBASE                           S01194
+0178 C***99******          MOVE ZTABKY    DBKEY                           S01194
+0179 C***99******          GOTO END                                       S01194
+     C*                                                                   S01194
+     C           *INL3     IFEQ '1'                                       S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM CCY       @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVEL'SDCURRPD'DBFILE             *************S01194
+     C                     MOVEL'002'     DBASE              * DBERR 002 *S01194
+     C                     MOVEL@OPTN     DBOPTN  7          *************S01194
+     C                     MOVELCCY       DBKEY                           S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     SETON                     99                   S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+     C                     END                                            S01194
+0180 C*                                                                   GL1170
+0181 C*  SET INDICATORS FOR OUTPUT ACCORDING TO NUMBER OF DECIMAL PLACES  GL1170
+0182 C*               FOR THE PARTICULAR CURRENCY                         GL1170
+0183 C*                                                                   GL1170
+0184 C***********CDP       COMP 1                      3031               S01194
+0185 C***********CDP       COMP 2                    33  32               S01194
+     C           A6NBDP    COMP 1                      3031               S01194
+     C           A6NBDP    COMP 2                    33  32               S01194
+0186 C*                                                                   GL1170
+0187 C*  MAINTAIN DETAIL RECORD COUNT                                     GL1170
+0188 C*                                                                   GL1170
+0189 C                     ADD  1         COUNT   50                      GL1170
+0190 C*                                                                   GL1170
+0191 C*  ACCUMULATE CUSTOMER TOTALS                                       GL1170
+0192 C*                                                                   GL1170
+0193 C   20                ADD  AMRT      DEBTOT 130                      GL1170
+0194 C  N20                ADD  AMRT      CRETOT 130                      GL1170
+0195 C*                                                                   GL1170
+0196 C*  PUT DATES INTO CORRECT FORMAT                                    GL1170
+0197 C*                                                                   GL1170
+0198 C                     Z-ADDSDAT      ZDAYNO                          GL1170
+0199 C                     EXSR ZDATE2                                    GL1170
+0200 C                     MOVE ZADATE    SDAY    7                       GL1170
+0201 C                     Z-ADDMDAT      ZDAYNO                          GL1170
+0202 C                     EXSR ZDATE2                                    GL1170
+0203 C                     MOVE ZADATE    MDAY    7                       GL1170
+0204 C*                                                                   GL1170
+     C/COPY WNCPYSRC,GLH00553
+     C/COPY OFCPYSRCZ,CGL141_041                                                              CGL141
+     C*  IF ACCRUAL FREQUENCY SWITCHABLE FEATURE ON, FORMAT               CGL003
+     C*  NEXT ACCRUAL DATE                                                CGL003
+     C*                                                                   CGL003
+     C           CGL003    IFEQ 'Y'                                       CGL003
+     C                     Z-ADDAMAPDA    ZDAYNO                          CGL003
+     C                     EXSR ZDATE2                                    CGL003
+     C                     MOVE ZADATE    ADAY    7                       CGL003
+     C                     ENDIF                                          CGL003
+0205 C*                                                                   GL1170
+0206 C*                                                                   GL1170
+0207 C           END       TAG                             **  END TAG  **GL1170
+0208 C   99                SETON                     U7U8LR               GL1170
+0209 C*                                                                   GL1170
+0210 C*  WHEN A/C CODE CHANGES, ACCUMULATE TOTALS INTO CCY TOTALS         GL1170
+0211 C*                                                                   GL1170
+0212 CL1                   ADD  DEBTOT    DACTOT 130                      GL1170
+0213 CL1                   ADD  CRETOT    CACTOT 130                      GL1170
+0214 CL2                   ADD  DACTOT    DCYTOT 130                      GL1170
+0215 CL2                   ADD  CACTOT    CCYTOT 130                      GL1170
+0216 C*                                                                   GL1170
+0217 C*                                                                   GL1170
+0218 C*                                                                   GL1170
+      *                                                                   S01117
+     C*                                                                   LN0075
+     C*  T  O  T  A  L     T  I  M  E    P  R  O  C  E  S  S  I  N  G     LN0075
+0085 C*                                                                   LN0075
+0086 C*   ACCESS BANK DETAILS, IN CASE NO DETAILS TO REPORT               LN0075
+0087 C*                                                                   LN0075
+     CLR         *IN40     IFEQ '0'                                       LN0075
+     C*                                                                   LN0075
+     CLR                   CALL 'AOBANKR0'                                LN0075
+     CLR                   PARM '*MSG   ' @RTCD   7                       LN0075
+     CLR                   PARM '*FIRST ' @OPTN   7                       LN0075
+     CLR         SDBANK    PARM SDBANK    DSFDY                           LN0075
+     CLR         @RTCD     IFNE *BLANKS                                   LN0075
+     CLR                   MOVEL'SDBANKPD'DBFILE             *************LN0075
+     CLR                   MOVEL'007'     DBASE              * DBERR 007 *LN0075
+     CLR                   MOVEL@OPTN     DBOPTN  7          *************LN0075
+     CLR                   MOVEL@OPTN     DBKEY                           LN0075
+     CLR                   EXSR *PSSR                                     LN0075
+     CLR                   SETON                     U7U8                 LN0075
+     CLR                   END                                            LN0075
+     CLR                   MOVE BJMRDT    RUNA                            RT0087
+     CLR                   END                                            LN0075
+     C*                                                                   LN0075
+      ** ENSURE TOTALS SPOOL FILE RECORDED BY RCF                         S01117
+     CLR                   Z-ADDSFNUMU    SFNUM2  60                      S01117
+     CLR                   OUT  LDA                                       S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ                             S01117
+     CLR                   PARM *BLANKS   SENTY   3                       S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           SFNUM2                          S01117
+     CLR                   PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     CLR         *LOCK     IN   LDA                                       S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME       S01117
+     C*                                                                   S01117
+     CLR                   SETON                     U7U8LR               S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+      *                                                                   S01117
+     CLR         *INU8     IFNE '1'                        IF             S01117
+     CLR         *INU7     ANDNE'1'                                       S01117
+     C*                                                                   S01117
+     C** SUPPRESS RUN CONTROL CHECK WHEN ONLY A BRANCH IS REQUESTED       S01117
+     CLR                   SETOF                     U8                   S01117
+     CLR         *IN49     IFEQ '0'                        B2             S01117
+     CLR         *IN47     OREQ '1'                                       S01117
+     CLR         *IN48     OREQ '1'                                       S01117
+0220 CLR         COUNT     COMP NORE                 9999                 GL1170
+0221 CLR 99                SETON                     U8                   GL1170
+     CLR                   END                             E2             S01117
+     C*                                                                   E36049
+     C** DO NOT OUTPUT TO P1 IF THERE ARE NO DETAILS TO REPORT FOR        E36049
+     C** BRANCH, COMPANY OR SYSTEM LEVEL.                                 E36049
+     C*                                                                   E36049
+     C***********                                                  S01117 E36049
+     C***OUTPUT*GL1170P1 HERE IF A SINGLE BRANCH REQUEST HAS NO DETAIL117 E36049
+     C***TO*REPORT                                                 S01117 E36049
+     C*R*********COUNT     IFEQ *ZEROS                     B2      S01117 E36049
+     C*R**********IN47     ANDEQ'0'                                S01117 E36049
+     C*R**********IN48     ANDEQ'0'                                S01117 E36049
+     C***********                                                  S01117 E36049
+     C*R**********IN49     IFEQ '1'                        B3      S01117 E36049
+     C*R*********          CALL 'AOBRCHR0'                         S01117 E36049
+     C*R*********          PARM '*MSG   ' @RTCD   7                S01117 E36049
+     C*R*********          PARM '*KEY   ' @OPTN   7                S01117 E36049
+     C*R*********          PARM BRNCH     @DSNB   3                S01117 E36049
+     C*R*********SDBRCH    PARM SDBRCH    DSFDY                    S01194 E36049
+     C*R*********@RTCD     IFNE *BLANKS                    B4      S01117 E36049
+     C*R*********          MOVEL'SDBRCHPD'DBFILE             *************E36049
+     C*R*********          MOVEL'004'     DBASE              * DBERR00047*E36049
+     C*R*********          MOVEL@OPTN     DBOPTN  7          *************E36049
+     C*R*********          MOVELBRNCH     DBKEY                    S01117 E36049
+     C*R*********          EXSR *PSSR                              S01117 E36049
+     C*R*********          SETON                     U7U8          S01117 E36049
+     C*R*********          END                             E4      S01117 E36049
+     C*R*********          END                             E3      S01117 E36049
+     C*R**********INU7     IFNE '1'                        B3      S01117 E36049
+     C*R*********          OPEN GL1170P1                           S01117 E36049
+     C*R*********          Z-ADD*ZEROS    PAGE                     S01117 E36049
+     C***********                                                  S01117 E36049
+     C***ENSURE*REPORT SPOOL FILE RECORDED BY RCF                  S01117 E36049
+     C*R*********          Z-ADDSFNUM1    SFNUM3  60               S01117 E36049
+     C*R*********          OUT  LDA                                S01117 E36049
+     C*R*********          CALL 'ZSFILE'                           S01117 E36049
+     C*R*********          PARM           SEQ                      S01117 E36049
+     C*R*********          PARM BRNCH     SENTY   3                S01117 E36049
+     C*R*********          PARM           SFILE1                   S01117 E36049
+     C*R*********          PARM           SFNUM3                   S01117 E36049
+     C*R*********          PARM           ZSERR   1                S01117 E36049
+     C***********                                                  S01117 E36049
+     C*R**********LOCK     IN   LDA                                S01117 E36049
+     C*R*********ZSERR     IFEQ 'Y'                                S01117 E36049
+     C***********                                                  S01117 E36049
+     C**ERROR*DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMMES01117 E36049
+     C***********                                                  S01117 E36049
+     C*R*********          SETON                     U7U8LR        S01117 E36049
+     C*R*********          RETRN                                   S01117 E36049
+     C*R*********          END                                     S01117 E36049
+     C*R*********          EXCPTNODTL                              S01117 E36049
+     C*R*********          END                             E3      S01117 E36049
+     C*R*********          END                             E2      S01117 E36049
+     C***********                                                  S01117 E36049
+     CLR                   END                             FI             S01117
+0222 C********************************************************************GL1170
+0223 C/SPACE                                                              GL1170
+0169 C********************************************************************S01194
+     C**                                                                  S01194
+     C**   *PSSR  SR TO DUMP PROGRAM WHEN DATABASE ERROR OCCURS           S01194
+     C**                                                                  S01194
+     C           *PSSR     BEGSR                                          S01194
+     C           @RUN      IFEQ *BLANKS                                   S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C                     ENDSR                                          S01194
+     C**                                                                  S01194
+0224 C********************************************************************GL1170
+0225 C**                                                                  GL1170
+0226 C*****ZSYSTM*SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   S01194
+0227 C**                                                                  GL1170
+0228 C***********ZSYSTM    BEGSR                           *** ZSYSTM *** S01194
+0229 C**                                                                  GL1170
+0230 C*****SET*UP KEY FOR INSTALLATION CONTROL RECORD.                    S01194
+0231 C***********          MOVEL'01      'ZTABKY 12                       S01194
+0232 C***********          MOVE '  10'    ZTABKY                          S01194
+0233 C**                                                                  GL1170
+0234 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0235 C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+0236 C**                                                                  GL1170
+0237 C*****CHECK*SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
+0238 C***********DATF      COMP 'M'                      98MMDDYY, 98 ON  S01194
+0239 C**                                                                  GL1170
+0240 C***********          ENDSR                                          S01194
+0241 C**                                                                  GL1170
+0242 C**                                                                  GL1170
+0243 C********************************************************************GL1170
+0244 C/SPACE                                                              GL1170
+0245 C********************************************************************GL1170
+0246 C**                                                                  GL1170
+0247 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.            GL1170
+0248 C**                                                                  GL1170
+0249 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.         GL1170
+0250 C**                                                                  GL1170
+0251 C           ZDATE2    BEGSR                           *** ZDATE2 *** GL1170
+0252 C**                                                                  GL1170
+0253 C**   CLEAR DATE FIELDS.                                             GL1170
+0254 C                     Z-ADD0         ZDATE   60                      GL1170
+0255 C                     MOVEL'       ' ZADATE  7                       GL1170
+0256 C**                                                                  GL1170
+0257 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.                        GL1170
+0258 C                     Z-ADDZDAYNO    ZDAYNO  50                      GL1170
+0259 C**                                                                  GL1170
+0260 C**   DETERMINE YEAR NUMBER.                                         GL1170
+0261 C**                                                                  GL1170
+0262 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.                    GL1170
+0263 C           ZDAYNO    SUB  1         ZDAYN1  50   99                 GL1170
+0264 C   99                GOTO ZDEND2                                    GL1170
+0265 C**                                                                  GL1170
+0266 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.             GL1170
+0267 C           ZDAYN1    DIV  1461      ZLYR    20                      GL1170
+0268 C                     MVR            ZDAYN1           SAVE REMAINING GL1170
+0269 C**                                                   DAYS           GL1170
+0270 C**   CALCULATE NUMBER OF REMAINING YEARS.                           GL1170
+0271 C                     Z-ADD1         ZWRK2   20                      GL1170
+0272 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *GL1170
+0273 C           ZDAYN1    COMP ZYDY,ZWRK2             90                 GL1170
+0274 C  N90      ZWRK2     ADD  1         ZWRK2                           GL1170
+0275 C  N90                GOTO ZDTAG1                                    GL1170
+0276 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON GL1170
+0277 C**                                                                  GL1170
+0278 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.                  GL1170
+0279 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          GL1170
+0280 C**                                                                  GL1170
+0281 C**   CALCULATE ACTUAL YEAR NUMBER.                                  GL1170
+0282 C           ZLYR      MULT 4         ZWRK3   30                      GL1170
+0283 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972   GL1170
+0284 C                     Z-ADDZWRK3     ZYEAR   20                      GL1170
+0285 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           GL1170
+0286 C**                                                                  GL1170
+0287 C**   DETERMINE MONTH NUMBER.                                        GL1170
+0288 C**                                                                  GL1170
+0289 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.         GL1170
+0290 C                     SETOF                     9293                 GL1170
+0291 C   91      ZDAYN1    COMP 59                     9293               GL1170
+0292 C   91N92   ZDAYN1    SUB  1         ZDAYN1                          GL1170
+0293 C**                                                                  GL1170
+0294 C**   CALCULATE MONTH NUMBER.                                        GL1170
+0295 C                     Z-ADD2         ZWRK2                           GL1170
+0296 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *GL1170
+0297 C           ZDAYN1    COMP ZMDY,ZWRK2             94                 GL1170
+0298 C  N94      ZWRK2     ADD  1         ZWRK2                           GL1170
+0299 C  N94                GOTO ZDTAG2                                    GL1170
+0300 C           ZWRK2     SUB  1         ZWRK2                           GL1170
+0301 C**                                                                  GL1170
+0302 C                     Z-ADDZWRK2     ZMTH    20       MONTH          GL1170
+0303 C**                                                                  GL1170
+0304 C**   DETERMINE DAY OF MONTH.                                        GL1170
+0305 C**                                                                  GL1170
+0306 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.                          GL1170
+0307 C           ZDAYN1    ADD  1         ZDAYN1                          GL1170
+0308 C**                                                                  GL1170
+0309 C**   CALCULATE DAY OF MONTH.                                        GL1170
+0310 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            GL1170
+0311 C**                                                                  GL1170
+0312 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.       GL1170
+0313 C   93      ZDAY      ADD  1         ZDAY                            GL1170
+0314 C**                                                                  GL1170
+0315 C**   FORMAT DATE, DDMMYY OR MMDDYY.                                 GL1170
+0316 C  N98                MOVELZDAY      ZWRK4   40                      GL1170
+0317 C   98                MOVE ZDAY      ZWRK4                           GL1170
+0318 C  N98                MOVE ZMTH      ZWRK4                           GL1170
+0319 C   98                MOVELZMTH      ZWRK4                           GL1170
+0320 C                     MOVELZWRK4     ZDATE                           GL1170
+0321 C                     MOVE ZYEAR     ZDATE                           GL1170
+0322 C**                                                                  GL1170
+0323 C**   FORMAT ALPHA DATE, DDMMMYY.                                    GL1170
+0324 C           ZDAY      COMP 10                     95                 GL1170
+0325 C                     MOVELZDAY      ZWRK5   5                       GL1170
+0326 C   95                MOVEL' '       ZWRK5                           GL1170
+0327 C                     MOVE ZMNM,ZMTH ZWRK5                           GL1170
+0328 C                     MOVELZWRK5     ZADATE                          GL1170
+0329 C                     MOVE ZYEAR     ZADATE                          GL1170
+0330 C**                                                                  GL1170
+0331 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*GL1170
+0332 C**                                                                  GL1170
+     C/COPY WNCPYSRC,GLH00554
+     C/COPY OFCPYSRCZ,CGL141_042                                                              CGL141
+0333 C**                                                                  GL1170
+0334 C********************************************************************GL1170
+0335 C/SPACE                                                              GL1170
+0336 O********************************************************************GL1170
+0337 O*L1170P1H**203   L3                                         S01124  S01117
+     OGL1170P1H  203   L3 45                                              S01117
+0345 O       OR        OFNL3 45                                           S01117
+0338 O***********                        22 'REFERENCE GL1170'            S01117
+     O                                   24 'REFERENCE GL1170P1'          S01117
+0339 O***********              TITL      89                               S01194
+1127 O                         BJURPT    89                               S01194
+0340 O                                  104 'DATE'                        GL1170
+0341 O                         RUNA     112                               GL1170
+0342 O                                  122 'PAGE'                        GL1170
+0343 O                         PAGE  Z  126                               GL1170
+0344 O********H**1     L3                                                 S01117
+0345 O*******OR**      OF                                                 S01117
+     O        H  1     L3 45                                              S01117
+0345 O       OR        OFNL3 45                                           S01117
+0346 O                                   62 'AMOUNTS TO AMORTISE'         GL1170
+0347 O                                   73 'BY ACCOUNT'                  GL1170
+     O                 49N48             82 'BRANCH'                      S01117
+     O                 49N48   BRCA      86                               S01117
+     O                 49N48             87 '-'                           S01117
+     O                 49N48   A8BRNM   117                               S01117
+     O                    48             88 'CONSOLIDATED'                S01117
+0349 O********H**2     L3                                                 S01117
+0350 O*******OR**      OF                                                 GL1170
+     O        H  2     L3 45                                              S01117
+     O       OR        OFNL3 45                                           S01117
+0351 O                                   63 '--------------------'        GL1170
+0352 O                                   73 '----------'                  GL1170
+0353 O********H**2     L3                                                 S01117
+0354 O*******OR**      OF                                                 S01117
+     O        H  2     L3 45                                              S01117
+0354 O       OR        OFNL3 45                                           S01117
+0355 O                                   14 'CURRENCY -'                  GL1170
+0356 O***********              CCNM      29                               S01194
+0356 O                         A6CYNM    29                               S01194
+0353 O********H**2     L3                                                 S01117
+0354 O*******OR**      OF                                                 S01117
+     O********H**2     L3 45                                      S01117  CGL003
+     O        H  2     L3 45                                              CGL003
+     O       AND      N46                                                 CGL003
+0354 O       OR        OFNL3 45                                           S01117
+     O       AND      N46                                                 CGL003
+0355 O**********                        105 'DR AMT TO'                                GL1170 CGL029
+     O                                  107 'DR AMT TO'                                       CGL029
+0356 O                                  130 'CR AMT TO'                   GL1170
+     O        H  1     L3 45                                              CGL003
+     O       AND       46                                                 CGL003
+     O       OR        OFNL3 45                                           CGL003
+     O       AND       46                                                 CGL003
+     O**********                        105 'DR AMT TO'                                CGL003 CGL029
+     O                                  107 'DR AMT TO'                                       CGL029
+     O                                  130 'CR AMT TO'                   CGL003
+     O        H  1     L3 45                                              CGL003
+     O       AND       46                                                 CGL003
+0354 O       OR        OFNL3 45                                           CGL003
+     O       AND       46                                                 CGL003
+     O**********                         81 'START   MATURITY'                         CGL003 CGL029
+     O                                   87 'START   MATURITY'                                CGL029
+0357 O********H**2     L3                                                 S01117
+0358 O*******OR**      OF                                                 S01117
+     O        H  2     L3 45                                              S01117
+     O       OR        OFNL3 45                                           S01117
+0359 O***********                        16 'A/C CODE  CUST.'             S01117
+     O                 49                 4 'BRN'                         S01117
+0359 O**********                         20 'A/C CODE  CUST.'                          S01117 CGL029
+0360 O**********                         42 'REFERENCE  NARRATIVE'                     GL1170 CGL029
+0361 O***********                        81 'START   MATURITY'    GL1170  CGL003
+0361 O**********      N46                81 'START   MATURITY'                         CGL003 CGL029
+     O**********       46                81 'ACCRUAL FREQ/DATE'                        CGL003 CGL029
+0362 O**********                        105 'AMORTISE'                                 GL1170 CGL029
+     O                                   13 'A/C CODE'                                        CGL029
+     O                                   26 'CUST.'                                           CGL029
+     O                                   48 'REFERENCE  NARRATIVE'                            CGL029
+     O                N46                87 'START   MATURITY'                                CGL029
+     O                 46                87 'ACCRUAL FREQ/DATE'                               CGL029
+     O                                  107 'AMORTISE'                                        CGL029
+0363 O                                  130 'AMORTISE'                    GL1170
+0364 O**                                                                  GL1170
+0365 O*                                                                   GL1170
+0366 O**                                                                  GL1170
+0367 O********D**1     02                                                 S01117
+0367 O        D  1     02 45                                              S01117
+0368 O***********              ACOD       5                               S01117
+0369 O***********                         6 '-'                           S01117
+0370 O***********              ACSQ       8                               S01117
+0371 O***********              CUST      16                               S01117
+     O                 49      BRCA       4                               S01117
+0368 O**********               ACOD       9                                            S01117 CGL029
+0369 O**********                         10 '-'                                        S01117 CGL029
+0370 O**********               ACSQ      12                                            S01117 CGL029
+0371 O**********               CUST      20                                            S01117 CGL029
+0372 O**********               REFN      28                                            GL1170 CGL029
+0373 O**********               NARR      63                                            GL1170 CGL029
+0374 O**********               SDAY      72                                            GL1170 CGL029
+0375 O**********               MDAY      81                                            GL1170 CGL029
+     O                         ACOD      15                                                   CGL029
+     O                                   16 '-'                                               CGL029
+     O                         ACSQ      18                                                   CGL029
+     O                         CUST      26                                                   CGL029
+     O                         REFN      34                                                   CGL029
+     O                         NARR      69                                                   CGL029
+     O                         SDAY      78                                                   CGL029
+     O                         MDAY      87                                                   CGL029
+0376 O                    30 20AMRT  1  105                               GL1170
+0377 O                    30N20AMRT  1  130                               GL1170
+0378 O                    31 20AMRT     105 '   ,   ,   , 0 . '           GL1170
+0379 O                    31N20AMRT     130 '   ,   ,   , 0 . '           GL1170
+0380 O                    32 20AMRT     105 '  ,   ,   , 0 .  '           GL1170
+0381 O                    32N20AMRT     130 '  ,   ,   , 0 .  '           GL1170
+0382 O                    33 20AMRT     105 ' ,   ,   , 0 .   '           GL1170
+0383 O                    33N20AMRT     130 ' ,   ,   , 0 .   '           GL1170
+0384 O**                                                                  GL1170
+0385 O*                                                                   GL1170
+     O/COPY WNCPYSRC,GLH00555
+     O/COPY OFCPYSRCZ,CGL141_043                                                              CGL141
+     O        D  1     46 02 45                                           CGL003
+     O**********               AMAPFQ    65                                            CGL003 CGL029
+     O**********               AMFDAY    71                                            CGL003 CGL029
+     O**********               ADAY      81                                            CGL003 CGL029
+     O                         AMAPFQ    71                                                   CGL029
+     O                         AMFDAY    77                                                   CGL029
+     O                         ADAY      87                                                   CGL029
+     O*                                                                   CGL003
+0386 O**                                                                  GL1170
+0387 O********T*12     L1 50                                              S01117
+     O        T 12     L1 50 45                                           S01117
+0388 O                                   62 'CUSTOMER'                    GL1170
+0389 O                         CUST      70                               GL1170
+0390 O                                   79 'TOTAL -'                     GL1170
+0391 O                       30DEBTOT1B 105                               GL1170
+0392 O                       30CRETOT1B 130                               GL1170
+0393 O                       31DEBTOT B 105 '   ,   ,   , 0 . '           GL1170
+0394 O                       31CRETOT B 130 '   ,   ,   , 0 . '           GL1170
+0395 O                       32DEBTOT B 105 '  ,   ,   , 0 .  '           GL1170
+0396 O                       32CRETOT B 130 '  ,   ,   , 0 .  '           GL1170
+0397 O                       33DEBTOT B 105 ' ,   ,   , 0 .   '           GL1170
+0398 O                       33CRETOT B 130 ' ,   ,   , 0 .   '           GL1170
+0399 O********T**3     L2 50                                              S01117
+     O        T  3     L2 50 45                                           S01117
+0400 O                                   84 'TOTAL -'                     GL1170
+0401 O**********                         66 'ACCOUNT CODE'                             GL1170 CGL029
+     O                                   60 'ACCOUNT CODE'                                    CGL029
+0402 O                         ACOD      72                               GL1170
+0403 O                                   73 '-'                           GL1170
+0404 O                         ACSQ      75                               GL1170
+0405 O                       30DACTOT1B 105                               GL1170
+0406 O                       30CACTOT1B 130                               GL1170
+0407 O                       31DACTOT B 105 '   ,   ,   , 0 . '           GL1170
+0408 O                       31CACTOT B 130 '   ,   ,   , 0 . '           GL1170
+0409 O                       32DACTOT B 105 '  ,   ,   , 0 .  '           GL1170
+0410 O                       32CACTOT B 130 '  ,   ,   , 0 .  '           GL1170
+0411 O                       33DACTOT B 105 ' ,   ,   , 0 .   '           GL1170
+0412 O                       33CACTOT B 130 ' ,   ,   , 0 .   '           GL1170
+0413 O********T*2      L3 50                                              S01117
+     O        T 2      L3 50 45                                           S01117
+0414 O                                   69 'CURRENCY TOTAL -'            GL1170
+0415 O                       30DCYTOT1B 105                               GL1170
+0416 O                       30CCYTOT1B 130                               GL1170
+0417 O                       31DCYTOT B 105 '   ,   ,   , 0 . '           GL1170
+0418 O                       31CCYTOT B 130 '   ,   ,   , 0 . '           GL1170
+0419 O                       32DCYTOT B 105 '  ,   ,   , 0 .  '           GL1170
+0420 O                       32CCYTOT B 130 '  ,   ,   , 0 .  '           GL1170
+0421 O                       33DCYTOT B 105 ' ,   ,   , 0 .   '           GL1170
+0422 O                       33CCYTOT B 130 ' ,   ,   , 0 .   '           GL1170
+     O        T 3      LR U7 U8                                           S01117
+     O       AND       45                                                 S01117
+     O                                   65 '*** ERROR IN'                S01117
+     O                                   78 ' DATABASE ***'               S01117
+     O        T 3      L4 45                                              S01117
+     O       AND      N48 49                                              S01117
+     O                                   66 '*** END OF REPORT FOR'       S01117
+     O                                   74 ' BRANCH '                    S01117
+     O                         BRCA      77                               S01117
+     O                                   81 ' ***'                        S01117
+     O        T 3      LR 45N49                                           S01117
+     O       OR        LR 45 48                                           S01117
+     O                                   76 '*** END OF REPORT ***'       S01117
+0471 O*L1170P1E**203           NODTL                               S01117 E36049
+0473 O***********                        24 'REFERENCE GL1170P1'   S01117 E36049
+0474 O***********              BJURPT    89                        S01117 E36049
+0475 O***********                       104 'DATE'                 S01117 E36049
+0476 O***********              RUNA     112                        S01117 E36049
+0477 O***********                       122 'PAGE'                 S01117 E36049
+0478 O***********              PAGE  Z  126                        S01117 E36049
+0479 O********E**1             NODTL                               S01117 E36049
+0346 O***********                        62 'AMOUNTS TO AMORTISE'  S01117 E36049
+0347 O***********                        73 'BY ACCOUNT'           S01117 E36049
+0385 O***********      49                82 'BRANCH'               S01117 E36049
+0385 O***********      49      BRNCH     86                        S01117 E36049
+0385 O***********      49                87 '-'                    S01117 E36049
+0385 O***********      49      A8BRNM   117                        S01117 E36049
+0385 O********E**              NODTL                               S01117 E36049
+0351 O***********                        63 '--------------------' S01117 E36049
+0352 O***********                        73 '----------'           S01117 E36049
+     O********E** 26           NODTL                               S01117 E36049
+     O***********                        76 '*** NO DETAILS TO REPORT'117 E36049
+     O***********                        80 '***'                  S01117 E36049
+     O********E** 48           NODTL                               S01117 E36049
+     O***********      49                69 '*** END OF REPORT FOR'S01117 E36049
+     O***********      49                76 'BRANCH'               S01117 E36049
+     O***********      49      BRNCH     80                        S01117 E36049
+     O***********      49                84 '***'                  S01117 E36049
+     O***********     N49                76 '*** END OF REPORT ***'S01117 E36049
+0423 O**                                                                  GL1170
+0424 O/SPACE                                                              GL1170
+0425 O**                                                                  GL1170
+0426 O********T**203   LR                                                 S01117
+     OGL1170AUT  203   LR                                                 S01117
+0427 O***********                        22 'REFERENCE GL1170'            S01117
+     O                                   24 'REFERENCE GL1170AU'          S01117
+0428 O***********              TITL      89                               S01194
+1127 O                         BJURPT    89                               S01194
+0429 O                                  104 'DATE'                        GL1170
+0430 O                         RUNA     112                               GL1170
+0431 O                                  122 'PAGE'                        GL1170
+0432 O***********              PAGE  Z  126                               S01117
+     O                         PAGE1 Z  126                               S01117
+0433 O        T  1     LR                                                 GL1170
+0434 O                                   62 'AMOUNTS TO AMORTISE'         GL1170
+0435 O                                   73 'BY ACCOUNT'                  GL1170
+0441 O                                   89 'RUN CONTROLS'                S01117
+0437 O        T  2     LR                                                 GL1170
+0438 O                                   63 '--------------------'        GL1170
+0439 O                                   73 '----------'                  GL1170
+0440 O        T  220   LR                                                 GL1170
+0441 O***********                        20 'RUN CONTROLS -'              S01117
+0442 O                                   72 '----------- PROGRAM'         GL1170
+0443 O                                   84 '-----------'                 GL1170
+0444 O***********                       107 '--------- FILE'              S01117
+0445 O***********                       124 'TRAILER --------'            S01117
+0444 O                 48               107 '--------- FILE'              S01117
+0444 O                 47               107 '--------- FILE'              S01117
+0444 O                N49               107 '--------- FILE'              S01117
+0445 O                 48               124 'TRAILER --------'            S01117
+0445 O                 47               124 'TRAILER --------'            S01117
+0445 O                N49               124 'TRAILER --------'            S01117
+0446 O        T  1     LR                                                 GL1170
+0447 O                                   59 'NUMBER'                      GL1170
+0448 O***********                        99 'NUMBER'                      S01117
+0448 O                 48                99 'NUMBER'                      S01117
+0448 O                 47                99 'NUMBER'                      S01117
+0448 O                N49                99 'NUMBER'                      S01117
+0449 O        T  2     LR                                                 GL1170
+0450 O                                   18 'S/AMAXA'                     GL1170
+0451 O        T  1     LR                                                 GL1170
+0452 O                                   25 'NUMBER OF RECORDS'           GL1170
+0453 O                                   33 'ON FILE'                     GL1170
+0454 O                         COUNT 3   59                               GL1170
+0455 O***********              NORE  3   99                               S01117
+0455 O                 48      NORE  3   99                               S01117
+0455 O                 47      NORE  3   99                               S01117
+0455 O                N49      NORE  3   99                               S01117
+0456 O                   NU7 U8         130 '***'                         GL1170
+0451 O        T 11     LRN50                                              S01117
+     O                                   76 '*** NO DETAILS TO REPORT'    S01117
+     O                                   80 '***'                         S01117
+0457 O        T  145   U8NU7 LR                                           GL1170
+0458 O                                  100 '*** DIFFERENCE ***'          GL1170
+0459 O        T  147   U8 U7 LR                                           GL1170
+0460 O                                   42 '***REFERENCE'                GL1170
+0377 O***********              DBPGM     51                               S01194
+0377 O                         DBPGM     53                               S01194
+0462 O                                   71 '-DATABASE ERROR AT'          GL1170
+0379 O***********              DBASE     74                               S01194
+0379 O                         DBASE     75                               S01194
+0464 O        T  1     U8 U7 LR                                           GL1170
+0465 O                                   37 'FILE NAME'                   GL1170
+0382 O***********              DBFILE    43                               S01194
+0383 O***********                        48 'KEY'                         S01194
+0384 O***********              DBKEY     78                               S01194
+0382 O                         DBFILE    46                               S01194
+0383 O                                   51 'KEY'                         S01194
+0384 O                         DBKEY     81                               S01194
+0469 O********T** 50   LR                                                 S01117
+0470 O***********                        73 '*** END OF REPORT ***'       S01117
+0471 O********************************************************************GL1170
+0472 O/SPACE                                                              GL1170
+0473 O********************************************************************GL1170
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

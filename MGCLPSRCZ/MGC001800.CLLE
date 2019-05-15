@@ -1,0 +1,179 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas MG Populate and Get UUID')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Generation Module                           */
+/*                                                                   */
+/*       MGC001800 - Midas MG Populate and Get UUID                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. MD051100           Date 30May18              */
+/*       Prev Amend No. CSW218  *CREATE    Date 19Mar18              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD051100 - System generated Dump after executing MGC001801  */
+/*       CSW218 - SWIFT Changes 2018                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ACTION &GENMSG &UUID)
+
+             DCL        VAR(&ACTION)    TYPE(*CHAR) LEN(3)
+             DCL        VAR(&GENMSG)    TYPE(*DEC)  LEN(6)
+             DCL        VAR(&UUID)      TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID)     TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB)     TYPE(*CHAR) LEN(7) +
+                           VALUE('  DPLIB')
+             DCL        VAR(&JOBTYPE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JAVA_PATH) TYPE(*CHAR) LEN(1024)
+             DCL        VAR(&JAVA_HOME) TYPE(*CHAR) LEN(1024)
+             DCL        VAR(&JAVAPATH2) TYPE(*CHAR) LEN(210)
+             DCL        VAR(&DTQPATH)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&READCTR)   TYPE(*CHAR) LEN(1) VALUE('F')
+             DCL        VAR(&MSGNO)     TYPE(*INT)
+
+/** System value variables */
+
+             DCL        VAR(&RTNCDE)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&JAVAPATH)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&JAVAHOME)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9)    TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9)     TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK10)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10)    TYPE(*CHAR) LEN(200)
+
+             DCLF       FILE(SDJARFL5)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2018')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             RTVJOBA    TYPE(&JOBTYPE)
+
+/** Setup system prefix variable from SDSTAT data area */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+
+
+/** Get system values from file SDSVALPD  */
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'JavaPathStem' +
+                          &JAVAPATH 'JavaHome' &JAVAHOME +
+                          &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+
+/** If the 'JavaPathStem' system value is missing then end abnormally */
+
+             IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             ELSE       CHGVAR VAR(&JAVAPATH2) VALUE(&JAVAPATH *TCAT +
+                          '/lib/ext')
+
+/** If the 'JavaHome' system value is missing then end abnormally */
+
+             IF         COND(%SST(&JAVAHOME 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             RMVLNK     OBJLNK(A)
+             MONMSG     MSGID(CPFA0A9)
+
+/** Add links to system */
+
+             ADDLNK     OBJ(&JAVAPATH2) NEWLNK(A)
+             MONMSG     MSGID(CPFA0A0)
+
+/** Setup environment variable CLASSPATH with the necessary directories */
+/** for invoking the populate UUID method */
+
+             RMVENVVAR  ENVVAR(CLASSPATH)
+             MONMSG     MSGID(CPFA981)
+
+/** Setup environment variable JAVA_HOME */
+
+             CHGVAR     VAR(&JAVA_HOME) VALUE(&JAVAHOME)
+             RMVENVVAR  ENVVAR(JAVA_HOME)
+             MONMSG     MSGID(CPFA981)
+
+
+ SETUP_PATH: RCVF       RCDFMT(SDJARFD0)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ADD_ENVVAR))
+
+                IF         COND(&READCTR *EQ 'F') THEN(CHGVAR VAR(&READCTR) +
+                              VALUE('S'))
+                ELSE       CHGVAR VAR(&JAVA_PATH)  VALUE(&JAVA_PATH *TCAT ':')
+                CHGVAR     VAR(&JAVA_PATH) VALUE(&JAVA_PATH *TCAT &JFNAME)
+
+             GOTO       CMDLBL(SETUP_PATH)
+
+ ADD_ENVVAR: ADDENVVAR  ENVVAR(CLASSPATH) VALUE(&JAVA_PATH)
+             MONMSG     MSGID(CPFA0A0)
+
+             ADDENVVAR  ENVVAR(JAVA_HOME) VALUE(&JAVA_HOME)
+             MONMSG     MSGID(CPFA0A0)
+
+             CHGVAR     VAR(&DTQPATH) VALUE('/QSYS.LIB/' *CAT +
+                          &DPLIB *CAT '.LIB/MGUUIDQ.DTAQ')
+
+/** Set number of UUID to be generated */
+
+             CHGVAR      VAR(&MSGNO) VALUE(&GENMSG)
+
+/** Call MG Populate UUID */
+
+             IF         COND(&ACTION *EQ 'WRT') THEN(CALL +
+                           PGM(MG001801) PARM(&SYSID &MSGNO &DTQPATH))                  /*MD051100*/
+/**********                PGM(MG001801) PARM(&MSGNO &DTQPATH))         */              /*MD051100*/
+/** Call MG Get UUID */
+
+             ELSE       CMD(DO)
+               IF          COND(&ACTION *EQ 'GET') THEN(CALL +
+                          PGM(MG001802) PARM(&UUID))
+             ENDDO
+
+/** Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(END)
+
+/** Abnormal termination - batch job */
+
+ABNOR:       CHGJOB     SWS(XXXXXX11)
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MGC001800 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+END:         ENDPGM
+

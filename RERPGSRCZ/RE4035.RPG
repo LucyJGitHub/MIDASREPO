@@ -1,0 +1,676 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Passbook Cover Printing')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4035 - Passbook Cover Printing                             *
+     F*                                                               *
+     F*  Function:  This program accesses and prints account details  *
+     F*  (I/C)      in passbook cover.                                *
+     F*                                                               *
+     F*  Called By:                                                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT002 *CREATE     Date  1Dec95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR
+      ** Account Numbers Cross Reference File
+      *
+     FREIAC   IF  E           K        DISK
+      ** Retail Interest and Charges File
+      *
+      /COPY ZSRSRC,RBWLOGF1
+      *
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   69  - Error found                                           *
+     F*   70  - Record not found                                      *
+     F*                                                               *
+     F* 80-89 - Standard RTS subroutines                              *
+     F*                                                               *
+     F* 90-99 - Standard MIDAS subroutines                            *
+     F*                                                               *
+     F*    U6 - System error                                          *
+     F* U7-U8 - Database error occurs                                 *
+     F*                                                               *
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Control Subroutines                                          *
+     F*                                                               *
+     F*  MAIN   - Main Processing                                     *
+     F*  FIRST  - Initial Processing                                  *
+     F*  RDDTAQ - Read Data Queue Message                             *
+     F*  PRDTAQ - Process Data Queue Message                          *
+     F*  RTVDET - Retrieve Details                                    *
+     F*  RTVMSG - Retrieve message from message file                  *
+     F*  SNDTAQ - Send Data to Data Queue                             *
+     F*  DBERR  - Database error handling                             *
+     F*  *PSSR  - Program error                                       *
+     F*                                                               *
+     F*  Standard RBA Subroutines                                     *
+     F*                                                               *
+     F*  SDQMS   - Send Data Queue Message                            *
+     F*  RDQMS   - Receive Data Queue Message                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     ITTIME       DS                             12
+      *
+     I                                        1   2 WTHR
+     I                                        3   4 WTMN
+     I                                        5   6 WTSS
+     I                                        1   60WTIME
+      *
+     I                                        7   8 WDT1
+     I                                        9  10 WDT2
+     I                                       11  12 WDT3
+     I                                        7  120WDATE
+      *
+     I                                        1  120WTMDS
+      *
+     ILDA         DS                            256
+      **  Local data area for data base errors.
+      *
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+      **  Field combining the following fields
+      *
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+      *
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+      *
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+      *
+     I                                      171 180 DBPGM
+      **  Number of database error
+      *
+     I                                      181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      ** Field containing program ID
+      *
+     I                                        1  10 @PGM
+      ** Field containing workstation ID
+      *
+     I                                      244 253 @JOB
+      ** Field containing user ID
+      *
+     I                                      254 263 @USER
+      *
+     I**********  DS                             18                                           CGL029
+     I            DS                             24                                           CGL029
+      ** Data structure to hold key fields of LF/REIAC
+      *
+     I**********                              1  18 @KREIA                                    CGL029
+     I                                        1  24 @KREIA                                    CGL029
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7   9 CCY
+     I**********                             10  130ACOD                                      CGL029
+     I**********                             14  150ACSQ                                      CGL029
+     I**********                             16  18 BRCA                                      CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ACSQ                                      CGL029
+     I                                       22  24 BRCA                                      CGL029
+      *
+     I/COPY ZSRSRC,RBPBCVI1
+      *
+     I/COPY ZSRSRC,RBWLOGI1
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency file Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch Code Details
+      *
+     I              QQDFAC                          QQDFA1                                    CGL029
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, Long data structure
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Control Processing                   *
+      *                                                               *
+      *  CALLS     FIRST  - Initial Processing                        *
+      *            RDDTAQ - Read Data Queue Message                   *
+      *            PRDTAQ - Process Data Queue Message                *
+      *                                                               *
+      *  CALLED BY         -                                          *
+      *                                                               *
+      *  FLDS USED         -                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initial Processing
+      *
+     C                     EXSR FIRST
+      *
+      ** Main Processing
+      ** Read data queue message
+      *
+     C                     EXSR RDDTAQ
+      *
+      ** Do while message type <> *END
+      *
+     C           REMSTY    DOWNE'*END'
+      *
+      ** Process data queue message
+      *
+     C                     EXSR PRDTAQ
+      *
+      ** Read next data queue message
+      *
+     C                     EXSR RDDTAQ
+      *
+     C                     END
+      *
+      ** Exit program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             RDDTAQ - Read Data Queue Message                  *
+      *                                                               *
+      *  CALLS      WRLOG  - Update Log File                          *
+      *             RDQMS  - Receive Data Queue Message               *
+      *                                                               *
+      *  CALLED BY  MAIN   - Main Control Processing                  *
+      *                                                               *
+      *  FLDS USED         -                                          *
+      *                                                               *
+      *****************************************************************
+     C           RDDTAQ    BEGSR                           ** RDDTAQ **
+      *
+     C                     MOVEL*BLANKS   REPPCI
+     C                     EXSR RDQMS
+     C                     EXSR DQERR
+     C                     MOVELP@QDR     REPPCI
+      *
+     C           REMSTY    IFNE '*END'
+      *
+      ** Update Log File
+      *
+     C                     CLEARLOGDS
+     C                     CLEARWCMSG
+     C                     MOVE RECMSQ    WCMSQ
+     C                     MOVELREBRCA    WBRCA
+     C                     MOVELREUSID    WUSID
+     C                     MOVE 'N'       WSUCM
+     C                     MOVE 'DR'      WSTAT
+     C                     TIME           WTMDS  120
+     C           WTHR      CAT  ':'       WA      3
+     C           WTMN      CAT  ':'       WB      3
+     C           WA        CAT  WB        WC      6
+     C           WC        CAT  WTSS      WSTTM
+     C                     MOVELWSTTM     WRCTM   8
+     C           WDT1      CAT  '/'       WA      3
+     C           WDT2      CAT  '/'       WB      3
+     C           WA        CAT  WB        WC      6
+     C           WC        CAT  WDT3      WRCDT   8
+     C                     MOVELP@QDR     WCMSG
+     C                     EXSR WRLOG
+      *
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             PRDTAQ - Process Data Queue Message               *
+      *                                                               *
+      *  CALLS      RTVDET - Retrieve Details                         *
+      *             SNDTAQ - Send Data to Data Queue                  *
+      *                                                               *
+      *  CALLED BY  MAIN   - Main Control Processing                  *
+      *                                                               *
+      *  FLDS USED         -                                          *
+      *                                                               *
+      *****************************************************************
+     C           PRDTAQ    BEGSR                           ** PRDTAQ **
+      *
+     C                     MOVE '0'       *IN69
+     C                     MOVE WAACN     WACCN  100
+      *
+      ** Get Account Details
+      *
+     C           WACCN     CHAINACNUM                70
+      *
+      ** Account number does not exist
+      *
+     C           *IN70     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVEL'USR0050' @MSGID
+     C                     MOVE '1'       *IN69
+      *
+     C                     ELSE
+      *
+      ** Check account sub type (must be savings a/c)
+      *
+     C           STYP      IFNE 'S'
+     C                     MOVEL'USR0119' @MSGID
+     C                     MOVE '1'       *IN69
+     C                     END
+      *
+     C           *IN69     IFEQ '0'
+      *
+      ** Check if passbook is used on this account
+      *
+     C           KLREIA    CHAINREIAC                70
+      *
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'REIACD  'DBFILE           ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVEL@KREIA    DBKEY            ***************
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C           PBKU      IFEQ 'N'
+     C                     MOVEL'USR1220' @MSGID
+     C                     MOVE '1'       *IN69
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C           *IN69     IFEQ '0'
+      *
+      ** Retrieve details
+      *
+     C                     EXSR RTVDET
+     C                     END
+      *
+     C                     END
+      *
+      ** Send data to data queue
+      *
+     C                     EXSR SNDTAQ
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             RTVDET - Retrieve Details                         *
+      *                                                               *
+      *  CALLS      AOBRCHR0 - Access Branch Details                  *
+      *             AOCURRR0 - Access Currency Details                *
+      *             AOCUSTR0 - Access Customer Details                *
+      *                                                               *
+      *  CALLED BY  PRDTAQ - Process Data Queue Message               *
+      *                                                               *
+      *  FLDS USED         -                                          *
+      *                                                               *
+      *****************************************************************
+     C           RTVDET    BEGSR                           ** RTVDET **
+      *
+      ** Use access program AOBRCHR0 to retrieve branch name
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @BRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ** If record not found
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'USR0095' @MSGID
+     C                     MOVE '1'       *IN69
+      *
+     C                     ELSE
+     C                     MOVELA8BRNM    RFISBN
+     C                     END
+      *
+     C           *IN69     IFEQ '0'
+      *
+      ** Retrieve currency name
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'USR0049' @MSGID
+     C                     MOVE '1'       *IN69
+      *
+     C                     ELSE
+     C                     MOVELA6CYNM    RFACCD
+     C                     END
+      *
+     C                     END
+      *
+     C           *IN69     IFEQ '0'
+      *
+      ** Retrieve Customer details
+      *
+     C                     MOVE CNUM      WCNUM   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WCNUM     @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** If record not found
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'USR1025' @MSGID
+     C                     MOVE '1'       *IN69
+      *
+     C                     ELSE
+     C                     MOVELBBCNA1    RFCSNM
+     C                     MOVELBBCNA2    RFCNA1
+     C                     MOVELBBCNA3    RFCNA2
+     C                     MOVELBBCNA4    RFCNA3
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             SNDTAQ - Send to Data Queue                       *
+      *                                                               *
+      *  CALLS      DBERR  - Database Error Handling                  *
+      *                                                               *
+      *  CALLED BY  MAIN   - Main Control Processing                  *
+      *                                                               *
+      *  FLDS USED         -                                          *
+      *                                                               *
+      *****************************************************************
+     C           SNDTAQ    BEGSR                           ** SNDTAQ **
+      *
+     C                     CLEARLOGDS
+     C                     CLEARWCMSG
+      *
+     C                     MOVELREMSTY    RFMSTY
+     C                     MOVE *BLANKS   RFHMSI
+      *
+     C           *IN69     IFEQ '1'
+     C                     MOVEL'N'       WSUCM
+     C                     MOVE @MSGID    RFHMSI
+     C                     MOVE 'E'       RFHMSS
+      *
+     C                     MOVEL*BLANKS   @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    RFHSMS
+      *
+     C                     CLEARRFCSNM
+     C                     CLEARRFISBN
+     C                     CLEARRFCNA1
+     C                     CLEARRFCNA2
+     C                     CLEARRFCNA3
+     C                     CLEARRFCNA4
+     C                     CLEARRFCNA5
+     C                     CLEARRFACCD
+     C                     ELSE
+     C                     MOVEL'Y'       WSUCM
+     C                     MOVEL'C'       RFHMSS
+     C                     TIME           WTMDS
+     C           WTHR      CAT  ':'       WA
+     C           WTMN      CAT  ':'       WB
+     C           WA        CAT  WB        WC
+     C           WC        CAT  WTSS      WSTTM
+     C                     MOVE WSTTM     WCMTM
+     C                     END
+      *
+     C                     MOVELREPPCO    P@QDS
+     C                     MOVELP@QDS     WCMSG
+     C                     EXSR SDQMS
+     C                     EXSR DQERR
+     C                     MOVEL*BLANKS   REPPCO
+      *
+      **  Update Log File
+      *
+     C                     MOVE RECMSQ    WCMSQ
+     C                     MOVELREBRCA    WBRCA
+     C                     MOVELREUSID    WUSID
+     C                     MOVE 'DS'      WSTAT
+     C                     TIME           WTMDS
+     C           WTHR      CAT  ':'       WA
+     C           WTMN      CAT  ':'       WB
+     C           WA        CAT  WB        WC
+     C           WC        CAT  WTSS      WSTTM
+     C                     EXSR WRLOG
+      *
+     C                     COMIT
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Key for LF/REIAC
+      *
+     C           KLREIA    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+      **   Reset LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     OUT  LDA
+      *
+      ** Initialise MSG text and MSG return code
+      *
+     C                     MOVE *BLANKS   @MSGTX
+     C                     MOVEL*BLANKS   @MSGID
+     C                     MOVEL'RTSMSGF' @MSGF
+      *
+     C                     MOVEL'RE4035'  P@QRC
+     C                     MOVE 'PNA '    P@QRC
+      *
+     C/COPY ZSRSRC,RBPBCVC1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             DBERR  - Database Error Handling                  *
+      *                                                               *
+      *  CALLS      *PSSR  - Program  error                           *
+      *                                                               *
+      *  CALLED BY  WRKACC - Work with account                        *
+      *             VSCCY  - Validate currency code                   *
+      *             DSPBAL - Display account balances                 *
+      *             VACCLO - Validate account closure                 *
+      *             UTRANT - Update teller transaction trailer        *
+      *             UTNTM2 - Update teller controls                   *
+      *             UTNTM3 - Update teller totals                     *
+      *             UMEMOS - Update memos                             *
+      *             UACNUM - Update accounts                          *
+      *             UCHQBK - Update cheque book                       *
+      *             ACLOSE - A/C closure enquiry                      *
+      *             FIRST  - Initial Processing                       *
+      *                                                               *
+      *  FLDS USED         -                                          *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             *PSSR - Program error                             *
+      *                                                               *
+      *  CALLS      DBERRCTL                                          *
+      *                                                               *
+      *  CALLED BY  DBERR  - Database Error Handling                  *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     ROLBK
+      *
+     C                     CLEARLOGDS
+      *
+     C                     MOVEL'USR0010' @MSGID
+     C                     MOVELDBLOT     @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    RFHSMS
+      *
+     C                     MOVE RECMSQ    WCMSQ
+     C                     MOVELREBRCA    WBRCA
+     C                     MOVELREUSID    WUSID
+     C                     MOVE 'N'       WSUCM
+     C                     MOVE 'DS'      WSTAT
+     C                     TIME           WTMDS
+     C           WTHR      CAT  ':'       WA
+     C           WTMN      CAT  ':'       WB
+     C           WA        CAT  WB        WC
+     C           WC        CAT  WTSS      WSTTM
+      *
+      **  Send to data queue
+      *
+     C                     MOVELREMSTY    RFMSTY
+     C                     MOVEL'DBER'    RFHMSI
+     C                     MOVEL'E'       RFHMSS
+      *
+     C                     MOVELREPPCO    P@QDS
+     C                     CLEARWCMSG
+     C                     MOVELP@QDS     WCMSG
+     C                     EXSR SDQMS
+     C                     EXSR DQERR
+     C                     MOVEL*BLANKS   REPPCO
+     C                     EXSR WRLOG
+      *
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,RBSDQMS
+      *
+      /EJECT
+      /COPY ZSRSRC,RBRDQMS
+      *
+      /EJECT
+      /COPY ZSRSRC,RBDQERR
+      *
+      /EJECT
+      /COPY ZSRSRC,RBRMSGC1
+      *
+      /EJECT
+      /COPY ZSRSRC,RBWLOGC1
+      *
+      /EJECT
+     C*****************************************************************
+** CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,1270 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Region limits key screen')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0461V - Midas SD Region Limits Key Screen                  *
+      *                                                               *
+      *  Function:  This program prompts fields, allowing user changes*
+      *             validates fields, and if valid performs an action *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 15Apr99               *
+      *                 S01459             Date 15APR99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     F*
+     F*  S01212  - 14SEP89 - LOCAL RETURNS /COPY INCORPORATION            S01212
+     F*
+     F/COPY WNCPYSRC,SD0461VFPG
+     FSD0461V#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Region Limits Key Screen
+      *
+     FSDREGNL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Region codes retrieval
+      *
+     FSDBRCHL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Branch codes retrieval
+      *
+     FSDCOMPL0IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Company codes retrieval
+      *
+     FSDLIMTL0IF  E           K        DISK                           UC
+     F                                              KINFDS ID0004
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Limit types retrieval index
+      *
+     FSDRGLML1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0005
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Region limits retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E/COPY WNCPYSRC,SD0461VEPG
+     I* Define Data area MUSER                                         ***
+     I*                                                                ***
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I*00/Copy Member SD0461V   Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD0461VIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IZMUSER      DS
+     I                                        1  10 USID
+     I                                       11  13 UDBC
+     I                                       14  16 UDDP
+     I                                       17  17 UBLA
+      * Outward parameters
+     IPARC        DS                              6
+      * KEY : Midas SD Region limits retrieval
+      * I : MAP Region Code
+     I                                        1   2 PARGCD
+      * I : MAP Level
+     I                                        3   3 PALEVL
+      * I : MAP Branch/Company Code
+     I                                        4   6 PABCCD
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     IID0004      DS                            528
+      * File information data structure
+      *
+     IID0005      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                              6
+      * KEY: Midas SD Region limits retrieval
+      * I : MAP Region Code
+     I                                        1   2 P1RGCD
+      * I : MAP Level
+     I                                        3   3 P1LEVL
+      * I : MAP Branch/Company Code
+     I                                        4   6 P1BCCD
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Region Code is Required'
+      * Region Code
+     I                                        1   2 ZA0001
+      * Message data for 'Region Code not found'
+      * Region Code
+     I                                        1   2 ZA0002
+      * Message data for 'Branch Code Not Found'
+      * Branch/Company Code
+     I                                        1   3 ZA0003
+      * Message data for 'Branch Code Not Found'
+      * Branch/Company Code
+     I                                        1   3 ZA0004
+      * Message data for 'Company Code Required'
+      * Branch/Company Code
+     I                                        1   3 ZA0005
+      * Message data for 'Company Code Not Found'
+      * Branch/Company Code
+     I                                        1   3 ZA0006
+      * Message data for 'Company Code Not Found'
+      * Branch/Company Code
+     I                                        1   3 ZA0007
+      * Message data for 'Branch/Comp Not Req Sys'
+      * Branch/Company Code
+     I                                        1   3 ZA0008
+      * Message data for 'Level is Invalid'
+      * Level
+     I                                        1   1 ZA0009
+      * Message data for 'Brnch/Comp Inval for Levl'
+      * Branch/Company Code
+     I                                        1   3 ZA0010
+      * Message data for 'Region Limit Exists MB'
+      * Region Code
+     I                                        1   2 ZA0011
+      * Level
+     I                                        3   3 ZA0012
+      * Branch/Company Code
+     I                                        4   6 ZA0013
+      * Message data for 'Region Limit Exists NonMB'
+      * Region Code
+     I                                        1   2 ZA0014
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Region Lim
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Conduct screen conversation
+     C                     DO   *HIVAL
+      * Start new transaction
+     C                     MOVEL'Y'       W0TRN   1
+      * Process current transaction
+     C           W0TRN     DOWEQ'Y'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            MALDSC
+      * Process screen input
+     C                     CAS            DAPRSC
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *****************************************************************
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSA1
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPRSC    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * USER: Process command keys
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VPCK - Region Limits  *
+     C*00/Copy Member SD0461V   Process Command Keys
+     C/COPY WNCPYSRC,SD0461VPCK
+     C                     END                             *FI
+      * CASE: DTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+      * Validate screen input
+     C                     EXSR DBVLSC
+      * If error, exit
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: User defined action
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VUDA - Region Limits  *
+     C*00/Copy Member SD0461V   User Defined Action
+     C/COPY WNCPYSRC,SD0461VUDA
+     C                     END                             *FI
+      * Exit program
+     C                     EXSR ZXEXPG
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBVLSC    BEGSR
+      *================================================================
+      * Validate screen input
+      *================================================================
+      * USER: Validate fields
+      * Validate Region Code
+      * CASE: DTL.Region Code is equal to blank
+     C           #1RGCD    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1RGCD    ZA0001           Region Code
+      * Send message 'Region Code is Required'
+     C                     MOVEL'USR0742' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: DTL.Region Code is Select Request
+     C           #1RGCD    IFEQ '?'                        *IF
+      * Select Region Codes - Region Codes  *
+     C                     CALL 'SD0190S'              90  Select Region C
+     C                     PARM *BLANK    W0RTN   7
+     C           #1RGCD    PARM #1RGCD    WQ0001  2        Region Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0190S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9931  *
+     C                     END
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Retrieve region code - Region Codes  *
+     C                     EXSR SARVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1RGCD    ZA0002           Region Code
+      * Send message 'Region Code not found'
+     C                     MOVEL'USR0743' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.Multi-branching Indicator is Multi-branched
+     C           WUMBIN    IFEQ 'Y'                        *IF
+      * Ensure Valid Level and Branch Company Code
+      * CASE: DTL.Level is Branch Level
+     C           #1LEVL    IFEQ 'B'                        *IF
+      * Validate as Branch Code
+      * CASE: DTL.Branch/Company Code is Blank
+     C           #1BCCD    IFEQ *BLANK                     *IF
+      * Get Default Branch-ZMUSER - Standard Functions  *
+     C*
+     C* Access data-area ZMUSER
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C                     MOVE UDBC      WUBRCD           User Def Branch
+     C                     MOVELWUBRCD    #1BCCD           Branch/Company
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL#1BCCD    WUBRCD           Branch code
+      * Validate Branch Code Entered
+      * CASE: DTL.Branch/Company Code is Question Mark
+     C           #1BCCD    IFEQ '?'                        *IF
+      * Select Branch Codes - Branch Codes  *
+     C                     CALL 'SD0061S'              90  Select Branch C
+     C                     PARM *BLANK    W0RTN   7
+     C           WUBRCD    PARM WUBRCD    WQ0002  3        Branch code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0061S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+      * Check Return Code
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+     C                     MOVELWUBRCD    #1BCCD           Branch/Company
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1BCCD    ZA0003           Branch/Company
+      * Send message 'Branch Code Not Found'
+     C                     MOVEL'USR0719' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check Exist of branch cd - Branch Codes  *
+     C                     EXSR SBRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1BCCD    ZA0004           Branch/Company
+      * Send message 'Branch Code Not Found'
+     C                     MOVEL'USR0719' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: DTL.Level is Company Level
+     C           #1LEVL    IFEQ 'C'                        *IF
+      * Validate as Company Code
+      * CASE: DTL.Branch/Company Code is Blank
+     C           #1BCCD    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1BCCD    ZA0005           Branch/Company
+      * Send message 'Company Code Required'
+     C                     MOVEL'USR0720' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL#1BCCD    WUCMCD           Company Code
+      * Validate Company Code Entered
+      * CASE: DTL.Branch/Company Code is Question Mark
+     C           #1BCCD    IFEQ '?'                        *IF
+      * Select Company Codes - Company Codes  *
+     C                     CALL 'SD0230S'              90  Select Company
+     C                     PARM *BLANK    W0RTN   7
+     C           WUCMCD    PARM WUCMCD    WQ0003  3        Company Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0230S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+      * Check Return Code
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+     C                     MOVELWUCMCD    #1BCCD           Branch/Company
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1BCCD    ZA0006           Branch/Company
+      * Send message 'Company Code Not Found'
+     C                     MOVEL'USR0721' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check Company Code Exists - Company Codes  *
+     C                     EXSR SCRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1BCCD    ZA0007           Branch/Company
+      * Send message 'Company Code Not Found'
+     C                     MOVEL'USR0721' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: DTL.Level is Blank
+     C           #1LEVL    IFEQ *BLANK                     *IF
+      * Validate as System Level
+      * CASE: DTL.Branch/Company Code is Not Blank
+     C           #1BCCD    IFNE *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1BCCD    ZA0008           Branch/Company
+      * Send message 'Branch/Comp Not Req Sys'
+     C                     MOVEL'USR0722' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1LEVL    ZA0009           Level
+      * Send message 'Level is Invalid'
+     C                     MOVEL'USR0723' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+      * CASE: DTL.Branch/Company Code is Not Blank
+     C           #1BCCD    IFNE *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1BCCD    ZA0010           Branch/Company
+      * Send message 'Brnch/Comp Inval for Levl'
+     C                     MOVEL'USR0757' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'S'       #1LEVL           Level
+     C                     MOVEL'SYS'     #1BCCD           Branch/Company
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VVFI - Region Limits  *
+     C*00/Copy Member SD0461V   Validate Fields
+     C/COPY WNCPYSRC,SD0461VVFI
+     C                     END                             *FI
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      * Select existing record
+     C                     EXSR VACKRL
+      * Check reference to Limit types
+     C                     EXSR VBCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * Check reference to Limit types
+     C                     EXSR VCCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CALC: Screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VSFI - Region Limits  *
+     C*00/Copy Member SD0461V   Calculate Function Flds
+     C/COPY WNCPYSRC,SD0461VSFI
+     C                     END                             *FI
+      * USER: Validate relations
+      * Only validate if Defer Confirm is *no
+      * CASE: PGM.*Defer confirm is Proceed to confirm
+     C           W0DCF     IFEQ 'N'                        *IF
+      * If Level is System then set up System Limits
+      * CASE: DTL.Level is System Level
+     C           #1LEVL    IFEQ 'S'                        *IF
+     C                     MOVEL'S'       WULEVL           Level
+     C                     MOVEL'SYS'     WUBCCD           Branch/Company
+     C                     ELSE
+      * CASE: DTL.Level is Blank
+     C           #1LEVL    IFEQ *BLANK                     *IF
+     C                     MOVEL'S'       WULEVL           Level
+     C                     MOVEL'SYS'     WUBCCD           Branch/Company
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Use Values input by User
+     C                     MOVEL#1LEVL    WULEVL           Level
+     C                     MOVEL#1BCCD    WUBCCD           Branch/Company
+     C                     END                             *FI
+     C                     END                             *FI
+      * retrieve Region Limits - Region Limits  *
+     C                     EXSR SDRVGN
+      * CASE: PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ 'Y2U0003'                  *IF
+      * Send appropriate error message according to multibranching indica
+      * CASE: WRK.Multi-branching Indicator is Multi-branched
+     C           WUMBIN    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1RGCD    ZA0011           Region Code
+     C                     MOVEL#1LEVL    ZA0012           Level
+     C                     MOVEL#1BCCD    ZA0013           Branch/Company
+      * Send message 'Region Limit Exists MB'
+     C                     MOVEL'USR0744' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     993132*
+     C                     SETON                     33    *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1RGCD    ZA0014           Region Code
+      * Send message 'Region Limit Exists NonMB'
+     C                     MOVEL'USR0745' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: PGM.*Defer confirm is Proceed to confirm
+     C           W0DCF     IFEQ 'N'                        *IF
+      * Edit Region Limits - Region Limits  *
+     C                     CLEARPARC
+     C                     MOVEL#1RGCD    PARGCD           Region Code
+     C                     MOVELWULEVL    PALEVL           Level
+     C                     MOVELWUBCCD    PABCCD           Branch/Company
+      *
+     C                     CALL 'SD0461R'              90  Edit Region Lim
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Region Lim
+     C                     PARM 'I'       WQ0009  1        Action Code
+     C           WUDRTC    PARM *BLANK    WQ0010  7        Duplicate Retur
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0461R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9931  *
+     C                     END
+      * CASE: WRK.Duplicate Return Code is *Normal
+     C           WUDRTC    IFEQ *BLANK                     *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     MOVEL*BLANK    #1RGCD           Region Code
+     C                     MOVEL*BLANK    #1LEVL           Level
+     C                     MOVEL*BLANK    #1BCCD           Branch/Company
+      * Send message '*Record added'
+     C                     MOVEL'Y2U0011' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     ELSE
+      * CASE: WRK.Duplicate Return Code is *Previous Screen
+     C           WUDRTC    IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: WRK.Duplicate Return Code is *User QUIT requested
+     C           WUDRTC    IFEQ 'Y2U9999'                  *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VVRE - Region Limits  *
+     C*00/Copy Member SD0461V   Validate Screen Relations
+     C/COPY WNCPYSRC,SD0461VVRE
+     C                     END                             *FI
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         GADSA1    BEGSR
+      *================================================================
+      * Set display attributes for screen
+      *================================================================
+     C                     MOVEL'0'       *IN79
+     C           WUMBIN    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         MALDSC    BEGSR
+      *================================================================
+      * Load screen from passed parameters
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1FXLT           FX Limit Type
+     C                     Z-ADD*ZERO     #1FLAM           FX Limit Amount
+     C                     Z-ADD*ZERO     #1FLED           FX Limit Expiry
+     C                     Z-ADD*ZERO     #1FLRD           FX Limit Review
+     C                     MOVEL*BLANK    #1FLFQ           FX Limit Freque
+     C                     Z-ADD*ZERO     #1FFDN           FX Frequency Da
+     C                     MOVEL*BLANK    #1LLTY           Lending Limit T
+     C                     Z-ADD*ZERO     #1LLAM           Lending Limit A
+     C                     Z-ADD*ZERO     #1LLED           Lending Limit E
+     C                     Z-ADD*ZERO     #1LLRD           Lending Limit R
+     C                     MOVEL*BLANK    #1LLFR           Lending Limit F
+     C                     Z-ADD*ZERO     #1LFDN           Lending Frequen
+     C                     Z-ADD*ZERO     #1FRLA           FRA Limit Amoun
+     C                     Z-ADD*ZERO     #1FRED           FRA Expiry Date
+     C                     Z-ADD*ZERO     #1FRRD           FRA Review Date
+     C                     MOVEL*BLANK    #1FRFQ           FRA Review Freq
+     C                     Z-ADD*ZERO     #1FRAD           FRA Frequency D
+     C                     Z-ADD*ZERO     #1IRLM           IRS Limit Amoun
+     C                     Z-ADD*ZERO     #1IRED           IRS Expiry Date
+     C                     Z-ADD*ZERO     #1IRDT           IRS Review Date
+     C                     MOVEL*BLANK    #1IRFQ           IRS Review Freq
+     C                     Z-ADD*ZERO     #1IFDN           IRS Frequency D
+     C                     MOVELP1RGCD    #1RGCD           Region Code
+     C                     MOVELP1LEVL    #1LEVL           Level
+     C                     MOVELP1BCCD    #1BCCD           Branch/Company
+      * CALC: Screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VSFI - Region Limits  *
+     C*00/Copy Member SD0461V   Calculate Function Flds
+     C/COPY WNCPYSRC,SD0461VSFI
+     C                     END                             *FI
+      * USER: Load screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VLSR - Region Limits  *
+     C*00/Copy Member SD0461V   Load Screen
+     C/COPY WNCPYSRC,SD0461VLSR
+     C                     END                             *FI
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Retrieve region code - Region Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           A3RGCD           Region Code
+      * Move fields to key list
+     C                     MOVEL#1RGCD    A3RGCD           Region Code
+     C           KRSSA     CHAIN@A3REBX              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0065' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Check Exist of branch cd - Branch Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           A8BRCD           Branch code
+      * Move fields to key list
+     C                     MOVELWUBRCD    A8BRCD           Branch code
+     C           KRSSB     CHAIN@A8REB0              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0075' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Check Company Code Exists - Company Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           APCMCD           Company Code
+      * Move fields to key list
+     C                     MOVELWUCMCD    APCMCD           Company Code
+     C           KRSSC     CHAIN@APREB3              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0037' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDRVGN    BEGSR
+      *================================================================
+      * retrieve Region Limits - Region Limits  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSD     KLIST
+     C                     KFLD           DYRGCD           Region Code
+     C                     KFLD           DYLEVL           Level
+     C                     KFLD           DYBCCD           Branch/Company
+      * Move fields to key list
+     C                     MOVEL#1RGCD    DYRGCD           Region Code
+     C                     MOVELWULEVL    DYLEVL           Level
+     C                     MOVELWUBCCD    DYBCCD           Branch/Company
+     C           KRSSD     CHAIN@DYREHQ              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0663' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1RGCD    WK1X01  1
+     C                     MOVEL#1LEVL    WK1X02  1
+     C                     MOVEL#1BCCD    WK1X03  1
+     C           WK1X01    IFEQ '?'                        Region Code
+     C           WK1X02    OREQ '?'                        Level
+     C           WK1X03    OREQ '?'                        Branch/Company
+     C                     CALL 'SD0460S'              90  Select Region L
+     C                     PARM *BLANK    W0RTN   7
+     C           #1RGCD    PARM #1RGCD    WQ0004  2        Region Code
+     C           #1LEVL    PARM #1LEVL    WQ0005  1        Level
+     C           #1BCCD    PARM #1BCCD    WQ0006  3        Branch/Company
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0460S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     993132*
+     C                     SETON                     33    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         VBCKRL    BEGSR
+      *================================================================
+      * Check reference to Limit types
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Name search required?
+     C                     MOVEL#1FXLT    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Limit Type
+     C                     CALL 'SD0141S'              90  Select Limits
+     C                     PARM *BLANK    W0RTN   7
+     C           #1FXLT    PARM #1FXLT    WQ0007  3        Limit Type
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0141S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     IFNE *BLANK
+     C                     GOTO VBEXIT
+     C                     END
+     C                     END
+      *................................................................
+      * If all low order keys not entered, exit
+     C           #1FXLT    IFEQ *BLANK                     Limit Type
+     C                     GOTO VBEXIT
+     C                     END
+      *
+     C           KLVBA2    KLIST
+     C                     KFLD           A2LMTY           Limit Type
+      * Setup key
+     C                     MOVEL#1FXLT    A2LMTY           Limit Type
+     C           KLVBA2    CHAIN@A2REBU              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     GOTO VBEXIT
+     C                     END
+      * Send message 'Limit types            NF'
+     C                     MOVEL'USR0063' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'USR0063' W0RTN
+      *================================================================
+     CSR         VBEXIT    ENDSR
+      /EJECT
+     CSR         VCCKRL    BEGSR
+      *================================================================
+      * Check reference to Limit types
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Name search required?
+     C                     MOVEL#1LLTY    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Limit Type
+     C                     CALL 'SD0141S'              90  Select Limits
+     C                     PARM *BLANK    W0RTN   7
+     C           #1LLTY    PARM #1LLTY    WQ0008  3        Limit Type
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0141S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     IFNE *BLANK
+     C                     GOTO VCEXIT
+     C                     END
+     C                     END
+      *................................................................
+      * If all low order keys not entered, exit
+     C           #1LLTY    IFEQ *BLANK                     Limit Type
+     C                     GOTO VCEXIT
+     C                     END
+      *
+     C           KLVCA2    KLIST
+     C                     KFLD           A2LMTY           Limit Type
+      * Setup key
+     C                     MOVEL#1LLTY    A2LMTY           Limit Type
+     C           KLVCA2    CHAIN@A2REBU              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     GOTO VCEXIT
+     C                     END
+      * Send message 'Limit types            NF'
+     C                     MOVEL'USR0063' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'USR0063' W0RTN
+      *================================================================
+     CSR         VCEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VEPP - Region Limits  *
+     C*00/Copy Member SD0461V   Exit Program Processing
+     C/COPY WNCPYSRC,SD0461VEPP
+     C                     END                             *FI
+      * CASE: DTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Branch code
+     C                     MOVEL*BLANK    WUBRCD  3
+      * Define work field Company Code
+     C                     MOVEL*BLANK    WUCMCD  3
+      * Define work field Level
+     C                     MOVEL*BLANK    WULEVL  1
+      * Define work field Branch/Company Code
+     C                     MOVEL*BLANK    WUBCCD  3
+      * Define work field Duplicate Return Code
+     C                     MOVEL*BLANK    WUDRTC  7
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0461V#
+     C                     OPEN SDREGNL1
+     C                     OPEN SDBRCHL1
+     C                     OPEN SDCOMPL0
+     C                     OPEN SDLIMTL0
+     C                     OPEN SDRGLML1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0461V PRECOMPILER - Region Limits  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * S01212 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0461VIPG - Region Limits  *
+     C/COPY WNCPYSRC,SD0461VCPG
+     C                     END                             *FI
+      * Load screen
+     C                     EXSR MALDSC
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0461VPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0461VPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0461VPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O/COPY WNCPYSRC,SD0461VOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

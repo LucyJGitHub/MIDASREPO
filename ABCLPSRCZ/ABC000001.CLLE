@@ -1,0 +1,98 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas AB Switchable feature init for CAP027')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - AB Module                                           */
+/*                                                                   */
+/*       ABC000001 - Midas AB switchable feature init for CAP027     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*       Prev Amend No. 191762  *CREATE    Date 02Apr01              */
+/*                      XNNNNN             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       191762 - APSWITCHON broken down to original programs        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+/*/COPY WNCPYSRC,ABC000001I                                          */
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ReturnCode) TYPE(*CHAR) LEN(10) /* +
+                          Return code used for procedures in this +
+                          function */
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,ABC000001M                                          */
+ 
+/* Mode 1 - First call */
+ 
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+/* +
+--------------------------------------------------------------------- +
+Call submodule to initialise various file fields +
+--------------------------------------------------------------------- +
+*/
+             CALLPRC    PRC(APINZINTC) PARM(&ReturnCode)
+             ENDDO
+ 
+/* Mode 2 - Second call */
+ 
+             IF         COND(&PMODE *EQ '2') THEN(DO)
+/* +
+--------------------------------------------------------------------- +
+Call submodule to initialise various file fields +
+--------------------------------------------------------------------- +
+*/
+             CALLPRC    PRC(APINZINTC) PARM(&ReturnCode)
+             ENDDO
+ 
+/* Mode 3 - Deletion */
+ 
+             IF         COND(&PMODE *EQ '3') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*/COPY WNCPYSRC,ABC000001P                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,ABC000001A                                          */
+ 
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+ /* Send the error message */
+ 
+             SNDPGMMSG  MSG('Program ABC000001 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,ABC000001E                                          */
+ 
+/* (Add any specific end processing here) */
+ 
+             ENDPGM

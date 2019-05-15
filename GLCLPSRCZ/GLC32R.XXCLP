@@ -1,0 +1,171 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CGL120*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas     GENERAL LEDGER MODULE                       */
+/*                                                                 */
+/*       GLC32R  -  DAILY JOURNAL                                  */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*           1989                                                  */
+/*                                                                 */
+/*       Last Amend No. CGL120  *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No.  BG18886           Date 29May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG9203           Date 01Jun06             */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      153640            DATE 22Nov99             */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      101993            DATE 11JUL96             */
+/*                      048922            DATE 09AUG93             */
+/*                      S01369            DATE 06APR92             */
+/*                      S01290            DATE 04JUL90             */
+/*                      S01194            DATE 16/03/89            */
+/*                      S01117            DATE 03/03/89            */
+/*                      S03220            DATE 09/05/88            */
+/*                      S01090            DATE 31/07/86            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       CGL120 - GL COB Components Task Split                     */
+/*       BG18886 - Amend non-standard codes.                       */
+/*       BUG9203 - Daily Journal Report not labelled properly      */
+/*                 Applied E44644 fixes from HEL-NYK               */
+/*       153640 - Run audit pgm over GExxPD files if FCOOB.        */
+/*       101993 - Daily journal restart gives zero opening balance */
+/*                Do not clear ABEXAG before succefull completion  */
+/*                of GLC33 or GLC65. The CLRPFM is done in GLC3320 */
+/*                or GLC32 depending of the component.             */
+/*       048922 - GL0340 halts on DB error but does not stop       */
+/*                the CL as no indicator is passed or tested.      */
+/*                Used both U7 and U8 when DB error.               */
+/*       S01369 - Allow user to request on-request GL balance      */
+/*                reports after POST 1,2,4,3, and 5.               */
+/*       S01290 - MIS GL REPORTING CHANGES                         */
+/*       S01194 - NEW STANDING DATA                                */
+/*       S01117 - MULTI-BRANCHING                                  */
+/*       S03220 - FUNDS TRANSFER                                   */
+/*       S01090 - REMOVAL OF GL0323                                */
+/*                                                                 */
+/*******************************************************************/
+/**/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+/************PGM        PARM(&POSTNUM)                              *  *S01290*/
+             PGM        PARM(&POSTNUM &RTYP)                          /*S01290*/
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&POST)    TYPE(*DEC) LEN(2)
+/**/
+             DCL        VAR(&ACJND) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACJNT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&RTYP) TYPE(*CHAR) LEN(1)                 /*S01290*/
+             DCL        VAR(&LDA)  TYPE(*CHAR) LEN(256)               /*048922*/
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)                /*048922*/
+/**/
+             SNDPGMMSG  MSG('GLC32R - Daily journal') TOMSGQ(MRUNQ)
+/**/
+/*********   CLRPFM     FILE(ABEX2)                                 *  *S01090*/
+/*********   CALL       PGM(GL0323)                                 *  *S01090*/
+/**/
+             CHGVAR     VAR(&POST) VALUE(&POSTNUM)
+             CHGVAR     VAR(&POST) VALUE(48 + &POST)
+             RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)
+             CHGVAR     VAR(%SUBSTRING(&GLSTAT &POST 1)) VALUE('Y')
+/**/                                                                  /*S01097*/
+/*  Reset GL balance report indicator to force GL balance extract  */ /*S01369*/
+/*  (GLC50) to be run prior to any on request reporting            */ /*S01369*/
+/**/                                                                  /*S01369*/
+             CHGVAR     VAR(%SUBSTRING(&GLSTAT 41 1)) VALUE('N')      /*S01369*/
+/**/                                                                  /*S01369*/
+             CHGDTAARA  DTAARA(GLSTAT) VALUE(&GLSTAT)
+/**/
+/**********  CHGVAR     VAR(&ACJND) VALUE('ACJND' ** &POSTNUM)                        */ /*BG18886*/
+             CHGVAR     VAR(&ACJND) VALUE('ACJND' *CAT &POSTNUM)                         /*BG18886*/
+/**********  CHGVAR     VAR(&ACJNT) VALUE('ACJNT' ** &POSTNUM)                        */ /*BG18886*/
+             CHGVAR     VAR(&ACJNT) VALUE('ACJNT' *CAT &POSTNUM)                         /*BG18886*/
+/**/
+/*********** OVRDBF     FILE(TABLE) TOFILE(TABGL)*/                   /*S01194*/
+             OVRDBF     FILE(ACBL) TOFILE(SACBL)
+             OVRDBF     FILE(ACJND) TOFILE(&ACJND)
+             OVRDBF     FILE(ACJNT) TOFILE(&ACJNT)
+/*/COPY WNCPYSRC,GLC32R001                                           */
+/*SAR 3220*/
+             IF         COND((&POSTNUM = '1') *OR (&POSTNUM = '5')) +
+                        THEN(DO)                                      /*S03220*/
+                        CHGJOB SWS(XXXXX1XX)                          /*S03220*/
+                        ENDDO                                         /*S03220*/
+             ELSE       CMD(DO)                                       /*S03220*/
+                        CHGJOB SWS(XXXXX0XX)                          /*S03220*/
+                        ENDDO                                         /*S03220*/
+             CHGJOB     SWS(XXXXXX00)                                 /*048922*/
+/*SAR 3220*/                                                          /*S03220*/
+/************CALL       PGM(GL0340)                                 *  *S01290*/
+/************CALL       PGM(GL0340) PARM(&RTYP)                                   /*S01290 BUG9203*/
+             CALL       PGM(GL0340) PARM(&RTYP &POSTNUM)                                 /*BUG9203*/
+/*********** DLTOVR     FILE(ACBL ACJND ACJNT TABLE)*/                /*S01194*/
+             DLTOVR     FILE(ACBL ACJND ACJNT)                        /*S01194*/
+/*/COPY WNCPYSRC,GLC32R002                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/********       CLRPFM     FILE(ABEXHH)                                 101993*/
+/********       CLRPFM     FILE(ABEXAI)                             *  *S01090*/
+/********       CLRPFM     FILE(ABEXAG)                                 101993*/
+/********       CLRPFM     FILE(ABEXZY)                                 101993*/
+/**/
+             ENDDO
+/**/
+             ELSE      CMD(DO)
+/** Database Error                                                 */ /*048922*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)           /*048922*/
+                     RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)              /*048922*/
+                     CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))    /*048922*/
+                     SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                                     MSGDTA(&MEM) TOMSGQ(MOPERQ +
+                                     MRUNQ)                           /*048922*/
+                ENDDO                                                 /*048922*/
+/* */                                                                 /*048922*/
+                ELSE       CMD(DO)                                    /*048922*/
+/**/
+/***************IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)        */ /*048922*/
+                IF         COND(%SWITCH(XXXXXX01)) THEN(DO)           /*048922*/
+/**/
+                   SNDPGMMSG  MSG('DAILY JOURNAL DOES NOT BALANCE')    +
+                               TOMSGQ(MRUNQ)
+                   SNDPGMMSG  MSG('DAILY JOURNAL DOES NOT BALANCE')    +
+                               TOMSGQ(MOPERQ)
+/**/
+                ENDDO
+/**/
+                ELSE       CMD(DO)                                     +
+/**/
+                      CHGJOB     SWS(XXXXXXX1)
+/**/
+                      SNDPGMMSG  MSG('FILE OUT OF BALANCE - SACBL') +
+                                   TOMSGQ(MRUNQ)
+                      SNDPGMMSG  MSG('FILE OUT OF BALANCE - SACBL') +
+                                   TOMSGQ(MOPERQ)
+/**/
+/* Run audit program to determine if any discrepancy between       */ /*153640*/
+/*  generated entries files and trailers.                          */ /*153640*/
+                   CALL       PGM(GLC0345)                            /*153640*/
+/**/                                                                  /*153640*/
+                ENDDO
+/**/
+                ENDDO                                                 /*048922*/
+/* */                                                                 /*048922*/
+             ENDDO
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

@@ -1,0 +1,563 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Generated entries audit report - other')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0346  -  Generated Entries audit report - other than GL/RE *
+      *                                                               *
+      *  Function:  This program compares the number/value of         *
+      *             postings on the COB Generated Entries files       *
+      *             against the hash totals on the trailer files,     *
+      *             listing all the totals and printing DIFFERENCE    *
+      *             against any files which do not tally.             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27417A          Date 19May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 153640  *CREATE    Date 26Jan99               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG27417A - Initialise merged posting files before merging.  *
+      *              Correct GL0345AU report for GEFPPD and GEFP2PD.  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  153640 - New program.                                        *
+      *                                                               *
+      *****************************************************************
+     FGECLPD  IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGECLPDF
+     FGECLZZ  IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGECLZZF
+     FGECL2PD IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGECL2PDF
+     FGECL2ZZ IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGECL2ZZF
+     FGECMPD  IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGECMPDF
+     FGECMZZ  IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGECMZZF
+     FGEDLPD  IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGEDLPDF
+     FGEDLZZ  IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGEDLZZF
+     FGEDL2PD IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGEDL2PDF
+     FGEDL2ZZ IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGEDL2ZZF
+     FGEFPPD  IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGEFPPDF
+     FGEFPZZ  IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGEFPZZF
+     FGEFP2PD IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGEFF2PDF
+     FGEFP2ZZ IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGEFF2ZZF
+     FGELEPD  IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGELEPDF
+     FGELEZZ  IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGELEZZF
+     FGELE2PD IF  E                    DISK
+     F            APOSTPDF                          KRENAMEGELE2PDF
+     FGELE2ZZ IF  E                    DISK
+     F            APOSTZZF                          KRENAMEGELE2ZZF
+     FGL0345AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+     E                    FILE@   1  20 40
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ISPOOLU      DS
+     I                                    B 367 3680LINE
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDMMOD    E DSSDMMODPD
+     I**   MIDAS MOD FLAGS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**   BANK DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+      *
+      *
+     C           FIRST     IFNE 'Y'
+     C                     EXSR INIT
+     C                     MOVE 'Y'       FIRST   1
+     C                     END
+      *
+     C                     EXSR MAIN
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                                                               *
+      * DEAL   - Process dealing files                                *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR                           ** MAIN SR **
+      *
+      *
+      *
+      *********************
+      ** ( 1)  GECLPD    **
+      *********************
+     C                     READ GECLPD                 1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GECLPD  'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C           *IN11     IFEQ *ON
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C                     ELSE
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GECLPD                   11
+     C                     ENDDO
+     C                     END
+      *
+     C                     READ GECLZZ                   12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C           NORE1     SUB  2         TNORE
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE FILE@,1   TEXT
+     C                     EXSR PRTDET
+      *
+      *********************
+      ** ( 2)  GECL2PD   **
+      *********************
+     C                     READ GECL2PD                1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GECL2PD 'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GECL2PD                  11
+     C                     ENDDO
+      *
+     C                     READ GECL2ZZ                  12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C           NORE1     SUB  2         TNORE
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE FILE@,2   TEXT
+     C                     EXSR PRTDET
+      *
+      *********************
+      ** ( 3)  GECMPD    **
+      *********************
+     C                     READ GECMPD                 1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GECMPD  'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GECMPD                   11
+     C                     ENDDO
+      *
+     C                     READ GECMZZ                   12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C           NORE1     SUB  2         TNORE
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE FILE@,3   TEXT
+     C                     EXSR PRTDET
+      *
+      *********************
+      ** ( 4)  GEDLPD    **
+      *********************
+     C                     READ GEDLPD                 1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GEDLPD  'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GEDLPD                   11
+     C                     ENDDO
+      *
+     C                     READ GEDLZZ                   12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C           NORE1     SUB  2         TNORE
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE FILE@,4   TEXT
+     C                     EXSR PRTDET
+      *
+      *********************
+      ** ( 5)  GEDL2PD   **
+      *********************
+     C                     READ GEDL2PD                1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GEDL2PD 'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GEDL2PD                  11
+     C                     ENDDO
+      *
+     C                     READ GEDL2ZZ                  12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C           NORE1     SUB  2         TNORE
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE FILE@,5   TEXT
+     C                     EXSR PRTDET
+      *
+      *********************
+      ** ( 6)  GEFPPD    **
+      *********************
+     C                     READ GEFPPD                 1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GEFPPD  'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GEFPPD                   11
+     C                     ENDDO
+      *
+     C                     READ GEFPZZ                   12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C********** NORE1     SUB  2         TNORE                                            BUG27417A
+     C                     Z-ADDNORE1     TNORE                                            BUG27417A
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C**********           MOVE FILE@,7   TEXT                                             BUG27417A
+     C                     MOVE FILE@,6   TEXT                                             BUG27417A
+     C                     EXSR PRTDET
+      *
+      *********************
+      ** ( 7)  GEFP2PD   **
+      *********************
+     C                     READ GEFP2PD                1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GEFP2D  'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GEFP2PD                  11
+     C                     ENDDO
+      *
+     C                     READ GEFP2ZZ                  12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C********** NORE1     SUB  2         TNORE                                            BUG27417A
+     C                     Z-ADDNORE1     TNORE                                            BUG27417A
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE FILE@,7   TEXT
+     C                     EXSR PRTDET
+      *
+      *********************
+      ** ( 8)  GELEPD    **
+      *********************
+     C                     READ GELEPD                 1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GELEPD  'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GELEPD                   11
+     C                     ENDDO
+      *
+     C                     READ GELEZZ                   12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C           NORE1     SUB  2         TNORE
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE FILE@,8   TEXT
+     C                     EXSR PRTDET
+      *
+      *********************
+      ** ( 9)  GELE2PD   **
+      *********************
+     C                     READ GELE2PD                1011
+     C           *IN10     IFEQ *ON
+     C                     MOVE 'GELE2PD 'FILNAM  8
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         FPSTA  180
+     C                     Z-ADD0         FNORE   50
+     C           *IN11     DOWEQ*OFF
+     C                     ADD  PSTA      FPSTA
+     C                     ADD  1         FNORE
+     C                     READ GELE2PD                  11
+     C                     ENDDO
+      *
+     C                     READ GELE2ZZ                  12
+     C           *IN12     IFEQ *ON
+     C                     Z-ADD0         TPSTA  180
+     C                     Z-ADD0         TNORE   50
+     C                     ELSE
+     C           HRWN      MULT 1000      #WRK18 180
+     C           #WRK18    ADD  HRDC      TPSTA
+     C           NORE1     SUB  2         TNORE
+     C                     END
+      *
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE FILE@,9   TEXT
+     C                     EXSR PRTDET
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * PRTDET - Print detail line if required                        *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRTDET    BEGSR                           ** PRTDET SR **
+      *
+     C           LINE      IFGT 57
+     C                     WRITEHEADAU
+     C                     END
+      *
+     C           TPSTA     IFNE FPSTA
+     C           TNORE     ORNE FNORE
+     C                     SETON                     50
+     C                     ELSE
+     C                     SETOF                     50
+     C                     END
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * INIT   - Initial routines                                     *
+      *          Called at beginning of program.                      *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ** INIT SR **
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C**  Access bank details file
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0346 ' DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE             *************
+     C                     Z-ADD1         DBASE              * DBERR 001 *
+     C                     MOVEL@OPTN     DBKEY              *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+0347 C*
+     C** Access Midas Modules file
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0346 ' DBPGM
+     C                     MOVEL'SDMMODPD'DBFILE             *************
+     C                     Z-ADD2         DBASE              * DBERR 002 *
+     C                     MOVEL@OPTN     DBKEY  29          *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     SETON                     42
+     C                     WRITEHEADAU
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           FILNAM    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0346 ' DBPGM
+     C                     MOVELFILNAM    DBFILE             *************
+     C                     Z-ADD99        DBASE              * DBERR 099 *
+     C                     MOVEL'READ    'DBKEY  29          *************
+     C                     OUT  LDA
+     C                     END
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  FILE@
+GECLPD    Syndicated Loans              -       1
+GECL2PD   Syndicated Loans ANWD         -       2
+GECMPD    CHIPS/Midas                   -       3
+GEDLPD    Dealing                       -       4
+GEDL2PD   Dealing ANWD                  -       5
+GEFPPD    Funds Transfer                -       6
+GEFP2PD   Funds Transfer ANWD           -       7
+GELEPD    Lending                       -       8
+GELE2PD   Lending ANWD                  -       9
+                                        -      10
+                                        -      11
+                                        -      12
+                                        -      13
+                                        -      14
+                                        -      15
+                                        -      16
+                                        -      17
+                                        -      18
+                                        -      19
+                                        -      20
+**  CPY@
+(c) Finastra International Limited 2001

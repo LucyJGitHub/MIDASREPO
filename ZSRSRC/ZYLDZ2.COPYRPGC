@@ -1,0 +1,1052 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutine                                  *
+      *                                                               *
+      *  ZYLDZ2 - Calculate Yields or Prices                          *
+      *                                                               *
+      *  ZYLD subroutine sets up parameter values and calls the       *
+      *  ZYIELD routine for calculating yields or prices              *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSE071             Date 19Jul05
+      *  Prev Amend No. 229857             Date 07Oct04               *
+      *                 226570             Date 27Jun04               *
+      *                 211407             Date 08Nov02               *
+      *                 207543             Date 17Jul02               *
+      *                 194370             Date 12Jul01               *
+      *                 CSE035             Date 22Apr02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 182750             Date 20Jul01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 140272             Date 22Aug00               *
+      *                 137802             Date 19Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 084704             Date 01Aug96               *
+      *                 083039             Date 01AUG96               *
+      *                 059110             DATE 25JUL96               *
+      *                 088047             DATE 26JUN96               *
+      *                 064575             DATE 15AUG94               *
+      *                 E39495             DATE 02NOV92               *
+      *                 E47922             DATE 01FEB93               *
+      *                 S01397             DATE 10SEP92               *
+      *                 E21668             DATE 20APR90               *
+      *                 E21256             DATE 26FEB90               *
+      *                 E21105             DATE 12FEB90               *
+      *                 E21034             DATE 06FEB90               *
+      *                 S01232             DATE 28NOV89               *
+      *                 E20380             DATE 28NOV89               *
+      *                 E14496             DATE 02NOV89               *
+      *                 E19635             DATE 20SEP89               *
+      *                 E17303             DATE 15MAR89               *
+      *                 E15823             DATE 21OCT88               *
+      *                 E14053             DATE 17SEP88               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSE071 - Multiple Holidays Re Securities                     *
+      *  229857 - Calculate the correct NMAT and FMAT for divisor     *
+      *           basis 1 and 2. Applied fix 188723.                  *
+      *  226570 - Calculate fraction of year to maturity from         *
+      *           valuation date to anniversary of maturity date.     *
+      *  211407 - Amend to call ZLCD1 and ZNCD1 in getting the PERIOD *
+      *           and WBENCD for NNX positions & transactions.        *
+      *  207543 - CEU018 NOT WORKING ON A PRICE BASIS, MISSING A PART *
+      *           OF AUS047.                                          *
+      *  194370 - For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  CSE035 - NX/NNX Coupon Paytment Processing.                  *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG                *
+      *  182750 - Amend this date routine to also initialise century  *
+      *           field correctly for dates after 31/12/2199          *
+      *           Note: This fix was done as part of DBA04 packaging  *
+      *           so all objects that use it were recompiled as part  *
+      *           of the packaging process. Therefore this fix number *
+      *           does not appear in the headerboxes of those objects.*
+      *  140272 - Correct calculation of period since last coupon if  *
+      *           divisor basis 1.                                    *
+      *  137802 - Correct calculation of coupon period if divisor     *
+      *           basis 1.                                            *
+      *  084704 - For DYBS=3 and DVBS=2, should use actual no. of days*
+      *  083039 - Error indicator added to call to ZYIELD             *
+      *           Applied GEMS 076187                                 *
+      *  059110 - Last Coupon Date should be calculated and not taken *
+      *           off the security file                               *
+      *  088047 - For CD yield should use the last coupon date as     *
+      *           start date.                                         *
+      *  064575 - Apply Gems fix 047976: Error in array index.        *
+      *  E39495 - Long term CD yield to price calculation is now      *
+      *           done outside PL1 program ZYIELD by new subroutine   *
+      *           ZCALCD                                              *
+      *           Note: Fields ZNOML, SCUMEX must be set up outside   *
+      *           ZYLD                                                *
+      *  E47922 - Ex-Coupon yields incorrect if last coupon period    *
+      *  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+      *         - New Zealand Bond formula added.                     *
+      *  E21668 - Next Coupon Date should be after Value Date.        *
+      *  E21256 - DEFINE SCUMEX CORRECTLY.                            *
+      *  E21105 - INCOMPLETE KEY USED TO PICK UP REDEMPTION PRICE     *
+      *  E21034 - ERROR FIX FOR HANDLING MATURITIES AFTER 2099.       *
+      *           ALSO RENAME WORK96 TO WRK159 TO AVOID CONFUSION     *
+      *           (THIS HAS NOT BEEN COMMENTED OUT, SIMPLY A SUBSTI-  *
+      *           TUTION MADE).                                       *
+      *           ALSO FORCED ECD PARAMETER FOR ZNCD IN CASE          *
+      *           IT IS NOT DONE IN THE CALLING PROGRAM.              *
+      *  S01232 - ADD AUSTRALIAN YIELD CALCULATION METHODS. ALSO      *
+      *           CORRECTED SOME FURTHER PROBLEMS WITH DIV BASIS 5.   *
+      *  E20380 - MORE ERRORS IN DIVISOR BASIS 5.                     *
+      *  E19635 - ERRORS IN CALCULATING PARAMETER VALUES FOR DIVISOR  *
+      *           BASIS 5.                                            *
+      *  E14496 - CHANGE TO ZDYYR FOR DIV BASIS 5 - OUTPUT            *
+      *           THEORETICAL LAST COUPON DATE.                       *
+      *  E17303 - FIELD 'MTYDTE' NOT CORRECTLY SET UP                 *
+      *  E15823 - INCREASE YIELD ACCURACY BY ENLARGING FIELDS         *
+      *  E14053 - SEMI-ANNUAL INDICATOR IS NOT BEING SET PRIOR TO     *
+      *           CALL OF ZYIELD.                                     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Inputs:     CTYPE, calculation type ('O' = Yield)            *
+      *                                      ('I' = Price)            *
+      *              PPARM, price value for yield calculation         *
+      *              YPARM, yield value for price calculation         *
+      *              VDATE, valuation date (MIDAS day number)         *
+      *                                                               *
+      *  Calls:      ZDAYS                                            *
+      *              ZDYYR                                            *
+      *              ZLCD                                             *
+      *              ZNCD                                             *
+      *              ZDATE1                                           *
+      *              ZDATE2                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZYLD      BEGSR                           ** ZYLD   *
+     C**
+     C*****PARAMETER*LIST*FOR*ZYIELD*ROUTINE***************************                       CPK015
+     C********** YPARMS    PLIST                                                              CPK015
+     C**********           PARM           ZPARMS                                              CPK015
+     C**
+     C**  KEY LIST FOR ACCESSING SEDEVED
+     C           SEDKY     KLIST
+     C                     KFLD           SESN
+     C                     KFLD           MATY                            E21105
+     C**
+     C**  SET ERROR INDICATOR TO BLANK
+     C                     MOVE *BLANK    ERRIND
+     C**                                                                  E21034
+     C****STORE*ECD*TO*PREVENT*CORRUPTION*-*SET*ECD*TO*VALUE*DATE* E21034 E21668
+     C**  STORE ECD TO PREVENT CORRUPTION - SET ECD TO VALUE DATE +1      E21034
+     C                     Z-ADDECD       WECD    50                      E21034
+     C***********          Z-ADDVDATE     ECD                      E21034 E21668
+     C           VDATE     ADD  1         ECD                             E21668
+     C**
+     C**  PRICE/YIELD INDICATOR & PRICE / YIELD VALUE
+     C           CTYPE     IFEQ 'O'
+     C                     MOVE 'Y'       PRCYLD
+     C                     Z-ADDPPARM     PRICEC
+     C                     Z-ADD*ZERO     YIELDC
+     C                     ELSE
+     C           CTYPE     IFEQ 'I'
+     C                     MOVE 'P'       PRCYLD
+     C                     Z-ADDYPARM     YIELDC
+     C                     Z-ADD*ZERO     PRICEC
+     C                     ELSE
+     C                     MOVE '1'       *IN99
+     C                     GOTO ZYEND1
+     C                     END
+     C                     END
+     C**
+     C**  YIELD CALCULATION METHOD
+     C                     MOVE SYBS      METHOD
+     C**
+     C**  COUPONS PER YEAR
+     C                     Z-ADD1         I       20
+     C                     Z-ADD*ZERO     CPYEAR
+     C                     MOVE 'N'       CDLAST  1                       064575
+     C***********CD,I      DOWNE*ZERO                                     064575
+     C***********I         ANDLT13                                        064575
+     C           I         DOWLT13                                        064575
+     C           CDLAST    ANDNE'Y'                                       064575
+     C           CD,I      IFNE *ZERO                                     064575
+     C           CR,I      IFEQ 'C'
+     C           CR,I      OREQ 'P'
+     C                     ADD  1         CPYEAR
+     C                     END
+     C                     ADD  1         I
+     C                     ELSE                                           064575
+     C                     MOVE 'Y'       CDLAST                          064575
+     C                     END
+     C                     END                                            064575
+     C**                                                                  E14053
+     C**  SET SEMI ANNUAL INDICATOR. IF COUPONS PER YEAR GT 1 THEN        E14053
+     C**    SET EQUAL TO 'Y' ELSE SET EQUAL TO 'N'                        E14053
+     C           CPYEAR    IFGT 1                                         E14053
+     C                     MOVE 'Y'       SEMANN                          E14053
+     C                     ELSE                                           E14053
+     C                     MOVE 'N'       SEMANN                          E14053
+     C                     END                                            E14053
+     C**                                                                  S01232
+     C**  INITIALISE (AUSTRALIAN) SHORT LAST COUPON FIELDS                S01232
+     C**                                                                  S01232
+     C                     Z-ADD0         DSFCTM                          S01232
+     C                     Z-ADD0         DYSTNC                          S01232
+     C**
+     C**  YEARS UNTIL PAYMENT (PAYYRS), WHOLE YEARS TO MATURITY (NMAT)
+     C**  & FRACTIONAL YEAR TO MATURITY (FMAT)
+     C**
+     C                     Z-ADDVDATE     ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    #DDAYS  50
+     C                     EXSR ZNCD
+      *                                                                                       194370
+      ** Reset control date to FCPN if FCPN > VDATE (valuation date)                          194370
+      ** and DVBS = '5'.                                                                      194370
+      *                                                                                       194370
+     C           DVBS      IFEQ '5'                                                           194370
+     C           FCPN      ANDGTVDATE                                                         194370
+     C                     Z-ADDECD       @WECD   50                                          194370
+     C                     Z-ADDFCPN      ECD                                                 194370
+     C                     END                                                                194370
+      *                                                                                       194370
+     C                     Z-ADD0         WSNCD   50                                          226570
+     C           NCD       IFEQ MATY                                                          226570
+     C           CRDS      ANDEQ*BLANKS                                                       226570
+     C           DVBS      ANDEQ'3'                                                           226570
+      *                                                                                       226570
+      ** Save original NCD value.                                                             226570
+      *                                                                                       226570
+     C                     Z-ADDNCD       WSNCD                                               226570
+      *                                                                                       226570
+     C                     Z-ADDVDATE     ZDAYNO                                              226570
+     C                     EXSR ZDATE2                                                        226570
+      *                                                                                       226570
+      ** Set correct century on value date.                                                   226570
+      *                                                                                       226570
+     C           VDATE     IFLT 10228                                                         226570
+     C                     MOVE '19'      ZCENT                                               226570
+     C                     ELSE                                                               226570
+     C           VDATE     IFLT 46753                                                         226570
+     C                     MOVE '20'      ZCENT                                               226570
+     C                     ELSE                                                               226570
+     C           VDATE     IFLT 83278                                                         226570
+     C                     MOVE '21'      ZCENT                                               226570
+     C                     ELSE                                                               226570
+     C                     MOVE '22'      ZCENT                                               226570
+     C                     ENDIF                                                              226570
+     C                     ENDIF                                                              226570
+     C                     ENDIF                                                              226570
+     C                     Z-ADDWRKYMD    HLDDTE                                              226570
+      *                                                                                       226570
+     C                     Z-ADDMATY      ZDAYNO                                              226570
+     C                     EXSR ZDATE2                                                        226570
+      *                                                                                       226570
+      ** Set correct century on maturity date.                                                226570
+      *                                                                                       226570
+     C           MATY      IFLT 10228                                                         226570
+     C                     MOVE '19'      ZCENT                                               226570
+     C                     ELSE                                                               226570
+     C           MATY      IFLT 46753                                                         226570
+     C                     MOVE '20'      ZCENT                                               226570
+     C                     ELSE                                                               226570
+     C           MATY      IFLT 83278                                                         226570
+     C                     MOVE '21'      ZCENT                                               226570
+     C                     ELSE                                                               226570
+     C                     MOVE '22'      ZCENT                                               226570
+     C                     ENDIF                                                              226570
+     C                     ENDIF                                                              226570
+     C                     ENDIF                                                              226570
+     C                     Z-ADDWRKYMD    MTYDTE                                              226570
+      *                                                                                       226570
+     C           MTYDTE    SUB  HLDDTE    WORK70                                              226570
+     C           WORK70    DIV  10000     NMAT                                                226570
+     C           NMAT      IFGE 1                                                             226570
+     C           NMAT      MULT 10000     WORK70                                              226570
+     C                     SUB  WORK70    MTYDTE                                              226570
+     C                     MOVELMTYDTE    WORK40                                              226570
+     C                     MOVE WORK40    WORKYR                                              226570
+     C                     MOVE MTYDTE    WORK40                                              226570
+     C   98                MOVELWORK40    ZDATE                                               226570
+     C  N98                MOVE WORK40    WORK20                                              226570
+     C  N98                MOVE WORK40    ZDATE                                               226570
+     C  N98                MOVELWORK20    ZDATE                                               226570
+     C                     MOVE WORKYR    ZDATE                                               226570
+     C                     EXSR ZDATE1                                                        226570
+     C                     Z-ADDZDAYNO    NCD                                                 226570
+     C                     ENDIF                                                              226570
+     C                     ENDIF                                                              226570
+      *                                                                                       226570
+     C                     EXSR ZDYYR
+      *                                                                                       194370
+      ** Restore back ECD.                                                                    194370
+      *                                                                                       194370
+     C           DVBS      IFEQ '5'                                                           194370
+     C           FCPN      ANDGTVDATE                                                         194370
+     C                     Z-ADD@WECD     ECD                                                 194370
+     C                     END                                                                194370
+      *                                                                                       226570
+      ** Restore original NCD if value has changed.                                           226570
+      *                                                                                       226570
+     C           WSNCD     IFNE 0                                                             226570
+     C                     Z-ADDWSNCD     NCD                                                 226570
+     C                     ENDIF                                                              226570
+     C**
+     C**   Day and divisor basis both 1 or both 2
+     C**
+     C********** DYBS      IFEQ '1'                                                           229857
+     C********** DVBS      ANDEQ'1'                                                           229857
+     C********** DYBS      OREQ '2'                                                           229857
+     C********** DVBS      ANDEQ'2'                                                           229857
+     C           DVBS      IFEQ '1'                                                           229857
+     C           DVBS      OREQ '2'                                                           229857
+     C           DYBS      OREQ '3'                                       084704
+     C           DVBS      ANDEQ'2'                                       084704
+     C           #DDAYS    DIV  ZINTDD    NMAT
+     C***********#DDAYS    DIV  ZINTDD    WORK96  96                      E15823
+     C           #DDAYS    DIV  ZINTDD    WRK159 159                      E15823
+     C           WRK159    SUB  NMAT      FMAT
+     C                     ELSE
+     C**
+     C**   Other day/divisor bases except Divisor basis 5
+     C**
+     C           DVBS      IFNE '5'
+     C           CPYEAR    OREQ *ZERO
+     C                     Z-ADDVDATE     ZDAYNO
+     C                     EXSR ZDATE2
+     C*                                                                   E21034
+     C*        Set correct century on value date                          E21034
+     C*                                                                   E21034
+     C           VDATE     IFLT 10228                                     E21034
+     C                     MOVE '19'      ZCENT                           E21034
+     C                     ELSE                                           E21034
+     C           VDATE     IFLT 46753                                     E21034
+     C                     MOVE '20'      ZCENT                           E21034
+     C                     ELSE                                           E21034
+     C           VDATE     IFLT 83278                                     182750
+     C                     MOVE '21'      ZCENT                           E21034
+     C                     ELSE                                           182750
+     C                     MOVE '22'      ZCENT                           182750
+     C                     END                                            182750
+     C                     END                                            E21034
+     C                     END                                            E21034
+     C***********          Z-ADDWRKYMD    HLDDTE  60                      E21034
+     C                     Z-ADDWRKYMD    HLDDTE  80                      E21034
+     C*                                                                   E21034
+     C                     Z-ADDMATY      ZDAYNO
+     C                     EXSR ZDATE2
+     C*                                                                   E21034
+     C*        Set correct century on maturity date                       E21034
+     C*                                                                   E21034
+     C           MATY      IFLT 10228                                     E21034
+     C                     MOVE '19'      ZCENT                           E21034
+     C                     ELSE                                           E21034
+     C           MATY      IFLT 46753                                     E21034
+     C                     MOVE '20'      ZCENT                           E21034
+     C                     ELSE                                           E21034
+     C           MATY      IFLT 83278                                     182750
+     C                     MOVE '21'      ZCENT                           E21034
+     C                     ELSE                                           182750
+     C                     MOVE '22'      ZCENT                           182750
+     C                     END                                            182750
+     C                     END                                            E21034
+     C                     END                                            E21034
+     C***********          Z-ADDWRKYMD    MTYDTE  60                      E21034
+     C                     Z-ADDWRKYMD    MTYDTE  80                      E21034
+     C***********          Z-ADDZDAY      MTDD                            E21034
+     C***********          Z-ADDZMTH      MTMM                            E21034
+     C           MTYDTE    SUB  HLDDTE    WORK70  70
+     C           WORK70    DIV  10000     NMAT
+     C           NMAT      MULT 10000     WORK70
+     C**********           ADD  WORK70    HLDDTE                                              226570
+     C                     SUB  WORK70    MTYDTE                                              226570
+     C***********          MOVELHLDDTE    WORKYR  20                      E21034
+     C**********           MOVELHLDDTE    WORK40                                       E21034 226570
+     C                     MOVELMTYDTE    WORK40                                              226570
+     C                     MOVE WORK40    WORKYR  20                      E21034
+     C**********           MOVE HLDDTE    WORK40  40                                          226570
+     C                     MOVE MTYDTE    WORK40  40                                          226570
+     C   98                MOVELWORK40    ZDATE
+     C  N98                MOVE WORK40    WORK20  20
+     C  N98                MOVE WORK40    ZDATE
+     C  N98                MOVELWORK20    ZDATE
+     C                     MOVE WORKYR    ZDATE
+     C                     EXSR ZDATE1
+     C**********           Z-ADDZDAYNO    ZSDATE                                              226570
+     C**********           Z-ADDMATY      ZEDATE                                              226570
+     C                     Z-ADDZDAYNO    ZEDATE                                              226570
+     C                     Z-ADDVDATE     ZSDATE                                              226570
+     C                     EXSR ZDAYS
+     C           ZDDAYS    DIV  ZINTDD    FMAT
+     C                     ELSE
+     C**                                                                  E20380
+     C**   All day bases when Divisor basis  = 5                          E20380
+     C**                                                                  E20380
+     C**      Reverse security events array if date format is DDMM        E20380
+     C**                                                                  E20380
+     C           *IN98     IFEQ '0'                                       E20380
+     C                     DO   12        I                               E20380
+     C                     MOVE CD,I      WORK20                          E20380
+     C                     MOVELWORK20    WORK40                          E20380
+     C                     MOVELCD,I      WORK20                          E20380
+     C                     MOVE WORK20    WORK40                          E20380
+     C                     MOVE WORK40    CD,I                            E20380
+     C                     END                                            E20380
+     C                     END                                            E20380
+     C**                                                                  E20380
+     C**      Fraction of year till next coupon                           E20380
+     C**                                                                  E20380
+     C           NCD       SUB  VDATE     DYSNCP  50
+     C           DYSNCP    DIV  ZINTDD    FMAT
+     C**                                                                  E20380
+     C**      Whole years from NCD to year of maturity                    E20380
+     C**                                                                  E20380
+     C                     Z-ADDNCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C*                                                                   E21034
+     C*          Set correct century on Next Coupon Date                  E21034
+     C*                                                                   E21034
+     C           NCD       IFLT 10228                                     E21034
+     C                     MOVE '19'      ZCENT                           E21034
+     C                     ELSE                                           E21034
+     C           NCD       IFLT 46753                                     E21034
+     C                     MOVE '20'      ZCENT                           E21034
+     C                     ELSE                                           E21034
+     C           NCD       IFLT 83278                                     182750
+     C                     MOVE '21'      ZCENT                           E21034
+     C                     ELSE                                           182750
+     C                     MOVE '22'      ZCENT                           182750
+     C                     END                                            182750
+     C                     END                                            E21034
+     C                     END                                            E21034
+     C                     Z-ADDWRKYMD    HLDDTE
+     C                     Z-ADDZDAY      NCDD
+     C                     Z-ADDZMTH      NCMM
+     C                     Z-ADDMATY      ZDAYNO                          E17303
+     C                     EXSR ZDATE2                                    E17303
+     C*                                                                   E21034
+     C*          Set correct century on Maturity Date                     E21034
+     C*                                                                   E21034
+     C           MATY      IFLT 10228                                     E21034
+     C                     MOVE '19'      ZCENT                           E21034
+     C                     ELSE                                           E21034
+     C           MATY      IFLT 46753                                     E21034
+     C                     MOVE '20'      ZCENT                           E21034
+     C                     ELSE                                           E21034
+     C           MATY      IFLT 83278                                     182750
+     C                     MOVE '21'      ZCENT                           E21034
+     C                     ELSE                                           182750
+     C                     MOVE '22'      ZCENT                           182750
+     C                     END                                            182750
+     C                     END                                            E21034
+     C                     END                                            E21034
+     C                     Z-ADDWRKYMD    MTYDTE                          E17303
+     C                     MOVE MTYDTE    MATMD                           E20380
+     C           MTYDTE    SUB  HLDDTE    WORK70
+     C           WORK70    DIV  10000     NMAT
+     C**
+     C**     Whole coupon periods from NCD till final one on array
+     C**
+     C                     Z-ADD*ZERO     CB4MAT                          E47922
+     C           NCD       IFNE MATY                                      E20380
+     C*                                                                   E20380
+     C                     Z-ADD1         I                               E20380
+     C                     MOVE 'N'       CRLAST  1                       064575
+     C           I         DOWLT13                                        064575
+     C           CRLAST    ANDNE'Y'                                       064575
+     C***********CR,I      DOWNE'C'                                E20380 064575
+     C***********CR,I      ANDNE'P'                                E20380 064575
+     C***********I         ANDLT13                                 E20380 064575
+     C           CR,I      IFNE 'C'                                       064575
+     C           CR,I      ANDNE'P'                                       064575
+     C                     ADD  1         I                               E20380
+     C                     ELSE                                           064575
+     C                     MOVE 'Y'       CRLAST                          064575
+     C                     END                                            E20380
+     C                     END                                            064575
+     C                     Z-ADDI         ZFSCPN  20                      E20380
+     C*                                                                   E20380
+     C                     Z-ADD12        I                               E20380
+     C                     MOVE 'N'       CRLAST                          064575
+     C           I         DOWNE*ZERO                                     064575
+     C           CRLAST    ANDNE'Y'                                       064575
+     C***********CR,I      DOWNE'C'                                E20380 064575
+     C           CR,I      IFNE 'C'                                       064575
+     C           CR,I      ANDNE'P'                                       E20380
+     C***********I         ANDGE1                                  E20380 064575
+     C                     SUB  1         I                               E20380
+     C                     ELSE                                           064575
+     C                     MOVE 'Y'       CRLAST                          064575
+     C                     END                                            E20380
+     C                     END                                            064575
+     C                     Z-ADDI         ZLSCPN  20                      E20380
+     C*                                                                   E20380
+     C                     MOVE '0'       ZNCFND  1                       E20380
+     C                     Z-ADDZFSCPN    I                               E20380
+     C           ZNCFND    DOWEQ'0'                                       E20380
+     C           I         ANDLT13                                        E20380
+     C           NCMDD     IFEQ CD,I                                      E20380
+     C           CR,I      IFEQ 'C'                                       E20380
+     C           CR,I      OREQ 'P'                                       E20380
+     C                     MOVE '1'       ZNCFND                          E20380
+     C                     ELSE                                           E20380
+     C                     ADD  1         I                               E20380
+     C                     END                                            E20380
+     C                     ELSE                                           E20380
+     C                     ADD  1         I                               E20380
+     C                     END                                            E20380
+     C                     END                                            E20380
+     C                     Z-SUB1         CB4MAT  30                      E20380
+     C*                                                                   E20380
+     C           HLDDTE    DOWLEMTYDTE                                    E20380
+     C                     ADD  1         CB4MAT                          E20380
+     C           I         IFGE ZLSCPN                                    E20380
+     C                     Z-ADDZFSCPN    I                               E20380
+     C                     ADD  10000     HLDDTE                          E20380
+     C                     ELSE                                           E20380
+     C                     ADD  1         I                               E20380
+     C           CR,I      DOWNE'C'                                       E20380
+     C           CR,I      ANDNE'P'                                       E20380
+     C                     ADD  1         I                               E20380
+     C                     END                                            E20380
+     C                     END                                            E20380
+     C                     MOVE CD,I      HLDDTE                          E20380
+     C                     END                                            E20380
+     C**                                                                  E20380
+     C**                                                                  E20380
+     C********************************************************************E20380
+     C*******              Z-ADD*ZERO     CB4MAT  30                      E20380
+     C*******              Z-ADD1         I                               E20380
+     C*******    CD,I      DOWNE*ZERO                                     E20380
+     C*******    I         ANDLT13                                        E20380
+     C*******    CR,I      IFEQ 'C'                                       E20380
+     C*******    CR,I      OREQ 'P'                                       E20380
+     C*******    NCDDM     IFGT CD,I                                      E20380
+     C*******              ADD  1         CB4MAT                          E20380
+     C*******              END                                            E20380
+     C*******              END                                            E20380
+     C*******              ADD  1         I                               E20380
+     C*******              END                                            E20380
+     C*******    NMAT      MULT CPYEAR    WORK30                          E20380
+     C*******              ADD  WORK30    CB4MAT                          E20380
+     C*******              Z-ADD1         I                               E20380
+     C*******    CD,I      DOWNE*ZERO                                     E20380
+     C*******    I         ANDLT13                                        E20380
+     C*******    CR,I      IFEQ 'C'                                       E20380
+     C*******    CR,I      OREQ 'P'                                       E20380
+     C*******    MATDM     IFLT CD,I                                      E20380
+     C*******              ADD  1         CB4MAT                          E20380
+     C*******              END                                            E20380
+     C*******              END                                            E20380
+     C*******              ADD  1         I                               E20380
+     C*******              END                                            E20380
+     C********************************************************************E20380
+     C*
+     C           CB4MAT    DIV  CPYEAR    WRK159
+     C                     Z-ADDWRK159    WRK99   99                      E19635
+     C*+*****************  ADD  WRK159    FMAT                            E19635
+     C                     ADD  WRK99     FMAT                            E19635
+     C*
+     C********************************************************************E20380
+     C*******                                                             E20380
+     C*******              Z-ADD1         I                               E20380
+     C*******    CD,I      DOWNE*ZERO                                     E20380
+     C*******              ADD  1         I                               E20380
+     C*******              END                                            E20380
+     C*******              SUB  1         I                               E20380
+     C********************************************************************E20380
+     C*                                                                   E20380
+     C*                                                                   E20380
+     C**    Find if there is a short last coupon and if there is, add     E20380
+     C**    these days to FMAT. (If Mat date NE normal coupon date then   E20380
+     C**    ZLCD will return last normal coupon date.) Must also store    E20380
+     C**    current values of ZECD and ZZLCD to reset after use.          E20380
+     C**    (As array is already in MMDD form - force IN98 to 1 for the   E20380
+     C**     call to ZLCD).                                               E20380
+     C**                                                                  E20380
+     C                     Z-ADDZECD      ZWECD   50                      E20380
+     C                     Z-ADDMATY      ZECD                            E20380
+     C                     Z-ADDZZLCD     ZWLCD   50                      E20380
+     C                     MOVE *IN98     ZIN98   1                       E20380
+     C                     SETON                     98                   E20380
+     C                     EXSR ZLCD                                      E20380
+     C                     MOVE ZIN98     *IN98                           E20380
+     C           ZZLCD     IFNE MATY                                      E20380
+     C**                                                                  E20380
+     C********************************************************************E20380
+     C***98********        MOVE CD,I      WORK20                          E20380
+     C***98********        MOVE CD,I      ZDATE                           E20380
+     C***98********        MOVELWORK20    ZDATE                           E20380
+     C**N98********        MOVELCD,I      ZDATE                           E20380
+     C*************        MOVE MTYDTE    WORKYR                          E20380
+     C*************                                                       E20380
+     C*************        EXSR ZDATE1                                    E20380
+     C*************        Z-ADDZDAYNO    ZSDATE                          E20380
+     C*************        Z-ADDMTYDTE    ZEDATE                          E20380
+     C*************        EXSR ZDAYS                                     E20380
+     C********************************************************************E20380
+     C*                                                                   E20380
+     C           MATY      SUB  ZZLCD     ZDDAYS                          E20380
+     C           ZDDAYS    DIV  ZINTDD    WRK159
+     C                     Z-ADDWRK159    WRK99                           E19635
+     C*****************    ADD  WRK159    FMAT                            E19635
+     C                     ADD  WRK99     FMAT                            E19635
+     C*                                                                   S01232
+     C*      Also set up parameters for short last coupon for Australian  S01232
+     C*      yields: days from coupon to maturity and from penultimate    S01232
+     C*      coupon to next coupon according to array.                    S01232
+     C*                                                                   S01232
+     C           SYBS      IFEQ 'AU'                                      S01232
+     C                     Z-ADDZDDAYS    DSFCTM                          S01232
+     C*                                                                   S01232
+     C***********          MOVELMTYDTE    WORKYR                    S01232E21034
+     C                     MOVELMTYDTE    WORK40                          E21034
+     C                     MOVE WORK40    WORKYR                          E21034
+     C*                                                                   S01232
+     C*            Find next coupon                                       S01232
+     C*                                                                   S01232
+     C                     MOVE '0'       ZNCFND                          S01232
+     C                     Z-ADD1         I                               S01232
+     C           ZNCFND    DOWEQ'0'                                       S01232
+     C           I         ANDLT13                                        S01232
+     C           CD,I      IFGT MATMD                                     S01232
+     C           CR,I      IFEQ 'P'                                       S01232
+     C           CR,I      OREQ 'C'                                       S01232
+     C                     MOVE WORKYR    ZDATE                           S01232
+     C                     MOVELCD,I      ZDATE                           S01232
+     C                     MOVE '1'       ZNCFND                          S01232
+     C                     ELSE                                           S01232
+     C                     ADD  1         I                               S01232
+     C                     END                                            S01232
+     C                     ELSE                                           S01232
+     C                     ADD  1         I                               S01232
+     C                     END                                            S01232
+     C                     END                                            S01232
+     C*                                                                   S01232
+     C*            If next coupon not found then use 1st coupon next year S01232
+     C*                                                                   S01232
+     C           ZNCFND    IFEQ '0'                                       S01232
+     C                     Z-ADD1         I                               S01232
+     C           ZNCFND    DOWEQ'0'                                       S01232
+     C           CR,I      IFEQ 'P'                                       S01232
+     C           CR,I      OREQ 'C'                                       S01232
+     C                     MOVE WORKYR    ZDATE                           S01232
+     C                     ADD  1         ZDATE                           S01232
+     C                     MOVELCD,I      ZDATE                           S01232
+     C                     MOVE '1'       ZNCFND                          S01232
+     C                     ELSE                                           S01232
+     C                     ADD  1         I                               S01232
+     C                     END                                            S01232
+     C                     END                                            S01232
+     C                     END                                            S01232
+     C*                                                                   S01232
+     C*                                                                   S01232
+     C*            Convert hypothetical NCD to day number using ZDATE1    S01232
+     C*                                                                   S01232
+     C           *IN98     IFEQ '0'                                       S01232
+     C                     MOVE ZDATE     WORK40                          S01232
+     C                     MOVELZDATE     WORK20                          S01232
+     C                     MOVE WORK20    WORK40                          S01232
+     C                     MOVELWORK40    ZDATE                           S01232
+     C                     END                                            S01232
+     C*                                                                   S01232
+     C*            Calculate days from LCD to hypothetical NCD            S01232
+     C*                                                                   S01232
+     C                     EXSR ZDATE1                                    S01232
+     C           ZDAYNO    SUB  ZZLCD     DYSTNC                          S01232
+     C*                                                                   S01232
+     C                     END                                            S01232
+     C                     END                                            S01232
+     C                     END
+     C**                                                                  E20380
+     C**      Revert security events array if date format is DDMM         E20380
+     C**      and revert LCD.                                             E20380
+     C**                                                                  E20380
+     C           *IN98     IFEQ '0'                                       E20380
+     C                     DO   12        I                               E20380
+     C                     MOVE CD,I      WORK20                          E20380
+     C                     MOVELWORK20    WORK40                          E20380
+     C                     MOVELCD,I      WORK20                          E20380
+     C                     MOVE WORK20    WORK40                          E20380
+     C                     MOVE WORK40    CD,I                            E20380
+     C                     END                                            E20380
+     C                     END                                            E20380
+     C                     Z-ADDZWLCD     ZZLCD                           E20380
+     C                     Z-ADDZWECD     ZECD                            E20380
+     C*                                                                   E20380
+     C                     END
+     C                     END
+     C**
+     C**  ADJUST WHOLE YEARS FOR FRACTIONS OF YEARS GT 1
+     C**
+     C           FMAT      IFGE 1
+     C                     SUB  1         FMAT
+     C                     ADD  1         NMAT
+     C                     END
+     C**
+     C           NMAT      ADD  FMAT      PAYYRS
+     C**
+     C**  WHOLE COUPON PERIODS FOR MATURITY - (USED IN AUST. YIELDS)      S01232
+     C                     Z-ADDCB4MAT    CPTOMT                          S01232
+     C**
+     C**  COUPON RATE
+     C                     Z-ADDCPNR      CPRTE
+     C**
+     C**  REDEMPTION PRICE
+     C**    EVENT MUST BE ACTIVE, FOR MATURITY DATE AND OF THE RIGHT TYPE E21105
+     C**                                                                  E21105
+     C           SEDKY     SETLLSEDEVDF
+     C           SEDKY     READESEDEVDF                  90
+     C********** *IN90     IFEQ '0'                                       E21105
+     C***********SDED      ANDGEVDATE                                     E21105
+     C                     SETOF                     91                   E21105
+     C           *IN90     DOWEQ'0'                                       E21105
+     C           *IN91     ANDEQ'0'                                       E21105
+     C           RECI      IFNE '*'                                       E21105
+     C           SDET      ANDEQ'RC'                                      E21105
+     C           RECI      ORNE '*'                                       E21105
+     C           SDET      ANDEQ'RP'                                      E21105
+     C                     SETON                     91                   E21105
+     C                     Z-ADDSDRP      KPRICE
+     C                     ELSE
+     C           SEDKY     READESEDEVDF                  90               E21105
+     C                     END                                            E21105
+     C                     END                                            E21105
+     C**
+     C           *IN90     IFEQ '1'                                       E21105
+     C                     Z-ADD100       KPRICE
+     C                     END
+     C**
+     C**  YEARS FROM ISSUE TO VALUATION
+     C           SYBS      IFEQ 'C '                                      088047
+     C                     Z-ADDZECD      @ECD    50                      088047
+     C                     Z-ADDZZLCD     @LCD    50                      088047
+     C                     Z-ADDVDATE     ZECD                            088047
+     C                     EXSR ZLCD                                      088047
+     C                     Z-ADDZZLCD     ZSDATE                          088047
+     C                     Z-ADD@ECD      ZECD                            088047
+     C                     Z-ADD@LCD      ZZLCD                           088047
+     C                     ELSE                                           088047
+     C                     Z-ADDISSD      ZSDATE
+     C                     END                                            088047
+     C                     Z-ADDVDATE     ZEDATE
+     C                     EXSR ZDAYS
+     C           ZDDAYS    DIV  ZINTDD    YISVAL
+     C**
+     C**  ACCURACY
+     C                     Z-ADD9         ACCRCY
+     C**
+     C**  DAYS SINCE LAST COUPON
+     C           NCD       SUB  1         ZECD                            059110
+     C                     EXSR ZLCD                                      059110
+     C           DVBS      IFNE '5'                                       E14496
+     C           DYBS      IFEQ '1'                                       140272
+     C                     Z-ADDZZLCD     ZSDATE                          140272
+     C                     Z-ADDVDATE     ZEDATE                          140272
+     C                     EXSR ZDAYS                                     140272
+     C                     Z-ADDZDDAYS    DYLSTC                          140272
+     C                     ELSE                                           140272
+     C***********VDATE     SUB  LCPN      DYLSTC                          059110
+     C           VDATE     SUB  ZZLCD     DYLSTC                          059110
+     C                     ENDIF                                          140272
+     C                     ELSE                                           E14496
+     C           VDATE     SUB  LCDD5     DYLSTC                          E14496
+     C                     END                                            E14496
+     C**
+     C**  PERIOD BETWEEN COUPONS
+     C************         EXSR ZNCD                                      E20380
+     C           DVBS      IFNE '5'                                       E14496
+     C***********NCD       SUB  LCPN      PERIOD                          059110
+     C*                                                                   137802
+     C           DVBS      IFEQ '1'                                       137802
+     C           CPYEAR    ANDNE*ZERO                                     137802
+     C                     EXSR ZDYYR                                     137802
+     C           ZINTDD    DIV  CPYEAR    PERIOD                          137802
+     C                     ELSE                                           137802
+     C           NCD       SUB  ZZLCD     PERIOD                          059110
+     C                     ENDIF                                          137802
+     C                     ELSE                                           E14496
+     C           NCD       SUB  LCDD5     PERIOD                          E14496
+     C                     END                                            E14496
+     C**
+     C**  DAYS UNTIL PAYMENT
+     C                     Z-ADDVDATE     ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    PAYDYS
+     C**
+     C**  VALUATION DATE
+     C                     Z-ADDVDATE     VALDTE
+     C**
+     C**  NEXT COUPON DATE
+     C                     Z-ADDNCD       NCPDTE
+     C**
+     C**  MATURITY DATE
+     C                     Z-ADDMATY      MATDTE
+     C**                                                                  S01232
+     C**  CUM OR EX COUPON FORMULA (FOR AUSTRALIAN METHODS)               S01232
+     C**                                                                  S01232
+     C                     MOVE SCUMEX    CUMEXF                          S01232
+     C********             MOVE ' '       SCUMEX  1                S01232 E21256
+     C                     MOVE SCUMEX    SCUMEX  1                       E21256
+     C**                                                                  S01232
+     C**  PURCHASED INTEREST (NEEDED FOR AUSTRALIAN METHODS AND           S01232
+     C**   CALCULATED IN CALLING PROGRAM) COPIED TO PARAMETER FIELD       S01232
+     C**                                                                  S01232
+      *                                                                   207543
+     C                     MOVE CEU018    CEU018  1                       207543
+     C           CEU018    IFEQ 'Y'                                       207543
+      *                                                                   207543
+     C           5         ADD  NMDP      I                               207543
+     C           WRKPI     MULT POWER8,I  WRKPI                           207543
+     C                     Z-ADDWRKPI     PURINT                          207543
+      *                                                                   207543
+     C                     ELSE                                           207543
+      *                                                                   207543
+     C           5         SUB  NCDP      I                               S01232
+     C           WRKPI     MULT POWER8,I  WRKPI                           S01232
+     C           WRKPI     MULT 100       PURINT                          S01232
+      *                                                                   207543
+     C                     END                                            207543
+      *                                                                   S01397
+      ***  Compound Frequency.                                            S01397
+      *                                                                   S01397
+     C                     Z-ADDCMFQ      COMFRQ                          S01397
+      *                                                                   S01397
+      ***  Discount Last Coupon.                                          S01397
+      *                                                                   S01397
+     C                     MOVELDSLC      DLCOUP                          S01397
+      *                                                                   S01397
+      ***  Discount Basis.                                                S01397
+      *                                                                   S01397
+     C                     MOVELDSCB      DSCBSS                          S01397
+     C**                                                                  S01232
+     C**  DEFINE FIELDS                                                   S01232
+     C                     Z-ADDWRKPI     WRKPI  159                      S01232
+     C                     Z-ADDNCDP      NCDP    10                      S01232
+     C*                                                                   E39495
+      ** FOR NX & NNX PROCESSING                                                              CSE035
+      *                                                                                       CSE035
+     C           CSE035    IFEQ 'Y'                                                           CSE035
+      *                                                                                       CSE035
+     C                     Z-ADD*ZEROS    ISSDTE                                              CSE035
+     C                     Z-ADD*ZEROS    WBENCD                                              CSE035
+     C           SCUMEX    IFEQ 'N'                                                           CSE035
+     C                     Z-ADDITLD      ISSDTE                                              CSE035
+     C                     ELSE                                                               CSE035
+     C           SCUMEX    IFEQ 'D'                                                           CSE035
+     C                     Z-ADDECD       SECD    50                                          CSE035
+     C                     Z-ADDNCDD5     SNCDD5  50                                          CSE035
+     C                     Z-ADDLCDD5     SLCDD5  50                                          CSE035
+     C                     Z-ADDITLD      ECD                                                 CSE035
+      *                                                                                       CSE035
+      **CALL*ZLCD*+*ZNCD*TO*DETERMINE*NEXT*AND*LAST*COUPON*DATES****                   CSE035 211407
+     C* Call ZLCD1 + ZNCD1 to determine LAST and NEXT COUPON DATES with                       211407
+     C* respect to issue date (i.e. LOGICAL dates as if the security is                       211407
+     C* normal.                                                                               211407
+      *                                                                                       CSE035
+     C                     Z-ADDNCD       @NCD    50                                          CSE035
+     C***********          EXSR ZNCD                                                   CSE035 211407
+     C***********          Z-ADDNCD       NCDD5   50                                   CSE035 211407
+      *                                                                                       211407
+      ** Setup BJDFIN in case SDBANKPD not read                                               211407
+     C           BJDFIN    IFEQ ' '                                                           211407
+     C           *IN98     IFEQ *ON                                                           211407
+     C                     MOVE 'M'       BJDFIN  1                                           211407
+     C                     ELSE                                                               211407
+     C                     MOVE 'D'       BJDFIN                                              211407
+     C                     ENDIF                                                              211407
+     C                     ENDIF                                                              211407
+      *                                                                                       211407
+     C                     CALL 'ZNCD1'                                                       211407
+     C                     PARM           ITLD                                                211407
+     C                     PARM           FCPN                                                211407
+     C                     PARM           MATY                                                211407
+     C                     PARM           CDDS                                                211407
+     C                     PARM           CRDS                                                211407
+     C                     PARM           ECD                                                 211407
+     C                     PARM           BJDFIN                                              211407
+     C                     PARM           NMCY                                                211407
+     C                     PARM           SITP                                                211407
+     C                     PARM           BCNV                                                211407
+     C                     PARM           LCPN                                                211407
+      ** Effect of Holidays on Dates                                                          CSE071
+     C                     PARM           HCY1                                                CSE071
+     C                     PARM           HCY2                                                CSE071
+     C                     PARM           HCY3                                                CSE071
+     C                     PARM           HCY4                                                CSE071
+     C                     PARM           HCY5                                                CSE071
+     C                     PARM           HCY6                                                CSE071
+     C                     PARM           HCY7                                                CSE071
+     C                     PARM           HCY8                                                CSE071
+     C                     PARM           HCY9                                                CSE071
+     C                     PARM           NCD1    50                                          211407
+      *                                                                                       211407
+     C                     Z-ADDNCD1      NCDD5   50                                          211407
+     C                     Z-ADD@NCD      NCD                                                 CSE035
+     C                     Z-ADDZZLCD     @LCD    50                                          CSE035
+     C           NCDD5     SUB  1         ZECD                                                CSE035
+     C***********          EXSR ZLCD                                                   CSE035 211407
+     C***********          Z-ADDZZLCD     LCDD5   50                                   CSE035 211407
+     C                     CALL 'ZLCD1'                                                       211407
+     C*                                                                                       211407
+     C** INPUTS                                                                               211407
+     C*                                                                                       211407
+     C                     PARM           ISSD                                                211407
+     C                     PARM           ITLD                                                211407
+     C                     PARM           FCPN                                                211407
+     C                     PARM           MATY                                                211407
+     C                     PARM           CDDS                                                211407
+     C                     PARM           CRDS                                                211407
+     C                     PARM           ZECD                                                211407
+     C                     PARM           BJDFIN                                              211407
+     C                     PARM           NMCY                                                211407
+     C                     PARM           SITP                                                211407
+     C                     PARM           BCNV                                                211407
+      ** Effect of Holidays on Dates                                                          CSE071
+     C                     PARM           HCY1                                                CSE071
+     C                     PARM           HCY2                                                CSE071
+     C                     PARM           HCY3                                                CSE071
+     C                     PARM           HCY4                                                CSE071
+     C                     PARM           HCY5                                                CSE071
+     C                     PARM           HCY6                                                CSE071
+     C                     PARM           HCY7                                                CSE071
+     C                     PARM           HCY8                                                CSE071
+     C                     PARM           HCY9                                                CSE071
+     C*                                                                                       211407
+     C** OUTPUTS                                                                              211407
+     C*                                                                                       211407
+     C                     PARM           ZZLCD1  50                                          211407
+      *                                                                                       211407
+     C                     Z-ADDZZLCD1    LCDD5   50                                          211407
+     C                     Z-ADD@LCD      ZZLCD                                               CSE035
+      *                                                                                       CSE035
+     C                     Z-ADDITLD      ISSDTE                                              CSE035
+     C                     Z-ADDNCDD5     WBENCD                                              CSE035
+      *                                                                                       CSE035
+      **  ADJUST PERIOD IF VALUE DATE LESS THAN WOULD-BE COUPON DATE                          CSE035
+      *                                                                                       CSE035
+     C           VDATE     IFLT NCDD5                                                         CSE035
+     C           NCDD5     SUB  LCDD5     PERIOD                                              CSE035
+     C                     END                                                                CSE035
+     C                     Z-ADDSECD      ECD                                                 CSE035
+     C                     Z-ADDSNCDD5    NCDD5                                               CSE035
+     C                     Z-ADDSLCDD5    LCDD5                                               CSE035
+     C                     END                                                                CSE035
+     C                     END                                                                CSE035
+      *                                                                                       CSE035
+     C                     END                                                                CSE035
+     C**  If long term CD (Long term = greater than 1 year to maturity)   E39495
+     C**  calculate Purchased Interest.  Used in adjustment of price      E39495
+     C*                                                                   E39495
+     C           METHOD    IFEQ 'C '                                      E39495
+     C           NMAT      ANDGE1                                         E39495
+     C*                                                                   E39495
+     C**  Set up From/To dates according to whether Cum or Ex Coupon      E39495
+     C*                                                                   E39495
+     C           CUMEXF    IFEQ 'X'                                       E39495
+     C                     Z-ADDZFDATE    ZDCSDT                          E39495
+     C                     Z-ADDNCD       ZDCEDT                          E39495
+     C                     ELSE                                           E39495
+     C                     Z-ADDLCPN      ZDCSDT                          E39495
+     C                     Z-ADDZFDATE    ZDCEDT                          E39495
+     C                     END                                            E39495
+     C                     Z-ADDZNOML     ZAMT                            E39495
+     C*                                                                   E39495
+     C**  Calculate Interest                                              E39495
+     C*                                                                   E39495
+     C                     EXSR ZACCZ                                     E39495
+     C*                                                                   E39495
+     C**  Convert nominal at maturity to face  value                      E39495
+     C**  (ZNOML X ZPRC = ZCONS)                                          E39495
+     C*                                                                   E39495
+     C                     Z-ADD100       ZPRC                            E39495
+     C                     EXSR ZCNSD                                     E39495
+     C                     Z-ADDZCONS     ZPNPL  150                      E39495
+     C*                                                                   E39495
+     C**  Make interest figure a percentage                               E39495
+     C*                                                                   E39495
+     C           ZPNPL     IFNE *ZERO                                     E39495
+     C                     MULT 100       ZDCINT                          E39495
+     C           ZDCINT    DIV  ZPNPL     PURINT    H                     E39495
+     C                     ELSE                                           E39495
+     C                     Z-ADD*ZERO     PURINT                          E39495
+     C                     END                                            E39495
+     C                     END                                            E39495
+     C*                                                                   E39495
+     C**  If long term CD and Yield to Price conversion required,         E39495
+     C**  use subroutine ZCALCD                                           E39495
+     C*                                                                   E39495
+     C           METHOD    IFEQ 'C '                                      E39495
+     C           NMAT      ANDGE1                                         E39495
+     C           PRCYLD    ANDEQ'P'                                       E39495
+     C                     EXSR ZCALCD                                    E39495
+     C                     ELSE                                           E39495
+     C**
+     C**  ALL PARAMETERS SET UP CALL ZYIELD ROUTINE
+     C***********          CALL 'ZYIELD'  YPARMS                          083039
+     C**********           CALL 'ZYIELD'  YPARMS       99                              083039 CPK015
+     C                     CALL 'ZYIELD'               99                                     CPK015
+     C                     PARM           PRCYLD                                              CPK015
+     C                     PARM           METHOD                                              CPK015
+     C                     PARM           SEMANN                                              CPK015
+     C                     PARM           ERRIND                                              CPK015
+     C                     PARM           PRICEC                                              CPK015
+     C                     PARM           YIELDC                                              CPK015
+     C                     PARM           CPRTE                                               CPK015
+     C                     PARM           NMAT                                                CPK015
+     C                     PARM           FMAT                                                CPK015
+     C                     PARM           KPRICE                                              CPK015
+     C                     PARM           YISVAL                                              CPK015
+     C                     PARM           ACCRCY                                              CPK015
+     C                     PARM           CPYEAR                                              CPK015
+     C                     PARM           DYLSTC                                              CPK015
+     C                     PARM           PERIOD                                              CPK015
+     C                     PARM           PAYYRS                                              CPK015
+     C                     PARM           PAYDYS                                              CPK015
+     C                     PARM           VALDTE                                              CPK015
+     C                     PARM           NCPDTE                                              CPK015
+     C                     PARM           MATDTE                                              CPK015
+     C                     PARM           CPTOMT                                              CPK015
+     C                     PARM           PURINT                                              CPK015
+     C                     PARM           DSFCTM                                              CPK015
+     C                     PARM           DYSTNC                                              CPK015
+     C                     PARM           CUMEXF                                              CPK015
+     C                     PARM           COMFRQ                                              CPK015
+     C                     PARM           DSCBSS                                              CPK015
+     C                     PARM           DLCOUP                                              CPK015
+     C                     PARM           ISSDTE                                              CSE035
+     C                     PARM           WBENCD                                              CSE035
+     C                     END                                            E39495
+     C*                                                                   E39495
+     C**  IF  long term CD and Price to Yield conversion required,        E39495
+     C**  round outgoing yield to 3 decimal places                        E39495
+     C*                                                                   E39495
+     C           METHOD    IFEQ 'C '                                      E39495
+     C           NMAT      ANDGE1                                         E39495
+     C           PRCYLD    ANDEQ'Y'                                       E39495
+     C                     Z-ADDYIELDC    ZYLDRN 133H                     E39495
+     C                     Z-ADDZYLDRN    YIELDC                          E39495
+     C                     END                                            E39495
+     C*                                                                   E21034
+     C*   RESET ECD                                                       E21034
+     C                     Z-ADDWECD      ECD                             E21034
+     C**
+     C**  CHECK FOR ERRORS
+     C           ERRIND    IFEQ 'P'
+     C           ERRIND    OREQ 'R'
+     C                     MOVE '1'       *IN99
+     C                     END
+     C**
+     C           ZYEND1    TAG
+     C           ZYLD9     ENDSR                           ** ZYLD9  **
+      *****************************************************************
+      * End of /COPY ZYLDZ2                                           *
+      *****************************************************************

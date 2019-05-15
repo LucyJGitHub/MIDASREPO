@@ -1,0 +1,482 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Daily reconciliation report')
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0200 -  ED DAILY RECONCILIATION REPORT                     *
+      *                                                               *
+      *  Function: Program produces a report showing sums of live     *
+      *            transactions by Branch, GM Transaction Category    *
+      *            and Currency.                                      *
+      *            NOTE: Standard SR for formatting amounts not used  *
+      *            because the amount field is 29,0 long.  Also uses  *
+      *            TABTG30 as a look-up table for speed & convenience.*
+      *                                                               *
+      *  Called By: EDC0200 - ED Daily Reconciliation Report Control  *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Access Object for Bank Details ICD     *
+      *             ZSFILE   - Log Spool File                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 106562             Date 20Aug96               *
+      *                 101973 *CREATE     Date 12FEB96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  106562 - Improve readability of report by formatting amounts *
+      *           with commas. Recompiled over amended ED0200P1.      *
+      *  101973 - Midas Extract Data Module. Phase 5.                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDRECOL1IF  E           K        DISK         KINFSR *PSSR
+      *
+     FTABTG30 IT  F      40           EDISK
+      *
+     FED0200AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *
+     FED0200P1O   E             22     PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+      *
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01  - READ OF EDRECOL1                                     *
+      *    11  - SECURITY TRADES                                      *
+      *    12  - FX DEALS                                             *
+      *    13  - FRA/IRS                                              *
+      *    14  - FF TRANSACTIONS                                      *
+      *    15  - FACILITIES/LOANS/DEPOSITS                            *
+      *    22  - OVERFLOW INDICATOR ON ED0200P1                       *
+      *    41  - ED0200AU HEADER PRINTED                              *
+      *    53  - CURRENCY TABLE ACCESS                                *
+      *                                                               *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  PROCES - Perform Detail Processing                           *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E    TABTG30         CY      1 200  3   CYD    37
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+     IEDREC1D0    11
+      *
+     IEDREC2D0    12
+      *
+     IEDREC3D0    13
+      *
+     IEDREC4D0    14
+      *
+     IEDREC5D0    15
+      *
+     ICYDDS       DS
+     I**   CURRENCY DETAILS FROM TABTG30
+     I                                        1   10CDP
+     I                                    P   2   88SPOT
+     I                                        9   90MDIN
+     I                                    P  10  168ERLC
+     I                                       17  170TNOT
+     I                                       18  31 CCNM
+     I                                       32  35 TEAC
+     I                                       36  370SSNO
+      *
+     ISPOOL1      DS
+      *
+      ***  File Information Data Structure for ED0200P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLINE
+     I                                    B 367 3680LINE
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for ED0200AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** BRANCH DETAILS
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** PROGRAM STATUS DATA STRUCTURE
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Audit report heading
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C                     WRITEHEADAU
+     C                     SETON                     41
+      *
+      ***  Initialisations
+      *
+     C                     Z-ADD*ZERO     RRPROG
+     C           *LIKE     DEFN EJBRCA    PRBRCA
+     C                     MOVEL*BLANKS   PRBRCA
+     C           *LIKE     DEFN EJTRTY    PRTRTY
+     C                     MOVEL*ZERO     PRTRTY
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      *** Read through the reconciliation extract file
+      *
+     C                     READ EDRECOL1                 01
+      *
+      *** If no records read then output Audit Report only
+      *
+     C           *IN01     IFEQ *ON
+     C                     WRITEDETAILAU
+     C                     WRITENULLAU
+      *
+     C                     ELSE
+      *
+      *** Open printer file
+      *
+     C                     OPEN ED0200P1
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Print page heading / Branch Heading / Transaction Type Heading
+      *
+     C                     EXSR BRANSR
+     C                     EXSR TRANSR
+      *
+      ***  Process until end of extract file
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+      ***  Check overflow before writing a detail line
+      *
+     C           *IN22     IFEQ *ON
+     C                     EXSR BRANSR
+     C                     EXSR TRANSR
+     C                     ENDIF
+      *
+      ***  Format Detail line
+      ***    Get currency decimal places unless this is a FF trade, when
+      ***    these are not needed
+      *
+     C           *IN14     IFEQ *OFF
+      *
+     C                     Z-ADD1         I       30
+     C           EJCCYC    LOKUPCY,I                     53
+     C           *IN53     IFEQ '1'
+     C                     MOVE CYD,I     CYDDS
+      *
+     C                     ELSE
+     C                     Z-ADD2         DBASE
+     C                     MOVELEJCCYC    DBKEY            ***************
+     C                     MOVEL'TABTG30 'DBFILE           * DBERROR 002 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ***  Format Detail line (NON FF)
+      *
+     C           CDP       IFEQ 0
+     C                     Z-ADDEJTVAL    RRVAL4
+     C                     ENDIF
+     C           CDP       IFEQ 1
+     C           EJTVAL    DIV  10        RRVAL4
+     C                     ENDIF
+     C           CDP       IFEQ 2
+     C           EJTVAL    DIV  100       RRVAL4
+     C                     ENDIF
+     C           CDP       IFEQ 3
+     C           EJTVAL    DIV  1000      RRVAL4
+     C                     ENDIF
+     C                     ELSE
+      *
+      ***  Format FF detail line
+      *
+     C                     Z-ADDEJTVAL    RRVAL4    H
+     C                     ENDIF
+      *
+      ***  Output Detail line
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         RRPROG
+      *
+      ***  Read next extract record
+      *
+     C                     SETOF                     111213
+     C                     SETOF                     1415
+     C                     READ EDRECOL1                 01
+      *
+      ***  Print Change of Branch Details if needed
+      *
+     C           EJBRCA    IFNE PRBRCA
+     C           *IN01     ANDEQ*OFF
+     C                     EXSR BRANSR
+     C                     ENDIF
+      *
+      ***  Print Change of Transaction Type Details if needed
+      *
+     C           EJTRTY    IFNE PRTRTY
+     C           *IN01     ANDEQ*OFF
+      *
+      ***  Check whether there is room on this page. If not then induce
+      ***  new page rather than writing Transaction line now.
+      *
+     C           LINE      ADD  2         WLINE   30
+     C           WLINE     IFLE OFLINE
+     C                     EXSR TRANSR
+     C                     ELSE
+     C                     SETON                     22
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  End of DOWEQ loop
+      *
+     C                     ENDDO
+      *
+      ** Write 'End of Report' on Detail report
+      *
+     C           *IN22     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+     C                     CLOSEED0200P1
+      *
+      ** Finish off Audit report
+      *
+     C                     WRITEDETAILAU
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/BRANSR
+      *****************************************************************
+      *                                                               *
+      *  BRANSR - Access branch and print branch header               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BRANSR    BEGSR                           *** BRANSR ***
+      *
+      ***  Get branch details
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM EJBRCA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD4         DBASE
+     C                     MOVELEJBRCA    DBKEY            ***************
+     C                     MOVEL'SDBRCHL1'DBFILE           * DBERROR 004 *
+     C                     EXSR *PSSR                      ***************
+     C                     ELSE
+     C                     MOVELA8BRNM    RRBRNM
+     C                     END
+      *
+      *** Start a new page for a new branch
+      *
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     WRITEBRANCHH
+     C                     MOVELEJBRCA    PRBRCA
+     C                     SETOF                     22
+      *
+      *** Induce the writing of the transaction type
+      *
+     C                     MOVEL*ZERO     PRTRTY
+      *
+     C                     ENDSR
+      /TITLE SR/TRANSR
+      *****************************************************************
+      *                                                               *
+      *  TRANSR - Print Transaction type header - done via record     *
+      *           format indicators.                                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TRANSR    BEGSR                           *** TRANSR ***
+      *
+     C                     WRITETRANTY
+     C                     MOVELEJTRTY    PRTRTY
+      *
+     C                     ENDSR
+      *
+W6    *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0200'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      ***  ERROR REPORT  ED0200AU
+      *
+     C           *IN41     IFEQ *OFF
+     C                     WRITEHEADAU
+     C                     SETON                     41
+     C                     ENDIF
+      *
+     C                     WRITEDBERROR
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+** CPY@ - Copyright Statement
+(c) Finastra International Limited 2001

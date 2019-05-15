@@ -1,0 +1,81 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Init Pgm for CER055')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       CLLE/REC005007 - Initialisation Program for CER055:         */
+/*                        Penalty Interest on Exceeding Overdraft    */
+/*                        Limit                                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD038844 *CREATE   Date 27Jul16              */
+/*                      NNNNNN             Date DDMmmYY              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD038844 - create new initialization program for CER055.    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCD)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD)    TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2016')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD AS400 LOCAL +
+                          DATA AREA EQUIVALENT')
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+             STRCMTCTL  LCKLVL(*ALL) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Check switchable features file */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CER055')
+ 
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)
+ 
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+ 
+                   CALL       PGM(RE005005)
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          REC005007 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,646 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas List of Inactive & Blocked Accounts')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3872 - LIST OF INACTIVE AND BLOCKED ACCOUNTS               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 098619             Date 19JAN98               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  098619 - Check for overflow while printing totals            *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSIBP    IP  F      90 20AI     2 DISK
+     F/COPY WNCPYSRC,RE3872F001
+     FRE3872P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC
+     FRE3872AUO   F     132     OA     PRINTER      KINFDS SPOOLU
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*  01 -  SORTED EXTRACT FILE - DETAIL
+     F*  02 -  SORTED EXTRACT FILE - TRAILER
+     F*  03 -  SORTED EXTRACT FILE - CATCHALL
+     F*  21 -  NO RETAIL ACCOUNT NUMBER ENTERED
+     F*  40 -  FIRST CYCLE
+     F*  41 -  CHAIN FAIL
+     F*  45 -  ACCOUNT IS BLOCKED
+     F*  46 -  ACCOUNT IS INACTIVE
+     F*  47 -  ACCOUNT IS BAD DEBT
+     F*  48 -  ACCOUNT IS BANKRUPT
+     F*  49 -  ACCOUNT IS ALL FOUR
+     F*  50 -  CCY HAS 0 D.P.
+     F*  51 -  CCY HAS 1 D.P.
+     F*  52 -  CCY HAS 2 D.P.
+     F*  53 -  CCY HAS 3 D.P.
+     F*  65 -  P1 FILE HAS BEEN CLOSED
+     F*  66 -  NO DETAILS TO REPORT
+     F*  75 -  BRANCH CHANGE OUTPUT INDICATOR
+     F*  88 -  MBIN = 'Y'
+     F*  89 -  BRNCH = 'ALL'
+     F*  U7 & U8 - DATABASE ERROR
+     F*  L1 -  CURRENCY
+     F*  L2 -  ACCOUNT OFFICER
+     F*  L3 -  BRANCH CODE
+     F*
+     F*****************************************************************
+     E/EJECT
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    CPY@    1   1 80
+     I/EJECT
+     I*
+     I*    SORTED EXTRACT FILE
+     I*
+     ISIBP    NS  01   1 CD
+     I                                        2   4 BRCA  L3
+     I**********                              5  100CNUM                                      CSD027
+     I                                        5  10 CNUM                                      CSD027
+     I                                       11  13 CCY   L1
+     I**********                             14  170ACOD                                      CGL029
+     I                                       14  170ACODQQ                                    CGL029
+     I                                       18  190ACSQ
+     I                                       20  290ACNO            21
+     I                                       30  49 CRNM
+     I                                    P  50  570GRBL0
+     I                                    P  50  571GRBL1
+     I                                    P  50  572GRBL2
+     I                                    P  50  573GRBL3
+     I                                    P  58  650NETB0
+     I                                    P  58  651NETB1
+     I                                    P  58  652NETB2
+     I                                    P  58  653NETB3
+     I                                    P  66  680LACD
+     I                                       69  69 RETB
+     I*
+     I*    BITS 2 AND 3 OF RETB SIGNIFY BLOCKED ACCOUNTS
+     I*    BIT 4 SIGNIFIES INACTIVE ACCOUNTS
+     I*
+     I                                       70  71 ACOC  L2
+     I                                       81  900ACOD                                      CGL029
+     I        NS  02   1 CT
+     I                                    P   2   40NORE
+     I        NS  77   1 CH
+     I*
+     I*    CATCHALL
+     I*
+     I        NS  03
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I**  File Information Data Structure
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**  Data Area LDA
+     I*
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     I**  Data Area RUNDAT
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     I              BJMRDT                          RUNA
+     I*
+     I** Bank Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+     I*
+     I**  External DS for Branch Codes.
+     I*
+     ISDCURR    E DSSDCURRPD
+     I              A6CYCD                          CCY
+     I              A6CYNM                          CCNM
+     I              A6NBDP                          CDP
+     I*
+     I**  External DS for Currency Codes.
+     I*
+     ISDACOF    E DSSDACOFPD
+     I              AZACOC                          ACOC
+     I              AZACON                          ACON
+     I*
+     I**  External DS for Account Officer Code.
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, Long data structure
+     I*
+     I/COPY WNCPYSRC,RE3872I001
+     C/EJECT
+     C*
+     C**   FIRST CYCLE CALCS
+     C*
+     C   40                GOTO START
+     C                     SETON                     4065
+     C*
+     C** Data Area LDA and Rundat
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'RE3872'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Test for Multibranching
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN88
+     C                     END
+     C*
+     C** Check System Date Format
+     C*
+     C           DATF      IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*
+     C** Get Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           BRNCH   3
+     C*
+     C   U1                TIME           MTIME   60
+     C           START     TAG                              ** START **
+     C/COPY WNCPYSRC,RE3872C001
+     C   01      TOTAC     ADD  1         TOTAC   50 10
+     C*
+     C**  Multibranching Changes
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C** If the required branch is greater than BRCA,
+     C** skip the calculation
+     C*
+     C           BRNCH     IFGT BRCA
+     C           BRNCH     ANDNE'ALL'
+     C                     SETOF                     75
+     C                     GOTO END
+     C                     END
+     C*
+     C** If the required Branch is less than BRCA
+     C** end the program
+     C*
+     C           BRNCH     IFLT BRCA
+     C           BRNCH     ANDNE'ALL'
+     C                     SETON                     LR
+     C                     SETOF                     75
+     C                     GOTO END
+     C                     END
+     C*
+     C                     END
+     C**
+     C           *INL3     IFEQ '1'
+     C                     CLOSERE3872P1
+     C           BRNCH     IFEQ 'ALL'
+     C           BRNCH     OREQ BRCA
+     C           MBIN      OREQ 'N'
+     C**
+     C                     Z-ADD0         NOACB
+     C                     Z-ADD0         NOACI
+     C                     Z-ADD0         NOACBD
+     C                     Z-ADD0         NOACBA
+     C                     Z-ADD0         NOACR
+     C**
+     C                     SETON                     75
+     C                     OPEN RE3872P1
+     C*
+     C** Indicate that the P1 file has been opened
+     C*
+     C                     SETON                     65
+     C                     Z-ADD0         PAGE
+     C*
+     C** Ensure report spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  Error during ZSFILE processing, return to calling program
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C** Get Branch Name (IN BRNM)
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL@DSNB     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD12        DBASE            * DBERROR 012 *
+     C                     OUT  LDA                        ***************
+     C                     SETON                     U7U8LR
+     C                     GOTO END
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C                     SETOF                     75
+     C                     END
+     C                     END
+     C**
+     C  N01                GOTO END
+     C*
+     C**   At A/C Officer Change, access SDACOFPD
+     C*
+     C           *INL2     IFEQ '1'
+     C                     CALL 'AOACOFR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM ACOC      @ACOC   2
+     C           SDACOF    PARM SDACOF    DSFDY
+     C                     END
+     C*
+     C**   At Currency change, set indicators according to number of D.P.
+     C*
+     C  NL1                GOTO REFER
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM CCY       @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           CDP       COMP 1                      5051
+     C           CDP       COMP 2                    53  52
+     C           REFER     TAG                              ** REFER **
+     C*
+     C** Set indicators according to referral reason
+     C*
+     C                     SETOF                     454647
+     C                     SETOF                     4849
+     C/COPY WNCPYSRC,RE3872C002
+     C                     TESTB'2'       RETB           45
+     C  N45                TESTB'3'       RETB           45
+     C                     TESTB'4'       RETB           46
+     C                     TESTB'7'       RETB           47
+     C                     TESTB'6'       RETB           48
+     C   45 46 47
+     CAN 48                SETON                     49
+     C*
+     C** Convert Day Number to Alphanumeric format
+     C*
+     C                     Z-ADDLACD      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    LACDA   7
+     C   45      NOACB     ADD  1         NOACB   50
+     C/COPY WNCPYSRC,RE3872C003
+     C   46      NOACI     ADD  1         NOACI   50
+     C   47      NOACBD    ADD  1         NOACBD  50
+     C   48      NOACBA    ADD  1         NOACBA  50
+     C   45
+     C/COPY WNCPYSRC,RE3872C004
+     COR 46
+     COR 47
+     COR 48      NOACR     ADD  1         NOACR   50
+     C           END       TAG
+     C   02
+     COR 77      TOTAC     ADD  1         TOTAC
+     C/COPY WNCPYSRC,RE3872C005
+     C*
+     C** Last record processing
+     C*
+     C** P1 file should not be opened if there are no records read
+     C*
+     CLR         *IN65     IFNE '1'
+     CLR                   SETON                     66
+     C*
+     C** Get Bank Details
+     C*
+     CLR                   CALL 'AOBANKR0'
+     CLR                   PARM '*DBERR  '@RTCD   7
+     CLR                   PARM '*FIRST  '@OPTN   7
+     CLR         SDBANK    PARM SDBANK    DSFDY
+     CLR                   END
+     C*
+     C**  Ensure total spool file recorded by RCF
+     C*
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60
+     C**
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANK    SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM           ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C*
+     C**  Error during ZSFILE processing, return to calling program
+     C*
+     CLR                   SETON                     U7U8
+     CLR                   RETRN
+     CLR                   END
+     C*
+     CLR U7                EXSR *PSSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C* CALLED FROM: AFTER ABNORMAL OPERATION OCCURS
+     C*
+     C* CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C********************************************************************
+     O/EJECT
+     ORE3872P1H  203   OFNL2 75
+     O       OR        L2 75
+     O       OR        OF 75                                              098619
+     O                                   27 'REFERENCE RE3872P1'
+     O                         TITL      92
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        H  1     OFNL2 75
+     O       OR        L2 75
+     O       OR        OF 75                                              098619
+     O                       U1          38 'INTERIM'
+     O                                   64 'LIST OF INACTIVE AND BLO'
+     O                                   77 'CKED ACCOUNTS'
+     O                       U1MTIME     87 '  :  :  '
+     O                 U1 88             97 'BRANCH'
+     O                 U1 88   BRCA     101
+     O                 U1 88            102 '-'
+     O                 U1 88   BRNM     132
+     O                NU1 88             87 'BRANCH'
+     O                NU1 88   BRCA      91
+     O                NU1 88             92 '-'
+     O                NU1 88   BRNM     122
+     O        H  2     OFNL2 75
+     O       OR        L2 75
+     O       OR        OF 75                                              098619
+     O                       U1          38 '*******'
+     O                                   64 '------------------------'
+     O                                   77 '-------------'
+     O                       U1          87 '********'
+     O        D  2     OFNL2 75
+     O       OR        L2 75
+     O       OR        OF 75                                              098619
+     O                                   11 'A/C OFFICER'
+     O                         ACON      42
+     O        D 21     OFNL2 75
+     O       OR        L2 75
+     O       OR        OF 75
+     O                                   17 'ACCOUNT NO'
+     O                                   39 'CUSTOMER NAME'
+     O                                   69 'LEDGER BALANCE'
+     O                                   95 'CLEARED BALANCE'
+     O                                  124 'LAST CUSTOMER   REFERRAL'
+     O        D  1     OFNL2 75
+     O       OR        L2 75
+     O                                  110 'ACTIVITY'
+     O        D  2     L1 75
+     O       OR        OFNL1 75
+     O                                    8 'CURRENCY'
+     O                         CCNM      23
+     O        D        01 75
+     O                      N21ACNO      17
+     O                       21          20 '-   -    -'
+     O                       21CNUM      10
+     O                       21CCY       14
+     O**********             21ACOD      19                                                   CGL029
+     O**********             21ACSQ      22                                                   CGL029
+     O**********               CRNM      46                                                   CGL029
+     O**********             50GRBL0     69 '   ,   ,   ,   , 0 CR'                           CGL029
+     O**********             51GRBL1     71 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O**********             52GRBL2     72 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O**********             53GRBL3     73 '   ,   ,   , 0 .   CR'                           CGL029
+     O**********             50NETB0     95 '   ,   ,   ,   , 0 CR'                           CGL029
+     O**********             51NETB1     97 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O**********             52NETB2     98 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O**********             53NETB3     99 '   ,   ,   , 0 .   CR'                           CGL029
+     O**********               LACDA    110                                                   CGL029
+     O**********             48         124 'BANKRUPT'                                        CGL029
+     O**********             47         124 'BAD DEBT'                                        CGL029
+     O**********             46         124 'INACTIVE'                                        CGL029
+     O**********             45         124 'BLOCKED '                                        CGL029
+     O                       21ACOD      25                                                   CGL029
+     O                       21ACSQ      28                                                   CGL029
+     O                         CRNM      54                                                   CGL029
+     O                       50GRBL0     75 '   ,   ,   ,   , 0 CR'                           CGL029
+     O                       51GRBL1     77 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O                       52GRBL2     78 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O                       53GRBL3     79 '   ,   ,   , 0 .   CR'                           CGL029
+     O                       50NETB0    101 '   ,   ,   ,   , 0 CR'                           CGL029
+     O                       51NETB1    103 '  ,   ,   ,   , 0 . CR'                          CGL029
+     O                       52NETB2    104 ' ,   ,   ,   , 0 .  CR'                          CGL029
+     O                       53NETB3    105 '   ,   ,   , 0 .   CR'                           CGL029
+     O                         LACDA    116                                                   CGL029
+     O                       48         130 'BANKRUPT'                                        CGL029
+     O                       47         130 'BAD DEBT'                                        CGL029
+     O                       46         130 'INACTIVE'                                        CGL029
+     O                       45         130 'BLOCKED '                                        CGL029
+     O/COPY WNCPYSRC,RE3872O001
+     O        D        01 75
+     O                    45 48         124 'BANKRUPT'
+     O                    46 48         124 'BANKRUPT'
+     O                    47 48         124 'BANKRUPT'
+     O                    45 47         124 'BAD DEBT'
+     O                    46 47         124 'BAD DEBT'
+     O                    45 46         124 'INACTIVE'
+     O/COPY WNCPYSRC,RE3872O002
+     O        D        01 45 46
+     O       AND       47 75
+     O       OR        01 45 46
+     O       AND       48 75
+     O       OR        01 45 47
+     O       AND       48 75
+     O       OR        01 46 47
+     O       AND       48 75
+     O                   N49 48         124 'BANKRUPT'
+     O                   N48 47         124 'BAD DEBT'
+     O                       49         124 'BAD DEBT'
+     O        D        01 49 75
+     O                                  124 'BANKRUPT'
+     O/COPY WNCPYSRC,RE3872O003
+     O********T 32 *** L3 10 75                                           098619
+     O        TF32     L3 10 75                                           098619
+     O       AND       88
+     O                                   61 'BRANCH TOTALS-'
+     O********T  1 *** L3 10 75                                           098619
+     O        TF 1     L3 10 75                                           098619
+     O       AND       88
+     O                                   70 'NO OF ACCOUNTS INACTIVE'
+     O                         NOACI 1B  76
+     O********T  1 *** L3 10 75                                           098619
+     O        TF 1     L3 10 75                                           098619
+     O       AND       88
+     O                                   69 'NO OF ACCOUNTS BLOCKED'
+     O                         NOACB 1B  76
+     O********T  1 *** L3 10 75                                           098619
+     O        TF 1     L3 10 75                                           098619
+     O       AND       88
+     O                                   70 'NO OF BAD DEBT ACCOUNTS'
+     O                         NOACBD1B  76
+     O********T  1 *** L3 10 75                                           098619
+     O        TF 1     L3 10 75                                           098619
+     O       AND       88
+     O                                   70 'NO OF ACCOUNTS BANKRUPT'
+     O                         NOACBA1B  76
+     O********T  2 *** L3 10 75                                           098619
+     O        TF 2     L3 10 75                                           098619
+     O       AND       88
+     O                                   70 'NO OF ACCOUNTS REPORTED'
+     O                         NOACR 1B  76
+     O        T  2     U7 LR 75
+     O                                   74 '*** DATABASE ERROR ***'
+     O        T  3     L3 75
+     O                 88                66 '*** END OF REPORT FOR'
+     O                 88                74 ' BRANCH '
+     O                 88      BRCA      77
+     O                 88                81 ' ***'
+     O                N88                76 '*** END OF REPORT ***'
+     O*
+     ORE3872AUT  203   LR
+     O                                   27 'REFERENCE RE3872AU'
+     O                         TITL      92
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O        T  1     LR
+     O                 U1                44 'INTERIM'
+     O                                   70 'LIST OF INACTIVE AND BLO'
+     O                                   83 'CKED ACCOUNTS'
+     O                 U1      MTIME     93 '  :  :  '
+     O                NU1                99 'RUN CONTROLS'
+     O                 U1               109 'RUN CONTROLS'
+     O        T  2     LR
+     O                 U1                44 '*******'
+     O                                   70 '------------------------'
+     O                                   83 '-------------'
+     O                 U1                93 '********'
+     O        T  215   LR
+     O                                   55 'FILE CONTROLS -'
+     O        T  2     LR
+     O                                   61 'INACTIVE/BLOCKED A/CS'
+     O                                   66 ' FILE'
+     O                                   73 ' - IBPA'
+     O        T  2     LR
+     O                                   57 'NUMBER OF RECORDS'
+     O                                   65 'ON FILE'
+     O                         NORE  1   73
+     O        T  2     LR
+     O                                   59 'NUMBER OF PROCESSED'
+     O                                   67 'RECORDS'
+     O                         TOTAC 1   73
+     O*
+     O**   NO DETAILS TO REPORT
+     O*
+     O        T 32     LRNU7 66
+     O                                   71 '***   NO DETAILS TO REPO'
+     O                                   79 'RT   ***'
+     O*
+     O**   DATABASE ERROR
+     O*
+     O        T 32     U7 LR
+     O                                   58 'DATABASE ERROR '
+     O                         DBASE     61
+     O                                   75 'IN PROGRAM'
+     O                         DBPGM     85
+     O        T  2     U7 LR
+     O                                   48 'FILE '
+     O                         DBFILE    56
+     O                                   62 ', KEY'
+     O                         DBKEY     92
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

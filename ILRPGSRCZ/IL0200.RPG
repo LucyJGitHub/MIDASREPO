@@ -1,0 +1,976 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Installation Control Data Set-Up')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0200    - INSTALLATION CONTROL DATA SET-UP             *
+      *                                                               *
+      *  Function:  This program prompt the IBLC Installation screen  *
+      *             to specify all parameters which can be different  *
+      *             for each bank.                                    *
+      *                                                               *
+      *  (phase(s)) Input Cycle                                       *
+      *                                                               *
+      *  Called By: SD9003X - Edit ICD records                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 UPG402             Date 06Oct04               *
+      *                 IL0033             Date 07jan02               *
+      *                 ULX043             Date 23Jul01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to change in ZALIGNZ2.                *
+      *  IL0033 - don't use *IN98 for test (replaced by *IN89)       *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC Bank details           Retrieval index     Prefix BJ.
+      *
+     FSDMMODPDIF  E           K        DISK         KINFSR *PSSR
+      ***  Module status file          Retrieval index     Prefix BG
+      *
+     FILFCTLPAUF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC file control record    Retrieval index     Prefix FC
+      *
+     FILICDRPDUF  E                    DISK         KINFSR *PSSR A
+      ***  IBLC Installation rcdm                          Prefix IC.
+      *
+     F                                              KINFDS INFDS
+     F                                              KCOMIT
+     FIL0200DFCF  E                    WORKSTN
+      *
+      /TITLE ARRAY SPECIFICATIONS
+      /EJECT
+      *-------------------------------------------------------------------------
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZALIGNZ1
+     E                    FLD@        6  3 0
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+     E                    ARR         9  1
+      *
+     E                    AR1         8  1
+      /TITLE FIELDS SPECIFICATIONS
+      /EJECT
+      *-------------------------------------------------------------------------
+     IA@CPY       DS
+      * ACT Copyright array
+     I                                        1  80 CPY@
+      *
+     IINFDS       DS
+      * Data structure for RPG 01021 Error Handling
+     I                                     *STATUS  STATUS
+      *
+     ILDA        UDS                            256
+      * Local Data Area for Database Error Details
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IDNATN       DS                              5
+      *  MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+     I                                        1   50FNATN
+      *
+     ICMTTXT      DS
+      *  Data structure for setup of commit text
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 JOBX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USERX
+      *
+     IPSDS       SDS
+      *  Program Status Data Structure.
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *ALPHA is used for CHEKR keyword (look the path and retain position
+      *from the first character which is not in this table.)
+     I              'ABCDEFGHIJKLMNOPQRST-C         ALPHA
+     I              'UVWXYZ.0123456789'
+      ***  Data Structure for screen input fields
+     I                                        1   1 SCB02
+     I                                        2   2 SGL02
+     I                                        3   3 SRE02
+     I                                        4   4 SDE02
+     I                                        5   5 SCL02
+     I                                        6   6 SST02
+     I                                        7   7 SFT02
+     I                                        8   8 SFO02
+     I                                        9   9 SPM02
+     I                                        1   9 ARR
+     I            DS
+      ***  Data structure for SDMMODPD  fields
+     I                                        1   1 BGSDGL
+     I                                        2   2 BGRTBN
+     I                                        3   3 BGDLFX
+     I                                        4   4 BGCSLN
+     I                                        5   5 BGSECS
+     I                                        6   6 BGFDTR
+     I                                        7   7 BGFUOP
+     I                                        8   8 BGPFMG
+     I                                        1   8 AR1
+     I            DS
+      ***  Data structure for bits test
+     I                                        1   1 CHR1
+     I                                        2   2 CHR2
+     I                                        1   2 INTF
+     I/COPY ZSRSRC,ZSEDITZ2
+      /TITLE MAIN PROCESSING SPECIFICATIONS
+      /EJECT
+      *-------------------------------------------------------------------------
+      **  Main processing
+      *-------------------------------------------------------------------------
+      *
+      ***  Define parameters list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           PRRC   10
+     C                     PARM           WQ0093  7
+     C                     PARM           WQ0094  5
+      *
+      ***  Perform Setup of Standard Fields
+      *
+     C                     MOVE '0'       *IN50
+     C                     EXSR #INIT
+      *
+      ***  Do until CK3 or error
+      *
+     C           WWAID     DOWNE'03'
+      *
+      ***  Detail screen input
+      *
+     C                     WRITEIL0200C0
+     C                     EXFMTIL0200X0
+      *
+      ***  Reset Error and Protect Fields
+      *
+     C                     MOVE '0'       *IN80
+     C                     MOVEA'00000'   *IN,20           *IN20->24
+     C                     MOVEA'00000'   *IN,30           *IN30->34
+     C                     MOVEA'000'     *IN,35           *IN35->37
+      *
+      ***  Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+      ***  Call S/R to move values into WWAID
+      *
+     C                     EXSR #VALC
+      *
+      ***  Validate detail screen input
+      *
+     C           WWAID     IFNE '03'
+     C           WWAID     ANDNE'12'
+     C           WWAID     ANDNE'08'
+     C           *IN50     ANDNE*ON                                                           CER001
+     C                     MOVEL*OFF      *IN80
+      *
+      ***  Call validation Subroutine
+      *
+     C                     EXSR #TEST
+      *
+      ***  No detail screen errors
+      *
+     C           *IN80     IFEQ *OFF
+      *
+     C                     EXSR #UPDF
+     C                     MOVE '03'      WWAID
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     COMIT
+      *
+     C                     SETON                         LR
+      *-------------------------------------------------------------------------
+      ***  End of processing
+      *-------------------------------------------------------------------------
+      /EJECT
+      *-------------------------------------------------------------------------
+      ***
+      ***  ZASNMS - Send message to prgrams's message queue.
+      ***  Called by screens validation
+      ***  Calls  - Y2SNMSGC - Send message.
+      ***
+      *-------------------------------------------------------------------------
+     C           ZASNMS    BEGSR
+      *
+      ***  Message file specified use PMSGF
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVELPMSGF     ZAMSGF
+     C                     ENDIF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***  Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      *
+      ***  Init S/R - To initialize static fields and access standing data
+      ***  Called once at start of program from main line
+      ***  Calls  *PSSR
+      ***
+      *-------------------------------------------------------------------------
+      *
+     C           #INIT     BEGSR                           ** #INIT BSR **
+      *
+      ***  Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C                     MOVEL'*'       DDPGMQ
+     C**********           MOVEL'ILUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+      *
+      ***  Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL'IL0200 ' ZAPGM  10        Message queue
+     C**********           MOVEL'ILUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+     C                     Z-ADD0         WWNUMB  40
+     C                     MOVE '0'       *IN98
+      *
+      ***  Setup Protect Field
+      *
+     C                     MOVE *INU1     *IN50
+      *
+      ***  Prepare LDA
+      *
+     C                     MOVEL'IL0200 ' DBPGM
+      *
+      ***  Prepare comit text
+      *
+     C                     MOVEL'IL'      MDID
+     C                     MOVEL'IL0200 ' PGMN
+     C                     MOVELDBPGM     JOBX
+     C                     MOVELUSER      USERX
+      *
+      ***  Get installation control data record 1
+      *
+     C                     READ SDBANKL1                 70
+     C           *IN70     IFEQ '1'                        ***************
+     C                     Z-ADD1         DBASE            * DBERROR 001 *
+     C                     MOVEL'SDBANKL1'DBFILE           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELDBPGM     SJOB
+     C                     MOVE BJMRDT    SRUNA
+     C                     MOVE USER      SUSER
+     C                     MOVE WSID      SWSID
+      *
+      ***  Read ILICDRPD record.
+      *
+     C                     READ ILICDRPD                 71
+      *
+      ***  No Record
+      ***
+     C***        *IN71     IFEQ '1'                        ***************
+     C***                  Z-ADD2         DBASE            * DBERROR 002 *
+     C***                  MOVEL'ILICDRPD'DBFILE           ***************
+     C***                  MOVE *BLANKS   DBKEY
+     C***                  EXSR *PSSR
+     C***                  ENDIF
+      *
+      ***  Setup with Default Value (12500 Euro)
+      *
+     C           ICLIMR    IFEQ 0
+     C                     MOVE '1250000' ZFIELD
+     C                     Z-ADD2         ZADEC            2 Decimals
+     C                     EXSR ZEDIT                      Conversion
+     C                     MOVE ZFIELD    SLIMR
+      *
+      ***  Limit for Registration Not equal 0
+      *
+     C                     ELSE
+     C                     Z-ADD13        ZADIG
+     C                     MOVE ICLIMR    WWLIMT 15 P
+     C                     MOVE WWLIMT    ZFIELD
+     C                     Z-ADD2         ZADEC            2 Decimals
+     C                     EXSR ZEDIT                      Conversion
+     C                     MOVE ZFIELD    SLIMR
+     C                     ENDIF
+      *
+      ***  Setup 'Print Routing Key Found' Field
+      *
+     C           ICPRID    IFEQ ' '
+     C                     MOVE 'N'       SPRID            Default Value
+     C                     ELSE
+     C                     MOVE ICPRID    SPRID            File Value
+     C                     ENDIF
+      *
+      ***  Setup Screen Folder Path
+      *
+     C                     MOVELICFLDP    SFLDP
+      *
+      ***  Setup 'Use Dummy Issuer' Field
+      *
+     C           ICDMIS    IFEQ ' '
+     C                     MOVE 'N'       SDMIS            Default Value
+     C                     ELSE
+     C                     MOVE ICDMIS    SDMIS            File Value
+     C                     ENDIF
+      *
+      ***  Setup 'Activation Date' Field
+      *
+     C           ICACTD    IFEQ 0
+     C                     MOVE '010102'  SACTD            Default Value
+     C                     ELSE
+     C                     Z-ADDICACTD    ZDAYNO           File Value
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ *OFF
+     C                     MOVE ZDATE     SACTD
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Read SDMMODPD record
+      *
+     C                     READ SDMMODPD                 70
+     C           *IN70     IFEQ '1'                        - B1
+      *                                                    ***************
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C                     MOVEL'SDMMODPD'DBFILE           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR *PSSR
+     C                     END                              - E1
+      *
+      ***  Initialize INTF zone with '00000000-00000000' value
+      *
+     C                     BITOF'01234567'CHR1
+     C                     BITOF'01234567'CHR2
+      *
+      ***  WRITE PF/ILICDRPD
+      *
+     C           *IN71     IFEQ *ON
+     C                     MOVE 'I'       ICCHTP
+     C                     Z-ADDBJRDNB    ICLCD
+     C                     MOVE USER      ICLUID
+     C                     MOVELINTF      ICINTF
+     C                     WRITEILICDRD0
+     C                     ELSE
+     C                     UNLCKILICDRPD
+     C                     ENDIF
+      *
+      ***  Initialize screen fields with record values or defaults
+      *
+     C                     MOVELICINTF    INTF
+     C                     MOVE '0'       *IN10
+     C                     TESTB'0'       CHR1           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SGL01            General Ledger
+     C                     ELSE
+     C                     MOVE 'N'       SGL01
+     C                     END
+      *
+     C                     MOVE '0'       *IN10
+     C                     TESTB'1'       CHR1           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SRE01            Retail Banking
+     C                     ELSE
+     C                     MOVE 'N'       SRE01
+     C                     END
+      *
+     C                     MOVE '0'       *IN10
+     C                     TESTB'2'       CHR1           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SDE01            Dealing/Forex
+     C                     ELSE
+     C                     MOVE 'N'       SDE01
+     C                     END
+      *
+     C                     MOVE '0'       *IN10
+     C                     TESTB'3'       CHR1           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SCL01            Customer Lending
+     C                     ELSE
+     C                     MOVE 'N'       SCL01
+     C                     END
+      *
+     C                     MOVE '0'       *IN10
+     C                     TESTB'4'       CHR1           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SST01            Securities Trading
+     C                     ELSE
+     C                     MOVE 'N'       SST01
+     C                     END
+      *
+     C                     MOVE '0'       *IN10
+     C                     TESTB'5'       CHR1           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SFT01            Funds Transfer
+     C                     ELSE
+     C                     MOVE 'N'       SFT01
+     C                     END
+      *
+     C                     MOVE '0'       *IN10
+     C                     TESTB'6'       CHR1           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SFO01            Futures & Options
+     C                     ELSE
+     C                     MOVE 'N'       SFO01
+     C                     END
+      *
+     C                     MOVE '0'       *IN10
+     C                     TESTB'1'       CHR2           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SPM01            Porofolio Mgmt
+     C                     ELSE
+     C                     MOVE 'N'       SPM01
+     C                     END
+      *
+     C                     MOVE '0'       *IN10
+     C                     TESTB'7'       CHR2           10
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'Y'       SCB01            COB Component
+     C                     ELSE
+     C                     MOVE 'N'       SCB01
+     C                     END
+      *
+      ***  Prepare input zones
+      *
+     C                     MOVEA*BLANKS   ARR
+      *
+      ***  Set in protect mode sreen field without Y in SDMMODPD
+      ***  corresponding field
+      *
+     C           BGSDGL    IFNE 'Y'                        General Ledger
+     C                     MOVE *ON       *IN51            protect
+     C                     ENDIF
+      *
+     C           BGRTBN    IFNE 'Y'                        Retail Banking
+     C                     MOVE *ON       *IN52            protect
+     C                     ENDIF
+      *
+     C           BGDLFX    IFNE 'Y'                        Dealing/Forex
+     C                     MOVE *ON       *IN53            protect
+     C                     ENDIF
+      *
+     C           BGCSLN    IFNE 'Y'                        Customer Lending
+     C                     MOVE *ON       *IN54            protect
+     C                     ENDIF
+      *
+     C           BGSECS    IFNE 'Y'                        Securities Trading
+     C                     MOVE *ON       *IN55            protect
+     C                     ENDIF
+      *
+     C           BGFDTR    IFNE 'Y'                        Funds Transfer
+     C                     MOVE *ON       *IN56            protect
+     C                     ENDIF
+      *
+     C           BGFUOP    IFNE 'Y'                        Futures & Options
+     C                     MOVE *ON       *IN57            protect
+     C                     ENDIF
+      *
+     C           BGPFMG    IFNE 'Y'                        Portfolio Mgmt
+     C                     MOVE *ON       *IN60            protect
+     C                     ENDIF
+      *
+      ***  If Enquiry  Protect all Fields
+      *
+     C           *INU1     IFEQ '1'
+     C                     MOVEA'11111111'*IN,51
+     C                     MOVEA'1111'    *IN,59
+     C                     ENDIF
+      *
+     C                     ENDSR                           **#INIT ENDSR**
+      /EJECT
+      *-------------------------------------------------------------------------
+      ***
+      ***  S/R to move the appropriate values into field WWAID,
+      ***  depending on which function key has been pressed.
+      ***  Called from #BA #BB
+      ***
+      *-------------------------------------------------------------------------
+      *
+     C           #VALC     BEGSR
+      *
+      ***  If ENTER pressed, the VLDCMDKEY indicator will be off
+      *
+     C           *IN59     IFEQ '0'
+     C                     MOVE 'RA'      WWAID   2
+     C                     MOVEL'PGM10'   WQ0094
+     C                     ENDIF
+      *
+      ***  If F3
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE '03'      WWAID
+     C                     MOVE '0'       *INKC
+     C                     MOVEL'**CMD**' W0RTN
+     C                     MOVEL'**CMD**' WQ0093
+     C                     MOVEL'CMD01'   WQ0094
+     C                     ENDIF
+      *
+     C                     ENDSR                           **#VALC  ENDSR**
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      ***
+      ***  Valid S/R - To validate detail screen
+      ***  Called from #VALC      S/R
+      ***  Calls: DEFLTS
+      ***
+      *-------------------------------------------------------------------------
+      *
+     C           #TEST     BEGSR                           ** #TEST  BSR**
+      *
+      ***  Setup error Field
+      *
+     C                     Z-ADD0         WWERR   10
+      *
+      ***  Folder Path
+      *
+     C           SFLDP     IFEQ *BLANKS
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL20001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ***  "Folder path" must exist on the system
+      *
+      *SFLDP contain the folder path, CHEKR compare fator1 charactere in
+      *the base string, beginning at the rightmost of the base string and
+      *return the position when there no match.
+      *
+     C           ' '       CHEKRSFLDP     E       20
+     C****       ALPHA     CHEKRSFLDP:E   START   20     98               IL0033
+     C***        *IN98     IFNE *ON                        not found      IL0033
+     C           ALPHA     CHEKRSFLDP:E   START   20     89               IL0033
+     C           *IN89     IFNE *ON                        not found      IL0033
+     C                     MOVELSFLDP     FOLDER    P
+     C                     MOVEL'*NONE'   PATH      P
+     C                     ELSE
+     C           START     IFEQ 0
+     C                     Z-ADD1         WWERR
+     C                     ELSE
+     C                     Z-ADDSTART     C       20
+     C           1         SUBSTSFLDP:C   SLASH   1
+     C           SLASH     IFNE '/'
+     C                     Z-ADD1         WWERR            no / found
+     C                     ELSE
+     C           E         SUB  START     LEN     20
+     C           START     ADD  1         S       20
+     C           START     SUB  1         END     20
+     C           LEN       IFNE 0
+     C           END       ANDNE0
+     C           LEN       SUBSTSFLDP:S   FOLDER 12
+     C           END       SUBSTSFLDP:1   PATH   51
+     C                     ELSE
+     C                     Z-ADD1         WWERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  'List or Expression not Valid. '
+      *
+     C           WWERR     IFEQ 1
+      *
+     C                     MOVEL'IL20002' ZAMSID
+     C                     MOVEL'1'       *IN20
+     C                     MOVEL'1'       *IN80
+     C                     EXSR ZASNMS
+      *
+      ***  No Input error, check Folder Existance
+      *
+     C                     ELSE
+      *
+      *** Validate Folder
+      *
+     C                     CALL 'ILCHKFLR'
+     C                     PARM FOLDER    PFOLDE 12
+     C                     PARM PATH      PPATH  51
+     C                     PARM *BLANKS   PMSGID  7
+      *
+      ***  Error Occured
+      *
+     C           PMSGID    IFNE *BLANKS
+     C                     SELEC
+      *
+      ***  Not Found
+      *
+     C           PMSGID    WHEQ 'CPF8A77'
+     C                     MOVEL'1'       *IN20
+     C                     MOVEL'1'       *IN80
+     C                     MOVEL'IL20003' ZAMSID
+      *
+      ***  Not Authorised
+      *
+     C           PMSGID    WHEQ 'CPF8A75'
+     C                     MOVEL'IL20004' ZAMSID
+     C                     MOVELSFLDP     ZAMSDA    P
+     C                     MOVEL'1'       *IN20
+     C                     MOVEL'1'       *IN80
+      *
+      ***  Bad Argument List
+      *
+     C           PMSGID    WHEQ 'CPD0047'
+     C                     MOVEL'IL20002' ZAMSID
+     C                     MOVEL'1'       *IN20
+     C                     MOVEL'1'       *IN80
+      *
+      ***  Folder Doesn't Exist
+      *
+     C           PMSGID    WHEQ 'CPD8A97'
+     C                     MOVEL'IL20003' ZAMSID
+     C                     MOVEL'1'       *IN20
+     C                     MOVEL'1'       *IN80
+      *
+      ***  Other Error
+      *
+     C                     OTHER
+      *
+     C                     MOVEL'IL20003' ZAMSID
+     C                     MOVEL'1'       *IN20
+     C                     MOVEL'1'       *IN80
+     C                     ENDSL
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  Default Limit for Registration
+      *
+     C           SLIMR     IFEQ ' '                        No Value entered
+     C                     Z-ADD1250000   WWLIMR 150       12500,00 Euro
+     C                     MOVE WWLIMR    ZFIELD           Default value
+     C                     Z-ADD2         ZADEC            2 Decimals
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SLIMR
+     C                     ELSE                            Value Entered
+     C                     Z-ADD13        ZADIG
+     C                     Z-ADD2         ZADEC            2 Decimals
+     C                     MOVE SLIMR     ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON                        Incorrect Value
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL20005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     MOVE ZFIELD    WWLIMR           File Format
+     C           WWLIMR    IFGT 1250000                    > 12500 Euro
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL20006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ***  Display Amount Correctly
+      *
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SLIMR            Converted Value
+     C                     ENDIF
+      *
+      ***  Print Rounting Key Found
+      *
+     C           SPRID     IFNE 'Y'
+     C           SPRID     ANDNE'N'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL20007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ***  Use Dummy Issuer
+      *
+     C           SDMIS     IFEQ ' '                        No Value Entered
+     C                     MOVE 'N'       SDMIS            Default Value
+     C                     ELSE                            Value Entered
+      *
+      ***  Must be 'Y' or 'N'
+      *
+     C           SDMIS     IFNE 'Y'
+     C           SDMIS     ANDNE'N'
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL20008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Activation Date
+      *
+     C           SACTD     IFEQ 0                          No Value Entered
+     C                     MOVE '010102'  SACTD            Default Value
+     C                     ELSE
+      *
+      ***  Convert Activation Date in Number Day
+      *
+     C                     MOVE SACTD     ZDATE
+     C                     EXSR ZDATE1
+      *
+      ***  Invalid Date
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL20009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            Valid Date
+     C           ZDAYNO    IFGT 10959                      > 01Jan02
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL20010' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDZDAYNO    WDAYNO  50
+      *
+     C                     ENDIF
+      *
+      ***  For Interfaced Modules
+      *
+     C                     Z-ADD1         I       20
+     C                     Z-ADD29        J       20
+     C                     MOVEA'00000'   *IN,J
+     C                     MOVE *OFF      *IN34
+     C                     MOVEA'000'     *IN,35
+     C           I         DOWLT9
+     C           ARR,I     IFNE 'Y'
+     C           ARR,I     ANDNE'N'
+     C           ARR,I     ANDNE' '
+     C                     MOVE '1'       *IN,J
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL20011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ADD  1         J
+     C                     ADD  1         I
+     C                     ENDDO
+      *
+     C           BGSDGL    IFEQ 'N'                        General Ledger
+     C                     BITOF'0'       CHR1
+     C                     ELSE
+     C           SGL02     IFEQ 'Y'
+     C                     BITON'0'       CHR1
+     C                     ELSE
+     C           SGL02     IFEQ 'N'
+     C                     BITOF'0'       CHR1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BGRTBN    IFEQ 'N'                        Retail Banking
+     C                     BITOF'1'       CHR1
+     C                     ELSE
+     C           SRE02     IFEQ 'Y'
+     C                     BITON'1'       CHR1
+     C                     ELSE
+     C           SRE02     IFEQ 'N'
+     C                     BITOF'1'       CHR1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BGDLFX    IFEQ 'N'                        Dealing/Forex
+     C                     BITOF'2'       CHR1
+     C                     ELSE
+     C           SDE02     IFEQ 'Y'
+     C                     BITON'2'       CHR1
+     C                     ELSE
+     C           SDE02     IFEQ 'N'
+     C                     BITOF'2'       CHR1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BGCSLN    IFEQ 'N'                        Customer Lending
+     C                     BITOF'3'       CHR1
+     C                     ELSE
+     C           SCL02     IFEQ 'Y'
+     C                     BITON'3'       CHR1
+     C                     ELSE
+     C           SCL02     IFEQ 'N'
+     C                     BITOF'3'       CHR1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BGSECS    IFEQ 'N'                        Securities Trading
+     C                     BITOF'4'       CHR1
+     C                     ELSE
+     C           SST02     IFEQ 'Y'
+     C                     BITON'4'       CHR1
+     C                     ELSE
+     C           SST02     IFEQ 'N'
+     C                     BITOF'4'       CHR1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BGFDTR    IFEQ 'N'                        Funds Transfer
+     C                     BITOF'5'       CHR1
+     C                     ELSE
+     C           SFT02     IFEQ 'Y'
+     C                     BITON'5'       CHR1
+     C                     ELSE
+     C           SFT02     IFEQ 'N'
+     C                     BITOF'5'       CHR1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BGFUOP    IFEQ 'N'                        Futures & Options
+     C                     BITOF'6'       CHR1
+     C                     ELSE
+     C           SFO02     IFEQ 'Y'
+     C                     BITON'6'       CHR1
+     C                     ELSE
+     C           SFO02     IFEQ 'N'
+     C                     BITOF'6'       CHR1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BGPFMG    IFEQ 'N'                        Portfolio Mgmt
+     C                     BITOF'1'       CHR2
+     C                     ELSE
+     C           SPM02     IFEQ 'Y'
+     C                     BITON'1'       CHR2
+     C                     ELSE
+     C           SPM02     IFEQ 'N'
+     C                     BITOF'1'       CHR2
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SCB02     IFEQ 'Y'                        COB Component
+     C                     BITON'7'       CHR2
+     C                     ELSE
+     C           SCB02     IFEQ 'N'
+     C                     BITOF'7'       CHR2
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Force to zero non used bits
+      *
+     C                     BITOF'23456'   CHR2
+      *
+     CSR                   ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      ***
+      ***  Updfls S/R To update file records
+      ***
+      *-------------------------------------------------------------------------
+      *
+     C           #UPDF     BEGSR                           ** #UPDF  BSR**
+      *
+     C           1         SETLLILICDRPD
+     C                     READ ILICDRPD                 70
+     C                     MOVE 'A'       ICCHTP
+     C                     MOVE USER      ICLUID
+     C                     Z-ADDBJRDNB    ICLCD
+     C                     MOVE SPRID     ICPRID
+     C                     MOVELSFLDP     ICFLDP
+     C                     MOVELSDMIS     ICDMIS
+     C                     MOVELINTF      ICINTF
+     C                     Z-ADDWDAYNO    ICACTD
+     C                     MOVE WWLIMR    ICLIMR
+     C                     UPDATILICDRD0                   Update ILICDRPD
+      *
+     C                     MOVEL'ILICDRPD'FCFNCT
+     C           FCFNCT    CHAINILFCTLPA             95
+      *
+      ***  Update audit record if found
+      *
+     C           *IN95     IFEQ *OFF
+     C                     ADD  1         FCNAMD
+     C                     MOVE 'Y'       FCCPTI
+      *
+      ***  Update audit record
+      *
+     C                     UPDATILFCTLA0
+      *
+      ***  Audit record not found: database error
+      *
+     C                     ELSE
+      *                                                    ***************
+     C                     Z-ADD4         DBASE            **DB ERROR 04**
+     C                     MOVEL'ILFCTLPA'DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           XTUPDF    ENDSR                           **#UPDTF ENDSR**
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      ***
+      ***  *PSSR  S/R
+      ***  Called from #UPDF, #INIT
+      ***
+      *-------------------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+      ***  Roll back changes, print dump and cancel program
+      *
+     C                     ROLBK
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      /COPY ZSRSRC,ZALIGNZ2
+      /COPY ZSRSRC,ZEDITZ2
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Finastra International Limited 2005

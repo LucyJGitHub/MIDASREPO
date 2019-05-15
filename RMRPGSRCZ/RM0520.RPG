@@ -1,0 +1,522 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IRM Write to Transaction Extract File')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Interest Risk Management Module                  *
+     F*                                                               *
+     F*  RM0520 - Write To Transaction Extract File                   *
+     F*                                                               *
+     F*  Function:  This program writes a single record to the        *
+     F*  (COB)      Transaction Extract file with the details passed  *
+     F*             to it from the calling program through a          *
+     F*             parameter.                                        *
+     F*                                                               *
+     F*  Called By: RM0100 - Foreign Exchange Tmark Extract           *
+     F*             RM0110 - Money Market Tmark Extract               *
+     F*             RM0120 - FRA/IRS Tmark Extract                    *
+     F*             RM0130 - Customer Lending Tmark Extract           *
+     F*             RM0140 - Securities Trading Tmark Extract         *
+     F*             RM0150 - Futures Tmark Extract                    *
+     F*             RM0400 - Forward Transaction Generation           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRM001  *CREATE    Date 06Feb95               *
+     F*                 Xnnnnn             Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CRM001 - Midas/Tmark Interface                               *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FRMTREXPDO   E                    DISK         KINFSR *PSSR
+     F** IRM Transaction Extract File
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   #LCONV - Convert input data fields to output format         *
+     F*   #LWRIT - Write a record to the Transaction Extract File     *
+     F*                                                               *
+     F*   ZDATE9 - Convert day number to date format YYYYMMDD         *
+     F*                                                               *
+     F*   *PSSR  - Standard Error Processing                          *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E*
+     E/COPY ZSRSRC,ZDATE9Z1
+     E*
+     I/EJECT
+     I/COPY ZSRSRC,ZDATE9Z2
+     I*
+     ID@ITEX    E DSRMITEXPD
+     I**  Data structure for Interim Transaction Extract File details
+     I*
+     IPDATA     E DSDSSDY
+     I**  Data structure to hold the incoming record format
+     I*
+     C/EJECT
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C           D@ITEX    PARM D@ITEX    PDATA
+     C                     PARM           PRTCD   7
+     C*
+     C**  Parameter list for RM0500
+     C*
+     C           WPLST     PLIST
+     C                     PARM           WPAMT  150
+     C                     PARM           WPCCY   3
+     C                     PARM           WPDEC   10
+     C                     PARM           WPCVA  22
+     C                     PARM *BLANKS   WPRTN   7
+     C*
+     C*****************************************************************
+     C**  M A I N   P R O C E S S I N G
+     C*****************************************************************
+     C*
+     C                     MOVE *BLANKS   PRTCD
+     C*
+     C**  Convert input data fields to output format
+     C*
+     C                     EXSR #LCONV
+     C*
+     C**  Write a record to the Transaction Extract File RMTREXPD
+     C*
+     C                     EXSR #LWRIT
+     C*
+     C**  Return to calling program
+     C*
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LCONV - Subroutine to convert input data fields to output    *
+     C*          format                                               *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LCONV    BEGSR                           ** #LCONV SR **
+     C*
+     C**  Convert Deal Date to YYYYMMDD format (Trade Date)
+     C*
+     C           DDAT      IFNE *ZEROS
+     C                     Z-ADDDDAT      @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     TRDA
+     C                     ELSE
+     C                     MOVE *BLANKS   TRDA
+     C                     ENDIF
+     C*
+     C**  Convert Value Date to YYYYMMDD format (Effective Date)
+     C*
+     C           VDAT      IFNE *ZEROS
+     C                     Z-ADDVDAT      @@DAYN
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     EFDA
+     C                     ELSE
+     C                     MOVE *BLANKS   EFDA
+     C                     ENDIF
+     C*
+     C**  Convert Maturity Date to YYYYMMDD format
+     C*
+     C           MDAT      IFNE *ZEROS
+     C                     Z-ADDMDAT      @@DAYN
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     MADA
+     C                     ELSE
+     C                     MOVE *BLANKS   MADA
+     C                     ENDIF
+     C*
+     C**  Convert Principal Amount to alpha format (Notional Amount)
+     C*
+     C           PCPL      IFNE *ZERO
+     C                     MOVE *ZEROS    WPAMT
+     C                     Z-ADDPCPL      WPAMT
+     C                     MOVE CCY       WPCCY
+     C                     Z-ADD0         WPDEC
+     C                     CALL 'RM0500'  WPLST
+     C                     MOVELWPCVA     NOTA
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   NOTA
+     C                     ENDIF
+     C*
+     C**  Convert Interest Rate to alpha format (Fixed Rate)
+     C*
+     C           INTR      IFNE *ZERO
+     C                     MOVE *ZEROS    WPAMT
+     C                     MOVE INTR      WPAMT
+     C                     MOVE *BLANKS   WPCCY
+     C                     Z-ADD7         WPDEC
+     C                     CALL 'RM0500'  WPLST
+     C                     MOVELWPCVA     FRAT
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   FRAT
+     C                     ENDIF
+     C*
+     C**  Check if Index Type is blank (implying a floating rate)
+     C*
+     C           IDXT      IFEQ *BLANK
+     C*
+     C**  Convert Rate/Spread to alpha format (Rate offset)
+     C*
+     C           RTSP      IFNE *ZERO
+     C*
+     C           SPIN      IFEQ 'S'
+     C                     Z-SUBRTSP      RTSP
+     C                     ENDIF
+     C*
+     C                     MOVE *ZEROS    WPAMT
+     C                     MOVE RTSP      WPAMT
+     C                     MOVE *BLANKS   WPCCY
+     C                     Z-ADD5         WPDEC
+     C                     CALL 'RM0500'  WPLST
+     C                     MOVELWPCVA     RATO
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   RATO
+     C                     ENDIF
+     C*
+     C**  Convert Rollover Frequency to its Tmark equivalent (Reset
+     C**  Frequency Code)
+     C*
+     C                     SELEC
+     C*
+     C           RLFQ      WHEQ 'N'
+     C                     MOVEL'M'       RFRC
+     C*
+     C           RLFQ      WHEQ 'X'
+     C                     MOVEL'S'       RFRC
+     C*
+     C           RLFQ      WHEQ 'Y'
+     C                     MOVEL'A'       RFRC
+     C*
+     C           RLFQ      WHEQ ' '
+     C                     MOVEL'Z'       RFRC
+     C*
+     C                     OTHER
+     C                     MOVELRLFQ      RFRC
+     C*
+     C                     ENDSL
+     C*
+     C**  Convert Rollover Date to YYYYMMDD format (Reset Frequency
+     C**  Start Date). If date zero then use effective date
+     C*
+     C           RLDT      IFNE *ZEROS
+     C                     Z-ADDRLDT      @@DAYN
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     RFRS
+     C                     ELSE
+     C                     MOVELEFDA      RFRS
+     C                     ENDIF
+     C*
+     C**  Convert Rollover Day to alpha format (Reset Frequency Day)
+     C*
+     C           RLDY      IFNE *ZEROS
+     C                     MOVE *ZEROS    WPAMT
+     C                     MOVE RLDY      WPAMT
+     C                     MOVE *BLANKS   WPCCY
+     C                     Z-ADD0         WPDEC
+     C                     CALL 'RM0500'  WPLST
+     C                     MOVELWPCVA     RFRD
+     C                     ELSE
+     C                     MOVEL*BLANKS   RFRD
+     C                     ENDIF
+     C*
+     C**  Convert Rate Fix Days to alpha format (Reset Gap Day)
+     C*
+     C           FRFD      IFNE *ZEROS
+     C                     MOVE *ZEROS    WPAMT
+     C                     MOVE FRFD      WPAMT
+     C                     MOVE *BLANKS   WPCCY
+     C                     Z-ADD0         WPDEC
+     C                     CALL 'RM0500'  WPLST
+     C                     MOVELWPCVA     RGAP
+     C                     ELSE
+     C                     MOVEL*BLANKS   RGAP
+     C                     ENDIF
+     C*
+     C**  Reset Calendar ID and Reset Gap Calendar ID is equal to
+     C**  the currency code
+     C*
+     C                     MOVELCCY       RCAL
+     C                     MOVELCCY       RGPC
+     C*
+     C**  Reset Start or End indicator is equal to 'S'
+     C*
+     C                     MOVE 'S'       RSEI
+     C*
+     C**  Else, initialise fields to blank
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   RATO
+     C                     MOVE *BLANKS   RFRC
+     C                     MOVE *BLANKS   RFRS
+     C                     MOVE *BLANKS   RFRD
+     C                     MOVE *BLANKS   RETM
+     C                     MOVE *BLANKS   RCAL
+     C                     MOVE *BLANKS   RGAP
+     C                     MOVE *BLANKS   RGPC
+     C                     MOVE *BLANKS   RSEI
+     C*
+     C                     END
+     C*
+     C**  For non 'FX' convert Interest Payment Frequency to its
+     C**  TMark equivalent
+     C*
+     C           IRTY      IFNE 'FX'
+     C*
+     C                     SELEC
+     C*
+     C           IPFR      WHEQ 'N'
+     C                     MOVE 'M'       WIPFR   1
+     C*
+     C           IPFR      WHEQ 'X'
+     C                     MOVE 'S'       WIPFR
+     C*
+     C           IPFR      WHEQ 'Y'
+     C                     MOVE 'A'       WIPFR
+     C*
+     C           IPFR      WHEQ ' '
+     C                     MOVE 'Z'       WIPFR
+     C*
+     C                     OTHER
+     C                     MOVE IPFR      WIPFR
+     C*
+     C                     ENDSL
+     C*
+     C**  Convert Next Interest Pay Date to YYYYMMDD format. If
+     C**  date is zero use effective date
+     C*
+     C           NIDT      IFNE *ZEROS
+     C                     Z-ADDNIDT      @@DAYN
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     WNIDT   8
+     C                     ELSE
+     C                     MOVELEFDA      WNIDT
+     C                     END
+     C*
+     C**  Convert Interest Frequency Day in Month to alpha format
+     C*
+     C           INTF      IFNE *ZEROS
+     C                     MOVE *ZEROS    WPAMT
+     C                     MOVE INTF      WPAMT
+     C                     MOVE *BLANKS   WPCCY
+     C                     Z-ADD0         WPDEC
+     C                     CALL 'RM0500'  WPLST
+     C                     MOVELWPCVA     WINTF   2
+     C                     ELSE
+     C                     MOVE *BLANKS   WINTF
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Compute for the Interest Basis
+     C                     MOVE *BLANKS   INTB
+     C*
+     C           IRTY      IFEQ 'LD'
+     C           IRTY      OREQ 'FR'
+     C           IRTY      OREQ 'SW'
+     C*
+     C                     SELEC
+     C           ICBS      WHEQ 1
+     C           ICBS      OREQ 4
+     C                     MOVEL'365F'    INTB
+     C*
+     C           ICBS      WHEQ 2
+     C           ICBS      OREQ 5
+     C                     MOVEL'360F'    INTB
+     C*
+     C           ICBS      WHEQ 3
+     C                     MOVEL'360E'    INTB
+     C*
+     C           ICBS      WHEQ 6
+     C                     MOVEL'366A'    INTB
+     C                     ENDSL
+     C*
+     C                     END
+     C*
+     C**  Default the Interest Basis to 360F and the Interest
+     C**  Method to YAD for FX
+     C*
+     C           IRTY      IFEQ 'FX'
+     C                     MOVEL'360F'    INTB
+     C                     MOVEL'YAD'     INTM
+     C                     END
+     C*
+     C**  Compute the Interest Basis for Securities
+     C**  Default is 30/360 or 360E
+     C*
+     C           IRTY      IFEQ 'SC'
+     C                     MOVEL'360E'    INTB
+     C*
+     C                     SELEC
+     C*
+     C           DYBS      WHEQ '1'
+     C           DVBS      ANDEQ'1'
+     C                     MOVEL'360E'    INTB
+     C*
+     C           DYBS      WHEQ '3'
+     C           DVBS      ANDEQ'1'
+     C                     MOVEL'360F'    INTB
+     C*
+     C           DYBS      WHEQ '3'
+     C           DVBS      ANDEQ'2'
+     C                     MOVEL'365F'    INTB
+     C*
+     C           DYBS      WHEQ '5'
+     C           DVBS      ANDEQ'1'
+     C                     MOVEL'360E'    INTB
+     C*
+     C           DYBS      WHEQ '3'
+     C           DVBS      ANDEQ'5'
+     C                     MOVEL'366A'    INTB
+     C*
+     C           DYBS      WHEQ '3'
+     C           DVBS      ANDEQ'2'
+     C                     MOVEL'365F'    INTB
+     C*
+     C           DYBS      WHEQ '3'
+     C           DVBS      ANDEQ'5'
+     C                     MOVEL'366A'    INTB
+     C                     ENDSL
+     C*
+     C                     ENDIF
+     C*
+     C**  Security Market Price to alpha format (Latest Price)
+     C*
+     C           MKPR      IFNE *ZERO
+     C                     MOVE *ZEROS    WPAMT
+     C                     MOVE MKPR      WPAMT
+     C                     MOVE *BLANKS   WPCCY
+     C                     Z-ADD8         WPDEC
+     C                     CALL 'RM0500'  WPLST
+     C                     MOVELWPCVA     LATP
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   LATP
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LWRIT - Subroutine to write a record to the transaction      *
+     C*          extract file                                         *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LWRIT    BEGSR                           ** #LWRIT SR **
+     C*
+     C**  Move remaining input fields to output fields
+     C*
+     C                     MOVE *BLANKS   RINC
+     C                     MOVE *BLANKS   ROPC
+     C                     MOVE *BLANKS   IGAP
+     C                     MOVE *BLANKS   IGHR
+     C                     MOVE *BLANKS   IGHA
+     C                     MOVEL'S'       YMTH
+     C                     MOVELCCY       ICAL
+     C                     MOVE *BLANKS   CPMT
+     C*
+     C**  Check if Interest Capitalization indicator is equal to 'Y'
+     C*
+     C           INTC      IFEQ 'Y'
+     C                     MOVELWIPFR     CFRQ
+     C                     MOVELWNIDT     CFSD
+     C                     MOVELWINTF     CFDA
+     C                     MOVE *BLANKS   IFRC
+     C                     MOVE *BLANKS   IFRS
+     C                     MOVE *BLANKS   IFRD
+     C                     ELSE
+     C                     MOVE *BLANKS   CFRQ
+     C                     MOVE *BLANKS   CFSD
+     C                     MOVE *BLANKS   CFDA
+     C                     MOVELWIPFR     IFRC
+     C                     MOVELWNIDT     IFRS
+     C                     MOVELWINTF     IFRD
+     C                     END
+     C*
+     C**  Write a record to the Transaction Extract File
+     C*
+     C                     WRITERMTREXD0
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*                                                               *
+     C* Called by: Any file or program error                          *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     DUMP
+     C                     MOVE '*ERROR ' PRTCD
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C*
+     C/COPY ZSRSRC,ZDATE9Z3
+     C*
+**  CPY@ - Copyright Statement
+(c) Finastra International Limited 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

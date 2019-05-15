@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas ZA Check Valid file & delay if too many recs')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Standard routines                                     */
+/*                                                                   */
+/*       ZACCHKVLDY - Check Valid file and delay job if too many     */
+/*                    records                                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CAP002  *CREATE    Date 28Jan98              */
+/*                      XNNNNN             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CAP002 - Conversion of Midas inputs to modular API structure*/
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &NUMBER)
+ 
+             DCL        VAR(&NUMBER) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&DELAYSECS) TYPE(*DEC) LEN(5 0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+RTVMBRD:
+             RTVMBRD    FILE(&FILE) NBRCURRCD(&NBRCURRCD)
+ 
+             IF         COND(&NBRCURRCD *GT &NUMBER) THEN(DO)
+                CHGVAR     VAR(&DELAYSECS) VALUE(&NBRCURRCD - &NUMBER)
+                DLYJOB     DLY(&DELAYSECS)
+                GOTO       CMDLBL(RTVMBRD)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+ 
+ END:
+             ENDPGM

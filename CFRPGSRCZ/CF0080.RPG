@@ -1,0 +1,284 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Download Client Details to TRAM')
+     F********************************************************************
+     F*                                                                  *
+     F*     Midas  CONFIRMATION MATCHING                             *
+     F*                                                                  *
+     F*     CF0080 - DOWNLOAD CLIENT DETAILS TO TRAM                     *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 27May93               *
+      *                 S01304             Date 13Sep90               *
+     F*                      S01184            DATE  15DEC89             *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*  S01408 - Core hook CF0080CEIP added                             *
+     F*         - Core hook CF0080CEND added                             *
+     F*         - Core hook CF0080CEPP added                             *
+     F*         - Core hook CF0080FPG  added                             *
+     F*         - Core hook CF0080IDS  added                             *
+     F*       S01304 - CHANGES MADE DURING CONFIRMATION MATCHING         *
+     F*                INCORPORATION.                                    *
+     F*                                                                  *
+     F*       S01184 - CREATED FOR CONFIRMATION MATCHING                 *
+     F*                                                                  *
+     F********************************************************************
+     FSDCUSTL0IP  E           K        DISK
+     FCFCLNTPDO   E                    DISK
+     F*                                                                   S01408
+     F** Core hook for externalisation.                                   S01408
+     F/COPY WNCPYSRC,CF0080FPG                                            S01408
+     F/SPACE 3
+      /EJECT
+     F****************************************************************
+     F*                  FUNCTION OF INDICATORS
+     F*
+     F*      01   FIRST CYCLE
+     F*      02   SDCUSTPD RECORD TO BE WRITTEN TO CFCLNTPD
+     F*      03   LOKUP
+     F*
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     E                    @11        11  1
+     E**  Array to hold first 11 bytes of SWIFT address
+     E*****************************************************************
+     I*
+     ICFSTAT      DS                            256
+     I                                       55  590@LTRD
+     I                                       60  640@RUND
+     I*   CONFIRMATION MATCHING DATA AREA - Last Transfer Date
+     I*
+     IRUNDAT      DS                             13
+     I                                    P   8  100@RD
+     I*   RUN DATE DATA AREA - Run Date (packed)
+     I*                                                                   S01408
+     I** Core hook for externalisation.                                   S01408
+     I/COPY WNCPYSRC,CF0080IDS                                            S01408
+      *****************************************************************
+      /EJECT
+     C****************************************************************
+     C* SUBROUTINES USED                                              *
+     C*
+     C* 1.  MAIN   -  Main processing
+     C* 2.  INIT   -  Initial processing
+     C* 3.  SETUP  -  Set up CFCLNTPD fields before output
+     C*
+     C****************************************************************
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN PROCESSING                                               *
+     C*                                                               *
+     C* This program extracts some CLIENT details from SDCUSTPD and   *
+     C* outputs them to CFCLNTPD.  A parameter of TRAM ID (TRID) is   *
+     C* received from the calling program CFC0080 and will contain    *
+     C* one of the following:                                         *
+     C*                                                               *
+     C*          'ZZZ'  =>  INSTALLATION (copy all live records to    *
+     C*                     CFCLNTPD)                                 *
+     C*          'nnn'  =>  ADD NEW TRAM SYSTEM (copy all live        *
+     C*                     to CFCLNTPD)                              *
+     C*                     nnn is the TRAM ID of the new system      *
+     C*          '   '  =>  DAILY DOWNLOAD (copy all live records     *
+     C*                     changed since Last Transfer Date)         *
+     C*                                                               *
+     C* CALLS         INIT    -  Initial processing                   *
+     C*               SETUP   -  Set up CFCLNTPD fields before output *
+     C*                                                               *
+     C* CALLED BY                                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C* IF FIRST CYCLE, do initial processing
+     C*
+     C           *IN01     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+     C*
+     C* IF SDCUSTPD record is DELETED
+     C*             don't output to CFCLNTPD
+     C*
+     C* IF SDCUSTPD record is LIVE and this is a DAILY DOWNLOAD and
+     C* the Last Change Date on record is *LT Last Transfer Date
+     C*             don't output to CFCLNTPD
+     C*
+     C* IF SDCUSTPD record is LIVE and this is a DAILY DOWNLOAD and
+     C* the Last Change Date on record is *GE Last Transfer Date
+     C*             write output to CFCLNTPD
+     C*
+     C* IF SDCUSTPD record is LIVE and INSTALLATION or NEW TRAM SYSTEM
+     C*             write to CFCLNTPD
+     C*
+     C**BBADST*=*Type of last change                                      S01304
+     C* BBTYLC = Type of last change                                      S01304
+     C***********BBADST    IFEQ 'D'                                       S01304
+     C           BBTYLC    IFEQ 'D'                                       S01304
+     C           TRID      OREQ *BLANKS
+     C***********BBAAVA    ANDLT@LTRD                                     S01304
+     C           BBLCD     ANDLT@LTRD                                     S01304
+     C                     MOVE '0'       *IN02
+     C                     ELSE
+     C                     EXSR SETUP
+     C                     END
+     C*
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,CF0080CEPP                                           S01408
+     C*                                                                   S01408
+     C           ENDPGM    TAG                             ENDPGM TAG
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SETUP - Set up CFCLNTPD fields before output                  *
+     C*                                                               *
+     C* CALLS         NONE                                            *
+     C*                                                               *
+     C* CALLED BY     MAIN - Main processing                          *
+     C*                                                               *
+     C*****************************************************************
+     C           SETUP     BEGSR
+     C*                                                                ***
+     C                     MOVE '1'       *IN02
+     C*
+     C* Customer No, Report Name, Shortname, Address Lines 1, 2, 3, 4
+     C* and SWIFT ID
+     C*
+     C***********          MOVE BBAENB    CNUM                            S01304
+     C***********          MOVE BBBUTX    CRNM                            S01304
+     C***********          MOVE BBBKTX    CSNM                            S01304
+     C***********          MOVE BBCATX    CNA1                            S01304
+     C***********          MOVE BBCBTX    CNA2                            S01304
+     C***********          MOVE BBCCTX    CNA3                            S01304
+     C***********          MOVE BBCDTX    CNA4                            S01304
+     C                     MOVE BBCUST    CNUM                            S01304
+     C                     MOVE BBCRNM    CRNM                            S01304
+     C                     MOVE BBCSSN    CSNM                            S01304
+     C                     MOVE BBCNA1    CNA1                            S01304
+     C                     MOVE BBCNA2    CNA2                            S01304
+     C                     MOVE BBCNA3    CNA3                            S01304
+     C                     MOVE BBCNA4    CNA4                            S01304
+     C*
+     C* If a 9 or 12 byte SWIFT address (i.e. TID present) remove
+     C* 9th byte (TID).  If an 11 byte SWIFT address, do not change.
+     C**11*bytes*=> only 12th byte of BBBYTX is blank.
+     C* 11 bytes => only 12th byte of BBCSID is blank.
+     C*
+     C***********          MOVE BBBYTX    @1      1                       S01304
+     C***********          MOVEABBBYTX    @11                             S01304
+     C                     MOVE BBCSID    @1      1                       S01304
+     C                     MOVEABBCSID    @11                             S01304
+     C                     Z-ADD1         X       20
+     C           ' '       LOKUP@11,X                    03
+     C*
+     C           @1        IFNE ' '
+     C           *IN03     OREQ '1'
+     C***********          MOVE BBBYTX    @BIC    3                       S01304
+     C***********          MOVELBBBYTX    @SWAD  11                       S01304
+     C                     MOVE BBCSID    @BIC    3                       S01304
+     C                     MOVELBBCSID    @SWAD  11                       S01304
+     C                     MOVE @BIC      @SWAD
+     C                     MOVEL@SWAD     SWAD
+     C                     ELSE                                           S01304
+     C                     MOVE BBCSID    SWAD                            S01304
+     C                     END
+     C*
+     C* if installation, mark all records as 'N'ew
+     C*
+     C           TRID      IFNE *BLANKS
+     C                     MOVE 'N'       RECI
+     C                     ELSE
+     C*
+     C* SDCUSTPD Last Change Type I (insert) => CFCLNTPD RECI N (new)
+     C* SDCUSTPD Last Change Type A (amend) => CFCLNTPD RECI C (change)
+     C*
+     C***********BBADST    IFEQ 'I'                                       S01304
+     C           BBTYLC    IFEQ 'I'                                       S01304
+     C                     MOVE 'N'       RECI
+     C                     ELSE
+     C                     MOVE 'C'       RECI
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR                           **SETUP**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* INIT - Initial processing                                     *
+     C*                                                               *
+     C* CALLS         NONE                                            *
+     C*                                                               *
+     C* CALLED BY     MAIN - Main processing                          *
+     C*                                                               *
+     C*****************************************************************
+     C           INIT      BEGSR
+     C*                                                                ***
+     C**  Receive parameter of TRAM ID
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TRID    3
+     C*
+     C* Define Confirmation Matching Data Area
+     C*
+     C           *NAMVAR   DEFN           CFSTAT
+     C*
+     C* Define Run Date Data Area
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C*
+     C* Set off FIRST CYCLE indicator
+     C*
+     C                     MOVE '1'       *IN01
+     C*
+     C*
+     C* Get Last Transfer Date from CFSTAT (for use in DAILY DOWNLOAD)
+     C* Update CFSTAT with today's run date (unpacked)
+     C*
+     C                     IN   RUNDAT
+     C           *LOCK     IN   CFSTAT
+     C                     Z-ADD@RD       @RUND
+     C                     OUT  CFSTAT
+     C*
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,CF0080CEIP                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR                           **INIT**
+     C*****************************************************************
+      /EJECT
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,CF0080CEND                                           S01408
+     C*
+     C* Output CFCLNTPD record if *IN02 is on
+     C*
+     OCFCLNTD0D        02
+     O                         *ALL

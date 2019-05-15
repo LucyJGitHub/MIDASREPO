@@ -1,0 +1,454 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas List cross currencies file')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - TREASURY MANAGEMENT (FX AND MM)
+     F*                                                              *
+     F*     TM3310 - LIST CROSS CURRENCIES FILE                      *
+     F*                                                              *
+     F*     Function: This enquiry produces a list of all the pairs  *
+     F*     (I/C COB) of currencies that have been set up as cross   *
+     F*               currency positions to be maintained.           *
+     F*                                                              *
+     F*     Called by: TMC3310 - List cross currencies maintained    *
+     F*                                                              *
+     F*     Calls    : ZSFILE  - Set up spool file numbers file.     *
+     F*                                                              *
+     F* (c) Finastra International Limited 2001                      *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     PREV AMEND NO. XXXXXX             DATE   XX/XXX/XX       *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+     F*     MD046248 - Finastra Rebranding                           *
+     F*     NEW PROGRAM FOR S01277, MAINTAIN CROSS CCY POSITIONS     *
+     F*                                                              *
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ---------------------------------------
+     F*
+     F*       61         OVERFLOW INDICATOR
+     F*       62         AT LEAST ONE SET OF DETAILS OUTPUT.
+     F*       63         PROGRAM CALLED AT END OF DAY.
+     F*       U7         DATABASE ERROR (JOB SWITCH).
+     F*       U8         DATABASE ERROR (JOB SWITCH).
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFXCRSCLLIPE E           K        DISK         KINFSR *PSSR
+     FTM3310AUO   E                    PRINTER      KINFDS SPOOLU
+     FTM3310RRO   E             61     PRINTER      KINFDS SPOOL
+     E                    CPY@    1   1 80
+     E                    @PRNM   1   4 45
+     E*
+     E**  ARRAY TO HOLD TM3310AU TITLE TEXT
+     E*
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** EXTERNAL DS FOR CURRENCY DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ISPOOL       DS                                                      S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     ISPOOLU      DS                                                      S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     C/EJECT
+     C*
+     C**   PERFORM #A ONLY ON FIRST CYCLE.
+     C           @CYCLE    IFNE 'FIRST'                    B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+     C*
+     C**   DO NOT PERFORM MAIN PROCESSING IF NO RECORDS
+     C*
+     C           *INLR     IFEQ '0'                        B1
+     C                     EXSR #B
+     C                     END                             E1
+     C*
+     C**   EXECUTE #C AT LR.
+     CLR                   EXSR #C
+     C/EJECT
+     C****************************************************************
+     C*       INDEX TO SUBROUTINES - LISTED ACCORDING TO USAGE       *
+     C*                                                              *
+     C*     1) #B      MAIN PROCESSING.                              *
+     C*     2) #A      INITIALISATION.                               *
+     C*     3) #C      TERMINATION.                                  *
+     C*     4) #CA     SETS UP AND OUTPUTS FILE CONTROL REPORT.      *
+     C*     5) *PSSR   DUMP.                                         *
+     C*                                                              *
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #B - MAIN PROCESSING                                     *
+     C*                                                              *
+     C*        CALLED BY  : CONTROL PROCESSING.                      *
+     C*                                                              *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS: @CALC   TOTAL NUMBER OF DETAILS O/P.     *
+     C*                     @RECP   NUMBER OF RECORDS O/P ON THIS    *
+     C*                             PAGE.                            *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  EXIT THIS ROUTINE IF A DATA BASE ERROR HAS OCCURRED
+     C**  OR THE LOGICAL DELETE FLAG OF THE INPUT RECORD IS NOT
+     C**  BLANKS.
+     C           *INU8     IFEQ '1'                        B1
+     C           CPDLTF    ORNE *BLANK                     *1
+     C                     GOTO #B9                        *1
+     C                     END                             E1
+     C*
+     C**  READ THE CURRENCIES FILE RECORD
+     C**  CORRESPONDING TO THE PRIMARY CURRENCY FIELD ON FXCRSUPP
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CPPCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**  IF A DATA BASE ERROR HAS OCCURRED, SET U7, U8
+     C**  AND LR. NO FURTHER PROCESSING IN THIS PROGRAM.
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVEL'SDCURRPD'DBFILE           *1
+     C                     MOVE *BLANKS   DBKEY            *1
+     C                     MOVELCPPCCY    DBKEY            *1
+     C                     MOVEL'001'     DBASE            *1
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            * DB ERROR 001*
+     C                     MOVE '1'       *INLR            ***************
+     C                     EXSR *PSSR                      *1
+     C                     GOTO #B9                        *1
+     C                     END                             E1
+     C*
+     C                     MOVE A6CYNM    RRPCNM
+     C*
+     C**  READ THE CURRENCIES FILE RECORD
+     C**  CORRESPONDING TO THE SECONDARY CURRENCY FIELD ON FXCRSCPP
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CPSCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**  IF A DATA BASE ERROR HAS OCCURRED, SET U7, U8
+     C**  AND LR. NO FURTHER PROCESSING IN THIS PROGRAM.
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVEL'SDCURRPD'DBFILE           *1
+     C                     MOVE *BLANKS   DBKEY            *1
+     C                     MOVELCPSCCY    DBKEY            *1
+     C                     MOVEL'003'     DBASE            *1
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            * DB ERROR 003*
+     C                     MOVE '1'       *INLR            ***************
+     C                     EXSR *PSSR                      *1
+     C                     GOTO #B9                        *1
+     C                     END                             E1
+     C*
+     C                     MOVE A6CYNM    RRSCNM
+     C*
+     C**  IF 25 DETAILS HAVE ALREADY BEEN OUTPUT ON THIS PAGE
+     C**  SKIP TO NEXT PAGE AND OUTPUT NEW HEADINGS.
+     C           @RECP     IFEQ 25                         B1
+     C                     WRITETM3310R0                   *1
+     C                     Z-ADD0         @RECP            *1
+     C                     END                             E1
+     C*
+     C**  SET UP OUTPUT FIELDS FOR DETAIL RECORDS
+     C                     MOVE CPPCCY    RRPCCY
+     C                     MOVE CPSCCY    RRSCCY
+     C*
+     C**  OUTPUT DETAIL RECORD
+     C                     MOVE '1'       *IN61
+     C                     WRITETM3310R1
+     C*
+     C**  *IN62 SET ON TO INDICATE DETAIL LINE PRODUCED.
+     C                     MOVE '1'       *IN62
+     C*
+     C**  INCREMENT FIELDS TO SHOW NUMBER OF DETAILS ALREADY
+     C**  OUTPUT, AND NUMBER DETAILS ALREADY OUTPUT ON THIS PAGE.
+     C                     ADD  1         @CALC
+     C                     ADD  1         @RECP
+     C*
+     C           #B9       ENDSR
+     C*
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #A - FIRST CYCLE PROCESSING                               *
+     C*                                                              *
+     C*       CALLED BY  : CONTROL PROCESSING.                       *
+     C*                                                              *
+     C*       CALLS      : ZA150                                     *
+     C*                                                              *
+     C*       WORK FIELDS: @CYCLE   FIELD TO INDICATE IF #A EXECUTED *
+     C*                    @TYPP    FIELD TO INDICATE TYPE OF PROC.  *
+     C*                    @CALC    FIELD CONTAINING CALCULATED      *
+     C*                             NUMBER OF DETAILS ALREADY OUTPUT *
+     C*                    @RECP    NUMBER OF DETAILS ALREADY        *
+     C*                             OUTPUT ON THIS PAGE              *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C**  RECEIVE PARAMETER INDICATING TYPE OF PROCESSING
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C                     PARM           @TYPP   2
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     MOVE 'FIRST'   @CYCLE  5
+     C*
+     C**  ACCESS INSTALLATION CONTROL DATA
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     MOVEL'002'     DBASE            * DBERROR 002*
+     C                     MOVEL@OPTN     DBKEY            **************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE BJMRDT    RRRUNA
+     C                     MOVE BJURPT    RRTITL
+     C*
+     C**  INITIALISE FIELD CONTAINING NUMBER OF DETAILS ALREADY
+     C**  OUTPUT
+     C                     Z-ADD0         @CALC   50
+     C*
+     C**  INITIALISE FIELD CONTAINING NUMBER OF RECORDS ALREADY
+     C**  ON THE PAGE TO THE MAXIMUM NUMBER OF DETAILS THAT CAN
+     C**  BE OUTPUT ON A PAGE.
+     C                     Z-ADD25        @RECP   20
+     C*
+     C           #A9       ENDSR
+     C*
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #C - TERMINATION PROCESSING.                              *
+     C*                                                              *
+     C*       CALLED BY  : CONTROL PROCESSING.                       *
+     C*                                                              *
+     C*       CALLS      : #CA                                       *
+     C*                                                              *
+     C*       WORK FIELDS: @CYCLE   FIELD TO INDICATE IF #A EXECUTED *
+     C*                    @T       ARRAY TO HOLD CONTROL REPORT     *
+     C*                             TITLE TEXT                       *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C** SET UP PROGRAM NAME.
+     C                     MOVEL'TM3310'  DBPGM
+     C                     MOVEL'TM3310'  RRPGM
+     C*
+     C**  SET UP FILE CONTROL REPORT TITLE.
+     C                     MOVEL@PRNM,1   RRPRNM
+     C                     MOVE @PRNM,2   RRPRNM
+     C                     MOVEL@PRNM,3   RRPRUL
+     C                     MOVE @PRNM,4   RRPRUL
+     C*
+     C** IF #A HAS NOT BEEN PERFORMED BECAUSE FXCRSCLL HAS NO RECORDS,
+     C** ACCESS I.C.D. RECORD.
+     C           @CYCLE    IFNE 'FIRST'                    B1
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     MOVEL'004'     DBASE            * DBERROR 004*
+     C                     MOVEL@OPTN     DBKEY            **************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE BJMRDT    RRRUNA
+     C                     MOVE BJURPT    RRTITL
+     C*
+     C                     END                             E1
+     C*
+     C**  PROCESSING IF DATABASE ERROR HAS OCCURRED IN THIS PROGRAM.
+     C           *INU8     IFEQ '1'                        B1
+     C*
+     C**  OUTPUT DETAIL REPORT AND CONTROL REPORT HEADINGS
+     C                     WRITETM3310A0                   *1
+     C                     WRITETM3310R0                   *1
+     C*
+     C**  LOAD PRINTER FILE WITH ERROR DATA , PRINT ERROR MESSAGE
+     C**  & EXIT PROGRAM.
+     C                     MOVE DBASE     RRBASE           *1
+     C                     MOVE DBFILE    RRFILE           *1
+     C                     MOVE DBKEY     RRKEY            *1
+     C                     WRITETM3310R3                   *1
+     C                     WRITETM3310A3                   *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     GOTO #C8                        *1
+     C                     END                             E1
+     C*
+     C**  PRODUCE FILE CONTROL REPORT.
+     C                     EXSR #CA
+     C*
+     C**  IF A DATA BASE ERROR HAS OCCURRED, BYPASS FURTHER PROCESSING.
+     C           *INU8     CABEQ'1'       #C8
+     C*
+     C** IF NO DETAILS HAVE YET BEEN OUTPUT, OUTPUT DETAIL HEADERS.
+     C           *IN62     IFEQ '0'                        B1
+     C                     WRITETM3310R0                   *1
+     C                     END                             E1
+     C*
+     C** REPORT TRAILERS.
+     C** PRINTS "END OF REPORT" IF *IN62 ON, OTHERWISE, "NO DETAILS".
+     C                     WRITETM3310R2
+     C*
+     C           #C8       TAG
+     C*
+     C** CALL ZSFILE FOR TM3100RR
+     C*
+     C** TRANSFER BINARY DATA INTO NUMERIC FIELD
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ    5
+     C                     PARM *BLANK    @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'                        B1
+     C                     SETON                     U7U8
+     C                     RETRN
+     C                     END                             E1
+     C*
+     C** ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+     C*
+      ** TRANSFER BINARY DATA INTO NUMERIC FIELD
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ
+     C                     PARM *BLANKS   @PARM
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'                        B1
+     C                     SETON                     U7U8
+     C                     RETRN
+     C                     END                             E1
+     C*
+     C           #C9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*       #CA          PRODUCES FILE CONTROL REPORT.             *
+     C*                                                              *
+     C*       CALLED BY  : TERMINATION PROCESSING.                   *
+     C*                                                              *
+     C*       CALLS      : QCMDEXC                                   *
+     C*                                                              *
+     C*       WORK FIELDS: @TYPP    RUN TYPE INPUT PARAMETER.        *
+     C*                    @CALC    FIELD CONTAINING CALCULATED      *
+     C*                             NUMBER OF DETAILS OUTPUT.        *
+     C*                    @OVR     ARRAY HOLDING OVERRIDE           *
+     C*                             COMMAND FOR QCMDEXC              *
+     C*                    @CMD     COMMAND PARAMETER FOR QCMDEXC    *
+     C*                    @LEN     COMMAND LENGTH FOR QCMDEXC       *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #CA       BEGSR
+     C*
+     C**  SET UP CALCULATED NUMBER OF RECORDS FIELD.
+     C                     Z-ADD@CALC     RRCALC
+     C*
+     C**  SET UP TIME FIELD.
+     C                     TIME           RRTIME
+     C*
+     C**  IF TYPE OF PROCESSING IS 'END OF DAY'
+     C**  SET ON *IN63 TO PRINT FIELDS ON REPORT.
+     C*
+     C           @TYPP     IFEQ 'ED'                       B1
+     C                     MOVE '1'       *IN63            *1
+     C                     END                             E1
+     C*
+     C**  PRINT FILE CONTROL REPORT.
+     C                     WRITETM3310A0
+     C                     WRITETM3310A1
+     C*
+     C           #CA9      ENDSR                           **#CA9**
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*   EXCEPTION ERROR SUBROUTINE                      *
+     C*                                                   *
+     C*   SUBROUTINE CALLED: EXECUTES WHENEVER EITHER     *
+     C*   FILE OR PROGRAM ERROR OCCURS                    *
+     C*                                                   *
+     C*   SUBROUTINE CALLS : NO OTHER SUBROUTINES         *
+     C*                                                   *
+     C*****************************************************
+     C           *PSSR     BEGSR
+      *
+     C** SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+      *
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     DUMP
+     C                     END                             E1
+      *
+     C                     ENDSR
+     C/EJECT
+**
+(c) Finastra International Limited 2001
+** TM3310AU REPORT TITLE
+      MIDAS DEALING ROOM SYSTEM - CROSS CURRE
+NCY REPORT TOTALS
+      ---------------------------------------
+-----------------

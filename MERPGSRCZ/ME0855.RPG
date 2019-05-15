@@ -1,0 +1,623 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Outgoing mail re-print (ISO format)')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *    ME0855 - Outgoing Mail Re-print (ISO format)               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 00000              Date 00Xxx00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FSDMEMOL0IF  E           K        DISK
+     FME0855DFCF  E                    WORKSTN
+      *
+     E                    CPY@    1   1 80
+     E                    ZMNM   12  12  3
+      *
+      * ID C  F  H  L Function of indicaators
+      * 01            DSRUN (DATA AREA) not found indicator
+      * 99            Read & Chain fail indicator
+      * 98            End of file indicator
+      * 91            Mandatory indicator for LOKUP operation(NOT USED)
+      * 30,32,33,41 -
+      * 42,43       - Error indicator
+      * 50 - 53       Testing Date format indicator
+      * U7U8LR        DB error
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Local data area data structure
+      *
+     IDSRUN       DS
+     I                                        1   7 RDAT
+     I                                        1   1 @BLK
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      **  RUNDAT data area data structure (date format -ddmmmyy)
+      *
+     IRDATEC      DS
+     I                                        1   4 @WRK4
+     I                                        5   6 YY
+      *
+      **  Data structure used to convert date in RUNDAT from
+      ** DDMMMYY into (ddmmyy or mmddyy) format
+      *
+     IFMDAT       DS
+     I                                        1   4 FMDM
+     I                                        5   6 FMYY
+     I                                        1   60FMDATE
+      *
+      **  Data structure for FROM date (ddmmyy or mmddyy)
+      *
+     ITODAT       DS
+     I                                        1   4 TODM
+     I                                        5   6 TOYY
+     I                                        1   60TODATE
+      *
+      **  Data structure for TO date (ddmmyy or mmddyy)
+      *
+     I           SDS
+     I                                     *PARMS   PGMPRM
+     I                                      244 253 PGMDEV
+     I                                      254 263 PGMUSR
+      *
+      **  Program status data structure
+      *
+     I@RPARM      DS
+     I                                        1 100 @@RPRM
+     I                                        1   2 @MODID
+     I                                        3   80@FMDAT
+     I                                        3   4 @@FMYY
+     I                                        5   6 @@FMMM
+     I                                        7   8 @@FMDD
+     I                                        9  140@TODAT
+     I                                        9  10 @@TOYY
+     I                                       11  12 @@TOMM
+     I                                       13  14 @@TODD
+     I                                       15  30 @FMTRN
+     I                                       31  46 @TOTRN
+      *
+      **  Parameters for &RPARM - 100 long string passed to RCF
+      *
+     ISFMTRN      DS
+     I                                        1   2 FMWRK2
+     I                                        3  16 FMWK14
+      *
+      **  From date data structure
+      *
+     ISTOTRN      DS
+     I                                        1   2 TOWRK2
+     I                                        3  16 TOWK14
+      *
+      **  To date data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      **  Bank details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      **  First data structure for access program, Short data structure
+      *
+     C                     MOVE '0'       FPRM3   1
+     C                     MOVE '0'       TPRM3   1
+      *
+     C                     MOVE *ZEROS    FPRM4   50
+     C                     MOVE *ZEROS    TPRM4   50
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE 'ME0855'  DBPGM
+      *
+      **  Access sdbankpd (via aobankr0) & verify date format
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBMSG  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Error handling for access object
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0855  'DBPGM
+     C                     MOVE '01'      DBASE            ***************
+     C                     MOVE 'AOBANKR0'DBFILE           * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  RCF Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C                     PARM           @LVL    1
+     C                     PARM           @ENT    1
+     C                     PARM           @RPARM100
+     C                     PARM           RACT    1
+     C                     PARM           RCMD    1
+      *
+      **  ZA0270 FROM Date parameters
+      *
+     C           PLIST1    PLIST
+     C                     PARM           PARM1   60
+     C                     PARM BJDFIN    PARM2   1
+     C           FPRM3     PARM '0'       PARM3   1
+     C           FPRM4     PARM *ZERO     PARM4   50
+      *
+      **  ZA0270 TO Date parameters
+      *
+     C           PLIST2    PLIST
+     C                     PARM           PARM1
+     C                     PARM BJDFIN    PARM2
+     C           TPRM3     PARM '0'       PARM3
+     C           TPRM4     PARM *ZERO     PARM4
+      *
+      **  ZM1001 ERROR
+      *
+     C           PLIST3    PLIST
+     C                     PARM           @MSGID 10
+     C                     PARM           @MSDTA 78
+      *
+     C                     MOVEL'ME0855'  PGMQ   10                       S01227
+     C                     MOVEL*BLANKS   MSGKEY  4
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   DETL  - Detail processing                                   *
+      *   TERM  - Termination processing                              *
+      *   VSEL  - Validation processing                               *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN   - Main process                                       *
+      *   Calls  - INIT - Init process                                *
+      *            DETL - Detail processing                           *
+      *            TERM - Termination processing                      *
+      *****************************************************************
+      *
+      **  Perform initial process
+      *
+     C                     EXSR INIT
+      *
+      **  Perform detail process
+      *
+     C                     EXSR DETL
+      *
+      **  Perform termination process
+      *
+     C                     EXSR TERM
+     C/EJECT
+      *****************************************************************
+      *   INIT   - Initial process                                    *
+      *   Called by main process                                      *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      **  Access data area DSRUN to find date
+      *
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  If data area not found then perform database error processing
+      *
+     C           RDAT      IFEQ *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0855  'DBPGM
+     C                     MOVE '02'      DBASE            ***************
+     C                     MOVE 'RUNDAT'  DBFILE           * DB ERROR 02 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Convert RUNDAT into format (ddmmyy or mmddyy)
+      *
+     C           @BLK      IFEQ *BLANKS
+     C                     MOVE '0'       @BLK
+     C                     END
+      *
+     C                     MOVE @YY       YY
+     C                     Z-ADD1         X       20
+     C           @MMM      LOKUPZMNM,X                   91
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVELX         @WRK4
+     C                     MOVE @DD       @WRK4
+     C                     ELSE
+     C                     MOVE X         @WRK4
+     C                     MOVEL@DD       @WRK4
+     C                     END
+      *
+      **  Display initial screen
+      *
+     C                     EXFMTINITSCN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DETL   - Detail processing                                  *
+      *   Called by main process                                      *
+      *****************************************************************
+     C           DETL      BEGSR
+      *
+     C                     SETON                     30
+      *
+      **  Do while not F3 / F12 or errors outstanding
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *IN30     ANDEQ'1'
+      *
+      **  Validate input - VSEL
+      *
+     C                     EXSR VSEL
+      *
+      **  If errors exist, display initial screen
+      *
+     C           *IN30     IFEQ '1'
+     C                     WRITESFLMSGC
+     C                     EXFMTINITSCN
+     C                     CALL 'ZM1002'
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL   - Validation processing                              *
+      *   Called by DETL process                                      *
+      *****************************************************************
+     C           VSEL      BEGSR
+      *
+     C                     SETOF                     30
+     C                     MOVEA'00000000'*IN,32
+     C                     MOVEA'0000'    *IN,40
+      *
+      **  VAlidation of module id, priority & status fields
+      *
+     C                     EXSR VMDSTS
+      *
+      **  VAlidation of FROM & TO dates
+      *
+     C                     EXSR VDATSR
+      *
+      **  VAlidation of FROM TRNO & TO TRNO
+      *
+     C                     EXSR VTRNSR
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   VMDSTS - Validation of module.                                       *
+      *   Called by DETL process                                               *
+      **************************************************************************
+     C           VMDSTS    BEGSR
+      *
+      **  If module id is not blank, access the module table file
+      **  (PF/SDMEMOL0) using the module id entered as key
+      *
+      *
+     C           SMODID    IFNE *BLANKS
+      *
+     C           SMODID    CHAINSDMEMOL0             9899
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '05'      DBASE            ***************
+     C                     MOVE 'FIRST'   DBKEY            * DB ERROR 05 *
+     C                     MOVE 'SDMEMOL0'DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  If no record found, display 'Module id not found'
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVEL'MEM1001' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3032
+     C                     SETOF                     98
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   VDATSR- Date validation process                                      *
+      *   Called by DETL process                                               *
+      *                                                                        *
+      **************************************************************************
+     C           VDATSR    BEGSR
+      *
+      **  Validation of FROM dates entered
+      *
+     C                     TESTN          SFMDAT     505152
+      *
+      **  TESTN :- *in50 = '1' (VALID)
+      **           *in52 = '1' (VALID)
+      **           *in51 = '0' (INVALID)
+      *
+     C           *IN51     IFEQ '0'
+      *
+     C           *IN50     IFEQ '1'
+     C                     MOVE SFMDAT    FMDAT
+     C                     MOVE FMDATE    PARM1
+     C                     SETON                     53
+     C                     END
+      *
+     C           *IN52     IFEQ '1'
+     C                     MOVE RDATEC    FMDAT
+     C                     MOVE FMDATE    PARM1
+     C                     SETON                     53
+     C                     END
+      *
+      **  If FROM date entered is numeric or *blank
+      **     call ZA0270 using plist1
+      **     ZA0270 does the validation of MONTH AND DAY
+      *
+     C           *IN53     IFEQ '1'
+     C                     CALL 'ZA0270'  PLIST1
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   FMDAT
+      *
+     C                     MOVEL'MEM1008' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3041
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   FMDAT
+      *
+     C                     MOVEL'MEM1008' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3041
+     C                     END
+      *
+      **  Set *in50,51,52 & 53 off
+      *
+     C                     MOVEA'0000'    *IN,50
+      *
+      **  Validation of TO dates entered
+      *
+     C                     TESTN          STODAT     505152
+      *
+      **  TESTN :- *in50 = '1' (VALID)
+      **           *in52 = '1' (VALID)
+      **           *in51 = '0' (INVALID)
+      *
+     C           *IN51     IFEQ '0'
+      *
+     C           *IN50     IFEQ '1'
+     C                     MOVE STODAT    TODAT
+     C                     MOVE TODATE    PARM1
+     C                     SETON                     53
+     C                     END
+      *
+     C           *IN52     IFEQ '1'
+     C                     MOVE RDATEC    TODAT
+     C                     MOVE TODATE    PARM1
+     C                     SETON                     53
+     C                     END
+      *
+      **  If TO date entered is numeric or *blank
+      **     call ZA0270 using plist2
+      **     ZA0270 does the validation of MONTH AND DAY
+      *
+     C           *IN53     IFEQ '1'
+     C                     CALL 'ZA0270'  PLIST2
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   TODAT
+      *
+     C                     MOVEL'MEM1009' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3042
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   TODAT
+      *
+     C                     MOVEL'MEM1009' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3042
+     C                     END
+      *
+      **  Set *in50,51,52 & 53 off
+      *
+     C                     MOVEA'0000'    *IN,50
+      *
+      **  If no errors from ZA0270
+      **  check that FROM date is not greater than TO date
+      *
+     C           FPRM3     IFEQ '0'
+     C           TPRM3     ANDEQ'0'
+      *
+     C           FPRM4     IFGT TPRM4
+     C                     MOVEL'MEM1010' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     304142
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           FPRM3     IFEQ '1'
+     C                     SETON                     41
+     C                     END
+      *
+     C           TPRM3     IFEQ '1'
+     C                     SETON                     42
+     C                     END
+      *
+     C                     MOVEL'MEM1011' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     30
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   VTRNSR - Transaction referance number validation process             *
+      *   Called by VSEL process                                               *
+      *                                                                        *
+      **************************************************************************
+     C           VTRNSR    BEGSR
+      *
+      **  If module id has been entered then
+      *
+     C           SMODID    IFNE *BLANKS
+      *
+     C           FMWRK2    IFNE SMODID
+     C           FMWRK2    ANDNE*BLANKS
+     C           TOWRK2    ORNE SMODID
+     C           TOWRK2    ANDNE*BLANKS
+      *
+     C                     MOVEL'MEM1012' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3043
+     C                     END
+     C                     END
+      *
+     C           SFMTRN    IFGT STOTRN
+      *
+     C                     MOVE SFMTRN    TOTRN
+     C                     MOVE STOTRN    FMTRN
+      *
+     C                     ELSE
+      *
+     C                     MOVE SFMTRN    FMTRN  16
+     C                     MOVE STOTRN    TOTRN  16
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   TERM - Termination  Processing                                       *
+      *   Called by MAIN process                                               *
+      *                                                                        *
+      **************************************************************************
+     C           TERM      BEGSR
+      *
+      **  If F3 was pressed send termination code of 'E' back to RCF
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       RCMD
+     C                     END
+      *
+      **  If F12 was pressed send termination code of 'F' back to RCF
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'F'       RCMD
+     C                     END
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  Set up &RPARM with selection criteria parameters
+      *
+     C                     MOVE SMODID    @MODID
+      *
+     C                     EXSR CNVDAT
+      *
+     C                     MOVE FMTRN     @FMTRN
+     C                     MOVE TOTRN     @TOTRN
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANKS   @RPARM
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   CNVDAT - Date convation process from (mmddyy or ddmmyy) to           *
+      *   yymmdd                                                               *
+      *   Called by TERM process                                               *
+      *                                                                        *
+      **************************************************************************
+     C           CNVDAT    BEGSR
+      *
+     C                     MOVE FMYY      @@FMYY
+     C                     MOVE TOYY      @@TOYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVELFMDM      @@FMMM
+     C                     MOVE FMDM      @@FMDD
+     C                     MOVELTODM      @@TOMM
+     C                     MOVE TODM      @@TODD
+     C                     ELSE
+     C                     MOVELFMDM      @@FMDD
+     C                     MOVE FMDM      @@FMMM
+     C                     MOVELTODM      @@TODD
+     C                     MOVE TODM      @@TOMM
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   *PSSR - error handling                                               *
+      *   Called by - INIT initial process                                     *
+      **************************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+** CPY@   **      Object copyright
+(c) Finastra International Limited 2001
+**  ZMNM - used to convert RUNDAT to DDMMYY format
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

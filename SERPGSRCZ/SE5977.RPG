@@ -1,0 +1,255 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Telekurs update of security prices')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE5977 - Telekurs Update of Security Prices                  *
+     F*                                                               *
+     F*  Function: This program updates the Security Price file.      *
+     F*                                                               *
+     F*  Called By: SEC5977 - Input Cycle Processing                  *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 17May06               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSD010             Date 03May02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01502  *CREATE    Date 08Jul94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CSD010 - Collateralised Lending (Securities and FX Pricing)  *
+      *           (Recompile)                                         *
+     F*  CSD006 - Market Data Feed (recompile)                        *
+     F*  S01502 - BLI Telekurs Processing.                            *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,SE5977F001
+     FTELKX2  IF  E           K        DISK
+     F/COPY WNCPYSRC,SE5977F002
+     FPRICE   UF  E           K        DISK                      A
+     FPRICEA  UF  E                    DISK
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       30      READ INDICATOR                                  *
+     F*       31      CHAIN FAIL INDICATOR                            *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E/COPY ZSRSRC,ZDATE1Z1
+     E                    CPY@    1   1 80
+     I*
+     I** DATA AREA TO FORMAT DATE
+     I*
+     I            DS
+     I                                        1   60ZDATE
+     I                                        1   20VDAYPM
+     I                                        3   40VMONPM
+     I/COPY WNCPYSRC,SE5977I001
+     I                                        5   50VDECPM
+     I                                        6   60VYERPM
+     I/COPY WNCPYSRC,SE5977I002
+     I*
+     I**  LOCAL DATA AREA FOR DATABASE RECORD
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** ACCESS PROGRAM DATA STRUCTURE
+     I*
+     ISDBANK    E DSSDBANKPD
+     IDSFDY     E DSDSFDY
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     C/EJECT
+     C*
+     C** Main Processing
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C                     EXSR INIT
+     C*
+     C/COPY WNCPYSRC,SE5977C001
+     C                     READ TELKXPFS                 30
+     C/COPY WNCPYSRC,SE5977C002
+     C           *IN30     DOWNE'1'
+     C                     EXSR UPDAT
+     C/COPY WNCPYSRC,SE5977C009
+     C                     READ TELKXPFS                 30
+     C/COPY WNCPYSRC,SE5977C010
+     C                     END
+     C*
+     C                     EXSR EXIT
+     C/EJECT
+     C*****************************************************************
+     C** INIT - Initial Processing Subroutine
+     C**
+     C** CALLED FROM   Main Processing
+     C** CALLS
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C** INITIALIZE LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE5977  'DBPGM
+     C                     OUT  LDA
+     c*
+     C** GET NEXT TRANSACTION NUMBER
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C** DEFINE KEY FOR PF PRICED
+     C*
+     C           PRICEK    KLIST
+     C                     KFLD           XPSSN
+     C                     KFLD           XPCNM
+     C                     KFLD           XPMKT
+     C/COPY WNCPYSRC,SE5977C003
+     C                     KFLD           XPBRC
+     C/COPY WNCPYSRC,SE5977C004
+     C                     KFLD           XPBOK
+     C                     KFLD           XPPRT
+     C**********           MOVE *ZERO     XPCNM   60                                         CSD027A
+     C                     MOVE *BLANKS   XPCNM   6                                          CSD027A
+     C                     MOVE *BLANK    XPMKT   1
+     C/COPY WNCPYSRC,SE5977C005
+     C                     MOVE *BLANK    XPBRC   3
+     C/COPY WNCPYSRC,SE5977C006
+     C                     MOVE *BLANK    XPBOK   2
+     C                     MOVE 'V '      XPPRT   2
+     C*
+     C** ACCESS ICD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM 'BLANKS'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     Z-ADD0         XSINS   50
+     C                     Z-ADD0         XSAMD   50
+     C                     Z-ADD0         XNORE   50
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** UPDAT - Update Price file.
+     C**
+     C** CALLED FROM   Main Processing
+     C** CALLS
+     C*****************************************************************
+     C*
+     C           UPDAT     BEGSR
+     C*
+     C                     MOVE SESN      XPSSN  10
+     C           PRICEK    CHAINPRICEDF              31
+     C                     MOVE SESN      PSSN
+     C                     MOVE 'V '      PPRT
+     C                     Z-ADDMKPR      PPRC
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVELNATN      TNLU
+     C*
+     C                     MOVE '0'       *IN98
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    PVDT
+     C*
+     C/COPY WNCPYSRC,SE5977CBDU
+     C*
+     C           *IN31     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     MOVEL'I'       CHTP
+     C/COPY WNCPYSRC,SE5977C007
+     C                     MOVE 'D'       RECI
+     C                     ADD  1         XSINS
+     C                     ADD  1         XNORE
+     C                     UPDATPRICEDF
+     C                     END
+     C                     ELSE
+     C                     MOVEL'I'       CHTP
+     C                     MOVE 'D'       RECI
+     C/COPY WNCPYSRC,SE5977C008
+     C                     MOVE *BLANKS   PNTV
+     C                     MOVE *BLANKS   PSRC
+     C                     MOVE *BLANKS   PBWN
+     C                     MOVE *BLANKS   PPWN
+     C                     ADD  1         XSINS
+     C                     ADD  1         XNORE
+     C                     WRITEPRICEDF
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** EXIT - Update Price file (Audit) and Exit Program
+     C**
+     C** CALLED FROM   Main Processing
+     C** CALLS
+     C*****************************************************************
+     C*
+     C           EXIT      BEGSR
+     C*
+     C** UPDATE AUDIT RECORD
+     C*
+     C           1         CHAINPRICEAF              31
+     C           *IN31     IFEQ '0'
+     C                     ADD  XSINS     SINS
+     C                     ADD  XSAMD     SAMD
+     C                     ADD  XNORE     NORE
+     C                     UPDATPRICEAF
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'PRICEA  'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVEL'*FIRST ' DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE1Z3
+**  CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

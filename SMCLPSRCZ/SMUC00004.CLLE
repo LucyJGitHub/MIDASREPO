@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Delete T_UPDEF rec, UDFDD=T_GZCLIPEX')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00004 - CL Program to delete records in T_UDFDEF        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BG26993            Date 26Jan10              */
+/*                      B06743  *CREATE    Date 03Oct05              */
+/*                      xxxxxx             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed BG6743C01.                                */
+/*       B06743  - CL Program to delete records in T_UDFDEF          */
+/*               - GP User Defined Forms XML definitions where UDFDD */
+/*                 = T_GZCLIPEX.                                     */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Take security copy. */
+             CPYF       FROMFILE(T_UDFDEF) TOFILE(QTEMP/T_UDFDEF_X) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+ 
+/* Build string to delete record. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from T_UDFDEF +
+                          where UDFDD =' *BCAT &QUOTE *TCAT +
+                          'T_GZCLIPEX' *TCAT &QUOTE)
+/* Call standard program to write to source file ... */
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+             CPYF       FROMFILE(QTEMP/T_UDFDEF_X) TOFILE(T_UDFDEF) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF0000)
+ 
+END:         ENDPGM

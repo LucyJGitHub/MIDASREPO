@@ -1,0 +1,107 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  ZCBDYSZTXT - Calculation Basis Days                          *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Last Amend No. 205373  *CREATE    Date 13Aug02               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  205373 - additional text when /COPY ZCBDYSZ1 is used in      *
+      *           sources being amended.  This is needed for sources  *
+      *           not containing core fix 182370.                     *
+      *                                                               *
+      *****************************************************************
+  STANDARD SUBROUTINE - ZCBDYS
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+   To Calculate the Number of Days between two Dates and the Number of
+   Days in Year, for a Calculation Basis, (Dealing version).
+ 
+  Notes for when including in RPG Program:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC,ZDATE2Z1 should be included in the 'E' specifications
+   /COPY ZSRSRC,ZDATE2Z2 should be included in the 'C' specifications
+   /COPY ZSRSRC,ZCBDYSZ1 should be included in the 'C' specifications
+   The contents of ZSRSRC,ZDATE2Z3 should be included at the correct
+   point in the Compile Time Array Data.
+   /COPY ZSRSRC,ZCBDYSZ2 should be included if fix 182370 is not                              205373
+   included in the program being amended.                                                     205373
+ 
+  Input:
+  ~~~~~~
+  ZCBSDT ( 5,0) Start Date
+  ZCBEDT ( 5,0) End Date
+  ZCBCBS ( 1,0) Calculation Basis
+   Calculation Bases are:
+      1 - Actual/365
+      2 - Actual/360
+      3 - 30/360
+      4 - Actual/365 (Excluding 29FEB)
+      5 - Actual/360 (Excluding 29FEB)
+      6 - Actual/366
+ 
+  Output:
+  ~~~~~~~
+  ZCBDAY ( 5,0) Number of Days in Period
+  ZCBDIV ( 3,0) Number of Days in Year
+ 
+  Procedure:
+  ~~~~~~~~~~
+  Initialise fields.
+ 
+  Define the Number of Days in the Year as follows:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  365 Days - Calculation Basis = 1 or 4.
+  360 Days - Calculation Basis = 2, 3 or 5.
+  366 Days - Calculation Basis = 6.
+ 
+  Then calculate the Number of Days in the Period:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Catchall: If Start Date >= End Date,
+     Set Number of Days in Period to zero and Exit Subroutine.
+   Else, Set Actual Number of Days in Period = End Date - Start Date.
+ 
+  Calculation Bases 1, 2 and 6: Actual Number of Days.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   For these three, 'Number of Days' already contains the final result,
+     so no need for any further calculations -> Exit Subroutine.
+ 
+  Calculation Bases 4 and 5: Actual Days, excluding 29th Feb.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Take Actual Days and subtract all the 29th February Days: This is
+     done by checking the ZF29 array, (Midas Dates for 29th February),
+     to get the indices of the first 29FEB after each of the Start Date
+     and the End Date. The difference is the Number of 29FEBs in the
+     Period. Then Exit Subroutine.
+ 
+  Calculation Basis 6: 30 Day months, (including '30th Feb.')
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Convert Input Dates to DD/MM/YY or MM/DD/YY Format and set up Start
+     and End Day, Month and Year (according to Date Format).
+   If either Day Equals 31, reduce it to 30. To keep the Day Difference
+     positive, if End Day is Less Than Start Day, add 30 to End Day and
+     reduce End Month by 1.
+   Calculate Day Difference = End Day - Start Day.
+   Similarly, if Start Month Greater Than End Month, add 12 to End
+     Month and reduce End Year by 1.
+   Calculate Month Difference = End Month - Start Month.
+   Multiply Month Difference by 30 for number of Month Days.
+   Subtract Start Year from End Year: If result Less Than zero then End
+     Date must be in the following century, so add 100 for change in
+     century.
+   Multiply Year Difference by 360 for number of Year Days.
+   Total the three differences to get the Number of Days in the Period.}
+      *****************************************************************
+      * End of /COPY ZCBDYSZTXT                                       *
+      *****************************************************************

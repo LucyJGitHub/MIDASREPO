@@ -1,0 +1,300 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    ACTGRP(SCC000100) DFTACTGRP(*NO)                            */                   /*BUG229*/
+/*EXI    TEXT('Midas SC Webfacing selection screen')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000100 - Webfacing Entry Control Program                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1096378          Date 15Mar12              */
+/*                      AR1096245          Date 15Mar13              */
+/*                      AR1000203          Date 25Nov12              */
+/*                      CCB021             Date 06Aug12              */
+/*                      CCB020             Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      247248             Date 24Apr07              */
+/*                      BUG14122A          Date 12Jun07              */
+/*                      BUG14122           Date 07Jun07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG9969            Date 17Jan06              */
+/*                      BUG229             Date 25May04              */
+/*                      CPK018             Date 22Feb03              */
+/*                      CAAA02  *CREATE    Date 06Sep03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1096378 - NWDC issues encountered during link testing.    */
+/*       AR1096245 - Error message encountered upon Insert/Enquire   */
+/*                   Update while system is in Secondary COB         */
+/*       AR1000203 - HATS screen does not prompt message that the    */
+/*                   System is in Close of Business                  */
+/*                   (Child: AR1000204)                              */
+/*       CCB021 - COB Restructure - Non Working Day COB              */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*              - Add handling for Phase G                           */
+/*       247248 - Problem when web-phased menus are accessed by a    */
+/*                user and COB is running in the system.  Applied    */
+/*                part of core fix 243665.                           */
+/*       243665A- File locks in CoB on reopen.                       */
+/*       243665 - File locks in CoB                                  */
+/*       BUG14122A - Reverse BUG14122 fix ; affected other Webfacing */
+/*                   screens                                         */
+/*       BUG14122 - Equation System Variables - dumping              */
+/*       BUG9969- Action Code authorisation Check                    */
+/*       BUG229 - Zone Change left files open changed to use         */
+/*                Activation Group to free the files                 */
+/*       CPK018 - Introduce processing to allow the user to access   */
+/*                the COB screen.                                    */
+/*       CAAA02 - Webfacing Enhancement                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&WFSEL)
+ 
+             DCL        VAR(&WFSEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CALL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MIDASMSG) TYPE(*CHAR) LEN(800)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                 /*AR1000203*/
+             DCL        VAR(&FRMT) TYPE(*CHAR) LEN(200)                                /*AR1000203*/
+             DCL        VAR(&PZONE) TYPE(*CHAR) LEN(10)                                /*AR1000203*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                    /*CPK018*/
+             DCL        VAR(&CONT) TYPE(*DEC) LEN(1 0) VALUE(0)                           /*CPK018*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                                /*BUG9969*/
+                                                                                          /*243665*/
+/** Define variables for AOUSERR0 */                                                      /*243665*/
+                                                                                          /*243665*/
+             DCL        VAR(&JOBUSR) TYPE(*CHAR) LEN(10)                                  /*243665*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*243665*/
+             DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)                                  /*243665*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')                    /*243665*/
+             DCL        VAR(&COBAUT) TYPE(*CHAR) LEN(1)                                   /*243665*/
+                                                                                          /*243665*/
+/**********  DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) */                    /*BUG14122 BUG14122A */
+/**********  DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7) */                    /*BUG14122 BUG14122A */
+/**********  DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6) */                    /*BUG14122 BUG14122A */
+/**********  DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200) */                  /*BUG14122 BUG14122A */
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+             RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&MPHAS)                                /*243665*/
+             RTVJOBA    USER(&JOBUSR)                                                     /*243665*/
+                                                                                          /*243665*/
+/* Get system prefix */                                                                /*AR1000203*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                            /*AR1000203*/
+                                                                                       /*AR1000203*/
+             CHGVAR     VAR(&OPTN) VALUE('*KEY')                                          /*243665*/
+             CALL       PGM(AOUSERR0) PARM(&RTCD &OPTN &JOBUSR +
+                          &DSSDY)                                                         /*243665*/
+             IF         COND(&RTCD *EQ '      ') THEN(DO)                                 /*243665*/
+               CHGVAR     VAR(&COBAUT) VALUE(%SST(&DSSDY 225 1))                          /*243665*/
+             ENDDO                                                                        /*243665*/
+                                                                                          /*243665*/
+/*  Unlock MUSERDD                                          */                            /*243665*/
+             CALL       PGM(AOUSERR0) PARM(' ' '*FREE' ' ' ' ')                           /*243665*/
+                                                                                          /*243665*/
+/*  Call SCC0010 to display 'error accessing user details'  */                            /*243665*/
+                                                                                          /*243665*/
+             IF         COND(&RTCD *NE '      ') THEN(DO)                                 /*243665*/
+                CHGVAR     VAR(&MESSAGE) VALUE('Error accessing user +
+                          details. Please check the joblog.')                             /*243665*/
+                CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                      /*243665*/
+                MONMSG     MSGID(CPF0000)                                                 /*243665*/
+                CALL       PGM(SCC0010) PARM('SCC000100' 'ENTER ' ' ')                    /*243665*/
+                MONMSG     MSGID(CPF0000)                                                 /*243665*/
+                GOTO       CMDLBL(END)                                                    /*243665*/
+             ENDDO                                                                        /*243665*/
+ 
+/**Access*the*COB*Monitor*if*COB*has*been*specified**/                         /*CPK018*/ /*243665*/
+/* The COBMONITOR is submitted by CBC0511, so don't need to submit                       /*243665A*/
+/* it here.  If CoB requested, check that user is a CoB user.                            /*243665A*/
+/* Until webfacing supports TFRJOB, process this option separately.                      /*243665A*/
+                                                                                          /*CPK018*/
+             IF         COND(&WFSEL *EQ 'COB') THEN(CHGVAR +
+                          VAR(&WFSEL) VALUE('0000001595'))                                /*243665*/
+             IF         COND((&WFSEL *EQ '0000001595') *OR (&WFSEL +
+                          *EQ '0000005111')) THEN(DO)                                     /*CCB021*/
+/*******     IF         COND(&WFSEL *EQ '0000001595') THEN(DO)                 /*243665*/ /*CCB021*/
+/*******     IF         COND(&WFSEL *EQ 'COB') THEN(DO)                        /*CPK018*/ /*243665*/
+/*******        RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&MPHAS)                  /*CPK018*/ /*243665*/
+/*******        IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'X')) +                 /*243665*/
+/*******                     THEN(DO)                                          /*CPK018*/ /*243665*/
+/*******                                                                       /*CPK018*/ /*243665*/
+                IF         COND(&COBAUT *EQ 'Y') THEN(DO)                                 /*243665*/
+/**If*MONCHK not allocated by another job then submit batch monitor */        /*CPK018*/ /*243665A*/
+/*******                                                                      /*CPK018*/ /*243665A*/
+/*MONACT:                                                                     /*CPK018*/ /*243665A*/
+/*******           ALCOBJ     OBJ((MONCHK *DTAARA *EXCL)) WAIT(5)             /*CPK018*/ /*243665A*/
+/*******           MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(PASSMON))       /*CPK018*/ /*243665A*/
+/*******                                                                      /*CPK018*/ /*243665A*/
+/*******           DLCOBJ     OBJ((MONCHK *DTAARA *EXCL))                     /*CPK018*/ /*243665A*/
+/*******                                                                      /*CPK018*/ /*243665A*/
+/*******           SBMJOB     JOB(COBMONITOR) JOBD(MEODD) USER(*JOBD) +                  /*243665A*/
+/*******                        RTGDTA(MULTILANGUAGE) RQSDTA('CALL +                     /*243665A*/
+/*******                        PGM(MLC0000) PARM(''SCC0107'' ''CBCMONB'' +              /*243665A*/
+/*******                  '' '' '' '' '' '' '' '')') INLLIBL(*JOBD) +                    /*243665A*/
+/*******                  MSGQ(*NONE) OUTQ(*JOBD)                             /*CPK018*/ /*243665A*/
+/*******           DLYJOB     DLY(3)                                          /*CPK018*/ /*243665A*/
+/*******                                                                      /*CPK018*/ /*243665A*/
+/*******           CHGVAR     VAR(&CONT) VALUE(&CONT + 1)                     /*CPK018*/ /*243665A*/
+/*******                                                                      /*CPK018*/ /*243665A*/
+/*******           IF         COND(&CONT *LE 3) THEN(GOTO CMDLBL(MONACT))     /*CPK018*/ /*243665A*/
+/*******                                                                      /*CPK018*/ /*243665A*/
+/*PASSMON:                                                                    /*CPK018*/ /*243665A*/
+/**********     IF         COND(&MPHAS *EQ 'A') THEN(DO) */                    /*243665A AR1096378*/
+                IF         COND(&MPHAS *EQ 'A') THEN(DO)                               /*AR1096378*/
+                  IF         COND(&WFSEL *EQ '0000001595') THEN(DO)                    /*AR1096378*/
+                   CALL       PGM(CBC000100) PARM('IPCTERM')                              /*243665*/
+                  ENDDO                                                                /*AR1096378*/
+                  IF         COND(&WFSEL *EQ '0000005111') THEN(DO)                    /*AR1096378*/
+                    CALL       PGM(CBC000001) PARM('NWDC')                             /*AR1096378*/
+                  ENDDO                                                                /*AR1096378*/
+                ENDDO                                                                    /*243665A*/
+                ELSE       CMD(DO)                                                       /*243665A*/
+                                                                                          /*CCB021*/
+/* Program now checks if the Close of Business processing  */                             /*CCB021*/
+/* is normal CoB or Non-Working Day                        */                             /*CCB021*/
+/*******           CALL       PGM(CBRUN)                   */                 /*243665A*/ /*CCB021*/
+                                                                                          /*CCB021*/
+/*  Call CBC000003 to invoke NWDC controlling component    */                             /*CCB021*/
+/*  else invoke normal CoB control                         */                             /*CCB021*/
+                                                                                          /*CCB021*/
+                   IF         COND(&MPHAS *EQ 'N') THEN(CALL PGM(CBC000003))              /*CCB021*/
+                                                                                          /*CCB021*/
+                   ELSE DO                                                                /*CCB021*/
+                      CALL       PGM(CBRUN)                                               /*CCB021*/
+                   ENDDO                                                                  /*CCB021*/
+                                                                                          /*CCB021*/
+                ENDDO                                                                    /*243665A*/
+/*******           CALL       PGM(CBRUN)                                                  /*243665*/
+                ENDDO
+                                                                                          /*243665*/
+/*  Call SCC0010 to display 'not authorised to CoB' message */                            /*243665*/
+                ELSE       CMD(DO)                                                        /*243665*/
+                   CHGVAR     VAR(&MESSAGE) VALUE('User not authorised to run +
+                              a Close of Businesss')                                      /*243665*/
+                   CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                   /*243665*/
+                   MONMSG     MSGID(CPF0000)                                              /*243665*/
+                   CALL       PGM(SCC0010) PARM('SCC000100' 'ENTER ' ' ')                 /*243665*/
+                   MONMSG     MSGID(CPF0000)                                              /*243665*/
+                ENDDO                                                                     /*243665*/
+                CHGVAR     VAR(&WFSEL) VALUE(' ')                                        /*243665A*/
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Signoff the system if OFF has been specified */
+ 
+             IF         COND(&WFSEL *NE 'OFF') THEN(DO)
+/**********     CALL       PGM(SC0000100) PARM(&WFSEL &CALL) */                           /*CCB020*/
+                CALL       PGM(SC0000100) PARM(&WFSEL &CALL &MPHAS)                       /*CCB020*/
+             IF         COND(&CALL *EQ ' ') THEN(DO)                                     /*BUG9969*/
+                                                                                         /*BUG9969*/
+/*  Call SCC0010 to Display 'Not authorised to action code' message */                   /*BUG9969*/
+                                                                                         /*BUG9969*/
+                CHGVAR     VAR(&MESSAGE) VALUE('User Not Authorised to any +
+                           Action Codes')                                                /*BUG9969*/
+                CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                     /*BUG9969*/
+                MONMSG     MSGID(CPF0000)                                                /*BUG9969*/
+                CHGVAR     VAR(&MESSAGE) VALUE('for this Option.')                       /*BUG9969*/
+                CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)                     /*BUG9969*/
+                MONMSG     MSGID(CPF0000)                                                /*BUG9969*/
+                CALL       PGM(SCC0010) PARM('SCC000100' 'ENTER ' ' ')                   /*BUG9969*/
+                MONMSG     MSGID(CPF0000)                                                /*BUG9969*/
+             GOTO       CMDLBL(END)                                                      /*BUG9969*/
+             ENDDO                                                                       /*BUG9969*/
+                                                                                          /*CCB020*/
+             IF         COND(&CALL *EQ 'G') THEN(DO)                                      /*CCB020*/
+                CHGVAR     VAR(&MESSAGE) VALUE('This option can not +
+                           be run while')                                                 /*CCB020*/
+                CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                      /*CCB020*/
+                MONMSG     MSGID(CPF0000)                                                 /*CCB020*/
+                CHGVAR     VAR(&MESSAGE) VALUE('Secondary COB is +
+                           still running.')                                               /*CCB020*/
+                CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)                      /*CCB020*/
+                MONMSG     MSGID(CPF0000)                                                 /*CCB020*/
+                CALL       PGM(SCC0010) PARM('SCC000100' 'ENTER ' ' ')                    /*CCB020*/
+                MONMSG     MSGID(CPF0000)                                                 /*CCB020*/
+                GOTO       CMDLBL(END)                                                    /*CCB020*/
+             ENDDO                                                                        /*CCB020*/
+                                                                                          /*243665*/
+/* If CoB is running, only CoB users can sign on              */                          /*243665*/
+                                                                                          /*243665*/
+/**********  IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'X')) +*/               /*AR1096245*/
+/**********               THEN(DO)                                 */           /*243665 AR1096245*/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'X') +
+                          *AND (&MPHAS *NE 'G')) THEN(DO)                              /*AR1096245*/
+                IF         COND(&COBAUT *NE 'Y') THEN(DO)                                /*243665A*/
+                                                                                          /*243665*/
+/* Call SCC0010 to inform user that the job cannot be run now */                          /*243665*/
+                   RTVMSG     MSGID(SCM0026) MSGF(MIDASMSG) MSG(&MESSAGE)                 /*243665*/
+                   CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)                   /*243665*/
+                   CHGDTAARA  DTAARA(MIDASMSG (10 1)) VALUE('1')                          /*243665*/
+                   CALL       PGM(SCC0010) PARM('SCC0102' 'ENTER' ' ')                    /*243665*/
+                   RETURN                                                                 /*243665*/
+                ENDDO                                                                     /*243665*/
+                ELSE       CMD(DO)                                                        /*243665*/
+                                                                                          /*243665*/
+/* We can't run the CoB from webfacing yet (that may be possible     */                   /*243665*/
+/* when we upgrade to v6).                                           */                   /*243665*/
+/* Remove the following to enable CoB to be run from webfacing at v6 */                   /*243665*/
+                IF         COND('Cat' *EQ 'Dog') THEN(DO)                                 /*243665*/
+                   CALL       PGM(CBRUN)                                                 /*243665A*/
+                ENDDO                                                                     /*243665*/
+                                                                                       /*AR1000203*/
+                   CALL       PGM(GPAOZONER1) PARM(&RTCD &OPTN &SYSID +
+                                     &FRMT)                                            /*AR1000203*/
+                   CHGVAR     VAR(&OPTN) VALUE('*KEY')                                 /*AR1000203*/
+                   CHGVAR     VAR(&PZONE) VALUE(%SST(&FRMT 1 10))                      /*AR1000203*/
+                   CHGVAR     VAR(&MESSAGE) VALUE('The ' *CAT &PZONE *TCAT +
+                                  ' system is currently in')                           /*AR1000203*/
+                   CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                /*AR1000203*/
+                   MONMSG     MSGID(CPF0000)                                           /*AR1000203*/
+                   CHGVAR     VAR(&MESSAGE) VALUE('Close of Business.')                /*AR1000203*/
+                   CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)                /*AR1000203*/
+                   MONMSG     MSGID(CPF0000)                                           /*AR1000203*/
+                   CALL       PGM(SCC0010) PARM('SCC000100' 'ENTER ' ' ')              /*AR1000203*/
+                   MONMSG     MSGID(CPF0000)                                           /*AR1000203*/
+                   CHGVAR     VAR(&WFSEL) VALUE(' ')                                     /*243665A*/
+                   RETURN                                                                /*243665A*/
+                ENDDO                                                                     /*243665*/
+                ENDDO                                                                    /*243665A*/
+/**Create*DTAARA*for*EQUATION*if*CRE026*is*on**/                             /*BUG14122 BUG14122A */
+/**Check*Swithchable*Feature*CRE026 */                                       /*BUG14122 BUG14122A */
+/**********  CHGVAR     VAR(&PRTCD) VALUE('       ') */                      /*BUG14122 BUG14122A */
+/**********  CHGVAR     VAR(&POPTN) VALUE('*VERIFY') */                      /*BUG14122 BUG14122A */
+/**********  CHGVAR     VAR(&PSARD) VALUE('CRE026') */                       /*BUG14122 BUG14122A */
+/**********  CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &DSFDY) */   /*BUG14122 BUG14122A */
+/**********  IF         COND(&PRTCD *EQ ' ') THEN(DO) */                     /*BUG14122 BUG14122A */
+/**********          CALL       PGM(UTM83C) PARM(' ') */                     /*BUG14122 BUG14122A */
+/**********          CALL       PGM(RCTINC) */                               /*BUG14122 BUG14122A */
+/**********  ENDDO */                                                        /*BUG14122 BUG14122A */
+                CALL       PGM(QCMDEXC) PARM(&CALL 100)
+ 
+                CHGVAR     VAR(&WFSEL) VALUE(' ')
+                CHGVAR     VAR(&CALL) VALUE(' ')
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

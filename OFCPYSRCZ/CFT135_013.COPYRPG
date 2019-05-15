@@ -1,0 +1,228 @@
+      *****************************************************************                       CFT135
+      *                                                               *                       CFT135
+      *  Midas - /COPY Member (FT0300)                                *                       CFT135
+      *                                                               *                       CFT135
+      *  CFT135_013 - Midas FT Auto generation                        *                       CFT135
+      *                                                               *                       CFT135
+      *  (c) Finastra International Limited 2013                      *                       CFT135
+      *                                                               *                       CFT135
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT135  *CREATE    Date 20Feb13               *
+      *                                                               *                       CFT135
+      *---------------------------------------------------------------*                       CFT135
+      *                                                               *                       CFT135
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT135 - MT100 MultiCash Interface                           *                       CFT135
+      *                                                               *                       CFT135
+      *****************************************************************                       CFT135
+      *                                                                                       CFT135
+      **===============================================================                       CFT135
+      ** Map translated data for Outgoing BOJ messages                                        CFT135
+      **===============================================================                       CFT135
+      *                                                                                       CFT135
+     C           SRMCLR    BEGSR                                                              CFT135
+      *                                                                                       CFT135
+      ** Set up subroutine stack name                                                         CFT135
+      *                                                                                       CFT135
+     C                     ADD  1         Q                                                   CFT135
+     C                     MOVEL'SRMCLR'  @STK,Q                                              CFT135
+      *                                                                                       CFT135
+      ** Set up the detail screen fields from the message.                                    CFT135
+      *                                                                                       CFT135
+      ** Destination                                                                          CFT135
+      *                                                                                       CFT135
+      ** If no Intermediary Bank then copy over P57 to Account with bank                      CFT135
+      *                                                                                       CFT135
+     C           P56       IFEQ *BLANKS                                                       CFT135
+     C           P57       ANDNE*BLANKS                                                       CFT135
+     C                     MOVELP57       DSTRAN                                              CFT135
+     C                     MOVELTMLIN     S5ACB                                               CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+      ** If Intermediary Bank then copy over P56 to Intermediary bank                         CFT135
+      *                                                                                       CFT135
+     C           P56       IFNE *BLANKS                                                       CFT135
+     C                     MOVELP56       DSTRAN                                              CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+      ** Intermediary Bank                                                                    CFT135
+      *                                                                                       CFT135
+     C           P56       IFNE *BLANKS                                                       CFT135
+     C                     MOVELP56       DSTRAN                                              CFT135
+     C           TRCODE    IFNE *BLANKS                                                       CFT135
+     C                     MOVE TRCODE    TRCDE2                                              CFT135
+     C                     MOVELTMLIN1    INBCH1  1                                           CFT135
+     C           INBCH1    IFEQ '/'                                                           CFT135
+     C                     ELSE                                                               CFT135
+     C                     END                                                                CFT135
+     C                     END                                                                CFT135
+     C                     END                                                                CFT135
+      *                                                                                       CFT135
+      ** Account with Bank - use A/C with bank if entered else use                            CFT135
+      ** Intermediary bank if entered else use Beneficiary                                    CFT135
+      *                                                                                       CFT135
+     C                     MOVE *BLANKS   DSTRAN                                              CFT135
+     C                     SELEC                                                              CFT135
+     C           P57       WHNE *BLANKS                                                       CFT135
+     C                     MOVELP57       DSTRAN                                              CFT135
+     C           P56       WHNE *BLANKS                                                       CFT135
+     C                     MOVELP56       DSTRAN                                              CFT135
+     C           P58       WHNE *BLANKS                                                       CFT135
+     C                     MOVELP58       DSTRAN                                              CFT135
+     C                     ENDSL                                                              CFT135
+      *                                                                                       CFT135
+     C           DSTRAN    IFNE *BLANKS                                                       CFT135
+     C           TRCODE    ANDNE*BLANKS                                                       CFT135
+     C                     MOVE TRCODE    TRCDE2                                              CFT135
+     C                     MOVELTMLIN1    ACBCH1  1                                           CFT135
+     C           ACBCH1    IFEQ '/'                                                           CFT135
+     C                     MOVE *BLANKS   S5ACB1                                              CFT135
+     C                     MOVELTMLIN1    S5ACB1                                              CFT135
+     C                     MOVE *BLANKS   S5ACB2                                              CFT135
+     C                     MOVELTRCNUM    S5ACB2                                              CFT135
+     C                     ELSE                                                               CFT135
+     C                     MOVE *BLANKS   S5ACB1                                              CFT135
+     C                     MOVELTRCNUM    S5ACB1                                              CFT135
+     C                     MOVE *BLANKS   S5ACB2                                              CFT135
+     C                     ENDIF                                                              CFT135
+     C                     MOVE *BLANK    S5ACB3                                              CFT135
+     C                     MOVE *BLANK    S5ACB4                                              CFT135
+     C                     MOVE *BLANK    S5ACB5                                              CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+      ** Ordering Customer                                                                    CFT135
+      *                                                                                       CFT135
+     C           P50       IFNE *BLANKS                                                       CFT135
+     C                     MOVELP50       DSTRAN                                              CFT135
+     C                     MOVELTMLIN     S4ORC                                               CFT135
+     C                     ELSE                                                               CFT135
+     C           P52       IFNE *BLANKS                                                       CFT135
+     C                     MOVELP52       DSTRAN                                              CFT135
+     C                     MOVELTMLIN     S4ORC                                               CFT135
+     C                     ENDIF                                                              CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+      ** If Interbank Payment use MT202 keyword                                               CFT135
+      *                                                                                       CFT135
+     C           PMTPY     IFEQ '200'                                                         CFT135
+     C           PMTPY     OREQ '201'                                                         CFT135
+     C           PMTPY     OREQ '202'                                                         CFT135
+     C           PMTPY     OREQ '203'                                                         CFT135
+     C           PMTPY     OREQ '204'                                                         CFT135
+     C           PMTPY     OREQ '205'                                                         CFT135
+     C           PMTPY     OREQ 'B22'                                                         CFT135
+      *                                                                                       CFT135
+     C                     MOVELS4ORC3    S4ORC4                                              CFT135
+     C                     MOVELS4ORC2    S4ORC3                                              CFT135
+     C                     MOVELS4ORC1    S4ORC2                                              CFT135
+     C                     MOVE *BLANKS   S4ORC1                                              CFT135
+     C                     MOVEL'MT202'   S4ORC1                                              CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+      ** Ordering Bank                                                                        CFT135
+      *                                                                                       CFT135
+      ** Process Ordering Bank                                                                CFT135
+      *                                                                                       CFT135
+     C           P52       IFNE *BLANKS                                                       CFT135
+     C                     MOVE *BLANKS   S4SLDT                                              CFT135
+     C                     MOVELP50       DSTRAN                                              CFT135
+     C                     MOVE TRCODE    TRCDE2                                              CFT135
+     C           TRCYCD    IFNE *BLANKS                                                       CFT135
+      *                                                                                       CFT135
+      ** Translate to nostro and retail account numbers                                       CFT135
+      *                                                                                       CFT135
+     C                     EXSR SRTRAN                                                        CFT135
+     C                     SELEC                                                              CFT135
+      *                                                                                       CFT135
+      ** If Retail then use                                                                   CFT135
+      *                                                                                       CFT135
+     C           ##ACNO    WHNE 0                                                             CFT135
+     C                     MOVE *BLANKS   S4ORBK                                              CFT135
+     C                     MOVE *BLANKS   S4ORBB                                              CFT135
+     C                     MOVEL##ACNO    S4ORC1                                              CFT135
+     C                     MOVEL*BLANKS   S4ORC2                                              CFT135
+     C                     MOVEL*BLANKS   S4ORC3                                              CFT135
+     C                     MOVEL*BLANKS   S4ORC4                                              CFT135
+      *                                                                                       CFT135
+      ** If currency not the same as input currency swap to pay                               CFT135
+      *                                                                                       CFT135
+     C           TRCYCD    IFNE S4SMCY                                                        CFT135
+     C                     MOVELS4SMAM    S4PYAM                                              CFT135
+     C                     MOVEL*BLANKS   S4SMAM                                              CFT135
+     C                     MOVELTRCYCD    S4SMCY                                              CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+      ** Use customer number                                                                  CFT135
+      *                                                                                       CFT135
+     C                     OTHER                                                              CFT135
+     C                     MOVE *BLANKS   S4ORBK                                              CFT135
+     C                     MOVE *BLANKS   S4ORBB                                              CFT135
+     C                     MOVE TRCODE    TRCDE2                                              CFT135
+     C                     MOVELTRCNUM    S4ORBK                                              CFT135
+     C                     ENDSL                                                              CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+      ** If recognised then continue                                                          CFT135
+      *                                                                                       CFT135
+     C           ##ACNO    IFNE 0                                                             CFT135
+     C                     MOVELP52       DSTRAN                                              CFT135
+      *                                                                                       CFT135
+      ** If line two not the same account then move to Charges field                          CFT135
+      *                                                                                       CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+     C                     ENDIF                                                              CFT135
+      *                                                                                       CFT135
+      ** Bank to Bank Information                                                             CFT135
+      *                                                                                       CFT135
+      ** If through payment, the bank to bank information has to be                           CFT135
+      ** carried forward to next outgoing message.                                            CFT135
+      ** (For Swift network only)                                                             CFT135
+      *                                                                                       CFT135
+     C                     MOVE *BLANK    W0BTOB  1                                           CFT135
+     C           PNWRK     IFEQ 'SWIFT'                                                       CFT135
+     C           PNWRK     OREQ 'MTCASH'                                                      CFT135
+     C                     MOVE 'Y'       W0BTOB                                              CFT135
+     C                     END                                                                CFT135
+      *                                                                                       CFT135
+     C           W0BTOB    IFEQ 'Y'                                                           CFT135
+     C           P72       IFNE *BLANKS                                                       CFT135
+      *                                                                                       CFT135
+     C                     MOVELP72       DSTRAN                                              CFT135
+      *                                                                                       CFT135
+     C                     END                                                                CFT135
+     C                     END                                                                CFT135
+      *                                                                                       CFT135
+      ** Payment Details (Multicash only)                                                     CFT135
+      *                                                                                       CFT135
+     C           P70       IFNE *BLANKS                                                       CFT135
+     C           PNWRK     ANDEQ'MTCASH'                                                      CFT135
+      *                                                                                       CFT135
+     C                     MOVELP70       DSTRAN                                              CFT135
+     C                     MOVELTMLIN1    S6PAY1                                              CFT135
+     C                     MOVELTMLIN2    S6PAY2                                              CFT135
+     C                     MOVELTMLIN3    S6PAY3                                              CFT135
+     C                     MOVELTMLIN4    S6PAY4                                              CFT135
+      *                                                                                       CFT135
+     C                     END                                                                CFT135
+      *                                                                                       CFT135
+      ** Clear ordering bank internal fields                                                  CFT135
+      *                                                                                       CFT135
+     C                     MOVEL*BLANKS   OPORBT                                              CFT135
+     C                     MOVEL*BLANKS   OPORB1                                              CFT135
+     C                     MOVEL*BLANKS   OPORB2                                              CFT135
+     C                     MOVEL*BLANKS   OPORB3                                              CFT135
+     C                     MOVEL*BLANKS   OPORB4                                              CFT135
+     C                     MOVEL*BLANKS   OPORB5                                              CFT135
+      *                                                                                       CFT135
+      **  Unwind subroutine stack name                                                        CFT135
+      *                                                                                       CFT135
+     C           EXMCLR    TAG                                                                CFT135
+     C                     MOVEA*BLANKS   @STK,Q                                              CFT135
+     C                     SUB  1         Q                                                   CFT135
+      *                                                                                       CFT135
+     C                     ENDSR                                                              CFT135
+      *                                                                                       CFT135
+      *****************************************************************                       CFT135
+      * End of /COPY CFT135_013                                       *                       CFT135
+      *****************************************************************                       CFT135

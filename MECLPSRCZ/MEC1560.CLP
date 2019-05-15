@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas ME Msg Tag Translation X-Ref Rpt')              */
+/*********************************************************************/
+/*                                                                   */
+/*     Midas - Message Management Module                             */
+/*                                                                   */
+/*     MEC1560 -  Message Tag translation Cross-reference Listing    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. 162671             Date 07May98              */
+/*                      CFT002  *CREATE    Date 07May98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       162671 - Default translation                                */
+/*       CFT002 - Straight Through Processing Phase 1                */
+/*                Based on MEC1560 original references S01489/HUB001 */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                            */
+             PGM        PARM(&DATA &SEQ &LEVEL &ENTITY)
+/*                                                                            */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+/* */
+/* Declare variables */
+/* */
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&LEVEL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ENTITY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&SEQ) TYPE(*CHAR) LEN(5)
+/* */
+/* Global Monitor Message */
+/* */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNORMAL)
+/**/
+             SNDPGMMSG  MSG('Message Tag Translation Cross +
+                          Reference') TOMSGQ(MRUNQ)
+             CHGJOB     SWS(00000000)
+/*                                                                            */
+/** Call the report program */
+/*                                                                            */
+/**/
+             OVRDBF     FILE(METAGTPD) TOFILE(METAGTPD) SECURE(*YES) +
+                          SHARE(*YES)                                 /*162671*/
+             OPNQRYF    FILE((METAGTPD)) QRYSLT('TGRECI *EQ ''D''') +
+                          KEYFLD((TGMTPY) (TGDFLT) (TGMTAG))          /*162671*/
+             CALL       PGM(ME1560) PARM(&SEQ)
+             CLOF METAGTPD                                            /*162671*/
+             DLTOVR FILE(METAGTPD)                                    /*162671*/
+/*                                                                            */
+/** Database error occurred */
+/*                                                                            */
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+             GOTO       CMDLBL(ABNORMAL)
+             ENDDO
+/*                                                                            */
+             GOTO       CMDLBL(ENDPGM)
+/**/
+/* Abnormal termination processing                       */
+/**/
+ABNORMAL:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+             SNDPGMMSG  MSG('Program MEC1560 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MEC1560 ended abnormally') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+ ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDPGM

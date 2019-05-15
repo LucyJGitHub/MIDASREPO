@@ -1,0 +1,200 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Download data control program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GOC000100 - Download data control program                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD020696A          Date 01Jul13              */
+/*                      MD020696           Date 03Jun13              */
+/*                      MD020167           Date 23Apr13              */
+/*                      CCB023A            Date 06Aug12              */
+/*                      CCB023             Date 06Aug12              */
+/*                      AR1061773          Date 11Dec12              */
+/*                      CCB020             Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                      245456             Date 16Feb07              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG9512            Date 05Dec05              */
+/*                      CGP002  *CREATE    Date 02Jul03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD020696A - Reversed fix MD020696 such that program will    */
+/*                   not encounter file allocation issue on GOSBSDPD */
+/*                   when component runs simultaneously              */
+/*       MD020696 - Dashboard doesn't show proper value of Jobs in   */
+/*                  MSGW status. Use API to get active jobs from sub-*/
+/*                  system instead of using the spooled file from    */
+/*                  WRKACTJOB *PRINT                                 */
+/*       MD020167 - New fields DCUATH not available in LFs           */
+/*       CCB023A - COB Restructure - Input Cycle Termination         */
+/*                 Restructuring                                     */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring (Recompile)                          */
+/*       AR1061773 - Status of SG CoB run not updated in dashboard   */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       245456 - Always call CoB monitoring program GO000102 in     */
+/*                order to ensure figures are zeroed in input cycle. */
+/*                Applied fix 243363.                                */
+/*       BUG9512 - Pgm doesn't handle errors in called programs      */
+/*       CGP002 - Global Processing data download                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(1000)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(1000)
+             DCL        VAR(&SYSTEMID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RUNPROGRAM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PHASE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&LOGCLPGM) TYPE(*CHAR) LEN(10)
+/*******************************************************************/             /*CCB020 CCB023A*/
+/**Parameter*for*call*to*CBC001001**/                                             /*CCB020 CCB023A*/
+/**********  DCL        VAR(&WCOB) TYPE(*CHAR) LEN(4)              */             /*CCB020 CCB023A*/
+/**********  DCL        VAR(&JOBDTL) TYPE(*CHAR) LEN(26)           *          /*MD020696 MD020696A*/
+/**********  DCL        VAR(&SBSNME) TYPE(*CHAR) LEN(10)           */         /*MD020696 MD020696A*/
+ 
+             DCLF       FILE(GODTACJ0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             RTVJOBA    LOGCLPGM(&LOGCLPGM)
+ 
+             CHGJOB     LOGCLPGM(*NO) SWS(XXXXXX00)
+ 
+/* Retrieve Midas system ID. */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSTEMID)
+ 
+/* If mode is *CLEAR then call program to clear records on GPDWNLPD */
+/*  for this Midas system only. */
+             IF         COND(&MODE *EQ '*CLEAR') THEN(DO)
+                CALL       PGM(GP000105) PARM(&SYSTEMID)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/**Do*processing*for*subsystem*information.**/                                         /*MD020696A*/
+/**Get*job*information*for*user*xxOWNER.*Variable*&JOBDTL*should****/         /*MD020696 MD020696A*/
+/**consists*of*10A*Jobname,*10A*Jobuser*and*6A*Jobnumber************/         /*MD020696 MD020696A*/
+/*******************************************************************/         /*MD020696 MD020696A*/
+/**********  CALL       PGM(GOC000108) PARM(&SYSTEMID)             */                   /*MD020696*/
+/**********  CHGVAR     VAR(&JOBDTL) VALUE('*ALL      ' *CAT +     */                  /*MD020696A*/
+/**********               &SYSTEMID *TCAT 'OWNER   ' *CAT '*ALL  ')*/         /*MD020696 MD020696A*/
+/**********  CHGVAR     VAR(&SBSNME) VALUE('M' *TCAT &SYSTEMID +   */                  /*MD020696A*/
+/**********               *TCAT 'SBS')                             */         /*MD020696 MD020696A*/
+/**********  CLRPFM     FILE(GOSBSDPD)                             */                  /*MD020696A*/
+/**********  CALL       PGM(GO001081) PARM(&JOBDTL &SBSNME)        */         /*MD020696 MD020696A*/
+ 
+/**Retrieve*Midas*phase*of*day.**/                                                        /*CCB020*/
+/**********  RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASE)         */                     /*CCB020*/
+/*******************************************************************/             /*CCB020 CCB023A*/
+/**Call*program*CBC001001*to*check*if*program*is*in*COB*or*IC**/                  /*CCB020 CCB023A*/
+/*******************************************************************/             /*CCB020 CCB023A*/
+/**********  CALL       PGM(CBC001001) PARM(&WCOB)                                /*CCB020 CCB023A*/
+/*******************************************************************/             /*CCB020 CCB023A*/
+/**If*the*return*value*is**YES,*system*is*in*COB**/                               /*CCB020 CCB023A*/
+/**Else*system*is*in*Input*Cycle**/                                               /*CCB020 CCB023A*/
+/*******************************************************************/             /*CCB020 CCB023A*/
+/**If*phase*is*not*'A'*(Input*cycle)*then*convert*to*'C'*to*represent*CoB.**/            /*CCB023A*/
+/**********  IF         COND(&PHASE *NE 'A') THEN(DO)                                     /*CCB020*/
+/**********     CHGVAR     VAR(&PHASE) VALUE('A')                  */          /*AR1061773 CCB023A*/
+/**********  IF         COND(&WCOB = '*YES') THEN(DO)              */             /*CCB020 CCB023A*/
+/**********     CHGVAR     VAR(&PHASE) VALUE('C')                  */                    /*CCB023A*/
+/**********  ENDDO                                                 */                    /*CCB023A*/
+                                                                                         /*CCB023A*/
+/* Retrieve Midas phase of day.                                    */                    /*CCB023A*/
+                                                                                         /*CCB023A*/
+             RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASE)                               /*CCB023A*/
+ 
+/* If mode is equal to *ALL then set flag to call all programs. */
+             IF         COND(&MODE *EQ '*ALL') THEN(DO)
+                CHGVAR     VAR(&RUNPROGRAM) VALUE('Y')
+             ENDDO
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* If mode is equal to *PHASE then check if phase (from MPHAS) matches */
+/*  that on file.                                                      */
+             IF         COND(&MODE *EQ '*PHASE') THEN(DO)
+/**********     IF         COND(&DCPHAS *EQ &PHASE *OR &DCPHAS *EQ '*') + ***/            /*245456*/
+/**********                  THEN(DO)                                     ***/            /*245456*/
+             IF         COND(&DCPHAS *EQ &PHASE *OR &DCPHAS *EQ '*' +
+                          *OR &DCPROG *EQ 'GO000102') THEN(DO)                            /*245456*/
+                   CHGVAR     VAR(&RUNPROGRAM) VALUE('Y')
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&RUNPROGRAM *EQ 'Y') THEN(DO)
+/* Build up command string to call program. */
+                CHGVAR     VAR(&CMD) VALUE(' ')
+                CHGVAR     VAR(&CMD) VALUE('CALL PGM(' *TCAT &DCPROG +
+                             *TCAT ') PARM(' *TCAT &QUOTE)
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &SYSTEMID *TCAT +
+                             &QUOTE *BCAT &QUOTE)
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &PHASE *TCAT +
+                             &QUOTE *BCAT &QUOTE)
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &DCKEYD *TCAT +
+                             &QUOTE *BCAT &QUOTE)
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &DCPARM *TCAT +
+                             &QUOTE *BCAT &QUOTE)
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &DCMPGM *TCAT +
+                             &QUOTE *BCAT &QUOTE)
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &DCMPRM *TCAT +
+                             &QUOTE *BCAT &QUOTE)
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &DCEPGM *TCAT +
+                             &QUOTE *BCAT &QUOTE)
+/**********     CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &DCEPRM *TCAT +
+                             &QUOTE *TCAT ')')                       */                 /*MD020167*/
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &DCEPRM *TCAT +
+                             &QUOTE *BCAT &QUOTE)                                       /*MD020167*/
+                CHGVAR     VAR(&CMD) VALUE(&CMD *TCAT &DCUATH *TCAT +
+                             &QUOTE *TCAT ')')                                          /*MD020167*/
+                CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
+             ENDDO
+ 
+/* If mode is equal to *PHASE then reset RUNPROGRAM flag. */
+             IF         COND(&MODE *EQ '*PHASE') THEN(DO)
+                CHGVAR     VAR(&RUNPROGRAM) VALUE('N')
+             ENDDO
+                                                                                         /*BUG9512*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                 /*BUG9512*/
+                GOTO       CMDLBL(ERROR)                                                 /*BUG9512*/
+             ENDDO                                                                       /*BUG9512*/
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSG('Error in pgm GOC000100') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ)                                                 /*BUG9512*/
+             MONMSG     MSGID(CPF0000)                                                   /*BUG9512*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(*LIBL/QCPFMSG) +
+                          MSGDTA('Error in pgm GOC000100') +
+                          MSGTYPE(*ESCAPE)                                               /*BUG9512*/
+             MONMSG     MSGID(CPF0000)                                                   /*BUG9512*/
+ 
+ENDPGM:
+             CHGJOB     LOGCLPGM(&LOGCLPGM)
+ 
+             ENDPGM

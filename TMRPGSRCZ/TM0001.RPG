@@ -1,0 +1,291 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas TM Initial file set-up')
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*  Midas - Treasury Management Module
+     F*                                                               *
+     F*  TM0001 - INITIAL FILE SET-UP                                 *
+     F*                                                               *
+     F*  Function: This will initialise the necessary files after     *
+     F*            TM module has been selected via an option from     *
+     F*            SCBEGIN.                                           *
+     F*                                                               *
+     F*  Called by: SCBEGIN - Midas modules files set-up.             *
+     F*                                                               *
+     F*  Calls    : ZA0140  - Date conversion.                        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 084595             Date 13Mar95               *
+      *                 E46391             Date 01Feb93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  084595 - Files should not be cleared on setup, as they are   *
+     F*           cleared by DL setup.                                *
+     F*  E46391 - Revaluations Control Data files MMREVCPP            *
+     F*           and FXREVCPP should be initialised in Dealing       *
+     F*           file setup program DL0005, as these files are       *
+     F*           used even if TM not installed.                      *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F****************************************************************
+     F*
+     F*  F U N C T I O N  O F  I N D I C A T O R S
+     F*
+     F*   11 - End of LF/TABLETXL reached.
+     F*   21 - Record-ids of 'XP' or 'HW' already exist on LF/TABLETXL.
+     F*****************************************************************
+     F/EJECT
+     FSDTRMAPDO   E                    DISK                           UC
+     F***FXREVCPPO   E                    DISK                         UC E46391
+     F***MMREVCPPO   E                    DISK                         UC E46391
+     FFXTTOTPPO   E                    DISK                           UC
+     FMMTTOTPPO   E                    DISK                           UC
+     FTABLETXLIF  F      27  2AI     1 DISK
+     FTABLETX O   F      96            DISK
+     F/EJECT
+     E                    OVRDBF  1   2 35
+      * OVRDBF commands for QCMDEXC.
+     E*******             CLRPFM  1   5 35                                084595
+     E                    CLRPFM  1   3 35                                084595
+      * CLRPFM commands for QCMDEXC.
+     E                    CPY@    1   1 80
+      * Copyright array
+     E/EJECT
+     ITABLETXLAA
+     I                                        1   2 RECTX
+     I                                        1  27 LOT
+      *
+     I            DS
+     IRUNDAT    E DSRUNDAT
+      *  Data structure for run date using RUNDAT
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      * Set up length field for QCMDEXC
+     C                     Z-ADD35        LEN    155
+      *
+      * Perform loop to clear files in case of rerun.
+     C                     Z-ADD1         X       20
+      *
+     C*******              DO   5                                         084595
+     C                     DO   3                                         084595
+     C                     MOVELCLRPFM,X  CMD    35
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           LEN
+     C                     ADD  1         X
+     C                     END
+      *
+      * Access data area RUNDAT to get run date.
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      *                  ************************
+      *                  *                      *
+      *                  *       SDTRMAPD       *
+      *                  *                      *
+      *                  ************************
+      *
+      * This will setup default values to be used for TM takeon.
+      *
+      * Initialise fields.
+     C                     MOVEL'TRMA'    ERTRMA
+     C                     MOVE 'SP1W'    ERSPRE
+     C                     MOVE AGRDNB    ERLCD
+     C                     MOVE 'I'       ERTYLC
+      *
+      * Open SDTRMAPD under user control and write record.
+     C                     OPEN SDTRMAPD
+     C                     WRITESDTRMAD0
+     C                     CLOSESDTRMAPD
+      *
+      *                  ************************
+      *                  *                      *
+      *                  *       FXTTOTPP       *
+      *                  *                      *
+      *                  ************************
+      *
+      *  Override FXTTOTPP to correct member FXDOLMPP
+     C                     MOVE OVRDBF,1  CMD
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           LEN
+      *
+      * Initialise fields.
+     C                     MOVE 'F2'      F2RCID
+      *
+      * Open FXTTOTPP under user control and write record.
+     C                     OPEN FXTTOTPP
+     C                     WRITEFXTTOTP0
+     C                     CLOSEFXTTOTPP
+      *
+      *                  ************************
+      *                  *                      *
+      *                  *       MMTTOTPP       *
+      *                  *                      *
+      *                  ************************
+      *
+      * Override MMTTOTPP to correct member MMLMCYPP.
+     C                     MOVE OVRDBF,2  CMD
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           LEN
+      *
+      * Initialise fields.
+     C                     MOVE 'IN'      INRCID
+      *
+      * Open MMTTOTPP under user control and write record.
+     C                     OPEN MMTTOTPP
+     C                     WRITEMMTTOTP0
+     C                     CLOSEMMTTOTPP
+     C*
+     C**  The FX/MM Revaluation Control Data files are now written when   E46391
+     C**  DL installed, as these files are used by programs which are     E46391
+     C**  run even if TM not installed (eg MM0053, Fx0590)                E46391
+     C*                                                                   E46391
+     C***********        ************************                         E46391
+     C***********        *                      *                         E46391
+     C***********        *       FXREVCPP       *                         E46391
+     C***********        *       MMREVCPP       *                         E46391
+     C***********        *                      *                         E46391
+     C***********        ************************                         E46391
+     C***********          MOVE AGRDNB    FULCD                           E46391
+     C***********          MOVE AGRDNB    IDLCD                           E46391
+     C***********                                                         E46391
+     C**Set*up*fields*for*PF/FXREVCPP*and*PF/MMREVCPP*by*using*********** E46391
+     C**PGM/ZA0140.****************************************************** E46391
+     C***********          MOVE 'D'       FMT     1                       E46391
+     C***********          CALL 'ZA0140'                                  E46391
+     C***********          PARM           FULCD                           E46391
+     C***********          PARM           FMT                             E46391
+     C***********          PARM           DATN    60                      E46391
+     C***********          PARM           DATA    7                       E46391
+     C***********          PARM           RTN     1                       E46391
+     C***********          PARM           DATY    80                      E46391
+     C***********                                                         E46391
+     C**Set*up*fields*for*output*to*PF/FXREVCPP*and*PF/MMREVCPP.********* E46391
+     C***********          MOVELDATA      FLD1    5                       E46391
+     C***********          MOVELDATN      FUDLUP                          E46391
+     C***********          MOVELDATN      IDDLUP                          E46391
+     C***********          MOVE FLD1      FUMLUP                          E46391
+     C***********          MOVE FLD1      IDMLUP                          E46391
+     C***********          MOVE DATA      FUYLUP                          E46391
+     C***********          MOVE DATA      IDYLUP                          E46391
+     C***********          MOVE 'FU'      FURCID                          E46391
+     C***********          MOVE 'ID'      IDRCID                          E46391
+     C***********          MOVE 'I'       FUCHTP                          E46391
+     C***********          MOVE 'I'       IDCHTP                          E46391
+     C***********          MOVE 'INS'     FULUID                          E46391
+     C***********          MOVE 'INS'     IDLUID                          E46391
+     C***********          MOVE 'N'       FURIPI                          E46391
+     C***********          MOVE 'N'       IDRIPI                          E46391
+     C***********          MOVE *ZEROS    FUTLRV                          E46391
+     C***********          MOVE *ZEROS    IDTLRV                          E46391
+     C***********          TIME           FUTLUP                          E46391
+     C***********          TIME           IDTLUP                          E46391
+     C***********                                                         E46391
+     C***********          OPEN FXREVCPP                                  E46391
+     C***********          WRITEFXREVCP0                                  E46391
+     C***********          CLOSEFXREVCPP                                  E46391
+     C***********                                                         E46391
+     C***********          OPEN MMREVCPP                                  E46391
+     C***********          WRITEMMREVCP0                                  E46391
+     C***********          CLOSEMMREVCPP                                  E46391
+      *
+      *                  ************************
+      *                  *                      *
+      *                  *       TABLETX        *
+      *                  *                      *
+      *                  ************************
+      *
+      * Read TABLETXL to check if records exist in case of re-run.
+     C           RECTX     SETLLTABLETXL
+     C                     READ TABLETXL                 11
+      *
+     C           *IN11     DOWEQ'0'
+     C           *IN21     ANDEQ'0'
+      *
+     C           RECTX     IFEQ 'XP'
+     C                     SETON                     21
+     C                     END
+      *
+     C                     READ TABLETXL                 11
+     C                     END
+      *
+      * If records found then skip further processing otherwise write
+      * records to PF/TABLETX.
+     C           *IN21     IFEQ '0'
+      *
+      * Initialise common fields for PF/TABLETX.
+     C                     MOVE 'H'       RECI    1
+     C                     MOVE *BLANKS   FLR1   10
+     C                     MOVE *ZEROS    FLR2   180
+     C                     MOVE *BLANKS   FLR3   58
+     C                     MOVE *ZEROS    TLCD    50
+     C                     MOVE *BLANKS   TCHTP   1
+     C                     MOVE *ZEROS    TTNLU   50
+      *
+     C                     MOVE 'XP'      RECTX
+     C                     EXCPT
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     *PSSR : SUBROUTINE TO DEAL WITH PROGRAM ERROR            *
+     C*                                                              *
+     C*        CALLED BY  : PROGRAM ERROR                            *
+     C*        CALLS      : NONE                                     *
+     C*                                                              *
+     C****************************************************************
+     C           *PSSR     BEGSR
+     C           LOOP      IFEQ *BLANKS
+     C                     MOVE 'N'       LOOP    1
+     C                     DUMP
+     C                     SETON                     LR
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     OTABLETX E       N21
+     O                         RECI       1
+     O                         RECTX      3
+     O                         FLR1      13
+     O                         FLR2      31
+     O                         FLR3      89
+     O                         TLCD      92P
+     O                         TCHTP     93
+     O                         TTNLU     96P
+     O*
+     O** The following 2 lines were removed from the arrays by change
+     O** 084595:
+     O*****CLRPFM FILE(FXREVCPP) MBR(*FIRST)                              S01117
+     O*****CLRPFM FILE(MMREVCPP) MBR(*FIRST)                              S01117
+     O*
+** OVRDBF - OVRDBF COMMANDS FOR QCMDEXC
+OVRDBF FILE(FXTTOTPP) MBR(FXDOLMPP)
+OVRDBF FILE(MMTTOTPP) MBR(MMLMCYPP)
+** CLRPFM - CLRPFM COMMANDS FOR QCMDEXC                                   S01117
+CLRPFM FILE(SDTRMAPD) MBR(*FIRST)                                         S01117
+CLRPFM FILE(FXTTOTPP) MBR(FXDOLMPP)                                       S01117
+CLRPFM FILE(MMTTOTPP) MBR(MMLMCYPP)                                       S01117
+** CPY@ - COPYRIGHT STATEMENT                                             S01117
+(c) Finastra International Limited 2001

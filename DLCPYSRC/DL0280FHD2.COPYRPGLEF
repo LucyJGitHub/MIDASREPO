@@ -1,0 +1,582 @@
+      *****************************************************************                       CFX114
+      *                                                               *                       CFX114
+      *  Midas - /COPY Member of DL0280FHD2                           *                       CFX114
+      *                                                               *                       CFX114
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CFX114 - Core changes for GBO014                             *
+      *  211108 - Don't adjust Next Interest End Date if MDAT = SLIP  *
+      *           for OIS deals with Rate Fix Days Adjustment <> 0    *
+      *  186412 - Interest adjustment for FRA/IRS deals are being     *
+      *           carried over to the next period.                    *
+      *  202327 - Multiply/divide indicator is incorrectly processed  *
+      *           when CIR003 is switched on.                         *
+      *  199825 _ Upfront fee not posted to correct nostro. Move pay/ *
+      *           receive branch to field KYSTBR.                     *
+      *  208947 - Adjust wrong mapping of field FIUSRI                *
+      *  204923 - Rate Fix Days Adjustment (OIS)                      *
+      *  CAP056 - Automatic Authorisation of Interface Deals          *
+      *  CIR008 - FRA/IRS Deals Authorisation                         *
+      *  185064 - Amended up-front fee amount generated reverse Deal  *
+      *           Date account key.                                   *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  198305 - Position 10 of RXV*****T* account key is sometimes  *
+      *           blank when CIR003 is switched on.                   *
+      *  188689 - Zeroise SLIP (Start/Last Interest Payment) if MDAT  *
+      *           was amended equal to the last interest payment date.*
+      *  150138 - Invalid account key "xxAyy    F" has been generated *
+      *           for non-interest bearing NA Purchased.              *
+      *  194408 - Accoount sequence of account key generated is being *
+      *           overwritten when interest paid separately is 'Y'.   *
+      *           Applied fix 187262.                                 *
+      *  148100 - Rollover interest should be settled based on the    *
+      *           settlement branch when interest is paid separately. *
+      *  185058 - Interest capitalisation is done if deal amendment   *
+      *           is followed by 'CI' of another deal. Reset AMTP.    *
+      *  182812 - If an amendment is done during interest change date *
+      *           that will cause UNICD and/or TNICD to be equal to   *
+      *           zero, UINFD and/or TINFD must be reset to zero      *
+      *           as well.  This is applicable for RS and RX deals.   *
+      *  198150 - Positions 6-9 of Interest Rate Swap keys not always *
+      *           set up correctly.  This fix was put in as part of   *
+      *           Release 4 packaging.                                *
+      *  CIR007 - Overnight Index Swaps                               *
+      *  184906   Separate processing for OUR principal change        *
+      *           schedule and THEIR principal change schedule.       *
+      *  193141 - DL0280 loops in SR/RXPDTB when XNIPD is a holiday   *
+      *           and XINDE = *blanks.                                *
+      *  193023 - Deals with Tax Indicator = X should be excluded     *
+      *           from interest payment history file.                 *
+      *  CRE007 - Base Rate Tax 2001.                                 *
+      *  CPB002 - Meridian DBA Middleware Replication Customization.  *
+      *  154850 - Truncation of values when calculating for the face  *
+      *           value, purchase value, discount amount per parcel   *
+      *           causes imbalances in the account movements.         *
+      *  188601 - Infinite loop occurs when RX deal has a frequency   *
+      *           'Z' and the date falls on a holiday previously a    *
+      *           working day.                                        *
+      *  CIR003 - FRA/IRS Pay/Receive Messages for Swaps              *
+      *  CIR006 - FRA/IRS Amortisation of Caps/Collars/Floors &       *
+      *           Individual Compounding Swaps.                       *
+      *  179458 - RS Interest Events are not generated when Next      *
+      *           Interest Payment Date falls on a holiday on local   *
+      *           currency and falls on a working day based on deal   *
+      *           currency.  Removed E20283 fixes to make core fix    *
+      *           108624 work.  Completed core fix 090534 so that     *
+      *           dealing currency will always be used when computing *
+      *           for next interest payment and rate change dates.    *
+      *           Applied full fix of 166855.                         *
+      *         - Added RSTM, RONS, PSTM and PONS in the input        *
+      *           specification for DELASDG in order to get the       *
+      *           correct settlement method and nostro when           *
+      *           processing FRA/IRS deals properly with fix CSW097.  *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *  180466 - Add parameter ZFRZBD to include interest payment    *
+      *           base date in the calculation.                       *
+      *  CIR005 - FRA/IRS Business Day Conventions                    *
+      *  CIR004 - Dealing Calculation Method Change                   *
+      *  169550 - Interest is being capitalised for deals in which    *
+      *           capitalising of interest is not allowed (e.g. IT &  *
+      *           IP deals).  Before checking deal amendments due for *
+      *           a certain deal, initialise AMTP to *BLANKS.         *
+      *  175065 - Bring DLGHISPD into line with DEALSDG               *
+      *  CSW097 - MT340s and MT360s Message Generation.               *
+      *           Amended to bring into line the next interest payment*
+      *           date calculation with that done in SWIFT Msg Gen.   *
+      *  CAP051 - Automatic Authorisation (MM and FX Part)            *
+      *  CDL007 - Deposit Breakdown Penalty                           *
+      *  CPB001 - Meridian DBA Middleware Replication Customization.  *
+      *           Midas/TOF Interface.                                *
+      *  171698 - Plato field not being updated correcty due to       *
+      *           internal define file not matching with PF/DEALSDG.  *
+      *  131609 - Interest capitalisation account key has not been    *
+      *           generated for deals with interest capitalisation    *
+      *           indicator equal to 'Y'.                             *
+      *  CDL006 - Dealing Fiduciary.                                  *
+      *  163136 - Interest Calculation Method '6'  showing incorrect -*
+      *           or ZERO amount. Addition to Core #126017 which dealt*
+      *           with the issue. It introduced an additional  INT6DY *
+      *           field in  Core  s-routine  ZINTDY in  /COPY ZSRSRC/ *
+      *           ZINTDYZ2 w/ch is usually called from GLINTC s-routine
+      *           in /COPY  ZSRSRC/ GLINTCZ1 .  However, there are at *
+      *           least a dozen other pgms that use ZINTDY but do     *
+      *           GLINTC-processing within the pgms calculation specs *
+      *           and therefore need to make use of INT6DY  field .   *
+      *  156954 - Fix 100140 is incomplete.  It doesn't consider if   *
+      *           date format is MMDDYY.                              *
+      *  CPL002 - Midas-Plato Interface                               *
+      *  134834 - Interest Payment Date on the floating side of RS    *
+      *           deal is calculated using local currency instead of  *
+      *           deal currency for settlement types other than '01', *
+      *           causing problems when the date is a holiday in deal *
+      *           currency. Calculate date using deal currency.       *
+      *  126244 - Incorrect narratives on Daily Journal.  Rolled-over *
+      *           by deal number has been linked with FRA, CD sold,   *
+      *           and CD purchased deals.                             *
+      *  128051 - Interest for maturing CD deal missing on maturity   *
+      *           date when principal is zero. Apply fix 125513.      *
+      *  145789 - 112253 was wrong as well as being incorporated      *
+      *           incorrectly. this fix, hopefully, corrects the      *
+      *           processing once and for all.                        *
+      *  145116 - CEU003 fix: Interest settlement currency is not     *
+      *           passed to account key xxRxx....I causing interest   *
+      *           amount to be posted on suspense account.            *
+      *  145001 - CEU015 fix: No need to convert RBDA as it is        *
+      *           already expressed in 'in' currency (deal ccy).      *
+      *  140180 - SC112253 not applied correctly. The extra MOVE 'D'  *
+      *           statement has now been commented out.               *
+      *  CEU015 - EMU Enhanced MM Rollover                            *
+      *  134798 - Missing EMU codes                                   *
+      *  134627 - 'Rollover Deal 000000 Not Found' appeared on report *
+      *         - Indicator 69 was being used for two different tasks *
+      *           in the program. Reused indicator 32 instead.        *
+      *  CEU003 - EMU DL Settlement Currency Conversion:              *
+      *           Amended to output the settlement currency to the    *
+      *           account keys file (DKEYSDP). Also amended to use    *
+      *           the settlement currency in place of the transaction *
+      *           currency when calculating the next interest payment *
+      *           date.                                               *
+      *  104484 - CALCULATION OF 1 EXTRA DAY ACCRUAL FOR ENHANCEMENT  *
+      *           S01440                                              *
+      *  121768 - Recompile over changed GLINTCZ1                     *
+      *  110359 - DB error when rollover deal reversed and old deal   *
+      *           is historic                                         *
+      *  110834 - Correction to Basic Rate Tax processing (BRT).      *
+      *  118948 - Maturity date settlement type and Receipt settlement*
+      *           method cannot be a basis in which OSBR in file      *
+      *           DKEYSDP should be updated. If the deal is a loan,   *
+      *           ROBR should be contained in OSBR, otherwise, move   *
+      *           POBR to OSBR. This is true only for interest com-   *
+      *           putations on Next Int Date event.                   *
+      *  122828 - Tax Indicator on Interest Payment File must be      *
+      *           'Y' or ' ', not 'N'. This fix prevents undefined    *
+      *           Record type error in Monthly Interest Report        *
+      *           Program. (NB. Copied from fix 057993)               *
+      *  117033 - Maturity Account Keys for BRT on Deals are          *
+      *           incorrect. If BRT is on and the deal ccy is         *
+      *           sterling, should produce a __M_____BT key. If the   *
+      *           deal ccy is not sterling, should produce a          *
+      *           __M______T key. Also if base ccy is not sterling,   *
+      *           should produce __M_____ST & __M__ccy_T keys.        *
+      *           If BRT is not on, should produce a __M______T key.  *
+      *  117032 - Reversal of Interest Capitalisation Keys for BRT on *
+      *           deals are incorrect. If BRT is on and the deal ccy  *
+      *           is sterling, should produce a __I_____BT key. If    *
+      *           the deal ccy is not sterling, should produce a      *
+      *           __I______T key. Also if base ccy is not sterling,   *
+      *           should produce __I_____ST & __I__ccy_T keys.        *
+      *           If BRT is not on, should produce a __I______T key.  *
+      *         - Also was only reversing out interest capitalised if *
+      *           interest capitalistion ind is on, else reversing    *
+      *           interest paid/received. Should always reverse out   *
+      *           interest paid/received.                             *
+      *  117028 - Interest Capitalisation Keys for BRT on deals are   *
+      *           incorrect. If BRT is on and the deal ccy is         *
+      *           sterling, should produce a __I_____BT key. If the   *
+      *           deal ccy is not sterling, should produce a          *
+      *           __I______T key. Also if base ccy is not sterling,   *
+      *           should produce __I_____ST & __I__ccy_T keys.        *
+      *           If BRT is not on, should produce a __I______T key.  *
+      *           Also reinsert subroutine GENBRT.                    *
+      *  112253 - Account Keys for RS codes are being generated       *
+      *           incorrectly. Spaces are being included within the   *
+      *           Account Keys such as RSDSC__I_A instead of          *
+      *                                RSDSC___IA.                    *
+      *  083036 - Properly setup customer number field when writing   *
+      *           records to COINTDD and INTPSDD                      *
+      *  126017 - Correction to interest calculation for calculation  *
+      *           basis 6 in SR/GLINTC. Add SR/ZDAT10                 *
+      *  096447 - When Next Rate Fix Date is equal to Current Rate    *
+      *           Change Date, compute for the Next Rate Change Date  *
+      *           as the basis for the Next Rate Fix Date.            *
+      *  090534 - IRS Next Interest Change Date is being calculated   *
+      *           using local currency to test for holidays in most   *
+      *           cases. It should only test for holidays in the      *
+      *           currency of the deal.                               *
+      *  126836 - CDL002 extended the length of DLBHISPD to 1199 and  *
+      *           moved the O-spec to end position 11199 but did not  *
+      *           change UBDATA so causing data corruption in end of  *
+      *           month. Extend UBDATA to 1199 & define FX netting    *
+      *           field in I-specs. Also renamed EXCPT name MATCH to  *
+      *           MATCH# in order to compile program.                 *
+      *  104044 - Initialize NRRSAL field under DEPOS tag.            *
+      *  100222 - Wrong settlement being used on M-B and R-A keys.    *
+      *           It uses settlement from new rollover deal, it       *
+      *           should use settlement a/c from the original deal.   *
+      *  CDL002 - FX Netting                                          *
+      *  CSW011 - Generate FRA MT34n messages only                    *
+      *  CSW005 - MG34n and MG36n message generation                  *
+      *  101985 - Deal amendment type (CI) not processed correctly.   *
+      *  108624 - Amended to allow the use of different currency      *
+      *           codes as a basis for the 'rate fix date'            *
+      *           calculation. (Providing this feature has been       *
+      *           switched on, on the FRA/IRS's I.C.D.                *
+      *  097885 - Recompiled for wrong calculation of number of day   *
+      *           interest (ZINTDYZ2).                                *
+      *  094711 - The branch of the deal is overriden by the branch   *
+      *           the deal amendment.                                 *
+      *           Before the access of the deal amendment, save the   *
+      *           branch and the original entry date. At the end of   *
+      *           the deal amendment processing, restore them.        *
+      *  109561 - Correct DBERR for AOPLCSR0 call                     *
+      *  CAC001 - Profit Centre Accounting Development:               *
+      *           New account keys will be produced on deal date,     *
+      *           value date, rollover date, accrual date, interest   *
+      *           due date, maturity date, balance change date and    *
+      *           sale date.  Two set of keys will be produced on     *
+      *           each date, one for the transaction profit center and*
+      *           one for the funding profit centre.                  *
+      *  100140 - Looping problems caused by FRA's fixing on 29th Feb *
+      *           Fix is to ensure that when 1 year is added to 29th  *
+      *           Feb in a leap year, the result is 28th Feb.         *
+      *  099469 - Complete fix 096561 for Loans and Deposits and      *
+      *           Negotiable Assets Purchased/Sold.                   *
+      *  077785 - Date of accrual event for FRA/IRS incorrect         *
+      *  101999 - Removes fix 043181.                                 *
+      *  100291 - The unsettled interest was being re-calculated on   *
+      *           change of principal so that it would be correct up  *
+      *           to the control date. However, this is wrong because *
+      *           the unsettled interest should be the interest upto  *
+      *           the last rate change date only. The processing is   *
+      *           changed to set the unsettled interest to the accrued*
+      *           interest to control date on rate change date only.  *
+      *  100289 - Accrual for cash-flow should use SR/ZINTDY to get   *
+      *           the number of days in the period rather than using  *
+      *           SR/GLINTC.                                          *
+      *  CPM004 - Change access to PMPORTPD depending on Bank Ports.  *
+      *  095244 - Recompiled for Calculation method 3                 *
+      *  095238 - Recompiled for Calculation method 3                 *
+      *  096561 - Output correct branches to DKEYSDP for Deals with
+      *           amendments.
+      *  095620 - Correct DB error processing                         *
+      *  093378 - If interest amount is 0, set yield to 0 to prevent  *
+      *           divide by zero error.                               *
+      *  089998 - Files out of balance because not all deal types are
+      *           included in array of possible deal types @DTP - should
+      *           include deal type 'TB','DA' AND 'TA' in @DTP
+      *  094604 - Reimbursement rate should only be used if floor     *
+      *           rate is not used.  Also applied fix 085766.         *
+      *  CIR002 - Compounding of Interest.                            *
+      *  CIR001 - Interest Rate Calendars.                            *
+      *  S01444 - Amended to write a record to the historic deals
+      *           file when a reversed record is dropped from the
+      *           main file.
+      *  085808 - CORRECT OUTPUT TO PF/DKEYSDP
+      *  080603 - Rollover and Taxable key Re Write
+      *           Tax keys applied to Enhanced rollover
+      *           Enhanced Rollover Keys & Amounts Changed
+      *           xxMyy....A key reinstated for Non Enhanced Rollovers
+      *           HK TAX test replaced with test for Optional features
+      *           Withholding Tax S01460 and BRT S01383.
+      *           Front Up Interest MI key suppressed
+      *           W/H Tax  Interest xxIyy....TC Suppressed
+      *  080205 - If no deals amendment Open to PM files never done   *
+      *  S01486 - Portfolio Management Upgrade to Release 10.         *
+      *           Calculate new FX rate on generation of deal date    *
+      *           account key and value date account key              *
+      *  044994 - Interest Payment Dates for Cross Currency IRS need  *
+      *           to match in both currencies, if the Interest        *
+      *           Payment Base Dates match. Added two sr., RXPDTA     *
+      *           and RXPDTB to identify and calculate payment dates. *
+      *           Also corrected @FREQB to output Base Date           *
+      *           correctly; ie., it sould NOT be adjusted for        *
+      *           holidays.                                           *
+      *  035589 - For IRS the Interest Accrued Since Last Change Date *
+      *           (UIALC/TIALC) should represent Interest Accrued     *
+      *           from Last Change Date up to latest Short Term Rate  *
+      *           change - NOT up to latest Accrual Date.             *
+      *           IE. Do not update field after Accrual processing    *
+      *           in DLRSAC.                                          *
+      *           Client reference on GEMS 040778                     *
+      *  046560 - Post FRA unrealised P/L until value date            *
+      *  068074 - DLC0606B failed with DL0280 attempting to update    *
+      *           or delete without prior read or chain.  Applied     *
+      *           GEMS Fix 066905 except the portion which reverses   *
+      *           GEMS Fix 064622 (not existing in this program).     *
+      *  051372 - Incorrect FRA settlement amount calculated for      *
+      *           Australian formula (SETF='A') if deal amount is     *
+      *           greater than 99 Million.                            *
+      *  040787 - Set Daily Accrual Amount (DACCR) to zero before     *
+      *           processing for the deal.  Do not produce an account *
+      *           key if interest amount is zero.  This fix is        *
+      *           related to fix E23950                               *
+      *  039124 - Rate fix advice for an IRS should not be produced   *
+      *           at maturity.                                        *
+      *  027266 - If for an IRS/Cap/Collar/Floor (non-Average Rate),  *
+      *           a single Rate Change Date is entered (ie. no        *
+      *           frequency/day input) then, on the first Interest    *
+      *           Fix Date, when the next Fix Date is calculated,     *
+      *           the Fix Date (associated to this Rate Change Date)  *
+      *           is set to 0.  Hence, no new rate gets fixed.        *
+      *  061873 - Tax and Net Account keys should not be generated if *
+      *           Hong Kong tax rate is zero.                         *
+      *  058320 - Amend processing so that PTYSEQPD is checked        *
+      *           and if a record already exists, it is updated.      *
+      *           (Previously duplicate keys were output)             *
+      *  052075 - A/C'S being opened by system with zero A/C seq      *
+      *           due to acsq being set to zero for BRT - so need     *
+      *           to save value of acsq before execution of the       *
+      *           subroutines WRISEQ OR WRIINT.                       *
+      *  062321 - When Negative Interest Indicator is ON, program     *
+      *           should negate TOTI to reflect correct postings.     *
+      *           (Applied GEMS fix 062270).                          *
+      *  066550 - GLINTC has had historical problems and inaccuracies *
+      *           and is now externaly descibed and changed to use    *
+      *           ZINTDYZ1. See document atached to error no on GEMS  *
+      *  060995 - Settlement sum in FRA was incorrect.  Interest for  *
+      *           excess days (due to holidays, etc.) of a one        *
+      *           fix calculation are calculated separately.          *
+      *           Applied fix 031967 was change to have 10 days       *
+      *           for number of excess days.                          *
+      *  031967 - PROBLEMS CAN OCCUR WITH SETTLEMENT SUMS FOR FRAS    *
+      *           ENTERED WITH MATURITY DATES JUST GREATER THAN 1     *
+      *           YEAR (DUE TO EXACTLY 1 YEAR BEING A NON-WORKING     *
+      *           DAY) AS MIDAS WILL CALCULATE THIS SUM USING         *
+      *           2 CALCULATIONS (1 YEAR CALC PLUS EXTRA DAYS         *
+      *           CALC) RATHER THAN 1 CALC.                           *
+      *           THIS CAUSES THE INCORRECT AMOUNTS.                  *
+      *  003457 - For a single CCY IRS, Accrual Date should show      *
+      *           Fixed Rate int INT. RATE column, not BASE RATE      *
+      *           of '00'.  The Accrual Date reporting on DL0280P1    *
+      *           not correct for any of the FRA/IRS Deal Types (but  *
+      *           accounting correct); ensure rates and amounts       *
+      *           output correctly on report.                         *
+      *  046978 - Unrealized Profit/Loss are not being reported in    *
+      *           DL0280 although their account keys are being gene-  *
+      *           rated.  Include the Unrealized Profit/Loss in       *
+      *           DL0280 reporting.                                   *
+      *  043181 - Deal originally input as Rollover, the was reversed *
+      *           but the Accounting Entries were not all reversed to *
+      *           the same account.                                   *
+      *         - Actual error is that the TYPE OF MONEY (the 10th    *
+      *           position of the Account Key) is being set to A for  *
+      *           Rollover's instead of R.                            *
+      *  051148 - Principal amount shown as 0.00 for Interest Date.   *
+      *  060147 - Replace all 'MOVE NEV' with 'MOVELNEV'.             *
+      *  058964 - BHF856 incorporated incorrectly. This will cause    *
+      *           Payment Branch to always be used for Interest       *
+      *           Date posting instead of being conditioned           *
+      *           on Deal Type.                                       *
+      *  031872 - The Account Key 'PN' (Net of Tax) for RX deals      *
+      *           was being created even though deal not taxable.     *
+      *  028694 - The Account Key, for FRAs, FRVyybbbPN is            *
+      *           produced even when Hong Kong Interest Tax not       *
+      *           used.                                               *
+      *  S01460 - To allow the Withholding Tax A/C keys to be         *
+      *           produced.                                           *
+      *  060129 - In the O-specs, the amount field for currencies     *
+      *           with zero(0) decimal place overwrites the last      *
+      *           character of the currency field because of          *
+      *           EDTCDE 1.                                           *
+      *           Fix: Adjust positions to the left to accomodate     *
+      *           EDTCDE 1. (Applied fix 055368)                      *
+      *  S01440 - Amended to Generate new account keys on accrual     *
+      *           date and on value date for deals with deal types    *
+      *           PI and SI when run date is greater than deal date   *
+      *           and less than or equal to value date                *
+      *  S01434 - ROLLOVER ENHANCEMENTS.                              *
+      *  032104 - Z-ADD OF ACCRUED INTEREST TO TOTAL INTEREST         *
+      *           SHOULD ONLY HAPPEN IF ORIG. ENTRY DATE WAS          *
+      *           BEFORE TODAY                                        *
+      *  048530 - 'NET' and Tax/Levy Amount should not be shown       *
+      *           against entry for 'ACCRUAL DATE' for deposits       *
+      *           in DL0280P1.                                        *
+      *  E50466 - Deals File not updated with fact that               *
+      *           capitalisation occurs.                              *
+      *  S01378 - Facilitates the partial sale of a parcel            *
+      *           of negotiable instruments which have been           *
+      *           previously input to the system as a single          *
+      *           transaction. When NAB is entered the parcel         *
+      *           size defines the number of parcels it may be        *
+      *           split into for selling. The parcel size on the      *
+      *           NAS defines the number of parcels being sold        *
+      *           by the transaction. (was MOF53). Parcel details     *
+      *           extract is included in LF/DAMSX, these are          *
+      *           produced by DL4040 (called by DLC0606A).            *
+      *  029001 - If 'Upper End Period' is equal to 'Lower End        *
+      *           Period' then a divide by Zero error will occur.     *
+      *  S01392 - JAP.SUB-MODULE INCORPORATION (CORE)                 *
+      *  E36008 - Interest accruals on the interest rate refix date   *
+      *           were not posted to the daily journal. Add another   *
+      *           condition (BKALDI = 'N') when performing accrual    *
+      *           date processing for RS, RX, RR/RP/RF deals          *
+      *  E33737 - Reversal of a NA purchased results in settlement in *
+      *           wrong branch.  Should use the pay branch (POBR) and *
+      *           not the receive branch (ROBR)                       *
+      *  E38323 - Recompilation of the program done due to a          *
+      *           change in ZFWDT subroutine                          *
+      *  S01383 - BASIC RATE TAX INCORPORATION                        *
+      *  043304 - FRA error in calulation of settlement amount for    *
+      *           Settlement formula - U.                             *
+      *  040318 - Settlement Formula for AUD (SETF=A) sometimes       *
+      *           outputs from DLRADS a negative amount; this causes  *
+      *           (eg.) a -ve Receipt which later becomes a Pay.      *
+      *  AUS021 - AUSTRALIAN PRODUCT. Includes two new settlement     *
+      *           formulas for FRAs. Initially includes one for       *
+      *           Australia and one for USA.                          *
+      *           (Also incorporating E38152)                         *
+      *  AUS003 - AUSTRALIAN PRODUCT - Interest To Calender Month     *
+      *           End.                                                *
+      *  E35983 - Calculation of discounted settlement amounts in     *
+      *           SR.DLRADS is done in wrong order which causes       *
+      *           half-adjust errors and consequent error of +/-      *
+      *           1 cent in settlement amount on confirmation         *
+      *  S01354 - Add internal funding deal processing                *
+      *  E29588 - SWIFT Rationalisation post-collection amendment     *
+      *           o Processing added to DL0280 to call MG5002 if      *
+      *             reversed deal is dropped. MG5002 increments       *
+      *             TRN for messages relating to dropped deal.        *
+      *  E26940 - IF HASH VALUE OF DEAL AMENDMENTS IS NEGATIVE -      *
+      *           PRINCIPAL DECREASES GREATER THAN PRINCIPAL          *
+      *           INCREASES - REMOVE SIGN, ELSE VALUE IS OUTPUT       *
+      *           WITH CHARACTER AT END OF NUMBER ON AU REPORT        *
+      *  E28496 - Recompile for SDFAISPD changes (BQHEOC - Hedged     *
+      *           Events on Cashflow removed).                        *
+      *  E26468 - A line of headings is not being printed.            *
+      *  E26172 - A value was, on some occasions, being printed in    *
+      *           the Sale Currency field for non-FX deals.  This     *
+      *           field is now blanked before printing if the deal    *
+      *           is not FX.                                          *
+      *  E23950 - A spurious FRA account key was being produced       *
+      *           because the program was not checking that the       *
+      *           deal has a non-zero interest component.             *
+      *  E26577 - Post unrealised P/L for IRSs even if Value Date     *
+      *           not yet reached (associated with S01328)            *
+      *  E24960 - No accrual date interest entries for FRAs           *
+      *  BHF856 - FOR PLACINGS START DATE GOES WITH PAY BRANCH AND    *
+      *           MATURITY GOES WITH RECEIVE BRANCH                   *
+      *  S01328 - FRA/IRS REVALUATION                                 *
+      *  DT0067 - LN0885 DOESN'T WORK (PROGRAM FALLS OVER) AND        *
+      *           IS UNNECESSARY - FIXED REMOVED                      *
+      *  E22595 - WHERE AN ACCOUNT KEY HAS POSTING REFERENCE 3 THE    *
+      *           ACCOUNT SHOULD BE OPENED IN THE NAME OF THE         *
+      *           ISSUER AND NOT THE 'BOUGHT FROM' CLIENT.            *
+      *  E22689 - SYSTEM OPENED ACCOUNTS WITH SEQUENCE NO '5N' FOR    *
+      *           FRA/IRS DEALS BECAUSE ACSQ FROM DEALSDB (CONTAIN    *
+      *           ING NN) WAS OUTPUT TO DKEYS. POSN 33/34 ON          *
+      *           DEALSDG WAS DEFINED AS CDAS INSTEAD OF ACSQ.        *
+      *  E21662 - For FRA/IRS RX Deals the interest and accrual       *
+      *           amount only uses their CCY decimal places           *
+      *  E22910 - For an Interest Rate Floor suppress ceiling         *
+      *           rate to stop 9999.9999999 appearing in Interest     *
+      *           Rate column.                                        *
+      *  E22691 - For a single ccy IRS, accrual date should show      *
+      *           fixed rate in INT.RATE column, not BASE RATE        *
+      *           of '00'.                                            *
+      *  E22610 - In SR DLRADS (calculates discounted settlement      *
+      *           amount for FRA's) discount factor for deals         *
+      *           longer than 1 year should use no. of days from      *
+      *           previous year, not current one.                     *
+      *  E20283 - INSUFFICIENT VALIDATION ON SETTLEMENT DETAILS.      *
+      *  E21758 - Align amount column on report when tax rate = 0.    *
+      *  S01182 - Book code/Profit centre updating. (Profit centre    *
+      *           already dealt with under preceding SARs/err nos)    *
+      *  E23400 - REMOVE UNNECESSARY USE OF BIT 1 OF UDSTI/TDSTI      *
+      *           (WAS USED TO INDICATE NEGATIVE INTEREST RATE BUT    *
+      *           THIS FIELD, SUNII/STNII, REMOVED BY S01157)         *
+      *           (CROSS-REFERENCE R10 FIX NUMBER LN0997)             *
+      *  LN0885 - CONDITION OPEN OF DL0280P1 PRINTER FILE ON SAME     *
+      *           INDICATORS AS OUTPUT OF HEADINGS.                   *
+      *  LN0884 -1 ADD 1 TO PLINES EVERY TIME FRA/IRS CONTINUATION    *
+      *            LINE OUTPUT TO ENSURE NEW PAGE WHEN NECESSARY;     *
+      *          2 CONDITION OUTPUT OF BRANCH HEADING ON              *
+      *            MULTIBRANCHING INDICATOR;                          *
+      *          3 Z-ADD 11 TO PLINES WHEN NOT MULTIBRANCHED          *
+      *            AND Z-ADD 13 WHEN MULTIBRANCHED (THIS IS BECAUSE   *
+      *            BRANCH HEADING IS OUTPUT IN LATTER ENVIRONMENT)    *
+      *          4 SET OFF OVERFLOW IND. AT END OF DETAIL CALCS       *
+      *            TO AVOID HEADERS BEING OUTPUT BY LOGIC CYCLE AS    *
+      *            WELL AS SUBROUTINE EXCP.  REMOVE PART 3 OF         *
+      *            LN0780 SINCE NOT NEEDED AS ALL OUTPUT TO P1        *
+      *            CONTROLLED BY EXCP.                                *
+      *  LN0854 - ADDED FRA/IRS DEAL TYPES TO ARRAY @DTYP             *
+      *  LN0818 - SPACE UP BEFORE 'END OF REPORT FOR BRANCH'          *
+      *  LN0802 - TO CORRECT NO. OF RECORD READ                       *
+      *  BHF641 - DEAL AMENDMENTS READ OUT OF SEQUENCE                *
+      *           DUE TO MULTI-BRANCHING CHANGES                      *
+      *  LN0743 - UNDERLINING NOT LONG ENOUGH                         *
+      *  LN0780 -1 CHANGE 'END OF BRANCH REPORT' TO 'ENDOF REPORT     *
+      *            FOR BRANCH'                                        *
+      *          2 BYSL INDICATOR FOR FRA/IRS SHOULD BE POS 569       *
+      *          3 STOP HEADERS BEING OUTPUT FOR OVERFLOW WHEN        *
+      *            END OF REPORT JUST REACHED                         *
+      *  LN0711 - SET UP SETTLEMENT BRANCH AND PROFIT ON              *
+      *           DKEYSDP FOR FRA/IRS                                 *
+      *  LN0710 - BEGIN TAG MOVED TO INCLUDE OPEN/CLOSE OF DL0280P1   *
+      *           IN DETAIL PROCESSING, IND 12 USED TO CONTROL        *
+      *           END OF BRANCH REPORT STATEMENT.                     *
+      *           PARM 'SEQ' FOR ZSFILE CHANGED.                      *
+      *  LN0590 - RECOMPILE FOR CHANGES MADE TO DEALSL1               *
+      *  BHF050 - ON NEG ASSETS PURCHASED OUTPUT THE ISSUED BY        *
+      *           CUSTOMER NUMBER INSTEAD OF THE PURCHASED FROM       *
+      *           CUSTOMER NUMBER.(E8629)                             *
+      *  E19920 - CODE ADDED TO ENSURE BANK TITLE IS PRINTED          *
+      *           ON REPORT IF INPUT FILE (DEALS) EMPTY.              *
+      *  E299   - 'AU' REPORT SHOULD NOT WRITE 'END OF REPORT'        *
+      *  E290/E20940 - HEADINGS NOT PRINTING WHEN NO DETAILS FOR A    *
+      *           BRANCH. OF INDICATOR BEING SETOF.                   *
+      *  E243   - FIX TO REMOVE OF PARMS ON CALLL TO PGM              *
+      *  S01117 - MULTI-BRANCHING CHANGES                             *
+      *  S01194 - NEW STANDING DATA CHANGES                           *
+      *  S01195 - NEW HOLIDAY PROCESSING                              *
+      *  S01157 - FRA/IRS. IF DEAL IS A FLOOR (TYPE 'RF') DO          *
+      *           NOT OUTPUT CEILING RATE FIELD, INSTEAD              *
+      *           OUTPUT FLOOR RATE. SPLIT DEAL TYPE 'RL'             *
+      *           INTO 'RP','RF' AND 'RR'.                            *
+      *           ALSO, ADD 'B' OR 'S' TO DEAL TYPE ON THE REPORT     *
+      *  E15229 - RESET RATE FIELD FOR NOSTRO TRANSFER DEALS          *
+      *  E11192 - TO INCLUDE FRA/IRS ACCRUAL EVENTS ON REPORT         *
+      *  E43615 - REVERSALS TO BE EFFECTIVE IF NA BOUGHT @ PREMIUM    *
+      *  E11624 - TO PREVENT THE FIRST LEG OF A REVERSED MIDWAY       *
+      *           FX SWAP BEING WRONGLY ADDED TO MATURED DEALS        *
+      *           TOTALS - FINISH JOB BEGUN BY E10165.                *
+      *  E11401 - OUTPUT INTEREST RATE NOT YIELD RATE FOR INTEREST    *
+      *           BEARING N/As AS PER S/36                            *
+      *  E11190 - INCLUDE FEDERAL FUNDS IND. ON REPORT FOR TAXABLE    *
+      *           DEALS, AND COLUMN HEADING FOR BASE RATE CODE.       *
+      *           (*IND14,& *IND13 WHICH WERE REDUNDANT REC.IDs.,     *
+      *           ARE NOW USED BY THIS FIX.)                          *
+      *  E13170 - TO STOP EXPIRED FIRST LEG OF SWAP DEAL EXCLUDING    *
+      *           NEXT DEAL,IF MATURING,FROM FILE CONTROLS.           *
+      *  S01147 - RELEASE 22                                          *
+      *  E11369 - INCORRECT INTEREST DUE GENERATED FOR N.A. DEAL      *
+      *           AT INTEREST DATE AND MATURITY DATE                  *
+      *  S05452 - AUTO RECONCILATIONS INCORPORATION                   *
+      *  S01119 - INCLUDE PROCESSING FOR FRA/IRS DEAL TYPES           *
+      *  E43766 - MATURITY DATE A/C KEY FOR C2 TYPE DEAL ON           *
+      *           NA'S PURCHASED USES BOUGHT FROM INSTEAD OF ISSUER   *
+      *  E10551 - NON-INTEREST BEARING NA'S PURCHASED PRODUCE MAT.    *
+      *           DATE A/C KEYS FOR FACE VALUE ENDING IN 'B'          *
+      *  E10516 - ADJUSTMENTS TO ACCRUED INTEREST ARE NOT INCLUDED    *
+      *           IN BOTH INTEREST DUE OR ACCRUED INT. RECEIVABLE     *
+      *  E43727 - FOR NON-FX DEALS, ACCRUAL DATE PROCESSING REPORTS   *
+      *           INT. UNDER PRINCIPAL COLUMN AND ZERO IN INTEREST.   *
+      *  E47290 - INDICATOR USAGE NOT RESET AFTER APPLICATION OF      *
+      *           PREVIOUS FIX CAN CAUSE WRONG ENTRIES IN A/C KEYS    *
+      *  E10753 - FILES WERE OUT OF BALANCE WHEN THE  SECOND LEG      *
+      *           OF A SWAP REACHED MATURITY DATE.                    *
+      *  E10126 - AMENDED TO FIX PAGE OVERFLOW ON DAILY DEALS         *
+      *           UPDATE REPORT                                       *
+      *  E10490 - E10165 CAUSED FILES TO GO OUT OF BALANCE IF A       *
+      *           DEAL AMENDMENT WAS ENTERED.                         *
+      *  E10528 - E10165 CAUSED FILES TO GO OUT OF BALANCE IF A       *
+      *           DEAL IS REVERSED                                    *
+      *  E43759 - AMENDED HEADINGS TO INDICATE SWAP PROFIT            *
+      *           OR SWAP LOSS.                                       *
+      *  E10430 - FIELDS SHOULD BE CLEARED WHEN A DEAL MATURES        *
+      *  E10467 - WHEN RUN IN INPUT CYCLE INITIALIZATION FOLLOWING    *
+      *           AN END OF MONTH THE FILES WERE THROWN OUT OF        *
+      *           BALANCE.                                            *
+      *  E10165 - SECOND LEG VALUE DATE EVENT FOR FX SWAP WAS         *
+      *           THROWING FILE CONTROLS OUT OF BALANCE. CAUSED       *
+      *           BY S01093                                           *
+      *  S01093 - IMPROVEMENTS TO PGM EFFICIENCY                      *
+      *           (A) OBTAIN CCY DETAILS FROM PRE-EX TIME ARRAYS      *
+      *           (B) DEALS FILE IS PROCESSED AS UPDATE PRIMARY       *
+      *           (C) STOP UNNECESSARY EXECUTION OF SR ZDATE5         *
+      *  S01108 - PROCESS NOSTRO XFER DEALS                           *
+      *  E80945 - INDICATOR 98 SETTING IS SAVED AND RESTORED          *
+      *           WHEN S.R.GLINTC IS PERFORMED.                       *
+      *****************************************************************                       CFX114
+      * End of /COPY DL0280FHD2                                       *                       CFX114
+      *****************************************************************                       CFX114

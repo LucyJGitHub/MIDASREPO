@@ -1,0 +1,1923 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Euro currency conversion of repayments')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0391 - Midas LE Euro Currency Conversion of Repayments     *
+      *                                                               *
+      *  Function:  This program will update future repayment         *
+      *  (COB)     schedules for loans due for multiccy rollover in   *
+      *            Euro currency, from 'In' ccy into its Euro ccy     *
+      *            equivalent. This will also convert and update Euro *
+      *            loan amendments back to its loan currency.         *
+      *                                                               *
+      *  Called By: LEC0603B - Euro Currency Conversion of Repayments *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CLE036             Date 29Sep03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP075             Date 08Aug02               *
+      *                 CLE034             Date 21May03               *
+      *                 CLE031             Date 05Feb03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 220012             Date 24Jul03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 177212             Date 09Nov01               *
+      *                 169693             Date 09Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 166542             Date 13Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 150054             Date 23Dec98               *
+      *                 148968             Date 18DEC98               *
+      *                 CEU020  *CREATE    Date 06Apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CLE106 - Syndications Manager.                               *
+      *  CLE036 - Lending Enhancements for Nordea Phase 1 Priority 2: *
+      *           Allow repayments in facility currency.              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP075 - Lending API enhancements - Loan Amendment.          *
+      *           (amendment in common with CAP079)                   *
+      *  CLE034 - Lending Enhancements Phase 1 Priority 1A            *
+      *           Recompile                                           *
+      *  CLE031 - Lending Enhancements.                               *
+      *           Recompile                                           *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  220012 - LE0391 Looping due to duplicate 'MC' record in      *
+      *           LEACT3L1                                            *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  177212 - Do not allow 'MC' processing for 'OUT' currency.    *
+      *           Also, setup correctly the field WTCCY in order to   *
+      *           avoid database error 008 due to CCY = *BLANKS.      *
+      *  169693 - Only call EU0200 in the following circumstances:    *
+      *           if from currency is euro and to currency is IN ccy; *
+      *           or from currency is IN ccy and to currency is euro. *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  166542 - DBerror in LE0430 due to wrong nostro code (settled *
+      *           in EUR). In SRSETT use ORVD and RDST to update OSAC *
+      *           ('Our Settlement A/C') & SETP (settlement type).    *
+      *  150054 - SETUP CORRECTLY FIELD WTCCY IN ORDER TO AVOID       *
+      *           DBERROR 008 DUE TO CCY = *BLANKS                    *
+      *  148968 - Re-compiled due to changes in LEACT3L0             *
+      *  CEU020 - EMU LE Multi-Currency Rollover                      *
+      *                                                               *
+      *****************************************************************
+     FACTN4   IF  E           K        DISK         KINFSR *PSSR
+     F            LOAMSDHF                          KIGNORE
+     F            ACTN1DNF                          KIGNORE
+     F            LOAMSZ1F                          KIGNORE
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FROLRECS UF  E           K        DISK         KINFSR *PSSR
+     F            LOAMSDKF                          KRENAMELOAMSDKA
+     FLEACT3L1UF  E           K        DISK         KINFSR *PSSR
+     F            LOAMSDKF                          KRENAMELOAMSDKZ
+     FLELAUPL0UF  E           K        DISK         KINFSR *PSSR
+     F            LOAMSDKF                          KRENAMELOAMSDKX
+     FLEACT3L0UF  E           K        DISK         KINFSR *PSSR
+     F            LOAMSDKF                          KRENAMELOAMSDKY
+     FLAUPDZ1 UF  E                    DISK         KINFSR *PSSR
+     FLE0391P1O   E             07     PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FLE0391AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - End of file for ACTN4                                 *
+      *   02  - End of file for LELAUPL0                              *
+      *   03  - End of file for LEACT3L0                              *
+      *   04  - No record in LAUPDZ1                                  *
+      *   05  - Error in updating files                               *
+      *   06  - Record not found while chaining CLOAN                 *
+      *   07  - Printer Overflow                                      *
+      *   08  - Record not found while chaining LEACT3L1              *
+      *   09  - Record not found same with key in ROLRECS             *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRREAD - Find loans with Euro multiccy rollover              *
+      *  SRUPLA - Check for future repayments on LAUPD                *
+      *  SRUPAC - Check for future repayments on ACTN3DK              *
+      *  SRSETT - Get settlement details of Euro                      *
+      *  SRTRAL - Update the trailer record                           *
+      *  SRCONV - Convert amounts to Euro ccy equivalent              *
+      *  SRUBLA - Update file LAUPDDK back to its loan currency       *
+      *  SRUBAC - Update file ACT3NDK back to its loan currency       *
+      *  SRRACT - Check for MC in LEACT3L1 with same loan number      *
+      *  SRRCLO - Check loan currency against loan amendment currency *
+      *  SRMCEU - Convert amounts of amendment type MC with the same  *
+      *           value date of an amendment type RE                  *
+      *  GLZADD - Add an amount to the total                          *
+      *  GLZSUB - Subtract an amount to the total                     *
+      *  GLZSUM - Carry out the additon for subroutine                *
+      *                                                               *
+      *  SRPRNT - Format and Write a Detail Record to the Report      *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZSEDIT - Edit an Amount                                      *
+      *  ZEDIT  - Edit an Rate                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZEDITZ1
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ICLOANCLF
+      ** Rename field
+     I              RECI                            RECIX
+     I              LNRF                            LNRFX
+     I              VDAT                            VDATX
+     I              MRIN                            MRINX
+     I              LTYP                            LTYPX
+     I              SUTP                            SUTPX
+     I              PTYP                            PTYPX
+     I              BRTT                            BRTTX
+     I              RTSP                            RTSPX
+     I              CCY                             CCYX
+     I              BRCA                            BRCAX
+     I              CNUM                            CNUMX
+     I              REPT                            REPTX
+     I              AUTO                            AUTOX
+     I              BRTE                            BRTEX
+     I              SPIN                            SPINX
+     I              WTIN                            WTINX
+     I              FCUS                            FCUSX
+     I              FTYP                            FTYPX
+     I              FSEQ                            FSEQX
+     I              INTC                            INTCX
+     I              NACD                            NACDX
+     I              FCLB                            FCLBX
+     I              ORED                            OREDX
+     I              LCD                             LCDX
+     I              CHTP                            CHTPX
+     I              TNLU                            TNLUX
+     I              FSRP                            FSRPX
+     I              FSGN                            FSGNX
+     I              FPRC                            FPRCX
+     I              DFTP                            DFTPX
+     I              DFST                            DFSTX
+     I              MNSG                            MNSGX
+     I              GASS                            GASSX
+     I              GPRT                            GPRTX
+     I              IUSR                            IUSRX
+     I              AUSR                            AUSRX
+     I              XUSR                            XUSRX
+     I              PCRF                            PCRFX
+     I              PCOB                            PCOBX
+     I              PDDI                            PDDIX
+     I              PTDI                            PTDIX
+     I              CLAS                            CLASX                                     CLE042
+     I              DFCL                            DFCLX                                     CLE042
+     ICLOANCKF
+      ** Rename field
+     I              RECI                            RECIX
+     I              LNRF                            LNRFX
+     I              MRIN                            MRINX
+     I              SPI1                            SPI1X
+     I              SPI2                            SPI2X
+     I              SPI3                            SPI3X
+     I              ORED                            OREDX
+     I              LCD                             LCDX
+     I              CHTP                            CHTPX
+     I              TNLU                            TNLUX
+     I              NLRA                            NLRAX
+     I/COPY ZSRSRC,ZSEDITZ2
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ** File Information Data Structure for LE0391P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for LE0391AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+     ISDBRCH    E DSSDBRCHPD
+      ** External data structures for Branch Details
+     ISDGELR    E DSSDGELRPD
+      ** External data structures for General Ledger Details
+     ISCSARD    E DSSCSARDPD
+      ** External data structures for SAR File Details
+     IDSFDY     E DSDSFDY
+      ** First data structure for Access Programs, short DS
+     IDSSDY     E DSDSSDY
+      ** Second data structure for Access Programs, long DS
+     IACTN3D    E DSACTN3DK                                                                   220012
+      **  External DS for Midas LE Action File Details                                        220012
+     I              LCD                             YYLCD                                     220012
+     IYACTN3    E DSACTN3DK                                                                   220012
+      **  External DS for Midas LE Action File Details                                        220012
+     I              RECI                            YRECI                                     220012
+     I              LNRF                            YLNRF                                     220012
+     I              VDAT                            YVDAT                                     220012
+     I              LASN                            YLASN                                     220012
+     I              MRIN                            YMRIN                                     220012
+     I              LTYP                            YLTYP                                     220012
+     I              SUTP                            YSUTP                                     220012
+     I              PTYP                            YPTYP                                     220012
+     I              AMTP                            YAMTP                                     220012
+     I              PRSQ                            YPRSQ                                     220012
+     I              BRTT                            YBRTT                                     220012
+     I              RTSP                            YRTSP                                     220012
+     I              CCY                             YCCY                                      220012
+     I              PRAM                            YPRAM                                     220012
+     I              INTA                            YINTA                                     220012
+     I              WTXA                            YWTXA                                     220012
+     I              FEAM                            YFEAM                                     220012
+     I              TAMT                            YTAMT                                     220012
+     I              BRCA                            YBRCA                                     220012
+     I              CNUM                            YCNUM                                     220012
+     I              REPT                            YREPT                                     220012
+     I              AUTO                            YAUTO                                     220012
+     I              STAI                            YSTAI                                     220012
+     I              SETP                            YSETP                                     220012
+     I              OSAC                            YOSAC                                     220012
+     I              TSEN                            YTSEN                                     220012
+     I              FACO                            YFACO                                     220012
+     I              SPI1                            YSPI1                                     220012
+     I              SPI2                            YSPI2                                     220012
+     I              SPI3                            YSPI3                                     220012
+     I              LAIN                            YLAIN                                     220012
+     I              BRTE                            YBRTE                                     220012
+     I              SPIN                            YSPIN                                     220012
+     I              CALC                            YCALC                                     220012
+     I              WTIN                            YWTIN                                     220012
+     I              LLAG                            YLLAG                                     220012
+     I              LWOI                            YLWOI                                     220012
+     I              XAVD                            YXAVD                                     220012
+     I              XASQ                            YXASQ                                     220012
+     I              FCUS                            YFCUS                                     220012
+     I              FTYP                            YFTYP                                     220012
+     I              FSEQ                            YFSEQ                                     220012
+     I              RLON                            YRLON                                     220012
+     I              FECD                            YFECD                                     220012
+     I              PONI                            YPONI                                     220012
+     I              ACTI                            YACTI                                     220012
+     I              CNFY                            YCNFY                                     220012
+     I              TLXY                            YTLXY                                     220012
+     I              CBLY                            YCBLY                                     220012
+     I              INTC                            YINTC                                     220012
+     I              NACD                            YNACD                                     220012
+     I              ACBI                            YACBI                                     220012
+     I              ZZ001                           YZZ001                                    220012
+     I              LSWCC                           YLSWCC                                    220012
+     I              LSWSC                           YLSWSC                                    220012
+     I              OSBR                            YOSBR                                     220012
+     I              FCLB                            YFCLB                                     220012
+     I              LSMD                            YLSMD                                     220012
+     I              REBT                            YREBT                                     220012
+     I              ZZ034                           YZZ034                                    220012
+     I              ORED                            YORED                                     220012
+     I              LCD                             YLCD                                      220012
+     I              CHTP                            YCHTP                                     220012
+     I              TNLU                            YTNLU                                     220012
+     I              RSTM                            YRSTM                                     220012
+     I              RONS                            YRONS                                     220012
+     I              RIBN                            YRIBN                                     220012
+     I              RIBA                            YRIBA                                     220012
+     I              ROBN                            YROBN                                     220012
+     I              ROCN                            YROCN                                     220012
+     I              PSTM                            YPSTM                                     220012
+     I              PONS                            YPONS                                     220012
+     I              PIBN                            YPIBN                                     220012
+     I              PIBA                            YPIBA                                     220012
+     I              POBN                            YPOBN                                     220012
+     I              POCN                            YPOCN                                     220012
+     I              RCRN                            YRCRN                                     220012
+     I              RCRA                            YRCRA                                     220012
+     I              RVNO                            YRVNO                                     220012
+     I              AWBN                            YAWBN                                     220012
+     I              AWBA                            YAWBA                                     220012
+     I              BENN                            YBENN                                     220012
+     I              BENA                            YBENA                                     220012
+     I              DTP1                            YDTP1                                     220012
+     I              DTP2                            YDTP2                                     220012
+     I              DTP3                            YDTP3                                     220012
+     I              DTP4                            YDTP4                                     220012
+     I              DCHG                            YDCHG                                     220012
+     I              BTB1                            YBTB1                                     220012
+     I              BTB2                            YBTB2                                     220012
+     I              BTB3                            YBTB3                                     220012
+     I              BTB4                            YBTB4                                     220012
+     I              BTB5                            YBTB5                                     220012
+     I              BTB6                            YBTB6                                     220012
+     I              CVMR                            YCVMR                                     220012
+     I              FSRP                            YFSRP                                     220012
+     I              FSGN                            YFSGN                                     220012
+     I              FPRC                            YFPRC                                     220012
+     I              COFA                            YCOFA                                     220012
+     I              IRCF                            YIRCF                                     220012
+     I              FRCF                            YFRCF                                     220012
+     I              DFTP                            YDFTP                                     220012
+     I              DFST                            YDFST                                     220012
+     I              MNSG                            YMNSG                                     220012
+     I              GASS                            YGASS                                     220012
+     I              GPRT                            YGPRT                                     220012
+     I              NRLI                            YNRLI                                     220012
+     I              ROLN                            YROLN                                     220012
+     I              ROSN                            YROSN                                     220012
+     I              ROBR                            YROBR                                     220012
+     I              RORC                            YRORC                                     220012
+     I              PDGN                            YPDGN                                     220012
+     I              GRIN                            YGRIN                                     220012
+     I              RLCY                            YRLCY                                     220012
+     I              PNAM                            YPNAM                                     220012
+     I              PAST                            YPAST                                     220012
+     I              ASTS                            YASTS                                     220012
+     I              IUSR                            YIUSR                                     220012
+     I              AUSR                            YAUSR                                     220012
+     I              XUSR                            YXUSR                                     220012
+     I              PCRF                            YPCRF                                     220012
+     I              PCOB                            YPCOB                                     220012
+     I              MTPD                            YMTPD                                     220012
+     I              PDDI                            YPDDI                                     220012
+     I              PTDI                            YPTDI                                     220012
+     I              SCCY                            YSCCY                                     220012
+     I              ICCY                            YICCY                                     220012
+     I              ECIN                            YECIN                                     220012
+     I              REPI                            YREPI                                     220012
+     I              CHDU                            YCHDU                                     220012
+     I              INTN                            YINTN                                     CAS005
+     I              FSPRAM                          YSPRAM                                    CAS005
+     I              REXR                            YREXR                                     CAS005
+     I              REXI                            YREXI                                     CAS005
+     I              PSCY                            YPSCY                                     CAS005
+     I              PEXR                            YPEXR                                     CAS005
+     I              PEXI                            YPEXI                                     CAS005
+     I              STAL                            YSTAL                                     CAS005
+     I              FRNT                            YFRNT                                     CAS005
+     I              AFRT                            YAFRT                                     CAS005
+     I              REPA                            YREPA                                     CAS005
+     I              TMST                            YTMST                                     CAS005
+     I              OSACQQ                          QQOSA1                                    CGL029
+     I              RONSQQ                          QQRON1                                    CGL029
+     I              PONSQQ                          QQPON1                                    CGL029
+     I              AUTH                            YAUTH                                     CLE036
+     I              FRCY                            YFRCY                                     CLE036
+     I              FRAM                            YFRAM                                     CLE036
+     I              FINT                            YFINT                                     CLE036
+     I              FTXA                            YFTXA                                     CLE036
+     I              FTOT                            YFTOT                                     CLE036
+     I              FPEN                            YFPEN                                     CLE036
+     I              BASR                            YBASR                                     CLE106
+     I              SLTP                            YSLTP                                     CLE106
+     I              SLST                            YSLST                                     CLE106
+     I              CLAS                            YCLAS                                     CLE042
+     I              DFCL                            YDFCL                                     CLE042
+     I              SLCL                            YSLCL                                     CLE042
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRREAD
+      *
+     C           WVALD     DOWEQ'Y'
+     C                     EXSR SRUPLA
+     C                     EXSR SRUPAC
+     C                     EXSR SRREAD
+     C                     ENDDO
+      *
+     C                     EXSR SRUBLA
+     C                     EXSR SRUBAC
+     C                     EXSR SRMCEU
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : *PSSR  - Program Error Processing                 *
+      *             AOBANKR0 Access Program                           *
+      *             AOSARDR0 Access Program                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE0391'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     SETON                     37
+     C                     END
+      *
+      ** Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       WOPEN   1
+     C                     MOVE *BLANKS   WBRCA   3
+     C                     MOVE *BLANKS   WBRCH   3
+     C                     Z-ADD0         WLCNT   50
+     C                     Z-ADD0         WACNT   50
+     C                     Z-ADD0         WBLAU   50
+     C                     Z-ADD0         WBACT   50
+     C**********           Z-ADD0         WLNRF   60                                          CLE148
+     C                     MOVEL*BLANKS   WLNRF   6                                           CLE148
+     C                     MOVEL'N'       CLE005  1
+      *
+      ** Access General Ledger File
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Switchable Feature Details
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CLE005'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVEL'Y'       CLE005
+     C                     ELSE
+      *
+      ** Handle Database Error
+      *
+     C           PRTCD     IFNE '*NRF    '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SCSARDPD'DBFILE           ************
+     C                     MOVEL'CLE005'  DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRREAD - Subroutine to look for loans with Euro multiccy     *
+      *           rollover.                                           *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREAD    BEGSR
+      *
+     C                     MOVEL*BLANKS   WVALD   1
+      *
+      ** Do Until End of File.
+      *
+     C           *IN01     DOUEQ'1'
+     C           WVALD     OREQ 'Y'
+      *
+      ** Read record from File.
+      *
+     C                     READ ACTN4                    01
+      *
+     C           AMTP      IFEQ 'MC'
+     C           ECIN      ANDEQ'Y'
+     C           RLCY      ANDEQBKEURO
+     C           *IN01     ANDEQ'0'
+     C                     MOVE 'Y'       WVALD
+     C                     Z-ADDVDAT      WVDAT   50
+     C                     MOVELRLCY      WRLCY   3
+     C                     MOVELBRCA      WBRCA   3
+      *
+     C           WLNRF     IFNE LNRF
+     C**********           Z-ADDLNRF      WLNRF   60                                          CLE148
+     C                     MOVELLNRF      WLNRF     P                                         CLE148
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPLA - Subroutine to check for future repayments on LAUPD  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : SRCONV - Convert amounts to Euro ccy equivalent   *
+      *             SRSETT - Get settlement details of Euro           *
+      *             SRPRNT - Write a Detail Record to the Report      *
+      *             SRTRAL - Update the trailer record                *
+      *             *PSSR  - Program Error Processing                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPLA    BEGSR
+      *
+     C           WKEY      KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WLNRF
+     C                     KFLD           WVDAT
+      *
+     C           WKEY      SETGTLELAUPL0
+     C                     READ LELAUPL0                 02
+      *
+     C           *IN02     DOWEQ'0'
+     C           WLNRF     ANDEQLNRF
+      *
+      ** Loans with future repayments are to be processed
+      *
+     C           AMTP      IFEQ 'RE'
+     C           CCY       ANDNEBKEURO
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'MR'
+     C           CCY       ANDNEBKEURO
+     C           RECI      ANDEQ'D'
+      *
+      ** Get Euro ccy equivalent of Principal Amount
+      *
+     C                     Z-ADDPRAM      WFRAM  183
+     C                     MOVELCCY       WFCCY   3
+     C                     MOVELWRLCY     WTCCY   3
+     C                     EXSR SRCONV
+     C                     Z-ADDPOUTA     PRAM
+      *
+      ** Get Euro ccy equivalent of Total Amount
+      *
+     C                     Z-ADDTAMT      WFRAM
+     C                     EXSR SRCONV
+     C                     Z-ADDTAMT      WTAMT  130
+     C                     MOVELCCY       WOCCY   3
+     C                     Z-ADDPOUTA     TAMT
+      *
+      ** Update file LAUPDDK
+      *
+     C                     EXSR SRSETT
+     C                     MOVELWRLCY     CCY
+     C                     MOVEL*BLANKS   RLCY
+     C                     UPDATLOAMSDKX               05
+      *
+      ** Handle Database Error.
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LELAUPL0'DBFILE           ************
+     C                     MOVELWLNRF     DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     ENDIF
+      *
+     C                     EXSR SRPRNT
+     C                     EXSR SRTRAL
+     C                     ADD  1         WLCNT
+      *
+     C                     ENDIF
+      *
+     C                     READ LELAUPL0                 02
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPAC - Subroutine to check for future repayments on ACTN3DK*
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : SRCONV - Convert amounts to Euro ccy equivalent   *
+      *             SRSETT - Get settlement details of Euro           *
+      *             *PSSR  - Program Error Processing                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPAC    BEGSR
+      *
+     C           WKEY      SETGTLEACT3L0
+     C                     READ LEACT3L0                 03
+      *
+     C           *IN03     DOWEQ'0'
+     C           WLNRF     ANDEQLNRF
+      *
+      ** Loans with future repayments are to be processed
+      *
+     C           AMTP      IFEQ 'RE'
+     C           CCY       ANDNEBKEURO
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'MR'
+     C           CCY       ANDNEBKEURO
+     C           RECI      ANDEQ'D'
+      *
+      ** Get Euro ccy equivalent of Principal Amount
+      *
+     C                     Z-ADDPRAM      WFRAM  183
+     C                     MOVELCCY       WFCCY   3
+     C                     MOVELWRLCY     WTCCY   3
+     C                     EXSR SRCONV
+     C                     Z-ADDPOUTA     PRAM
+      *
+      ** Get Euro ccy equivalent of Total Amount
+      *
+     C                     Z-ADDTAMT      WFRAM
+     C                     EXSR SRCONV
+     C                     Z-ADDTAMT      WTAMT
+     C                     MOVELCCY       WOCCY   3
+     C                     Z-ADDPOUTA     TAMT
+      *
+      ** Update file LAUPDDK
+      *
+     C                     EXSR SRSETT
+     C                     MOVELWRLCY     CCY
+     C                     MOVEL*BLANKS   RLCY
+     C                     UPDATLOAMSDKY               05
+      *
+      ** Handle Database Error.
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LEACT3L0'DBFILE           ************
+     C                     MOVELWLNRF     DBKEY            * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ADD  1         WACNT
+      *
+     C                     ENDIF
+      *
+     C                     READ LEACT3L0                 03
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSETT - Subroutine to get settlement details of Euro        *
+      *                                                               *
+      *  Called By: SRUPLA - Checks for future reapyments on LAUPD    *
+      *             SRUPAC - Checks for future reapyments on ACTN3DK  *
+      *                                                               *
+      *  Calls    : *PSSR  - Program Error Processing                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSETT    BEGSR
+      *
+     C                     MOVEL'B'       WRCDT   1
+      *
+     C           WKEY2     KLIST
+     C                     KFLD           WLNRF
+     C                     KFLD           WRCDT
+      *
+     C           WKEY2     CHAINCLOANCKF             06
+      *
+      ** Handle Database Error.
+      *
+     C           *IN06     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD   7
+     C                     MOVE 'B'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 06 *
+     C                     Z-ADD6         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move settlement details to the fields of LELAUPL0/LEACT3L0
+      *
+     C                     Z-ADDRRST      RSTM
+     C                     MOVELRRON      RONS
+     C                     MOVELRRIB      RIBN
+     C                     MOVELRRBA      RIBA
+     C**********           Z-ADDRROB      ROBN                                                CSD027
+     C**********           Z-ADDRROC      ROCN                                                CSD027
+     C                     MOVE RROB      ROBN                                                CSD027
+     C                     MOVE RROC      ROCN                                                CSD027
+     C                     Z-ADDRPST      PSTM
+     C                     MOVELRPON      PONS
+     C                     MOVELRPIB      PIBN
+     C                     MOVELRPBA      PIBA
+     C**********           Z-ADDRPOB      POBN                                                CSD027
+     C**********           Z-ADDRPOC      POCN                                                CSD027
+     C                     MOVE RPOB      POBN                                                CSD027
+     C                     MOVE RPOC      POCN                                                CSD027
+     C                     MOVELRRCR      RCRN
+     C                     MOVELRRCA      RCRA
+     C                     MOVELRRVN      RVNO
+     C                     MOVELRAWB      AWBN
+     C                     MOVELRAWA      AWBA
+     C                     MOVELRBEN      BENN
+     C                     MOVELRBNA      BENA
+     C                     MOVELRDP1      DTP1
+     C                     MOVELRDP2      DTP2
+     C                     MOVELRDP3      DTP3
+     C                     MOVELRDP4      DTP4
+     C                     MOVELRDCH      DCHG
+     C                     MOVELRBB1      BTB1
+     C                     MOVELRBB2      BTB2
+     C                     MOVELRBB3      BTB3
+     C                     MOVELRBB4      BTB4
+     C                     MOVELRBB5      BTB5
+     C                     MOVELRBB6      BTB6
+     C                     MOVELRCVM      CVMR
+      * Move rollover settlement account to OSAC                         166542
+     C                     Z-ADDRDST      SETP                           166542
+     C                     MOVELORVD      OSAC                           166542
+      *
+      ** Loans/Loan Participation Purchased
+      *
+     C           PTYP      IFEQ 61
+     C           PTYP      OREQ 62
+     C           PTYP      OREQ 63
+     C           PTYP      OREQ 70
+     C           PTYP      OREQ 64
+     C           PTYP      OREQ 65
+     C           PTYP      OREQ 68
+     C           CLE005    ANDEQ'Y'
+     C           PTYP      OREQ 71
+     C           CLE005    ANDEQ'Y'
+     C                     MOVELRLSB      OSBR
+     C                     MOVELRPSC      SCCY
+     C                     MOVELRICY      ICCY
+     C                     ELSE
+      *
+      ** Loan Participation Sold
+      *
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C           PTYP      OREQ 69
+     C           CLE005    ANDEQ'Y'
+     C           PTYP      OREQ 72
+     C           CLE005    ANDEQ'Y'
+     C                     MOVELRLBR      OSBR
+     C                     MOVELRRSC      SCCY
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRAL - Subroutine to update the trailer record.            *
+      *                                                               *
+      *  Called By: SRUPLA - Checks for future reapyments on LAUPD    *
+      *                                                               *
+      *  Calls    : GLZADD - Add an amount to the total               *
+      *             GLZSUB - Subtract an amount to the total          *
+      *             *PSSR  - Program Error Processing                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTRAL    BEGSR
+      *
+     C           1         CHAINLAUPDZ1              04
+      *
+     C           *IN04     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LAUPDZ1 'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 07 *
+     C                     Z-ADD7         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDVRRF      ZZTOTI
+     C                     Z-ADDVRRL      ZZTOTD
+     C                     Z-ADD0         ZZAMT
+     C           WTAMT     DIV  1000      ZZAMT
+     C                     EXSR GLZSUB
+     C                     Z-ADD0         ZZAMT
+     C           TAMT      DIV  1000      ZZAMT
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    VRRF
+     C                     Z-ADDZZTOTI    VLBF
+     C                     Z-ADDZZTOTD    VRRL
+     C                     Z-ADDZZTOTD    VLBL
+      *
+     C                     UPDATLOAMSZ1F               05
+      *
+      ** Handle Database Error.
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LAUPDZ1 'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 08 *
+     C                     Z-ADD8         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCONV - Subroutine to convert amounts to Euro ccy equivalent*
+      *                                                               *
+      *  Called By: SRUPLA - Checks for future reapyments on LAUPD    *
+      *             SRUPAC - Checks for future reapyments on ACTN3DK  *
+      *                                                               *
+      *  Calls    : EU0200 pgm                                        *
+      *             *PSSR  - Program Error Processing                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCONV    BEGSR
+     C*                                                                  169693
+     C** Only call EU0200 if currencies are not the same.                169693
+     C*                                                                  169693
+     C** Also, only call EU0200 under the following circumstances:       169693
+     C** if from currency is IN ccy and to currency is euro;             169693
+     C** or to currency is IN ccy and from currency is euro.             169693
+     C*                                                                  169693
+     C                     CALL 'AOCURRR0'                               169693
+     C                     PARM *BLANKS   PRTCD                          169693
+     C                     PARM '*KEY    'POPTN                          169693
+     C                     PARM WFCCY     PCURR   3                      169693
+     C           SDCURR    PARM SDCURR    DSSDY                          169693
+      *                                                                  169693
+      ** Handle Database Error.                                          169693
+      *                                                                  169693
+     C           PRTCD     IFNE *BLANKS                                  169693
+     C           *LOCK     IN   LDA                                      169693
+     C                     MOVEL'SDCURRPD'DBFILE           ************  169693
+     C                     MOVELWFCCY     DBKEY            * DBERR 25 *  169693
+     C                     Z-ADD25        DBASE            ************  169693
+     C                     OUT  LDA                                      169693
+     C                     EXSR *PSSR                                    169693
+     C                     ENDIF                                         169693
+     C                     MOVE A6INCY    FINCY   1                      169693
+     C*                                                                  169693
+     C**  Access currency details for the To currency                    169693
+     C*                                                                  169693
+     C                     CALL 'AOCURRR0'                               169693
+     C                     PARM *BLANKS   PRTCD                          169693
+     C                     PARM '*KEY    'POPTN                          169693
+     C                     PARM WTCCY     PCURR                          169693
+     C           SDCURR    PARM SDCURR    DSSDY                          169693
+      *                                                                  169693
+      ** Handle Database Error.                                          169693
+      *                                                                  169693
+     C           PRTCD     IFNE *BLANKS                                  169693
+     C           *LOCK     IN   LDA                                      169693
+     C                     MOVEL'SDCURRPD'DBFILE           ************  169693
+     C                     MOVELWTCCY     DBKEY            * DBERR 26 *  169693
+     C                     Z-ADD26        DBASE            ************  169693
+     C                     OUT  LDA                                      169693
+     C                     EXSR *PSSR                                    169693
+     C                     ENDIF                                         169693
+     C                     MOVE A6INCY    TINCY   1                      169693
+     C*                                                                  169693
+     C** Only call EU0200 if currencies are not the same.                169693
+     C*                                                                  169693
+     C           WFCCY     IFNE WTCCY                                    169693
+     C*                                                                  169693
+     C** And only call EU0200 under the following circumstances:         169693
+     C** if from currency is IN ccy and to currency is euro;             169693
+     C** or to currency is IN ccy and from currency is euro.             169693
+     C*                                                                  169693
+     C           FINCY     IFEQ 'Y'                                      169693
+     C           WTCCY     ANDEQBKEURO                                   169693
+     C           TINCY     OREQ 'Y'                                      169693
+     C           WFCCY     ANDEQBKEURO                                   169693
+     C*                                                                  169693
+      *
+     C                     CALL 'EU0200'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM WFRAM     PFRAM  183
+     C                     PARM WFCCY     PFRCY   3
+     C                     PARM WTCCY     PTOCY   3
+     C                     PARM           POUTA  150
+     C                     PARM           PINTA  183
+     C                     PARM           PEXRT  159
+     C                     PARM           PMDIN   1
+      *
+      ** Handle Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0200  'DBFILE           ************
+     C                     MOVEL'*CALL   'DBKEY            * DBERR 09 *
+     C                     Z-ADD9         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                         169693
+     C                     ENDIF                                         169693
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRNT - Subroutine to write a detail line on report.        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *             SRUPLA - Checks for future reapyments on LAUPD    *
+      *                                                               *
+      *  Calls    : ZDATE2 - Convert Midas Day Number into Date       *
+      *             ZSEDIT - Edit an Amount                           *
+      *             ZEDIT  - Edit an Rate                             *
+      *             *PSSR  - Program Error Processing                 *
+      *             AOBRCHR0 Access Program                           *
+      *             AOCURRR0 Access Program                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRNT    BEGSR
+      *
+     C           WBRCH     IFNE WBRCA
+     C           *IN37     ANDEQ'1'
+      *
+      ** Call Access Program for Branch Details
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WBRCA     PBRCH   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELWBRCA     DBKEY            * DBERR 10 *
+     C                     Z-ADD10        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           WBRCH     IFNE *BLANKS
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     MOVELWBRCA     WBRCH
+      *
+     C                     ENDIF
+      *
+      ** Open printer file LE0391P1 if not yet open.
+      *
+     C           WOPEN     IFEQ 'N'
+      *
+     C                     MOVE 'Y'       WOPEN
+     C                     OPEN LE0391P1
+     C                     WRITEHEADP1
+      *
+     C                     MOVE *BLANKS   SENTY
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD0         DIFLN1  20
+     C                     Z-ADD2         RQDLN1  20
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+      *
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C**********           Z-ADDWLNRF     RLNRF                                               CLE148
+     C                     MOVELWLNRF     RLNRF                                               CLE148
+     C                     MOVE 'J'       ZECODE
+      *
+      ** Call Access Program for Currency Details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WOCCY     PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELWOCCY     DBKEY            * DBERR 11 *
+     C                     Z-ADD11        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELWOCCY     ROLCY
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANK    ZECHAR
+     C                     Z-ADDWTAMT     ZFLD15
+      *
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ROAMT
+      *
+      ** Call Access Program for Currency Details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM CCY       PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELCCY       DBKEY            * DBERR 12 *
+     C                     Z-ADD12        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELPMDIN     RMDIN
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE PEXRT     ZFIELD
+     C                     Z-ADD9         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    REXRT
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDA6NBDP    WEUDP   20
+     C                     Z-ADDTAMT      ZFLD15
+      *
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    REAMT
+     C                     Z-ADDVDAT      ZDAYNO
+      *
+     C                     EXSR ZDATE2
+      *
+     C                     MOVE ZADATE    RRYDT
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Print Audit Report                                  *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *              *PSSR  - Program Error Processing Subroutine     *
+      *                                                               *
+      *  Calls    :  NONE                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C                     WRITEHEADAU
+      *
+      ** Print Audit File if database error.
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      *
+      ** Print Audit File if no details to report.
+      *
+     C           WOPEN     IFEQ 'N'
+     C           WLCNT     ANDEQ0
+     C           WACNT     ANDEQ0
+     C           WBLAU     ANDEQ0
+     C           WBACT     ANDEQ0
+     C                     WRITENODTLS
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDWLCNT     RLKNO
+     C                     Z-ADDWACNT     RATNO
+     C                     Z-ADDWBLAU     RBLAU
+     C                     Z-ADDWBACT     RBACT
+     C                     WRITECONTROL
+      *
+     C           WOPEN     IFEQ 'Y'
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUBLA - Update file LAUPDDK back to its loan currency       *
+      *                                                               *
+      *  Called By:  SRAUDT - Print Audit Report                      *
+      *                                                               *
+      *  Calls    :  SRRACT - Check record with MC and same loan no.  *
+      *              SRTRAL - Subroutine to update the trailer record *
+      *              *PSSR  - Program Error Processing Subroutine     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUBLA    BEGSR
+      *
+     C           *LOVAL    SETLLLELAUPL0
+     C                     READ LELAUPL0                 02
+      *
+     C           *IN02     DOWEQ'0'
+      *
+     C           AMTP      IFEQ 'PI'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'RE'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'BC'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'SC'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'SA'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'LS'
+     C           RECI      ANDEQ'D'
+     C                     MOVELBRCA      WBRCA
+     C**********           Z-ADDLNRF      WLNRF                                               CLE148
+     C                     MOVELLNRF      WLNRF                                               CLE148
+     C                     Z-ADDVDAT      WVDAT
+     C                     MOVELCCY       WCCY    3
+      *
+     C           AMTP      IFEQ 'PI'
+     C           AMTP      OREQ 'RE'
+     C                     Z-ADDPRAM      WPRAM  150
+     C                     Z-ADDTAMT      WTAMT
+     C                     ENDIF
+      *
+     C                     EXSR SRRACT
+     C           WCONV     IFEQ 'Y'
+     C                     UPDATLOAMSDKX               05
+      *
+      ** Handle Database Error.
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LELAUPL0'DBFILE           ************
+     C                     MOVELWLNRF     DBKEY            * DBERR 13 *
+     C                     Z-ADD13        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ADD  1         WBLAU
+      *
+     C           AMTP      IFEQ 'PI'
+     C           AMTP      OREQ 'RE'
+     C                     EXSR SRTRAL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ LELAUPL0                 02
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUBAC - Update file ACT3NDK back to its loan currency       *
+      *                                                               *
+      *  Called By:  SRAUDT - Print Audit Report                      *
+      *                                                               *
+      *  Calls    :  SRRACT - Check record with MC and same loan no.  *
+      *              *PSSR  - Program Error Processing Subroutine     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUBAC    BEGSR
+      *
+     C           *LOVAL    SETLLLEACT3L0
+     C                     READ LEACT3L0                 03
+      *
+     C           *IN03     DOWEQ'0'
+      *
+     C           AMTP      IFEQ 'PI'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'RE'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'BC'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'SC'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'SA'
+     C           RECI      ANDEQ'D'
+     C           AMTP      OREQ 'LS'
+     C           RECI      ANDEQ'D'
+     C                     MOVELBRCA      WBRCA
+     C**********           Z-ADDLNRF      WLNRF                                               CLE148
+     C                     MOVELLNRF      WLNRF                                               CLE148
+     C                     Z-ADDVDAT      WVDAT
+     C                     MOVELCCY       WCCY
+      *
+     C           AMTP      IFEQ 'PI'
+     C           AMTP      OREQ 'RE'
+     C                     Z-ADDPRAM      WPRAM
+     C                     Z-ADDTAMT      WTAMT
+     C                     ENDIF
+      *
+     C                     EXSR SRRACT
+     C           WCONV     IFEQ 'Y'
+     C                     UPDATLOAMSDKY               05
+      *
+      ** Handle Database Error.
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LEACT3L0'DBFILE           ************
+     C                     MOVELWLNRF     DBKEY            * DBERR 14 *
+     C                     Z-ADD14        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ADD  1         WBACT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ LEACT3L0                 03
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRACT - Check for the existence of MC in LEACT3L1 with same *
+      *           loan number                                         *
+      *                                                               *
+      *  Called By: SRUBLA - Update file LAUPDDK back to its loan ccy *
+      *             SRUBAC - Update file ACT3NDK back to its loan ccy *
+      *                                                               *
+      *  Calls    : SRRCLO - Check loan ccy against loan amd ccy      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRACT    BEGSR
+      *
+     C                     MOVE 'N'       WCONV   1
+      *
+     C           WKEY3     KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WLNRF
+      *
+     C                     MOVE LCD       YYLCD                                               220012
+     C                     MOVE ACTN3D    YACTN3                                              220012
+     C           WKEY3     CHAINLEACT3L1            N08
+     C                     MOVE VDAT      YYVDAT  50                                          220012
+     C                     MOVE YACTN3    ACTN3D                                              220012
+      *
+     C********** *IN08     IFEQ '1'                                       177212
+     C********** WVDAT     ORLT VDAT                                      177212
+     C           *IN08     IFEQ '0'                                       177212
+     C********** WVDAT     ANDGEVDAT                                                   177212 220012
+     C           WVDAT     ANDGEYYVDAT                                                        220012
+     C                     EXSR SRRCLO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCLO - Check loan currency against loan amendment currency *
+      *                                                               *
+      *  Called By: SRRACT - Check MC in LEACT3L1 with same loan no.  *
+      *                                                               *
+      *  Calls    : SRCONV - Convert amounts to Euro ccy equivalent   *
+      *             *PSSR  - Program Error Processing Subroutine      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCLO    BEGSR
+      *
+     C                     MOVEL'A'       WRCDT
+      *
+     C           WKEY4     KLIST
+     C                     KFLD           WLNRF
+     C                     KFLD           WRCDT
+      *
+     C           WKEY4     CHAINCLOANCLF             06
+      *
+      ** Handle Database Error.
+      *
+     C           *IN06     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD   7
+     C                     MOVE 'A'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 15 *
+     C                     Z-ADD15        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           WCCY      IFNE CCYX
+     C                     MOVELCCYX      CCY
+     C                     MOVEL*BLANKS   RLCY
+     C                     MOVEL'Y'       WCONV
+      *
+     C           AMTP      IFEQ 'PI'
+     C           AMTP      OREQ 'RE'
+     C                     Z-ADDWPRAM     WFRAM
+     C                     MOVELWCCY      WFCCY
+     C                     MOVELCCYX      WTCCY
+     C                     EXSR SRCONV
+     C                     Z-ADDPOUTA     PRAM
+     C                     Z-ADDWTAMT     WFRAM
+     C                     EXSR SRCONV
+     C                     Z-ADDPOUTA     TAMT
+      *
+      ** Loans/Loan Participation Purchased
+      *
+     C           PTYP      IFEQ 61
+     C           PTYP      OREQ 62
+     C           PTYP      OREQ 63
+     C           PTYP      OREQ 70
+     C           PTYP      OREQ 64
+     C           PTYP      OREQ 65
+     C           PTYP      OREQ 68
+     C           CLE005    ANDEQ'Y'
+     C           PTYP      OREQ 71
+     C           CLE005    ANDEQ'Y'
+      *
+     C           AMTP      IFEQ 'RE'
+     C                     MOVELOMDB      OSBR
+     C                     ELSE
+     C                     MOVELOSDB      OSBR
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Loan Participation Sold
+      *
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C           PTYP      OREQ 69
+     C           CLE005    ANDEQ'Y'
+     C           PTYP      OREQ 72
+     C           CLE005    ANDEQ'Y'
+      *
+     C           AMTP      IFEQ 'RE'
+     C                     MOVELOSDB      OSBR
+     C                     ELSE
+     C                     MOVELOMDB      OSBR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMCEU - Convert amounts of amendment type MC with the same  *
+      *           value date of an amendment type RE                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : SRCONV - Convert amounts to Euro ccy equivalent   *
+      *             SRTRAL - Update the trailer record                *
+      *             *PSSR  - Program Error Processing Subroutine      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMCEU    BEGSR
+      *
+     C           *LOVAL    SETLLLEACT3L1
+     C                     READ LEACT3L1                 08
+      *
+     C           *IN08     DOWEQ'0'
+     C                     Z-ADDVDAT      WVDAT
+     C**********           Z-ADDLNRF      WLNRF                                               CLE148
+     C                     MOVELLNRF      WLNRF                                               CLE148
+     C                     MOVELBRCA      WBRCA
+      *
+     C           WKEY      SETGTLEACT3L0
+     C           WKEY      REDPELEACT3L0                 03
+      *
+     C           *IN03     DOWEQ'0'
+      *
+      ** Locate amendment type RE in LEACT3L0
+      *
+     C           AMTP      IFEQ 'RE'
+      *
+     C                     MOVEL'A'       WRCDT
+     C           WKEY4     CHAINCLOANCLF             06
+      *
+      ** Handle Database Error.
+      *
+     C           *IN06     IFEQ '1'
+     C                     MOVELWLNRF     WKFLD   7
+     C                     MOVE 'A'       WKFLD
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     MOVELWKFLD     DBKEY            * DBERR 16 *
+     C                     Z-ADD16        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Convert Principal amount and Total amount to Euro
+      *
+     C                     MOVELCCY       WFCCY
+     C********             MOVELRLCY      WTCCY                          150054
+     C                     MOVELWRLCY     WTCCY                          150054
+     C                     Z-ADDPRAM      WFRAM
+     C                     EXSR SRCONV
+      *
+     C                     Z-ADDPOUTA     WPRAM
+     C                     Z-ADDTAMT      WFRAM
+     C                     EXSR SRCONV
+      *
+     C                     Z-ADDTAMT      WTAMT
+     C                     Z-ADDPOUTA     WAMT   130
+      *
+     C           WKEY3     CHAINLEACT3L1             08
+      *
+     C                     Z-ADDWPRAM     PRAM
+     C                     Z-ADDWAMT      TAMT
+      *
+      ** Update LEACT3L1
+      *
+     C                     UPDATLOAMSDKZ               05
+      *
+      ** Handle Database Error.
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LEACT3L1'DBFILE           ************
+     C                     MOVELWLNRF     DBKEY            * DBERR 17 *
+     C                     Z-ADD17        DBASE            ************
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     ENDIF
+      *
+     C           WKEY      READELELAUPL0                 02
+      *
+      ** Locate amendment type RE in LELAUPL0
+      *
+     C           *IN02     DOWEQ'0'
+     C           AMTP      ANDNE'MC'
+     C           WKEY      READELELAUPL0                 02
+     C                     ENDDO
+      *
+     C           *IN02     IFEQ '0'
+     C           AMTP      ANDEQ'MC'
+     C                     Z-ADDWPRAM     PRAM
+     C                     Z-ADDWAMT      TAMT
+      *
+      ** Update LELAUPL0
+      *
+     C                     UPDATLOAMSDKX               05
+      *
+      ** Handle Database Error.
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LELAUPL0'DBFILE           ************
+     C                     MOVELWLNRF     DBKEY            * DBERR 18 *
+     C                     Z-ADD18        DBASE            ************
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     ENDIF
+      *
+     C                     EXSR SRTRAL
+      *
+     C                     ENDIF
+      *
+     C           WKEY3     READEROLRECS                  09
+      *
+      ** Locate amendment type RE in LELAUPL0
+      *
+     C           *IN09     DOWEQ'0'
+     C           AMTP      ANDNE'MC'
+     C           WKEY3     READEROLRECS                  09
+     C                     ENDDO
+      *
+     C           *IN09     IFEQ '0'
+     C           AMTP      ANDEQ'MC'
+     C                     Z-ADDWPRAM     PRAM
+     C                     Z-ADDWAMT      TAMT
+      *
+      ** Update ROLRECS
+      *
+     C                     UPDATLOAMSDKA               05
+      *
+      ** Handle Database Error.
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ROLRECS 'DBFILE           ************
+     C                     MOVELWLNRF     DBKEY            * DBERR 19 *
+     C                     Z-ADD19        DBASE            ************
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     LEAVE
+      *
+     C                     ELSE
+      *
+     C           WKEY      REDPELEACT3L0                 03
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     READ LEACT3L1                 08
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GLZADD - Subroutine to add an amount to the total            *
+      *                                                               *
+      *  Called by: SRTRAL - Update the trailer record                *
+      *                                                               *
+      *  Calls    : GLZSUM - Subr. to carry out the addition          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GLZADD    BEGSR                           ***  GLZADD ***
+      *
+     C                     Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     C   91                GOTO ZZAEND                     AMT = 0.BYPASS
+      *
+      ** Split ZZAMT into integer and decimal fields
+      *
+     C                     Z-ADDZZAMT     ZZAMTI 150       Integer Field
+     C                     MOVE ZZAMT     ZZAMTD  30       Decimal Field
+      *
+      ** Both ZZAMTI and ZZAMTD contain a 'SIGN' zone now
+      *
+     C                     EXSR GLZSUM
+     C           ZZAEND    ENDSR                           ***  ZZAEND ***
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GLZSUB - Subroutine to subtract an amount to the total       *
+      *                                                               *
+      *  Called by: SRTRAL - Update the trailer record                *
+      *                                                               *
+      *  Calls    : GLZADD - Subroutine to add an amount to the total *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GLZSUB    BEGSR                           ***  GLZSUB ***
+      *
+      ** Processing. Just Reverse the 'SIGN' and add
+      *
+     C                     Z-SUBZZAMT     ZZAMT  153       Reverse 'SIGN'
+     C                     EXSR GLZADD                       and 'ADD'
+     C                     Z-SUBZZAMT     ZZAMT            Restore 'SIGN'
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GLZSUM - Subroutine to carry out the additon for subroutine  *
+      *                                                               *
+      *  Called by: GLZADD - Subroutine to add an amount to the total *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GLZSUM    BEGSR                           ***  GLZSUM ***
+      *
+     C                     Z-ADDZZTOTI    ZZTOTI 150       Define ZZTOTI
+     C                     Z-ADDZZTOTD    ZZTOTD  30       Define ZZTOTD
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+      *
+      ** Determine sign of ZZAMTI & D, 92 if neg.
+      *
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND                     Zero Bypass
+      *
+      ** Determine sign of ZZTOTI & D, 91 if neg.
+      *
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+      *
+      ** If ZZTOTAL is zero, return ZZAMOUNT.
+      *
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND                     Zero Bypass
+      *
+      ** If signs differ bypass overflow checks.
+      *
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+      *
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93    '93' = CARRY
+     C  N93      ZZWK2     COMP -999                   93    Into Integer.
+      *
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     C      93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+      *
+      ** If the modulus of ZZWK3 is lt mod. ZZTOTI then O/F has occurred
+      *
+     C  N92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     C   92      ZZWK3     COMP ZZTOTI               99     Negative
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+      *
+      ** If O/F zeroise ZZAMT, ind '99' set and ZZTOT fields left intact
+      *
+     C   99                Z-ADD0         ZZAMT  153
+     C                     GOTO ZZSEND
+      *
+      ** The 'SIGNS' are different
+      *
+     C           ZZOFPS    TAG                             ***  ZZOFPS ***
+      *
+      ** If ZZAMT was negative, make it pos. to comp with ZZTOT
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+      *
+      ** If ZZTOT was negative, make it pos. to comp with ZZAMT.
+      *
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Both ZZAMT and ZZTOT are noe positive
+      *
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+      *
+      ** If ZZTOT eq. ZZAMT return zero.
+      *
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+      *
+      ** If ZZTOT gt. ZZAMT.
+      *
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+      *
+      ** If ZZAMT gt. ZZTOT.
+      *
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+      *
+      ** Reverse sign of ZZTOT if larger I/P fields were negative
+      *
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Restore sign of ZZAMTI & ZZAMTD If It was reversed.
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG                             ***  ZZSEND ***
+      *
+      ** If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD.
+      *
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+     C                     ENDSR                             ** ENDSR **
+      /EJECT
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ31
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      /EJECT
+** ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+** ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@
+(c) Finastra International Limited 2001

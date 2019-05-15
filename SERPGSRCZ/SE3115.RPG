@@ -1,0 +1,663 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Incr. Date to Next Work Day')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3115 - Increment date to date of next working day          *
+     F*                                                               *
+     F*  Function: To amend day to date of next working day           *
+     F*                                                               *
+     F*  Called by: SEC3104 - Extel Daily Changes Update Control      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 046303             Date 16Jan94               *
+     F*                 052254             Date 11JAN94               *
+     F*                 E38323             DATE 31JUL92               *
+     F*                 S01195             DATE 30JUL90               *
+     F*                 S01117             DATE 30JUL90               *
+     F*                 S01269             DATE 02AUG90               *
+     F*                 E20651             DATE 30JAN90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E38323 - Recompiled over changed copy source ZFWDT subr      *
+     F*  S01117 - Multibranching                                      *
+     F*  S01195 - Holiday Processing                                  *
+     F*  S01269 - Trade Authorisation: Recompiled over changed        *
+     F*           File TABSE.                                         *
+     F*  E20651 - DB Error Numbers used in more than one place.       *
+     F*           New Error Numbers as foillows:                      *
+     F*           DB ERROR 03 -> 04                                   *
+     F*           DB ERROR 03 -> 05                                   *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F***TABSE***IF  E           K        DISK                            S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+      /EJECT
+     F********************************************************************
+     F*                                                                 **
+     F*  FUNCTION OF INDICATORS                                         **
+     F*                                                                 **
+     F*   50 - DATE OF RECEPTION IS RUN  DATE                           **
+     F*   88 - DATA AREA ERROR                                          **
+     F*   89 - FILE ERROR                                               **
+     F*98-99 - SUBROUTINES                                              **
+     F*U7-U8 - DATABASE ERROR                                           **
+     F*                                                                 **
+     F********************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR  - DUMP program on error                               *
+     F*  ZACCH  - Access holiday record for currency (and location)   *   S01195
+     F*  ZDATE1 - Validate dates submitted and convert to no. of days *
+     F*  ZDATE2 - Convert a day number to date format                 *
+     F*  ZFWDT  - Calculate nth working day forward from given date   *   S01195
+     F*           for currency and (optional) location.               *   S01195
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E**
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0             ZDATE SR. ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE SR. ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E***********         ZHC        50  3               ZDATE5 SR. ARRAY S01195
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+      /EJECT
+     I*
+     I***LDA*****   UDS                            256                    S01117
+     I**     Local Data Area
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+      *                                                                   S01117
+     ILDA         DS                            256                       S01117
+      *                                                                   S01117
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+      ** after each database error handling.                              S01117
+      *                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IEXSTTD    E DSEXSTAT
+     I**       Data Area  EXSTAT
+     I*
+     IPSDS       SDS
+     I**      Program status data structure used by error processing
+     I*
+     I                                     *PROGRAM #PGM
+     I                                      201 208 #FILE
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                   S01195
+      ** Data structure for holiday processing.                           S01195
+      *                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+      *
+     IRUNDT       DS                                                      S01117
+      *                                                                   S01117
+      ** RUNDAT data area                                                 S01117
+      *                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      *                                                                   S01117
+      ** Bank Details                                                     S01117
+      *                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                   S01117
+      ** Short data structure for access programs (200 long)              S01117
+      *                                                                   S01117
+     C/EJECT
+     C**
+     C**      Set Up fields (error processing)
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL#PGM      DBPGM
+     C                     OUT  LDA                                       S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+      ** Check system date format, DDMMYY or MMDDYY.                      S01117
+      *                                                                   S01117
+     C           DATF      COMP 'M'                      98               S01117
+     C**
+     C**     Access data area EXSTAT
+     C**
+     C           *NAMVAR   DEFN EXSTAT    EXSTTD
+     C           *LOCK     IN   EXSTTD                 88
+     C**
+     C**     DB Error if no record found.
+     C**
+     C           *IN88     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '01'      DBASE                           S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     MOVEL'DTARA'   DBFILE           * DB ERROR 01 *
+     C                     MOVEL'EXSTAT'  DBKEY            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     END
+     C***********                                                         S01117
+     C*******GET*INSTALLATION*CONTROL*DATA*RECORD*1*                      S01117
+     C***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C***********                                                         S01117
+     C*******DB*Error*if*no*record*found.*                                S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '02'      #BASE            *************  S01117
+     C***********          MOVEL'TABLE'   #FILE            **DBERR**02**  S01117
+     C***********          MOVEL'TABTB10' #KEY             *************  S01117
+     C***********                                                         S01117
+     C***********          EXSR *PSSR                                     S01117
+     C***********                                                         S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C*****Determine*local*currency*&*date*of*next*working*day*           S01117
+     C***********                                                         S01117
+     C***********          MOVEL'01     ' KEY    12                       S01117
+     C***********          MOVE '11'      KEY                             S01117
+     C***********KEY       CHAINTABSE                89                   S01117
+     C************IN89     IFEQ '1'                        B1             S01117
+     C***********RECI      ORNE 'D'                        B1             S01117
+     C***********          MOVE '03'      DBASE            *********E20651S01117
+     C***********          MOVEL'TABLE'   DBFILE           **DBERR03E20651S01117
+     C***********          MOVE '04'      DBASE            *********E20651S01117
+     C***********          MOVEL'TABLE'   DBFILE           * DBERR04E20651S01117
+     C***********          MOVEL'11    '  DBKEY            ***************S01117
+     C***********          SETON                     U7U8                 S01117
+     C***********                                                         S01117
+     C***********          EXSR *PSSR                                     S01117
+     C***********                                                         S01117
+     C***********          END                                            S01117
+      *                                                                   S01117
+      ** Access bank details                                              S01117
+      ** Retrieve local ccy (& location) and date of next working day     S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 02 *S01117
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01117
+     C                     SETON                     U7U8                 S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                                            S01117
+     C**
+     C**   Convert date to day number
+     C**                               \
+     C                     MOVE DREC      ZDATE   60
+     C                     EXSR ZDATE1
+     C**
+     C**   If date invalid
+     C**
+     C           *IN99     IFEQ '1'
+     C***********          MOVE '03'      DBASE            *************  E20651
+     C***********          MOVEL'DTARA'   DBFILE           **DBERR**03**  E20651
+     C***********          MOVE '05'      DBASE            *********E20651S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD5         DBASE            ***************S01117
+     C                     MOVEL'DTARA'   DBFILE           * DB ERROR 05 *E20651
+     C                     MOVEL'EXSTAT'  DBKEY            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**   If date of reception is the run date, output date of
+     C**    next working day to EXSTAT
+     C**
+     C           ZDAYNO    IFEQ RUND
+     C***********          Z-ADDDNWD      ZDAYNO                          S01117
+     C                     Z-ADDBJDNWD    ZDAYNO                          S01117
+     C                     EXSR ZDATE2
+     C**
+     C**   Output date of next working day to EXSTAT
+     C**
+     C                     Z-ADDZDATE     DREC
+     C                     MOVE '1'       *IN50
+     C                     END
+     C**
+     C**   Drop to end if already output to EXSTAT
+     C**
+     C           *IN50     IFEQ '0'
+     C**
+     C**   Increment day number
+     C**
+     C                     ADD  1         ZDAYNO
+     C**
+     C**   Check if date is holiday in local currency
+     C**
+     C***********          MOVE LOCY      ZCCY                            S01117
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C                     MOVE BJLCCY    ZCCY                            S01117
+     C                     MOVE BJSLCD    ZLOC                            S01195
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C                     EXSR ZFWDT                                     S01195
+     C**
+     C**   Convert day number of next working day to date format
+     C**
+     C                     Z-ADDZDYNBR    ZDAYNO
+     C                     EXSR ZDATE2
+     C**
+     C**   Output date of next working day to EXSTAT
+     C**
+     C                     Z-ADDZDATE     DREC
+     C**
+     C                     END
+     C**
+     C**   Increment sequence number
+     C**
+     C                     ADD  1         SQNR
+     C**
+     C**
+     C                     OUT  EXSTTD
+     C***********          OUT  LDA                                       S01117
+     C                     SETON                     LR
+     C                     RETRN
+     C**
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************   S01117
+     C***********                                                     *   S01117
+     C*****SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.**********S01117
+     C***********                                                     *   S01117
+     C*****************************************************************   S01117
+     C***********                                                         S01117
+     C***SR*********ZSYSTM    BEGSR                        ZSYSTM BEGSR   S01117
+     C***********                                                         S01117
+     C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.********************S01117
+     C***********                                                         S01117
+     C***SR*********          MOVEL'01      'ZTABKY 12                    S01117
+     C***SR*********          MOVE '  10'    ZTABKY                       S01117
+     C***********                                                         S01117
+     C***SR*********ZTABKY    CHAINTABSE             99    ON NOT THERE   S01117
+     C***SRN99******RECI      COMP '*'                   99ON, IS DELETED S01117
+     C***********                                                         S01117
+     C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.********************S01117
+     C***********                                                         S01117
+     C***SR*********DATF      COMP 'M'                   98MMDDYY, 98 ON. S01117
+     C***********                                                         S01117
+     C***SR*********          ENDSR                                       S01117
+     C***********                                                         S01117
+     C***********                                                         S01117
+     C*****************************************************************   S01117
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   SR. TO VALIDATE DATES SUBMITTED AND CONVERT TO NO. OF DAYS.*
+     C**                                                              *
+     C*****************************************************************
+     C**
+     CSR         ZDATE1    BEGSR                           ZDATE1 BEGSR
+     C**
+     C**   CLEAR DAY NUMBER.
+     C**
+     CSR                   Z-ADD0         ZDAYNO  50
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C**
+     CSR                   MOVE ZDATE     ZYEAR   20
+     CSRN98                MOVELZDATE     ZDAY    20
+     CSR 98                MOVELZDATE     ZMTH    20
+     CSR                   MOVE ZDATE     ZWRK4   40
+     CSRN98                MOVELZWRK4     ZMTH
+     CSR 98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID.
+     C**
+     CSR         ZMTH      COMP 0                      9999
+     CSRN99      ZMTH      COMP 12                   99
+     CSR 99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR 30 DAY MONTHS.
+     C**
+     CSR         ZMTH      COMP 4                        91IF 91 ON, 30
+     CSRN91      ZMTH      COMP 6                        91DAY MONTH.
+     CSRN91      ZMTH      COMP 9                        91
+     CSRN91      ZMTH      COMP 11                       91
+     C**
+     C**   ENSURE DAY IS VALID.
+     C**
+     CSR         ZDAY      COMP 0                      9999
+     CSR 91N99   ZDAY      COMP 30                   99
+     CSRN91N99   ZDAY      COMP 31                   99
+     CSR 99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+     C**
+     CSR         ZYEAR     ADD  28        ZYEAR
+     CSR         ZYEAR     DIV  4         ZLYR    20
+     CSR                   MVR            ZLY     20     92LEAP YR, 92 ON.
+     CSR         ZMTH      COMP 2                    94  93FEB., 93 ON.
+     C**                                                   PAST FEB, 94 ON
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C**                                                   PAST FEB, 94 ON
+     CSRN92 93   ZDAY      COMP 28                   99
+     CSR 92 93   ZDAY      COMP 29                   99
+     CSR 99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+     C**
+     CSR         ZLYR      MULT 1461      ZDAYNO           X DYS IN SPAN.
+     CSRN92      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+     CSR 92 94   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+     CSR         ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+     CSR         ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+     C**
+     CSR         ZDEND1    ENDSR                           ZDEND1 ENDSR
+     C**
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*                                                               *
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.        *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C**
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C**
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C**
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C**
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C**                                                   DAYS
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C**
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C**
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C**
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C**
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C**
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C**
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C**
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C**
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C**
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************   S01195
+     C***********                                                     *   S01195
+     C*****ZDATE5*SR.*TO*DETERMINE*IF*A*DAY*NUMBER*DATE*IS*A*HOLIDAY***   S01195
+     C****************IN*GIVEN*CURRENCY,*AND,*IF*DAY*IS*A*HOLIDAY******   S01195
+     C****************AND*IF*REQUIRED,*DETERMINE*NEXT*WORKING*DAY.*****   S01195
+     C***********                                                     *   S01195
+     C*****************************************************************   S01195
+     C***********                                                         S01195
+     C***********ZDATE5    BEGSR                           *** ZDATE5 *** S01195
+     C***********                                                         S01195
+     C*****CALCULATIONS*TO*DEFINE*INPUT*FIELDS.***************************S01195
+     C***********                                                         S01195
+     C***********          Z-ADDZDAYNO    ZDAYNO  50                      S01195
+     C***********          MOVE ZCCY      ZCCY    3                       S01195
+     C***********          MOVE ZOPT      ZOPT    1                       S01195
+     C***********                                                         S01195
+     C*****CALCULATIONS*TO*DEFINE/CLEAR*WORKFIELDS.***********************S01195
+     C***********                                                         S01195
+     C***********          MOVE '   '     ZHC                             S01195
+     C***********                                                         S01195
+     C*****RESET*INDICATOR.***********************************************S01195
+     C***********                                                         S01195
+     C***********          SETOF                     99                   S01195
+     C***********                                                         S01195
+     C*****CALCULATION*TO*DEFINE/SET*OUTPUT*FIELD.************************S01195
+     C***********                                                         S01195
+     C***********          Z-ADDZDAYNO    ZDYNBR  50                      S01195
+     C***********                                                         S01195
+     C*****DETERMINE*IF*HOLIDAY*******************************************S01195
+     C***********                                                         S01195
+     C***********ZDHOL     TAG                             ** ZDHOL TAG **S01195
+     C***********          SETOF                     91                   S01195
+     C***********                                                         S01195
+     C*****SET*KEY*FOR*FIRST*HOLIDAY*RECORD.******************************S01195
+     C***********                                                         S01195
+     C***********          MOVEL'22      'ZTABKY 12                       S01195
+     C***********          MOVELZDYNBR    ZWRK6   6                       S01195
+     C***********          MOVE '1'       ZWRK6                           S01195
+     C***********          MOVE ZWRK6     ZTABKY                          S01195
+     C***********                                                         S01195
+     C*****CHAIN*FOR*HOLIDAY*RECORD,*RECORD*1*OR*2.***********************S01195
+     C***********                                                         S01195
+     C***********ZDHCH5    TAG                             ** ZDHCH5 TAG *S01195
+     C***********ZTABKY    CHAINTABSE                90    ON NOT THERE   S01195
+     C**N90******RECI      COMP 'D'                  9090  DELETED        S01195
+     C***********                                                         S01195
+     C*****STORE*CURRENCIES*IF*RECORD*FOUND.******************************S01195
+     C***********                                                         S01195
+     C**N90N91***          MOVEAHCCY      ZHC,1                           S01195
+     C***91N90***          MOVEAHCCY      ZHC,26                          S01195
+     C***********                                                         S01195
+     C*****GET*SECOND*RECORD,*IF*NOT*ALREADY*DONE.************************S01195
+     C***********                                                         S01195
+     C***********          MOVE ZTABKY    ZWRK1N  10                      S01195
+     C***********ZWRK1N    COMP 1                        91               S01195
+     C***********          MOVE '2'       ZTABKY                          S01195
+     C***91N90***          GOTO ZDHCH5                                    S01195
+     C***********                                                         S01195
+     C*****BYPASS*TO*END*IF*NO*FIRST*RECORD*FOUND.************************S01195
+     C***********                                                         S01195
+     C***90*91***          GOTO ZDEND5                                    S01195
+     C***********                                                         S01195
+     C*****DETERMINE*HOLIDAY*RECORD*TYPE.*********************************S01195
+     C***********                                                         S01195
+     C***********INEX      COMP 'E'                      92               S01195
+     C***********INEX      COMP 'I'                      93               S01195
+     C***********                                                         S01195
+     C*****CHECK*IF*CURRENCY*ON*HOLIDAY.**********************************S01195
+     C***********                                                         S01195
+     C***********ZCCY      LOKUPZHC                      94               S01195
+     C***********                                                         S01195
+     C*****BYPASS*TO*END*IF*NOT*HOLIDAY*FOR*CURRENCY.*********************S01195
+     C***********                                                         S01195
+     C***92*94***                                                         S01195
+     C***OR*93N94***          GOTO ZDEND5                                 S01195
+     C***********                                                         S01195
+     C*****SET*INDICATOR*FOR*HOLIDAY*FOR*DAY*NUMBER.**********************S01195
+     C********************************************************************S01195
+     C***********          SETON                     99                   S01195
+     C***********                                                         S01195
+     C*****CHECK*IF*NEXT*WORKING*DAY*REQUIRED.****************************S01195
+     C***********                                                         S01195
+     C***********ZOPT      COMP 'Y'                      95               S01195
+     C***95******ZDYNBR    ADD  1         ZDYNBR                          S01195
+     C***95******          GOTO ZDHOL                                     S01195
+     C***********                                                         S01195
+     C***********                                                         S01195
+     C***********ZDEND5    ENDSR                           * ZDEND5 ENDSR*S01195
+     C***********                                                         S01195
+     C***********                                                         S01195
+     C*****************************************************************   S01195
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    DEFAULT ERROR HANDLING                                    *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           *PSSR     BEGSR                                       ***
+     C**
+     C           WERROR    IFNE 'Y'
+     C                     MOVE 'Y'       WERROR  1
+     C                     DUMP
+     C        NU8          SETON                       U7U8
+     C**
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+     C**
+     C                     MOVEL#PGM      DBPGM
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL#FILE     DBFILE
+     C                     MOVEL#BASE     DBASE
+     C**
+     C                     END
+     C**
+     C                     OUT  EXSTTD
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

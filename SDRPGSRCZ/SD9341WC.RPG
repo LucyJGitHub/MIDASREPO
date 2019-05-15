@@ -1,0 +1,1265 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ICD For New Retail-Window controller')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   Standing Data Module
+     F*                                                               *
+     F*  SD9341WC - ICD FOR NEW RETAIL - WINDOW CONTROLER             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002             Date 23Sep98               *
+     F*                 062539             DATE 19NOV93               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  062539 - Checks for title only accounts and also validates   *
+     F*           income flag .                                       *
+     F*  S01413 - Retail 3 Incorporation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FTABTREY0IF  E           K        DISK
+     F            TABTREF0                          KRENAMERTVIDX
+     F*                                Retreival index
+     FTABTREXCUF  E           K        DISK         KCOMIT       A
+     F            TABTREF0                          KRENAMEUPDIDX
+     F*                                Update index
+     FTABTBRE IF  E                    DISK
+     F*
+     FSD9341W#CF  E                    WORKSTN
+     F            SD9341F0                          KRENAMESCREEN
+     F            SD9341F1                          KRENAMESCREEN1
+     F            SD9341F2                          KRENAMESCREEN2
+     F*                                Display file
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*   U S E   O F     I N D I C A T O R S
+     F*
+     F*  (Screen field error indicators should start with 20 in
+     F*   ascending order)
+     F*
+     F*  *IN10  -  On=Delete/Enquiry, Protect field.
+     F*            Off=Insert/Amdend, Underline field.
+     F*  *IN11  -  On=Delete - Display 'F10=Confirm Delete'
+     F*  *IN20  -  Invalid #1SCIA field
+     F*  *IN21  -  Invalid #1ACIA field
+     F*  *IN22  -  Invalid #1ACCD field
+     F*  *IN23  -  Invalid #1ACCF field
+     F*  *IN24  -  Invalid #1ACBD field
+     F*  *IN30  -  Field numeric
+     F*  *IN70  -  Extension record not found via update index
+     F*  *IN71  -  Unable to allocate record via update index
+     F*  *IN72  -  Statement charges processed
+     F*  *IN73  -  Fixed A/C charges processed
+     F*  *IN75  -  General error indicator. Used to condition output
+     F*  *IN78  -  Error occured during DBF update
+     F*            of error messages and redisplay screen.
+     F*  *IN80  -  Unable to allocate extension record
+     F*  *IN81  -  Call to DBERRCTL ended in error
+     F*  *IN88  -  Data base error indicator
+     F*  *IN89  -  Extension record not found via retrieval index
+     F*  *INKJ  -  F10 pressed, enable delete
+     F*  *INKL  -  F12 pressed, exit
+     F*  *INLR  -  End processing
+     F*****************************************************************
+     E/EJECT
+     E                    ZYDY    4   4  4 0             ZDATE2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR.ARRAY
+     E                    CPY@    1   1 80               COPYRIGHT
+     I/EJECT
+     I*                                                                -
+     I           SDS
+     I*
+     I** Get program name from PSDS
+     I*
+     I                                     *PROGRAM WWPGM
+     I*
+     INWRCD     E DSTABTREXC
+     I*
+     I** Current/previous master file fields
+     I*
+     I*
+     I***SVRCD**  DS                             15                                           CGL029
+     ISVRCD       DS                             35                                           CGL029
+     I*
+     I** Stored master file fields
+     I*
+     IRUNDAT      DS
+     I                                       12  12 DATF
+     I*                                      13  13 MBIN
+     I** Data Area Rundat
+     I*
+     I*
+     I** Get the data structure passed from calling program
+     I*
+     I/COPY QWINDSRC,SD9341DTA
+     I*
+     ISDACOD    E DSSDACODPD
+     I*
+     I** Account Code Details
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     C/EJECT
+     C*---------------------------------------------------------------
+     C* Main processing
+     C*---------------------------------------------------------------
+     C*
+     C** Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Execute initial routine
+     C*
+     C                     EXSR SRINIT
+     C*
+     C** Execute specific routine depending on action
+     C*
+     C           ACTION    CASEQ'I'       SRINS
+     C           ACTION    CASEQ'A'       SRAMD
+     C           ACTION    CASEQ'E'       SRENQ
+     C           ACTION    CASEQ'D'       SRDEL
+     C                     END
+     C*
+     C** Execute routine to setup return code and exit program
+     C*
+     C                     EXSR SRRTRN
+     C*
+     C/EJECT
+     C*---------------------------------------------------------------
+     C* SRINS - Routine to handle 'INSERT' action
+     C*---------------------------------------------------------------
+     C*
+     C           SRINS     BEGSR
+     C*
+     C** Check whether record exists
+     C*
+     C                     EXSR SRREC
+     C*
+     C** If record found,
+     C** set DB error indicator, setup message, display screen, exit
+     C*
+     C           *IN89     IFEQ '0'
+     C*
+     C                     MOVE '1'       *IN88
+     C                     MOVEL'WNE9995' ZAMSID
+     C                     EXSR SRSMSG
+     C*
+     C** Initialize fields with file values for display
+     C*
+     C                     EXSR SRFTOS
+     C*
+     C** Protect fields for display
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C** Display screen
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C** Execute DB error routine
+     C*
+     C                     EXSR SRDBER
+     C*
+     C                     ELSE
+     C*
+     C** Record not found, initialize fields
+     C*
+     C                     EXSR SRINZ
+     C*
+     C** Display and handle screen until no more errors or F12
+     C*
+     C           *IN75     DOUEQ'0'
+     C           *INKL     OREQ '1'
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C** Bypass any further validation if previous DB error or F12
+     C*
+     C           *IN88     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C** Clear messages for redisplay
+     C*
+     C                     EXSR SRCMSG
+     C*
+     C** Validate input
+     C*
+     C                     EXSR SRVAL
+     C*
+     C** No errors
+     C*
+     C           *IN75     IFEQ '0'
+     C*
+     C** Move screen fields to file fields
+     C*
+     C                     EXSR SRSTOF
+     C*
+     C** Write new record
+     C*
+     C                     EXSR SRWRT
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*---------------------------------------------------------------
+     C* SRAMD - Routine to handle 'AMEND' action
+     C*---------------------------------------------------------------
+     C*
+     C           SRAMD     BEGSR
+     C*
+     C** Check whether record exists
+     C*
+     C                     EXSR SRREC
+     C*
+     C** If record not found,
+     C** set DB error indicator, setup message, display screen, exit
+     C*
+     C           *IN89     IFEQ '1'
+     C*
+     C                     MOVE '1'       *IN88
+     C                     MOVEL'WNE9999' ZAMSID
+     C                     EXSR SRSMSG
+     C*
+     C** Protect fields for display
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C** Display screen
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C**Execute DB error routine
+     C*
+     C                     EXSR SRDBER
+     C*
+     C                     ELSE
+     C*
+     C** Record found,
+     C** set file fields to screen fields and save before image
+     C*
+     C                     EXSR SRFTOS
+     C                     EXSR SRSAVE
+     C*
+     C** Display and handle screen until record can be allocated and
+     C** record on file and no errors left or F12 pressed
+     C*
+     C           *IN71     DOUEQ'0'
+     C           *IN70     ANDEQ'0'
+     C           *IN75     ANDEQ'0'
+     C           *INKL     OREQ '1'
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C** Bypass any further validation if previous DB error or F12
+     C*
+     C           *IN88     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C** Clear messages for redisplay
+     C*
+     C                     EXSR SRCMSG
+     C*
+     C** Validate input
+     C*
+     C                     EXSR SRVAL
+     C*
+     C** No errors
+     C*
+     C           *IN75     IFEQ '0'
+     C*
+     C** Allocate record via update index
+     C*
+     C                     EXSR SRALOC
+     C*
+     C** If record on file and allocated, compare record images,
+     C** else, screen will be redisplayed
+     C*
+     C           *IN70     IFEQ '0'
+     C           *IN71     ANDEQ'0'
+     C*
+     C                     EXSR SRCOMP
+     C*
+     C** If images do not match, screen will be redisplayed with
+     C** relevant message
+     C*
+     C           WWMTCH    IFEQ 'Y'
+     C*
+     C** Images match, move screen values to file fields
+     C*
+     C                     EXSR SRSTOF
+     C*
+     C** Update record
+     C*
+     C                     EXSR SRUPD
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*----------------------------------------------------------------
+     C* SRDEL - Routine to handle 'DELETE' action
+     C*----------------------------------------------------------------
+     C*
+     C           SRDEL     BEGSR
+     C*
+     C** Set indicators on for 'DELETE' mode to protect fields
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C** Check whether record exists
+     C*
+     C                     EXSR SRREC
+     C*
+     C** If record not found,
+     C** set DB error indicator, setup message, display screen, exit
+     C*
+     C           *IN89     IFEQ '1'
+     C*
+     C                     MOVE '1'       *IN88
+     C                     MOVEL'WNE9996' ZAMSID
+     C                     EXSR SRSMSG
+     C*
+     C* Disable F10 key
+     C*
+     C                     MOVE '0'       *IN11
+     C*
+     C* Display screen
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C** Execute DB error routine
+     C*
+     C                     EXSR SRDBER
+     C*
+     C                     ELSE
+     C*
+     C** Record found,
+     C** set file fields to screen fields and save before image
+     C*
+     C                     EXSR SRFTOS
+     C                     EXSR SRSAVE
+     C*
+     C** Enable F10 key
+     C*
+     C                     MOVE '1'       *IN11
+     C*
+     C** Display and handle screen until record can be allocated and
+     C** record on file and F10 pressed or F12 pressed
+     C*
+     C           *IN71     DOUEQ'0'
+     C           *IN70     ANDEQ'0'
+     C           *INKJ     ANDEQ'1'
+     C           *INKL     OREQ '1'
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C** F12 not pressed, F10 pressed
+     C*
+     C           *INKL     IFEQ '0'
+     C           *INKJ     ANDEQ'1'
+     C*
+     C** Allocate record via update index
+     C*
+     C                     EXSR SRALOC
+     C*
+     C** If record on file and allocated, compare record images,
+     C** else, screen will be redisplayed
+     C*
+     C           *IN70     IFEQ '0'
+     C           *IN71     ANDEQ'0'
+     C*
+     C                     EXSR SRCOMP
+     C*
+     C** If images do not match, screen will be redisplayed with
+     C** relevant message
+     C*
+     C           WWMTCH    IFEQ 'Y'
+     C*
+     C** Images match, delete record
+     C*
+     C                     EXSR SRDELR
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C* SRENQ - Routine to handle 'ENQUIRY' action
+     C*-----------------------------------------------------------------
+     C*
+     C           SRENQ     BEGSR
+     C*
+     C** Set indicators on for 'ENQUIRY' mode to protect fields
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C** Check whether record exists
+     C*
+     C                     EXSR SRREC
+     C*
+     C** If record not found,
+     C** set DB error indicator, setup message, display screen, exit
+     C*
+     C           *IN89     IFEQ '1'
+     C*
+     C                     MOVE '1'       *IN88
+     C                     MOVEL'WNE9994' ZAMSID
+     C                     EXSR SRSMSG
+     C*
+     C** Protect fields
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C** Display screen
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C** Execute DB error routine
+     C*
+     C                     EXSR SRDBER
+     C*
+     C                     ELSE
+     C*
+     C** Record found, set file fields to screen fields
+     C*
+     C                     EXSR SRFTOS
+     C*
+     C** Display and handle screen
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*--------------------------------------------------------------
+     C* SRSMSG - Routine to send messages to message subfile.
+     C*--------------------------------------------------------------
+     C*
+     C           SRSMSG    BEGSR
+     C*
+     C** If message file not set up, use default
+     C*
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVELWWDMSF    ZAMSGF
+     C                     END
+     C*
+     C                     CALL 'SNDERMSG'
+     C                     PARM WWPGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C* Clear all fields for default mechanism next time.
+     C*
+     C                     MOVEL*BLANKS   ZAPGRL           Rel queue
+     C                     MOVEL*BLANKS   ZAMSID           Message Id.
+     C                     MOVEL*BLANKS   ZAMSGF           Message file.
+     C                     MOVEL*BLANKS   ZAMSDA           Message data.
+     C                     MOVEL*BLANKS   ZAMSTP           Message type.
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------
+     C* SRCMSG - Routine to clear program's message queue.
+     C*-------------------------------------------------------------
+     C*
+     C           SRCMSG    BEGSR
+     C*
+     C                     CALL 'CLRERMSG'
+     C                     PARM WWPGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------
+     C* SRREC - Routine to access file via retrieve index
+     C*-------------------------------------------------------------
+     C*
+     C           SRREC     BEGSR
+     C*
+     C           KLIST     CHAINRTVIDX               89
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------
+     C* SRALOC - Routine to access record via update index
+     C*--------------------------------------------------------------
+     C*
+     C           SRALOC    BEGSR
+     C*
+     C           KLIST     CHAINUPDIDX               7071
+     C*
+     C** If record not on file, setup message 'Record deleted'
+     C*
+     C           *IN70     IFEQ '1'
+     C                     MOVEL'WNE9998' ZAMSID
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------
+     C* SRUPD - Routine to update file.
+     C*-------------------------------------------------------------
+     C*
+     C           SRUPD     BEGSR
+     C*
+     C                     UPDATUPDIDX                 78
+     C*
+     C                     COMIT
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------
+     C* SRWRT - Routine to write a new record to the file.
+     C*--------------------------------------------------------------
+     C*
+     C           SRWRT     BEGSR
+     C*
+     C                     WRITEUPDIDX                 78
+     C*
+     C                     COMIT
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------
+     C* SRDELR - Routine to delete a record
+     C*-------------------------------------------------------------
+     C*
+     C           SRDELR    BEGSR
+     C*
+     C                     DELETUPDIDX                 78
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*--------------------------------------------------------------
+     C* SRCOMP - Routine to compare before/after image of records
+     C*--------------------------------------------------------------
+     C*
+     C           SRCOMP    BEGSR
+     C*
+     C           SVRCD     IFEQ NWRCD
+     C                     MOVE 'Y'       WWMTCH  1
+     C                     ELSE
+     C                     MOVE 'N'       WWMTCH
+     C                     MOVEL'WNE9997' ZAMSID
+     C                     EXSR SRSMSG
+     C*
+     C** Use SETLL to release record lock
+     C*
+     C           KLIST     SETLLUPDIDX
+     C*
+     C** Set condition to redisplay screen
+     C*
+     C                     MOVE '1'       *IN70
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------
+     C* SRSAVE - Routine to save before image of record via DS
+     C*--------------------------------------------------------------
+     C*
+     C           SRSAVE    BEGSR
+     C*
+     C                     MOVELNWRCD     SVRCD
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*--------------------------------------------------------------
+     C* SRRTRN - Routine to set up return code for calling program
+     C*--------------------------------------------------------------
+     C*
+     C           SRRTRN    BEGSR
+     C*
+     C** DBF update error
+     C*
+     C           *IN78     IFEQ '1'
+     C                     MOVE 'USR0563' WWRTRN
+     C                     ROLBK
+     C                     ELSE
+     C** Database error
+     C*
+     C           *IN88     IFEQ '1'
+     C                     MOVE 'Y2U0004' WWRTRN
+     C                     ROLBK
+     C                     ELSE
+     C*
+     C** F12 pressed
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'USR0790' WWRTRN
+     C                     ELSE
+     C*
+     C** No errors
+     C*
+     C                     MOVE *BLANKS   WWRTRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Exit program
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*----------------------------------------------------------
+     C* SRDBER - Routine to handle database errors
+     C*----------------------------------------------------------
+     C*
+     C           SRDBER    BEGSR
+     C*
+     C** Dump program
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C** Call standard DB error handler
+     C*
+     C                     CALL 'DBERRCTL'             81
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*----------------------------------------------------------
+     C* SRSCRN - Routine to handle screen and validation
+     C*----------------------------------------------------------
+     C*
+     C           SRSCRN    BEGSR
+     C*
+     C** Display messages
+     C*
+     C                     WRITE#MSGCTL
+     C*
+     C** Display main screen
+     C*
+     C           *IN72     IFEQ '1'
+     C           *IN73     ANDEQ'1'
+     C                     EXFMTSCREEN
+     C                     ELSE
+     C           *IN72     IFEQ '1'
+     C                     EXFMTSCREEN1
+     C                     ELSE
+     C           *IN73     IFEQ '1'
+     C                     EXFMTSCREEN2
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*---------------------------------------------------------
+     C* The routines that can be changed start here...
+     C*---------------------------------------------------------
+     C* SRVAL - Routine to control validation of each field.
+     C*---------------------------------------------------------
+     C*
+     C           SRVAL     BEGSR
+     C*
+     C** Initialize error condition indicators
+     C*
+     C                     MOVE '0'       *IN75
+     C                     MOVEA'00000000'*IN,20
+     C*
+     C** Validate each screen field.
+     C*
+     C** #1SCIA validation
+     C*
+     C           *IN72     IFEQ '1'
+     C                     EXSR SCIATS
+     C                     END
+     C           *IN73     IFEQ '1'
+     C*
+     C** #1ACIA validation
+     C*
+     C                     EXSR ACIATS
+     C*
+     C** #1ACCD validation
+     C*
+     C                     EXSR ACCDTS
+     C*
+     C** #1ACCF validation
+     C*
+     C                     EXSR ACCFTS
+     C*
+     C** #1ACBD validation
+     C*
+     C                     EXSR ACBDTS
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C* SCIATS - CHECK STATEMENT CHARGE INCOME ACCOUNT CODE FIELD    *
+     C*                                                              *
+     C*                                                              *
+     C****************************************************************
+     C           SCIATS    BEGSR
+     C*
+     C** Validate field
+     C** If no value is entered, display message for mandatory field.
+     C*
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN50
+     C*
+     C           #1SCIA    IFEQ *BLANKS
+     C*
+     C                     MOVEL'LZW1501' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C*
+     C                     ELSE
+     C*
+     C** Test numeric
+     C*
+     C**********           MOVEL#1SCIA    NUM5    50                                          CGL029
+     C**********           MOVELNUM5      ALP4    4                                           CGL029
+     C                     MOVEL#1SCIA    NUM5   110                                          CGL029
+     C                     MOVELNUM5      ALP4   10                                           CGL029
+     C*
+     C           ALP4      IFLE #1SCIA
+     C                     MOVE '1'       *IN30
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C** If field is input, access on FILE/SDACODL0
+     C*
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C**********           PARM #1SCIA    @ACOD   4                                           CGL029
+     C                     PARM #1SCIA    @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSFDY
+     C*
+     C** If chain failed, display message for invalid  field.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C*
+     C                     MOVEL'LZW1502' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C           A5ACTY    IFEQ 'R'
+     C                     MOVEL'LZW1508' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C*                                                                   062539
+     C*  Check for title only accounts                                    062539
+     C*                                                                   062539
+     C           A5TOIN    IFEQ 'Y'                                       062539
+     C                     MOVEL'WND0002' ZAMSID                          062539
+     C                     MOVEL'MIDAS   'ZAMSGF                          062539
+     C                     MOVE '1'       *IN20                           062539
+     C                     MOVE '1'       *IN75                           062539
+     C                     EXSR SRSMSG                                    062539
+     C                     END                                            062539
+     C*                                                                   062539
+     C*  Must be Income or Expense                                        062539
+     C*                                                                   062539
+     C           A5ACSC    IFNE 'IN'                                      062539
+     C           A5ACSC    ANDNE'EX'                                      062539
+     C                     MOVEL'WND0003' ZAMSID                          062539
+     C                     MOVEL'MIDAS   'ZAMSGF                          062539
+     C                     MOVE '1'       *IN20                           062539
+     C                     MOVE '1'       *IN75                           062539
+     C                     EXSR SRSMSG                                    062539
+     C                     END                                            062539
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL'LZW1502' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C* ACIATS - CHECK ACCOUNT CHARGE INCOME ACCOUNT CODE FIELD      *
+     C*                                                              *
+     C*                                                              *
+     C****************************************************************
+     C           ACIATS    BEGSR
+     C*
+     C** Validate field
+     C** If no value is entered, display message for mandatory field.
+     C*
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN50
+     C*
+     C           #1ACIA    IFEQ *BLANKS
+     C*
+     C                     MOVEL'LZW1601' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C*
+     C                     ELSE
+     C*
+     C** Test numeric
+     C*
+     C**********           MOVEL#1ACIA    NUM5    50                                          CGL029
+     C**********           MOVELNUM5      ALP4    4                                           CGL029
+     C                     MOVEL#1ACIA    NUM5   110                                          CGL029
+     C                     MOVELNUM5      ALP4   10                                           CGL029
+     C*
+     C           ALP4      IFLE #1ACIA
+     C                     MOVE '1'       *IN30
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C** If field is input, access on FILE/SDACODL0
+     C*
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C**********           PARM #1ACIA    @ACOD   4                                           CGL029
+     C                     PARM #1ACIA    @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSFDY
+     C*
+     C** If chain failed, display message for invalid  field.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C*
+     C                     MOVEL'LZW1602' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C           A5ACTY    IFEQ 'R'
+     C                     MOVEL'LZW1620' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C*                                                                   062539
+     C*  Check for title only accounts                                    062539
+     C*                                                                   062539
+     C           A5TOIN    IFEQ 'Y'                                       062539
+     C                     MOVEL'WND0002' ZAMSID                          062539
+     C                     MOVEL'MIDAS   'ZAMSGF                          062539
+     C                     MOVE '1'       *IN21                           062539
+     C                     MOVE '1'       *IN75                           062539
+     C                     EXSR SRSMSG                                    062539
+     C                     END                                            062539
+     C*                                                                   062539
+     C*  Must be Income or Expense                                        062539
+     C*                                                                   062539
+     C           A5ACSC    IFNE 'IN'                                      062539
+     C           A5ACSC    ANDNE'EX'                                      062539
+     C                     MOVEL'WND0003' ZAMSID                          062539
+     C                     MOVEL'MIDAS   'ZAMSGF                          062539
+     C                     MOVE '1'       *IN21                           062539
+     C                     MOVE '1'       *IN75                           062539
+     C                     EXSR SRSMSG                                    062539
+     C                     END                                            062539
+     C*
+     C                     ELSE
+     C                     MOVEL'LZW1602' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C* ACCDTS - CHECK ACCOUNT  CHARGE DATE FIELD                    *
+     C*                                                              *
+     C*                                                              *
+     C****************************************************************
+     C           ACCDTS    BEGSR
+     C*
+     C** Validate field
+     C** If no value is entered, display message for mandatory field.
+     C*
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN30
+     C*
+     C           #1ACCD    IFEQ *BLANKS
+     C*
+     C                     MOVEL'LZW1603' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C*
+     C                     ELSE
+     C*
+     C**  Test numeric
+     C*
+     C                     MOVEL#1ACCD    NUM7    70
+     C                     MOVELNUM7      ALP6    6
+     C*
+     C           ALP6      IFLE #1ACCD
+     C                     MOVE '1'       *IN30
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C** Load date format indicator
+     C*
+     C                     MOVELP1DFIN    WUDFIN  1        Date Format Ind
+     C*
+     C** If value is entered, check for a valid date
+     C*
+     C*
+     C** Check Screen Date  *
+     C*
+     C                     MOVE #1ACCD    ZDATE   60
+     C                     EXSR ZDATE1
+     C*
+     C** Error detected ?  Display message for invalid field  else saveen midas
+     C** date
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'LZW1604' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    ACCDP5  50
+     C                     END
+     C                     ELSE
+     C*
+     C                     MOVEL'LZW1604' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C* ACCFTS - CHECK ACCOUNT CHARGE FREQUENCY                      *
+     C*                                                              *
+     C*                                                              *
+     C****************************************************************
+     C           ACCFTS    BEGSR
+     C*
+     C** Validate field
+     C** If no value is entered, display message for mandatory field.
+     C*
+     C                     MOVE '0'       *IN23
+     C*
+     C           #1ACCF    IFEQ *BLANKS
+     C*
+     C                     MOVEL'LZW1605' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C*
+     C                     ELSE
+     C*
+     C** If value  entered NOT  'M','Q','X','Y', display message for invalid
+     C** field.
+     C*
+     C           #1ACCF    IFNE 'M'
+     C           #1ACCF    ANDNE'Q'
+     C           #1ACCF    ANDNE'X'
+     C           #1ACCF    ANDNE'Y'
+     C*
+     C                     MOVEL'LZW1606' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C* ACBDTS - CHECK ACCOUNT  CHARGE BASE DATE                     *
+     C*                                                              *
+     C*                                                              *
+     C****************************************************************
+     C           ACBDTS    BEGSR
+     C*
+     C** Validate field
+     C** If no value is entered, display message for mandatory field.
+     C*
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN31
+     C*
+     C           #1ACBD    IFEQ *BLANKS
+     C*
+     C                     MOVEL'LZW1607' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C*
+     C                     ELSE
+     C*
+     C** If value  entered NOT  between '01'-'30' , display message for invalid
+     C** field.
+     C*
+     C                     MOVE #1ACBD    ACBDN   20
+     C*
+     C**  Test numeric
+     C*
+     C                     MOVEL#1ACBD    NUM3    30
+     C                     MOVELNUM3      ALP2    2
+     C*
+     C           ALP2      IFLE #1ACBD
+     C                     MOVE '1'       *IN30
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C**  Validation field
+     C*
+     C           ACBDN     IFLT 1
+     C           ACBDN     ORGT 31
+     C*
+     C                     MOVEL'LZW1608' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL'LZW1608' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN75
+     C                     EXSR SRSMSG
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------
+     C* SRINZ - Routine to initialize screen fields with defaults
+     C*------------------------------------------------------------
+     C*
+     C           SRINZ     BEGSR
+     C*
+     C           *IN72     IFEQ '1'
+     C                     MOVE *BLANKS   #1SCIA
+     C                     END
+     C           *IN73     IFEQ '1'
+     C                     MOVE *BLANKS   #1ACIA
+     C                     MOVE *BLANKS   #1ACCD
+     C                     MOVEL*BLANKS   #1ACCF
+     C                     MOVE *BLANKS   #1ACBD
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------
+     C* SRFTOS - Routine to move file fields to screen fields
+     C*------------------------------------------------------------
+     C*
+     C           SRFTOS    BEGSR
+     C*
+     C           *IN72     IFEQ '1'
+     C                     MOVE RESCIA    #1SCIA
+     C                     END
+     C           *IN73     IFEQ '1'
+     C                     MOVE REACIA    #1ACIA
+     C*
+     C** Convert day number to date formats
+     C*
+     C                     MOVE REACCD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     #1ACCD
+     C*
+     C                     MOVE REACCF    #1ACCF
+     C                     MOVE REACBD    #1ACBD
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------
+     C* SRSTOF - Routine to move screen fields to file fields
+     C*------------------------------------------------------------
+     C*
+     C           SRSTOF    BEGSR
+     C*
+     C** Move data fields to file fields
+     C*
+     C           *IN72     IFEQ '1'
+     C                     MOVE #1SCIA    RESCIA
+     C                     END
+     C           *IN73     IFEQ '1'
+     C                     MOVE #1ACIA    REACIA
+     C                     MOVE ACCDP5    REACCD
+     C                     MOVE #1ACCF    REACCF
+     C                     MOVE #1ACBD    REACBD
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------
+     C* SRINIT - Routine to handle initial processing
+     C*------------------------------------------------------------
+     C*
+     C           SRINIT    BEGSR
+     C*
+     C** Get parameters from calling program
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           DATA
+     C                     PARM           WWRTRN  7
+     C*
+     C** Dummy parameters (used for non-DDS window method)
+     C*
+     C                     PARM           DUMMY1  30
+     C                     PARM           DUMMY2  30
+     C                     PARM           DUMMY3  30
+     C                     PARM           DUMMY4  30
+     C                     PARM           DUMMY5 10
+     C*
+     C** The following parameter is needed from PTF16 on.
+     C** Every PTF level below should omit this parameter
+     C*
+     C                     PARM           SPARE 256
+     C*
+     C** Setup key values using transaction data passed from caller
+     C*
+     C*
+     C** Define KLIST for file access
+     C*
+     C                     MOVE P1RECI    KRECI   1
+     C           KLIST     KLIST
+     C                     KFLD           KRECI
+     C*
+     C** Setup default message file for CE system
+     C*
+     C                     MOVEL'REUSRMSG'WWDMSF 10
+     C*
+     C** Data Area Rundat
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C*
+     C**   *IN98 used in SR ZDATE1 & ZDATE 2 is set on
+     C*
+     C           DATF      IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*
+     C** Read TABTBRE
+     C*
+     C           1         SETLLTABTBRE
+     C                     READ TABTBRE                  87
+     C*
+     C           P1STMC    IFEQ 'Y'
+     C                     MOVE '1'       *IN72
+     C                     END
+     C           P1FACH    IFEQ 'Y'
+     C                     MOVE '1'       *IN73
+     C                     END
+     C*
+     C                     ENDSR
+     C*************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+** ZYDY -- YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+** ZMDY -- MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM -- MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

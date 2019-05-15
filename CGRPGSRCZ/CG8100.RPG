@@ -1,0 +1,3614 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Work with layout function')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG8100 - Layout Tool - Work with planes                      *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 095463             Date 24Oct95               *
+      *                 091826             Date 20Aug95               *
+     F*                 089344             DATE 20JUN95               *
+     F*                 084478             DATE 13MAR95               *
+     F*                 084084             DATE 29FEB95               *
+     F*                 S01522             DATE 01JAN95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  095463 - Work with 132 wide screen                           *
+     F*  091826 - Various print generator errors                      *
+     F*  089344 - If new layout obtain new data.                      *
+     F*  084478 - COMIT & ROLBK re-organised within suite             *
+     F*  084084 - Change to cope with re-direction                    *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     FCG8100DFCF  E                    WORKSTN
+     F            #SFLRCD                           KRENAME#SFLRCD1
+     F            #SFLCTL                           KRENAME#SFLCTL1
+     F            #WINDOW                           KRENAME#WINDOW1
+     F            #CMDTXT                           KRENAME#CMDTXT1
+     F            #MSGRCD                           KRENAME#MSGRCD1
+     F            #MSGCTL                           KRENAME#MSGCTL1
+     F                                        RRN1  KSFILE #SFLRCD1
+     F                                              KINFDS INF1DS
+     F                                              KINFSR SRFILE
+     FCGPDECL0UF  E           K        DISK                      A
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FCGPASCL0UF  E           K        DISK                      A
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FCGWPRDE1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F*CGWPLAYOUF*E****       K        DISK                           UC  089344
+     FCGWPLAYOUF  E           K        DISK                      A    UC  089344
+     F                                              KINFSR SRFILE
+     FCGW1LAYOIF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     FCGW2LAYOUF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     FCGW3LAYOIF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     FCGWPDISPUF  E           K        DISK                      A    UC
+     F                                              KINFSR SRFILE
+     E/EJECT
+     E*
+     E*  Array containing Copyright statement
+     E*
+     E                    CPY@    1   1 80
+     E                    TYP     1   6  1  ATYN     8
+     E                    LIN       256  1
+     E                    CMD        24  1
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+      /EJECT
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     IINF1DS    E DSY2I#DSP
+     I*
+     I* Display file information data structure for CG8100DF
+     I*
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+      *
+     ICGLDA     E DSCGLDA                                                 S01194
+      *
+     IP1PARM      DS
+     I                                        1  10 P1LAYO
+     I                                       11  20 P1PLAN
+     I                                       21  30 P1FLDN
+     I                                       31  380P1TCGP
+     I                                       39  460P1CID
+      *
+     I            DS
+     I                                        1   40L1
+     I                                        5   80L2
+     I                                        9  120L3
+     I                                       13  160L4
+     I                                       17  200L5
+      *
+     I            DS
+     I                                        1   40S1
+     I                                        5   80S2
+     I                                        9  120S3
+     I                                       13  160S4
+     I                                       17  200S5
+      *
+     I            DS
+     I                                        1   40Z1
+     I                                        5   80Z2
+     I                                        9  120Z3
+     I                                       13  160Z4
+     I                                       17  200Z5
+      *
+     I            DS
+     I                                        1 256 DSPLIN
+     I                                        1 256 LIN
+      *
+     I            DS
+     I                                        1  24 CMDSET
+     I                                        1  24 CMD
+     I*...................................................................
+     I* Job date and time:
+     I*
+     IJBDTTM      DS
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     I*...................................................................
+     I* Message translation fields:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     IPATHDS      DS
+     I                                        1 256 I#P1
+     I                                      257 376 I#P2
+     IACTCDE      DS
+     I                                        1   1 #FIRST
+     I                                        2   2 ESCAPE
+     I                                        3   3 COORDI
+     I                                        4   4 DETAIL
+     I                                        5   5 ADDPLA
+     I                                        6   6 ASCSEQ                089344
+     I                                        7   7 DELETE                089344
+     I                                        8   8 CPYPLA                089344
+     I                                        9   9 ATTACH                089344
+     I***********                             6   6 CPYPLA                089344
+     I***********                             7   7 DELETE                089344
+     I***********                             8   8 ATTACH                089344
+     I***********                             9   9 ASCSEQ                089344
+      *                                                                ...
+     I                                        3   9 ACTUPD
+     I                                        5   9 DSPUPD
+     I                                        8   9 WRKUPD                089344
+      *                                                                ...
+     I            DS
+     I                                        1   3 #SFILL
+     I                                        1   1 #START
+     I                                        2   2 #DIREC
+      *
+     I*...................................................................
+     I              '1'                   C         #ON
+     I              '0'                   C         #OFF
+     I*...................................................................
+     I              'CGWPDISP  '          C         WKF1
+     I              'CGWPLAYO  '          C         WKF2
+     I              'CGW1LAYO  '          C         WKF3
+     I              'CGW2LAYO  '          C         WKF4
+     I              'CGW3LAYO  '          C         WKF5
+      *
+     I              '*LIBL'               C         LIBL
+      *
+     I              'OVRDBF FILE('        C         CMDS11
+     I              ') TOFILE(QTEMP/'     C         CMDS12
+     I              ')'                   C         CMDS13
+      *                                                                   089344
+     I              'RCLRSC'              C         CMDS21                089344
+      *
+     I              '*'                   C         BOXL01
+     I              '-'                   C         BOXL02
+     I              '|'                   C         BOXL03
+     I              'R'                   C         BOXL04
+      *
+     I              'NEW'                 C         NEWSEQ
+      /EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *
+     C           PL1020    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*DISPLAY'P@ACTN  8
+     C                     PARM #@GRPS    P@FGRP
+     C                     PARM *BLANKS   P@PATH240
+      *
+     C           *LIKE     DEFN #@GRPS    P@FGRP
+      *
+     C           PL8110    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM *BLANKS   C#LAYO
+     C                     PARM *BLANKS   C#PLAN
+      *
+     C           *LIKE     DEFN #@LAYO    C#LAYO
+     C           *LIKE     DEFN #@PLAN    C#PLAN
+      *
+     C           PL8250    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM 'Q'       P0RPLY  1                       084478
+     C                     PARM           P0MSG   7                       084478
+     C***********          PARM *BLANKS   P0RPLY  1                       084478
+     C***********          PARM 'CGD1804' P0MSG   7                       084478
+      *
+     C           PL8020    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*LAYSIZE'P@ACTN  8
+     C                     PARM TOPPLA    P@PLAN
+     C                     PARM *BLANKS   PATHDS
+      *
+     C           *LIKE     DEFN LPPLAN    P@PLAN
+      *
+     C           PL8900    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+      *
+     C           PL3004    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM           P@FILE 10
+     C                     PARM ##PGM     P@PGM  10
+     C                     PARM           P@DIR   1
+      *
+     C           PL0499    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*PDELETE'P@ACTN  8
+     C                     PARM           P1PARM
+      *
+     C           PC0499    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*COPY   'P@ACTN  8
+     C                     PARM           P1PARM
+      *
+     C           KY#LA1    KLIST
+     C                     KFLD           L#DCOL
+      *
+     C           KY#LA2    KLIST
+     C                     KFLD           L#DCOL
+     C                     KFLD           L#PPLA
+      *
+     C           KY#LA3    KLIST
+     C                     KFLD           L#DCOL
+     C                     KFLD           L#PPLA
+     C                     KFLD           L#SEQA
+      *
+     C           KYH#A1    KLIST
+     C                     KFLD           H#DCOL
+      *
+     C           KYH#A2    KLIST
+     C                     KFLD           H#DCOL
+     C                     KFLD           H#PPLA
+      *
+     C           KYH#A3    KLIST
+     C                     KFLD           H#DCOL
+     C                     KFLD           H#PPLA
+     C                     KFLD           H#SEQA
+      *
+     C           KY@LA1    KLIST
+     C                     KFLD           L@DCOL
+      *
+     C           KY@LA2    KLIST
+     C                     KFLD           L@DCOL
+     C                     KFLD           L@PPLA
+      *
+     C           KY@LA3    KLIST
+     C                     KFLD           L@DCOL
+     C                     KFLD           L@PPLA
+     C                     KFLD           L@SEQA
+      *
+     C           *LIKE     DEFN L#DCOL    L@DCOL
+     C           *LIKE     DEFN L#PPLA    L@PPLA
+     C           *LIKE     DEFN L#SEQA    L@SEQA
+     C           *LIKE     DEFN L#PLAN    L@PLAN
+     C           *LIKE     DEFN L#DDPH    L@DDPH
+     C           *LIKE     DEFN L#RPTH    L@RPTH
+     C           *LIKE     DEFN L#OFAB    L@OFAB
+     C           *LIKE     DEFN L#BOXD    L@BOXD
+      *
+     C           KY3LA1    KLIST
+     C                     KFLD           L#EROW
+      *
+     C           KY3LA2    KLIST
+     C                     KFLD           L#EROW
+     C                     KFLD           L#ECOL
+      *
+     C           KYASC2    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           L#PLAN
+      *
+     C           KYASC0    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           L@PPLA
+     C                     KFLD           L@PLAN
+      *
+     C           KYASC#    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           L@PPLA
+     C                     KFLD           L#PLAN
+      *
+     C           KYDECP    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           #@PLAN
+      *
+     C           KYDEC0    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           L@PLAN
+      *
+     C           KYDEC#    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           L#PLAN
+      *
+     C           KYDE#P    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           #PLANE
+      *
+     C           KYLAYP    KLIST
+     C                     KFLD           #@PLAN
+      *
+     C           *LIKE     DEFN #@LAYO    #@@AYO
+      *
+      *  Reset return code
+      *
+     C                     MOVEL*BLANKS   P0RTN
+      *
+     C           *NAMVAR   DEFN *LDA      CGLDA
+     C                     IN   CGLDA
+     C                     MOVEL##PGM     #@LAST    P
+     C                     CLEAR#@FLDN
+     C                     OUT  CGLDA
+      *
+      *  Top level control
+      *
+     C           #@LAYO    IFNE #@@AYO                                    089344
+     C                     EXSR SRDATA                                    089344
+     C                     IN   CGLDA                                     089344
+      *  If new layout fix new data                                       089344
+     C           OLDLAY    IFEQ 'N'                                       089344
+     C                     COMIT                                          089344
+     C                     END                                            089344
+     C                     END                                            089344
+      *
+     C           #@LAYO    IFNE #@@AYO
+     C           DSPUPD    ORNE *BLANKS
+      *
+     C***********          EXSR SRDATA                                    089344
+      *
+     C***********          IN   CGLDA                                     089344
+      ***If new layout fix new data                                       089344
+     C***********OLDLAY    IFEQ 'N'                                       089344
+     C***********          COMIT                                          089344
+     C***********          END                                            089344
+      *
+     C                     EXSR SRLOAD
+      *
+     C                     MOVE *BLANKS   P@DIR
+     C                     MOVELWKF1      P@FILE
+     C                     CALL 'CGC3004' PL3004
+      *
+     C                     MOVE #@LAYO    #@@AYO
+      *
+     C                     END
+      *
+     C                     CLEARACTCDE
+      *
+     C           ESCAPE    DOUEQ'Y'
+      *
+      *  Load structure data into QTEMP
+      *
+     C           DSPUPD    IFNE *BLANKS
+      *
+     C           WRKUPD    IFNE *BLANKS                                   089344
+     C                     EXSR SRDATA
+     C                     END                                            089344
+      *
+     C                     EXSR SRLOAD
+      *  Store display data
+     C                     MOVE *BLANKS   P@DIR
+     C                     MOVELWKF1      P@FILE
+     C                     CALL 'CGC3004' PL3004
+      *
+     C                     ELSE
+      *  Recall data from last store
+     C                     MOVE 'Y'       P@DIR
+     C                     MOVELWKF1      P@FILE
+     C                     CALL 'CGC3004' PL3004
+      *
+     C                     END
+      *
+      *  Initialise size data (also serves as integrity check)
+      *
+     C                     EXSR SRSINZ
+      *
+      *  Process plane display until one selected
+      *
+     C                     CLEARACTCDE
+      *
+      *  If #@PLAN already specified by-pass layout diagram
+      *
+     C                     OPEN CGWPLAYO
+     C           KYLAYP    CHAIN@LAYFMT              90
+     C                     CLOSECGWPLAYO
+      *
+     C           *IN90     IFEQ *ON
+     C                     EXSR SRINT1
+     C                     END
+      *
+      *  Process actions on plane
+      *
+     C           ESCAPE    IFNE 'Y'
+      *
+     C                     CLEARACTCDE
+     C                     EXSR SRINT2
+      *
+     C           ESCAPE    IFNE 'Y'
+     C           ACTUPD    ANDNE*BLANKS
+      *
+     C                     EXSR SRDUPD
+      *                                                                   084478
+     C***********          COMIT                                          084478
+      *
+      *  Flag LDA to force review & update on exit
+     C                     IN   CGLDA
+     C                     MOVE 'Y'       #@REVU
+     C                     OUT  CGLDA
+      *
+     C           COORDI    IFEQ 'Y'
+     C           REPEAT    ANDNE'Y'
+     C           L@OFAB    ANDNE'R'
+      * Transfer to CG8200 to allow user to keep fields within plane
+     C                     IN   CGLDA
+     C                     MOVEL'CG8200'  #@NEXT    P
+     C                     MOVEL'*SIZE'   #@ACTN    P
+     C                     Z-ADD#@CROW    #@#ROW
+     C                     Z-ADD#@CCOL    #@#COL
+     C                     RESET#@CROW
+     C                     RESET#@CCOL
+     C                     OUT  CGLDA
+     C                     MOVE 'Y'       ESCAPE
+      *
+     C                     END
+      *
+     C***********          ELSE                                           084478
+      ***********                                                         084478
+     C***********          ROLBK                                          084478
+      *
+     C                     END
+      * Check for any unvalidated planes
+     C                     EXSR SR#NEW
+      *
+     C           ESCAPE    IFNE 'Y'
+     C                     IN   CGLDA
+     C                     CLEAR#@PLAN
+     C                     OUT  CGLDA
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *                                                                   084478
+     C           #@NEXT    IFEQ '*EXIT*'                                  084478
+     C           #@REVU    ANDEQ*BLANKS                                   084478
+      *                                                                   084478
+      *  Invoke common "Confirm" window at this common exit point         084478
+      *                                                                   084478
+     C                     CLEARP0MSG                                     084478
+     C                     CALL 'CG8250'  PL8250       9090               084478
+      *                                                                   084478
+     C           *IN90     IFEQ '1'                                       084478
+     C           P@RTCD    OREQ '*ERROR*'                                 084478
+     C                     MOVEL'CG8250'  W0FILE                          084478
+     C                     MOVEL'*CALL'   W0KEY            ***************084478
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *084478
+     C                     MOVEL'MEM5003' W0MSGD           ***************084478
+     C                     MOVEL'MIDAS  ' W0MSGF                          084478
+     C                     EXSR SRERR                                     084478
+     C                     END                                            084478
+      *                                                                   084478
+     C           P0RPLY    IFEQ 'Y'                                       084478
+     C                     COMIT                                          084478
+     C                     ELSE                                           084478
+     C                     ROLBK                                          084478
+     C                     END                                            084478
+      *                                                                   084478
+     C                     END                                            084478
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+     C           *INZSR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'*INZSR'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C**********           Z-ADD1         W0ERNB                          084478
+     C                     Z-ADD3         W0ERNB           * DB ERROR 03 *084478
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Update the screen time:
+      *
+     C                     TIME           ##JTM
+     C                     Z-ADD##JTM     ##TME   60
+      *
+      * Set static screen fields
+      *
+     C                     EXSR SRTEXT
+      *
+      * Define the default message file:
+      *
+     C                     MOVEL'CGUSRMSG'ZADFMF 10
+      *
+     C           *LIKE     DEFN #@CROW    #@#ROW
+     C           *LIKE     DEFN #@CCOL    #@#COL
+     C                     Z-ADD1         #@#ROW
+     C                     Z-ADD1         #@#COL
+     C                     Z-ADD1         #@CROW
+     C                     Z-ADD1         #@CCOL
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDATA   : Extract Structure Data                            *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 100                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDATA    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDATA'  @STK,Q
+      *                                                                   089344
+     C                     CLOSECGWPLAYO                                  089344
+     C                     CLOSECGW1LAYO                                  089344
+     C                     CLOSECGW2LAYO                                  089344
+     C                     CLOSECGW3LAYO                                  089344
+      *
+      *  Initialse files in QTEMP
+      *
+     C                     MOVELWKF2      P#WRKF
+     C                     MOVE 'Y'       P#NOVR
+     C                     EXSR SR3003
+      *
+     C                     MOVELWKF3      P#WRKF
+     C                     EXSR SR3003
+      *
+     C                     MOVELWKF4      P#WRKF
+     C                     EXSR SR3003
+      *
+     C                     MOVELWKF5      P#WRKF
+     C                     EXSR SR3003
+      *
+      *  Load Group-Set data into work-files
+      *
+     C           *LIKE     DEFN #@LAYO    ##LAYO
+      *
+     C                     IN   CGLDA
+     C                     CLEAROLDLAY
+     C                     OUT  CGLDA
+      *
+     C                     CALL 'CGC1020' PL1020       9090
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CGC1020' W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD101       W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     CLEARCMDSTR                                    089344
+     C                     MOVELCMDS21    CMDSTR                          089344
+     C                     CALL 'QCMDEXC'                                 089344
+     C                     PARM           CMDSTR256                       089344
+     C                     PARM 256       CMDLEN 155                      089344
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDINZ   : Initialise existing QTEMP data                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 105                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDINZ    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDINZ'  @STK,Q
+      *
+     C                     OPEN CGW2LAYO
+      *
+      *  Reset any QTEMP data
+      *
+     C           *LOVAL    SETLL@LAYFW2
+     C                     READ @LAYFW2                  30
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+     C                     Z-ADD0         L#DDPH
+     C                     Z-ADD0         L#SROW
+     C                     Z-ADD0         L#EROW
+     C                     Z-ADD0         L#SCOL
+     C                     Z-ADD0         L#ECOL
+      *
+     C                     UPDAT@LAYFW2
+     C                     READ @LAYFW2                  30
+     C                     END
+      *
+     C                     CLOSECGW2LAYO
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSINZ   : Initialise existing QTEMP data                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 105                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSINZ    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRSINZ'  @STK,Q
+      *
+     C                     OPEN CGW2LAYO
+      *
+      *  Reset any QTEMP data
+      *
+     C           *LOVAL    SETLL@LAYFW2
+     C                     READ @LAYFW2                  30
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+      *  Locate plane data
+      *
+     C           KYDEC#    CHAIN@PDECL0             N90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGPDECL0'W0FILE
+     C                     MOVELL#PLAN    W0KEY            ***************
+     C                     Z-ADD105       W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVE LPOFAB    L#OFAB
+     C                     MOVE LPFPAB    L#FPAB
+     C                     MOVE LPBOXD    L#BOXD
+     C                     MOVE LPOFOP    L#OFOP
+     C                     MOVE LPFILS    L#FILS
+     C                     MOVE LPDESC    L#DESC
+      *
+     C                     Z-ADDLPSROW    #PSROW
+     C                     Z-ADDLPSCOL    #PSCOL
+     C                     Z-ADDLPEROW    #PEROW
+     C                     Z-ADDLPECOL    #PECOL
+     C                     Z-ADDLPRROW    #PRROW
+     C                     Z-ADDLPRCOL    #PRCOL
+      *
+     C                     Z-ADDLPFROW    #PFROW
+     C                     Z-ADDLPFCOL    #PFCOL
+     C                     Z-ADDLPOROW    #POROW
+     C                     Z-ADDLPOCOL    #POCOL
+      *
+     C                     CLEARL#SERR
+      *
+     C                     UPDAT@LAYFW2
+     C                     READ @LAYFW2                  30
+     C                     END
+      *
+     C                     CLOSECGW2LAYO
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD   : Load structure data                               *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 110                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLOAD    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRLOAD'  @STK,Q
+      *
+     C                     MOVELWKF1      P#WRKF
+     C                     MOVE 'Y'       P#NOVR
+     C                     EXSR SR3003
+      *
+      *  Initialise QTEMP data
+      *
+     C                     EXSR SRDINZ
+      *
+      *  1st pass allocate depths
+      *
+     C                     EXSR SRADPH
+      *
+      *  2nd pass allocate boxes & generate QTEMP data
+      *
+     C                     EXSR SRGBOX
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR3003   : Clone work file into QTEMP                        *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 120                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SR3003    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SR3003'  @STK,Q
+      *
+     C           *LIKE     DEFN P@WRKF    P#WRKF                       e
+      *
+     C                     CALL 'CGC3003'              9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM P#WRKF    P@WRKF 10                    e
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CGC3003' W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD121       W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'PGI0002' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           P#NOVR    IFNE 'Y'
+      *
+     C                     CLEARCMDSTR
+     C                     MOVELCMDS11    CMDSTR
+     C           CMDSTR    CAT  P#WRKF:0  CMDSTR    P
+     C           CMDSTR    CAT  CMDS12:0  CMDSTR    P
+     C           CMDSTR    CAT  P#WRKF:0  CMDSTR    P
+     C           CMDSTR    CAT  CMDS13:0  CMDSTR    P
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDSTR256
+     C                     PARM 256       CMDLEN 155
+      *
+     C                     END
+      *
+     C                     CLEARP#WRKF                                 e
+     C                     MOVE *BLANKS   P#NOVR  1                    e
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRADPH   : Assign depths                                     *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 130                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRADPH    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRADPH'  @STK,Q
+      *
+     C                     OPEN CGW2LAYO
+      *
+      *  Initialise displacements
+      *
+     C           *LIKE     DEFN L#DDPH    MAXDPH
+     C           *LIKE     DEFN L#DDPH    MINDPH
+     C                     Z-ADD0         MAXDPH
+     C                     Z-ADD0         MINDPH
+      *  Initialise top plane
+     C           *LIKE     DEFN L#PLAN    TOPPLA
+     C                     MOVE *BLANKS   TOPPLA
+      *
+      *  Process subsequent columns
+      *
+     C                     DO   *HIVAL    L1
+      *
+     C                     Z-ADDL1        L#DCOL
+     C           KY#LA1    CHAIN@LAYFW2              30
+     C   30                LEAVE
+      *  Store top plane
+     C           L#DCOL    IFEQ 1
+     C           TOPPLA    ANDEQ*BLANKS
+     C                     MOVE L#PLAN    TOPPLA
+     C                     END
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+      *  If a "loose" repeater offset to current minimum depth
+      *
+     C           L#LRPT    IFEQ '*LOOSE'
+     C           MINDPH    ADD  -1        L#DDPH
+     C                     UPDAT@LAYFW2
+     C                     END
+      *
+     C                     EXSR SRSKEY
+      *
+     C                     EXSR SROFFN
+      *
+     C           OFFSPR    IFNE 0
+      *
+     C           OFFSPR    DIV  2         TESTRE  61
+     C                     Z-ADDTESTRE    ODDEVN  11
+      *
+     C           OFFSPR    IFGT 1
+      * Push all others to accomodate spread
+     C                     DO   *HIVAL    L2
+      *
+     C                     Z-ADDL2        L#DCOL
+     C           KY#LA1    CHAIN@LAYFW2              31
+     C   31                LEAVE
+      *
+     C           *IN31     DOWEQ*OFF
+      *
+     C                     SELEC
+     C           L@DDPH    WHLT 0
+     C           L#DDPH    ANDLT0
+      *
+     C           L#DCOL    IFGE L2
+     C           L#DDPH    ANDLEL@DDPH
+     C           L#DCOL    ORLT L2
+     C                     SUB  OFFSPR    L#DDPH
+     C                     ADD  1         L#DDPH
+     C                     END
+      *
+     C           L@DDPH    WHGT 0
+     C           L#DDPH    ANDGT0
+      *
+     C           L#DCOL    IFGE L2
+     C           L#DDPH    ANDGEL@DDPH
+     C           L#DCOL    ORLT L2
+     C                     ADD  OFFSPR    L#DDPH
+     C                     SUB  1         L#DDPH
+     C                     END
+      *
+     C           L@DDPH    WHEQ 0
+      *
+     C                     Z-ADDTESTRE    SPREAD
+      *
+     C                     SELEC
+     C           L#DDPH    WHGT 0
+     C                     ADD  SPREAD    L#DDPH
+     C           L#DDPH    WHLT 0
+     C                     SUB  SPREAD    L#DDPH
+      *
+     C           ODDEVN    IFEQ 0
+     C                     ADD  1         L#DDPH
+     C                     END
+      *
+     C                     ENDSL
+      *
+     C                     ENDSL
+      *
+      * Adjust parent to lie on mid point of offspring
+      *
+     C           L#PLAN    IFEQ L@PLAN
+      *
+     C                     Z-ADDOFFSPR    #OFSPR
+     C                     SUB  1         #OFSPR
+     C                     DIV  2         #OFSPR
+      *
+     C                     SELEC
+     C           L#DDPH    WHGT 0
+     C                     SUB  #OFSPR    L#DDPH
+     C           L#DDPH    WHLT 0
+     C                     ADD  #OFSPR    L#DDPH
+     C                     ENDSL
+      *
+     C                     END
+      *
+     C                     SELEC
+     C           L#DDPH    WHGT MAXDPH
+     C                     Z-ADDL#DDPH    MAXDPH
+     C           L#DDPH    WHLT MINDPH
+     C                     Z-ADDL#DDPH    MINDPH
+     C                     ENDSL
+      *
+     C                     UPDAT@LAYFW2
+      *
+     C           KY#LA1    READE@LAYFW2                  31
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      * action depends +/- or centre line
+     C                     SELEC
+     C           L@DDPH    WHGT 0
+     C                     Z-ADDOFFSPR    SPREAD
+     C                     SUB  1         SPREAD
+     C           L@DDPH    WHLT 0
+     C                     Z-ADD0         SPREAD
+     C           L@DDPH    WHEQ 0
+     C                     Z-ADDTESTRE    SPREAD
+     C                     ENDSL
+      *
+     C                     Z-ADDL@DCOL    L#DCOL
+     C                     ADD  1         L#DCOL
+     C                     MOVE L@PLAN    L#PPLA
+      * Assign depths to this spread
+     C           KY#LA2    CHAIN@LAYFW2              31
+     C           *IN31     DOWEQ*OFF
+      *
+     C           L@DDPH    ADD  SPREAD    L#DDPH
+      *
+     C                     SELEC
+     C           L#DDPH    WHGT MAXDPH
+     C                     Z-ADDL#DDPH    MAXDPH
+     C           L#DDPH    WHLT MINDPH
+     C                     Z-ADDL#DDPH    MINDPH
+     C                     ENDSL
+      *
+     C***********L#DDPH    IFEQ 0
+     C***********ODDEVN    ANDEQ0
+     C*********************SUB  1         SPREAD
+     C*********************Z-ADD#PREAD    L#DDPH
+     C*********************END
+      *
+     C                     UPDAT@LAYFW2
+      *
+     C           KY#LA2    READE@LAYFW2                  31
+     C                     SUB  1         SPREAD
+     C                     END
+      *
+     C                     END
+      *
+     C           KY@LA3    SETGT@LAYFW2
+     C           KY@LA1    READE@LAYFW2                  30
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     CLOSECGW2LAYO
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRGBOX   : Generate Boxes                                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 140                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRGBOX    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRGBOX'  @STK,Q
+      *
+     C                     OPEN CGW2LAYO
+     C                     OPEN CGWPDISP
+      *  Initialise No. of lines in display
+     C                     Z-ADD0         NUMLIN  30
+      *
+      *  Process in sequence generating QTEMP display data
+      *
+     C                     DO   *HIVAL    L1
+      *
+     C                     Z-ADDL1        L#DCOL
+     C           KY#LA1    CHAIN@LAYFW2             N30
+     C   30                LEAVE
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+     C                     EXSR SRSKEY
+      * determine if offspring
+     C                     EXSR SROFFN
+      * determine links to previous
+     C                     EXSR SRSIBN
+     C                     MOVE *BLANKS   #LINK   1
+      *
+     C           SIBNBR    IFGT 1
+      *
+     C                     SELEC
+     C           SIBSEN    WHEQ 1
+     C                     MOVE 'F'       #LINK
+     C           SIBSEN    WHEQ SIBNBR
+     C                     MOVE 'L'       #LINK
+     C                     OTHER
+     C                     MOVE 'S'       #LINK
+     C                     ENDSL
+      *
+     C                     END
+      * re-chain to get record
+     C           KY@LA3    CHAIN@LAYFW2              30
+      * add this box
+     C                     EXSR SRABOX
+      * update work-file with dimensions
+     C                     Z-ADDL@SROW    L#SROW
+     C                     Z-ADDL@EROW    L#EROW
+     C                     Z-ADDL@SCOL    L#SCOL
+     C                     Z-ADDL@ECOL    L#ECOL
+      *
+     C                     UPDAT@LAYFW2
+      *
+     C           KY#LA1    READE@LAYFW2                  30
+     C                     END
+      *
+     C                     END
+      *
+     C                     CLOSECGW2LAYO
+     C                     CLOSECGWPDISP
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSKEY   : Save Key Data                                     *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 150                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSKEY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRSKEY'  @STK,Q
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVE L#DCOL    L@DCOL
+     C                     MOVE L#PPLA    L@PPLA
+     C                     MOVE L#SEQA    L@SEQA
+     C                     MOVE L#DDPH    L@DDPH
+     C                     MOVE L#PLAN    L@PLAN
+     C                     MOVE L#RPTH    L@RPTH
+     C                     MOVE L#OFAB    L@OFAB
+     C                     MOVE L#BOXD    L@BOXD
+      *
+      *  Locate plane data
+      *
+     C           KYDEC0    CHAIN@PDECL0             N90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGPDECL0'W0FILE
+     C                     MOVELL@PLAN    W0KEY            ***************
+     C                     Z-ADD151       W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROFFN   : Get Offspring Numbers                             *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 160                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SROFFN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROFFN'  @STK,Q
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     Z-ADDL@DCOL    L#DCOL
+     C                     ADD  1         L#DCOL
+     C                     MOVE L@PLAN    L#PPLA
+      *
+     C           *LIKE     DEFN L#DCOL    OFFSPR
+     C           *LIKE     DEFN L#DCOL    OFFREL
+     C           *LIKE     DEFN L#DCOL    OFFFIX
+     C           *LIKE     DEFN L#DCOL    OFFOVR
+     C           *LIKE     DEFN L#DCOL    OFFREP
+      *
+     C           *LIKE     DEFN L#DDPH    #OFSPR
+     C           *LIKE     DEFN L#DCOL    SPREAD
+      *
+     C                     Z-ADD0         OFFSPR
+     C                     Z-ADD0         OFFFIX
+     C                     Z-ADD0         OFFREL
+     C                     Z-ADD0         OFFOVR
+     C                     Z-ADD0         OFFREP
+      * Get no. of offspring
+     C           KY#LA2    CHAIN@LAYFW2             N31
+     C           *IN31     DOWEQ*OFF
+      *
+     C           KYDEC#    CHAIN@PDECL0             N90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGPDECL0'W0FILE
+     C                     MOVELL#PLAN    W0KEY            ***************
+     C                     Z-ADD161       W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      * Absolute Number
+     C                     ADD  1         OFFSPR
+      *
+     C           LPOFAB    IFNE *BLANKS
+     C                     ADD  1         OFFOVR
+     C                     ELSE
+      *
+     C           L#RPTH    IFEQ *BLANKS
+      *
+     C           LPRROW    IFNE 0
+     C           LPRCOL    ORNE 0
+     C                     ADD  1         OFFREL
+     C                     ELSE
+     C                     ADD  1         OFFFIX
+     C                     END
+      *
+     C                     ELSE
+     C                     ADD  1         OFFREP
+     C                     END
+      *
+     C                     END
+      *
+     C           KY#LA2    READE@LAYFW2             N    31
+     C                     END
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSIBN   : Get Sibling Numbers
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 165                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSIBN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRSIBN'  @STK,Q
+      *
+      *  Unwind subroutine stack name
+      *
+     C           *LIKE     DEFN L#DCOL    SIBSEN
+     C           *LIKE     DEFN L#DCOL    SIBNBR
+     C           *LIKE     DEFN L#DCOL    SIBREL
+     C           *LIKE     DEFN L#DCOL    SIBFIX
+     C           *LIKE     DEFN L#DCOL    SIBOVR
+     C           *LIKE     DEFN L#DCOL    SIBREP
+      *
+     C           *LIKE     DEFN SIBNBR    #IBNBR
+      *
+     C                     Z-ADD0         SIBSEN
+     C                     Z-ADD0         SIBNBR
+     C                     Z-ADD0         SIBFIX
+     C                     Z-ADD0         SIBREL
+     C                     Z-ADD0         SIBOVR
+     C                     Z-ADD0         SIBREP
+      * Get no. of siblings
+     C           KY@LA2    CHAIN@LAYFW2             N31
+     C           *IN31     DOWEQ*OFF
+      *
+     C           KYDEC#    CHAIN@PDECL0             N90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGPDECL0'W0FILE
+     C                     MOVELL@PLAN    W0KEY            ***************
+     C                     Z-ADD166       W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      * Absolute Number
+     C                     ADD  1         SIBNBR
+      * Seniority
+     C           L#PLAN    IFEQ L@PLAN
+     C                     Z-ADDSIBNBR    SIBSEN
+     C                     END
+      *
+     C           LPOFAB    IFNE *BLANKS
+     C                     ADD  1         SIBOVR
+     C                     ELSE
+      *
+     C           L#RPTH    IFEQ *BLANKS
+      *
+     C           LPRROW    IFNE 0
+     C           LPRCOL    ORNE 0
+     C                     ADD  1         SIBREL
+     C                     ELSE
+     C                     ADD  1         SIBFIX
+     C                     END
+      *
+     C                     ELSE
+     C                     ADD  1         SIBREP
+     C                     END
+      *
+     C                     END
+      *
+     C           KY@LA2    READE@LAYFW2             N    31
+     C                     END
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRABOX   : Add Box to display                                *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 170                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRABOX    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRABOX'  @STK,Q
+      *
+     C           L#DCOL    SUB  1         L@DCOL
+     C           L@DCOL    MULT 17        S1
+      *
+     C           *LIKE     DEFN L#DDPH    POSDPH
+     C           MAXDPH    SUB  L#DDPH    POSDPH
+     C                     MULT 4         POSDPH
+     C           POSDPH    ADD  2         DSPSEQ
+      * Line 1 '  *************  '
+     C           *NOKEY    CLEAR@DSPFMT
+     C           DSPSEQ    CHAIN@DSPFMT              30
+      *
+     C           S1        ADD  3         S2
+     C           S1        ADD  14        S3
+     C           S2        DO   S3        S4
+      *
+     C                     MOVE BOXL01    LIN,S4
+      * Put in "R" to indicate repeating group OR plane type
+     C           S3        IFEQ S4
+      *
+     C           L#RPTH    IFNE *BLANKS
+     C                     MOVE BOXL04    LIN,S4
+     C                     END
+      *
+     C           L#OFAB    IFNE *BLANKS
+     C                     MOVE L#OFAB    LIN,S4
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           S1        IFGT 1
+     C           #LINK     IFEQ 'L'
+     C           #LINK     OREQ 'S'
+     C                     MOVE BOXL03    LIN,S1
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDDSPSEQ    L@SROW
+     C                     Z-ADDS2        L@SCOL
+      *
+     C   30                WRITE@DSPFMT
+     C  N30                UPDAT@DSPFMT
+      * If Last or Subsequent fill connector line
+     C           #LINK     IFEQ 'L'
+     C           #LINK     OREQ 'S'
+      *
+     C           DSPSEQ    DOWGT1
+      *
+     C                     SUB  1         DSPSEQ
+     C           *NOKEY    CLEAR@DSPFMT
+     C           DSPSEQ    CHAIN@DSPFMT              30
+      *
+     C           LIN,S1    IFEQ BOXL03
+     C                     LEAVE
+     C                     END
+      *
+     C                     MOVE BOXL03    LIN,S1
+     C   30                WRITE@DSPFMT
+     C  N30                UPDAT@DSPFMT
+     C                     END
+      *
+     C                     END
+      * Reset line number
+     C                     Z-ADDL@SROW    DSPSEQ
+      * Line 2 '--*PLANENAME *--|'
+     C                     ADD  1         DSPSEQ
+     C           *NOKEY    CLEAR@DSPFMT
+     C           DSPSEQ    CHAIN@DSPFMT              30
+      *
+     C           L#DCOL    IFGT 1
+     C                     DO   2         S2
+     C           S1        ADD  S2        S3
+     C                     MOVE BOXL02    LIN,S3
+     C                     END
+     C                     END
+      *
+     C           S1        ADD  3         S2
+     C           S1        ADD  14        S3
+     C           S2        DO   S3        S4
+     C                     MOVE BOXL01    LIN,S4
+     C                     END
+      *
+     C           S1        ADD  3         S2
+     C                     DO   10        S3
+     C           S3        ADD  S2        S4
+     C           1         SUBSTL#PLAN:S3 LIN,S4
+     C                     END
+      *
+     C           OFFSPR    IFGT 0
+      *
+     C           S1        ADD  14        S2
+     C                     DO   2         S3
+     C           S3        ADD  S2        S4
+     C                     MOVE BOXL02    LIN,S4
+     C                     END
+      *
+     C                     END
+      *
+     C           S1        IFGT 1
+     C           #LINK     IFEQ 'F'
+     C           #LINK     OREQ 'L'
+     C           #LINK     OREQ 'S'
+     C                     MOVE BOXL03    LIN,S1
+     C                     ELSE
+     C                     MOVE BOXL02    LIN,S1
+     C                     END
+     C                     END
+      *
+     C   30                WRITE@DSPFMT
+     C  N30                UPDAT@DSPFMT
+      * Line 3 '  ************  '
+     C                     ADD  1         DSPSEQ
+     C           *NOKEY    CLEAR@DSPFMT
+     C           DSPSEQ    CHAIN@DSPFMT              30
+      *
+     C           S1        ADD  3         S2
+     C           S1        ADD  14        S3
+     C           S2        DO   S3        S4
+     C                     MOVE BOXL01    LIN,S4
+     C                     END
+      *
+     C                     Z-ADDDSPSEQ    L@EROW
+     C                     Z-ADDS3        L@ECOL
+      *
+     C           S1        IFGT 1
+     C           #LINK     IFEQ 'F'
+     C           #LINK     OREQ 'S'
+     C                     MOVE BOXL03    LIN,S1
+     C                     END
+     C                     END
+      *
+     C   30                WRITE@DSPFMT
+     C  N30                UPDAT@DSPFMT
+      * Line 4 ...
+     C                     ADD  1         DSPSEQ
+     C           *NOKEY    CLEAR@DSPFMT
+     C           DSPSEQ    CHAIN@DSPFMT              30
+      *
+     C           S1        IFGT 1
+     C           #LINK     IFEQ 'F'
+     C           #LINK     OREQ 'S'
+     C                     MOVE BOXL03    LIN,S1
+     C                     END
+     C                     END
+      *
+     C   30                WRITE@DSPFMT
+     C  N30                UPDAT@DSPFMT
+      *
+     C           *LIKE     DEFN L#SROW    L@SROW
+     C           *LIKE     DEFN L#EROW    L@EROW
+     C           *LIKE     DEFN L#SCOL    L@SCOL
+     C           *LIKE     DEFN L#ECOL    L@ECOL
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINT1   : Interactive processing level 1                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 180                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINT1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINT1'  @STK,Q
+      *
+     C                     OPEN CGW3LAYO
+      *
+     C           ESCAPE    DOUEQ'Y'
+      *
+     C                     IN   CGLDA
+     C           #@MDTA    IFEQ *BLANKS
+     C                     MOVE 'CGD1613' #@MSID
+     C                     Z-ADD#@#ROW    #@CROW
+     C                     Z-ADD#@#COL    #@CCOL
+     C                     END
+     C                     OUT  CGLDA
+      *
+     C           @#SCCL    IFNE 80                                        095463
+     C                     CALL 'CG8905'  PL8900       9090               095463
+     C                     ELSE                                           095463
+     C                     CALL 'CG8900'  PL8900       9090
+     C                     ENDIF                                          095463
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C           @#SCCL    IFNE 80                                        095463
+     C                     MOVEL'CG8905'  W0FILE                          095463
+     C                     ELSE                                           095463
+     C                     MOVEL'CG8900'  W0FILE
+     C                     ENDIF                                          095463
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD181       W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     IN   CGLDA
+      *
+     C                     MOVEL#@CMDK    CMDSET
+      *
+     C           #FIRST    IFEQ 'Y'
+     C                     CLEAR#NEWPL
+     C                     ELSE
+      * First check no unvalidated planes in layout
+     C                     EXSR SR#NEW
+     C                     END
+      *
+     C           CMD,3     IFEQ #ON
+     C           CMD,12    OREQ #ON
+      *
+     C           #NEWPL    IFEQ *BLANKS
+      *
+     C           #FIRST    IFNE 'Y'
+     C                     IN   CGLDA
+     C                     MOVEL'*EXIT*'  #@NEXT    P
+     C                     MOVE *BLANKS   #@LAST
+     C                     MOVEL'*ALL'    #@PLAN    P
+     C                     RESET#@#ROW
+     C                     RESET#@#COL
+     C                     RESET#@CROW
+     C                     RESET#@CCOL
+     C                     OUT  CGLDA
+     C                     END
+      *
+     C                     MOVE 'Y'       ESCAPE
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           ESCAPE    IFNE 'Y'
+      *
+     C                     CLEARL#SROW
+     C                     CLEARL#SCOL
+     C                     Z-ADD#@TROW    L#EROW
+     C           KY3LA1    SETLLCGW3LAYO
+      *
+     C           *IN30     DOUEQ*ON
+     C           L#SROW    ORLE #@TROW
+     C           L#SCOL    ANDLE#@TCOL
+     C           L#EROW    ANDGE#@TROW
+     C           L#ECOL    ANDGE#@TCOL
+      *
+     C           L#SROW    IFGT #@TROW
+     C           L#SCOL    ANDGT#@TCOL
+     C                     SETON                         30
+     C                     LEAVE
+     C                     END
+      *
+     C                     READ CGW3LAYO                 30
+     C                     END
+      *
+     C           *IN30     IFEQ *OFF
+     C           #NEWPL    ANDEQL#PLAN
+     C           *IN30     OREQ *OFF
+     C           #NEWPL    ANDEQ*BLANKS
+      *
+     C           #FIRST    IFEQ 'Y'
+      *
+     C           L#LRPT    IFNE #@RPTH
+      *  Plane selected not in correct diagram context
+     C                     IN   CGLDA
+     C                     MOVE 'CGD1771' #@MSID
+     C                     OUT  CGLDA
+      *
+     C                     ELSE
+      *  Store selected plane
+     C                     MOVE L#PLAN    C#PLAN
+     C                     LEAVE
+     C                     END
+      *
+     C                     ELSE
+      *  Tag plane details in *LDA
+     C                     IN   CGLDA
+     C                     MOVE L#RPTH    #@RPTH
+     C                     MOVE L#LRPT    #@LRPT
+     C                     MOVE L#PLAN    #@PLAN
+     C                     OUT  CGLDA
+     C                     LEAVE
+     C                     END
+      *
+     C                     ELSE
+      *  Cursor does not specify plane: Error message
+     C                     IN   CGLDA
+     C           #@MDTA    IFEQ *BLANKS
+     C                     MOVE 'CGD1481' #@MSID
+     C                     MOVEL'CURSOR'  #@MDTA
+     C                     END
+     C                     OUT  CGLDA
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     CLOSECGW3LAYO
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINT2   : Interactive processing level 2                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 190                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINT2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINT2'  @STK,Q
+      *
+     C                     OPEN CGWPRDE1
+     C                     OPEN CGWPLAYO
+     C                     OPEN CGW1LAYO
+     C                     OPEN CGW2LAYO
+      *
+      *  Store Key & locate plane data
+      *
+     C                     EXSR SRSKEY
+      *
+      *  Determine control variables:
+      *
+     C                     MOVE 'N'       REPEAT  1
+     C                     MOVE *BLANKS   FIXREL  1
+      *
+      *  Check for main body or "loose" group fro re-attachment
+      *
+     C           L#LRPT    DOWNE'*LOOSE'
+     C           L#PLAN    ANDNETOPPLA
+      *
+     C           L#PPLA    CHAIN@LAYFMT             N90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGWPLAYO'W0FILE
+     C                     MOVELL#PPLA    W0KEY            ***************
+     C*************        Z-ADD191       W0ERNB                          084478
+     C                     Z-ADD190       W0ERNB           * DB ERROR 190*084478
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           L#LRPT    IFEQ '*LOOSE'
+     C                     EXSR SRSKEY
+     C                     END
+      *
+     C                     END
+      *
+     C           KY@LA3    CHAIN@LAYFW2             N90
+      *
+     C           L#LRPT    IFEQ '*LOOSE'
+      *
+     C                     EXSR SRPATT
+      * Fix changes here
+     C***********ATTACH    IFEQ 'Y'                                       084478
+     C***********          COMIT                                          084478
+     C***********          END                                            084478
+      * Data has changed so save kernel data
+     C                     EXSR SRSKEY
+     C                     END
+      *
+     C           KY@LA3    CHAIN@LAYFW2             N90
+      *
+     C           L#RPTH    IFNE *BLANKS
+     C                     MOVE 'Y'       REPEAT
+     C                     END
+      * Determine composition of siblings
+     C                     EXSR SRSIBN
+      * Determine composition of offspring
+     C                     EXSR SROFFN
+      * Mixture of types: generate warning
+     C           SIBFIX    IFGT 0
+     C           SIBREL    ANDGT0
+     C                     MOVE 'CGD1482' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     END
+      * Relative co-exist with repeater: issue warning
+     C           SIBREL    IFGT 0
+     C           L@RPTH    ANDNE*BLANKS
+     C                     MOVE 'CGD1488' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     END
+      *
+     C                     Z-ADDSIBFIX    #IBNBR
+     C                     ADD  SIBREL    #IBNBR
+      *
+     C           REPEAT    IFEQ 'Y'
+     C                     MOVE 'F'       FIXREL
+     C                     ELSE
+      *
+     C           #IBNBR    IFGT 1
+     C           SIBREL    IFGT 0
+     C                     MOVE 'R'       FIXREL
+     C                     ELSE
+     C                     MOVE 'F'       FIXREL
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      *  Load subfile
+      *
+     C                     EXSR SRLOD2
+      *
+      *  Set Options Indicators
+      *
+     C                     SETOF                     414243
+     C                     SETOF                     444546
+     C                     SETOF                     47
+      *
+     C           L@OFAB    IFEQ 'R'
+     C                     SETON                     4142
+     C                     END
+      *
+     C           REPEAT    IFEQ 'Y'
+     C                     SETON                     414247
+     C                     ELSE
+      *
+     C           L@OFAB    IFEQ *BLANKS
+     C                     SETON                     44
+     C                     END
+      *
+     C                     END
+      *
+     C           L@DCOL    IFEQ 1
+     C                     SETON                     45
+     C                     END
+      *
+     C           OFFREL    IFGT 0
+     C                     SETON                     46
+     C                     END
+      *
+      *  Initialise header text
+      *
+     C                     EXSR SRHTXT
+      *
+     C           KY@LA3    CHAIN@LAYFW2             N90
+     C           KYDEC0    CHAIN@PDECL0             N90
+      *
+     C           LPOFAB    IFNE *BLANKS
+      *
+     C           LPOFAB    IFEQ 'R'
+     C                     MOVE 'F'       FIXREL
+     C                     ELSE
+      *
+     C                     Z-ADD1         L1
+     C           LPOFAB    LOKUPTYP,L1               99  30
+      *
+     C           *IN30     IFEQ *OFF
+     C                     MOVE 'CGD1513' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     MOVE TYN,L1    FIXREL
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVELLPPLAN    #PNAME
+     C                     MOVELLPDESC    #PDESC
+     C                     MOVELLPFPAB    #PFPAB
+     C                     MOVELLPBOXD    #PBOXD
+     C                     MOVELLPOFOP    #POFOP
+     C                     MOVELLPFILS    #PFILS
+      *
+     C           *LIKE     DEFN LPSROW    H#SROW
+     C           *LIKE     DEFN LPSCOL    H#SCOL
+     C           *LIKE     DEFN LPEROW    H#EROW
+     C           *LIKE     DEFN LPECOL    H#ECOL
+     C           *LIKE     DEFN LPRROW    H#RROW
+     C           *LIKE     DEFN LPRCOL    H#RCOL
+     C           *LIKE     DEFN LPFROW    H#FROW
+     C           *LIKE     DEFN LPFCOL    H#FCOL
+     C           *LIKE     DEFN LPOROW    H#OROW
+     C           *LIKE     DEFN LPOCOL    H#OCOL
+      *
+     C           *LIKE     DEFN LPTOPP    H#TOPP
+     C           *LIKE     DEFN LPOFAB    H#OFAB
+     C           *LIKE     DEFN LPFPAB    H#FPAB
+     C           *LIKE     DEFN LPBOXD    H#BOXD
+     C           *LIKE     DEFN LPOFOP    H#OFOP
+     C           *LIKE     DEFN LPFILS    H#FILS
+     C           *LIKE     DEFN LPDESC    H#DESC
+     C           *LIKE     DEFN LPRPTH    H#RPTH
+     C           *LIKE     DEFN LPPLAN    H#PLAN
+      *
+     C           *LIKE     DEFN L#DCOL    H#DCOL
+     C           *LIKE     DEFN L#PPLA    H#PPLA
+     C           *LIKE     DEFN L#SEQA    H#SEQA
+      *
+     C                     MOVE LPTOPP    H#TOPP
+     C                     MOVE LPOFAB    H#OFAB
+     C                     MOVE LPFPAB    H#FPAB
+     C                     MOVE LPBOXD    H#BOXD
+     C                     MOVE LPOFOP    H#OFOP
+     C                     MOVE LPFILS    H#FILS
+     C                     MOVE LPDESC    H#DESC
+     C                     MOVE LPRPTH    H#RPTH
+     C                     MOVE LPPLAN    H#PLAN
+      *
+     C                     MOVE L#DCOL    H#DCOL
+     C                     MOVE L#PPLA    H#PPLA
+     C                     MOVE L#SEQA    H#SEQA
+      *
+     C                     Z-ADDLPSROW    H#SROW
+     C                     Z-ADDLPSCOL    H#SCOL
+     C                     Z-ADDLPEROW    H#EROW
+     C                     Z-ADDLPECOL    H#ECOL
+     C                     Z-ADDLPRROW    H#RROW
+     C                     Z-ADDLPRCOL    H#RCOL
+     C                     Z-ADDLPFROW    H#FROW
+     C                     Z-ADDLPFCOL    H#FCOL
+     C                     Z-ADDLPOROW    H#OROW
+     C                     Z-ADDLPOCOL    H#OCOL
+      *
+     C                     Z-ADD#PSROW    #STRRO
+     C                     Z-ADD#PSCOL    #STRCO
+     C           1         ADD  #PEROW    #ENDRO
+     C           1         ADD  #PECOL    #ENDCO
+     C                     Z-ADD#PRROW    #RELRO
+     C                     Z-ADD#PRCOL    #RELCO
+      *
+     C           *IN46     IFEQ *ON
+      *
+     C           #PSROW    IFNE #PFROW                                    091826
+     C                     Z-ADD#PFROW    #FAVRO                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C           #PSCOL    IFNE #PFCOL                                    091826
+     C                     Z-ADD#PFCOL    #FAVCO                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C           #PEROW    IFNE #POROW                                    091826
+     C           1         ADD  #POROW    #OVRRO                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C           #PECOL    IFNE #POCOL                                    091826
+     C           1         ADD  #POCOL    #OVRCO                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C***********#PSROW    IFNE #PFROW                                    091826
+     C***********#PSCOL    ORNE #PFCOL                                    091826
+      ***********                                                         091826
+     C***********          Z-ADD#PFROW    #FAVRO                          091826
+     C***********          Z-ADD#PFCOL    #FAVCO                          091826
+      ***********                                                         091826
+     C***********          END                                            091826
+      ***********                                                         091826
+     C***********#PEROW    IFNE #POROW                                    091826
+     C***********#PECOL    ORNE #POCOL                                    091826
+      ***********                                                         091826
+     C***********          Z-ADD#POROW    #OVRRO                          091826
+     C***********          Z-ADD#POCOL    #OVRCO                          091826
+      ***********                                                         091826
+     C***********          END                                            091826
+      *
+     C                     END
+      *
+     C           *LIKE     DEFN SIBREP    H#BREP
+     C           *LIKE     DEFN SIBREL    H#BREL
+     C           *LIKE     DEFN SIBFIX    H#BFIX
+     C           *LIKE     DEFN OFFFIX    H#FFIX
+     C           *LIKE     DEFN OFFREP    H#FREP
+      *
+     C                     Z-ADDSIBREP    H#BREP
+     C                     Z-ADDSIBREL    H#BREL
+     C                     Z-ADDSIBFIX    H#BFIX
+     C                     Z-ADDOFFFIX    H#FFIX
+     C                     Z-ADDOFFREP    H#FREP
+      *
+      * Do until F3 (exit), F12 (previous) or action
+      *
+     C           ACTCDE    DOUNE*BLANKS
+     C           *IN12     OREQ *ON
+     C*
+     C* Update the screen time and the job time:
+     C*
+     C                     TIME           ##TME
+     C                     Z-ADD##TME     ##JTM
+     C*
+     C                     WRITE#WINDOW1
+     C                     WRITE#MSGCTL1
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL1
+      *
+      * Clear messages from the program's message queue:
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     MOVE *BLANKS   #ERROR  1
+      *
+      * Process command keys:
+      *
+     C           *IN07     IFEQ *ON
+      *
+      *  Invalid for top plane
+     C           H#TOPP    IFEQ 'Y'
+     C                     MOVE 'CGD1512' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     MOVE 'Y'       #ERROR
+     C                     EXSR SRSNMS
+     C                     END
+      *  Delete/Detach
+     C           REPEAT    IFEQ 'N'
+     C           H#OFAB    ANDEQ*BLANKS
+      *
+     C                     Z-ADDH#BREL    #IBNBR
+     C                     ADD  H#BFIX    #IBNBR
+      *
+     C           #IBNBR    IFEQ 1
+      * Cannot delete only plane
+     C                     MOVE 'CGD1362' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     MOVE 'Y'       #ERROR
+     C                     EXSR SRSNMS
+     C                     END
+      *
+     C                     END
+      *
+     C           #ERROR    IFEQ *BLANKS
+      *
+     C                     MOVE 'CGD1804' P0MSG                           084478
+     C                     CALL 'CG8250'  PL8250       9090
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CG8250'  W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C**********           Z-ADD0         W0ERNB                          084478
+     C                     Z-ADD192       W0ERNB           * DB ERROR 192*084478
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           P0RPLY    IFEQ 'Y'
+      *
+     C                     MOVE 'Y'       DELETE
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      * F8:
+     C           *IN08     IFEQ *ON
+      *
+      *  Work with conditions
+      *
+     C                     IN   CGLDA
+     C                     MOVEL'CG8400'  #@NEXT    P
+     C                     OUT  CGLDA
+      *
+     C                     MOVE 'Y'       ESCAPE
+      *
+     C                     END
+      *
+     C           *IN09     IFEQ *ON
+      *
+     C           REPEAT    IFEQ 'Y'
+     C           L@OFAB    OREQ 'R'
+     C                     MOVE 'CGD1584' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     ELSE
+      *  Work with plane fields
+     C                     IN   CGLDA
+     C                     MOVEL'CG8200'  #@NEXT    P
+     C                     MOVE *BLANKS   #@ACTN
+     C                     Z-ADD#@CROW    #@#ROW
+     C                     Z-ADD#@CCOL    #@#COL
+     C                     RESET#@CROW
+     C                     RESET#@CCOL
+     C                     OUT  CGLDA
+      *
+     C                     MOVE 'Y'       ESCAPE
+      *
+     C                     END
+      *
+     C                     END
+      * F18:
+     C           *IN18     IFEQ *ON
+      *
+      *  Review Mode for setting conditions
+      *
+     C                     IN   CGLDA
+     C                     MOVEL'CG8300'  #@NEXT    P
+     C                     OUT  CGLDA
+      *
+     C                     MOVE 'Y'       ESCAPE
+      *
+     C                     END
+      *
+     C           *IN03     IFEQ *ON
+     C           *IN12     OREQ *ON
+      *
+     C           *IN03     IFEQ *ON
+      *  Transfer out of suite
+     C                     IN   CGLDA
+     C                     MOVEL'*EXIT*'  #@NEXT    P
+     C                     MOVE *BLANKS   #@LAST
+     C                     MOVEL'*ALL'    #@PLAN    P
+     C                     RESET#@#ROW
+     C                     RESET#@#COL
+     C                     RESET#@CROW
+     C                     RESET#@CCOL
+     C                     OUT  CGLDA
+      *
+     C                     MOVE 'Y'       ESCAPE
+     C                     END
+      *
+     C           *IN12     IFEQ *ON
+     C                     CLEARACTCDE
+     C                     END
+      *
+     C                     ELSE
+      *
+      *  Validate & process actions
+      *
+     C           DELETE    IFNE 'Y'
+      *  Now check for duplicates
+     C                     EXSR SRCSEQ
+      *
+     C           #PLANE    IFNE *BLANKS
+      *
+     C           H#RPTH    IFEQ *BLANKS
+     C           H#OFAB    ANDNE'R'                                       084478
+      *
+     C***********KYH#A2    CHAIN@LAYFW2              30                   084478
+      *
+     C***********L#OFAB    IFNE 'R'                                       084478
+     C                     MOVE 'CGD1490' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C***********          END                                            084478
+      *
+     C                     END
+      *
+     C                     CLEARC#PLAN
+      *
+     C           '?'       SCAN #PLANE                   30
+      * Proffer other diagram for selection
+     C           *IN30     IFEQ *ON
+      *
+     C                     CLEAR#PLANE
+      *
+     C                     CALL 'CG8110'  PL8110       9090
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CG8110'  W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C**********           Z-ADD1         W0ERNB                          084478
+     C                     Z-ADD193       W0ERNB           * DB ERROR 193*084478
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           C#LAYO    IFNE *BLANKS
+      *
+     C           C#PLAN    IFNE *BLANKS
+     C                     MOVELC#PLAN    #PLANE    P
+     C                     ELSE
+      *
+     C                     CLOSECGWPLAYO
+     C                     CLOSECGW1LAYO
+     C                     CLOSECGW2LAYO
+      *  Store workfile data
+     C                     MOVE *BLANKS   P@DIR
+     C                     MOVELWKF1      P@FILE
+     C                     CALL 'CGC3004' PL3004
+      *
+     C                     MOVE *BLANKS   P@DIR
+     C                     MOVELWKF2      P@FILE
+     C                     CALL 'CGC3004' PL3004
+      *
+     C                     MOVE 'Y'       #FIRST
+      *
+     C                     IN   CGLDA
+     C                     MOVE #@LAYO    ##LAYO
+     C                     MOVE C#LAYO    #@LAYO
+     C                     OUT  CGLDA
+      *
+     C                     EXSR SRDATA
+     C                     EXSR SRLOAD
+      *
+     C                     EXSR SRINT1
+      *
+     C                     IN   CGLDA
+     C                     MOVE ##LAYO    #@LAYO
+     C                     OUT  CGLDA
+      *
+     C                     MOVE *BLANKS   #FIRST
+      *
+     C           ESCAPE    IFEQ 'Y'
+     C                     CLEARESCAPE
+     C                     ELSE
+     C                     MOVE C#PLAN    #PLANE
+     C                     END
+      *  Restore workfile data
+     C                     MOVE 'Y'       P@DIR
+     C                     MOVELWKF1      P@FILE
+     C                     CALL 'CGC3004' PL3004
+      *
+     C                     MOVE 'Y'       P@DIR
+     C                     MOVELWKF2      P@FILE
+     C                     CALL 'CGC3004' PL3004
+      *
+     C                     OPEN CGWPLAYO
+     C                     OPEN CGW1LAYO
+     C                     OPEN CGW2LAYO
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           #PLANE    IFNE *BLANKS
+      *
+     C           #PLANE    SETLL@LAYFMT                  30
+      *
+     C           *IN30     IFEQ *ON
+     C                     MOVE 'CGD1374' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C                     Z-ADDH#DCOL    L#DCOL
+     C                     ADD  1         L#DCOL
+     C                     MOVE H#PLAN    L#PPLA
+     C                     MOVE NEWSEQ    L#SEQA
+      *
+     C           KY#LA3    CHAIN@LAYFW2              30
+      *
+     C           *IN30     IFEQ *OFF
+     C                     MOVE 'CGD1388' ZAMSID
+     C                     MOVELL#PLAN    ZAMSDA
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C           C#PLAN    IFNE *BLANKS
+     C                     MOVE 'Y'       CPYPLA
+     C                     ELSE
+     C                     MOVE 'Y'       ADDPLA
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           #PTYPE    IFNE *BLANKS
+      *
+     C           #PLANE    IFEQ *BLANKS
+     C                     MOVE 'CGD1489' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     ELSE
+      *
+     C           H#FREP    IFGT 0
+     C           H#DCOL    OREQ 1
+      *
+     C           #PTYPE    IFNE 'R'
+     C                     MOVE 'CGD1566' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD1         L1
+     C           #PTYPE    LOKUPTYP,L1               99  30
+      *
+     C           *IN30     IFEQ *OFF
+     C                     MOVE 'CGD1373' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C           H#FFIX    IFNE 0
+     C                     MOVE 'CGD1491' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *  Validate size & position
+     C           FIXREL    IFEQ 'R'
+      *
+     C           #RELRO    IFEQ 0
+     C           #RELCO    ANDEQ0
+      *
+     C                     MOVE 'CGD1525' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           FIXREL    IFEQ 'F'
+      *
+     C           #RELRO    IFNE 0
+     C           #RELCO    ORNE 0
+      *
+     C                     MOVE 'CGD1526' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           #RELRO    IFNE 0
+     C           #RELCO    ORNE 0
+      *
+     C           H#BREP    IFGT 0
+     C                     MOVE 'CGD1567' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C           #STRRO    IFNE 0
+     C           #STRCO    ORNE 0
+      *
+     C                     MOVE 'CGD1527' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           #STRRO    IFEQ 0
+     C           #STRCO    ANDNE0
+     C           #STRRO    ORNE 0
+     C           #STRCO    ANDEQ0
+      *
+     C                     MOVE 'CGD1554' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C                     END
+      *
+     C           #ENDRO    IFEQ 0
+     C           #ENDCO    OREQ 0
+      *
+     C                     MOVE 'CGD1528' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C                     END
+      *
+     C           #STRRO    IFEQ 0
+     C           #STRCO    ANDEQ0
+     C           #RELRO    ANDEQ0
+     C           #RELCO    ANDEQ0
+      *
+     C                     MOVE 'CGD1583' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C                     END
+      *
+     C***********#FAVRO    IFNE 0                                         091826
+     C***********#FAVCO    ANDEQ0                                         091826
+     C***********#FAVRO    OREQ 0                                         091826
+     C***********#FAVCO    ANDNE0                                         091826
+      ***********                                                         091826
+     C***********#OVRRO    ORNE 0                                         091826
+     C***********#OVRCO    ANDEQ0                                         091826
+     C***********#OVRRO    OREQ 0                                         091826
+     C***********#OVRCO    ANDNE0                                         091826
+      *                                                                   091826
+     C           #FAVRO    IFNE 0                                         091826
+     C           #OVRRO    ANDEQ0                                         091826
+     C           #FAVCO    ORNE 0                                         091826
+     C           #OVRCO    ANDEQ0                                         091826
+      *                                                                   091826
+     C                     MOVE 'CGD1753' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C                     END
+      *
+     C           #FAVRO    IFNE 0
+     C           #FAVRO    ANDLT#STRRO                                    091826
+     C           #FAVCO    ORNE 0                                         091826
+     C           #FAVCO    ANDLT#STRCO                                    091826
+      *
+     C***********#FAVRO    IFLT #STRRO                                    091826
+     C***********#FAVCO    ORLT #STRCO                                    091826
+      *
+     C                     MOVE 'CGD1754' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C***********          END                                            091826
+      *
+     C                     END
+      *
+     C           #STRRO    ADD  #ENDRO    @ENDRO
+     C           #STRCO    ADD  #ENDCO    @ENDCO
+      *                                                                   091826
+     C           #FAVRO    IFEQ 0                                         091826
+     C                     Z-ADD#STRRO    @OVRRO                          091826
+     C                     ELSE                                           091826
+     C                     Z-ADD#FAVRO    @OVRRO                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C           #OVRRO    IFEQ 0                                         091826
+     C                     ADD  #ENDRO    @OVRRO                          091826
+     C                     ELSE                                           091826
+     C                     ADD  #OVRRO    @OVRRO                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C           #FAVCO    IFEQ 0                                         091826
+     C                     Z-ADD#STRCO    @OVRCO                          091826
+     C                     ELSE                                           091826
+     C                     Z-ADD#FAVCO    @OVRCO                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C           #OVRCO    IFEQ 0                                         091826
+     C                     ADD  #ENDCO    @OVRCO                          091826
+     C                     ELSE                                           091826
+     C                     ADD  #OVRCO    @OVRCO                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C           @OVRRO    IFGT @ENDRO                                    091826
+      *                                                                   091826
+     C                     MOVE 'CGD1755' ZAMSID                          091826
+     C                     MOVEL'CGUSRMSG'ZAMSGF                          091826
+     C                     EXSR SRSNMS                                    091826
+     C                     MOVE 'Y'       #ERROR                          091826
+      *                                                                   091826
+     C                     END                                            091826
+      *                                                                   091826
+     C           @OVRCO    IFGT @ENDCO                                    091826
+      *                                                                   091826
+     C                     MOVE 'CGD1756' ZAMSID                          091826
+     C                     MOVEL'CGUSRMSG'ZAMSGF                          091826
+     C                     EXSR SRSNMS                                    091826
+     C                     MOVE 'Y'       #ERROR                          091826
+      *                                                                   091826
+     C                     END                                            091826
+      *                                                                   091826
+     C***********          SUB  1         @ENDRO                          091826
+     C***********          SUB  1         @ENDCO                          091826
+      ***********                                                         091826
+     C***********#OVRRO    IFNE 0                                         091826
+      ***********                                                         091826
+     C***********#OVRRO    IFGT @ENDRO                                    091826
+     C***********#OVRCO    ORGT @ENDCO                                    091826
+      ***********                                                         091826
+     C***********          MOVE 'CGD1755' ZAMSID                          091826
+     C***********          MOVEL'CGUSRMSG'ZAMSGF                          091826
+     C***********          EXSR SRSNMS                                    091826
+     C***********          MOVE 'Y'       #ERROR                          091826
+      ***********                                                         091826
+     C***********          END                                            091826
+      ***********                                                         091826
+     C***********          END                                            091826
+      ***********                                                         091826
+     C***********#FAVRO    IFNE 0                                         091826
+     C***********#OVRRO    ANDNE0                                         091826
+      ***********                                                         091826
+     C***********#FAVRO    IFGT #OVRRO                                    091826
+     C***********#FAVCO    ORGT #OVRCO                                    091826
+      ***********                                                         091826
+     C***********          MOVE 'CGD1756' ZAMSID                          091826
+     C***********          MOVEL'CGUSRMSG'ZAMSGF                          091826
+     C***********          EXSR SRSNMS                                    091826
+     C***********          MOVE 'Y'       #ERROR                          091826
+      ***********                                                         091826
+     C***********          END                                            091826
+      ***********                                                         091826
+     C***********          END                                            091826
+      *
+     C           *LIKE     DEFN #ENDRO    @ENDRO
+     C           *LIKE     DEFN #ENDCO    @ENDCO
+      *                                                                   091826
+     C           *LIKE     DEFN #OVRRO    @OVRRO                          091826
+     C           *LIKE     DEFN #OVRCO    @OVRCO                          091826
+      *
+     C           #ENDRO    SUB  1         @ENDRO
+     C           #ENDCO    SUB  1         @ENDCO
+      *
+     C           #STRRO    IFNE H#SROW
+     C           #STRCO    ORNE H#SCOL
+     C           @ENDRO    ORNE H#EROW
+     C           @ENDCO    ORNE H#ECOL
+     C           #RELRO    ORNE H#RROW
+     C           #RELCO    ORNE H#RCOL
+      * Also need size validation when repeater re-attached
+     C           ATTACH    OREQ 'Y'
+      * Validate size change if no other errors
+     C           #ERROR    IFEQ *BLANKS
+      *
+      * Reset any QTEMP size error flags
+      *
+     C           *LOVAL    SETLL@LAYFW2
+     C                     READ @LAYFW2                  30
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+     C                     CLEARL#SERR
+     C                     UPDAT@LAYFW2
+     C                     READ @LAYFW2                  30
+      *
+     C                     END
+      * Update this record with size change
+     C           H#PLAN    CHAIN@LAYFMT              30
+     C                     Z-ADD#STRRO    #PSROW
+     C                     Z-ADD#STRCO    #PSCOL
+     C           #ENDRO    SUB  1         #PEROW
+     C           #ENDCO    SUB  1         #PECOL
+     C                     Z-ADD#RELRO    #PRROW
+     C                     Z-ADD#RELCO    #PRCOL
+     C                     UPDAT@LAYFMT
+      *
+     C                     CALL 'CGC8020' PL8020       9090
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CGC8020' W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD198       W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           *LOVAL    SETLL@LAYFW2
+     C                     READ @LAYFW2             N    30
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+     C           L#SERR    IFNE *BLANKS
+      *
+     C                     SELEC
+     C           L#SERR    WHEQ 'Y'
+     C           L#SERR    OREQ 'R'
+     C                     MOVE 'CGD1555' ZAMSID
+     C           L#PPLA    CAT  L#PLAN    ZAMSDA    P
+     C           L#SERR    WHEQ 'O'
+     C                     MOVE 'CGD1598' ZAMSID
+     C                     MOVELL#PLAN    ZAMSDA    P
+     C                     ENDSL
+      *
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+      *
+     C                     END
+      *
+     C                     READ @LAYFW2             N    30
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVE 'Y'       COORDI
+      *
+     C                     END
+      *
+     C           #PFPAB    IFNE H#FPAB
+     C           #PBOXD    ORNE H#BOXD
+     C           #POFOP    ORNE H#OFOP
+     C           #PFILS    ORNE H#FILS
+     C           #PDESC    ORNE H#DESC
+     C                     MOVE 'Y'       DETAIL
+     C                     END
+      *                                                                   091826
+     C           #FAVRO    IFNE 0                                         091826
+     C           #FAVRO    ANDNEH#FROW                                    091826
+     C           #FAVRO    OREQ 0                                         091826
+     C           #STRRO    ANDNEH#FROW                                    091826
+      *                                                                   091826
+     C           #FAVCO    ORNE 0                                         091826
+     C           #FAVCO    ANDNEH#FCOL                                    091826
+     C           #FAVCO    OREQ 0                                         091826
+     C           #STRCO    ANDNEH#FCOL                                    091826
+      *                                                                   091826
+     C           #OVRRO    ORNE 0                                         091826
+     C           #OVRRO    ANDNEH#OROW                                    091826
+     C           #OVRRO    OREQ 0                                         091826
+     C           #ENDRO    ANDNEH#OROW                                    091826
+      *                                                                   091826
+     C           #OVRCO    ORNE 0                                         091826
+     C           #OVRCO    ANDNEH#OCOL                                    091826
+     C           #OVRCO    OREQ 0                                         091826
+     C           #ENDCO    ANDNEH#OCOL                                    091826
+      *                                                                   091826
+     C                     MOVE 'Y'       DETAIL                          091826
+     C                     END                                            091826
+      *
+     C***********#FAVRO    IFNE 0                                         091826
+     C***********#FAVCO    ANDNE0                                         091826
+      *
+     C***********#FAVRO    IFNE H#FROW                                    091826
+     C***********#FAVCO    ORNE H#FCOL                                    091826
+     C***********          MOVE 'Y'       DETAIL                          091826
+     C***********          END                                            091826
+      *
+     C***********          END                                            091826
+      *
+     C***********#OVRRO    IFNE 0                                         091826
+     C***********#OVRCO    ANDNE0                                         091826
+      *
+     C***********#OVRRO    IFNE H#OROW                                    091826
+     C***********#OVRCO    ORNE H#OCOL                                    091826
+     C***********          MOVE 'Y'       DETAIL                          091826
+     C***********          END                                            091826
+      *
+     C***********          END                                            091826
+      *
+     C***********#FAVRO    IFEQ 0                                         091826
+     C***********#FAVCO    ANDEQ0                                         091826
+      *
+     C***********H#FROW    IFNE H#SROW                                    091826
+     C***********H#FCOL    ORNE H#SCOL                                    091826
+     C***********          MOVE 'Y'       DETAIL                          091826
+     C***********          END                                            091826
+      *
+     C***********          END                                            091826
+      *
+     C***********#OVRRO    IFEQ 0                                         091826
+     C***********#OVRCO    ANDEQ0                                         091826
+      *
+     C***********H#OROW    IFNE H#EROW                                    091826
+     C***********H#OCOL    ORNE H#ECOL                                    091826
+     C***********          MOVE 'Y'       DETAIL                          091826
+     C***********          END                                            091826
+      *
+     C***********          END                                            091826
+      *
+      * Validate Details
+      *
+     C                     MOVEL#PFILS    #SFILL
+      *
+     C           #SFILL    IFNE *BLANKS
+      *
+     C           #START    IFNE 'A'
+     C           #START    ANDNE'B'
+     C           #START    ANDNE'C'
+     C           #START    ANDNE'D'
+      *
+     C           #DIREC    ORNE 'R'
+     C           #DIREC    ANDNE'C'
+      *
+     C                     MOVE 'CGD1751' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C                     END
+      *
+     C           #PFPAB    IFNE *BLANKS
+     C           #PFPAB    ANDNE'Y'
+      *
+     C                     MOVE 'CGD1752' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C           #POFOP    IFNE *BLANKS
+     C           #POFOP    ANDNE'Y'
+      *
+     C                     MOVE 'CGD1752' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C           #PBOXD    IFNE *BLANKS
+     C           #PBOXD    ANDNE'Y'
+      *
+     C                     MOVE 'CGD1752' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           #ERROR    IFNE *BLANKS
+     C                     CLEARACTCDE
+     C                     END
+      *
+     C                     ENDDO
+      *
+     C                     CLOSECGWPLAYO
+     C                     CLOSECGW2LAYO
+     C                     CLOSECGW1LAYO
+     C                     CLOSECGWPRDE1
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTEXT   : Screen text                                       *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 200                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRTEXT    BEGSR                           * S R T E X T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRTEXT'  @STK,Q
+     C* Instructions:
+     C                     MOVE 'CGD1327' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    ##CMD1
+     C* Function keys:
+     C                     MOVE 'CGD1328' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    ##CMD2
+     C* Miscellaneous:
+     C                     MOVE 'CGD1516' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TSTRR
+     C*
+     C                     MOVE 'CGD1517' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TENDR
+     C*
+     C                     MOVE 'CGD1518' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TSTRC
+     C*
+     C                     MOVE 'CGD1519' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TENDC
+     C*
+     C                     MOVE 'CGD1520' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TRELR
+     C*
+     C                     MOVE 'CGD1521' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TRELC
+     C*
+     C                     MOVE 'CGD1742' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TFROW
+     C*
+     C                     MOVE 'CGD1743' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TFCOL
+     C*
+     C                     MOVE 'CGD1744' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TOVRR
+     C*
+     C                     MOVE 'CGD1745' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TOVRC
+     C*
+     C                     MOVE 'CGD1746' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #NFPAB
+     C*
+     C                     MOVE 'CGD1747' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #NBOXD
+     C*
+     C                     MOVE 'CGD1748' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #NOFOP
+     C*
+     C                     MOVE 'CGD1749' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #NFILS
+     C*
+     C                     MOVE 'CGD1522' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TATTT
+     C*
+     C                     MOVE 'CGD1523' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TATTN
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRGMSG   : Get Message                                       *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 200                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRGMSG    BEGSR                           * S R T E X T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRGMSG'  @STK,Q
+      *
+      * Keep PLIST in one place
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM           #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGC1000' W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD200       W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHTXT   : Header Text                                       *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 205                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRHTXT    BEGSR                           * S R T E X T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRHTXT'  @STK,Q
+      *
+     C           L@PLAN    CAT  #@LAYO    #MSDTA    P
+     C           ATTACH    IFNE 'Y'
+     C                     MOVE 'CGD1326' #MSGID
+     C                     ELSE
+     C                     MOVE 'CGD1349' #MSGID
+     C                     END
+     C* Header text:
+     C                     EXSR SRGMSG
+     C*
+     C                     MOVEL#MSTX1    #TEXT
+      *
+     C                     Z-ADD1         L1
+     C           L@OFAB    LOKUPTYP,L1               99  30
+      *
+     C           *IN30     IFEQ *ON
+      *
+     C                     MOVELTYN,L1    #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TDESC
+      *
+     C                     MOVE 'CGD1750' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #TYPE
+      *
+     C                     END
+      *
+     C           OFFREP    IFNE 0
+     C           L@DCOL    OREQ 1
+      *
+     C                     MOVE 'CGD1812' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #NTYPE
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'CGD1524' #MSGID
+     C                     EXSR SRGMSG
+     C                     MOVEL#MSTX1    #NTYPE
+      *
+     C                     DO   6         L1
+     C           #NTYPE    CAT  TYP,L1:1  #NTYPE    P
+     C                     END
+      *
+     C                     END
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOD2   : Load subfile level 2                              *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 210                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLOD2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRLOD2'  @STK,Q
+      *  Clear subfile
+     C                     RESET#SFLCTL1
+      *
+     C                     SETOF                     8182
+     C                     SETON                     80
+     C                     WRITE#SFLCTL1
+     C                     SETOF                     80
+     C                     SETON                     81
+     C*
+     C                     Z-ADD*ZERO     RRN1    50
+     C           *LIKE     DEFN RRN1      #RRN1
+      *  Load subfile
+     C           KY@LA2    CHAIN@LAYFW2             N90
+     C           *IN90     DOWEQ*OFF
+      *
+     C                     MOVELL#PLAN    #1PLAN
+     C                     MOVELL#SEQA    #1SEQ
+      *
+     C                     MOVELL#PPLA    #1PPLA
+     C                     Z-ADDL#DCOL    #1DCOL
+     C                     MOVELL#SEQA    #1SEQA
+     C                     MOVELL#DESC    #1DESC
+      *
+     C                     ADD  1         RRN1
+     C                     WRITE#SFLRCD1
+     C                     SETON                     82
+      *
+     C           KY@LA2    READE@LAYFW2             N    90
+     C                     END
+      *
+     C                     Z-ADD1         ##SFRC
+     C                     Z-ADDRRN1      #RRN1
+      *
+     C* Decide on the starting line number.
+     C* If the cursor is in the top half of the plane display,
+     C*   start on line 14 (bottom half);
+     C*  otherwise,
+     C*   start on line  2 (top half).
+     C*
+     C                     Z-ADD2         SLNO
+     C***********#@CROW    IFLT 13
+     C*********************Z-ADD14        SLNO
+     C*********************ENDIF
+      *
+      * Unwind subroutine stack:
+      *
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCSEQ   : Check sequencing for duplicates                   *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 220                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCSEQ    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCSEQ'  @STK,Q
+      *  Clear QTEMP file to facilitate duplicate check
+     C           KY@LA2    CHAIN@LAYFW2              30
+      *
+     C           *IN30     DOWEQ*OFF
+     C                     CLEARL#SEQA
+     C                     UPDAT@LAYFW2
+     C           KY@LA2    READE@LAYFW2                  30
+     C                     END
+      *
+     C                     DO   #RRN1     RRN1
+      *
+     C           RRN1      CHAIN#SFLRCD1             30
+      *
+     C           *IN30     IFEQ *OFF
+      *
+     C           #1SEQ     IFNE #1SEQA
+     C                     MOVE 'Y'       ASCSEQ
+     C                     END
+      *
+     C                     MOVE L@DCOL    L#DCOL
+     C                     MOVE L@PPLA    L#PPLA
+     C                     MOVE #1SEQ     L#SEQA
+      *
+     C           L#SEQA    IFEQ NEWSEQ
+     C           L#SEQA    OREQ *BLANKS
+      *
+     C           L#SEQA    IFEQ *BLANKS
+     C                     MOVE 'CGD1815' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C           L#SEQA    IFEQ NEWSEQ
+     C                     MOVE 'CGD1399' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           KY#LA3    SETLL@LAYFW2                  30
+      *
+     C           *IN30     IFEQ *ON
+     C                     MOVE 'CGD1400' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     MOVE 'Y'       #ERROR
+     C                     ELSE
+      *
+     C           #1PLAN    CHAIN@LAYFMT              30
+     C                     MOVE #1SEQ     L#SEQA
+     C                     UPDAT@LAYFMT
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      * Unwind subroutine stack:
+      *
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDUPD   : Perform Database Updates                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 230                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDUPD    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDUPD'  @STK,Q
+      *
+     C                     OPEN CGWPLAYO                                  089344
+     C                     OPEN CGW2LAYO                                  089344
+      *
+     C           DELETE    IFEQ 'Y'
+      *
+     C           KYASC0    CHAIN@PASCL0              90
+     C  N90                DELET@PASCL0
+      *
+     C           L@PLAN    CHAIN@LAYFMT              90                   089344
+      *                                                                   089344
+     C           *IN90     IFEQ *OFF                                      089344
+      *                                                                   089344
+     C           REPEAT    IFEQ 'Y'                                       089344
+      *                                                                   089344
+     C                     MOVE *BLANKS   L#PPLA                          089344
+     C                     MOVE '*LOOSE'  L#LRPT                          089344
+     C                     UPDAT@LAYFMT                                   089344
+      *                                                                   089344
+     C                     ELSE                                           089344
+      *                                                                   089344
+     C                     DELET@LAYFMT                                   089344
+      *                                                                   089344
+     C           L@DCOL    ADD  1         L#DCOL                          089344
+     C                     MOVE L@PLAN    L#PPLA                          089344
+      *                                                                   089344
+     C           KY#LA2    CHAIN@LAYFW2             N90                   089344
+      *                                                                   089344
+     C           *IN90     DOWEQ*OFF                                      089344
+     C           L#PLAN    CHAIN@LAYFMT              91                   089344
+     C  N91                DELET@LAYFMT                                   089344
+     C           KY#LA2    READE@LAYFW2             N    90               089344
+     C                     END                                            089344
+      *                                                                   089344
+     C                     END                                            089344
+      *                                                                   089344
+     C                     END                                            089344
+      *
+     C           REPEAT    IFNE 'Y'
+     C           L@OFAB    OREQ 'R'
+      *
+     C                     CLEARP1PARM
+     C                     MOVEL#@LAYO    P1LAYO
+     C                     MOVE L@PLAN    P1PLAN
+      *
+     C                     CALL 'CG0499'  PL0499       9090
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CG0499'  W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD231       W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C***********KYDEC0    CHAIN@PDECL0              90
+     C**N90                DELET@PDECL0
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+     C***********ATTACH    IFEQ 'Y'
+      *
+     C*********************CLEAR@PASCL0
+     C*********************MOVE #@LAYO    BALAYO
+     C*********************MOVE L@PPLA    BAPLAN
+     C*********************MOVE L@PLAN    BATPLN
+     C*********************MOVE L@SEQA    BASEQA
+     C*********************MOVE 'D'       BARECI
+     C*********************WRITE@PASCL0
+      *
+     C*********************ELSE
+      *
+     C           KYDECP    CHAIN@PDECL0              90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGPDECL0'W0FILE
+     C                     MOVEL#@PLAN    W0KEY            ***************
+     C                     Z-ADD233       W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     Z-ADD#STRRO    LPSROW
+     C                     Z-ADD#STRCO    LPSCOL
+      *
+     C           #ENDRO    SUB  1         LPEROW
+     C           #ENDCO    SUB  1         LPECOL
+     C                     Z-ADD#RELRO    LPRROW
+     C                     Z-ADD#RELCO    LPRCOL
+      *
+     C           #FAVRO    IFEQ 0                                         091826
+     C                     Z-ADD#STRRO    LPFROW                          091826
+     C                     ELSE                                           091826
+     C                     Z-ADD#FAVRO    LPFROW                          091826
+     C                     END                                            091826
+      *
+     C           #FAVCO    IFEQ 0                                         091826
+     C                     Z-ADD#STRCO    LPFCOL                          091826
+     C                     ELSE                                           091826
+     C                     Z-ADD#FAVCO    LPFCOL                          091826
+     C                     END                                            091826
+      *
+     C           #OVRRO    IFEQ 0                                         091826
+     C           #ENDRO    SUB  1         LPOROW                          091826
+     C                     ELSE                                           091826
+     C           #OVRRO    SUB  1         LPOROW                          091826
+     C                     END                                            091826
+      *
+     C           #OVRCO    IFEQ 0                                         091826
+     C           #ENDCO    SUB  1         LPOCOL                          091826
+     C                     ELSE                                           091826
+     C           #OVRCO    SUB  1         LPOCOL                          091826
+     C                     END                                            091826
+      *                                                                   091826
+     C***********#FAVRO    IFEQ 0                                         091826
+      *
+     C***********          Z-ADD#STRRO    LPFROW                          091826
+     C***********          Z-ADD#STRCO    LPFCOL                          091826
+      *
+     C***********          ELSE                                           091826
+      *
+     C***********          Z-ADD#FAVRO    LPFROW                          091826
+     C***********          Z-ADD#FAVCO    LPFCOL                          091826
+      *
+     C***********          END                                            091826
+      *
+     C***********#OVRCO    IFEQ 0                                         091826
+      *
+     C***********#ENDRO    SUB  1         LPOROW                          091826
+     C***********#ENDCO    SUB  1         LPOCOL                          091826
+      *
+     C***********          ELSE                                           091826
+      *
+     C***********#OVRRO    SUB  LPFROW    LPOROW                          091826
+     C***********#OVRCO    SUB  LPFCOL    LPOCOL                          091826
+      *
+     C***********          END                                            091826
+      *
+     C                     MOVE #PDESC    LPDESC
+     C                     MOVE #PFPAB    LPFPAB
+     C                     MOVE #PBOXD    LPBOXD
+     C                     MOVE #POFOP    LPOFOP
+     C                     MOVE #PFILS    LPFILS
+      *
+     C                     UPDAT@PDECL0
+      *
+     C*********************END
+      *
+     C           #PLANE    IFNE *BLANKS
+      *
+     C                     SELEC
+     C           ADDPLA    WHEQ 'Y'
+      *
+     C                     CLEAR@PDECL0
+      *
+     C                     MOVE #@LAYO    LPLAYO
+     C                     MOVE #PLANE    LPPLAN
+     C                     MOVE #PTYPE    LPOFAB
+     C                     MOVE 'D'       LPRECI
+     C                     WRITE@PDECL0
+      *
+     C                     CLEAR@LAYFMT                                   089344
+      *                                                                   089344
+     C                     MOVE LPPLAN    L#PLAN                          089344
+     C           1         ADD  L@DCOL    L#DCOL                          089344
+     C                     MOVE L@PLAN    L#PPLA                          089344
+     C                     MOVE L@RPTH    L#LRPT                          089344
+     C                     MOVE NEWSEQ    L#SEQA                          089344
+     C                     MOVE LPOFAB    L#OFAB                          089344
+     C                     MOVE LPFPAB    L#FPAB                          089344
+     C                     MOVE LPBOXD    L#BOXD                          089344
+     C                     MOVE LPOFOP    L#OFOP                          089344
+     C                     MOVE LPFILS    L#FILS                          089344
+     C                     MOVE LPDESC    L#DESC                          089344
+      *                                                                   089344
+     C                     WRITE@LAYFMT                                   089344
+      *
+     C           CPYPLA    WHEQ 'Y'
+      *
+     C                     CLEARP1PARM
+     C                     MOVELC#LAYO    P1LAYO
+     C                     MOVELC#PLAN    P1PLAN
+     C                     CALL 'CG0499'  PC0499       9090
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CG0499'  W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C**********           Z-ADD1         W0ERNB                          084478
+     C                     Z-ADD234       W0ERNB           * DB ERROR 234*084478
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           KYDE#P    CHAIN@PDECL0              90
+      *
+     C                     Z-ADD0         LPSROW
+     C                     Z-ADD0         LPSCOL
+     C                     Z-ADD0         LPFROW
+     C                     Z-ADD0         LPFCOL
+     C                     Z-ADD0         LPRROW
+     C                     Z-ADD0         LPRCOL
+      *
+     C                     UPDAT@PDECL0
+      *
+     C                     ENDSL
+      *
+     C                     CLEAR@PASCL0
+     C                     MOVE #@LAYO    BALAYO
+     C                     MOVE L@PLAN    BAPLAN
+     C                     MOVE #PLANE    BATPLN
+     C                     MOVE NEWSEQ    BASEQA
+     C                     MOVE 'D'       BARECI
+     C                     WRITE@PASCL0
+      *
+     C                     END
+      *
+     C           L@DCOL    IFGT 1
+      *  Synchronise sequence of attachment
+     C                     DO   #RRN1     RRN1
+      *
+     C           RRN1      CHAIN#SFLRCD1             30
+      *
+     C           *IN30     IFEQ *OFF
+      *
+     C                     MOVE #1PLAN    L#PLAN
+      *
+     C           KYASC#    CHAIN@PASCL0              30
+      *
+     C           *IN30     IFEQ *ON
+     C                     MOVEL'CGPASCL0'W0FILE
+     C                     MOVEL#1PLAN    W0KEY            ***************
+     C**********           Z-ADD232       W0ERNB                          084478
+     C                     Z-ADD235       W0ERNB           * DB ERROR 235*084478
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ELSE
+      *
+     C                     MOVE #1SEQ     BASEQA
+     C                     UPDAT@PASCL0
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     CLOSECGWPLAYO                                  089344
+     C                     CLOSECGW2LAYO                                  089344
+      *
+      * Unwind subroutine stack:
+      *
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPATT   : Attach plane in QTEMP work file                   *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 240                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPATT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATT'  @STK,Q
+      *
+     C                     MOVE L@RPTH    #LPATH
+     C           #LPATH    CHAIN@RD1FMT              90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGWPRDE1'W0FILE
+     C                     MOVEL#LPATH    W0KEY            ***************
+     C                     Z-ADD241       W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           #FPATH    CHAIN@LAYFW1              90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGW1LAYO'W0FILE
+     C                     MOVEL#FPATH    W0KEY            ***************
+     C                     Z-ADD242       W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           *LIKE     DEFN L#PLAN    L##PLA
+     C                     MOVE L#PLAN    L##PLA
+      *
+      * Now re-attach by linking to previous plane & database
+      *
+     C           KY@LA3    CHAIN@LAYFW2              90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGLAYOW2'W0FILE
+     C                     MOVELL@PPLA    W0KEY            ***************
+     C                     Z-ADD243       W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVE NEWSEQ    L#SEQA
+     C                     CLEARL#LRPT
+     C                     MOVE L##PLA    L#PPLA
+     C                     UPDAT@LAYFW2                90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVE 'CGD1570' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     ELSE
+      * Also database part to allow size validation
+     C                     CLEAR@PASCL0
+     C                     MOVE #@LAYO    BALAYO
+     C                     MOVE L#PPLA    BAPLAN
+     C                     MOVE L#PLAN    BATPLN
+     C                     MOVE L#SEQA    BASEQA
+     C                     MOVE 'D'       BARECI
+     C                     WRITE@PASCL0
+      *
+     C                     MOVE 'Y'       ATTACH
+     C                     END
+      *
+      * Unwind subroutine stack:
+      *
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR#NEW   : Check for any unvalidated planes                  *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *  OFFSET   : 250                                               *
+      *                                                               *
+      *****************************************************************
+     CSR         SR#NEW    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SR#NEW'  @STK,Q
+      *
+     C           *LIKE     DEFN BATPLN    #NEWPL
+     C                     MOVE *BLANKS   #NEWPL
+      *
+     C                     IN   CGLDA
+     C                     CLEAR#@MDTA
+     C                     OUT  CGLDA
+      *
+     C           #@LAYO    CHAIN@PASCL0             N90
+      *
+     C           *IN90     DOWEQ*OFF
+      *
+     C           BASEQA    IFEQ NEWSEQ
+     C                     MOVELBATPLN    #NEWPL
+     C                     IN   CGLDA
+     C                     MOVE 'CGD1685' #@MSID
+     C                     MOVEL#NEWPL    #@MDTA
+     C                     OUT  CGLDA
+     C                     LEAVE
+     C                     END
+      *
+     C           #@LAYO    READE@PASCL0             N    90
+     C                     END
+      *
+      * Unwind subroutine stack:
+      *
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSNMS sends a message to the program's queue.     **
+     C********************************************************************
+     C           SRSNMS    BEGSR                           * S R S N M S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSNMS'  @STK,Q
+     C*
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVE ##PGM     ZAPGMQ
+     C                     ENDIF
+     C*
+     C* If no message file specified, use default:
+     C*
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVE ZADFMF    ZAMSGF
+     C                     ENDIF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+     C*
+     C* Clear all fields after use:
+     C*
+     C                     MOVE *BLANKS   ZAPGMQ
+     C                     MOVE *BLANKS   ZAPGRL
+     C                     MOVE *BLANKS   ZAMSID
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVE *BLANKS   ZAMSTP
+     C*
+     C           EXSNMS    TAG                             <<<=== EXSNMS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+      *
+      * File and Program Error Processing
+      *
+     C/COPY CGCPYSRC,SRERRC
+     E/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  TYP/TYN
+ACGD1367R
+BCGD1368R
+ECGD1369R
+FCGD1652R
+NCGD1767R
+OCGD1370F

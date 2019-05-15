@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Build XML Data')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GL000668 - Midas GL Build XML Data                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MSID &RTCDE)
+ 
+             DCL        VAR(&MSID)   TYPE(*CHAR) LEN(21)
+ 
+             DCL        VAR(&RTCDE)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&JOBNM)    TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    JOB(&JOBNM)
+ 
+             RMVM       FILE(GLUXMLL0) MBR(&JOBNM)
+             MONMSG     MSGID(CPF0000)
+ 
+             RMVM       FILE(GLUXMLPD) MBR(&JOBNM)
+             MONMSG     MSGID(CPF0000)
+ 
+             ADDPFM     FILE(GLUXMLPD) MBR(&JOBNM)
+             ADDLFM     FILE(GLUXMLL0) MBR(&JOBNM) DTAMBRS((GLUXMLPD +
+                          (&JOBNM)))
+ 
+             OVRDBF     FILE(GLUXMLPD) TOFILE(GLUXMLPD) MBR(&JOBNM) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(GLUXMLL0) TOFILE(GLUXMLL0) MBR(&JOBNM) +
+                          OVRSCOPE(*JOB)
+ 
+             CALL       PGM(GL000668) PARM(&MSID &RTCDE)
+ 
+             CALL       PGM(GL000669) PARM(&RTCDE)
+ 
+             DLTOVR     FILE(GLUXMLPD GLUXMLL0) LVL(*JOB)
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,344 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MT Process incoming testkey')
+     F********************************************************************
+     F*                                                                  *
+     F*     Midas  Midas/TELEX LINK                                  *
+     F*                                                                  *
+     F*     MT3030 - PROCESS INCOMING TESTKEY                            *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*      COMPANY CONFIDENTIAL                                     *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMT001             Date 02Nov98               *
+     F*                 S01179             Date 14JUN89               *S01179
+     F*
+     F********************************************************************
+     F*
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CMT001 - Orion Telex 3.3 Implementation.                     *
+     F*           Re-compile due to changes on the file N#IH.         *
+     F*     S01179 - PROGRAM CREATED FOR AS400                            S01179
+     F*
+     F*****************************************************************
+     FTKINPF  IP  E                    DISK
+     FN#CFA   IF  E                    DISK
+     FTABTB10 IF  E                    DISK
+     FN$I1    UF  E           K        DISK                      A
+     F            N#ID01                            KIGNORE
+     F            N#SH01                            KIGNORE
+     F            N#SI01                            KIGNORE
+     FMT3030P1O   E                    PRINTER
+     F                                              KINFDS PRINT
+     F/SPACE 3
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*      10          First cycle
+     F*      20          READ ind on file N#CFA
+     F*      30          READE indicator for N#IH01
+     F*      40          SETLL indicator for N#IH01
+     F*      41          Conditions output - new N#IH01
+     F*      42          Conditions output - warning msg
+     F*      43          Supresses output of last blank record
+     F*      50          READE to file N#DA01
+     F*             LR   Last record
+     F/EJECT
+     E                    CPY@    1   1 80
+     E                    NAR1    1   1 24
+      *
+      ** Array to hold title narrative
+      *
+     ILDA         DS                            256
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+      *
+      **  Database error data structure
+      *
+     I            DS
+     I                                        1  120TIMSTP
+     I                                        1   60CLOCK
+     I                                        7  120DATE
+      *
+      **  Data structure to split timestamp
+      *
+     I            DS
+     I                                        1   9 ADDR
+     I                                        1   1 ATT1
+     I                                        2   8 NARR
+     I                                        9   9 ATT2
+      *
+      **  Data structure to hold address details with underline attrib
+      *
+     I            DS
+     I                                        1  30 TTLE
+     I                                        1   1 ATT3
+     I                                        2  25 NAR1
+     I                                       26  26 ATT4
+      *
+      **  Data structure to hold title details with underline attrib
+      *
+     IPRINT       DS
+     I                                    B 367 3680LINE
+      *
+      ** DS for line number to handle overflow
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ** Data structure to enable compilation - Copyright Insertion
+      *
+     C/EJECT
+      *
+      **                      INITIAL PROCESSING
+      **                      ~~~~~~~~~~~~~~~~~~
+      **    If the Item Number is blank do no processing
+      **
+      *
+     C           TKYI      IFNE *ZEROS
+      *
+      **    IF the first cycle indicator is off
+      *
+     C           *IN10     IFEQ '0'
+      *
+      ** Initialise LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE                       ***
+     C                     MOVE *BLANKS   DBKEY                        1 *
+     C                     MOVE *BLANKS   DBPGM                        ***
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      *   Obtain run date for screen from I.C.D. record
+     C**  Check Installation Control Record 1.
+     C                     READ TABTB10F                 99-rec not found
+     C  N99      RECI      COMP 'D'                  9999  -is deleted
+     C           *IN99     IFEQ '1'
+     C*  DATABASE ERROR 01 on TABLE file
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  10'    ZTABKY
+     C                     MOVE 'TB10 '   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     MOVE 'MT1240  'DBPGM            ***************
+     C                     Z-ADD01        DBASE
+     C                     OUT  LDA
+     C                     WRITEFMTP101
+     C                     WRITEFMTP103
+     C                     RETRN
+     C                     END
+      *
+      *
+      **    Access N#CFA
+      *
+     C                     READ N#CFA                    20
+      *
+      **    IF live record not found
+      **       Process data base error
+      *
+     C           *IN20     IFEQ '1'
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVE 'MT3030'  DBPGM
+     C                     Z-ADD2         DBASE            ***********
+     C                     MOVE 'N#CFA'   DBFILE           * DBERROR *
+     C                     OUT  LDA                        *   02    *
+     C                     WRITEFMTP101                    ***********
+     C                     WRITEFMTP103
+     C                     RETRN
+      *
+     C                     END
+      *
+     C                     TIME           TIMSTP
+      *
+     C                     MOVEL'Testkey' NARR
+     C                     BITOF'01345'   ATT1
+     C                     BITON'267'     ATT1
+     C                     BITOF'0134567' ATT2
+     C                     BITON'2'       ATT2
+     C                     BITOF'01345'   ATT3
+     C                     BITON'267'     ATT3
+     C                     BITOF'0134567' ATT4
+     C                     BITON'2'       ATT4
+      *
+      ** Print the Heading
+      *
+     C                     WRITEFMTP101
+      *
+     C                     MOVE '1'       *IN10
+      *
+     C                     END
+      *
+      **                      MAIN PROCESSING
+      **                      ~~~~~~~~~~~~~~~
+      **
+      *
+     C                     MOVEA'000'     *IN,41
+      *
+      **       Access N#IHA01, the Item Header Record
+      *
+     C           TKYI      SETLLN#IH01                   40
+      *
+      **       IF found
+      **          DOWHILE records with same item number are found
+     C           *IN40     IFEQ '1'
+      *
+     C           TKYI      READEN#IH01                   30
+      *
+     C           *IN30     DOWEQ'0'
+      *
+      **          Update the Item Title
+      *
+     C                     MOVELTTLE      IHITIT
+      *
+     C                     EXCPTTIT
+      *
+     C           TKYI      READEN#IH01                   30
+      *
+     C                     END
+      *
+      **       ELSE
+      **          Access the first Data Record on N#DA01
+      *
+     C                     ELSE
+      *
+     C           TKYI      SETLLN#DA01
+     C           TKYI      READEN#DA01                   50
+      *
+      ** If no Data record found report the fact
+      *
+     C           *IN50     IFEQ '1'
+      *
+      **          Set on output indicator *IN42
+      *
+     C                     MOVE '1'       *IN42
+      *
+      **   otherwise count the number of data records
+      *
+     C                     ELSE
+     C                     Z-ADD0         IHRECS
+      *
+      **          DOW same item number
+      **             Add 1 to count
+      *
+     C           *IN50     DOWEQ'0'
+     C                     ADD  1         IHRECS
+     C           TKYI      READEN#DA01                   50
+     C                     END
+      *
+      ** Format the rest of the fields before outputting a new record
+      ** to the Item Header File
+      *
+     C                     MOVE TKYI      IHITEM
+     C                     MOVE 'TMSG'    IHITTP
+     C                     MOVELTTLE      IHITIT
+     C                     MOVE DFPO      IHCOWN
+     C                     Z-ADD1         IHOITM
+     C                     MOVE '*TLX'    IHOLOC
+     C                     MOVELADDR      IHOADD
+     C                     MOVE DATE      IHODTE
+     C                     MOVELCLOCK     IHOTIM
+     C                     MOVE DATE      IHRDTE
+     C                     MOVELCLOCK     IHRTIM
+     C                     Z-ADD0         IHVDTE
+     C                     Z-ADD0         IHVTIM
+     C                     Z-ADD0         IHADTE
+     C                     Z-ADD0         IHATIM
+     C                     Z-ADD0         IHRITM
+     C                     MOVE 'I'       IHIQOQ
+     C                     MOVE *BLANKS   IHACKN
+      *
+      **          Set on output indicator *IN41
+      *
+     C                     MOVE '1'       *IN41
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** Print the detail line
+      *
+     C           LINE      IFEQ 59
+     C                     WRITEFMTP101
+     C                     END
+     C                     WRITEFMTP102
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN43
+     C                     END
+      *
+      ** If there were no telexes selected for verification print a
+      ** report to indicate this
+      *
+     CLR         *IN10     IFEQ '0'
+      *
+      ** Initialise LDA
+      *
+     CLR         *LOCK     IN   LDA
+     CLR                   MOVE *BLANKS   DBFILE                       ***
+     CLR                   MOVE *BLANKS   DBKEY                        1 *
+     CLR                   MOVE *BLANKS   DBPGM                        ***
+     CLR                   MOVE *BLANKS   DBASE
+     CLR                   OUT  LDA
+      *
+      *   Obtain run date for screen from I.C.D. record
+     C**  Check Installation Control Record 1.
+     CLR                   READ TABTB10F                 99-rec not found
+     CLRN99      RECI      COMP 'D'                  9999  -is deleted
+     CLR         *IN99     IFEQ '1'
+     C*  DATABASE ERROR 03 on TABLE file
+     CLR         *LOCK     IN   LDA
+     CLR                   SETON                     U7U8LR
+     CLR                   MOVEL'01      'ZTABKY 12
+     CLR                   MOVE '  10'    ZTABKY
+     CLR                   MOVE 'TB10 '   DBFILE           ***************
+     CLR                   MOVELZTABKY    DBKEY            * DB ERROR 03 *
+     CLR                   MOVE 'MT1240  'DBPGM            ***************
+     CLR                   Z-ADD01        DBASE
+     CLR                   OUT  LDA
+     CLR                   WRITEFMTP101
+     CLR                   WRITEFMTP103
+     CLR                   RETRN
+     CLR                   END
+      *
+     CLR                   WRITEFMTP101
+      *
+     CLR                   END
+      *
+      ** Print end of report
+      *
+     CLR         LINE      IFEQ 59
+     CLR                   WRITEFMTP101
+     CLR                   END
+     CLR                   WRITEFMTP104
+      *
+      **
+      *
+     C/EJECT
+      *
+      **                   OUTPUT
+      *                    ~~~~~~
+     ON#IH01  E                TIT
+     O                         IHITIT
+     O        DADD     41N43
+     O                         *ALL
+**  CPY@
+(c) Finastra International Limited 2001
+** NAR1
+Valid Testkey on Payment

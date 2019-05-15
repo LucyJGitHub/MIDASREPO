@@ -1,0 +1,1741 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Produce Profitability rpt/eqy file:RE&GL')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER450 - Produce Profitability Report/Enquiry File: RE & GL  *
+     F*                                                               *
+     F*  Function:  This program produces the file LENQRED by         *
+     F*             Customer, Account Officer and Department. It      *
+     F*             also calculates Yield and Margin figures.         *
+     F*                                                               *
+     F*  Called By: LERC450 - Produce profitability report/enquiry    *
+     F*                       file: RE & GL.                          *
+     F*                                                               *
+     F*  (COB)                                                        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 225714             Date 26May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002 EM / TI Interface 23/09/98             *
+     F*                 BH3506             DATE 14SEP92               *
+     F*                 BHSTEV             DATE 11AUG92               *
+     F*                 BHXXXX             DATE 07AUG92               *
+     F*                 ALIEN1             DATE 10JUL92               *
+     F*                 E32389             DATE 13APR92               *
+     F*                 E35137             DATE 09APR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  225714 - LER480 report incorrect. Year to date values should *
+      *           include month to date values plus previous months'  *
+      *           amounts.                                            *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  BH3506 - Attempt to fix multiple RETAIL ACCOUNTS lines for   *
+     F*           Account Officer totals and Department totals.       *
+     F*           RSP suggests there's something up with control      *
+     F*           breaks at this release, so take out branch code     *
+     F*           rename so as not to confuse the operating system....*
+     F*           Actually turned out to be a problem with the dept   *
+     F*           and account officer written to retail totals recs.  *
+     F*  BHSTEV - Ensure correct no. of days for days in year         *
+     F*  BHXXXX - CHANGE TO CALCULATE CORRECT NUMBER OF DAYS          *
+     F*  ALIEN1 - For GL A/Cs, customer LENQRED records are output    *
+     F*           from LEPEGLD (Other Charges/Fees account info.)     *
+     F*           by account (multiple records) or consolidated       *
+     F*           (single record) depending on PEFMTC reporting flag. *
+     F*  E32389 - FOR RETAIL RECORD FORMAT, PGM DOESN'T LOAD          *
+     F*           DEPARTMENT CODE RETAIL AND ACCOUNT OFFICER RETAIL   *
+     F*           IN SUB-TOTALS.                                      *
+     F*  E35137 - PGM DIDN'T CONSIDER ACCRUAL FOR NON-WORKING DAYS    *
+     F*           IND. ALSO IT ALWAYS PROCESSED WEEK-END, THE FRIDAY  *
+     F*           EVENING. NOW, IT CHECKS INDICATOR ON SDGELRL1.      *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     FPEGRL0  IP  E           K        DISK
+     F*
+     FLENQRED O   E                    DISK
+     F*
+     FSDGELRL1IF  E           K        DISK                               E35137
+     F*                                                                   ALIEN1
+     FPEFMTC  IF  E           K        DISK                               ALIEN1
+     F*                                                                   ALIEN1
+      /EJECT
+     F*******************************************************************
+     F*                                                                 *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                    *
+     F*                                                                 *
+     F*   01  - Read of LEPEREDF format.                                *
+     F*   02  - Read of LEPEGLDF format.                                *
+     F*                                                                 *
+     F*   10  - Initial Processing indicator                            *
+     F*                                                                 *
+     F*   20  - Read of PEFMTC.                                         * ALIEN1
+     F*                                                                 * ALIEN1
+     F*   U7  - Database error                                          *
+     F*   U8  - Database error                                          *
+     F*                                                                 *
+     F*******************************************************************
+      /SPACE 3
+     F*******************************************************************
+     F*                                                                 *
+     F*  S U B R O U T I N E   I N D E X                                *
+     F*                                                                 *
+     F*  INIT   - Initialization subroutine                             *
+     F*  SGLD   - Process General Ledger detail records.                *
+     F*  SRED   - Process Retail detail records.                        *
+     F*  WRITNQ - Yield and Margin rates calculations                   *
+     F*  CUSTSR - Outputs Customer totals to LENQRED                    *
+     F*  ACOFSR - Outputs Account Officer totals to LENQRED             *
+     F*  DEPTSR - Outputs Department totals to LENQRED                  *
+     F*  LASTSR - Outputs last record totals to LENQRED.                *
+     F*  *PSSR  - Standard error processing subroutine                  *
+     F*                                                                 *
+     F*******************************************************************
+      /EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    AGG        12 15 0             GL BALANCES
+     E                    AGM        12 15 0             MARGIN AMOUNTS
+     E                    AGA        12 15 0             AGGREGATE AMOUNTS
+     E                    AGF        12 15 0             CHARGES   AMOUNTS
+     E                    AGD        12  2 0             DAYS NON ZERO
+     E                    GMNM   12  12  3               MONTH NAMES
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ** DEFINE CONTROL GROUPS
+      *
+     ILEPEREDF    01
+     I**************BRCA                            RDBRCA                BH3506
+     I                                              RDDEPTL3
+     I                                              RDACOFL2
+     I                                              RDCNUML1
+     ILEPEGLDF    02
+     I**************BRCA                            GDBRCA                BH3506
+     I                                              GDDEPTL3
+     I                                              GDACOFL2
+     I                                              GDCNUML1
+      *
+     I            DS
+      ** SPLIT UP DATE FOR CONVERSION.
+     I                                        1   6 DATE
+     I                                        1   2 DD
+     I                                        3   6 MY
+      *
+     I            DS
+      ** GENERAL LEDGER BALANCES DATA STRUCTURE
+     I                                    P   1  960AGG
+     I                                    P   1   80GDJANA
+     I                                    P   9  160GDFEBA
+     I                                    P  17  240GDMARA
+     I                                    P  25  320GDAPRA
+     I                                    P  33  400GDMAYA
+     I                                    P  41  480GDJUNA
+     I                                    P  49  560GDJULA
+     I                                    P  57  640GDAUGA
+     I                                    P  65  720GDSEPA
+     I                                    P  73  800GDOCTA
+     I                                    P  81  880GDNOVA
+     I                                    P  89  960GDDECA
+      *
+     I            DS
+      ** AGGREGATE AMOUNTS DATA STRUCTURE
+     I                                    P   1  960AGA
+     I                                    P   1   80RDJANA
+     I                                    P   9  160RDFEBA
+     I                                    P  17  240RDMARA
+     I                                    P  25  320RDAPRA
+     I                                    P  33  400RDMAYA
+     I                                    P  41  480RDJUNA
+     I                                    P  49  560RDJULA
+     I                                    P  57  640RDAUGA
+     I                                    P  65  720RDSEPA
+     I                                    P  73  800RDOCTA
+     I                                    P  81  880RDNOVA
+     I                                    P  89  960RDDECA
+      *
+     I            DS
+      ** MARGIN AMOUNTS DATA STRUCTURE
+     I                                    P   1  960AGM
+     I                                    P   1   80RDJANM
+     I                                    P   9  160RDFEBM
+     I                                    P  17  240RDMARM
+     I                                    P  25  320RDAPRM
+     I                                    P  33  400RDMAYM
+     I                                    P  41  480RDJUNM
+     I                                    P  49  560RDJULM
+     I                                    P  57  640RDAUGM
+     I                                    P  65  720RDSEPM
+     I                                    P  73  800RDOCTM
+     I                                    P  81  880RDNOVM
+     I                                    P  89  960RDDECM
+      *
+     I            DS
+      ** CHARGES AMOUNTS DATA STRUCTURE
+     I                                    P   1  960AGF
+     I                                    P   1   80RDJANF
+     I                                    P   9  160RDFEBF
+     I                                    P  17  240RDMARF
+     I                                    P  25  320RDAPRF
+     I                                    P  33  400RDMAYF
+     I                                    P  41  480RDJUNF
+     I                                    P  49  560RDJULF
+     I                                    P  57  640RDAUGF
+     I                                    P  65  720RDSEPF
+     I                                    P  73  800RDOCTF
+     I                                    P  81  880RDNOVF
+     I                                    P  89  960RDDECF
+      *
+     I            DS
+      ** DAYS NON ZERO DATA STRUCTURE
+     I                                    P   1  240AGD
+     I                                    P   1   20RDJAND
+     I                                    P   3   40RDFEBD
+     I                                    P   5   60RDMARD
+     I                                    P   7   80RDAPRD
+     I                                    P   9  100RDMAYD
+     I                                    P  11  120RDJUND
+     I                                    P  13  140RDJULD
+     I                                    P  15  160RDAUGD
+     I                                    P  17  180RDSEPD
+     I                                    P  19  200RDOCTD
+     I                                    P  21  220RDNOVD
+     I                                    P  23  240RDDECD
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Standard data area layout for system flags & run date.
+     I*                                                                     0113
+     ILERSTS    E DSLERSTS                                                  0113
+      ** Fees/Profitability enhancement status data area                    0113
+     I              FACHISD                         WHISST                  0113
+     I              LERC2030                        LERC20                  0113
+     I              LERC135                         LERC13                  0113
+     I              LERC315                         LERC35                  0113
+     I              LERC425                         LERC42                  0113
+     I              EOYFLAG                         EOYFLG                  0113
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+     I            DS                                                                          225714
+     I                                        1   7 REPDT                                     225714
+     I                                        1   20REPDD                                     225714
+     I                                        3   5 REPMM                                     225714
+     I                                        6   70REPYY                                     225714
+     I            DS                                                                          225714
+     I                                        1   60PRFDT                                     225714
+     I                                        1   20PRFDD                                     225714
+     I                                        3   40PRFMM                                     225714
+     I                                        5   60PRFYY                                     225714
+     I            DS                                                                          225714
+     I                                        1   60WSTRMO                                    225714
+     I                                        1   20WSTRDD                                    225714
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDACOD    E DSSDACODPD                                              ALIEN1
+      ** Account Code details accessed via access program                 ALIEN1
+      *                                                                   ALIEN1
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     C/EJECT
+      *
+      ** PERFORM INITIAL PROCESSING.
+      *
+     C           *IN10     CASEQ'0'       INIT
+     C                     END
+      *
+      ** PROCESS DETAIL RECORDS ACCORDING TO RECORD READ IN
+      *
+     C           *IN01     CASEQ'1'       SRED
+     C           *IN02     CASEQ'1'       SGLD
+     C                     END
+      *
+      ** TOTAL TIME PROCESSING:
+      ** PROCESS LEVEL BREAK ON CUSTOMER:
+      *
+     CL1                   EXSR CUSTSR
+      *
+      ** PROCESS LEVEL BREAK ON A/C OFFICER:
+      *
+     CL2                   EXSR ACOFSR
+      *
+      ** PROCESS LEVEL BREAK ON DEPARTMENT:
+      *
+     CL3                   EXSR DEPTSR
+      *
+      ** PROCESS LEVEL BREAK ON LAST RECORD
+      *
+     CLR                   EXSR LASTSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SGLD   - Process General Ledger detail records.               *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing.                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SGLD      BEGSR
+      *
+      ** SET UP MONTH-TO-DATE  & YTD DATA:
+      *
+     C                     XFOOTAGG       PYTD
+      *                                                                                       225714
+     C           WNXT      IFGT 1                                                             225714
+     C           WNXT      ANDLT13                                                            225714
+     C           PYTD      SUB  AGG,WNXT  PYTD                                                225714
+     C                     ENDIF                                                              225714
+     C                     SUB  PYTD      PCYTD
+     C                     SUB  AGG,MN    PCMTD
+      *
+      ****Update*LENQRED*with*branch*code.****                            BH3506
+     C**********           MOVE GDBRCA    BRCA                            BH3506
+      *
+      ** Output General Ledger record for each GL account (Other          ALIEN1
+      ** Charges/Fees) for customer.                                      ALIEN1
+      *                                                                   ALIEN1
+     C           PCRPT     IFEQ 'N'                                       ALIEN1
+      *                                                                   ALIEN1
+     C                     MOVE 'C'       QRRTYP                          ALIEN1
+     C                     Z-ADD6         QRRSEQ                          ALIEN1
+     C                     Z-ADDPCMTD     QRMFEE                          ALIEN1
+     C                     Z-ADDPCYTD     QRYFEE                          ALIEN1
+     C                     MOVE GDDEPT    QRDEPT                          ALIEN1
+     C                     MOVE GDACOF    QRACOF                          ALIEN1
+     C**********           Z-ADDGDCNUM    QRCNUM                                       ALIEN1 CSD027
+     C                     MOVE GDCNUM    QRCNUM                                              CSD027
+     C                     Z-ADD0         QRMAVB                          ALIEN1
+     C                     Z-ADD0         QRMMGN                          ALIEN1
+     C                     Z-ADD0         QRMAYR                          ALIEN1
+     C                     Z-ADD0         QRMAMR                          ALIEN1
+     C                     Z-ADD0         QRYAVB                          ALIEN1
+     C                     Z-ADD0         QRYMGN                          ALIEN1
+     C                     Z-ADD0         QRYAYR                          ALIEN1
+     C                     Z-ADD0         QRYAMR                          ALIEN1
+     C                     MOVE GDACCY    QRACCY                          ALIEN1
+     C**********           MOVE GDACOD    PACOD   4                                    ALIEN1 CGL029
+     C                     MOVE GDACOD    PACOD  10                                           CGL029
+      *                                                                   ALIEN1
+      ** Retrieve Account Code narrative.                                 ALIEN1
+      *                                                                   ALIEN1
+     C                     CALL 'AOACODR0'                                ALIEN1
+     C                     PARM '*MSG   ' PRTCD                           ALIEN1
+     C                     PARM '*KEY   ' POPTN                           ALIEN1
+     C                     PARM           PACOD                           ALIEN1
+     C********** SDACOD    PARM SDACOD    DSFDY                                        ALIEN1 CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           PRTCD     IFNE *BLANKS                                   ALIEN1
+     C           *LOCK     IN   LDA                        ************** ALIEN1
+     C                     MOVELPACOD     DBKEY            *  DBERR 07  * ALIEN1
+     C                     Z-ADD7         DBASE            ************** ALIEN1
+     C                     MOVEL'SDACODPD'DBFILE                          ALIEN1
+     C                     MOVEL' LER450 'DBPGM                           ALIEN1
+     C                     OUT  LDA                                       ALIEN1
+     C                     EXSR *PSSR                                     ALIEN1
+     C                     END                                            ALIEN1
+     C                     Z-ADDGDACOD    QRACOD                          ALIEN1
+     C                     MOVE A5ACCN    QRACNA                          ALIEN1
+     C                     Z-ADDGDACSQ    QRACSQ                          ALIEN1
+      *                                                                   ALIEN1
+      ** SET UP ACCOUNT OFFICER FIELDS                                    ALIEN1
+      *                                                                   ALIEN1
+     C                     ADD  PCMTD     PAAMTD                          ALIEN1
+     C                     ADD  PCYTD     PAAYTD                          ALIEN1
+     C                     Z-ADD0         PCMTD                           ALIEN1
+     C                     Z-ADD0         PCYTD                           ALIEN1
+      *                                                                   ALIEN1
+     C           QRYFEE    IFNE 0                                         ALIEN1
+     C                     WRITELENQREDF                                  ALIEN1
+     C                     END                                            ALIEN1
+      *                                                                   ALIEN1
+     C                     END                                            ALIEN1
+      *                                                                   ALIEN1
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRED   - Process Retail detail records.                       *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing.                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRED      BEGSR
+      *
+      ** SET UP MONTH-TO-DATE  & YTD DATA:
+      *
+     C                     XFOOTAGA       PAYTD
+     C                     XFOOTAGM       PMYTD
+     C                     XFOOTAGF       PFYTD
+     C                     XFOOTAGD       PDYTD
+      *                                                                                       225714
+     C           WNXT      IFGT 1                                                             225714
+     C           WNXT      ANDLT13                                                            225714
+     C           PAYTD     SUB  AGA,WNXT  PAYTD                                               225714
+     C           PMYTD     SUB  AGM,WNXT  PMYTD                                               225714
+     C           PFYTD     SUB  AGF,WNXT  PFYTD                                               225714
+     C           PDYTD     SUB  AGD,WNXT  PDYTD                                               225714
+     C                     ENDIF                                                              225714
+      *
+      ****Update*LENQRED*with*branch*code.****
+     C**********           MOVE RDBRCA    BRCA
+      *
+     C           RDDRCR    IFEQ 'D'
+     C                     ADD  PAYTD     PCYAGD
+     C                     ADD  PMYTD     PCYMGD
+     C                     ADD  PFYTD     PCYFED
+     C                     ADD  PDYTD     PCYDYD
+     C                     ADD  AGA,MN    PCMAGD
+     C                     ADD  AGD,MN    PCMDYD
+     C                     ADD  AGF,MN    PCMFED
+     C                     ADD  AGM,MN    PCMMGD
+     C                     ELSE
+     C                     ADD  PAYTD     PCYAGC
+     C                     SUB  PMYTD     PCYMGC
+     C                     ADD  PFYTD     PCYFEC
+     C                     ADD  PDYTD     PCYDYC
+     C                     ADD  AGA,MN    PCMAGC
+     C                     ADD  AGD,MN    PCMDYC
+     C                     ADD  AGF,MN    PCMFEC
+     C                     SUB  AGM,MN    PCMMGC
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CUSTSR - Outputs Customer totals to LENQRED.                  *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing.                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CUSTSR    BEGSR
+      *
+      ***SET*UP*COMMON*FIELDS*FOR*GENERAL*LEDGER*RECORD                   ALIEN1
+      ** Output single General Ledger record with consolidated account    ALIEN1
+      ** information (Other Charges/Fees) for customer.                   ALIEN1
+      *
+     C           PCRPT     IFEQ 'Y'                                       ALIEN1
+      *                                                                   ALIEN1
+     C                     MOVE 'C'       QRRTYP
+     C                     Z-ADD6         QRRSEQ
+     C                     Z-ADDPCMTD     QRMFEE
+     C                     Z-ADDPCYTD     QRYFEE
+     C                     MOVE GDDEPT    QRDEPT
+     C                     MOVE GDACOF    QRACOF
+     C**********           Z-ADDGDCNUM    QRCNUM                                              CSD027
+     C                     MOVE GDCNUM    QRCNUM                                              CSD027
+     C                     Z-ADD0         QRMAVB
+     C                     Z-ADD0         QRMMGN
+     C                     Z-ADD0         QRMAYR
+     C                     Z-ADD0         QRMAMR
+     C                     Z-ADD0         QRYAVB
+     C                     Z-ADD0         QRYMGN
+     C                     Z-ADD0         QRYAYR
+     C                     Z-ADD0         QRYAMR
+     C                     MOVE *BLANKS   QRACCY                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACOD                          ALIEN1
+     C                     MOVE *BLANKS   QRACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACSQ                          ALIEN1
+      *
+      ** SET UP ACCOUNT OFFICER FIELDS
+      *
+     C                     ADD  PCMTD     PAAMTD
+     C                     ADD  PCYTD     PAAYTD
+     C                     Z-ADD0         PCMTD
+     C                     Z-ADD0         PCYTD
+      *
+     C           QRYFEE    IFNE 0
+     C                     WRITELENQREDF
+     C                     END
+      *                                                                   ALIEN1
+     C                     END                                            ALIEN1
+      *
+      ** SET UP COMMON FIELDS FOR RETAIL DEBIT RECORD
+      *
+     C                     MOVE 'C'       QRRTYP
+     C                     Z-ADD4         QRRSEQ
+     C                     MOVE RDDEPT    QRDEPT
+     C                     MOVE RDACOF    QRACOF
+     C**********           Z-ADDRDCNUM    QRCNUM                                              CSD027
+     C                     MOVE RDCNUM    QRCNUM                                              CSD027
+     C                     MOVE *BLANKS   QRACCY                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACOD                          ALIEN1
+     C                     MOVE *BLANKS   QRACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACSQ                          ALIEN1
+      *
+     C                     Z-ADDPCMFED    QRMFEE
+     C                     Z-ADDPCYFED    QRYFEE
+     C                     Z-ADDPCMMGD    QRMMGN
+     C                     Z-ADDPCYMGD    QRYMGN
+      *
+      ** SET UP ACCOUNT OFFICER FIELDS
+      *
+     C                     ADD  PCMAGD    PAMAGD
+     C                     ADD  PCMDYD    PAMDYD
+     C                     ADD  PCMMGD    PAMMGD
+     C                     ADD  PCMFED    PAMFED
+     C                     ADD  PCYAGD    PAYAGD
+     C                     ADD  PCYDYD    PAYDYD
+     C                     ADD  PCYMGD    PAYMGD
+     C                     ADD  PCYFED    PAYFED
+      *
+      **   AVERAGE BALANCE CALC.
+      *
+     C           PMNTH     IFNE 0
+     C           PCMAGD    DIV  PMNTH     PCMABD    H
+     C                     ELSE
+     C                     Z-ADD0         PCMABD
+     C                     END
+     C                     Z-ADDPCMABD    QRMAVB
+      *
+     C           PYEAR     IFNE 0
+     C           PCYAGD    DIV  PYEAR     PCYABD    H
+     C                     ELSE
+     C                     Z-ADD0         PCYABD
+     C                     END
+     C                     Z-ADDPCYABD    QRYAVB
+      *
+      **  AVERAGE YIELD RATE
+      *
+     C           PCMAGD    IFNE 0
+     C                     ADD  PCMMGD    PCMFED
+     C           PCMFED    MULT CALCB     P170
+     C           P170      DIV  PCMAGD    QRMAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAYR
+     C                     END
+      *
+     C           PCYAGD    IFNE 0
+     C                     ADD  PCYMGD    PCYFED
+     C           PCYFED    MULT CALCB     P170
+     C           P170      DIV  PCYAGD    QRYAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAYR
+     C                     END
+      *
+      **  AVERAGE MARGIN
+      *
+     C           PCMAGD    IFNE 0
+     C           PCMMGD    MULT CALCB     P170
+     C           P170      DIV  PCMAGD    QRMAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAMR
+     C                     END
+      *
+     C           PCYAGD    IFNE 0
+     C           PCYMGD    MULT CALCB     P170
+     C           P170      DIV  PCYAGD    QRYAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAMR
+     C                     END
+      *
+     C           QRYMGN    IFEQ 0
+     C           QRYFEE    ANDEQ0
+     C           QRYAVB    ANDEQ0
+     C                     ELSE
+     C                     WRITELENQREDF
+     C                     END
+      *
+      ** RESET CUST. WORK FIELDS
+     C                     Z-ADD0         PCMAGD
+     C                     Z-ADD0         PCMDYD
+     C                     Z-ADD0         PCMMGD
+     C                     Z-ADD0         PCMFED
+     C                     Z-ADD0         PCYAGD
+     C                     Z-ADD0         PCYDYD
+     C                     Z-ADD0         PCYMGD
+     C                     Z-ADD0         PCYFED
+      *
+      ** SET UP COMMON FIELDS FOR RETAIL CREDIT RECORD
+      *
+     C                     MOVE 'C'       QRRTYP
+     C                     Z-ADD5         QRRSEQ
+     C                     MOVE RDDEPT    QRDEPT
+     C                     MOVE RDACOF    QRACOF
+     C**********           Z-ADDRDCNUM    QRCNUM                                              CSD027
+     C                     MOVE RDCNUM    QRCNUM                                              CSD027
+     C                     MOVE *BLANKS   QRACCY                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACOD                          ALIEN1
+     C                     MOVE *BLANKS   QRACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACSQ                          ALIEN1
+      *
+     C                     Z-ADDPCMFEC    QRMFEE
+     C                     Z-ADDPCYFEC    QRYFEE
+     C                     Z-ADDPCMMGC    QRMMGN
+     C                     Z-ADDPCYMGC    QRYMGN
+      *
+      ** SET UP ACCOUNT OFFICER FIELDS
+      *
+     C                     ADD  PCMAGC    PAMAGC
+     C                     ADD  PCMDYC    PAMDYC
+     C                     ADD  PCMMGC    PAMMGC
+     C                     ADD  PCMFEC    PAMFEC
+     C                     ADD  PCYAGC    PAYAGC
+     C                     ADD  PCYDYC    PAYDYC
+     C                     ADD  PCYMGC    PAYMGC
+     C                     ADD  PCYFEC    PAYFEC
+      *
+      **   AVERAGE BALANCE CALC.
+      *
+     C           PMNTH     IFNE 0
+     C           PCMAGC    DIV  PMNTH     PCMABC    H
+     C                     ELSE
+     C                     Z-ADD0         PCMABC
+     C                     END
+     C                     Z-ADDPCMABC    QRMAVB
+      *
+     C           PYEAR     IFNE 0
+     C           PCYAGC    DIV  PYEAR     PCYABC    H
+     C                     ELSE
+     C                     Z-ADD0         PCYABC
+     C                     END
+     C                     Z-ADDPCYABC    QRYAVB
+      *
+      **  AVERAGE YIELD RATE
+      *
+     C           PCMAGC    IFNE 0
+     C                     ADD  PCMMGC    PCMFEC
+     C           PCMFEC    MULT CALCB     P170
+     C           P170      DIV  PCMAGC    QRMAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAYR
+     C                     END
+      *
+     C           PCYAGC    IFNE 0
+     C                     ADD  PCYMGC    PCYFEC
+     C           PCYFEC    MULT CALCB     P170
+     C           P170      DIV  PCYAGC    QRYAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAYR
+     C                     END
+      *
+      **  AVERAGE MARGIN
+      *
+     C           PCMAGC    IFNE 0
+     C           PCMMGC    MULT CALCB     P170
+     C           P170      DIV  PCMAGC    QRMAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAMR
+     C                     END
+      *
+     C           PCYAGC    IFNE 0
+     C           PCYMGC    MULT CALCB     P170
+     C           P170      DIV  PCYAGC    QRYAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAMR
+     C                     END
+      *
+     C           QRYMGN    IFEQ 0
+     C           QRYFEE    ANDEQ0
+     C           QRYAVB    ANDEQ0
+     C                     ELSE
+     C                     WRITELENQREDF
+     C                     END
+      *
+      ** RESET CUST. WORK FIELDS
+     C                     Z-ADD0         PCMAGC
+     C                     Z-ADD0         PCMDYC
+     C                     Z-ADD0         PCMMGC
+     C                     Z-ADD0         PCMFEC
+     C                     Z-ADD0         PCYAGC
+     C                     Z-ADD0         PCYDYC
+     C                     Z-ADD0         PCYMGC
+     C                     Z-ADD0         PCYFEC
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ACOFSR - Outputs Account Officer totals to LENQRED.           *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACOFSR    BEGSR
+      *
+      ** SET UP COMMON FIELDS FOR GENERAL LEDGER RECORD
+      *
+     C                     MOVE 'A'       QRRTYP
+     C                     Z-ADD6         QRRSEQ
+     C                     Z-ADDPAAMTD    QRMFEE
+     C                     Z-ADDPAAYTD    QRYFEE
+     C                     MOVE GDDEPT    QRDEPT
+     C                     MOVE GDACOF    QRACOF
+     C                     MOVE *BLANKS   QRACCY                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACOD                          ALIEN1
+     C                     MOVE *BLANKS   QRACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACSQ                          ALIEN1
+     C**********           Z-ADD0         QRCNUM                                              CSD027
+     C                     MOVE *BLANKS   QRCNUM                                              CSD027
+     C                     Z-ADD0         QRMAVB
+     C                     Z-ADD0         QRMMGN
+     C                     Z-ADD0         QRMAYR
+     C                     Z-ADD0         QRMAMR
+     C                     Z-ADD0         QRYAVB
+     C                     Z-ADD0         QRYMGN
+     C                     Z-ADD0         QRYAYR
+     C                     Z-ADD0         QRYAMR
+      *
+      ** SET UP DEPARTMENT FIELDS
+      *
+     C                     ADD  PAAMTD    PDDMTD
+     C                     ADD  PAAYTD    PDDYTD
+     C                     Z-ADD0         PAAMTD
+     C                     Z-ADD0         PAAYTD
+      *
+     C           QRYFEE    IFNE 0
+     C                     WRITELENQREDF
+     C                     END
+      *
+      ** SET UP COMMON FIELDS FOR RETAIL DEBIT RECORD
+      *
+     C                     Z-ADD4         QRRSEQ
+      *
+     C                     Z-ADDPAMFED    QRMFEE
+     C                     Z-ADDPAYFED    QRYFEE
+     C                     Z-ADDPAMMGD    QRMMGN
+     C                     Z-ADDPAYMGD    QRYMGN
+      *
+      ** SET UP DEPARTMENT FIELDS
+      *
+     C                     ADD  PAMAGD    PDMAGD
+     C                     ADD  PAMDYD    PDMDYD
+     C                     ADD  PAMMGD    PDMMGD
+     C                     ADD  PAMFED    PDMFED
+     C                     ADD  PAYAGD    PDYAGD
+     C                     ADD  PAYDYD    PDYDYD
+     C                     ADD  PAYMGD    PDYMGD
+     C                     ADD  PAYFED    PDYFED
+     C                     MOVE RDDEPT    QRDEPT                          BH3506
+     C                     MOVE RDACOF    QRACOF                          BH3506
+      *
+      **   AVERAGE BALANCE CALC.
+      *
+     C           PMNTH     IFNE 0
+     C*********  PAMAGD    DIV  PMNTH     PAMABD                         E32389
+     C           PAMAGD    DIV  PMNTH     PAMABD    H                    E32389
+     C                     ELSE
+     C                     Z-ADD0         PAMABD
+     C                     END
+     C                     Z-ADDPAMABD    QRMAVB
+      *
+     C           PYEAR     IFNE 0
+     C           PAYAGD    DIV  PYEAR     PAYABD    H
+     C                     ELSE
+     C                     Z-ADD0         PAYABD
+     C                     END
+     C                     Z-ADDPAYABD    QRYAVB
+      *
+      **  AVERAGE YIELD RATE
+      *
+     C           PAMAGD    IFNE 0
+     C                     ADD  PAMMGD    PAMFED
+     C           PAMFED    MULT CALCB     P170
+     C           P170      DIV  PAMAGD    QRMAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAYR
+     C                     END
+      *
+     C           PAYAGD    IFNE 0
+     C                     ADD  PAYMGD    PAYFED
+     C           PAYFED    MULT CALCB     P170
+     C           P170      DIV  PAYAGD    QRYAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAYR
+     C                     END
+      *
+      **  AVERAGE MARGIN
+      *
+     C           PAMAGD    IFNE 0
+     C           PAMMGD    MULT CALCB     P170
+     C           P170      DIV  PAMAGD    QRMAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAMR
+     C                     END
+      *
+     C           PAYAGD    IFNE 0
+     C           PAYMGD    MULT CALCB     P170
+     C           P170      DIV  PAYAGD    QRYAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAMR
+     C                     END
+      *
+     C           QRYMGN    IFEQ 0
+     C           QRYFEE    ANDEQ0
+     C           QRYAVB    ANDEQ0
+     C                     ELSE
+     C                     WRITELENQREDF
+     C                     END
+      *
+      ** RESET ACOF. WORK FIELDS
+     C                     Z-ADD0         PAMAGD
+     C                     Z-ADD0         PAMDYD
+     C                     Z-ADD0         PAMMGD
+     C                     Z-ADD0         PAMFED
+     C                     Z-ADD0         PAYAGD
+     C                     Z-ADD0         PAYDYD
+     C                     Z-ADD0         PAYMGD
+     C                     Z-ADD0         PAYFED
+      *
+      ** SET UP COMMON FIELDS FOR RETAIL CREDIT RECORD
+      *
+     C                     Z-ADD5         QRRSEQ
+      *
+     C                     Z-ADDPAMFEC    QRMFEE
+     C                     Z-ADDPAYFEC    QRYFEE
+     C                     Z-ADDPAMMGC    QRMMGN
+     C                     Z-ADDPAYMGC    QRYMGN
+      *
+      ** SET UP DEPT FIELDS
+      *
+     C                     ADD  PAMAGC    PDMAGC
+     C                     ADD  PAMDYC    PDMDYC
+     C                     ADD  PAMMGC    PDMMGC
+     C                     ADD  PAMFEC    PDMFEC
+     C                     ADD  PAYAGC    PDYAGC
+     C                     ADD  PAYDYC    PDYDYC
+     C                     ADD  PAYMGC    PDYMGC
+     C                     ADD  PAYFEC    PDYFEC
+      *
+      **  AVERAGE BALANCE CALC.
+      *
+     C           PMNTH     IFNE 0
+     C***********PAMAGC    DIV  PMNTH     PAMABC                         E32389
+     C           PAMAGC    DIV  PMNTH     PAMABC    H                    E32389
+     C                     ELSE
+     C                     Z-ADD0         PAMABC
+     C                     END
+     C                     Z-ADDPAMABC    QRMAVB
+      *
+     C           PYEAR     IFNE 0
+     C           PAYAGC    DIV  PYEAR     PAYABC    H
+     C                     ELSE
+     C                     Z-ADD0         PAYABC
+     C                     END
+     C                     Z-ADDPAYABC    QRYAVB
+      *
+      **  AVERAGE YIELD RATE
+      *
+     C           PAMAGC    IFNE 0
+     C                     ADD  PAMMGC    PAMFEC
+     C           PAMFEC    MULT CALCB     P170
+     C           P170      DIV  PAMAGC    QRMAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAYR
+     C                     END
+      *
+     C           PAYAGC    IFNE 0
+     C                     ADD  PAYMGC    PAYFEC
+     C           PAYFEC    MULT CALCB     P170
+     C           P170      DIV  PAYAGC    QRYAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAYR
+     C                     END
+      *
+      ** AVERAGE MARGIN
+      *
+     C           PAMAGC    IFNE 0
+     C           PAMMGC    MULT CALCB     P170
+     C           P170      DIV  PAMAGC    QRMAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAMR
+     C                     END
+      *
+     C           PAYAGC    IFNE 0
+     C           PAYMGC    MULT CALCB     P170
+     C           P170      DIV  PAYAGC    QRYAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAMR
+     C                     END
+      *
+     C           QRYMGN    IFEQ 0
+     C           QRYFEE    ANDEQ0
+     C           QRYAVB    ANDEQ0
+     C                     ELSE
+     C                     WRITELENQREDF
+     C                     END
+      *
+      ** RESET ACOF. WORK FIELDS
+     C                     Z-ADD0         PAMAGC
+     C                     Z-ADD0         PAMDYC
+     C                     Z-ADD0         PAMMGC
+     C                     Z-ADD0         PAMFEC
+     C                     Z-ADD0         PAYAGC
+     C                     Z-ADD0         PAYDYC
+     C                     Z-ADD0         PAYMGC
+     C                     Z-ADD0         PAYFEC
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DEPTSR - Outputs department totals to LENQRED.                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, WRITNQ                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DEPTSR    BEGSR
+      *
+      ** SET UP COMMON FIELDS FOR GENERAL LEDGER RECORD
+      *
+     C                     MOVE 'D'       QRRTYP
+     C                     Z-ADD6         QRRSEQ
+     C                     Z-ADDPDDMTD    QRMFEE
+     C                     Z-ADDPDDYTD    QRYFEE
+     C                     MOVE GDDEPT    QRDEPT
+     C                     MOVE *BLANKS   QRACOF
+     C                     MOVE *BLANKS   QRACCY                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACOD                          ALIEN1
+     C                     MOVE *BLANKS   QRACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACSQ                          ALIEN1
+     C**********           Z-ADD0         QRCNUM                                              CSD027
+     C                     MOVE *BLANKS   QRCNUM                                              CSD027
+     C                     Z-ADD0         QRMAVB
+     C                     Z-ADD0         QRMMGN
+     C                     Z-ADD0         QRMAYR
+     C                     Z-ADD0         QRMAMR
+     C                     Z-ADD0         QRYAVB
+     C                     Z-ADD0         QRYMGN
+     C                     Z-ADD0         QRYAYR
+     C                     Z-ADD0         QRYAMR
+      *
+      ** SET UP TOTAL FIELDS
+      *
+     C                     ADD  PDDMTD    PTMTD
+     C                     ADD  PDDYTD    PTYTD
+     C                     Z-ADD0         PDDMTD
+     C                     Z-ADD0         PDDYTD
+      *
+     C           QRYFEE    IFNE 0
+     C                     WRITELENQREDF
+     C                     END
+      *
+      **  SET UP COMMON FIELDS FOR RETAIL DEBIT RECORD
+      *
+     C                     Z-ADD4         QRRSEQ
+      *
+     C                     Z-ADDPDMFED    QRMFEE
+     C                     Z-ADDPDYFED    QRYFEE
+     C                     Z-ADDPDMMGD    QRMMGN
+     C                     Z-ADDPDYMGD    QRYMGN
+      *
+      **  SET UP TOTAL FIELDS
+      *
+     C                     ADD  PDMAGD    PTMAGD
+     C                     ADD  PDMDYD    PTMDYD
+     C                     ADD  PDMMGD    PTMMGD
+     C                     ADD  PDMFED    PTMFED
+     C                     ADD  PDYAGD    PTYAGD
+     C                     ADD  PDYDYD    PTYDYD
+     C                     ADD  PDYMGD    PTYMGD
+     C                     ADD  PDYFED    PTYFED
+     C                     MOVE RDDEPT    QRDEPT                          BH3506
+      *
+      **   AVERAGE BALANCE CALC.
+      *
+     C           PMNTH     IFNE 0
+     C           PDMAGD    DIV  PMNTH     PDMABD    H
+     C                     ELSE
+     C                     Z-ADD0         PDMABD
+     C                     END
+     C                     Z-ADDPDMABD    QRMAVB
+      *
+     C           PYEAR     IFNE 0
+     C           PDYAGD    DIV  PYEAR     PDYABD    H
+     C                     ELSE
+     C                     Z-ADD0         PDYABD
+     C                     END
+     C                     Z-ADDPDYABD    QRYAVB
+      *
+      ** AVERAGE YIELD RATE
+      *
+     C           PDMAGD    IFNE 0
+     C                     ADD  PDMMGD    PDMFED
+     C           PDMFED    MULT CALCB     P170
+     C           P170      DIV  PDMAGD    QRMAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAYR
+     C                     END
+      *
+     C           PDYAGD    IFNE 0
+     C                     ADD  PDYMGD    PDYFED
+     C           PDYFED    MULT CALCB     P170
+     C           P170      DIV  PDYAGD    QRYAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAYR
+     C                     END
+      *
+      **  AVERAGE MARGIN
+      *
+     C           PDMAGD    IFNE 0
+     C           PDMMGD    MULT CALCB     P170
+     C           P170      DIV  PDMAGD    QRMAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAMR
+     C                     END
+      *
+     C           PDYAGD    IFNE 0
+     C           PDYMGD    MULT CALCB     P170
+     C           P170      DIV  PDYAGD    QRYAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAMR
+     C                     END
+      *
+     C           QRYMGN    IFEQ 0
+     C           QRYFEE    ANDEQ0
+     C           QRYAVB    ANDEQ0
+     C                     ELSE
+     C                     WRITELENQREDF
+     C                     END
+      *
+      ** RESET DEPT. WORK FIELDS
+     C                     Z-ADD0         PDMAGD
+     C                     Z-ADD0         PDMDYD
+     C                     Z-ADD0         PDMMGD
+     C                     Z-ADD0         PDMFED
+     C                     Z-ADD0         PDYAGD
+     C                     Z-ADD0         PDYDYD
+     C                     Z-ADD0         PDYMGD
+     C                     Z-ADD0         PDYFED
+      *
+      **  SET UP COMMON FIELDS FOR RETAIL CREDIT RECORD
+      *
+     C                     Z-ADD5         QRRSEQ
+      *
+     C                     Z-ADDPDMFEC    QRMFEE
+     C                     Z-ADDPDYFEC    QRYFEE
+     C                     Z-ADDPDMMGC    QRMMGN
+     C                     Z-ADDPDYMGC    QRYMGN
+      *
+      **  SET UP TOTAL FIELDS
+      *
+     C                     ADD  PDMAGC    PTMAGC
+     C                     ADD  PDMDYC    PTMDYC
+     C                     ADD  PDMMGC    PTMMGC
+     C                     ADD  PDMFEC    PTMFEC
+     C                     ADD  PDYAGC    PTYAGC
+     C                     ADD  PDYDYC    PTYDYC
+     C                     ADD  PDYMGC    PTYMGC
+     C                     ADD  PDYFEC    PTYFEC
+      *
+      **  AVERAGE BALANCE CALC.
+      *
+     C           PMNTH     IFNE 0
+     C           PDMAGC    DIV  PMNTH     PDMABC    H
+     C                     ELSE
+     C                     Z-ADD0         PDMABC
+     C                     END
+     C                     Z-ADDPDMABC    QRMAVB
+      *
+     C           PYEAR     IFNE 0
+     C           PDYAGC    DIV  PYEAR     PDYABC    H
+     C                     ELSE
+     C                     Z-ADD0         PDYABC
+     C                     END
+     C                     Z-ADDPDYABC    QRYAVB
+      *
+      ** AVERAGE YIELD RATE
+      *
+     C           PDMAGC    IFNE 0
+     C                     ADD  PDMMGC    PDMFEC
+     C           PDMFEC    MULT CALCB     P170
+     C           P170      DIV  PDMAGC    QRMAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAYR
+     C                     END
+      *
+     C           PDYAGC    IFNE 0
+     C                     ADD  PDYMGC    PDYFEC
+     C           PDYFEC    MULT CALCB     P170
+     C           P170      DIV  PDYAGC    QRYAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAYR
+     C                     END
+      *
+      ** AVERAGE MARGIN
+      *
+     C           PDMAGC    IFNE 0
+     C           PDMMGC    MULT CALCB     P170
+     C           P170      DIV  PDMAGC    QRMAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAMR
+     C                     END
+      *
+     C           PDYAGC    IFNE 0
+     C           PDYMGC    MULT CALCB     P170
+     C           P170      DIV  PDYAGC    QRYAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAMR
+     C                     END
+      *
+     C           QRYMGN    IFEQ 0
+     C           QRYFEE    ANDEQ0
+     C           QRYAVB    ANDEQ0
+     C                     ELSE
+     C                     WRITELENQREDF
+     C                     END
+      *
+      ** RESET DEPT. WORK FIELDS
+     C                     Z-ADD0         PDMAGC
+     C                     Z-ADD0         PDMDYC
+     C                     Z-ADD0         PDMMGC
+     C                     Z-ADD0         PDMFEC
+     C                     Z-ADD0         PDYAGC
+     C                     Z-ADD0         PDYDYC
+     C                     Z-ADD0         PDYMGC
+     C                     Z-ADD0         PDYFEC
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * LASTSR - Outputs last record totals to LENQRED.               *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, WRITNQ                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LASTSR    BEGSR
+      *
+      **  SET UP COMMON FIELDS FOR GENERAL LEDGER RECORD
+      *
+     C                     MOVE 'T'       QRRTYP
+     C                     Z-ADD6         QRRSEQ
+     C                     Z-ADDPTMTD     QRMFEE
+     C                     Z-ADDPTYTD     QRYFEE
+     C                     MOVE *BLANKS   QRDEPT
+     C                     MOVE *BLANKS   QRACOF
+     C                     MOVE *BLANKS   QRACCY                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACOD                          ALIEN1
+     C                     MOVE *BLANKS   QRACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    QRACSQ                          ALIEN1
+     C**********           Z-ADD0         QRCNUM                                              CSD027
+     C                     MOVE *BLANKS   QRCNUM                                              CSD027
+     C                     Z-ADD0         QRMAVB
+     C                     Z-ADD0         QRMMGN
+     C                     Z-ADD0         QRMAYR
+     C                     Z-ADD0         QRMAMR
+     C                     Z-ADD0         QRYAVB
+     C                     Z-ADD0         QRYMGN
+     C                     Z-ADD0         QRYAYR
+     C                     Z-ADD0         QRYAMR
+      *
+     C           QRYFEE    IFNE 0
+     C                     WRITELENQREDF
+     C                     END
+      *
+      **  SET UP COMMON FIELDS FOR RETAIL DEBIT RECORD
+      *
+     C                     Z-ADD4         QRRSEQ
+      *
+     C                     Z-ADDPTMFED    QRMFEE
+     C                     Z-ADDPTYFED    QRYFEE
+     C                     Z-ADDPTMMGD    QRMMGN
+     C                     Z-ADDPTYMGD    QRYMGN
+      *
+      **  AVERAGE BALANCE CALC.
+      *
+     C           PMNTH     IFNE 0
+     C           PTMAGD    DIV  PMNTH     PTMABD    H
+     C                     ELSE
+     C                     Z-ADD0         PTMABD
+     C                     END
+     C                     Z-ADDPTMABD    QRMAVB
+      *
+     C           PYEAR     IFNE 0
+     C           PTYAGD    DIV  PYEAR     PTYABD    H
+     C                     ELSE
+     C                     Z-ADD0         PTYABD
+     C                     END
+     C                     Z-ADDPTYABD    QRYAVB
+      *
+      **  AVERAGE YIELD RATE
+      *
+     C           PTMAGD    IFNE 0
+     C                     ADD  PTMMGD    PTMFED
+     C           PTMFED    MULT CALCB     P170
+     C           P170      DIV  PTMAGD    QRMAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAYR
+     C                     END
+      *
+     C           PTYAGD    IFNE 0
+     C                     ADD  PTYMGD    PTYFED
+     C           PTYFED    MULT CALCB     P170
+     C           P170      DIV  PTYAGD    QRYAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAYR
+     C                     END
+      *
+      ** AVERAGE MARGIN
+      *
+     C           PTMAGD    IFNE 0
+     C           PTMMGD    MULT CALCB     P170
+     C           P170      DIV  PTMAGD    QRMAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAMR
+     C                     END
+      *
+     C           PTYAGD    IFNE 0
+     C           PTYMGD    MULT CALCB     P170
+     C           P170      DIV  PTYAGD    QRYAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAMR
+     C                     END
+      *
+     C           QRYMGN    IFEQ 0
+     C           QRYFEE    ANDEQ0
+     C           QRYAVB    ANDEQ0
+     C                     ELSE
+     C                     WRITELENQREDF
+     C                     END
+      *
+      **  SET UP COMMON FIELDS FOR RETAIL CREDIT RECORD
+      *
+     C                     Z-ADD5         QRRSEQ
+      *
+     C                     Z-ADDPTMFEC    QRMFEE
+     C                     Z-ADDPTYFEC    QRYFEE
+     C                     Z-ADDPTMMGC    QRMMGN
+     C                     Z-ADDPTYMGC    QRYMGN
+      *
+      **  AVERAGE BALANCE CALC.
+      *
+     C           PMNTH     IFNE 0
+     C           PTMAGC    DIV  PMNTH     PTMABC    H
+     C                     ELSE
+     C                     Z-ADD0         PTMABC
+     C                     END
+     C                     Z-ADDPTMABC    QRMAVB
+      *
+     C           PYEAR     IFNE 0
+     C           PTYAGC    DIV  PYEAR     PTYABC    H
+     C                     ELSE
+     C                     Z-ADD0         PTYABC
+     C                     END
+     C                     Z-ADDPTYABC    QRYAVB
+      *
+      **  AVERAGE YIELD RATE
+      *
+     C           PTMAGC    IFNE 0
+     C                     ADD  PTMMGC    PTMFEC
+     C           PTMFEC    MULT CALCB     P170
+     C           P170      DIV  PTMAGC    QRMAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAYR
+     C                     END
+      *
+     C           PTYAGC    IFNE 0
+     C                     ADD  PTYMGC    PTYFEC
+     C           PTYFEC    MULT CALCB     P170
+     C           P170      DIV  PTYAGC    QRYAYR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAYR
+     C                     END
+      *
+      **  AVERAGE MARGIN
+      *
+     C           PTMAGC    IFNE 0
+     C           PTMMGC    MULT CALCB     P170
+     C           P170      DIV  PTMAGC    QRMAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRMAMR
+     C                     END
+      *
+     C           PTYAGC    IFNE 0
+     C           PTYMGC    MULT CALCB     P170
+     C           P170      DIV  PTYAGC    QRYAMR    H
+     C                     ELSE
+     C                     Z-ADD0         QRYAMR
+     C                     END
+      *
+     C           QRYMGN    IFEQ 0
+     C           QRYFEE    ANDEQ0
+     C           QRYAVB    ANDEQ0
+     C                     ELSE
+     C                     WRITELENQREDF
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Performs First Cycle calculations.                   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, WRITNQ                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVE '1'       *IN10
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+     C*                                                                     0113
+     C** Access LERSTS for the date of last run                             0113
+     C*                                                                     0113
+     C           *NAMVAR   DEFN           LERSTS                            0113
+     C                     IN   LERSTS                                      0113
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *                                                    **************
+     C           PRTCD     IFNE *BLANKS                    * DBERROR 01 *
+     C           *LOCK     IN   LDA                        **************
+     C                     MOVEL'*READ   'DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'LER450'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C** ADD ONE TO PREVIOUS END OF YEAR DATE TO GET
+     C** START OF YEAR DAY THEN SUBTRACT FROM DATE OF NEXT WORKING
+     C** DAY TO GET NUMBER OF DAYS SO FAR THIS YEAR
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE BJMRDT    WRK5A   5
+     C                     MOVELWRK5A     MMM     3
+     C                     MOVE WRK5A     YY      2
+     C*
+     C           BJPEYD    ADD  1         SOYDN   50
+     C           BJDNWD    SUB  1         BJDNWD                           0113
+     C*                                                                    0113
+     C** If the start of year date is later than the takeon date           0113
+     C** use it otherwise use the takeon date to calculate the active      0113
+     C** days in the year                                                  0113
+     C*                                                                    0113
+     C           WHISST    IFLT SOYDN                                      0113
+     C***********BJDNWD    SUB  SOYDN     PYEAR   50                     BHXXXX
+     C********** LASTRN    SUB  SOYDN     PYEAR   50               BHXXXX BHSTEV
+     C********** LASTRN    SUB  BJPEYD    PYEAR   50                                   BHSTEV 225714
+     C           WPRFDT    SUB  BJPEYD    PYEAR   50                                          225714
+     C                     ELSE                                            0113
+     C***********BJDNWD    SUB  WHISST    PYEAR                     0113 BHXXXX
+     C********** LASTRN    SUB  WHISST    PYEAR                                        BHXXXX 225714
+     C           WPRFDT    SUB  WHISST    PYEAR                                               225714
+     C                     END                                             0113
+     C*
+     C                     Z-ADDSOYDN     ZDAYNO
+     C*
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                         98MMDDYY, 98 ON
+     C                     END
+     C*
+     C                     EXSR ZDATE2
+      *
+     C           ZADATE    IFEQ *BLANKS
+     C           ZDATE     OREQ 0
+     C           *LOCK     IN   LDA                        **************
+     C                     MOVEL'*READ   'DBKEY            *  DBERR 02   *
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'ZDATE2  'DBFILE
+     C                     MOVEL' LER450 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVELZADATE    DSTORE  2
+     C*
+     C                     END
+      *                                                                                       225714
+     C                     MOVE REPDAT    REPDT                                               225714
+     C                     MOVE REPMM     MMM                                                 225714
+     C                     Z-ADD1         X       20                                          225714
+     C           REPMM     LOKUPGMNM,X                   97                                   225714
+     C           X         ADD  1         WNXT    20                                          225714
+     C                     MOVELREPDD     PRFDD                                               225714
+     C                     MOVE X         PRFMM                                               225714
+     C                     MOVE REPYY     PRFYY                                               225714
+     C                     MOVE PRFDT     ZDATE                                               225714
+     C                     EXSR ZDATE1                                                        225714
+     C                     Z-ADDZDAYNO    WPRFDT  50                                          225714
+      *                                                                                       225714
+     C                     Z-ADDPRFDT     WSTRMO                                              225714
+     C                     Z-ADD01        WSTRDD                                              225714
+     C                     MOVE WSTRMO    ZDATE                                               225714
+     C                     EXSR ZDATE1                                                        225714
+     C                     Z-ADDZDAYNO    WSTART  50                                          225714
+     C*
+     C** ACCESS SDCURRL0 USING THE BASE CURRENCY TO RETRIEVE THE DEFAULT
+     C** CALCULATION BASIS
+     C*
+     C** AND FOR THE BASE CURRENCY DEFAULT CALCULATION BASIS
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BJCYCD    CURKEY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           A6DICB    OREQ *BLANKS
+     C           *LOCK     IN   LDA                        **************
+     C                     MOVELBJCYCD    DBKEY            *  DBERR 03   *
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL' LER450 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C** SETUP THE CORRECT NUMBER OF DAYS IN THE YEAR FROM THE
+     C** DEFAULT CALCULATION BASIS
+     C*
+     C                     ELSE
+     C           A6DICB    IFEQ '1'
+     C           A6DICB    OREQ '4'
+     C                     Z-ADD365       CALCB   30
+     C                     ELSE
+     C           A6DICB    IFEQ '6'
+     C                     Z-ADD366       CALCB
+     C                     ELSE
+     C                     Z-ADD360       CALCB
+     C                     END
+     C                     END
+     C                     END
+      *
+      **  Get current month number for accessing arrays.
+      *
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPGMNM,MN                  10
+     C                     MOVE YY        MY
+     C*
+     C**  REMOVAL OF HARD CODED START OF MONTH DAY
+     C**  AND ADDITION OF START OF YEAR DATE DAY
+     C*
+     C** START OF MONTH DATE NEEDS TO BE ADJUSTED IF THE DAY
+     C** NUMBER OF THE DATE OF NEXT WORKING DAY IS LESS THAN OR EQUAL
+     C** TO START OF MONTH DAY
+     C*
+     C                     Z-ADDBJDNWD    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+     C           ZADATE    IFEQ *BLANKS
+     C           ZDATE     OREQ 0
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVEL'*READ   'DBKEY            *  DBERR 04   *
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'ZDATE2  'DBFILE
+     C                     MOVEL' LER450 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** The check should be made on the day of rundate not on            0113
+     C** the day of next working day                                      0113
+     C*                                                                   0113
+     C                     MOVELBJMRDT    DD1     2                       0113
+     C*********************MOVELZADATE    DD1     2                       0113
+     C*
+     C**  IF THE DD FIELD OF THE PROCESSING DATE IS LESS THAN THE
+     C**  DD FIELD OF THE START OF MONTH DATE THEN ALLOW FOR
+     C**  THE USE OF THE PREVIOUS MONTHS CALCULATIONS BY
+     C**  SUBTRACTING '1' FROM THE MONTH NUMBER
+     C*
+     C***********DD1       IFLE DSTORE                                    0113
+     C           DD1       IFLT DSTORE                                    0113
+     C                     SUB  1         MN
+     C*
+     C**  SUBSEQUENTLY IF THE RESULTING MONTH NUMBER IS ZERO THEN
+     C**  MOVE 12 INTO THE MN FIELD AND SUBTRACT ONE FROM THE YY
+     C**  FIELD TO RETURN TO THE PREVIOUS YEAR
+     C*
+     C           MN        IFEQ 0
+     C                     Z-ADD12        MN
+     C                     MOVE YY        YYN     20
+     C                     SUB  1         YYN
+     C                     MOVE YYN       MY
+     C                     END
+     C*
+     C                     END
+     C*
+     C** NOW MOVE THE APPROPRIATE VALUES INTO THE MONTH AND YEAR FIELDS
+     C** FOR THE DATE DATASTRUCTURE
+     C*
+     C                     MOVE DSTORE    DD
+     C*
+     C                     MOVELMN        MY
+     C*
+     C                     MOVE DATE      ZDATE
+     C                     MOVE '0'       GRTCD
+     C                     CALL 'LERDATEF'
+     C                     PARM           ZDATE   60
+     C                     PARM           ZDAYNO  50
+     C                     PARM           GRTCD   1
+     C*
+     C           GRTCD     IFNE '0'
+     C           A6DICB    OREQ *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVEL'LERDATEF'DBFILE           *  DBERR 05   *
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL' LER450 'DBPGM
+     C                     MOVEL'*READ   'DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                  E35137
+      * RETRIEVE ACCRUALS FOR NON-WORKING INDICATOR                      E35137
+      *                                                                  E35137
+     C           *LOVAL    SETLLSDGELRL1                                 E35137
+     C                     READ SDGELRL1                 99              E35137
+     C           *IN99     IFEQ '1'                                      E35137
+     C                     Z-ADD8         DBASE                          E35137
+     C                     MOVEL'BKANWD'  DBKEY                          E35137
+     C                     MOVEL'SDGELRL1'DBFILE                         E35137
+     C                     SETON                     U7U8LR              E35137
+     C                     RETRN                                         E35137
+     C                     END                                           E35137
+     C*                                                                  BHXXXX
+     C** SET UP THE NUMBER OF DAYS IN THE MONTH                          BHXXXX
+     C*                                                                  BHXXXX
+     C           LASTRN    IFGT WPRFDT                                                        225714
+     C           WPRFDT    SUB  ZDAYNO    PMNTH                                               225714
+     C                     ELSE                                                               225714
+     C           LASTRN    SUB  ZDAYNO    PMNTH   50                     BHXXXX
+     C                     ENDIF                                                              225714
+     C           PMNTH     ADD  1         PMNTH                          BHXXXX
+     C***********                                                  E35137BHXXXX
+     C**CHECK*ACCRUALS FOR NON-WORKING INDICATOR FOR CALC. DATE    E35137BHXXXX
+     C***********                                                  E35137BHXXXX
+     C***********BKANWD    IFNE '2'                                E35137BHXXXX
+     C***********BKANWD    OREQ '2'                                      BHXXXX
+     C***********BKAPDT    ANDLEBJDNWD                                   BHXXXX
+     C***********                                                        BHXXXX
+     C***********BJDNWD    SUB  ZDAYNO    PMNTH   50                     BHXXXX
+     C***********                                                        BHXXXX
+     C***********          ELSE                                    E35137BHXXXX
+     C**RUN*DATE*MINUS START DATE OF MONTH PLUS 1                  E35137BHXXXX
+     C***********BJRDNB    SUB  ZDAYNO    PMNTH   50               E35137BHXXXX
+     C***********          ADD  1         PMNTH                    E35137BHXXXX
+     C***********                                                  E35137BHXXXX
+     C***********          END                                     E35137BHXXXX
+     C***********                                                  E35137BHXXXX
+      ** Access PEFMTC for Other Charges/Fees reporting option.           ALIEN1
+      *                                                                   ALIEN1
+     C                     READ PEFMTC                   20               ALIEN1
+     C           *IN20     IFEQ '1'                                       ALIEN1
+     C           *LOCK     IN   LDA                        ************** ALIEN1
+     C                     MOVEL'*READ   'DBKEY            *  DBERR 06  * ALIEN1
+     C                     Z-ADD6         DBASE            ************** ALIEN1
+     C                     MOVEL'PEFMTC  'DBFILE                          ALIEN1
+     C                     MOVEL' LER450 'DBPGM                           ALIEN1
+     C                     OUT  LDA                                       ALIEN1
+     C                     EXSR *PSSR                                     ALIEN1
+     C                     END                                            ALIEN1
+      *
+      ** DEFINE WORK FIELDS
+      *
+     C                     Z-ADD0         P7      70
+     C                     Z-ADD0         P15    150
+     C                     Z-ADD0         P170   170
+     C           *LIKE     DEFN P15       PYTD
+     C           *LIKE     DEFN P15       PFYTD
+     C           *LIKE     DEFN P15       PMYTD
+     C           *LIKE     DEFN P15       PAMABC
+     C           *LIKE     DEFN P15       PAMABD
+     C           *LIKE     DEFN P15       PAMAGC
+     C           *LIKE     DEFN P15       PAMAGD
+     C           *LIKE     DEFN P7        PAMDYC
+     C           *LIKE     DEFN P7        PAMDYD
+     C           *LIKE     DEFN P15       PAMFEC
+     C           *LIKE     DEFN P15       PAMFED
+     C           *LIKE     DEFN P15       PAMMGC
+     C           *LIKE     DEFN P15       PAMMGD
+     C           *LIKE     DEFN P15       PAMTD
+     C           *LIKE     DEFN P15       PAAMTD
+     C           *LIKE     DEFN P15       PAYABC
+     C           *LIKE     DEFN P15       PAYABD
+     C           *LIKE     DEFN P15       PAYAGC
+     C           *LIKE     DEFN P15       PAYAGD
+     C           *LIKE     DEFN P7        PAYDYC
+     C           *LIKE     DEFN P7        PAYDYD
+     C           *LIKE     DEFN P15       PAYFEC
+     C           *LIKE     DEFN P15       PAYFED
+     C           *LIKE     DEFN P15       PAYMGC
+     C           *LIKE     DEFN P15       PAYMGD
+     C           *LIKE     DEFN P15       PAYTD
+     C           *LIKE     DEFN P15       PAAYTD
+     C           *LIKE     DEFN P15       PCMABC
+     C           *LIKE     DEFN P15       PCMABD
+     C           *LIKE     DEFN P15       PCMAGC
+     C           *LIKE     DEFN P15       PCMAGD
+     C           *LIKE     DEFN P7        PCMDYC
+     C           *LIKE     DEFN P7        PCMDYD
+     C           *LIKE     DEFN P15       PCMFEC
+     C           *LIKE     DEFN P15       PCMFED
+     C           *LIKE     DEFN P15       PCMMGC
+     C           *LIKE     DEFN P15       PCMMGD
+     C           *LIKE     DEFN P15       PCMTD
+     C           *LIKE     DEFN P15       PCYABC
+     C           *LIKE     DEFN P15       PCYABD
+     C           *LIKE     DEFN P15       PCYAGC
+     C           *LIKE     DEFN P15       PCYAGD
+     C           *LIKE     DEFN P7        PCYDYC
+     C           *LIKE     DEFN P7        PCYDYD
+     C           *LIKE     DEFN P15       PCYFEC
+     C           *LIKE     DEFN P15       PCYFED
+     C           *LIKE     DEFN P15       PCYMGC
+     C           *LIKE     DEFN P15       PCYMGD
+     C           *LIKE     DEFN P15       PCYTD
+     C           *LIKE     DEFN P15       PDMABC
+     C           *LIKE     DEFN P15       PDMABD
+     C           *LIKE     DEFN P15       PDMAGC
+     C           *LIKE     DEFN P15       PDMAGD
+     C           *LIKE     DEFN P7        PDMDYC
+     C           *LIKE     DEFN P7        PDMDYD
+     C           *LIKE     DEFN P15       PDMFEC
+     C           *LIKE     DEFN P15       PDMFED
+     C           *LIKE     DEFN P15       PDMMGC
+     C           *LIKE     DEFN P15       PDMMGD
+     C           *LIKE     DEFN P15       PDMTD
+     C           *LIKE     DEFN P15       PDDMTD
+     C           *LIKE     DEFN P15       PDYABC
+     C           *LIKE     DEFN P15       PDYABD
+     C           *LIKE     DEFN P15       PDYAGC
+     C           *LIKE     DEFN P15       PDYAGD
+     C           *LIKE     DEFN P7        PDYDYC
+     C           *LIKE     DEFN P7        PDYDYD
+     C           *LIKE     DEFN P15       PDYFEC
+     C           *LIKE     DEFN P15       PDYFED
+     C           *LIKE     DEFN P15       PDYMGC
+     C           *LIKE     DEFN P15       PDYMGD
+     C           *LIKE     DEFN P15       PDYTD
+     C           *LIKE     DEFN P15       PDDYTD
+     C           *LIKE     DEFN P15       PTMABC
+     C           *LIKE     DEFN P15       PTMABD
+     C           *LIKE     DEFN P15       PTMAGC
+     C           *LIKE     DEFN P15       PTMAGD
+     C           *LIKE     DEFN P7        PTMDYC
+     C           *LIKE     DEFN P7        PTMDYD
+     C           *LIKE     DEFN P15       PTMFEC
+     C           *LIKE     DEFN P15       PTMFED
+     C           *LIKE     DEFN P15       PTMMGC
+     C           *LIKE     DEFN P15       PTMMGD
+     C           *LIKE     DEFN P15       PTMTD
+     C           *LIKE     DEFN P15       PTYABC
+     C           *LIKE     DEFN P15       PTYABD
+     C           *LIKE     DEFN P15       PTYAGC
+     C           *LIKE     DEFN P15       PTYAGD
+     C           *LIKE     DEFN P7        PTYDYC
+     C           *LIKE     DEFN P7        PTYDYD
+     C           *LIKE     DEFN P15       PTYFEC
+     C           *LIKE     DEFN P15       PTYFED
+     C           *LIKE     DEFN P15       PTYMGC
+     C           *LIKE     DEFN P15       PTYMGD
+     C           *LIKE     DEFN P15       PTYTD
+      *
+     C                     ENDSR
+      *
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   Nothing                                *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     RETRN
+      *
+     C           PSSR      ENDSR
+      *
+     C*****************************************************************
+     C/EJECT
+     C/TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   225714
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   GMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

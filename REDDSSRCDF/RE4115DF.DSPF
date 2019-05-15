@@ -1,0 +1,2522 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas RE Cash/Cheque Deposit in Non A/C CCY')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Retail Module                                        *
+     A*                                                               *
+     A*  DSPF/RE4115DF - Cash/Cheque Deposit in Non A/C Ccy           *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042577           Date 28Nov16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 253894 (B          Date 28Apr08               *
+      *                 249218             Date 16Aug07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CRT026             Date 22May06               *
+      *                 BUG7819            Date 17Aug05               *
+      *                 CAAA03             Date 30Apr04               *
+      *                 CRE019             Date 12Jan04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT002             Date  1DEC95               *
+      *                 S01408             Date 25JAN96               *
+     A*                 S01408             DATE 24JAN96               *
+     A*                 093546             DATE 11SEP95               *
+     A*                 092429             DATE 24AUG95               *
+     A*                 091241             DATE 21JUL95               *
+     A*                 090199             DATE 07JUL95               *
+     A*                 CRT001  *CREATE    DATE 28FEB95               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD042577 - Create screen format for each option in order to  *
+      *             display help text correctly.                      *
+      *  253894 - Removed CLRL keyword and added a header in RE4115F3 *
+      *  249218 - Applied fix 239004.                                 *
+      *  239004 - 'Transaction Terminated' not shown when account's   *
+      *           branch is not matched with teller ID branch.        *
+      *  CRT026 - Retail Teller Password Change                       *
+      *  BUG7819 - If a retail account has insufficient funds,        *
+      *            the system simply drop a Cash Withdrawal           *
+      *            (non-account currency) transaction                 *
+      *  CAAA03 - Webfacing changes.                                  *
+      *  CRE019 - Cheque Processing and Maintenance                   *
+     A*  CRT002 - Retail Branch Access.                               *
+     A*  S01408 - Addition of hook RE4115DF05                         *
+     A*           Addition of hook RE4115DF06                         *
+     A*           Addition of hook RE4115DF07                         *
+     A*           Addition of hook RE4115DF08                         *
+     A*           Addition of hook RE4115DF09                         *
+     A*           Addition of hook RE4115DF10                         *
+     A*  S01408 - Addition of hook RE4115DF01                         *
+     A*           Addition of hook RE4115DF02                         *
+     A*           Addition of hook RE4115DF03                         *
+     A*           Addition of hook RE4115DF04                         *
+     A*  093546 - Change 'Ledger Balance' text to 'Today's Projected  *
+     A*           Ledger Balance'.  Align other fields.               *
+     A*  092429 - Include RTS transaction narrative.                  *
+     A*  091241 - Bank Code field extended from 7A to 11A.            *
+     A*  090199 - RE-COMPILATION TO CORRECT MULTI-LANGUAGE            *
+     A*           REFERENCES.                                         *
+     A*  CRT001 - Retail Teller System.                               *
+     A*                                                               *
+     A*****************************************************************
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A                                      REF(MFRFL)
+      ** Start of change CAAA03
+     A                                      DSPSIZ(*DS4)
+     A*********                             MSGLOC(24)                                        CAAA03
+     A                                      MSGLOC(25)
+      ** End of change CAAA03
+      *
+      *---------------------------------------------------------------------
+     A          R RE4115F0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A** Start of Change 253894
+     A**********                            CLRL(*NO)                                         253894
+     A** End of Change 253894
+     A                                      PUTOVR
+     A                                      CF03
+     A                                      CF05
+     A N11                                  CF10
+     A*
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A*********                                      Begin /CRT002/
+     A**24*****                         1 32'CLEARING CHEQUE DEPOSIT'
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A*                                              End   /CRT002/
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN NON-ACCOUNT +
+     A                                       CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(UL HI)
+     A*********                                      Begin /CRT002/
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A*                                              End   /CRT002/
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+      ** Transaction completion details
+     A  20                             11 06'TRANSACTION TERMINATED'                          239004
+     A  21                             11 06'OVERRIDE REQUIRED'                               239004
+     A  45                             11 06'TRANS NO. COMPLETED -'
+     A                                      DSPATR(HI)
+     A  45        STTLU          5  0O 11 28TEXT('TELLER TRANSACTION NUMBER')
+     A                                      DSPATR(HI)
+     A  41                             12 06'ACCOUNT CLOSED'
+     A                                      DSPATR(HI)
+     A  42                             12 06'ACCOUNT NOT CLOSED'
+     A                                      DSPATR(HI)
+      *
+      ** A/C number prompt
+     A                                 14  6'Enter next'
+     A                                 15  6'Retail a/c number '
+     A            SACNO1        10   B 15 30TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(UL)
+     A  30                                  DSPATR(PC)
+     A  30                                  DSPATR(RI)
+     A                                      OVRDTA
+     A**Start of change CRE019
+      *
+     A  43 49
+     AO 44 49                          16  6'House Cheque A/C  '
+     A  43 49
+     AO 44 49     SHCAC         10   B 16 30TEXT('House Cheque A/C')
+     A  43 49
+     AO 44 49                               DSPATR(HI)
+     A  43N48 49
+     AO 44N48 49                            DSPATR(UL)
+     A  43 48 49
+     AO 44 48 49                            DSPATR(PC RI)
+     A                                      OVRDTA
+     A**End of change CRE019
+      *
+     A** Start of change BUG7819                                                             BUG7819
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')                          BUG7819
+      *                                                                                      BUG7819
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')                          BUG7819
+      ** End of change BUG7819                                                               BUG7819
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A N11                             23 25'F10=A/C closure enquiry'
+      *
+      * Start of change MD042577
+      *---------------------------------------------------------------------
+     A          R F00JN                     TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF03
+     A                                      CF05
+     A N11                                  CF10
+     A*
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN NON-ACCOUNT +
+     A                                       CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(UL HI)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+      ** Transaction completion details
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A  45                             11 06'TRANS NO. COMPLETED -'
+     A                                      DSPATR(HI)
+     A  45        STTLU          5  0O 11 28TEXT('TELLER TRANSACTION NUMBER')
+     A                                      DSPATR(HI)
+     A  41                             12 06'ACCOUNT CLOSED'
+     A                                      DSPATR(HI)
+     A  42                             12 06'ACCOUNT NOT CLOSED'
+     A                                      DSPATR(HI)
+      *
+      ** A/C number prompt
+     A                                 14  6'Enter next'
+     A                                 15  6'Retail a/c number '
+     A            SACNO1        10   B 15 30TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(UL)
+     A  30                                  DSPATR(PC)
+     A  30                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43 49
+     AO 44 49                          16  6'House Cheque A/C  '
+     A  43 49
+     AO 44 49     SHCAC         10   B 16 30TEXT('House Cheque A/C')
+     A  43 49
+     AO 44 49                               DSPATR(HI)
+     A  43N48 49
+     AO 44N48 49                            DSPATR(UL)
+     A  43 48 49
+     AO 44 48 49                            DSPATR(PC RI)
+     A                                      OVRDTA
+      *
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A N11                             23 25'F10=A/C closure enquiry'
+      *---------------------------------------------------------------------
+     A          R F00JP                     TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF03
+     A                                      CF05
+     A N11                                  CF10
+     A*
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN NON-ACCOUNT +
+     A                                       CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(UL HI)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+      ** Transaction completion details
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A  45                             11 06'TRANS NO. COMPLETED -'
+     A                                      DSPATR(HI)
+     A  45        STTLU          5  0O 11 28TEXT('TELLER TRANSACTION NUMBER')
+     A                                      DSPATR(HI)
+     A  41                             12 06'ACCOUNT CLOSED'
+     A                                      DSPATR(HI)
+     A  42                             12 06'ACCOUNT NOT CLOSED'
+     A                                      DSPATR(HI)
+      *
+      ** A/C number prompt
+     A                                 14  6'Enter next'
+     A                                 15  6'Retail a/c number '
+     A            SACNO1        10   B 15 30TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(UL)
+     A  30                                  DSPATR(PC)
+     A  30                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43 49
+     AO 44 49                          16  6'House Cheque A/C  '
+     A  43 49
+     AO 44 49     SHCAC         10   B 16 30TEXT('House Cheque A/C')
+     A  43 49
+     AO 44 49                               DSPATR(HI)
+     A  43N48 49
+     AO 44N48 49                            DSPATR(UL)
+     A  43 48 49
+     AO 44 48 49                            DSPATR(PC RI)
+     A                                      OVRDTA
+      *
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A N11                             23 25'F10=A/C closure enquiry'
+      *---------------------------------------------------------------------
+     A          R F00JR                     TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF03
+     A                                      CF05
+     A N11                                  CF10
+     A*
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN NON-ACCOUNT +
+     A                                       CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(UL HI)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+      ** Transaction completion details
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A  45                             11 06'TRANS NO. COMPLETED -'
+     A                                      DSPATR(HI)
+     A  45        STTLU          5  0O 11 28TEXT('TELLER TRANSACTION NUMBER')
+     A                                      DSPATR(HI)
+     A  41                             12 06'ACCOUNT CLOSED'
+     A                                      DSPATR(HI)
+     A  42                             12 06'ACCOUNT NOT CLOSED'
+     A                                      DSPATR(HI)
+      *
+      ** A/C number prompt
+     A                                 14  6'Enter next'
+     A                                 15  6'Retail a/c number '
+     A            SACNO1        10   B 15 30TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(UL)
+     A  30                                  DSPATR(PC)
+     A  30                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43 49
+     AO 44 49                          16  6'House Cheque A/C  '
+     A  43 49
+     AO 44 49     SHCAC         10   B 16 30TEXT('House Cheque A/C')
+     A  43 49
+     AO 44 49                               DSPATR(HI)
+     A  43N48 49
+     AO 44N48 49                            DSPATR(UL)
+     A  43 48 49
+     AO 44 48 49                            DSPATR(PC RI)
+     A                                      OVRDTA
+      *
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A N11                             23 25'F10=A/C closure enquiry'
+      * End of change MD042577
+      *---------------------------------------------------------------------
+     A**********R RE4115F1                  TEXT('WARNING/TERMINAL')                          239004
+     A**********                            CLRL(14)                                          239004
+      *
+     A*/COPY WNCPYSRC,RE4115DF11
+     A** Start of change CAAA03
+     A**********  SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')                            CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+     A**********  SANAM         20   O 04 18TEXT('ACCOUNT NAME')                              CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+     A**********  SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')                          CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+     A**Start*of*change*CRE019*****************************************                       CAAA03
+     A*N30*55***                       04 48'House Cheque A/C'                                CAAA03
+     A*N30*55***  SHCAC2        10   O 04 65TEXT('House Cheque Account')                      CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+     A*N30*55***  SHCCY2         3   O 04 76TEXT('House Cheque Currency')                     CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+     A**End*of*change*CRE019*******************************************                       CAAA03
+      **********                                                                              CAAA03
+     A**29******                       05 06'Interest'                                        CAAA03
+     A**********                                     Begin /093546/                           CAAA03
+      ** End of change CAAA03
+     A**29******  SINTR         22   O 05 28TEXT('NET INTEREST')
+     A** Start of change CAAA03
+     A**29******  SINTR         22   O 05 46TEXT('NET INTEREST')                              CAAA03
+     A**********                                     End   /093546/                           CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+     A**29*76***                       06 06'Withholding Tax'                                 CAAA03
+     A**********                                     Begin /093546/                           CAAA03
+      ** End of change CAAA03
+     A**29*76***  SWTAX         22   O 06 28TEXT('WITHHOLDING TAX')
+     A** Start of change CAAA03
+     A**29*76***  SWTAX         22   O 06 46TEXT('WITHHOLDING TAX')                           CAAA03
+     A**********                                     End   /093546/                           CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+     A* 29******                       07 06'S/Charge'                                        CAAA03
+     A**********                                     Begin /093546/                           CAAA03
+      ** End of change CAAA03
+     A**29******  SCHRG         22   O 07 28TEXT('SERVICE CHARGE')
+     A** Start of change CAAA03
+     A**29******  SCHRG         22   O 07 46TEXT('SERVICE CHARGE')                            CAAA03
+     A**********                                     End   /093546/                           CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+     A**29******                       08 06'Close bal.'                                      CAAA03
+     A**********                                     Begin /093546/                           CAAA03
+      ** End of change CAAA03
+     A**29******  SCLOB         22   O 08 28TEXT('CLOSING BALANCE')
+     A** Start of change CAAA03
+     A**29******  SCLOB         22   O 08 46TEXT('CLOSING BALANCE')                           CAAA03
+     A**********                                     End   /093546/                           CAAA03
+     A**********                            DSPATR(HI)                                        CAAA03
+      **********                                                                              CAAA03
+     A*/COPY*WNCPYSRC,RE4115DF12***************************************                       CAAA03
+     A**22******  SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')                           CAAA03
+     A**********                            DSPATR(HI RI)                                     CAAA03
+      **********                                                                              CAAA03
+     A**22******  SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')                           CAAA03
+     A**********                            DSPATR(HI RI)                                     CAAA03
+      ** End of change CAAA03
+      *
+     A** Start of change BUG7819                                                             BUG7819
+     A**22******  SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')                          BUG7819
+      *                                                                                      BUG7819
+     A**22******  SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')                          BUG7819
+      ** End of change BUG7819                                                               BUG7819
+     A**20******                       11 06'TRANSACTION TERMINATED'                          239004
+     A**********                            DSPATR(HI)                                       BUG7819
+     A**21******                       11 06'OVERRIDE REQUIRED'                               239004
+     A**********                            DSPATR(HI)                                       BUG7819
+      *
+      *---------------------------------------------------------------------
+     A          R RE4115F2                  TEXT('DETAIL SCREEN')
+     A                                      OVERLAY
+     A** Start of Change 253894
+     A***********                           CLRL(*NO)                                         253894
+     A** End of Change 253894
+     A                                      PUTOVR
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF01                                          S01408
+      *                                                                   S01408
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A*********                                      Begin /CRT002/
+     A**24*****                         1 32'CLEARING CHEQUE DEPOSIT'
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A*                                              End   /CRT002/
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A*********                                      Begin /CRT002/
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A*                                              End   /CRT002/
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF02                                          S01408
+      *                                                                   S01408
+      *
+      ** Start of change CAAA03
+     A            SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('ACCOUNT NAME')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')
+     A                                      DSPATR(HI)
+     A N30 55                          04 48'House Cheque A/C'
+     A N30 55     SHCAC2        10   O 04 65TEXT('House Cheque Account')
+     A                                      DSPATR(HI)
+     A N30 55     SHCCY2         3   O 04 76TEXT('House Cheque Currency')
+     A                                      DSPATR(HI)
+     A  29                             05 06'Interest'
+     A  29        SINTR         22   O 05 46TEXT('NET INTEREST')
+     A                                      DSPATR(HI)
+     A  29 76                          06 06'Withholding Tax'
+     A  29 76     SWTAX         22   O 06 46TEXT('WITHHOLDING TAX')
+     A                                      DSPATR(HI)
+     A  29                             07 06'S/Charge'
+     A  29        SCHRG         22   O 07 46TEXT('SERVICE CHARGE')
+     A                                      DSPATR(HI)
+     A  29                             08 06'Close bal.'
+     A  29        SCLOB         22   O 08 46TEXT('CLOSING BALANCE')
+     A                                      DSPATR(HI)
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+      *
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+      ** End of change CAAA03
+     A                                 12  6'Currency '
+     A            SCCY1          3   B 12 23TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A     27N31                            DSPATR(UL)
+     A        31                            DSPATR(PC)
+     A        31                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  44
+     AO 24                             13 06'          '
+      *
+     A  43
+     AO 23
+     AO 25                             13  6'Cash amount'
+      *
+     A  43
+     AO 23
+     AO 25        SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             14  6'Cheque amount'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQAM         14   B 14 23TEXT('CHEQUE AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N33                            DSPATR(UL)
+     A        33                            DSPATR(PC)
+     A        33                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF14
+     A  43
+     AO 44
+     AO 23
+     AO 24                             15  6'Value date'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SVLDT          6   B 15 23TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A     27N34                            DSPATR(UL)
+     A        34                            DSPATR(PC)
+     A        34                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF16
+     A                                 16  6'Exchange rate'
+      *
+     A            SEXRT         14   B 16 23TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A     27N38                            DSPATR(UL)
+     A        38                            DSPATR(PC)
+     A        38                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF15
+     A  43
+     AO 44
+     AO 23
+     AO 24                             17  6'Cheque number'
+     A*********                                      Begin /CRT002/
+     A  50                                  DSPATR(ND)
+     A*                                              End   /CRT002/
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQNF          8   B 17 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A*********                                      Begin /CRT002/
+     A  50                                  DSPATR(ND PR)
+     A*                                              End   /CRT002/
+     A                                      OVRDTA
+     A*                                              Begin /092429/
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+      *                                              End   /092429/
+      *
+     A  23
+     AO 24                             18  6'Issue bank code'
+     A*********                                      Begin /CRT002/
+     A  50                                  DSPATR(ND)
+     A*                                              End   /CRT002/
+      *
+     A  23
+      *                                              Begin /091241/
+     A*O*24********SRBCD          7   B 18 23TEXT('ISSUE BANK CODE')
+     AO 24        SRBCD         11   B 18 23TEXT('ISSUE BANK CODE')
+      *                                              End   /091241/
+     A                                      DSPATR(HI)
+     A     27N36                            DSPATR(UL)
+     A        36                            DSPATR(PC)
+     A        36                            DSPATR(RI)
+     A*********                                      Begin /CRT002/
+     A  50                                  DSPATR(ND PR)
+     A*                                              End   /CRT002/
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF13
+     A                                 19  6'Dept code'
+     A            SDEPC          3   B 19 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             20  6'Profit centre'
+     A            SPRFC          4   B 20 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 12 41'Charge Currency '
+     A            ACCY           3   O 12 64TEXT('CHARGE CURRENCY')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGES AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF07                                          S01408
+      *                                                                   S01408
+      *
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A                                 23 25'F12=Previous'
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF03                                          S01408
+      *                                                                   S01408
+      *
+      * Start of change MD042577
+      *---------------------------------------------------------------------
+     A          R F20JN                     TEXT('DETAIL SCREEN')
+     A                                      OVERLAY
+     A                                      PUTOVR
+      *
+      */COPY WNCPYSRC,RE4115DF01
+      *
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+      */COPY WNCPYSRC,RE4115DF02
+      *
+      *
+     A            SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('ACCOUNT NAME')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')
+     A                                      DSPATR(HI)
+     A N30 55                          04 48'House Cheque A/C'
+     A N30 55     SHCAC2        10   O 04 65TEXT('House Cheque Account')
+     A                                      DSPATR(HI)
+     A N30 55     SHCCY2         3   O 04 76TEXT('House Cheque Currency')
+     A                                      DSPATR(HI)
+     A  29                             05 06'Interest'
+     A  29        SINTR         22   O 05 46TEXT('NET INTEREST')
+     A                                      DSPATR(HI)
+     A  29 76                          06 06'Withholding Tax'
+     A  29 76     SWTAX         22   O 06 46TEXT('WITHHOLDING TAX')
+     A                                      DSPATR(HI)
+     A  29                             07 06'S/Charge'
+     A  29        SCHRG         22   O 07 46TEXT('SERVICE CHARGE')
+     A                                      DSPATR(HI)
+     A  29                             08 06'Close bal.'
+     A  29        SCLOB         22   O 08 46TEXT('CLOSING BALANCE')
+     A                                      DSPATR(HI)
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+      *
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+     A                                 12  6'Currency '
+     A            SCCY1          3   B 12 23TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A     27N31                            DSPATR(UL)
+     A        31                            DSPATR(PC)
+     A        31                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  44
+     AO 24                             13 06'          '
+      *
+     A  43
+     AO 23
+     AO 25                             13  6'Cash amount'
+      *
+     A  43
+     AO 23
+     AO 25        SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             14  6'Cheque amount'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQAM         14   B 14 23TEXT('CHEQUE AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N33                            DSPATR(UL)
+     A        33                            DSPATR(PC)
+     A        33                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF14
+     A  43
+     AO 44
+     AO 23
+     AO 24                             15  6'Value date'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SVLDT          6   B 15 23TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A     27N34                            DSPATR(UL)
+     A        34                            DSPATR(PC)
+     A        34                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF16
+     A                                 16  6'Exchange rate'
+      *
+     A            SEXRT         14   B 16 23TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A     27N38                            DSPATR(UL)
+     A        38                            DSPATR(PC)
+     A        38                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF15
+     A  43
+     AO 44
+     AO 23
+     AO 24                             17  6'Cheque number'
+     A  50                                  DSPATR(ND)
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQNF          8   B 17 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A  23
+     AO 24                             18  6'Issue bank code'
+     A  50                                  DSPATR(ND)
+      *
+     A  23
+     AO 24        SRBCD         11   B 18 23TEXT('ISSUE BANK CODE')
+     A                                      DSPATR(HI)
+     A     27N36                            DSPATR(UL)
+     A        36                            DSPATR(PC)
+     A        36                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF13
+     A                                 19  6'Dept code'
+     A            SDEPC          3   B 19 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             20  6'Profit centre'
+     A            SPRFC          4   B 20 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 12 41'Charge Currency '
+     A            ACCY           3   O 12 64TEXT('CHARGE CURRENCY')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGES AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+      */COPY WNCPYSRC,RE4115DF07
+      *
+      *
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A                                 23 25'F12=Previous'
+      *
+      */COPY WNCPYSRC,RE4115DF03
+      *
+      *
+      *---------------------------------------------------------------------
+     A          R F20JP                     TEXT('DETAIL SCREEN')
+     A                                      OVERLAY
+     A                                      PUTOVR
+      *
+      */COPY WNCPYSRC,RE4115DF01
+      *
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+      */COPY WNCPYSRC,RE4115DF02
+      *
+      *
+     A            SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('ACCOUNT NAME')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')
+     A                                      DSPATR(HI)
+     A N30 55                          04 48'House Cheque A/C'
+     A N30 55     SHCAC2        10   O 04 65TEXT('House Cheque Account')
+     A                                      DSPATR(HI)
+     A N30 55     SHCCY2         3   O 04 76TEXT('House Cheque Currency')
+     A                                      DSPATR(HI)
+     A  29                             05 06'Interest'
+     A  29        SINTR         22   O 05 46TEXT('NET INTEREST')
+     A                                      DSPATR(HI)
+     A  29 76                          06 06'Withholding Tax'
+     A  29 76     SWTAX         22   O 06 46TEXT('WITHHOLDING TAX')
+     A                                      DSPATR(HI)
+     A  29                             07 06'S/Charge'
+     A  29        SCHRG         22   O 07 46TEXT('SERVICE CHARGE')
+     A                                      DSPATR(HI)
+     A  29                             08 06'Close bal.'
+     A  29        SCLOB         22   O 08 46TEXT('CLOSING BALANCE')
+     A                                      DSPATR(HI)
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+      *
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+     A                                 12  6'Currency '
+     A            SCCY1          3   B 12 23TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A     27N31                            DSPATR(UL)
+     A        31                            DSPATR(PC)
+     A        31                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  44
+     AO 24                             13 06'          '
+      *
+     A  43
+     AO 23
+     AO 25                             13  6'Cash amount'
+      *
+     A  43
+     AO 23
+     AO 25        SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             14  6'Cheque amount'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQAM         14   B 14 23TEXT('CHEQUE AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N33                            DSPATR(UL)
+     A        33                            DSPATR(PC)
+     A        33                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF14
+     A  43
+     AO 44
+     AO 23
+     AO 24                             15  6'Value date'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SVLDT          6   B 15 23TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A     27N34                            DSPATR(UL)
+     A        34                            DSPATR(PC)
+     A        34                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF16
+     A                                 16  6'Exchange rate'
+      *
+     A            SEXRT         14   B 16 23TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A     27N38                            DSPATR(UL)
+     A        38                            DSPATR(PC)
+     A        38                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF15
+     A  43
+     AO 44
+     AO 23
+     AO 24                             17  6'Cheque number'
+     A  50                                  DSPATR(ND)
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQNF          8   B 17 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A  23
+     AO 24                             18  6'Issue bank code'
+     A  50                                  DSPATR(ND)
+      *
+     A  23
+     AO 24        SRBCD         11   B 18 23TEXT('ISSUE BANK CODE')
+     A                                      DSPATR(HI)
+     A     27N36                            DSPATR(UL)
+     A        36                            DSPATR(PC)
+     A        36                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF13
+     A                                 19  6'Dept code'
+     A            SDEPC          3   B 19 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             20  6'Profit centre'
+     A            SPRFC          4   B 20 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 12 41'Charge Currency '
+     A            ACCY           3   O 12 64TEXT('CHARGE CURRENCY')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGES AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+      */COPY WNCPYSRC,RE4115DF07
+      *
+      *
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A                                 23 25'F12=Previous'
+      *
+      */COPY WNCPYSRC,RE4115DF03
+      *
+      *---------------------------------------------------------------------
+     A          R F20JR                     TEXT('DETAIL SCREEN')
+     A                                      OVERLAY
+     A                                      PUTOVR
+      *
+      */COPY WNCPYSRC,RE4115DF01
+      *
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+      */COPY WNCPYSRC,RE4115DF02
+      *
+      *
+     A            SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('ACCOUNT NAME')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')
+     A                                      DSPATR(HI)
+     A N30 55                          04 48'House Cheque A/C'
+     A N30 55     SHCAC2        10   O 04 65TEXT('House Cheque Account')
+     A                                      DSPATR(HI)
+     A N30 55     SHCCY2         3   O 04 76TEXT('House Cheque Currency')
+     A                                      DSPATR(HI)
+     A  29                             05 06'Interest'
+     A  29        SINTR         22   O 05 46TEXT('NET INTEREST')
+     A                                      DSPATR(HI)
+     A  29 76                          06 06'Withholding Tax'
+     A  29 76     SWTAX         22   O 06 46TEXT('WITHHOLDING TAX')
+     A                                      DSPATR(HI)
+     A  29                             07 06'S/Charge'
+     A  29        SCHRG         22   O 07 46TEXT('SERVICE CHARGE')
+     A                                      DSPATR(HI)
+     A  29                             08 06'Close bal.'
+     A  29        SCLOB         22   O 08 46TEXT('CLOSING BALANCE')
+     A                                      DSPATR(HI)
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+      *
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+     A                                 12  6'Currency '
+     A            SCCY1          3   B 12 23TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A     27N31                            DSPATR(UL)
+     A        31                            DSPATR(PC)
+     A        31                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  44
+     AO 24                             13 06'          '
+      *
+     A  43
+     AO 23
+     AO 25                             13  6'Cash amount'
+      *
+     A  43
+     AO 23
+     AO 25        SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             14  6'Cheque amount'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQAM         14   B 14 23TEXT('CHEQUE AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N33                            DSPATR(UL)
+     A        33                            DSPATR(PC)
+     A        33                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF14
+     A  43
+     AO 44
+     AO 23
+     AO 24                             15  6'Value date'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SVLDT          6   B 15 23TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A     27N34                            DSPATR(UL)
+     A        34                            DSPATR(PC)
+     A        34                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF16
+     A                                 16  6'Exchange rate'
+      *
+     A            SEXRT         14   B 16 23TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A     27N38                            DSPATR(UL)
+     A        38                            DSPATR(PC)
+     A        38                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF15
+     A  43
+     AO 44
+     AO 23
+     AO 24                             17  6'Cheque number'
+     A  50                                  DSPATR(ND)
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQNF          8   B 17 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A  23
+     AO 24                             18  6'Issue bank code'
+     A  50                                  DSPATR(ND)
+      *
+     A  23
+     AO 24        SRBCD         11   B 18 23TEXT('ISSUE BANK CODE')
+     A                                      DSPATR(HI)
+     A     27N36                            DSPATR(UL)
+     A        36                            DSPATR(PC)
+     A        36                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+     A*/COPY WNCPYSRC,RE4115DF13
+     A                                 19  6'Dept code'
+     A            SDEPC          3   B 19 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             20  6'Profit centre'
+     A            SPRFC          4   B 20 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 12 41'Charge Currency '
+     A            ACCY           3   O 12 64TEXT('CHARGE CURRENCY')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGES AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+      */COPY WNCPYSRC,RE4115DF07
+      *
+      *
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A                                 23 25'F12=Previous'
+      *
+      */COPY WNCPYSRC,RE4115DF03
+      *
+      * End of change MD042577
+      *---------------------------------------------------------------------
+     A          R RE4115F3                  TEXT('OVERRIDE SCREEN')
+     A                                      PROTECT
+     A                                      OVERLAY
+     A** Start of Change 253894
+     A**********                            CLRL(*NO)                                         253894
+     A** End of Change 253894
+     A                                      PUTOVR
+     A                                      CF01
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF08                                          S01408
+      *                                                                   S01408
+     A                                      CF02
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF05                                          S01408
+      *                                                                   S01408
+     A                                      CF03
+     A                                      CF12
+     A** Start of Change 253894
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+     A            SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('ACCOUNT NAME')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')
+     A                                      DSPATR(HI)
+     A N30 55                          04 48'House Cheque A/C'
+     A N30 55     SHCAC2        10   O 04 65TEXT('House Cheque Account')
+     A                                      DSPATR(HI)
+     A N30 55     SHCCY2         3   O 04 76TEXT('House Cheque Currency')
+     A                                      DSPATR(HI)
+     A** End of Change 253894
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF09                                          S01408
+      *                                                                   S01408
+      *
+     A*                                              Begin /093546/
+     A**28******                       05  6'Ledger balance'
+     A**28******  SLDBL         22   O 05 28TEXT('LEDGER BALANCE')
+     A  28                             05  6'Today''s Projected +
+     A                                      Ledger Balance'
+     A  28        SLDBL         22   O 05 46TEXT('LEDGER BALANCE')
+     A*                                              End   /093546/
+     A                                      DSPATR(HI)
+      *
+     A  28                             06  6'Available balance'
+     A*                                              Begin /093546/
+     A**28******  SAVBL         22   O 06 28TEXT('LEDGER BALANCE')
+     A  28        SAVBL         22   O 06 46TEXT('LEDGER BALANCE')
+     A*                                              End   /093546/
+     A                                      DSPATR(HI)
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF06                                          S01408
+      *                                                                   S01408
+      *
+     A  43
+     AO 23
+     AO 25                             07 06'A/c ccy cash equiv.'
+     A*                                              Begin /093546/
+     A**43******
+     A*O*23*****
+     A*O*25*****   SCSHEQ        17     07 28TEXT('A/C CCY CASH EQ')
+     A  43
+     AO 23
+     AO 25        SCSHEQ        17     07 46TEXT('A/C CCY CASH EQ')
+     A*                                              End   /093546/
+     A                                      DSPATR(HI)
+      *
+     A*                                              Begin /093546/
+     A**43******
+     A*O*23*****
+     A*O*25*****                        07 46'       '
+     A  43
+     AO 23
+     AO 25                             07 63'       '
+     A*                                              End   /093546/
+     A  43
+     AO 44
+     AO 23
+     AO 24                             08 06'A/c ccy cheque equiv.'
+     A*                                              Begin /093546/
+     A**43******
+     A*O*44*****
+     A*O*23*****
+     A*O*24*****   SCHQEQ        17     08 28TEXT('A/C CCY CHEQUE EQ')
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCHQEQ        17     08 46TEXT('A/C CCY CHEQUE EQ')
+     A*                                              End   /093546/
+     A                                      DSPATR(HI)
+      ** Start of change CAAA03
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+     A** Start of Change 253894
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+     A** End of Change 253894
+      *
+     A                                 12  6'Currency '
+     A            SCCY1          3   B 12 23TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A     27N31                            DSPATR(UL)
+     A        31                            DSPATR(PC)
+     A        31                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  44
+     AO 24                             13 06'          '
+      *
+     A  43
+     AO 23
+     AO 25                             13  6'Cash amount'
+      *
+     A  43
+     AO 23
+     AO 25        SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             14  6'Cheque amount'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQAM         14   B 14 23TEXT('CHEQUE AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N33                            DSPATR(UL)
+     A        33                            DSPATR(PC)
+     A        33                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             15  6'Value date'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SVLDT          6   B 15 23TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A     27N34                            DSPATR(UL)
+     A        34                            DSPATR(PC)
+     A        34                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A                                 16  6'Exchange rate'
+      *
+     A            SEXRT         14   B 16 23TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A     27N38                            DSPATR(UL)
+     A        38                            DSPATR(PC)
+     A        38                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             17  6'Cheque number'
+     A  50                                  DSPATR(ND)
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQNF          8   B 17 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+     A  23
+     AO 24                             18  6'Issue bank code'
+     A  50                                  DSPATR(ND)
+     A  23
+     AO 24        SRBCD         11   B 18 23TEXT('ISSUE BANK CODE')
+     A                                      DSPATR(HI)
+     A     27N36                            DSPATR(UL)
+     A        36                            DSPATR(PC)
+     A        36                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 19  6'Dept code'
+     A            SDEPC          3   B 19 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             20  6'Profit centre'
+     A            SPRFC          4   B 20 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 12 41'Charge Currency '
+     A            ACCY           3   O 12 64TEXT('CHARGE CURRENCY')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGES AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      ** End of change CAAA03
+      *
+     A  26                             21  6'Override teller id'
+     A  26        SOVTI          3   B 21 26TEXT('OVERRIDE TELLER ID')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+      *
+     A  26                             21 31'passcode'
+     A  26        SOVPC          6   B 21 40TEXT('OVERRIDE PASSCODE')
+     A                                      OVRDTA
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+      *
+      ** Start of change CRT026
+      *
+     A  56                             21  6'Override user id?'
+     A  56        SOVUR         10   B 21 24TEXT('OVERRIDE USER ID')
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+     A  38                                  DSPATR(PC)
+     A                                      OVRDTA
+      *
+     A  56                             21 36'Password?'
+     A  56        SOVPW         10   B 21 46TEXT('OVERRIDE PASSWORD')
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+      ** End of change CRT026
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF10                                          S01408
+      *                                                                   S01408
+     A                                 23  2'F1=Accept   F2=Display balance-
+     A                                         F3=Exit   F12=Previous'
+      *                                                                   S01408
+      */COPY WNCPYSRC,RE4115DF04                                          S01408
+      *                                                                   S01408
+      *
+      * Start of change MD042577
+     A          R F30JR                     TEXT('OVERRIDE SCREEN')
+     A                                      PROTECT
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF01
+      *
+      */COPY WNCPYSRC,RE4115DF08
+      *
+     A                                      CF02
+      *
+      */COPY WNCPYSRC,RE4115DF05
+      *
+     A                                      CF03
+     A                                      CF12
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+     A            SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('ACCOUNT NAME')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')
+     A                                      DSPATR(HI)
+     A N30 55                          04 48'House Cheque A/C'
+     A N30 55     SHCAC2        10   O 04 65TEXT('House Cheque Account')
+     A                                      DSPATR(HI)
+     A N30 55     SHCCY2         3   O 04 76TEXT('House Cheque Currency')
+     A                                      DSPATR(HI)
+      *
+      */COPY WNCPYSRC,RE4115DF09
+      *
+      *
+     A  28                             05  6'Today''s Projected +
+     A                                      Ledger Balance'
+     A  28        SLDBL         22   O 05 46TEXT('LEDGER BALANCE')
+     A                                      DSPATR(HI)
+      *
+     A  28                             06  6'Available balance'
+     A  28        SAVBL         22   O 06 46TEXT('LEDGER BALANCE')
+     A                                      DSPATR(HI)
+      *
+      */COPY WNCPYSRC,RE4115DF06
+      *
+      *
+     A  43
+     AO 23
+     AO 25                             07 06'A/c ccy cash equiv.'
+     A  43
+     AO 23
+     AO 25        SCSHEQ        17     07 46TEXT('A/C CCY CASH EQ')
+     A                                      DSPATR(HI)
+      *
+     A  43
+     AO 23
+     AO 25                             07 63'       '
+     A  43
+     AO 44
+     AO 23
+     AO 24                             08 06'A/c ccy cheque equiv.'
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCHQEQ        17     08 46TEXT('A/C CCY CHEQUE EQ')
+     A                                      DSPATR(HI)
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+      *
+     A                                 12  6'Currency '
+     A            SCCY1          3   B 12 23TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A     27N31                            DSPATR(UL)
+     A        31                            DSPATR(PC)
+     A        31                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  44
+     AO 24                             13 06'          '
+      *
+     A  43
+     AO 23
+     AO 25                             13  6'Cash amount'
+      *
+     A  43
+     AO 23
+     AO 25        SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             14  6'Cheque amount'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQAM         14   B 14 23TEXT('CHEQUE AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N33                            DSPATR(UL)
+     A        33                            DSPATR(PC)
+     A        33                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             15  6'Value date'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SVLDT          6   B 15 23TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A     27N34                            DSPATR(UL)
+     A        34                            DSPATR(PC)
+     A        34                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A                                 16  6'Exchange rate'
+      *
+     A            SEXRT         14   B 16 23TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A     27N38                            DSPATR(UL)
+     A        38                            DSPATR(PC)
+     A        38                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             17  6'Cheque number'
+     A  50                                  DSPATR(ND)
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQNF          8   B 17 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+     A  23
+     AO 24                             18  6'Issue bank code'
+     A  50                                  DSPATR(ND)
+     A  23
+     AO 24        SRBCD         11   B 18 23TEXT('ISSUE BANK CODE')
+     A                                      DSPATR(HI)
+     A     27N36                            DSPATR(UL)
+     A        36                            DSPATR(PC)
+     A        36                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 19  6'Dept code'
+     A            SDEPC          3   B 19 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             20  6'Profit centre'
+     A            SPRFC          4   B 20 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 12 41'Charge Currency '
+     A            ACCY           3   O 12 64TEXT('CHARGE CURRENCY')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGES AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+     A  26                             21  6'Override teller id'
+     A  26        SOVTI          3   B 21 26TEXT('OVERRIDE TELLER ID')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+      *
+     A  26                             21 31'passcode'
+     A  26        SOVPC          6   B 21 40TEXT('OVERRIDE PASSCODE')
+     A                                      OVRDTA
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+      *
+      *
+     A  56                             21  6'Override user id?'
+     A  56        SOVUR         10   B 21 24TEXT('OVERRIDE USER ID')
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+     A  38                                  DSPATR(PC)
+     A                                      OVRDTA
+      *
+     A  56                             21 36'Password?'
+     A  56        SOVPW         10   B 21 46TEXT('OVERRIDE PASSWORD')
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+      *
+      */COPY WNCPYSRC,RE4115DF10
+      *
+     A                                 23  2'F1=Accept   F2=Display balance-
+     A                                         F3=Exit   F12=Previous'
+      *
+      */COPY WNCPYSRC,RE4115DF04
+      *
+     A          R F30JN                     TEXT('OVERRIDE SCREEN')
+     A                                      PROTECT
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF01
+      *
+      */COPY WNCPYSRC,RE4115DF08
+      *
+     A                                      CF02
+      *
+      */COPY WNCPYSRC,RE4115DF05
+      *
+     A                                      CF03
+     A                                      CF12
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+     A            SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('ACCOUNT NAME')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')
+     A                                      DSPATR(HI)
+     A N30 55                          04 48'House Cheque A/C'
+     A N30 55     SHCAC2        10   O 04 65TEXT('House Cheque Account')
+     A                                      DSPATR(HI)
+     A N30 55     SHCCY2         3   O 04 76TEXT('House Cheque Currency')
+     A                                      DSPATR(HI)
+      *
+      */COPY WNCPYSRC,RE4115DF09
+      *
+      *
+     A  28                             05  6'Today''s Projected +
+     A                                      Ledger Balance'
+     A  28        SLDBL         22   O 05 46TEXT('LEDGER BALANCE')
+     A                                      DSPATR(HI)
+      *
+     A  28                             06  6'Available balance'
+     A  28        SAVBL         22   O 06 46TEXT('LEDGER BALANCE')
+     A                                      DSPATR(HI)
+      *
+      */COPY WNCPYSRC,RE4115DF06
+      *
+      *
+     A  43
+     AO 23
+     AO 25                             07 06'A/c ccy cash equiv.'
+     A  43
+     AO 23
+     AO 25        SCSHEQ        17     07 46TEXT('A/C CCY CASH EQ')
+     A                                      DSPATR(HI)
+      *
+     A  43
+     AO 23
+     AO 25                             07 63'       '
+     A  43
+     AO 44
+     AO 23
+     AO 24                             08 06'A/c ccy cheque equiv.'
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCHQEQ        17     08 46TEXT('A/C CCY CHEQUE EQ')
+     A                                      DSPATR(HI)
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+      *
+     A                                 12  6'Currency '
+     A            SCCY1          3   B 12 23TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A     27N31                            DSPATR(UL)
+     A        31                            DSPATR(PC)
+     A        31                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  44
+     AO 24                             13 06'          '
+      *
+     A  43
+     AO 23
+     AO 25                             13  6'Cash amount'
+      *
+     A  43
+     AO 23
+     AO 25        SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             14  6'Cheque amount'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQAM         14   B 14 23TEXT('CHEQUE AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N33                            DSPATR(UL)
+     A        33                            DSPATR(PC)
+     A        33                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             15  6'Value date'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SVLDT          6   B 15 23TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A     27N34                            DSPATR(UL)
+     A        34                            DSPATR(PC)
+     A        34                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A                                 16  6'Exchange rate'
+      *
+     A            SEXRT         14   B 16 23TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A     27N38                            DSPATR(UL)
+     A        38                            DSPATR(PC)
+     A        38                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             17  6'Cheque number'
+     A  50                                  DSPATR(ND)
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQNF          8   B 17 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+     A  23
+     AO 24                             18  6'Issue bank code'
+     A  50                                  DSPATR(ND)
+     A  23
+     AO 24        SRBCD         11   B 18 23TEXT('ISSUE BANK CODE')
+     A                                      DSPATR(HI)
+     A     27N36                            DSPATR(UL)
+     A        36                            DSPATR(PC)
+     A        36                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 19  6'Dept code'
+     A            SDEPC          3   B 19 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             20  6'Profit centre'
+     A            SPRFC          4   B 20 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 12 41'Charge Currency '
+     A            ACCY           3   O 12 64TEXT('CHARGE CURRENCY')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGES AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+     A  26                             21  6'Override teller id'
+     A  26        SOVTI          3   B 21 26TEXT('OVERRIDE TELLER ID')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+      *
+     A  26                             21 31'passcode'
+     A  26        SOVPC          6   B 21 40TEXT('OVERRIDE PASSCODE')
+     A                                      OVRDTA
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+      *
+      *
+     A  56                             21  6'Override user id?'
+     A  56        SOVUR         10   B 21 24TEXT('OVERRIDE USER ID')
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+     A  38                                  DSPATR(PC)
+     A                                      OVRDTA
+      *
+     A  56                             21 36'Password?'
+     A  56        SOVPW         10   B 21 46TEXT('OVERRIDE PASSWORD')
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+      *
+      */COPY WNCPYSRC,RE4115DF10
+      *
+     A                                 23  2'F1=Accept   F2=Display balance-
+     A                                         F3=Exit   F12=Previous'
+      *
+      */COPY WNCPYSRC,RE4115DF04
+      *
+     A          R F30JP                     TEXT('OVERRIDE SCREEN')
+     A                                      PROTECT
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF01
+      *
+      */COPY WNCPYSRC,RE4115DF08
+      *
+     A                                      CF02
+      *
+      */COPY WNCPYSRC,RE4115DF05
+      *
+     A                                      CF03
+     A                                      CF12
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4115'
+     A  23                              1 29'CASH/CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  24N50                           1 32'CLEARING CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  25                              1 25'CASH DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  43                              1 31'CASH/HOUSE CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A  44                              1 21'HOUSE CHEQUE DEPOSIT IN +
+     A                                      NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A  50                              1 31'TRAVELLERS CHEQUE DEPOSIT'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A  23
+     AO 24
+     AO 43                              2 32'IN NON-ACCOUNT CURRENCY'
+     A                                      DSPATR(HI UL)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+     A            SACNO2        10   O 04 06TEXT('RETAIL A/C NO.')
+     A                                      DSPATR(HI)
+     A            SANAM         20   O 04 18TEXT('ACCOUNT NAME')
+     A                                      DSPATR(HI)
+     A            SCCY2          3   O 04 40TEXT('ACCOUNT CURRENCY')
+     A                                      DSPATR(HI)
+     A N30 55                          04 48'House Cheque A/C'
+     A N30 55     SHCAC2        10   O 04 65TEXT('House Cheque Account')
+     A                                      DSPATR(HI)
+     A N30 55     SHCCY2         3   O 04 76TEXT('House Cheque Currency')
+     A                                      DSPATR(HI)
+      *
+      */COPY WNCPYSRC,RE4115DF09
+      *
+      *
+     A  28                             05  6'Today''s Projected +
+     A                                      Ledger Balance'
+     A  28        SLDBL         22   O 05 46TEXT('LEDGER BALANCE')
+     A                                      DSPATR(HI)
+      *
+     A  28                             06  6'Available balance'
+     A  28        SAVBL         22   O 06 46TEXT('LEDGER BALANCE')
+     A                                      DSPATR(HI)
+      *
+      */COPY WNCPYSRC,RE4115DF06
+      *
+      *
+     A  43
+     AO 23
+     AO 25                             07 06'A/c ccy cash equiv.'
+     A  43
+     AO 23
+     AO 25        SCSHEQ        17     07 46TEXT('A/C CCY CASH EQ')
+     A                                      DSPATR(HI)
+      *
+     A  43
+     AO 23
+     AO 25                             07 63'       '
+     A  43
+     AO 44
+     AO 23
+     AO 24                             08 06'A/c ccy cheque equiv.'
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCHQEQ        17     08 46TEXT('A/C CCY CHEQUE EQ')
+     A                                      DSPATR(HI)
+     A  22        SMSG1         72   O 09 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  22        SMSG2         72   O 10 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+     A  20                             11 06'TRANSACTION TERMINATED'
+     A                                      DSPATR(HI)
+     A  21                             11 06'OVERRIDE REQUIRED'
+     A                                      DSPATR(HI)
+      *
+     A                                 12  6'Currency '
+     A            SCCY1          3   B 12 23TEXT('CURRENCY')
+     A                                      DSPATR(HI)
+     A     27N31                            DSPATR(UL)
+     A        31                            DSPATR(PC)
+     A        31                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  44
+     AO 24                             13 06'          '
+      *
+     A  43
+     AO 23
+     AO 25                             13  6'Cash amount'
+      *
+     A  43
+     AO 23
+     AO 25        SCSAM         14   B 13 23TEXT('CASH AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N32                            DSPATR(UL)
+     A        32                            DSPATR(PC)
+     A        32                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             14  6'Cheque amount'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQAM         14   B 14 23TEXT('CHEQUE AMOUNT')
+     A                                      DSPATR(HI)
+     A     27N33                            DSPATR(UL)
+     A        33                            DSPATR(PC)
+     A        33                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             15  6'Value date'
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SVLDT          6   B 15 23TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A     27N34                            DSPATR(UL)
+     A        34                            DSPATR(PC)
+     A        34                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A                                 16  6'Exchange rate'
+      *
+     A            SEXRT         14   B 16 23TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A     27N38                            DSPATR(UL)
+     A        38                            DSPATR(PC)
+     A        38                            DSPATR(RI)
+     A                                      OVRDTA
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24                             17  6'Cheque number'
+     A  50                                  DSPATR(ND)
+      *
+     A  43
+     AO 44
+     AO 23
+     AO 24        SCQNF          8   B 17 23TEXT('CHEQUE NUMBER REFERENCE')
+     A                                      DSPATR(HI)
+     A     27N35                            DSPATR(UL)
+     A        35                            DSPATR(PC)
+     A        35                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+     A                                 17 41'Narrative'
+     A            NARRI         20   B 17 60TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A     27                               DSPATR(UL)
+     A                                      OVRDTA
+     A  23
+     AO 24                             18  6'Issue bank code'
+     A  50                                  DSPATR(ND)
+     A  23
+     AO 24        SRBCD         11   B 18 23TEXT('ISSUE BANK CODE')
+     A                                      DSPATR(HI)
+     A     27N36                            DSPATR(UL)
+     A        36                            DSPATR(PC)
+     A        36                            DSPATR(RI)
+     A  50                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 19  6'Dept code'
+     A            SDEPC          3   B 19 23TEXT('DEPARTMENT CODE')
+     A                                      DSPATR(HI)
+     A     27N37                            DSPATR(UL)
+     A        37                            DSPATR(PC)
+     A        37                            DSPATR(RI)
+     A                                      OVRDTA
+     A N47                             20  6'Profit centre'
+     A            SPRFC          4   B 20 23TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A  27N46                               DSPATR(UL)
+     A  46                                  DSPATR(PC)
+     A  46                                  DSPATR(RI)
+     A  47                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 12 41'Charge Currency '
+     A            ACCY           3   O 12 64TEXT('CHARGE CURRENCY')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5   B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18 27                               DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charge Percentage'
+     A            SCPER          5   B 14 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19 27                               DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Amount'
+     A            SCAMT         14   B 15 64TEXT('CHARGES AMOUNT')
+     A                                      DSPATR(HI)
+     A N17 27                               DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+     A  26                             21  6'Override teller id'
+     A  26        SOVTI          3   B 21 26TEXT('OVERRIDE TELLER ID')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+      *
+     A  26                             21 31'passcode'
+     A  26        SOVPC          6   B 21 40TEXT('OVERRIDE PASSCODE')
+     A                                      OVRDTA
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+      *
+      *
+     A  56                             21  6'Override user id?'
+     A  56        SOVUR         10   B 21 24TEXT('OVERRIDE USER ID')
+     A                                      DSPATR(HI)
+     A N38                                  DSPATR(UL)
+     A  38                                  DSPATR(RI)
+     A  38                                  DSPATR(PC)
+     A                                      OVRDTA
+      *
+     A  56                             21 36'Password?'
+     A  56        SOVPW         10   B 21 46TEXT('OVERRIDE PASSWORD')
+     A                                      DSPATR(ND)
+     A  39                                  DSPATR(RI)
+     A                                      OVRDTA
+      *
+      *
+      */COPY WNCPYSRC,RE4115DF10
+      *
+     A                                 23  2'F1=Accept   F2=Display balance-
+     A                                         F3=Exit   F12=Previous'
+      *
+      */COPY WNCPYSRC,RE4115DF04
+      *
+      * End of change MD042577
+      *---------------------------------------------------------------------
+     A          R RE4115S0                  TEXT('MESSAGE SUBFILE')
+      *
+     A                                      SFL
+      ** Start of change CAAA03
+     A**********                            SFLMSGRCD(24)                                     CAAA03
+     A                                      SFLMSGRCD(25)
+      ** End of change CAAA03
+     A            SMGKY                     SFLMSGKEY
+     A            SPGMQ                     SFLPGMQ
+      *
+      *---------------------------------------------------------------------
+     A          R RE4115C0                  TEXT('CONTROL RECORD')
+      *
+     A                                      SFLCTL(RE4115S0)
+     A                                      SFLSIZ(10)
+     A                                      SFLPAG(1)
+     A                                      SFLDSP
+     A                                      SFLINZ
+     A  10                                  SFLEND
+     A            SPGMQ                     SFLPGMQ
+      *
+      ****************************************************************

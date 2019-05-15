@@ -1,0 +1,207 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Control program for print')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - HISTORY AND AUDIT FACILITY
+     F*                                                               *
+     F*  HF0300 - HAF Control Program for Print                       *
+     F*                                                               *
+     F*  Function : Controlling program for audit report HF0310P1     *
+     F*  (COB)      setting up printer file attributes                *
+     F*                                                               *
+     F*  Called By: HFC0240 - Audit Report                            *
+     F*             HFC0420 - Control of Extracted Records            *
+     F*                                                               *
+     F*  Calls    : HF0310  - Print Program                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. 108721             Date 23Oct96               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01379             Date 16Sep92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  108721 - Override printer file before changing the attributes*
+     F*  S01379 - HISTORY AND AUDIT FACILITY                          *
+     F*           NEW PROGRAM CREATED FOR SAR.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FHFRGRPPDIP  E           K        DISK
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  01    - FIRST CYCLE PROCESSING                               *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E***********         EXC     1   4 70               QCAEXECES                            108721
+     E                    EXC     1   5 70               QCAEXECES                            108721
+     E                    QUE        22  1               OUTQ
+     E                    QU2        11  1               OUTQ NAME
+      /SPACE 3
+      *
+     IMESINT      DS
+     I                                        1  80 ZALL
+     I                                       40  43 XHOLD
+     I                                       31  320XCOPI
+      *
+     I                                       29  32 XSAV
+     I                                       42  420XOUTP
+     I                                       53  62 XUSRD
+      *
+     I                                       32  41 XUSRD2
+      *
+     I                                       29  50 XQFIL
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+      /EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           SERN    8
+     C                     PARM           PARM2   6
+     C                     PARM           ITEM    30
+      *
+      ** SET UP COPYRIGHT PARAMETER
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** DEFINE LOCAL DATA AREA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** NUMBER OF REPORT GROUPS
+      *
+     C           *IN01     IFEQ '0'
+     C           NPOO      ORNE NPOLD
+     C                     SETON                     01
+     C                     Z-ADDNPOO      NPOLD   30
+     C                     Z-ADD80        PLEN   155
+      *
+      ** FIRST LINE
+      ** NUMBER OF COPIES AND HOLD(*YES *NO)
+      *
+     C                     MOVELEXC,1     MESINT
+     C                     MOVELHOLD      XHOLD
+     C                     Z-ADDCOPI      XCOPI
+     C                     EXSR SBROVR                                                        108721
+     C                     CALL 'QCMDEXC'
+     C                     PARM           MESINT
+     C                     PARM           PLEN
+      *
+      ** SECOND LINE
+      ** SAVE, OUTPUT PRIORITY AND USER DATA
+      *
+     C                     MOVELEXC,2     MESINT
+     C                     MOVELSAV       XSAV
+     C                     Z-ADDOUTP      XOUTP
+     C                     MOVELUSRD      XUSRD
+     C                     EXSR SBROVR                                                        108721
+     C                     CALL 'QCMDEXC'
+     C                     PARM           MESINT
+     C                     PARM           PLEN
+      *
+      ** THIRD LINE
+      ** PRINT TEXT
+      *
+     C                     MOVELEXC,3     MESINT
+     C                     MOVELUSRD      XUSRD2
+     C                     EXSR SBROVR                                                        108721
+     C                     CALL 'QCMDEXC'
+     C                     PARM           MESINT
+     C                     PARM           PLEN
+      *
+      ** FOURTH LINE
+      ** OUTPUT QUEUE LIB/NAME
+      *
+     C                     MOVELEXC,4     MESINT
+     C                     MOVEA*BLANKS   QUE
+     C                     MOVEAOUQL      QUE
+     C                     Z-ADD1         B       20
+      *
+     C           BTAG      TAG
+     C           QUE,B     IFNE ' '
+     C                     ADD  1         B
+     C                     GOTO BTAG
+     C                     END
+      *
+     C                     MOVEL'/'       QUE,B
+     C                     MOVEAOUQN      QU2
+     C                     Z-ADD1         C       20
+      *
+     C           CTAG      TAG
+     C                     ADD  1         B
+     C           QU2,C     IFEQ ' '
+     C                     MOVEL')'       QUE,B
+     C                     GOTO BEND
+     C                     END
+      *
+     C                     MOVE QU2,C     QUE,B
+     C                     ADD  1         C
+     C                     GOTO CTAG
+      *
+     C           BEND      TAG
+     C                     MOVEAQUE       XQFIL
+     C                     EXSR SBROVR                                                        108721
+     C                     CALL 'QCMDEXC'
+     C                     PARM           MESINT
+     C                     PARM           PLEN
+      *
+      ** CALL PRINT PROGRAM
+      *
+     C                     CALL 'HF0310'
+     C                     PARM           SERN
+     C                     PARM           PARM2
+     C                     PARM           NPOO
+     C                     END
+      *                                                                                       108721
+      *****************************************************************                       108721
+      *                                                               *                       108721
+      *          SBROVR - Subroutine to Override Printer File         *                       108721
+      *                                                               *                       108721
+      *   Called before calling QCMDEXC                               *                       108721
+      *   Calls: None.                                                *                       108721
+      *                                                               *                       108721
+      *****************************************************************                       108721
+      *                                                                                       108721
+     C           SBROVR    BEGSR                           *** SBROVR ***                     108721
+      *                                                                                       108721
+     C                     MOVELEXC,5     MESINT                                              108721
+     C                     CALL 'QCMDEXC'                                                     108721
+     C                     PARM           MESINT                                              108721
+     C                     PARM           PLEN                                                108721
+      *                                                                                       108721
+     C                     ENDSR                                                              108721
+      *                                                                                       108721
+      *****************************************************************                       108721
+      *
+**  CPY@
+(c) Finastra International Limited 2001
+**   EXC
+CHGPRTF FILE(HF0310P1) COPIES(  ) HOLD(    )
+CHGPRTF FILE(HF0310P1) SAVE(    ) OUTPTY(1) USRDTA('          ')
+CHGPRTF FILE(HF0310P1) PRTTXT('          ' )
+CHGPRTF FILE(HF0310P1) OUTQ(
+OVRPRTF FILE(HF0310P1)

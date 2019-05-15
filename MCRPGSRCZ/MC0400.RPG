@@ -1,0 +1,827 @@
+     H        1
+      *****************************************************************
+/*S*D****OVRDBF*MCPOSTL0*MCPOSTL1**************************************   124857
+/*S*D****OVRDBF*MCPOSTL3*MCPOSTL1**************************************   155581
+/*OVRF*: OVRDBF MCPOSTL4 MCPOSTL7
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Spot revaluation of foreign currency')        *
+      * Note - MCPOSTL4 renamed for compilation purposes to a file    *   186136
+      *        with same format MCPCACPD but only 1 member file as    *   186136
+      *        can only rename 1 format in a logical file in RPG.     *   186136
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  MC0400 - Spot Revaluation of Foreign Currency                *
+      *                                                               *
+      *  Function: This program revalues a Foreign Currency Amount    *
+      *    (COB)   against its Base Currency Equivalent, for each     *
+      *            Spot Revaluation Date since the given date.        *
+      *            Revaluation P&L entries generated for a prior year *
+      *            are accumulated and transfered to the Retained P&L *
+      *            Account.                                           *
+      *                                                               *
+      *  Called by: MC0320 - Value Date Adjustment Entry Generation   *
+      *             MC0410 - Transfer of Foreign Ccy Income/Expense   *
+      *                                                               *
+      *  Calls: AOTRADR0   - ICD Trading Data                         *
+      *         AOACODR0   - Account Codes                            *
+      *         AOCURRR0   - Currency Details                         *
+      *         RPG/GL0765 - Convert F/Ccy to Base Ccy                *
+      *         RPG/MC0420 - Transfer of Base Ccy IN/EX to P&L        *
+      *                                                               *
+      *  Parameters: 7A Return code                                   *
+      *              3A Base Currency                                 *
+      *              6N Branch Internal Cust Number                   *
+      *             15N Base Ccy Equiv. Amount                        *
+      *              4A Base Ccy Equiv. A/c Code                      *
+      *            200A Format MCMOVEPD                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 263441             Date 19Jan10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243924             Date 24Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 182954             Date 16May01               *
+      *                 186136             Date 18Dec00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 180501             Date 20Jun00               *
+      *                 179278             Date 19May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02MAR99               *
+      *                 155581             Date 12Feb99               *
+      *                 CTI002             Date 23Sep98               *
+      *                 124857             Date 01Dec97               *
+      *                 121023             Date 01Dec97               *
+      *                 CMC001 *CREATE     Date 18Mar96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  263441 - Spot FX deal created distortion on Revaluation.     *
+      *           Remove ATYP as part of the key so that the Base     *
+      *           Equivalent Amount (XBCEQ) will be accessed instead  *
+      *           by MC0400. Similar fix  with 260995.                *
+      *  243924 - Avoid the base currency being zeroised when the     *
+      *           chain to MCPOSTL4 only fails because of book code.  *
+      *           Try and access the file with a blank book code.     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  182954 - Do not output DBERR if no record in MCPOSTL4 -      *
+      *           instead, set Base Ccy Equivalent to 0.              *
+      *  186136 - Add explaination of override to header box.         *
+      *         - Profit centre of the posting for the Base ccy Spot  *
+      *           Trade A/C is not being checked if it can hold FX    *
+      *           positions or not.                                   *
+      *  180501 - Base Ccy Transfer not happening in base ccy.        *
+      *  179278 - Apply 133359 - Key Extended of CHAIN to MCPOSTL4    *
+      *           Apply 125371 - File name changed from               *
+      *                          MCPOSTL0 to MCPOSTL4                 *
+      *         - Remove ravages of 155581.                           *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *  155581 - fixes 121023 & 124857 removed & replaced            *
+      *           Base Ccy's Equiv A/c code removed from Ccy Array    *
+      *           Reval of base ccy spot trade a/c is never required  *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  124857 - File name changed from MCPOSTL0 to MCPOSTL3         *
+      *           (duplicate file created) to stop record pointer from*
+      *           being reset between MC0320 and MC0400, which was    *
+      *           causing programs to loop on last record             *
+      *  121023 - Wrong Revaluation amount generated                  *
+      *  CMC001 - Management Accounts Enhancement for PCA             *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     FMCDIRYL3IF  E           K        DISK         KINFSR *PSSR
+      **  Diary Events File
+      *
+      */SPACE***********                                           121023 155581
+     F*CPOSTL0IF  E           K        DISK         KINFSR *PSSR    121023124857
+     F**MCPOSTL3IF**E           K        DISK         KINFSR *PSSR 124857 155581
+      ****Management*Account*Movements**************************** 121023 155581
+     F************MCPCACD0                          KRENAMEMCPOST  121023 155581
+      ************                                                 121023 155581
+      /SPACE                                                              179278
+     FMCPOSTL4IF  E           K        DISK         KINFSR *PSSR          179278
+      **  Management Account Movements                                    179278
+     F            MCPCACD0                          KRENAMEMCPOST         179278
+      *                                                                   179278
+      /SPACE
+     FMCPCACPDO   E                    DISK         KINFSR *PSSR
+      **  Profit Centre Accounting File
+      *
+     F/COPY WNCPYSRC,MC0400F001
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  01  -  First Cycle                                           *
+      *  11  -  End of file on read of MCDIRYL3                       *
+      ***12**-**Record*Not*Found*in*MCPOSTL0************************121023124857
+      ***12**-**Record*Not*Found*in*MCPOSTL3***********************124857 155581
+      *  12  -  Record Not Found in MCPOSTL4                          *   179278
+      *  20  -  Next Spot Date found                                  *
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  PRP02  -  Post Revaluation P&L for each Spot Revaluation     *
+      *            Calender Event.                                    *
+      *  PRW01  -  Write to Profit Centre Account file, for each Spot *
+      *            Revaluation Posting Entry when P&L to Post is not  *
+      *            Zero.                                              *
+      *  PRW02  -  Write to Profit Centre Account file, for each Base *
+      *            Ccy Equivalent Posting Entry when P&L to Post is   *
+      *            not Zero.                                          *
+      *  PRW03  -  Write to Profit Centre Accounting file when the    *
+      *            Base Ccy Spot Trade A/c is maintained, for the     *
+      *            Base Ccy Spot Trade A/c and its Equivalent         *
+      *  DBERR  -  Error handling                                     *
+      *  *PSSR  -  Subroutine to Handle Abnormal Error Conditions     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80               Copyright
+     E                    SR        999  5 0A
+     E                    BT        999  5 0
+      /SPACE 3
+     I***********                                                  121023 155581
+     I**MCPOST***                                                  121023 155581
+     I***********   BRCA                            ZBRCA          121023 155581
+     I***********   CCY                             ZCCY           121023 155581
+     I***********   ACOD                            ZACOD          121023 155581
+     I***********   CNUM                            ZCNUM          121023 155581
+     I***********   ACSQ                            ZACSQ          121023 155581
+     I***********   PRFC                            ZPRFC          121023 155581
+     I***********   BOKC                            ZBOKC          121023 155581
+     I***********   OTTP                            ZOTTP          121023 155581
+     I***********   OTST                            ZOTST          121023 155581
+     I***********   ASOC                            ZASOC          121023 155581
+     I***********   EVDT                            ZEVDT          121023 155581
+     I***********   PAMT                            ZPAMT          121023 155581
+     I***********   VOIN                            ZVOIN          121023 155581
+     I***********   GETP                            ZGETP          121023 155581
+     I***********   ACSC                            ZACSC          121023 155581
+     I***********   CPNB                            ZCPNB          121023 155581
+     I***********   PDTM                            ZPDTM          121023 155581
+     I***********   ATYP                            ZATYP          121023 155581
+     I***********   PNAR                            ZPNAR          121023 155581
+     I***********                                                  121023 155581
+     I*********** DS                                               121023 155581
+     I***********                             1   40XBCAC0         121023 155581
+     I***********                             5   80XACOD0         121023 155581
+     I***********                                                  121023 155581
+     I*                                                                   179278
+     IMCPOST                                                              179278
+     I              BRCA                            ZBRCA                 179278
+     I              CCY                             ZCCY                  179278
+     I              ACOD                            ZACOD                 179278
+     I              CNUM                            ZCNUM                 179278
+     I              ACSQ                            ZACSQ                 179278
+     I              PRFC                            ZPRFC                 179278
+     I              BOKC                            ZBOKC                 179278
+     I              OTTP                            ZOTTP                 179278
+     I              OTST                            ZOTST                 179278
+     I              ASOC                            ZASOC                 179278
+     I              EVDT                            ZEVDT                 179278
+     I              PAMT                            ZPAMT                 179278
+     I              VOIN                            ZVOIN                 179278
+     I              GETP                            ZGETP                 179278
+     I              ACSC                            ZACSC                 179278
+     I              CPNB                            ZCPNB                 179278
+     I              PDTM                            ZPDTM                 179278
+     I              ATYP                            ZATYP                 179278
+     I              PNAR                            ZPNAR                 179278
+     I*                                                                   179278
+     I            DS                                                      179278
+     I**********                              1   40XBCAC0                             179278 CGL029
+     I**********                              5   80XACOD0                             179278 CGL029
+     I                                        1  100XBCAC0                                    CGL029
+     I                                       11  200XACOD0                                    CGL029
+     I*                                                                   179278
+     I/COPY WNCPYSRC,MC0400I001
+     ILDA       E DSLDA
+      **  Local data structure used for error handling
+      *
+     ISDTRAD    E DSSDTRADPD
+      **  ICD Trading Data
+      *
+     ISDACOD    E DSSDACODPD
+      **  Accounts Codes
+     I              QQACCD                          ACCDQQ                                    CGL029
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency Details
+      *
+     IDSMOVE    E DSMCMOVEPD
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long Data Structure
+      *
+     ISDPRFC    E DSSDPRFCPD                                              186136
+     I**  Profit Centre Details                                           186136
+     I*                                                                   186136
+      ** Posting Narrative
+     I              'SPOT REVALUATION    -C         NSPOT
+     I              '          '
+      *                                                                                       CGL029
+      **  Zeros Constant                                                                      CGL029
+     I              '0000000000'          C         WZEROS                                    CGL029
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      **  Set up copyright
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Receive parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           XRETC   7        Return code
+     C                     PARM           XBCCY   3        Base currency
+     C**********           PARM           XBCUS   60       Branch customer                    CSD027
+     C                     PARM           XBCUS   6        Branch customer                    CSD027
+     C                     PARM           XBCEQ  190       Base ccy eq. amt
+     C**********           PARM           XBCAC   4        Base ccy eq. A/c                   CGL029
+     C                     PARM           XBCAC  10                                           CGL029
+     C           DSMOVE    PARM           DSFDY            MCMOVEPD fmt
+      *
+      **  Save DSMOVE parameters
+      *
+     C                     MOVE BRCA      XBRCA   3        Branch
+     C                     MOVE CCY       XCCY    3        Currency
+     ***********           MOVE ACOD      XACOD   4        Account code                       CGL029
+     C                     MOVE ACOD      XACOD  10                                           CGL029
+     C**********           Z-ADDCNUM      XCNUM   60       Customer                           CSD027
+     C                     MOVELCNUM      XCNUM   6        Customer                           CSD027
+     C                     Z-ADDACSQ      XACSQ   20       A/c Sequence Nbr
+     C                     MOVE PRFC      XPRFC   4        Profit Centre
+     C                     MOVE BOKC      XBOKC   2        Book
+     C                     MOVE OTTP      XOTTP  10        Deal Type
+     C                     MOVE OTST      XOTST  10        Deal Sub-Type
+     C**********           Z-ADDASOC      XASOC   60       Associated Cust.                   CSD027
+     C                     MOVE ASOC      XASOC   6        Associated Cust.                   CSD027
+     C                     Z-ADDEVDT      XEVDT   50       Event Date
+     C                     Z-ADDPAMT      XPAMT  190       Posting Amount
+     C                     Z-ADDVOIN      XVOIN   10       Void Indicator
+     C                     MOVE GETP      XGETP   1        Generated Entry Type
+     C                     MOVE ACSC      XACSC   2        Account Section
+     C                     Z-ADDCPNB      XCPNB   60       Current Period
+     C                     Z-ADDPDTM      XPDTM  110       Posting Date/Time
+     C                     MOVE ATYP      XATYP   1        Account Type
+     C                     MOVE PNAR      XPNAR  30        Posting Narrative
+      *
+      **  Define the error DS
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'MC0400'  WPGM   10
+      *
+      **  First Cycle
+      *
+     C           *IN01     IFEQ '0'
+     C/COPY WNCPYSRC,MC0400C001
+      *
+      **  Get 'Spot Trade A/c code' and 'Spot Revaluation A/c code',
+      **  error if not found
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDTRADPD'WFILE   8        ************
+     C                     Z-ADD1         WBASE   30       * DBERR 01 *
+     C                     MOVEL'*FIRST'  WKEY   29        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Get 'Spot Reval A/c Section' and 'Spot Revaluation A/c Type'
+      **  using Spot Revaluation Account Code, error if not found
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C**********           PARM BLSRAC    PACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM BLSRAC    PACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDACODPD'WFILE            ************
+     C                     Z-ADD2         WBASE            * DBERR 02 *
+     C                     MOVELBLSRAC    WKEY             ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Get 'Base Ccy Equivalent A/c code, error if not found
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM XBCCY     P@CCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'WFILE            ************
+     C                     Z-ADD3         WBASE            * DBERR 03 *
+     C                     MOVELXBCCY     WKEY             ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Set up Table of Spot Reval dates for the last 3 years
+      *
+     C           *HIVAL    SETGTMCDIRYL3
+     C                     Z-ADD999       C       40
+     C                     READPMCDIRYL3                 11
+      *
+     C           C         DOWGE1
+     C           *IN11     ANDEQ*OFF
+     C                     Z-ADDGIEVDT    SR,C
+     C           GIBTFR    IFEQ 'Y'
+     C                     Z-ADDGIEVDT    BT,C
+     C                     ENDIF
+     C                     SUB  1         C
+     C                     READPMCDIRYL3                 11
+     C                     ENDDO
+      *
+     C           C         IFLT 999
+     C                     ADD  1         C
+     C                     ENDIF
+     C*
+     C***Get*the*Base*Currency*equivalent*amount*if*zero.********* 121023 155581
+     C***********                                                  121023 155581
+     C***********XBCEQ     IFEQ 0                                  121023 155581
+     C***********                                                  121023 155581
+     C***********KPOST0    KLIST                                   121023 155581
+     C***********          KFLD           XBRCA                    121023 155581
+     C***********          KFLD           XBCCY                    121023 155581
+     C***********          KFLD           XEVDT                    121023 155581
+     C***********          KFLD           XPRFC                    121023 155581
+     C***********          KFLD           XBCAC0                   121023 155581
+     C***********          KFLD           XBCUS                    121023 155581
+     C***********          KFLD           XACSQ                    121023 155581
+     C***********                                                  121023 155581
+     C***********KPOST1    KLIST                                   121023 155581
+     C***********          KFLD           XBRCA                    121023 155581
+     C***********          KFLD           XCCY                     121023 155581
+     C***********          KFLD           XEVDT                    121023 155581
+     C***********          KFLD           XPRFC                    121023 155581
+     C***********          KFLD           XACOD0                   121023 155581
+     C***********          KFLD           XCNUM                    121023 155581
+     C***********          KFLD           XACSQ                    121023 155581
+     C***********                                                  121023 155581
+     C***********          MOVE XBCAC     XBCAC0                   121023 155581
+     C***********KPOST0    CHAINMCPOSTL0             12             121023124857
+     C***********KPOST0    CHAINMCPOSTL3             12            124857 155581
+     C************IN12     IFEQ '1'                                121023 155581
+     C***********          MOVEL'MCPOSTL0'WFILE            *********121023124857
+     C***********          MOVEL'MCPOSTL3'WFILE     ************   124857 155581
+     C***********          Z-ADD5         WBASE     * DBERR 05 *   121023 155581
+     C***********          MOVEL*BLANKS   WKEY      ************   121023 155581
+     C***********          EXSR DBERR                              121023 155581
+     C***********          ENDIF                                   121023 155581
+     C***********                                                  121023 155581
+     C***********          Z-SUBZPAMT     XBCEQ                    121023 155581
+     C***********                                                  121023 155581
+     C***********          MOVE XACOD     XACOD0                   121023 155581
+     C***********KPOST1    CHAINMCPOSTL0             12             121023124857
+     C***********KPOST1    CHAINMCPOSTL3             12            124857 155581
+     C***********                                                  121023 155581
+     C***********          ENDIF                                   121023 155581
+     C** Get the Base Currency equivalent amount if zero.                 179278
+     C*                                                                   179278
+     C           XBCEQ     IFEQ 0                                         179278
+     C*                                                                   179278
+     C           KPOST0    KLIST                                          179278
+     C                     KFLD           XBRCA                           179278
+     C                     KFLD           XBCCY                           179278
+     C                     KFLD           XEVDT                           179278
+     C                     KFLD           XPRFC                           179278
+     C*                               Start of Additions for 133359       179278
+     C                     KFLD           XBOKC                           179278
+     C                     KFLD           XOTTP                           179278
+     C                     KFLD           XOTST                           179278
+     C*                               End of Additions for   133359       179278
+     C                     KFLD           XBCAC0                          179278
+     C                     KFLD           XBCUS                           179278
+     C                     KFLD           XACSQ                           179278
+     C*                               Start of Additions for 133359       179278
+     C                     KFLD           XASOC                           179278
+     C                     KFLD           XGETP                           179278
+     C**********           KFLD           XATYP                                        179278 263441
+     C                     KFLD           XVOIN                           179278
+     C*                               End of Additions for   133359       179278
+     C*                                                                   179278
+     C           KPOST1    KLIST                                          179278
+     C                     KFLD           XBRCA                           179278
+     C                     KFLD           XCCY                            179278
+     C                     KFLD           XEVDT                           179278
+     C                     KFLD           XPRFC                           179278
+     C*                               Start of Additions for 133359       179278
+     C                     KFLD           XBOKC                           179278
+     C                     KFLD           XOTTP                           179278
+     C                     KFLD           XOTST                           179278
+     C*                               End of Additions for   133359       179278
+     C                     KFLD           XACOD0                          179278
+     C                     KFLD           XCNUM                           179278
+     C                     KFLD           XACSQ                           179278
+     C*                               Start of Additions for 133359       179278
+     C                     KFLD           XASOC                           179278
+     C                     KFLD           XGETP                           179278
+     C**********           KFLD           XATYP                                        179278 263441
+     C                     KFLD           XVOIN                           179278
+     C*                               End of Additions for   133359       179278
+     C*                                                                   179278
+     C                     MOVE XBCAC     XBCAC0                          179278
+     C           KPOST0    CHAINMCPOSTL4             12                   179278
+     C           *IN12     IFEQ '1'                                       179278
+     C*          Before zeroizing amount, try chaining with blank book                        243924
+     C                     MOVE XBOKC     WBOOK   2                                           243924
+     C                     MOVE *BLANKS   XBOKC                                               243924
+     C           KPOST0    CHAINMCPOSTL4             12                                       243924
+     C                     MOVE WBOOK     XBOKC                                               243924
+     C           *IN12     IFEQ '1'                                                           243924
+     C                     Z-ADD0         ZPAMT                           182954
+     C***********          MOVEL'MCPOSTL4'WFILE         ************179278182954
+     C***********          Z-ADD5         WBASE         * DBERR 05 *179278182954
+     C***********          MOVEL*BLANKS   WKEY          ************179278182954
+     C***********          EXSR DBERR                               179278182954
+     C                     ENDIF                                                              243924
+     C                     ENDIF                                          179278
+     C*                                                                   179278
+     C                     Z-SUBZPAMT     XBCEQ                           179278
+     C*                                                                   179278
+     C                     MOVE XACOD     XACOD0                          179278
+     C           KPOST1    CHAINMCPOSTL4             12                   179278
+     C*                                                                   179278
+     C                     ENDIF                                          179278
+      *
+      **  End First Cycle
+      *
+     C                     SETON                     01
+     C                     ENDIF
+      *
+      **  Set lower limits on Spot Revaluation dates and locate the
+      **  first spot revaluation date that is GE the event date
+      *
+     C                     Z-ADDC         X       40
+     C           XEVDT     LOKUPSR,X                 20  20
+     C           *IN20     IFEQ *ON
+      *
+      **  Clear Base Ccy Equiv. Accumulators
+      *
+     C                     Z-ADD*ZERO     APLPST
+     C                     Z-ADD*ZERO     PLTFRD
+     C/COPY WNCPYSRC,MC0400C002
+      *
+      **  For each Spot Revaluation Date...
+      *
+     C           X         DO   999       X
+      *
+      **  Post Revaluation P&L
+      *
+     C                     Z-ADDSR,X      GLEVDT
+     C                     EXSR PRP02
+      *
+      **  Check if Revaluation Date is also a Base Ccy Transfer
+      *
+     C           BT,X      IFNE 0
+     C/COPY WNCPYSRC,MC0400C003
+      *
+      **  If Spot Reval A/c Section is 'IN' or 'EX'
+      *
+     C           A5ACSC    IFEQ 'IN'
+     C           A5ACSC    OREQ 'EX'
+      *
+      **  Sum of 'P&L To Transfer'
+      *
+     C           APLPST    SUB  PLTFRD    PLTFR  150
+     C                     ADD  PLTFR     PLTFRD 150
+      *
+      **  Set up DSMOVE
+      *
+     C                     Z-ADDBT,X      EVDT
+     C                     MOVE BLSRAC    ACOD             Spot Reval. A/c
+     C                     Z-SUBPLTFR     PAMT             P&L to Post
+     C                     MOVE XGETP     GETP             Generated Entry Type
+     C                     MOVE A5ACSC    ACSC             Spot Reval. A/c Sect.
+     C                     MOVE A5ACTY    ATYP             Spot Reval. A/c Type
+      *
+     C                     MOVE XBRCA     BRCA             Branch
+     C***********          MOVE XCCY      CCY              Currency                           180501
+     C                     MOVE XBCCY     CCY              Currency                           180501
+     C**********           Z-ADDXCNUM     CNUM             Customer                           CSD027
+     C                     MOVE XCNUM     CNUM             Customer                           CSD027
+     C                     Z-ADDXACSQ     ACSQ             A/c Sequence Nbr
+     C                     MOVE XPRFC     PRFC             Profit Centre
+     C                     MOVE XBOKC     BOKC             Book
+     C                     MOVE XOTTP     OTTP             Deal Type
+     C                     MOVE XOTST     OTST             Deal Sub-Type
+     C**********           Z-ADDXASOC     ASOC             Associated Cust.                   CSD027
+     C                     MOVE XASOC     ASOC             Associated Cust.                   CSD027
+     C                     Z-ADDXVOIN     VOIN             Void Indicator
+     C                     MOVE XPNAR     PNAR             Posting Narrtve
+     C                     Z-ADDXCPNB     CPNB             Current Period
+     C                     Z-ADDXPDTM     PDTM             Posting Date/Time
+     C/COPY WNCPYSRC,MC0400C004
+      *
+      **  Call MC0420 - Transfer Base Ccy IN/EX to P&L
+      *
+     C                     CALL 'MC0420'
+     C                     PARM *BLANKS   PRTCD   7        Return code
+     C**********           PARM XBCUS     P@BCUS  60       Branch int. cust                   CSD027
+     C                     PARM XBCUS     P@BCUS  6        Branch int. cust                   CSD027
+     C                     PARM 'N'       P@LCKR  1        Locked Record
+     C                     PARM DSMOVE    DSFDY            MCMOVEPD fmt
+     C/COPY WNCPYSRC,MC0400C005
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     IN   LDA
+     C                     MOVELDBFILE    WFILE
+     C                     MOVE DBASE     WBASE
+     C                     MOVELDBKEY     WKEY
+     C                     MOVE DBPGM     WPGM
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO1
+     C                     ENDIF
+      *
+     C***********          SETON                     LR            121023 155581
+     C***********                                                  121023 155581
+     C                     SETON                     LR                   179278
+     C*                                                                   179278
+     C                     RETRN
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRP02  -  Post Revaluation P&L for each Spot Revaluation     *
+      *            Calender Event.                                    *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  PRW01  -  Write to Profit Centre Account file,   *
+      *                        for each Spot Reval Posting Entry.     *
+      *              PRW02  -  Write to Profit Centre Account file,   *
+      *                        for each Base Ccy Equiv. Posting Entry.*
+      *              PRW02  -  Write to Profit Centre Account file,   *
+      *                        for the Base Ccy Spot Trade A/c and    *
+      *                        its Equivalent                         *
+      *                                                               *
+      *****************************************************************
+     C           PRP02     BEGSR
+      *
+      **  Call 'GL0765' to convert the currency amount to base currency
+      **  using the historic exchange rate of the spot revaluation date.
+      *
+     C                     CALL 'GL0765'
+     C                     PARM *BLANKS   GLRTCD  7        Return code
+     C                     PARM XCCY      GLCCY   3        Currency
+     C                     PARM XBCCY     GLBCCY  3        Base currency
+     C                     PARM           GLEVDT  50       Event date
+     C                     PARM XPAMT     GLPAMT 190       Posting amount
+      *
+     C           GLRTCD    IFNE *BLANKS
+     C                     MOVEL'GL0765'  WFILE            ************
+     C                     Z-ADD4         WBASE            * DBERR 04 *
+     C                     MOVELGLRTCD    WKEY             ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  'Base Ccy Equiv. Amt' - 'Foreign/Base Amt' = 'P&L Total'
+      *
+     C           XBCEQ     SUB  GLPAMT    PLTOT  150
+      *
+      **  Sum of 'P&L To Post'
+      *
+     C           PLTOT     SUB  APLPST    PLPST  150
+     C                     ADD  PLPST     APLPST 150
+      *
+      ** If P&L to Post is not zero
+      *
+     C           PLPST     IFNE 0
+      *
+      **  Write to Profit Centre Accounting file, for the Spot
+      **  Revaluation Account Entry
+      *
+     C                     EXSR PRW01
+      *
+      **  Write to Profit Centre Accounting file, for the Base Ccy
+      **  Equivalent Entry
+      *
+     C                     EXSR PRW02
+      *
+      **  If Base Ccy Spot Trade Equiv A/c Code is not Blank/Zero,
+      **  then 2 additional entries are required because a Spot Trade
+      **  Account is being maintained in Base Currency along with its
+      **  Equivalent Account.
+      *
+     C           A6SPAE    IFNE *BLANK
+     C********** A6SPAE    ANDNE'0000'                                                        CGL029
+     C           A6SPAE    ANDNEWZEROS                                                        CGL029
+     C                     EXSR PRW03
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW01  -  Write to Profit Centre Account file, for each Spot *
+      *            Revaluation Posting Entry when P&L to Post is not  *
+      *            Zero.                                              *
+      *                                                               *
+      *  Called By:  PRP02 - Post Revaluation P&L for each Spot       *
+      *                      Revaluation Calender Event               *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW01     BEGSR
+      *
+     C                     MOVE XBRCA     BRCA             Branch
+     C                     MOVE XBCCY     CCY              Base Currency
+     C                     MOVE BLSRAC    ACOD             Spot Reval A/c
+     C**********           Z-ADDXBCUS     CNUM             Branch Internal Cust.              CSD027
+     C                     MOVE XBCUS     CNUM             Branch Internal Cust.              CSD027
+     C                     MOVE '01'      ACSQ             A/c Sequence Nbr
+     C                     MOVE XPRFC     PRFC             Profit Centre
+     C                     MOVE XBOKC     BOKC             Book
+     C                     MOVE XOTTP     OTTP             Deal Type
+     C                     MOVE XOTST     OTST             Deal Sub-Type
+     C**********           Z-ADDXASOC     ASOC             Associated Cust.                   CSD027
+     C                     MOVE XASOC     ASOC             Associated Cust.                   CSD027
+     C                     Z-ADDGLEVDT    EVDT             Spot Reval Date
+     C                     Z-ADD0         VOIN             Void Indicator
+     C                     MOVE 'R'       GETP             Generated Entry Type
+     C           PLPST     MULT -1        PAMT             P&L to Post
+     C                     MOVE A5ACSC    ACSC             Spot Reval A/c Sect.
+     C                     MOVE A5ACTY    ATYP             Spot Reval A/c Type
+     C                     MOVELNSPOT     PNAR             Posting Narrative
+     C                     Z-ADDXCPNB     CPNB             Current Period
+     C                     Z-ADDXPDTM     PDTM             Posting Date&Time
+     C                     EXSR SRPRFC                                    186136
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW02  -  Write to Profit Centre Account file, for each Base *
+      *            Ccy Equivalent Posting Entry when P&L to Post is   *
+      *            not Zero.                                          *
+      *                                                               *
+      *  Called By:  PRP02 - Post Revaluation P&L for each Spot       *
+      *                      Revaluation Calender Event               *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW02     BEGSR
+      *
+     C                     MOVE XBCAC     ACOD             Base Ccy Equiv A/c
+     C                     Z-ADDPLPST     PAMT             P&L to Post
+     C                     MOVE *BLANK    ATYP             Account Type
+     C                     MOVE *BLANK    ACSC             Account Section
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW03  -  Write to Profit Centre Accounting file when the    *
+      *            Base Ccy Spot Trade A/c is maintained, for the     *
+      *            Base Ccy Spot Trade A/c and its Equivalent         *
+      *                                                               *
+      *  Called By:  PRP02 - Post Revaluation P&L for each Spot       *
+      *                      Revaluation Calender Event               *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW03     BEGSR
+      *
+     C                     MOVE BLSPTA    ACOD             Spot Trade A/c
+     C                     WRITEMCPCACD0
+      *
+     C                     MOVE A6SPAE    ACOD             Base Ccy Equiv. A/c
+     C           PLPST     MULT -1        PAMT             P&L to Post
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C*****************************************************************   186136
+     C**  Subroutine SRPRFC access Profit Centre details              *   186136
+     C*****************************************************************   186136
+     C           SRPRFC    BEGSR                           ** SRPRFC SR **186136
+      *                                                                   186136
+      **  Access Profit Centre details via access object                  186136
+      *                                                                   186136
+     C                     CALL 'AOPRFCR0'                                186136
+     C                     PARM *BLANKS   WRTCD   7                       186136
+     C                     PARM '*KEY   ' WOPTN   7                       186136
+     C                     PARM PRFC      WPRFC   4                       186136
+     C           SDPRFC    PARM SDPRFC    DSFDY                           186136
+      *                                                                   186136
+      **  Database error if not found                                     186136
+      *                                                                   186136
+     C           WRTCD     IFNE *BLANKS                                   186136
+     C                     MOVEL'SDPRFCPD'WFILE            ************   186136
+     C                     Z-ADD5         WBASE            * DBERR 05 *   186136
+     C                     MOVELPRFC      WKEY             ************   186136
+     C                     EXSR DBERR                                     186136
+     C                     ELSE                                           186136
+      *                                                                   186136
+      **  Use FX Position Profit Centre if not blank                      186136
+      *                                                                   186136
+     C           DSFPPC    IFNE *BLANK                                    186136
+     C                     MOVE DSFPPC    PRFC                            186136
+     C                     ENDIF                                          186136
+     C                     ENDIF                                          186136
+      *                                                                   186136
+     C                     ENDSR                                          186136
+     C********************************************************************186136
+     C/EJECT                                                              186136
+      *****************************************************************
+      *                                                               *
+      *  DBERR   -  Error handling                                    *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELWFILE     DBFILE
+     C                     MOVE WBASE     DBASE
+     C                     MOVELWKEY      DBKEY
+     C                     MOVELWPGM      DBPGM
+     C                     OUT  LDA
+     C                     MOVEL'*REVAL'  XRETC
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Subroutine to handle abnormal error conditions       *
+      *                                                               *
+      *  Called by:  Abnormal Termination Processing                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVEL'*REVAL'  XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+      *
+      *****************************************************************
+      /SPACE 3
+**  CPY@
+(c) Finastra International Limited 2001

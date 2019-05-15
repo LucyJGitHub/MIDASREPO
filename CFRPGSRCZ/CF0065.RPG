@@ -1,0 +1,264 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Chaser generation audit report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - CONFIRMATION MATCHING
+     F*                                                               *
+     F*       CF0065 - CHASER GENERATION COB AUDIT REPORT             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 124744             Date 30Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 099936             Date  27JAN98              *
+     F*                      S01310            DATE  06DEC90          *
+     F*                      S01184            DATE  15DEC89          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*       124744 - Bank title not appearing on reports. Use field *
+     F*                BJURPT instead of BJAGNA.
+     F*       099936 - Pgm produces lots of spool files instead of 1  *
+     F*                per branch.  Fix is to read LF/CHASERL0 in     *
+     F*                keyed sequence, i.e. in Branch Code order.     *
+     F*       S01310 - SWIFT RATIONALISATION                          *
+     F*       S01184 - CREATED FOR CONFIRMATION MATCHING              *
+     F*                                                               *
+     F*****************************************************************
+     FSDBANKPDIF  E                    DISK
+     FCFCHSRPDIF  E                    DISK
+     F*FCHSRL0IF**E********            DISK                        S01310 099936
+     FCFCHSRL0IF  E           K        DISK                               099936
+     F            CFCHSRD0                          KRENAMECFCHSR00       S01310
+     FSDBRCHL0IF  E           K        DISK                               S01310
+     FCF0065AUO   E                    PRINTER      KINFDS SPOOLA     UC  S01310
+     FCF0065P1O   E             20     PRINTER      KINFDS SPOOLP     UC  S01310
+     F*F0065AUO***E********     20     PRINTER                            S01310
+     F*
+     E                    CPY@    1   1 80                                S01310
+      *
+     F*****************************************************************
+     F* ID C  F  H  L    FUNCTION OF INDICATORS
+     F* 20 - CF0065P1 OVERFLOW
+     F* 30 - ERROR ON SDBANKPD
+     F* 31 - EOF CFCHSRPD
+     F* 32 - DETAILS OUTPUT
+     F* U7 - DATABASE ERRORS
+     F* U8 - DATABASE ERRORS
+     F* LR - DATABASE ERRORS AND END PROGRAM
+     E*****************************************************************
+     IRUNDAT      DS                             13
+     I                                        1   7 RUND
+     I                                       13  13 MBIN                  S01310
+     I*   RUN DATE DATA AREA - Run Date (DDMMMYY)
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**  Local Data Area - Database errors
+      *
+     ISPOOLA      DS                                                      S01310
+     I                                       83  92 AFILE                 S01310
+     I                                    B 123 1240AFNUM                 S01310
+     ISPOOLP      DS                                                      S01310
+     I                                       83  92 PFILE                 S01310
+     I                                    B 123 1240PFNUM                 S01310
+      **  File information data structure                                 S01310
+      *                                                                   S01310
+     C           *ENTRY    PLIST                                          S01310
+     C                     PARM           RSEQ    5                       S01310
+      *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*               INDEX TO SUBROUTINES                            *
+     C* MAIN    - MAIN PROCESSING                                     *
+     C* INIT    - INITIAL PROCESSING                                  *
+     C* *PSSR   - ERROR PROCESSING                                    *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  MAIN - MAIN PROCESS                                          *
+     C*                                                               *
+     C*  CALLS    INIT   - INITIAL PROCESS                            *
+     C*                                                               *
+     C*  CALLED BY                                                    *
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+      *
+      **  If multibranching off                                           S01310
+     C           MBIN      IFNE 'Y'                                       S01310
+     C*
+     C**  Read CHASER AUDIT file
+     C                     READ CFCHSRPD                 31
+      *
+     C                     OPEN CF0065P1                                  S01310
+     C                     MOVE PFILE     SFILE                           S01310
+     C                     Z-ADDPFNUM     ZSNUM                           S01310
+     C                     EXSR SPLF                                      S01310
+     C                     WRITEHEADER                                    S01310
+      *                                                                   S01310
+     C           *IN31     DOWEQ'0'
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     20
+     C                     END
+     C                     MOVE PRLN      PRNT
+     C*
+     C**  Output to printer file
+     C                     WRITEDETAIL
+     C                     SETON                     32
+      *
+     C                     READ CFCHSRPD                 31
+     C                     END
+     C*
+     C                     ELSE                                           S01310
+     C**  Read CHASER AUDIT file                                          S01310
+     C                     READ CFCHSRL0                 31               S01310
+     C                     MOVE BRCA      @BRCA   3                       S01310
+      *                                                                   S01310
+     C                     OPEN CF0065P1                                  S01310
+     C                     MOVE PFILE     SFILE                           S01310
+     C                     Z-ADDPFNUM     ZSNUM                           S01310
+     C                     EXSR SPLF                                      S01310
+     C           BRCA      CHAINSDBRCHL0             88                   S01310
+     C                     WRITEHEADER                                    S01310
+      *                                                                   S01310
+     C           *IN31     DOWEQ'0'                                       S01310
+     C                     MOVE PRLN      PRNT                            S01310
+     C*                                                                   S01310
+     C**  Output to printer file                                          S01310
+     C           *IN20     IFEQ '1'                                       S01310
+     C                     WRITEHEADER                                    S01310
+     C                     SETOF                     20                   S01310
+     C                     END                                            S01310
+     C                     WRITEDETAIL                                    S01310
+     C                     SETON                     32                   S01310
+      *                                                                   S01310
+     C                     READ CFCHSRL0                 31               S01310
+      *                                                                   S01310
+     C           *IN31     IFEQ '0'                                       S01310
+     C           BRCA      ANDNE@BRCA                                     S01310
+     C                     WRITEEOREPORT                                  S01310
+     C                     CLOSECF0065P1                                  S01310
+     C                     OPEN CF0065P1                                  S01310
+     C                     MOVE PFILE     SFILE                           S01310
+     C                     Z-ADDPFNUM     ZSNUM                           S01310
+     C                     EXSR SPLF                                      S01310
+     C           BRCA      CHAINSDBRCHL0             88                   S01310
+     C                     WRITEHEADER                                    S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     MOVE BRCA      @BRCA                           S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *
+     C                     WRITEEOREPORT
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  INIT - INITIAL PROCESSING                                    *
+     C*                                                               *
+     C*  CALLS    *PSSR - ERROR PROCESSING                            *
+     C*                                                               *
+     C*  CALLED BY   MAIN - MAIN PROCESSING                           *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80                       S01310
+      *
+     C** DTAARA/LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE                          S01310
+     C                     MOVE *BLANKS   DBKEY                           S01310
+     C                     MOVE *BLANKS   DBASE                           S01310
+     C                     MOVEL'CF0065  'DBPGM
+     C                     OUT  LDA
+     C*
+     C** DTAARA/RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C****Obtain*report*title*from*PF/SDBANKPD*(BJAGNA)                   124744
+     C**  Obtain report title from PF/SDBANKPD (BJURPT)                   124744
+     C                     READ SDBANKPD                 30
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD01        DBASE            * DB ERROR 01 *
+     C                     MOVEL'FIRST'   DBKEY            ***************
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN CF0065AU                                  S01310
+     C                     MOVE AFILE     SFILE                           S01310
+     C                     Z-ADDAFNUM     ZSNUM                           S01310
+     C                     EXSR SPLF                                      S01310
+     C                     WRITEHEADERA                                   S01310
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+     C*
+      **  If multibranching on display branch code                        S01310
+     C           MBIN      IFEQ 'Y'                                       S01310
+     C                     MOVE '1'       *IN49                           S01310
+     C                     END                                            S01310
+     C*********************WRITEHEADER                                    S01310
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   SPLF  - Error handling                                      *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           SPLF      BEGSR                                          S01310
+      *                                                                   S01310
+     C                     CALL 'ZSFILE'                                  S01310
+     C                     PARM           RSEQ                            S01310
+     C                     PARM BRCA      @PARM   3                       S01310
+     C                     PARM           SFILE  10                       S01310
+     C                     PARM           ZSNUM   60                      S01310
+     C                     PARM           ZSERR   1                       S01310
+     C           ZSERR     IFEQ 'Y'                                       S01310
+     C                     EXSR *PSSR                                     S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+      /EJECT
+     C*****************************************************************
+     C*  *PSSR - ERROR PROCESSING                                     *
+     C*                                                               *
+     C*  CALLS    NONE                                                *
+     C*                                                               *
+     C*  CALLED BY   INIT  - INITIAL PROCESSING                       *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

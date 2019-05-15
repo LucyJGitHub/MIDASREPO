@@ -1,0 +1,788 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Plane Manipulation')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                  *
+     F*                                                               *
+     F*  CG0390 - Plane manipulation.                                 *
+     F*                                                               *
+     F*  Function:                                                    *
+     F*                                                               *
+     F*                                                               *
+     F*  Called By:                                                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 09Dec94               *
+      *                                    Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,CG0390DFPG
+     FCG0390DFCF  E                    WORKSTN
+     FCGLAYOL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      * RTV : Layout Reference          Retrieval index
+      *
+     FCGLAYOL0UF  E           K        DISK                      A    UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      * UPD : Layout Reference          Update index
+      *
+     F/EJECT
+     E/COPY WNCPYSRC,CG0390DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E*  Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     E/COPY WNCPYSRC,CG0390DEPG
+     E/EJECT
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     IO1PARM      DS
+     I                                        1  10 O1LAYO
+     I                                       11  20 O1PLAN
+     I                                       21  30 O1FLDN
+     I                                       31  380O1TCGP
+     I                                       39  460O1CID
+     IO2PARM      DS
+     I                                        1  10 O2NLAY
+     I                                       11  20 O2FMBR
+     I                                       21  30 O2TMBR
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     I/COPY CGCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+      *
+      *  Define allocate and deallocate as constants
+      *
+     I              'Allocate  '          C         ##ALOC
+     I              'Deallocate'          C         ##DEAL
+      *
+     IP@INFO      DS                            100
+     I                                        1  10 P@LAYO
+     I                                       20  45 P@JOB
+      *
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           S#LAYO           Layout name
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ *OFF
+     C                     EXSR SRINIT
+     C                     ENDIF
+      *
+      ** Main processing
+      *
+     C                     EXSR SRMAIN
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN   : Main processing                                   *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMAIN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+     C                     EXSR SRCOPY
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMAIN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCOPY   : Copy layout                                       *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           SRCOPY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCOPY'  @STK,Q
+      *
+      ** Inhibit F10 first time through.
+      *
+     C                     SETON                     42
+     C                     MOVE *BLANKS   S#NLAY
+      *
+     C           *IN03     DOUEQ*ON                        B1
+     C           *IN12     OREQ *ON
+      *
+      ** Display screen
+      *
+     C                     EXSR SRDISP
+      *
+      ** F3
+      *
+     C           *IN03     IFEQ *ON                        B*2
+     C                     MOVEL'Y2U9999' W0RTN
+     C                     GOTO EXCOPY
+     C                     ENDIF                           E*2
+      *
+      ** F12
+      *
+     C           *IN12     IFEQ *ON                        B*2
+     C                     MOVEL'USR0790' W0RTN
+     C                     SETOF                     12
+     C                     GOTO EXCOPY
+     C                     ENDIF                           E*2
+      *
+     C           *IN10     IFEQ *ON                        B*2
+     C           #UPDAT    ANDEQ'Y'
+     C           S#NLAY    ANDEQ##NLAY
+     C                     EXSR SRPROC
+     C                     GOTO DSPSCR
+     C                     ENDIF                           E*2
+      *
+      ** Validate layout and check existance.
+      *
+     C                     EXSR SRVAL
+      *
+     C           DSPSCR    TAG
+      *
+     C                     ENDDO                           E1
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCOPY    TAG
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDISP   : Display screen.                                   *
+      *                                                               *
+      *  CALLED BY: SRCOPY                                            *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDISP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRDISP'  @STK,Q
+      *
+     C                     TIME           ##TME
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     WRITE#RCDFM1
+     C                     WRITE#RCDFM2
+     C                     EXFMT#RCDFM4
+      *
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     MOVEA'0'       *IN,39
+     C                     MOVEA'0'       *IN,42
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDISP    TAG
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL    : Validation.                                       *
+      *                                                               *
+      *  CALLED BY: SRCOPY                                            *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRVAL     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRVAL'   @STK,Q
+      *
+      * Deallocate
+      *
+     C                     CLEARP@INFO
+     C                     MOVEL##DEAL    P@ACTC
+      * Deallocate
+      *
+     C                     CALL 'CGC8100'              9090
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM           P@ACTC 10
+     C                     PARM           P@INFO
+      *
+      ** New layout must be entered.
+      *
+     C           S#NLAY    IFEQ *BLANKS                    B*2
+     C                     MOVEL'N'       #UPDAT
+     C                     SETON                     3942
+     C                     MOVEL'CGD1602' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            X*2
+     C           *LIKE     DEFN S#NLAY    ##NLAY
+     C                     MOVELS#NLAY    ##NLAY
+     C                     ENDIF                           E*2
+      *
+      ** Check if new layout name exists.
+      *
+     C           S#NLAY    SETLL@LAYOL1                  98
+      *
+     C           *IN42     IFEQ *OFF                       B*2
+      *
+      * Allocate layout names
+      *
+     C                     CLEARP@INFO
+     C                     MOVEL##ALOC    P@ACTC
+     C                     MOVELS#LAYO    P@LAYO
+      * Allocate
+     C                     CALL 'CGC8100'              9090
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM           P@ACTC 10
+     C                     PARM           P@INFO
+      *
+      * Send message if return code not blank or *IN90 on
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    ORNE *BLANKS
+     C           26        SUBSTP@INFO:20 ZAMSDA
+     C                     MOVEL'CGD1760' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     3942  *
+     C                     GOTO EXVAL
+     C                     ENDIF
+      *
+      * Allocate layout names
+      *
+     C                     CLEARP@INFO
+     C                     MOVEL##ALOC    P@ACTC
+     C                     MOVELS#NLAY    P@LAYO
+      * Allocate
+     C                     CALL 'CGC8100'              9090
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM           P@ACTC 10
+     C                     PARM           P@INFO
+      *
+      * Send message if return code not blank or *IN90 on
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    ORNE *BLANKS
+     C           26        SUBSTP@INFO:20 ZAMSDA
+     C                     MOVEL'CGD1760' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     3942  *
+     C                     GOTO EXVAL
+     C                     ENDIF
+      *
+     C           *IN98     IFEQ *OFF                       B**3
+     C                     MOVEL'CGD1605' ZAMSID
+     C                     ELSE                            X**3
+     C                     MOVEL'CGD1607' ZAMSID
+     C                     ENDIF                           E**3
+     C                     MOVEL'Y'       #UPDAT  1
+     C                     EXSR ZASNMS
+     C                     ENDIF                           E*2
+      *
+      ** Store values to copy back to CGLAYOPD.
+      *
+     C           S#LAYO    CHAIN@LAYOL1              98
+      *
+     C           *IN98     IFEQ *OFF
+     C           *LIKE     DEFN LYRECI    U#RECI
+     C                     MOVELLYRECI    U#RECI
+     C           *LIKE     DEFN LYPTYP    U#PTYP
+     C                     MOVELLYPTYP    U#PTYP
+     C           *LIKE     DEFN LYPSTP    U#PSTP
+     C                     MOVELLYPSTP    U#PSTP
+     C           *LIKE     DEFN LYPRTF    U#PRTF
+     C                     MOVELLYPRTF    U#PRTF
+     C           *LIKE     DEFN LYDESC    U#DESC
+     C                     MOVELLYDESC    U#DESC
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXVAL     TAG
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Process files                                     *
+      *                                                               *
+      *  CALLED BY: SRCOPY                                            *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPROC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRPROC'  @STK,Q
+      *
+      ** Delete layout.
+      *
+     C                     EXSR SRPDEL
+      *
+      ** Copy layout.
+      *
+     C                     EXSR SRMDTA
+      *
+      ** Delete layout reference if it exists.
+      *
+     C                     EXSR SRDREF
+      *
+      ** Create layout reference.
+      *
+     C                     EXSR SRCREF
+      *
+     C                     COMIT
+     C                     MOVEL'N'       #UPDAT
+     C                     MOVE *BLANKS   S#NLAY
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPROC    TAG
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMDTA   : Move and update data.                             *
+      *                                                               *
+      *  CALLED BY: SRCOPY                                            *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMDTA    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMDTA'  @STK,Q
+      *
+      ** Set up parameters for copy.
+      *
+     C                     EXSR SRCSET
+      *
+     C                     CALL 'CG0400'
+     C                     PARM *BLANKS   W0RTN
+     C                     PARM '*COPY'   W0ACT   8
+     C                     PARM           O1PARM
+     C                     PARM           O2PARM
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMDTA    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRPDEL   : Permanant Delete                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           SRPDEL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRPDEL'  @STK,Q
+      *
+      ** Set up parameters for delete.
+      *
+     C                     EXSR SRPSET
+      *
+     C                     CALL 'CG0400'
+     C                     PARM *BLANKS   W0RTN
+     C                     PARM '*PDELETE'W0ACT
+     C                     PARM           O1PARM
+     C                     PARM           O2PARM
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRCREF   : Create layout reference                           *
+      *                                                               *
+      *  CALLED BY: SRCOPY                                            *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCREF    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCREF'  @STK,Q
+      *
+      ** Move all fields to @LAYOL@.
+      *
+     C                     MOVELS#NLAY    LYLAYO           Layout identifier
+     C                     MOVELU#RECI    LYRECI           Record identifier
+     C                     MOVELU#PTYP    LYPTYP           Print item type
+     C                     MOVELU#PSTP    LYPSTP           Print item sub-type
+     C                     MOVELU#PRTF    LYPRTF           Printer profile
+     C                     MOVELU#DESC    LYDESC           Description
+     C                     MOVEL##JOB     LYAJOB           Job name
+     C                     MOVEL##USR     LYAUSR           User name
+     C                     Z-ADD##JTM     LYATIM           Action time
+     C                     MOVELWUMRDT    LYARDT           Action date
+     C                     MOVEL'C'       LYAACT           Action type
+     C                     Z-ADDWURDNB    LYRDNB           Run day number
+      *
+     C                     WRITE@LAYOL0                91  *
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRDREF   : Delete layout reference (if it exists)            *
+      *                                                               *
+      *  CALLED BY: SRCOPY                                            *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDREF    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRDREF'  @STK,Q
+      *
+      ** Check if layout name exists.
+      *
+     C           S#NLAY    CHAIN@LAYOL0              98
+      *
+     C           *IN98     IFEQ *OFF
+     C                     DELET@LAYOL0
+     C                     ENDIF
+      *
+     C           EXDREF    TAG
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRPSET   : Set up parameters for permanant delete.           *
+      *                                                               *
+      *  CALLED BY: SRPDEL                                            *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPSET    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRPSET'  @STK,Q
+      *
+     C                     CLEARO1PARM
+     C                     CLEARO2PARM
+      *
+     C                     MOVELS#NLAY    O1LAYO
+     C                     MOVEL'*FIRST'  O2FMBR
+      *
+     C           EXPSET    TAG
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRCSET   : Set up parameters for copy.                       *
+      *                                                               *
+      *  CALLED BY: SRMDTA                                            *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCSET    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCSET'  @STK,Q
+      *
+     C                     CLEARO1PARM
+     C                     CLEARO2PARM
+      *
+     C                     MOVELS#LAYO    O1LAYO
+     C                     MOVEL'*FIRST'  O2FMBR
+     C                     MOVEL'*FIRST'  O2TMBR
+     C                     MOVELS#NLAY    O2NLAY
+      *
+     C           EXCSET    TAG
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialisation                                    *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+     C                     MOVEL'C'       S#ACTN
+      *
+      ** Open user controlled file.
+      *
+     C                     OPEN CGLAYOL0
+      *
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      *
+      ** Obtain 'copy'.
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1645' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    S#DESC
+      *
+      ** Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Option Name
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1599' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONKY
+      *
+      * Function keys
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1266' #MSGID  7
+     C                     PARM 'CGUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    #KCMD2
+      *
+      * Obtain default message file
+     C                     MOVEL'CGUSRMSG'ZADFMF 10
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS   : Send message to program's message queue           *
+      *                                                               *
+      *  CALLED BY:                                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C                     ENDSR
+      *****************************************************************
+     C/COPY CGCPYSRC,SRERRC
+**  CPY@
+(c) Finastra International Limited 2001

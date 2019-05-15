@@ -1,0 +1,866 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Fees, RE, GL, etc EOY processing')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER530 - Fees, Retail, General Ledger etc. EOY               *
+     F*                                                               *
+     F*  Function:  This program updates the module-specific          *
+     F*             profitability files for RE, GL, DL and FF.        *
+     F*                                                               *
+     F*  Called By: LERC530 - End of Year processing - Accounts and   *
+     F*                       Deals.                                  *
+     F*  (COB)
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 081531             Date 30Oct97               *
+     F*                 110779             Date 21Jan97               *
+     F*                 069242             DATE 14APR94               *
+     F*                 BH3418             DATE 13JUL92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  081531 - FOOB in component LERC530 during COB. Field NREREC  *
+     F*           in NPEREZ has been increased to 5,0 - recompile pgm.*
+     F*  110779 - Remove redundant end of century calculation, which  *
+     F*           will not work after the year 2000 anyway.           *
+     F*  069242 - Lotus 123 files are now redundant                   *
+      *  BH3418 - Change to datastructure for AOACCTR0
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FLEPEFFD IF  E           K        DISK
+      * Profitability Extract Facility Fees - Detail
+      *
+     FLEPEFFZ UF  E                    DISK
+      * Profitability Extract Facility Fees - Audit
+      *
+     FLEPEFLD IF  E           K        DISK
+      * Profitability Extract Loan Fees - Detail
+      *
+     FLEPEFLZ UF  E                    DISK
+      * Profitability Extract Loan Fees - Audit
+      *
+     FLEPERED IF  E           K        DISK
+      * Profitability Extract Retail - Detail
+      *
+     FLEPEREZ UF  E                    DISK
+      * Profitability Extract Retail - Audit
+      *
+     FLEPEGLD IF  E           K        DISK
+      * Profitability Extract General Ledger - Detail
+      *
+     FLEPEGLZ UF  E                    DISK
+      * Profitability Extract General Ledger - Audit
+      *
+     FLEPEDFD IF  E           K        DISK
+      * Profitability Extract Dealing & Futures - Detail
+      *
+     FLEPEDFZ UF  E                    DISK
+      * Profitability Extract Dealing & Futures - Audit
+      *
+     FSDACOFL0IF  E           K        DISK
+      *  Account Officer File
+      *
+     F**PEFF123 O   E                    DISK                             069242
+     F**PEFL123 O   E                    DISK                             069242
+     F**PERE123 O   E                    DISK                             069242
+     F**PEGL123 O   E                    DISK                             069242
+     F**PEDF123 O   E                    DISK                             069242
+     FNPERED  O   E                    DISK
+     F            LEPEREDF                          KRENAMENPEREDF
+     FNPEREZ  O   E                    DISK
+      *
+     FLER530AUO   E                    PRINTER      KINFDS SPOOL
+      *
+      /EJECT
+     F*******************************************************************
+     F*                                                                 *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                    *
+     F*                                                                 *
+     F*   50  - File controls out of balance LEPEFFZ                    *
+     F*   51  - File controls out of balance LEPEFLZ                    *
+     F*   52  - File controls out of balance LEPEREZ                    *
+     F*   53  - File controls out of balance LEPEGLZ                    *
+     F*   54  - File controls out of balance LEPEDFZ                    *
+     F*                                                                 *
+     F*   80  - End of file LEPEFFD, LEPEFLD, LEPERED, LEPEGLD, LEPEDFD *
+     F*   87  - End of file LEPEFFZ, LEPEFLZ, LEPEREZ, LEPEGLZ, LEPEDFZ *
+     F*                                                                 *
+     F*   88  - Account Officer array index equals '1'                  *
+     F*                                                                 *
+     F*   89  - End of file SDACOFL0.                                   *
+     F*                                                                 *
+     F*   98  - Date Format is 'M'                                      *
+     F*                                                                 *
+     F*   99  - Error in ZDATE1 subroutine.                             *
+     F*                                                                 *
+     F*   U7  - Database error                                          *
+     F*   U8  - Database error                                          *
+     F*                                                                 *
+     F*******************************************************************
+      /SPACE 3
+     F*******************************************************************
+     F*                                                                 *
+     F*  S U B R O U T I N E   I N D E X                                *
+     F*                                                                 *
+     F*  B0000  - Initialization subroutine                             *
+     F*  C0000  - Profitability extract - Facility Fees                 *
+     F*  D0000  - Profitability extract - Loan Fees                     *
+     F*  E0000  - Profitability extract - Retail                        *
+     F*  F0000  - Profitability extract - General Ledger                *
+     F*  G0000  - Profitability extract - Dealing and Futures           *
+     F*  H0000  - End of program control                                *
+     F*  Z1000  - Obtain department                                     *
+     F*  DBERR  - Database error output subroutine                      *
+     F*  *PSSR  - Standard error processing subroutine                  *
+     F*                                                                 *
+     F*******************************************************************
+      /EJECT
+     E                    AO         50  2
+     E                    DC         50  3
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+      *
+     ILEPEFFDF
+     I              FFDRCI                          PFFRCI
+     I              FFDCNM                          PFFCNM
+     I              FFDFAC                          PFFFAC
+     I              FFDCOD                          PFFCOD
+     I              FFDCCY                          PFFCCY
+      *
+     ILEPEFLDF
+     I              FLDRCI                          PFLRCI
+     I              FLDCNM                          PFLCNM
+     I              FLDLON                          PFLLON
+     I              FLDCOD                          PFLCOD
+     I              FLDCCY                          PFLCCY
+      *
+     ILEPEREDF
+     I              BRCA                            PRBRCA
+     I              RDCNUM                          PRENUM
+     I              RDACCY                          PRECCY
+     I              RDACOD                          PRECOD
+     I              RDACSQ                          PRECSQ
+     I              RDDRCR                          PRERCR
+     I              RDPINT                          PREINT
+      *
+     ILEPEGLDF
+     I              GDCNUM                          PGLNUM
+     I              GDACCY                          PGLCCY
+     I              GDACOD                          PGLCOD
+     I              GDACSQ                          PGLCSQ
+      *
+     ILEPEDFDF
+     I              DDCNUM                          PDFNUM
+     I              DDRTYP                          PDFTYP
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ISPOOL       DS
+      ** File information data structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Standard data area layout for system flags & run date.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDACOF    E DSSDACOFPD
+      ** ACCOUNT OFFICER DETAILS
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** CUSTOMER DETAILS
+      *
+     ID@ACCT    E DSACCNTAB
+      *
+      *  Account Details DS for assigning data from Access
+      *  Programs to work fields
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     C/EJECT
+      *
+     C                     EXSR B0000
+     C                     EXSR C0000
+     C                     EXSR D0000
+     C                     EXSR E0000
+     C                     EXSR F0000
+     C                     EXSR G0000
+     C                     EXSR H0000
+      *
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * B0000  - Initialisation Subroutine                            *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, DBERR, ZDATE1, ZDATE2                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           B0000     BEGSR
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define & read external data areas used in program.
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*                                                                    0112
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                     0112
+     C           AGDFF     IFEQ 'M'                                        0112
+     C                     SETON                         98MMDDYY, 98 ON   0112
+     C                     END                                             0112
+      *
+     C                     SETON                     LR
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *                                                    **************
+     C           @RTCD     IFNE *BLANKS                    * DBERROR 01 *
+     C           *LOCK     IN   LDA                        **************
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'LER530  'DBPGM
+     C                     MOVEL'BANK    'DBKEY
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C**  FIRSTLY REMOVE THE HARD CODED END OF CENTURY DATE
+     C**  AND THEN CONTINUE THE ORIGINAL PROCESSING
+     C                     MOVE BJMRDT    YY      20
+      *
+     C*********************Z-ADDYY        PFFCYY                          069242
+     C*********************Z-ADDYY        PFLCYY                          069242
+     C*********************Z-ADDYY        PRECYY                          069242
+     C*********************Z-ADDYY        PGLCYY                          069242
+     C*********************Z-ADDYY        PDFCYY                          069242
+     C*
+     C** ADD THE END OF YEAR DAYNO FROM PF/SDBANK TO THE INPUT FIELD
+     C** ZDAYNO (MIDAS DAY NUMBER), AND CALL THE SUBROUTINE TO
+     C** CONVERT THIS INTO A DDMMYY FORMAT WHICH IS RETURNED TO
+     C** THIS PROGRAM AS ZDATE (DAY MONTH YEAR).
+     C*
+     C                     Z-ADDBJEYD     ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C** THIS DATE IS THEN IN THE CORRECT FORMAT TO MOVE 99
+     C** TO THE YEAR(YY) VALUE OF DATED AND PRODUCE THE END OF
+     C** CENTURY DATE. THEN THIS DDMMYY FORMAT IS CHANGED BACK INTO
+     C** A MIDAS RUNDAY NUMBER.
+     C*
+     C*********************                                                 0112
+     C*****CHECK*SYSTEM*DATE FORMAT, DDMMYY OR MMDDYY.                      0112
+     C***********AGDFF*****IFEQ 'M'                                         0112
+     C*********************SETON                         98MMDDYY, 98 ON    0112
+     C*********************END                                              0112
+     C*
+     C*********************MOVE '99'      ZDATE                           110779
+     C*********************EXSR ZDATE1                                    110779
+     C*********************                                               110779
+     C************IN99*****IFEQ '1'                                       110779
+     C************LOCK*****IN   LDA                                       110779
+     C*********************Z-ADD5         DBASE            ************** 110779
+     C*********************MOVEL'ZDATE1'  DBFILE           * DBERROR 05 * 110779
+     C*********************MOVELZDAYNO    DBKEY            ************** 110779
+     C*********************MOVEL'LER530  'DBPGM                           110779
+     C*********************OUT  LDA                                       110779
+     C*********************EXSR DBERR                                     110779
+     C*********************EXSR *PSSR                                     110779
+     C*********************END                                            110779
+     C*********************                                               110779
+     C*
+     C****ALL*THAT*REMAINS*IS*TO*CHECK*TO*SEE*IF*THE*RUNDATE***********   069242
+     C****IS*GREATER*THAN*THE*END*OF*CENTURY*DATE*AND*IF*IT*IS*********   069242
+     C****THEN*ADD*100*TO*THE*ORIGINAL*FIELDS...***********************   069242
+     C*
+     C***********BJRDNB    IFGT ZDAYNO                                    069242
+     C***********          ADD  100       PFFCYY                          069242
+     C***********          ADD  100       PFLCYY                          069242
+     C***********          ADD  100       PRECYY                          069242
+     C***********          ADD  100       PGLCYY                          069242
+     C***********          ADD  100       PDFCYY                          069242
+     C***********          END                                            069242
+      *
+     C                     Z-ADD50        X       20
+     C                     READ SDACOFL0                 89
+      *
+     C           *IN89     DOWEQ'0'
+     C                     MOVE AZACOC    AO,X
+     C                     MOVE AZDPCD    DC,X
+     C                     SUB  1         X              88
+     C                     READ SDACOFL0                 89
+     C  N88                END
+      *
+     C           X         IFLT 50
+     C                     ADD  1         X
+     C                     END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * C0000  - Profitability extract - Facility Fees                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Z1000                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           C0000     BEGSR
+     C*
+     C                     Z-ADD0         @FFREC
+     C*
+     C                     READ LEPEFFD                  80
+     C*
+     C           *IN80     DOWEQ'0'
+     C***********          MOVE PFFCNM    BBCUST                          069242
+     C***********          EXSR Z1000                                     069242
+     C***********          MOVE AO,Y      PFFACO                          069242
+     C***********          MOVE DC,Y      PFFDEP                          069242
+     C***********          Z-ADDFFDJAN    PFFJAN                          069242
+     C***********          Z-ADDFFDFEB    PFFFEB                          069242
+     C***********          Z-ADDFFDMAR    PFFMAR                          069242
+     C***********          Z-ADDFFDAPR    PFFAPR                          069242
+     C***********          Z-ADDFFDMAY    PFFMAY                          069242
+     C***********          Z-ADDFFDJUN    PFFJUN                          069242
+     C***********          Z-ADDFFDJUL    PFFJUL                          069242
+     C***********          Z-ADDFFDAUG    PFFAUG                          069242
+     C***********          Z-ADDFFDSEP    PFFSEP                          069242
+     C***********          Z-ADDFFDOCT    PFFOCT                          069242
+     C***********          Z-ADDFFDNOV    PFFNOV                          069242
+     C***********          Z-ADDFFDDEC    PFFDEC                          069242
+     C***********          WRITEPEFF123F                                  069242
+     C                     ADD  1         @FFREC  50
+     C                     READ LEPEFFD                  80
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * D0000  - Profitability extract - Loan Fees                    *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Z1000                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           D0000     BEGSR
+     C*
+     C                     Z-ADD0         @FLREC
+     C*
+     C                     READ LEPEFLD                  80
+     C*
+     C           *IN80     DOWEQ'0'
+     C***********          MOVE PFLCNM    BBCUST                          069242
+     C***********          EXSR Z1000                                     069242
+     C***********          MOVE AO,Y      PFLACO                          069242
+     C***********          MOVE DC,Y      PFLDEP                          069242
+     C***********          Z-ADDFLDJAN    PFLJAN                          069242
+     C***********          Z-ADDFLDFEB    PFLFEB                          069242
+     C***********          Z-ADDFLDMAR    PFLMAR                          069242
+     C***********          Z-ADDFLDAPR    PFLAPR                          069242
+     C***********          Z-ADDFLDMAY    PFLMAY                          069242
+     C***********          Z-ADDFLDJUN    PFLJUN                          069242
+     C***********          Z-ADDFLDJUL    PFLJUL                          069242
+     C***********          Z-ADDFLDAUG    PFLAUG                          069242
+     C***********          Z-ADDFLDSEP    PFLSEP                          069242
+     C***********          Z-ADDFLDOCT    PFLOCT                          069242
+     C***********          Z-ADDFLDNOV    PFLNOV                          069242
+     C***********          Z-ADDFLDDEC    PFLDEC                          069242
+     C***********          WRITEPEFL123F                                  069242
+     C                     ADD  1         @FLREC  50
+     C                     READ LEPEFLD                  80
+     C                     END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * E0000  - Profitability extract - Retail                       *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Z1000                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           E0000     BEGSR
+      *
+     C                     Z-ADD0         @REREC
+     C                     Z-ADD0         NREREC
+      *
+     C                     READ LEPERED                  80
+      *
+     C           *IN80     DOWEQ'0'
+      *
+     C***********          MOVE PRENUM    BBCUST                          069242
+     C***********          EXSR Z1000                                     069242
+     C***********          MOVE AO,Y      PRECOF                          069242
+     C***********          MOVE DC,Y      PREEPT                          069242
+     C***********          Z-ADDRDJANA    PREANA                          069242
+     C***********          Z-ADDRDFEBA    PREEBA                          069242
+     C***********          Z-ADDRDMARA    PREARA                          069242
+     C***********          Z-ADDRDAPRA    PREPRA                          069242
+     C***********          Z-ADDRDMAYA    PREAYA                          069242
+     C***********          Z-ADDRDJUNA    PREUNA                          069242
+     C***********          Z-ADDRDJULA    PREULA                          069242
+     C***********          Z-ADDRDAUGA    PREUGA                          069242
+     C***********          Z-ADDRDSEPA    PREEPA                          069242
+     C***********          Z-ADDRDOCTA    PRECTA                          069242
+     C***********          Z-ADDRDNOVA    PREOVA                          069242
+     C***********          Z-ADDRDDECA    PREECA                          069242
+     C***********          Z-ADDRDJAND    PREAND                          069242
+     C***********          Z-ADDRDFEBD    PREEBD                          069242
+     C***********          Z-ADDRDMARD    PREARD                          069242
+     C***********          Z-ADDRDAPRD    PREPRD                          069242
+     C***********          Z-ADDRDMAYD    PREAYD                          069242
+     C***********          Z-ADDRDJUND    PREUND                          069242
+     C***********          Z-ADDRDJULD    PREULD                          069242
+     C***********          Z-ADDRDAUGD    PREUGD                          069242
+     C***********          Z-ADDRDSEPD    PREEPD                          069242
+     C***********          Z-ADDRDOCTD    PRECTD                          069242
+     C***********          Z-ADDRDNOVD    PREOVD                          069242
+     C***********          Z-ADDRDDECD    PREECD                          069242
+     C***********          Z-ADDRDJANM    PREANM                          069242
+     C***********          Z-ADDRDFEBM    PREEBM                          069242
+     C***********          Z-ADDRDMARM    PREARM                          069242
+     C***********          Z-ADDRDAPRM    PREPRM                          069242
+     C***********          Z-ADDRDMAYM    PREAYM                          069242
+     C***********          Z-ADDRDJUNM    PREUNM                          069242
+     C***********          Z-ADDRDJULM    PREULM                          069242
+     C***********          Z-ADDRDAUGM    PREUGM                          069242
+     C***********          Z-ADDRDSEPM    PREEPM                          069242
+     C***********          Z-ADDRDOCTM    PRECTM                          069242
+     C***********          Z-ADDRDNOVM    PREOVM                          069242
+     C***********          Z-ADDRDDECM    PREECM                          069242
+     C***********          Z-ADDRDJANF    PREANF                          069242
+     C***********          Z-ADDRDFEBF    PREEBF                          069242
+     C***********          Z-ADDRDMARF    PREARF                          069242
+     C***********          Z-ADDRDAPRF    PREPRF                          069242
+     C***********          Z-ADDRDMAYF    PREAYF                          069242
+     C***********          Z-ADDRDJUNF    PREUNF                          069242
+     C***********          Z-ADDRDJULF    PREULF                          069242
+     C***********          Z-ADDRDAUGF    PREUGF                          069242
+     C***********          Z-ADDRDSEPF    PREEPF                          069242
+     C***********          Z-ADDRDOCTF    PRECTF                          069242
+     C***********          Z-ADDRDNOVF    PREOVF                          069242
+     C***********          Z-ADDRDDECF    PREECF                          069242
+     C***********          WRITEPERE123F                                  069242
+     C                     ADD  1         @REREC  50
+     C                     MOVEL*BLANK    UUACID
+     C                     MOVE PRENUM    UUCUST
+     C                     MOVE PRECCY    UUCYCD
+     C                     MOVE PRECOD    UUACNO
+     C                     MOVE PRECSQ    UUACSN
+     C                     MOVE PRBRCA    UUBRCD
+      *
+      **  Call to Access Program - AOACCTR0 Check Account Number
+      **  Access Account Details file for the file fields
+     C                     CALL 'AOACCTR0'
+     C                     PARM '*MSG   ' @RTCD   7        B:Return Cd
+     C                     PARM '*KEY   ' UUAPOP  7        B:Option
+     C                     PARM           UUACID 10        I:Account Identifier
+     C                     PARM           UUCUST  6        I:Customer Number
+     C                     PARM           UUCYCD  3        I:Currency Code
+     C**********           PARM           UUACNO  4        I:Account Code Num                 CGL029
+     C                     PARM           UUACNO 10        I:Account Code Num                 CGL029
+     C                     PARM           UUACSN  2        I:Account Sequence
+     C                     PARM           UUBRCD  3        I:Branch code
+     C***********D@ACCT    PARM *BLANK    UUSDY   6        O:Format       BH3418
+     C           D@ACCT    PARM *BLANK    DSSDY            O:Format       BH3418
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           ACST      ANDNE'C'
+     C                     MOVE PRBRCA    BRCA
+     C                     MOVE PRENUM    RDCNUM
+     C                     MOVE PRECCY    RDACCY
+     C                     MOVE PRECOD    RDACOD
+     C                     MOVE PRECSQ    RDACSQ
+     C                     MOVE PRERCR    RDDRCR
+     C                     MOVE PREINT    RDPINT
+     C                     Z-ADD0         RDJANA
+     C                     Z-ADD0         RDFEBA
+     C                     Z-ADD0         RDMARA
+     C                     Z-ADD0         RDAPRA
+     C                     Z-ADD0         RDMAYA
+     C                     Z-ADD0         RDJUNA
+     C                     Z-ADD0         RDJULA
+     C                     Z-ADD0         RDAUGA
+     C                     Z-ADD0         RDSEPA
+     C                     Z-ADD0         RDOCTA
+     C                     Z-ADD0         RDNOVA
+     C                     Z-ADD0         RDDECA
+     C                     Z-ADD0         RDJAND
+     C                     Z-ADD0         RDFEBD
+     C                     Z-ADD0         RDMARD
+     C                     Z-ADD0         RDAPRD
+     C                     Z-ADD0         RDMAYD
+     C                     Z-ADD0         RDJUND
+     C                     Z-ADD0         RDJULD
+     C                     Z-ADD0         RDAUGD
+     C                     Z-ADD0         RDSEPD
+     C                     Z-ADD0         RDOCTD
+     C                     Z-ADD0         RDNOVD
+     C                     Z-ADD0         RDDECD
+     C                     Z-ADD0         RDJANM
+     C                     Z-ADD0         RDFEBM
+     C                     Z-ADD0         RDMARM
+     C                     Z-ADD0         RDAPRM
+     C                     Z-ADD0         RDMAYM
+     C                     Z-ADD0         RDJUNM
+     C                     Z-ADD0         RDJULM
+     C                     Z-ADD0         RDAUGM
+     C                     Z-ADD0         RDSEPM
+     C                     Z-ADD0         RDOCTM
+     C                     Z-ADD0         RDNOVM
+     C                     Z-ADD0         RDDECM
+     C                     Z-ADD0         RDJANF
+     C                     Z-ADD0         RDFEBF
+     C                     Z-ADD0         RDMARF
+     C                     Z-ADD0         RDAPRF
+     C                     Z-ADD0         RDMAYF
+     C                     Z-ADD0         RDJUNF
+     C                     Z-ADD0         RDJULF
+     C                     Z-ADD0         RDAUGF
+     C                     Z-ADD0         RDSEPF
+     C                     Z-ADD0         RDOCTF
+     C                     Z-ADD0         RDNOVF
+     C                     Z-ADD0         RDDECF
+     C                     WRITENPEREDF
+     C                     ADD  1         NREREC
+     C                     END
+     C                     READ LEPERED                  80
+     C                     END
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITENPEREZF
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * F0000  - Profitability extract - General Ledger               *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Z1000                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           F0000     BEGSR
+      *
+     C                     Z-ADD0         @GLREC
+      *
+     C                     READ LEPEGLD                  80
+      *
+     C           *IN80     DOWEQ'0'
+     C***********          MOVE PGLNUM    BBCUST                          069242
+     C***********          EXSR Z1000                                     069242
+     C***********          MOVE AO,Y      PGLCOF                          069242
+     C***********          MOVE DC,Y      PGLEPT                          069242
+     C***********          Z-ADDGDJANA    PGLJAN                          069242
+     C***********          Z-ADDGDFEBA    PGLFEB                          069242
+     C***********          Z-ADDGDMARA    PGLMAR                          069242
+     C***********          Z-ADDGDAPRA    PGLAPR                          069242
+     C***********          Z-ADDGDMAYA    PGLMAY                          069242
+     C***********          Z-ADDGDJUNA    PGLJUN                          069242
+     C***********          Z-ADDGDJULA    PGLJUL                          069242
+     C***********          Z-ADDGDAUGA    PGLAUG                          069242
+     C***********          Z-ADDGDSEPA    PGLSEP                          069242
+     C***********          Z-ADDGDOCTA    PGLOCT                          069242
+     C***********          Z-ADDGDNOVA    PGLNOV                          069242
+     C***********          Z-ADDGDDECA    PGLDEC                          069242
+     C***********          WRITEPEGL123F                                  069242
+     C                     ADD  1         @GLREC  50
+      *
+     C                     READ LEPEGLD                  80
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * G0000  - Profitability extract - Dealing and Futures          *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Z1000                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           G0000     BEGSR
+      *
+     C                     Z-ADD0         @DFREC
+      *
+     C                     READ LEPEDFD                  80
+      *
+     C           *IN80     DOWEQ'0'
+     C***********          MOVE PDFNUM    BBCUST                          069242
+     C***********          EXSR Z1000                                     069242
+     C***********          MOVE AO,Y      PDFCOF                          069242
+     C***********          MOVE DC,Y      PDFEPT                          069242
+     C***********          Z-ADDDDJANA    PDFJAN                          069242
+     C***********          Z-ADDDDFEBA    PDFFEB                          069242
+     C***********          Z-ADDDDMARA    PDFMAR                          069242
+     C***********          Z-ADDDDAPRA    PDFAPR                          069242
+     C***********          Z-ADDDDMAYA    PDFMAY                          069242
+     C***********          Z-ADDDDJUNA    PDFJUN                          069242
+     C***********          Z-ADDDDJULA    PDFJUL                          069242
+     C***********          Z-ADDDDAUGA    PDFAUG                          069242
+     C***********          Z-ADDDDSEPA    PDFSEP                          069242
+     C***********          Z-ADDDDOCTA    PDFOCT                          069242
+     C***********          Z-ADDDDNOVA    PDFNOV                          069242
+     C***********          Z-ADDDDDECA    PDFDEC                          069242
+     C***********          WRITEPEDF123F                                  069242
+     C                     ADD  1         @DFREC  50
+      *
+     C                     READ LEPEDFD                  80
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * H0000  - End of program control                               *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           H0000     BEGSR
+     C                     READ LEPEFFZ                  87
+     C                     READ LEPEFLZ                  87
+     C                     READ LEPEREZ                  87
+     C                     READ LEPEGLZ                  87
+     C                     READ LEPEDFZ                  87
+     C*
+     C           @FFREC    IFNE FFDNOR
+     C                     SETON                     50
+     C                     END
+     C*
+     C           @FLREC    IFNE FLDNOR
+     C                     SETON                     51
+     C                     END
+     C*
+     C           @REREC    IFNE RZNREC
+     C                     SETON                     52
+     C                     END
+     C*
+     C           @GLREC    IFNE GZNREC
+     C                     SETON                     53
+     C                     END
+     C*
+     C           @DFREC    IFNE DZNREC
+     C                     SETON                     54
+     C                     END
+     C*
+     C                     WRITELER530P
+     C                     WRITELER530D
+     C                     WRITELER530T
+     C*
+     C           *IN50     IFEQ '1'
+     C           *IN51     OREQ '1'
+     C           *IN52     OREQ '1'
+     C           *IN53     OREQ '1'
+     C           *IN54     OREQ '1'
+     C                     SETON                     U7
+     C                     END
+      *
+     C           *INU7     IFEQ '0'
+     C                     Z-ADD0         FFDNOR           Update
+     C                     Z-ADD0         FLDNOR           Controls
+     C                     Z-ADD0         RZNREC
+     C                     Z-ADD0         GZNREC
+     C                     Z-ADD0         DZNREC
+     C                     UPDATLEPEFFZF
+     C                     UPDATLEPEFLZF
+     C                     UPDATLEPEREZF
+     C                     UPDATLEPEGLZF
+     C                     UPDATLEPEDFZF
+     C                     END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Z1000  - Obtain Department                                    *
+      *                                                               *
+      * Called by: C0000, D0000, E0000, F0000                         *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           Z1000     BEGSR
+     C           BBCUST    IFNE @CUS
+     C                     MOVELBBCUST    @CUS    6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM @CUS      KEYC   10
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            **************
+     C                     MOVEL@CUS      DBKEY            * DBERROR 02 *
+     C                     MOVEL'LER530  'DBPGM            **************
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADDX         Y       20        Look for
+     C           BBACOC    LOKUPAO,Y                     10 Acc Off
+      *
+     C           *IN10     IFNE '1'
+     C                     Z-ADD50        Y
+      *
+     C                     CALL 'AOACOFR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BBACOC    ACOKEY  2
+     C           SDACOF    PARM SDACOF    DSFDY
+      *
+     C                     MOVE BBACOC    AO,50
+      *
+     C           @RTCD     IFNE *BLANKS                     Acc Off
+     C                     MOVE AZDPCD    DC,50             found
+     C                     ELSE
+     C                     MOVE '***'     DC,50             not found
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR  - Writes database error format on Audit Report         *
+      *                                                               *
+      * Called by: B0000, Z1000                                       *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C                     WRITELER530P
+     C                     WRITEDBFMT
+     C                     WRITELER530T
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   AUDIT                                  *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+     C/EJECT
+     C/TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

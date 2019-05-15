@@ -1,0 +1,215 @@
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Midas - Copy Source                                          *
+      *                                                               *
+      *  ZFDLLN - Formats the 20A Port Mgmt Line Desc for Dealing     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005 *CREATE     DATE 26JUN96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZFDLLN    BEGSR
+      *****************************************************************
+      *
+      **  Case 1 FX Deals (DEALSDB)       Format: YYY VVVVVVV(DDDDDDD)
+      **         YYY = Customer Sell Currency (IE Bank Buy Currency)
+      **         VVVVVVV = Value Date in DDMMMYY Format
+      **         DDDDDDD = Deal Date in DDMMMYY Format
+      *
+      **  Case 2 MM Deals (DEALSDC)       Format: XXX 999.9999 DDMMMYY
+      **                                       or: XXX 999.9999 999
+      **         XXX = Currency
+      **         999.9999 = Interest Rate
+      **         DDMMMYY = Maturity Date (If Maturity Date Not = 0)
+      **         999 = Notice Days       (If Maturity Date = 0 )
+      *
+      **  Case 3 FRA/IRS Deals (DEALSDG) Deal Types FR, RS and RL
+      **                                  Format: XXX 999.9999 DDMMMYY
+      **         XXX = Currency
+      **         999.9999 = Interest Rate
+      **         DDMMMYY = Maturity Date
+      *
+      **  Case 4 FRA/IRS Deals (DEALSDG) Deal Type  RX
+      **                                   Format: XXX XXX DDMMMYY
+      **         XXX = Our and Their Currency
+      **         DDMMMYY = Maturity Date
+      *
+      **  Input Fields
+      **      ZPUCY   3A     Purchase Currency
+      **      ZDDAT   5N0    Deal Date
+      **      ZVDAT   5N0    Value Date
+      **      ZCCY    3A     Currency
+      **      ZINRT  11N7    Interest Rate
+      **      ZMDAT   5N0    Maturity Date
+      **      ZNOTD   3N0    Notice Days
+      **      ZUCUCY  3A     FRA/IRS Our Currency
+      **      ZUEINR 11N7    FRA/IRS Our Interest Rate
+      **      ZTCUCY  3A     FRA/IRS THEIR CURRENCY
+      *
+      **  Output Fields
+      **      ZLIN   20A     Line Description
+      *
+      **  Array Used
+      **      ZLI    20 elements, each 1 character long
+      *
+      *****************************************************************
+      *
+      **  Clear line description
+      *
+     C                     MOVEA*BLANKS   ZLI
+      *
+      **  Format detail output for deal type case 1
+      *
+     C           ZDDAT     IFNE 0
+     C                     MOVEAZPUCY     ZLI,01
+     C                     Z-ADDZVDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+      *
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     ENDIF
+     C                     MOVEAZADATE    ZLI,05
+     C                     MOVEA'('       ZLI,12
+      *
+     C                     Z-ADDZDDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+      *
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     ENDIF
+     C                     MOVEAZADATE    ZLI,13
+     C                     MOVEA')'       ZLI,20
+     C                     ENDIF
+      *
+      **  Format detail output for deal type case 2
+      *
+     C           ZCCY      IFNE *BLANKS
+     C                     MOVEAZCCY      ZLI,01
+     C                     Z-ADDZINRT     ZWRKN   74
+     C                     MOVELZWRKN     ZWRKA3  3
+     C                     MOVELZWRKA3    ZWRKA2  2
+      *
+      **  Suppress leading zeroes
+      *
+     C           ZWRKA2    IFEQ '00'
+     C                     MOVEL'  '      ZWRKA3
+     C                     ENDIF
+      *
+     C                     MOVELZWRKA3    ZWRKA1  1
+     C           ZWRKA1    IFEQ '0'
+     C                     MOVEL' '       ZWRKA3
+     C                     ENDIF
+      *
+     C                     MOVE ZWRKN     ZWRKA4  4
+     C                     MOVEAZWRKA3    ZLI,05
+     C                     MOVEA'.'       ZLI,08
+     C                     MOVEAZWRKA4    ZLI,09
+      *
+      **  If maturity date zero, output notice days to formatted line
+      *
+     C           ZMDAT     IFEQ *ZERO
+     C                     MOVE ZNOTD     ZWRKA3  3
+     C                     MOVEAZWRKA3    ZLI,14
+     C                     ELSE
+      *
+      **  Otherwise, output maturity date
+      *
+     C                     Z-ADDZMDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     ENDIF
+     C                     MOVEAZADATE    ZLI,14
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Format detail output for deal type case 3
+      *
+     C           ZUCUCY    IFNE *BLANKS
+     C           ZTCUCY    ANDEQ*BLANKS
+     C                     MOVEAZUCUCY    ZLI,01
+     C                     Z-ADDZUEINR    ZWRKN   74
+     C                     MOVELZWRKN     ZWRKA3  3
+     C                     MOVELZWRKA3    ZWRKA2  2
+      *
+      **  Suppress leading zeroes
+      *
+     C           ZWRKA2    IFEQ '00'
+     C                     MOVEL'  '      ZWRKA3
+     C                     ENDIF
+      *
+     C                     MOVELZWRKA3    ZWRKA1  1
+     C           ZWRKA1    IFEQ '0'
+     C                     MOVEL' '       ZWRKA3
+     C                     ENDIF
+      *
+     C                     MOVE ZWRKN     ZWRKA4  4
+     C                     MOVEAZWRKA3    ZLI,05
+     C                     MOVEA'.'       ZLI,08
+     C                     MOVEAZWRKA4    ZLI,09
+      *
+     C                     Z-ADDZMDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     ENDIF
+     C                     MOVEAZADATE    ZLI,14
+      *
+     C                     ENDIF
+      *
+      **  Format detail output for deal type case 4
+      *
+     C           ZUCUCY    IFNE *BLANKS
+     C           ZTCUCY    ANDNE*BLANKS
+     C                     MOVEAZUCUCY    ZLI,01
+     C                     MOVEAZTCUCY    ZLI,05
+     C                     Z-ADDZMDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     ENDIF
+     C                     MOVEAZADATE    ZLI,09
+      *
+     C                     ENDIF
+      *
+      **  Set all fields to blank or zero
+      *
+     C                     MOVE *BLANKS   ZCCY    3
+     C                     MOVE *BLANKS   ZSLCY   3
+     C                     Z-ADD*ZEROS    ZVDAT   50
+     C                     MOVE *BLANKS   ZPUCY   3
+     C                     Z-ADD*ZEROS    ZINRT  117
+     C                     Z-ADD*ZEROS    ZDDAT   50
+     C                     Z-ADD*ZEROS    ZMDAT   50
+     C                     Z-ADD*ZEROS    ZNOTD   30
+     C                     MOVE *BLANKS   ZUCUCY  3
+     C                     Z-ADD*ZEROS    ZUEINR 117
+     C                     MOVE *BLANKS   ZTCUCY  3
+      *
+     C                     MOVEAZLI       ZLIN   20
+      *
+     C                     ENDSR
+      *
+      ********************************************************************

@@ -1,0 +1,738 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Request production of S352 statement')           *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Retail Module
+     F*                                                                  *
+     F*    RE2193 - REQUEST PRODUCTION OF S352 STATEMENT                 *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                         *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 CTI002             Date 09Sep98               *
+     F*                          S01383              DATE 27APR92        *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*       S01383 - BASIC RATE TAX INCORPORATION                      *
+     F*                NEW PROGRAM                                       *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDCBRTL1IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     FINTPSL10IF  E           K        DISK
+     F            INTPSDDF                          KRENAMEINTPS10
+     FINTPSL17IF  E           K        DISK
+     F            INTPSDDF                          KRENAMEINTPS17
+     FSTMREQPDO   E                    DISK
+      * Display File
+     FRE2193FMCF  E                    WORKSTN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N    O F   I N D I C A T O R S               *
+      *    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~               *
+      *         03         CMD/3 PRESSED                              *
+      *         12         CMD/12 PRESSED                             *
+      *         30         ERROR FOUND                                *
+      *         31         CUSTOMER NUMBER IN ERROR                   *
+      *         32         DEAL NUMBER IN ERROR                       *
+      *         33         CURRENCY CODE IN ERROR                     *
+      *         34         ACCOUNT CODE IN ERROR                      *
+      *         35         ACCOUNT SEQUENCE IN ERROR                  *
+      *         36         BRANCH CODE IN ERROR                       *
+      *         37         SYSTEM IS MULTI-BRANCHING                  *
+      *         85         FAILED CHAIN INDICATOR                     *
+      *         90 - 99    USED IN STANDARD SUBROUTINES               *
+      *         U7         DATABASE ERROR                             *
+      *         LR         END OF PROGRAM                             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *          I N D E X   O F   S U B R O U T I N E S              *
+      *          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~              *
+      *          INIT   -  INITIAL PROCESSING                         *
+      *          INPUT  -  MAIN INPUT PROCESSING                      *
+      *          VALID1 -  INPUT VALIDATION                           *
+      *          CLEAR  -  CLEAR INPUT SCREEN                         *
+      *          WRITE  -  WRITE RECORD TO STMREQPD                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E*
+     E                    ERNO       38  4               ERROR CODES
+     E*
+     E*****************************************************************
+     I*
+     I* Rename key field on SDCBRTL1 to make it unique
+     I*
+     ISDCBRTD0
+     I              XCNUM                           CNUM1
+     I*
+     I* Data structure for program status data area
+     I*
+     IPSDS       SDS
+     I                                      244 253 WID
+     I                                      254 263 USRID
+     I*
+     I** Data structure for error messages
+     I*
+     ISCRMSG      DS
+     I                                        1 152 ERNO
+     I                                        1  76 ERCD
+     I                                       77 152 ERMSG
+     I*
+     I@BANK     E DSSDBANKPD
+     I** DUMMY RECORD FORMATS FOR ACCESS TO BANK DETAILS
+     ISDCUST    E DSSDCUSTPD
+     I** EXTERNAL DS FOR CUSTOMER DETAILS
+     ISDCURR    E DSSDCURRPD
+     I**  EXTERNAL DS FOR CURRENCY CODES
+     ISDACOD    E DSSDACODPD
+     I**  EXTERNAL DS FOR ACCOUNT CODES
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I**  EXTERNAL DS FOR BRANCH CODES
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I**
+     I**   DATA AREA RUNDAT
+     I**
+     IRUNDAT      DS
+     I                                       13  13 MBIN
+     I**
+     I** DATA AREA OF MENU USER
+     I**
+     IZMUSER      DS                             17
+     I                                       11  13 USRBCH
+     ILDA        UDS
+     I                                        1 256 DBLDA
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C*
+     C**   MAIN PROCESSING
+     C**   ~~~~~~~~~~~~~~~
+     C*
+     C** Set up key list to access file ACCNT and INTPSL17
+     C*
+     C           ACCKEY    KLIST
+     C**********           KFLD           CUST    60                                          CSD027
+     C                     KFLD           CUST    6                                           CSD027
+     C                     KFLD           CURY    3
+     C**********           KFLD           CODE    40                                          CGL029
+     C                     KFLD           CODE   100                                          CGL029
+     C                     KFLD           SEQ     20
+     C                     KFLD           BRCH    3
+     C*
+     C                     EXSR INIT
+     C*
+     C                     EXSR INPUT
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  INIT       :  INITIAL PROCESSING                            *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEL'RE2193'  DBPGM
+     C*
+     C** OBTAIN BANK DETAILS VIA ACCESS PROGRAM
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+     C*
+     C           BJDFIN    COMP 'M'                      98*
+     C*
+     C* CHECK IF SYSTEM IS MULTI-BRANCHING
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN37
+     C                     END
+     C*
+     C* GET DEFAULT BRANCH
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C*
+     C**  Display screen
+     C*
+     C                     EXFMTRE2193F1
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  INPUT      :  INPUT PROCESSING                              *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INPUT     BEGSR
+     C*
+     C** Process while Cmd/3 not pressed
+     C*
+     C           *IN03     DOWEQ'0'                        **B001
+     C*
+     C** Perform initial validation of data input from screen
+     C*
+     C                     EXSR VALID1
+     C*
+     C** Process while there are errors (*IN30 is on) and neither
+     C** Cmd/3 nor Cmd/12 are pressed
+     C*
+     C           *IN30     DOWEQ'1'                        **B002
+     C           *IN03     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C*
+     C                     EXFMTRE2193F1
+     C*
+     C** If neither Cmd/3 nor Cmd/12 are pressed
+     C*
+     C           *IN03     IFEQ '0'                        **B003
+     C           *IN12     ANDEQ'0'
+     C                     EXSR VALID1
+     C                     END                             **E003
+     C*
+     C                     END                             **E002
+     C*
+     C** If neither Cmd/3 nor Cmd/12 are pressed
+     C*
+     C           *IN03     IFEQ '0'                        **B002
+     C           *IN12     ANDEQ'0'
+     C                     EXSR WRITE
+     C                     EXSR CLEAR
+     C                     EXFMTRE2193F1
+     C                     END                             **E002
+     C*
+     C** If Cmd/12 is pressed
+     C*
+     C           *IN12     IFEQ '1'                        **B002
+     C*
+     C                     EXSR CLEAR
+     C*
+     C                     EXFMTRE2193F1
+     C*
+     C                     END                             **E002
+     C*
+     C                     END                             **E001
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  VALID1     :  INPUT VALIDATION                              *
+     C*   CALLED BY  :  INPUT                                         *
+     C*   CALLS      :  ZALIGN                                        *
+     C*                 ZDATE1                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALID1    BEGSR
+     C*
+     C** Initialise data structure  ERNO
+     C*
+     C                     MOVE *BLANKS   ERNO
+     C*
+     C** Set off all error indicators
+     C*
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     36
+     C*
+     C** Initialise array index X
+     C*
+     C                     Z-ADD0         X       20
+     C*
+     C** Check that customer number (mandatory field) is not blank
+     C*
+     C           CUSNO     IFEQ *BLANKS                    **B001
+     C*
+     C                     ADD  1         X
+     C                     MOVE '001'     ERNO,X
+     C                     SETON                     3031
+     C*
+     C                     ELSE                            **X001
+     C*
+     C** Using input customer number as key, access SDCUSTPD
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CUSNO     @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C* If record not found
+     C*
+     C           @RTCD     IFNE *BLANKS                    **B002
+     C           @KYST     OREQ '*ERROR'
+     C*
+     C                     ADD  1         X
+     C                     MOVE '002'     ERNO,X
+     C                     SETON                     3031
+     C*
+     C                     ELSE                            **X002
+     C                     MOVEL*BLANK    CUSNO
+     C                     MOVELBBCUST    CUSNO
+     C**********           MOVELBBCUST    CLKEY   60                                          CSD027
+     C                     MOVELBBCUST    CLKEY   6                                           CSD027
+     C*
+     C           CLKEY     CHAINSDCBRTL1             85
+     C*
+     C* If record not found
+     C*
+     C           *IN85     IFEQ '1'                        **B003
+     C                     MOVELCLKEY     DBKEY            *************
+     C                     MOVEL'SDCBRTPD'DBFILE           * DBERR 001 *
+     C                     MOVEL'001'     DBASE            *************
+     C                     SETON                     U7U8LR
+     C                     SETON                     03
+     C                     DUMP
+     C                     END                             **E003
+     C                     END                             **E002
+     C*
+     C** Check that currency, a/c code, a/c seq, branch and deal number
+     C** are not ALL blank
+     C*
+     C           DEAL      IFEQ ' '                        **B002
+     C           CURR      ANDEQ' '
+     C           ACODE     ANDEQ' '
+     C           ACSEQ     ANDEQ' '
+     C           BRANCH    ANDEQ' '
+     C*
+     C                     ADD  1         X
+     C                     MOVE '003'     ERNO,X
+     C                     SETON                     303233
+     C                     SETON                     343536
+     C*
+     C                     ELSE                            **X002
+     C*
+     C** If deal number is blank, then currency, a/c code,
+     C** a/c sequence and branch must all be entered
+     C*
+     C           DEAL      IFEQ ' '                        **B003
+     C*
+     C*  DEFAULT USER BRANCH IF BRANCH NOT SPECIFIED
+     C*
+     C           BRANCH    IFEQ ' '
+     C                     MOVE USRBCH    BRANCH
+     C                     END
+     C*
+     C           CURR      IFEQ ' '                        **B004
+     C           ACODE     OREQ ' '
+     C           ACSEQ     OREQ ' '
+     C           BRANCH    OREQ ' '
+     C*
+     C                     ADD  1         X
+     C                     MOVE '016'     ERNO,X
+     C                     SETON                     303334
+     C                     SETON                     3536
+     C*
+     C                     END                             **E004
+     C*
+     C                     END                             **E003
+     C*
+     C*
+     C** If deal number is entered, then currency, a/c code,
+     C** a/c sequence and branch should be all left blank
+     C*
+     C           DEAL      IFNE ' '                        **B003
+     C*
+     C           CURR      IFNE ' '                        **B004
+     C           ACODE     ORNE ' '
+     C           ACSEQ     ORNE ' '
+     C           BRANCH    ORNE ' '
+     C*
+     C                     ADD  1         X
+     C                     MOVE '016'     ERNO,X
+     C                     SETON                     303334
+     C                     SETON                     3536
+     C*
+     C                     END                             **E004
+     C*
+     C                     END                             **E003
+     C*
+     C*  VALIDATE CURRENCY
+     C*
+     C           CURR      IFNE ' '                        B0001
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CURR      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C                     ADD  1         X
+     C                     MOVE '010'     ERNO,X
+     C                     SETON                     3033
+     C                     ELSE
+     C                     MOVELA6CYCD    CURR
+     C                     END
+     C                     END                             E0001
+     C*
+     C*  VALIDATE ACCOUNT CODE
+     C*
+     C           ACODE     IFNE ' '                        B0001
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C**********           PARM ACODE     @AFNB   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM ACODE     @AFNB  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C                     ADD  1         X
+     C                     MOVE '011'     ERNO,X
+     C                     SETON                     3034
+     C                     ELSE
+     C                     MOVELA5ACCD    ACODE
+     C                     END
+     C                     END                             E0001
+     C*
+     C*  IF SYSTEM IS MULTI-BRANCHING
+     C*  VALIDATE BRANCH
+     C*
+     C           *IN37     IFEQ '1'                        B0001
+     C           BRANCH    ANDNE' '
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRANCH    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                    B0002
+     C                     ADD  1         X
+     C                     MOVE '012'     ERNO,X
+     C                     SETON                     3036
+     C                     ELSE
+     C                     MOVELA8BRCD    BRANCH
+     C                     END                             E0002
+     C*
+     C* IF NO ERRORS, CHECK AUTHORITY TO BRANCH
+     C*
+     C           *IN36     IFNE '1'                        B0002
+     C                     CALL 'ZVBBU'
+     C                     PARM BRANCH    @BRCX   3
+     C                     PARM           @OTCD   10
+     C           @OTCD     IFNE 0                          B0003
+     C                     ADD  1         X
+     C                     MOVE '013'     ERNO,X
+     C                     SETON                     3036
+     C                     END                             E0003
+     C                     END                             E0002
+     C                     END                             E0001
+     C*
+     C* CHECK AUTHORITY TO ACTION CODE ('INSERT')
+     C*
+     C* - IF MULTI-BRANCHING
+     C*
+     C                     Z-ADD*ZERO     @OTCD
+     C           *IN37     IFEQ '1'                        B0001
+     C           BRANCH    IFNE ' '
+     C           *IN36     ANDNE'1'
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       @ACTN   1
+     C                     PARM BRANCH    @BRCX   3
+     C                     PARM           @OTCD
+     C                     END
+     C                     ELSE
+     C*
+     C* - IF NOT MULTI-BRANCHING
+     C*
+     C                     CALL 'ZVACTU'
+     C                     PARM 'I'       @ACTN   1
+     C                     PARM           @OTCD
+     C                     END                             E0001
+     C*
+     C* NO AUTHORITY TO DO THIS TRANSACTION
+     C*
+     C           @OTCD     IFNE 0                          B0001
+     C                     ADD  1         X
+     C                     MOVE '014'     ERNO,X
+     C                     SETON                     303132
+     C                     SETON                     333435
+     C                     SETON                     36
+     C                     END                             E0001
+     C*
+     C** If deal number is blank, set up keylist ACCKEY to chain
+     C** to ACCNT
+     C*
+     C           DEAL      IFEQ ' '                        **B003
+     C*
+     C                     MOVELCUSNO     CUST
+     C                     MOVE CURR      CURY
+     C                     MOVE ACODE     CODE
+     C                     MOVE ACSEQ     SEQ
+     C                     MOVE BRANCH    BRCH
+     C*
+     C           ACCKEY    CHAINACCNT                85
+     C*
+     C** If record not found, indicate error
+     C*
+     C           *IN85     IFEQ '1'                        **B003
+     C*
+     C                     ADD  1         X
+     C                     MOVE '004'     ERNO,X
+     C                     SETON                     303133
+     C                     SETON                     343536
+     C*
+     C                     ELSE                            **X004
+     C*
+     C** Check for account type
+     C*
+     C           ATYP      IFNE 'R'                        **B005
+     C*
+     C                     ADD  1         X
+     C                     MOVE '005'     ERNO,X
+     C                     SETON                     303133
+     C                     SETON                     343536
+     C*
+     C                     END                             **E005
+     C*
+     C** Access INTPSL17 using Account number
+     C*
+     C*
+     C           ACCKEY    CHAININTPSL17             85
+     C*
+     C** If record not found, indicate error
+     C*
+     C           *IN85     IFEQ '1'                        **B005
+     C*
+     C                     ADD  1         X
+     C                     MOVE '006'     ERNO,X
+     C                     SETON                     303133
+     C                     SETON                     343536
+     C                     END                             **E005
+     C*
+     C                     END                             **E004
+     C*
+     C                     ELSE                            **X003
+     C*
+     C** If deal number not blank, use it to access DEALS
+     C*
+     C                     MOVE DEAL      WRKFLD  60
+     C           WRKFLD    CHAINDEALS                85
+     C*
+     C** If record not found, indicate error
+     C*
+     C           *IN85     IFEQ '1'                        **B004
+     C*
+     C                     ADD  1         X
+     C                     MOVE '007'     ERNO,X
+     C                     SETON                     3032
+     C*
+     C                     ELSE                            **X004
+     C*
+     C** Check for deal type
+     C*
+     C           DTYP      IFNE 'IT'                       **B005
+     C           DTYP      ANDNE'TD'
+     C           DTYP      ANDNE'CD'
+     C*
+     C                     ADD  1         X
+     C                     MOVE '008'     ERNO,X
+     C                     SETON                     3032
+     C                     END                             **E005
+     C*
+     C** Check input customer mumber against cust. no. of deal
+     C*
+     C                     MOVELCUSNO     CUST
+     C           CUSNO     IFNE *BLANKS                    **B005
+     C           CUST      ANDNECNUM
+     C*
+     C                     ADD  1         X
+     C                     MOVE '009'     ERNO,X
+     C                     SETON                     3031
+     C*
+     C                     ELSE                            **X005
+     C*
+     C** Use deal number to access INTPSL10
+     C*
+     C           DLNO      CHAININTPSL10             85
+     C*
+     C** If record not found, indicate error
+     C*
+     C           *IN85     IFEQ '1'                        **B006
+     C*
+     C                     ADD  1         X
+     C                     MOVE '006'     ERNO,X
+     C                     SETON                     303132
+     C                     END                             **E006
+     C*
+     C                     END                             **E005
+     C*
+     C                     END                             **E004
+     C*
+     C                     END                             **E003
+     C*
+     C                     END                             **E002
+     C*
+     C                     END                             **E001
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  WRITE      :  WRITE STATEMENT REQUEST FILE                  *
+     C**  CALLED BY  :  INPUT                                         *
+     C**  CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           WRITE     BEGSR
+     C*
+     C** Move fields into relevant fields for output
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVELBBCRNM    CRNM
+     C                     MOVE DEAL      DLNO
+     C                     MOVELCUSNO     CNUM
+     C*
+     C** If account, get currency code from program
+     C*
+     C           DEAL      IFEQ ' '
+     C                     MOVE CURR      CCY
+     C                     ELSE
+     C                     MOVE *BLANK    CCY
+     C                     END
+     C*
+     C                     MOVE ACODE     ACOD
+     C                     MOVE ACSEQ     ACSQ
+     C*
+     C* If account, use branch code defined
+     C*
+     C           DEAL      IFEQ ' '
+     C                     MOVE BRANCH    BRCA
+     C                     ELSE
+     C                     MOVE *BLANK    BRCA
+     C                     END
+     C*
+     C                     MOVE BJRDNB    RDAT
+     C                     MOVELBBCNA1    CNA1
+     C*
+     C** Write details to history file
+     C*
+     C                     WRITESTMREQF
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  CLEAR      :  CLEAR INPUT SCREEN                            *
+     C**  CALLED BY  :  INPUT                                         *
+     C**  CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CLEAR     BEGSR
+     C*
+     C** Set off all error/conditioning indicators
+     C*
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     36
+     C*
+     C** Initialise all input fields
+     C*
+     C                     MOVE *BLANKS   CUSNO
+     C                     MOVE *BLANKS   DEAL
+     C                     MOVE *BLANKS   CURR
+     C                     MOVE *BLANKS   ACODE
+     C                     MOVE *BLANKS   ACSEQ
+     C                     MOVE *BLANKS   BRANCH
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************

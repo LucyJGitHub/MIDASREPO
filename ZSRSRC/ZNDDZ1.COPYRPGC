@@ -1,0 +1,149 @@
+     C********************************************************************
+     C*    SUBROUTINE- ZNDD
+     C*    DETERMINE NEXT DIVIDEND DATE
+     C*
+     C**  INPUT - CD ARRAY - DIVIDEND DATES - SECTYD SECURITY FILE
+     C**          ECD - EVENT CONTROL DATE - ZEVCD PROCESS
+     C**          SESN - SECURITY SHORTNAME
+     C*************IN98*-*DATE*FORMAT*-*FROM*TABTC10*RECORD*VIA*ZSYSTM****S01117
+     C**          *IN98 - DATE FORMAT - FROM RUNDAT VIA PROGRAM           S01117
+     C**
+     C**  OUTPUT - NDD (5,0) - NEXT DIVIDEND DATE
+     C**
+     C**  CALLS  - ZDATE1
+     C**           ZDATE2
+     C*
+      *****************************************************************
+      **                                                             **
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      ** LAST AMEND NO. S01117             DATE 18JAN91              **
+      ** PREV AMEND NO. E20093             DATE 03NOV89              **
+      **                                                             **
+      *---------------------------------------------------------------*
+      **                                                             **
+      ** S01117 - Release 10 multibranching.                         **
+      ** E20093 - Created to fix problem that future dividends were  **   E20093
+      **          not being picked up.                               **   E20093
+      **                                                             **
+      *****************************************************************
+     C*
+     C           ZNDD      BEGSR                           *** ZNDD   ***
+      *
+      * CALL ZDATE2 TO OBTAIN MMDD FOR EVENT CONTROL DATE
+     C                     Z-ADDECD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ZZECD4  40
+     C           *IN98     IFEQ '0'
+     C                     MOVELZZECD4    ZZWRKD
+     C                     MOVE ZZECD4    ZZWRKM
+     C                     Z-ADDZZWRKD    ZZECD4
+     C                     MOVELZZWRKM    ZZECD4
+     C                     END
+      *
+      * IF DATE FORMAT IS DDMMYY CONVERT ARRAY OF DIVIDEND DATES TO MMDD
+     C           *IN98     IFEQ '0'
+     C                     DO   12        X       20
+     C                     MOVE CD,X      ZZWRKM  20
+     C                     MOVELCD,X      ZZWRKD  20
+     C                     Z-ADDZZWRKD    CD,X
+     C                     MOVELZZWRKM    CD,X
+     C                     END
+     C                     END
+      * GET YEAR FOR ECD
+     C                     MOVE ZDATE     ZECDYR  20
+      *
+      * FIND NEXT DIVIDEND DATE FROM SECURITY DIARY EVENTS IF ENTERED
+      *
+     C                     Z-ADD0         NDD     50
+     C                     MOVE '0'       ZFOUND  1
+      *
+     C*
+     C           ZKDIV     KLIST
+     C                     KFLD           SESN
+     C                     KFLD           ECD
+     C*
+     C           ZKDIV     SETLLSEDEVD2
+     C                     READ SEDEVD2                  99
+     C           *IN99     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C                     Z-ADDSDED      NDD
+     C                     MOVE '1'       ZFOUND
+     C                     ELSE
+      *
+      * FIND NEXT DIVIDEND DATE FROM ARRAYS -
+      *  IF DIV DATES ALL BLANK NDD = 0.
+     C                     DO   12        X
+     C           ZZECD4    IFLE CD,X
+     C                     MOVE '1'       ZFOUND
+     C                     GOTO ZNDD00
+     C                     END
+     C                     END
+      *      FOUND - ADD ECD'S YY TO FORM DATE
+     C           ZNDD00    TAG                             ZNDD00 TAG
+     C           ZFOUND    IFEQ '1'
+     C                     Z-ADDZECDYR    ZDATE
+     C                     MOVELCD,X      ZDATE
+      *      NOT FOUND - USE FIRST DIVIDEND
+      *                  ADD NEXT YEAR'S YY TO FORM DATE
+     C                     ELSE
+     C                     DO   12        X
+     C           CD,X      IFNE 0
+     C                     Z-ADDZECDYR    ZDATE
+     C                     ADD  1         ZDATE
+     C                     MOVELCD,X      ZDATE
+     C                     MOVE '1'       ZFOUND
+     C                     GOTO ZNDD01
+     C                     END
+     C                     END
+     C                     END
+     C           ZNDD01    TAG                             ZNDD01 TAG
+      *
+      * CONVERT DATE TO DAY NO USING ZDATE1
+      * (NOT DONE IF NO DIVIDEND DATES FOUND)
+      * IF DDMMYY FORMAT TURN ROUND TO MMDDYY
+     C           ZFOUND    IFEQ '1'
+     C           *IN98     IFEQ '0'
+     C                     MOVELZDATE     ZZWRK   40
+     C                     MOVE ZZWRK     ZZWRKM
+     C                     MOVELZZWRK     ZZWRKD
+     C                     Z-ADDZZWRKD    ZZWRK
+     C                     MOVELZZWRKM    ZZWRK
+     C                     MOVELZZWRK     ZDATE
+     C                     END
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    NDD
+      *
+      * IF NEXT DIVIDEND DATE IS LESS THAN FIRST EXPECTED DIVIDEND DATE
+      * THEN NEXT DATE IS FIRST DATE
+      *
+     C           NDD       IFLT IDIV
+     C                     Z-ADDIDIV      ZDATE
+     C                     END
+     C                     END
+      *
+      * IF ARRAYS ARE BLANK USE FIRST EXPECTED DIVIDEND DATE
+      *
+     C           ZFOUND    IFEQ '0'
+     C                     Z-ADDIDIV      NDD
+     C                     END
+      *
+     C                     END
+      *
+      *
+      * IF DATE FORMAT IS DDMMYY TURN BACK ARRAY OF DIVIDEND DATES TO DDM
+     C           *IN98     IFEQ '0'
+     C                     DO   12        X       20
+     C                     MOVELCD,X      ZZWRKM  20
+     C                     MOVE CD,X      ZZWRKD  20
+     C                     Z-ADDZZWRKM    CD,X
+     C                     MOVELZZWRKD    CD,X
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************

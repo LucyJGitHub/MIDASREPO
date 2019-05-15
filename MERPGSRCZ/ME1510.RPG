@@ -1,0 +1,2763 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Msg content translation table maintenance')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1510 - Edit Message Translation  Edit record(1 screen)     *
+      *                                                               *
+      *  Function:  This program controls the display and update      *
+      *             of MEDECDPD records                               *
+      *                                                               *
+      *  Called By: ME1500  - Display Message Translation Records     *
+      *  Calls : MEC1150 - Extract message information                *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD049278           Date 12Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3339            Date 23Jun04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL013             Date 29Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 162075             Date 27Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 162607             Date 01Jul99               *
+      *                 162335             Date 10Jun99               *
+      *                 162079             Date 09Jun99               *
+      *                 CFT002  *Create    Date 23Apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD049278 - MIDAS Equivalent field doesn't accept alpha-      *
+      *             numeric characters.                               *      
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3339 - Addition to changes introduced by CGL029(Increase  *
+      *            of account code from 4 to 10.)
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CGL013 - MT94x Messages Generation (Recompile over new layout*
+      *                                      of SDNWRKPD)             *
+      *  162075 - Correct cursor positioning                          *
+      *  162607 - Enhancement to 162079.  Replace the error message   *
+      *           with a warning                                      *
+      *  162335 - Translation cross validity checking                 *
+      *  162079 - Cross validity check  between Currencies            *
+      *  CFT002 - Incorporate Into Core                               *
+      *           Based on ME1510 original references HUB001/S01489   *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  03    Cancel and exit                                        *
+      *  05    Reset screen field                                     *
+      *  10    Delete record                                          *
+      *  12    Redisplay previous screen                              *
+      *  31,...,35 Error indicator for screen field                   *
+      *  36    Position cursor on message field tag                   *   162075
+      *  37    Position cursor on message type                        *   162075
+      *  38    Position cursor on currency                            *   162075
+      *  39    Position cursor on network                             *   162075
+      *  77    Allow delete                                           *
+      *  78    Protect key field                                      *
+      *  79    Protect key field on detail screen                     *
+      *  86    Putover                                                *
+      *  89    Add mode                                               *
+      *  90    Error indicator                                        *
+      *  91    Record locked                                          *
+      *  99    General error indicators                               *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   ZZINIT - Initialization                                     *
+      *   FACKPM - Check passed parameters                            *
+      *   BADSKY - Display and process key screen                     *
+      *   ZXEXPG - Cancel and exit from key screen                    *
+      *   MDIZ#K - Initialise key screen                              *
+      *   MAIZ#1 - Initialise record - except for key fields          *
+      *   BBEXFM - Display key screen and process HELP requests       *
+      *   BEPRKY - Process key screen input                           *
+      *   GADSAK - Set key screen conditioning indicators             *
+      *   BFVLKY - Validate key fields                                *
+      *   MBFL#1 - Move @DECDL1 fields to screen                      *
+      *   CADSDAy- Display and process detail screen                  *
+      *   VBCKRL - Check reference to BIS¦Midas¦ABS Message Net       *
+      *   VCCKRL - Check reference to BIS¦Midas¦ABS Message Typ       *
+      *   VECKRL - Check reference to BIS¦Midas¦ABS Currency File     *
+      *   CBEXFM - Display screen and process HELP requests           *
+      *   GBDSAD - Set detail screen conditioning indicators          *
+      *   SRWIND - Control Window Processing                          *
+      *   EBPR## - Process record                                     *
+      *   VFCKME - Check MIDAS equivalent (A/C or Cust No)            *
+      *   SACRRC - Create Record - Incoming Msg Translation           *
+      *   SCCHRC - Delete Record - Incoming Msg Translation           *
+      *   SDCHRC - Change Inc Msg Trans - Incoming Msg Translation    *
+      *   SBCHRC - Change Record - Incoming Msg Translation           *
+      *   BDHMKY - Process HOME key                                   *
+      *   BEPRKY - Process key screen input                           *
+      *   CCDSPV - Redisplay previous screen                          *
+      *   CFPRSC - Validate record                                    *
+      *   DCVLDL - Validate details                                   *
+      *   EDDLRQ - Process delete request                             *
+      *   ECADRQ - Process add request                                *
+      *   EECHRQ - Process update request                             *
+      *                                                               *
+      *****************************************************************
+      *EDTRCD: Cpysrc Templates Initialise Program F-spec
+     F/COPY WNCPYSRC,ME1510DFPG
+     FME1510DFCF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+     F                                              KINFSR SRFILE
+      * DSP: Edit Message Translation  Edit record(1 screen)
+      *
+     FMEDECDL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+     F                                              KINFSR SRFILE
+      * RTV : Incoming Msg Translation  Retrieval index
+      *
+     FMEDECDL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      * RTV : Incoming Msg Translation  Seacrh index
+      *
+     FMEDECDL0UF  E           K        DISK                      A    UC
+     F                                              KCOMIT
+     F                                              KINFSR SRFILE
+      * UPD : Incoming Msg Translation  Update index
+      *
+     FSDMTAGL1IF  E           K        DISK         KINFSR SRFILE
+     F            @EFREJ5                           KRENAME@MTAGL1
+      * RTV : BIS¦Midas¦ABS Message Fie Retrieval index
+      *
+     FSDCURRL3IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @A6REA5                           KRENAME@CURRL3
+      *
+      * RTV : BIS¦Midas¦ABS SWIFT Currencies
+      *
+     FMETAGTL2IF  E           K        DISK                                                   162335
+     F                                              KINFSR SRFILE                             162335
+      * RTV : Incoming Msg Translation X-ref  Seacrh index                                    162335
+      *                                                                                       162335
+     E/EJECT
+     E                    CPY@    1   1 80
+      *------------------------------
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+     E*
+     E/COPY MECPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     E*EDTRCD: Cpysrc Templates Initialise Program E-spec
+     E/COPY WNCPYSRC,ME1510DEPG
+     I/COPY MECPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     I*
+     I*EDTRCD: Cpysrc Templates Initialise Program I-spec
+     I/COPY WNCPYSRC,ME1510DIPG
+      /EJECT
+      * Data structures:
+     IDATA        DS                           1024
+      * Data to be passed to window processing
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I@1DBRC    E DSMEDECDL0
+      * UPD : Incoming Msg Translation  Update index
+      * Current/previous master file format fields for change control
+      *
+     I****#1DBRC      DS                            272                                      BUG3339
+     I#1DBRC      DS                            278                                          BUG3339
+      * Increase data structure due to increased length of account codes                     BUG3339
+      * Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     ISDCUST    E DSSDCUSTPD
+      * @CUST - Customer record format data structure
+      *
+     IP@ACCT    E DSACCNTAB
+      * ACCNTABF - Account details record format data structure
+     I                                        2  16 @ACCK1
+      *
+      *
+     IDSNWRK    E DSSDNWRKPD
+     I*
+     I* Data Structures for Network definition
+     I*
+     IDSMTPY    E DSSDMTPYPD
+     I*
+     I* Data Structures for Message Type Definition
+     I*
+     IDSMTAG    E DSSDMTAGPD
+     I*
+     I* Data Structures for Message Tag Definition
+     I*
+     IDSCURR    E DSSDCURRPD
+     I*
+     I* Data Structures for Currency Definition
+     I*
+     ISDNOST    E DSSDNOSTPD
+     I*
+     I* Data Structures for Nostro Details
+     I*
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+     I              LCD                             SCLCD                                     CSC022
+      ** Switchable Features File                                                             CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+      *
+      * Template of key fields entered
+      *
+     IDSTMPL      DS
+     I                                        1   1 #TNWRK
+     I                                        2   2 #TMTAG
+     I                                        3   3 #TMTPY
+     I                                        4   4 #TCYCD
+     I                                        5   5 #TSNDR
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I : MAP Action Code
+     I                                        1   1 P1ACTC
+     IP2PARM      DS                            215
+      * KEY: Incoming Msg Translation  Retrieval index
+      * I : MAP Network
+     I                                        1   6 P2NWRK
+      * I : MAP Message Field Tag
+     I                                        7  11 P2MTAG
+      * I : MAP Currency
+     I                                       12  14 P2CYCD
+      * I : MAP Sender
+     I                                       15  34 P2SNDR
+      * I : MAP Message type
+     I                                       35  37 P2MTPY
+      * I : MAP Message Sequence No
+     I                                    P  38  400P2SQNO
+      * I : MAP Incoming field data
+     I                                       41 215 P2INDA
+     I                                       41  75 P2IND1
+     I                                       76 110 P2IND2
+     I                                      111 145 P2IND3
+     I                                      146 180 P2IND4
+     I                                      181 215 P2IND5
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Invalid Action code (FT)'
+      * Action Code
+     I                                        1   1 ZA0001
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+      * Data Structure redefining Address fields
+      *
+     I            DS
+     I                                        1 210 ADDRSS
+     I                                        1  35 ADCHK1
+     I                                       36  70 ADCHK2
+     I                                       71 105 ADCHK3
+     I                                      106 140 ADCHK4
+     I                                      141 175 ADCHK5
+     I                                      176 210 ADCHK6
+      *
+      * Blank Line Analysis data structure
+      *
+     I                                       36 210 ADCH26
+     I                                       71 210 ADCH36
+      *
+      * SWIFT Address Analysis data structure
+      *
+     I                                        1   1 ADSLSH
+     I                                        1  11 ADSWFT
+     I                                       12  35 ADEXSW
+     I                                       36  36 ADSLS2
+     I                                       36  46 ADSWF2
+     I                                       47  70 ADEXS2
+      *
+      * Customer Analysis data structure
+      *
+     I                                        1  10 ADCUST
+     I                                       11  35 ADEXCS
+     I                                        1   6 ADCNUM
+     I                                        7  35 ADEXCN
+     I                                       36  45 ADCUS2
+     I                                       46  70 ADXCS2
+     I                                       36  41 ADCNM2
+     I                                       42  70 ADXCN2
+      *
+      * Account Analysis data structure FULL Account
+      *
+     I                                        1   6 ADGCNM
+     I                                        7   9 ADGCCY
+     I**********                             10  13 ADGACD                                    CGL029
+     I**********                             14  15 ADGASQ                                    CGL029
+     I**********                             16  18 ADGBRC                                    CGL029
+     I**********                             16  35 ADEXG1                                    CGL029
+     I**********                             19  35 ADEXGL                                    CGL029
+     I                                       10  19 ADGACD                                    CGL029
+     I                                       20  21 ADGASQ                                    CGL029
+     I                                       22  24 ADGBRC                                    CGL029
+     I                                       22  35 ADEXG1                                    CGL029
+     I                                       25  35 ADEXGL                                    CGL029
+      *
+      * Partial Account Analysis data structure
+      *
+     I                                        1   6 ADPCNM
+     I**********                              7  10 ADPACD                                    CGL029
+     I**********                             11  12 ADPASQ                                    CGL029
+     I**********                             13  15 ADPBRC                                    CGL029
+     I**********                             13  35 ADEXP1                                    CGL029
+     I**********                             16  35 ADEXPA                                    CGL029
+     I                                        7  16 ADPACD                                    CGL029
+     I                                       17  18 ADPASQ                                    CGL029
+     I                                       19  21 ADPBRC                                    CGL029
+     I                                       19  35 ADEXP1                                    CGL029
+     I                                       22  35 ADEXPA                                    CGL029
+      *
+      * Nostro Number Account Analysis data structure
+      *
+     I                                        1   2 ADNOSN
+     I                                        3  35 ADEXNN
+      *
+      * Nostro Account Analysis data structure
+      *
+     I                                        1   5 ADFNOS
+     I                                        1   3 ADFCCY
+     I                                        4   5 ADFNNB
+     I                                        6  35 ADFNEX
+      *
+      * Retail Account Analysis data structure
+      *
+     I                                        1  10 ADACNO
+     I                                       11  35 ADEXAC
+     I            DS
+      *
+      * Data Structure redefining Partial Account
+      *
+     I**********                              1  12 PTACCT                                    CGL029
+     I                                        1  18 PTACCT                                    CGL029
+     I                                        1   6 PTCNUM
+     I**********                              7  10 PTACOD                                    CGL029
+     I**********                             11  12 PTACSQ                                    CGL029
+     I                                        7  16 PTACOD                                    CGL029
+     I                                       17  18 PTACSQ                                    CGL029
+      *
+      *  Defined Constants
+      *
+      *
+     I              '0123456789'          C         DIGITS
+      *
+      *
+      /EJECT
+      *
+      * Data to be passed to window processing
+      *
+     I/COPY QWINDSRC,ME1510WDTA
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1ACTC    PARM           WP0001  1        Action Code
+     C                     PARM           P2PARM           KEY: Incoming M
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialise key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1NWRK    IFEQ *BLANK                     Network
+      * One or more key fields is blank
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+     C   12                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Validate key fields
+     C                     EXSR BFVLKY
+      * If A,E,D ignore key field validation
+     C           P1ACTC    IFEQ 'D'
+     C           P1ACTC    OREQ 'E'
+     C           P1ACTC    OREQ 'A'
+     C                     SETOF                     99
+     C                     MOVE '0000'    *IN,31
+     C                     MOVE *BLANK    W0RTN
+     C                     END
+      *
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           DCNWRK           Network
+     C                     KFLD           DCMTAG           Message Field T
+     C                     KFLD           DCMTPY           Message type
+     C                     KFLD           DCCYCD           Currency
+     C                     KFLD           DCSNDR           Sender
+     C                     KFLD           DCSQNO           Sequence No
+      * Setup key
+     C                     MOVEL#1NWRK    DCNWRK           Network
+     C                     MOVEL#1CYCD    DCCYCD           Currency
+     C                     MOVEL#1SNDR    DCSNDR           Sender
+     C                     MOVEL#1MTPY    DCMTPY           Message Type
+     C                     MOVEL#1MTAG    DCMTAG           Message Field T
+     C                     Z-ADDP2SQNO    DCSQNO           Sequence No
+     C           KRTV      CHAIN@DECDL1              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     993132*
+     C                     SETON                     3334  *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, flip to add mode
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ADD'     W0PMD
+      * USER: Initialise detail screen (new record)
+      * EDTRCD: Init. det. scr NW - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Initialise Dtl New Rcd
+     C/COPY WNCPYSRC,ME1510DISN
+     C                     ELSE
+      *
+      * If insert then send record already exists
+      *
+     C           P1ACTC    IFEQ 'I'
+     C           P2INDA    ANDEQ*BLANKS
+     C                     MOVEA'11111'   *IN,31
+     C                     MOVEL'1'       *IN99
+      * Send message 'Already exists'
+     C*                    MOVEL'MIN0066' ZAMSID
+     C*                    EXSR ZASNMS
+     C                     MOVEL'MIN0066' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO BEEXIT
+     C                     END
+      * If record does exist, flip to change mode
+     C                     MOVEL'CHG'     W0PMD
+      * Load screen fields from DBF
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * EDTRCD: Detail scrn funcs - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Calc Detail Function Flds
+     C/COPY WNCPYSRC,ME1510DCDF
+      * USER: Initialise detail screen (existing record)
+      * EDTRCD: Init. det. scr EX - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Initialise Dtl Exist Rcd
+     C/COPY WNCPYSRC,ME1510DISE
+     C                     END
+      *..................................................
+     C   99                GOTO BEEXIT
+      *
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      *
+      * Check that key is valid
+      *
+     C                     MOVEL'NNNNN'   DSTMPL
+     C           #1NWRK    IFNE *BLANK
+     C                     MOVEL'Y'       #TNWRK
+     C                     END
+     C           #1MTAG    IFNE *BLANK
+     C                     MOVEL'Y'       #TMTAG
+     C                     END
+     C           #1MTPY    IFNE *BLANK
+     C                     MOVEL'Y'       #TMTPY
+     C                     END
+     C           #1CYCD    IFNE *BLANK
+     C                     MOVEL'Y'       #TCYCD
+     C                     END
+     C           #1SNDR    IFNE *BLANK
+     C                     MOVEL'Y'       #TSNDR
+     C                     END
+      *
+      * Check that keys filled are valid
+      *
+     C           P1ACTC    IFEQ 'I'
+     C           DSTMPL    ANDNE'YYYYY'
+     C           DSTMPL    ANDNE'YYYYN'
+     C           DSTMPL    ANDNE'YYYNN'
+     C           DSTMPL    ANDNE'YYNNN'
+     C           DSTMPL    ANDNE'YYNYN'
+     C           DSTMPL    ANDNE'YNNYN'
+     C           DSTMPL    ANDNE'YNNNN'
+     C                     MOVEA'11111'   *IN,31
+     C                     MOVEL'1'       *IN99
+     C                     MOVEL'MIN0317' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      * To test if any ? are entered in screen fields
+     C                     MOVEL'N'       W0PMT   1
+      * Check relations
+      * Check reference to BIS¦Midas¦ABS Message Net
+     C                     EXSR VBCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9931  *
+     C                     END
+      * Check reference to BIS¦Midas¦ABS Message Fie
+     C                     EXSR VDCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9933  *
+     C                     END
+      * Check reference to BIS¦Midas¦ABS Message Typ
+     C                     EXSR VCCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9932  *
+     C                     END
+      * Check reference to BIS¦Midas¦ABS Currency File
+     C                     EXSR VECKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9934  *
+     C                     END
+      * USER: Validate key screen
+      *
+      * Make sure MTPY is not ALL
+      *
+     C           #1MTPY    IFEQ 'ALL'                      IF
+     C                     SETON                     9932  *
+      * Send message 'ALL message type not valid'
+     C                     MOVEL'MIN0085' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      * EDTRCD: Valid key screen - R10 Copy source templates  *
+     C/COPY WNCPYSRC,ME1510DVKS
+      * Network required
+     C           #1NWRK    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *
+      * If insert then record full must not exist
+      *
+     C           P1ACTC    IFEQ 'I'
+     C           P2INDA    ANDNE*BLANKS
+      * Check for existing record
+     C           KRTV1     KLIST
+     C                     KFLD           DCNWRK           Network
+     C                     KFLD           DCMTAG           Message Field T
+     C                     KFLD           DCMTPY           Message type
+     C                     KFLD           DCCYCD           Currency
+     C                     KFLD           DCSNDR           Sender
+     C                     KFLD           DCIND1           Text
+     C                     KFLD           DCIND2           Text
+     C                     KFLD           DCIND3           Text
+     C                     KFLD           DCIND4           Text
+     C                     KFLD           DCIND5           Text
+      * Setup key
+     C                     MOVEL#1NWRK    DCNWRK           Network
+     C                     MOVEL#1CYCD    DCCYCD           Currency
+     C                     MOVEL#1SNDR    DCSNDR           Sender
+     C                     MOVEL#1MTPY    DCMTPY           Message Type
+     C                     MOVEL#1MTAG    DCMTAG           Message Field T
+     C                     MOVELP2IND1    DCIND1           Text
+     C                     MOVELP2IND2    DCIND2           Text
+     C                     MOVELP2IND3    DCIND3           Text
+     C                     MOVELP2IND4    DCIND4           Text
+     C                     MOVELP2IND5    DCIND5           Text
+     C           KRTV1     CHAIN@DECDL2              90    *
+      * Send message 'Already exists'
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVEL'MIN0066' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVELDCSQNO    P2SQNO
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+     C           W0TRN     IFEQ 'R'
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR MAIZ#1
+     C                     END
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * EDTRCD: Process key req. - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Process Key Screen Rqst
+     C/COPY WNCPYSRC,ME1510DPKR
+     C   05                MOVEL'R'       W0TRN
+      *
+      * If insert go to key screen else exit
+      *
+     C           *IN12     IFEQ '1'
+     C           P1ACTC    IFEQ 'I'
+     C   12                MOVEL'K'       W0TRN
+     C                     ELSE
+     C                     EXSR ZXEXPG
+     C                     END
+     C                     END
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * If delete is not pending....
+      * Validate details
+     C           P1ACTC    IFEQ 'I'
+     C           P1ACTC    OREQ 'A'
+     C  N10                CAS            DCVLDL
+     C                     END
+     C                     END
+      *
+      *  Call window processing
+      *
+     C           *IN99     IFEQ '0'
+     C                     EXSR SRWIND
+     C                     END
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: update record
+     C           P1ACTC    IFEQ 'A'
+     C           P1ACTC    OREQ 'I'
+     C           P1ACTC    OREQ 'D'
+     C           *IN10     ANDEQ'1'
+     C                     EXSR EBPR##
+     C                     END
+      *
+     C           P1ACTC    IFEQ 'D'                        Cancel delete
+     C           *IN10     ANDNE'1'
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *
+      * Exit if enquire
+      *
+     C           P1ACTC    IFEQ 'E'
+     C                     MOVEL'N'       W0RPT
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * USER: Validate detail screen fields
+      * EDTRCD: Valid det. scrn - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Validate Detail Screen
+     C/COPY WNCPYSRC,ME1510DVSF
+      *
+      * To test if any ? are entered in screen fields
+     C                     MOVEL'N'       W0PMT   1
+      * Check Midas Equivalent
+     C                     EXSR VFCKME
+      * CALC: Detail screen function fields
+      * EDTRCD: Detail scrn funcs - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Calc Detail Function Flds
+     C/COPY WNCPYSRC,ME1510DSFF
+      * USER: Validate detail screen relations
+      *
+      * If insert then record full must not exist
+      *
+     C           P1ACTC    IFEQ 'I'
+     C           P2INDA    ANDEQ*BLANKS
+      * Setup key
+     C                     MOVEL#1NWRK    DCNWRK           Network
+     C                     MOVEL#1CYCD    DCCYCD           Currency
+     C                     MOVEL#1SNDR    DCSNDR           Sender
+     C                     MOVEL#1MTPY    DCMTPY           Message Type
+     C                     MOVEL#1MTAG    DCMTAG           Message Field T
+     C                     MOVEL#1IND1    DCIND1           Text
+     C                     MOVEL#1IND2    DCIND2           Text
+     C                     MOVEL#1IND3    DCIND3           Text
+     C                     MOVEL#1IND4    DCIND4           Text
+     C                     MOVEL#1IND5    DCIND5           Text
+     C           KRTV1     CHAIN@DECDL2              90    *
+      * Send message 'Already exists'
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVEL'1'       *IN99
+     C                     MOVEL'MIN0066' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      * EDTRCD: Detail scrn rels - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Validate Screen Relns
+     C/COPY WNCPYSRC,ME1510DVSR
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * Process delete request
+     C   10                CAS            EDDLRQ
+      * Process add request
+     C           W0PMD     CASEQ'ADD'     ECADRQ
+      * Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes
+      **                                                                                      CSC022
+      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C                     ROLBK
+     C                     ELSE                                                               CSC022
+     C           WCRSKP    IFEQ 'N'                                                           CSC022
+     C                     ROLBK                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     GOTO EBEXIT
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * USER: Process command keys
+      * EDTRCD: Process cmds - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Process Command Keys
+     C/COPY WNCPYSRC,ME1510DPCK
+     C           W0PMD     IFEQ 'ADD'
+     C           P2INDA    ANDEQ*BLANKS
+      * Exit after successful add
+     C                     MOVEL'R'       W0RPT
+     C                     END
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         ECADRQ    BEGSR
+      *================================================================
+      * Process add request
+      *================================================================
+      * USER: Create DBF record
+      * Create Record - Incoming Msg Translation  *
+     C                     EXSR SACRRC
+     C           W0RTN     IFEQ *BLANK
+      * Send message '*Record added'
+     C                     MOVEL'Y2U0011' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         ECEXIT    ENDSR
+      /EJECT
+     CSR         EDDLRQ    BEGSR
+      *================================================================
+      * Process delete request
+      *================================================================
+      * USER: Delete DBF record
+      * Delete Record - Incoming Msg Translation  *
+     C                     EXSR SCCHRC
+     C           W0RTN     IFEQ *BLANK
+      * Send message '*Record deleted'
+     C                     MOVEL'Y2U0013' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EDEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      * USER: Change DBF record
+      * Change Incoming Msg Trans - Incoming Msg Translation  *
+     C                     EXSR SDCHRC
+     C           W0RTN     IFNE *BLANK
+      * DBF update error
+      * Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P2NWRK    IFEQ *BLANK
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+     C                     MOVEL'0'       *IN79
+     C           P1ACTC    IFEQ 'E'                        *IF
+     C           P1ACTC    OREQ 'D'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN78
+     C           W0PMD     IFEQ 'ADD'                      *IF
+     C                     MOVEL'1'       *IN78
+     C                     END                             *FI
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields
+      *================================================================
+     C                     MOVEL*BLANK    #1RECI           Record Identifi
+     C                     MOVEL*BLANK    #1AJOB           Job name
+     C                     MOVEL*BLANK    #1AACT           Action Type
+     C                     Z-ADD*ZERO     #1RDNB           Run day number
+     C                     MOVELP1ACTC    #PACTC           Action Code
+     C           P2INDA    IFNE *BLANKS
+     C                     MOVELP2IND1    #1IND1           In Data Line 1
+     C                     MOVELP2IND2    #1IND2           In Data Line 2
+     C                     MOVELP2IND3    #1IND3           In Data Line 3
+     C                     MOVELP2IND4    #1IND4           In Data Line 4
+     C                     MOVELP2IND5    #1IND5           In Data Line 5
+     C                     ELSE
+     C                     MOVEL*BLANK    #1IND1           In Data Line 1
+     C                     MOVEL*BLANK    #1IND2           In Data Line 2
+     C                     MOVEL*BLANK    #1IND3           In Data Line 3
+     C                     MOVEL*BLANK    #1IND4           In Data Line 4
+     C                     MOVEL*BLANK    #1IND5           In Data Line 5
+     C                     END
+     C                     MOVEL*BLANK    #1MDEQ           MIDAS Equivalent
+     C                     MOVEL*BLANK    #1MDE1           MIDAS Equivalent
+     C                     MOVEL*BLANK    #1AUSR           User name
+     C                     MOVEL*BLANK    #1ARDT           Action Date
+     C                     Z-ADD*ZERO     #1ATIM           Action Time
+      *
+      * Fill Command lines and narrative text from messages
+      *
+     C                     SELEC
+      *
+      * Insert screen
+      *
+     C           P1ACTC    WHEQ 'I'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0309' #MSGID
+     C                     PARM 'MEMSG   '#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONDT
+      *
+      * Action codes
+      *
+     C                     MOVEL*BLANKS   ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0061' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      * Enquiry screen
+      *
+     C           P1ACTC    WHEQ 'E'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0308' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONDT
+      *
+      * Action codes
+      *
+     C                     MOVEL*BLANKS   ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0061' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      *
+      * Amendment screen
+      *
+     C           P1ACTC    WHEQ 'A'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0309' #MSGID
+     C                     PARM 'MEMSG   '#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONDT
+      *
+      * Action codes
+      *
+     C                     MOVEL*BLANKS   ##CMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0061' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+      *
+      * Delete screen
+      *
+     C           P1ACTC    WHEQ 'D'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0309' #MSGID
+     C                     PARM 'MEMSG   '#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONDT
+      *
+      * Action codes
+      *
+     C                     MOVEL*BLANKS   ##CMD1
+      *
+      * Function keys and allow delete key
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0065' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C                     MOVEL'1'       *IN77
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+     C                     ENDSL
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @DECDL1 fields to screen
+      *================================================================
+     C                     MOVELDCRECI    #1RECI           Record Identifi
+     C                     MOVELDCAJOB    #1AJOB           Job name
+     C                     MOVELDCAACT    #1AACT           Action Type
+     C                     Z-ADDDCRDNB    #1RDNB           Run day number
+     C                     MOVELDCNWRK    #1NWRK           Network
+     C                     MOVELDCMTAG    #1MTAG           Message Field T
+     C                     MOVELDCCYCD    #1CYCD           Currency
+     C                     MOVELDCSNDR    #1SNDR           Sender
+     C                     MOVELDCMTPY    #1MTPY           Message type
+     C                     MOVELDCIND1    #1IND1           In Data Line 1
+     C                     MOVELDCIND2    #1IND2           In Data Line 2
+     C                     MOVELDCIND3    #1IND3           In Data Line 3
+     C                     MOVELDCIND4    #1IND4           In Data Line 4
+     C                     MOVELDCIND5    #1IND5           In Data Line 5
+     C                     MOVELDCMDEQ    #1MDEQ           MIDAS Equivalent
+     C                     MOVELDCMDID    #1MDID           MIDAS Equivalent
+     C                     MOVELDCAUSR    #1AUSR           User name
+     C                     MOVELDCARDT    #1ARDT           Action Date
+     C                     Z-ADDDCATIM    #1ATIM           Action Time
+      * Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialise key screen
+      *================================================================
+     C                     MOVELP1ACTC    #PACTC           Action Code
+     C                     MOVELP2NWRK    #1NWRK           Network
+     C                     MOVELP2MTAG    #1MTAG           Message Field T
+     C                     MOVELP2CYCD    #1CYCD           Currency
+     C                     MOVELP2SNDR    #1SNDR           Sender
+     C                     MOVELP2MTPY    #1MTPY           Message type
+     C                     MOVEL*BLANKS   #1SCFD           Msg Tag Desc.
+     C                     MOVEL*BLANKS   #1MTPD           Msg Typ Desc.
+     C                     MOVEL*BLANKS   #1NETD           Network Desc.
+     C                     MOVEL*BLANKS   #1CYNM           Currency Name
+      * USER: Initialise key screen
+      * Option Name
+     C                     SELEC
+      * Insert screen
+     C           P1ACTC    WHEQ 'I'
+     C                     MOVEL'1'       *IN77
+     C                     MOVEL'MIN0309' #MSGID
+      * Enquiry screen
+     C           P1ACTC    WHEQ 'E'
+     C                     MOVEL'MIN0308' #MSGID
+      * Amendment screen
+     C           P1ACTC    WHEQ 'A'
+     C                     MOVEL'MIN0309' #MSGID
+      * Delete screen
+     C           P1ACTC    WHEQ 'D'
+     C                     MOVEL'MIN0309' #MSGID
+     C                     ENDSL
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM           #MSGID
+     C                     PARM 'MEMSG   '#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONKY
+      * Action codes
+     C                     MOVEL*BLANKS   #KCMD1
+      * Function keys
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0061' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    #KCMD2
+      * EDTRCD: Init. key screen - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Initialise Key Screen
+     C/COPY WNCPYSRC,ME1510DIKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SACRRC    BEGSR
+      *================================================================
+      * Create Record - Incoming Msg Translation  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to @DECDL0
+     C                     MOVEL#1NWRK    DCNWRK           Network
+     C                     MOVEL#1MTAG    DCMTAG           Message Field T
+     C                     MOVEL#1CYCD    DCCYCD           Currency
+     C                     MOVEL#1SNDR    DCSNDR           Sender
+     C                     MOVEL#1MTPY    DCMTPY           Message type
+      *
+      * Find sequence number for next put
+      *
+     C           KRTV2     KLIST
+     C                     KFLD           DCNWRK           Network
+     C                     KFLD           DCMTAG           Message Field T
+     C                     KFLD           DCMTPY           Message type
+     C                     KFLD           DCCYCD           Currency
+     C                     KFLD           DCSNDR           Sender
+     C           KRTV2     SETGT@DECDL0
+     C                     READP@DECDL0             N    90
+     C           *IN90     IFEQ '0'
+     C           #1NWRK    ANDEQDCNWRK                     Network
+     C           #1MTAG    ANDEQDCMTAG                     Message Field T
+     C           #1CYCD    ANDEQDCCYCD                     Currency
+     C           #1SNDR    ANDEQDCSNDR                     Sender
+     C           #1MTPY    ANDEQDCMTPY                     Message type
+     C           DCSQNO    ADD  1         P2SQNO
+     C                     ELSE
+     C                     Z-ADD1         P2SQNO
+     C                     END
+      *
+     C                     MOVEL#1NWRK    DCNWRK           Network
+     C                     MOVEL#1MTAG    DCMTAG           Message Field T
+     C                     MOVEL#1CYCD    DCCYCD           Currency
+     C                     MOVEL#1SNDR    DCSNDR           Sender
+     C                     MOVEL#1MTPY    DCMTPY           Message type
+     C                     Z-ADDP2SQNO    DCSQNO           Sequence No
+     C                     MOVEL#1IND1    DCIND1           In Data Line 1
+     C                     MOVEL#1IND2    DCIND2           In Data Line 2
+     C                     MOVEL#1IND3    DCIND3           In Data Line 3
+     C                     MOVEL#1IND4    DCIND4           In Data Line 4
+     C                     MOVEL#1IND5    DCIND5           In Data Line 5
+     C                     MOVEL#1MDEQ    DCMDEQ           MIDAS Equivalent
+     C                     MOVEL#1MDID    DCMDID           MIDAS Equivalent
+     C                     MOVEL'D'       DCRECI           Record Identifi
+     C                     MOVEL##JOB     DCAJOB           Job name
+     C                     MOVEL##USR     DCAUSR           User name
+     C                     Z-ADD##JTM     DCATIM           Action Time
+     C                     MOVELWUMRDT    DCARDT           Action Date
+     C                     MOVEL'I'       DCAACT           Action Type
+     C                     Z-ADDWURDNB    DCRDNB           Run day number
+      *
+     C           KLCRSA    KLIST
+     C                     KFLD           DCNWRK           Network
+     C                     KFLD           DCMTAG           Message Field T
+     C                     KFLD           DCMTPY           Message Type
+     C                     KFLD           DCCYCD           Currency
+     C                     KFLD           DCSNDR           Sender
+     C                     KFLD           DCSQNO           Sequence No
+      * Check for duplicate primary key
+     C           KLCRSA    SETLL@DECDL0                  90*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CCS0093' W0RTN   7
+      * USER: Processing if DBF record already exists
+      * Change Record - Incoming Msg Translation  *
+     C                     EXSR SBCHRC
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C                     WRITE@DECDL0                91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF write successful
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCHRC    BEGSR
+      *================================================================
+      * Change Record - Incoming Msg Translation  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @DECDL0
+     C                     MOVEL#1NWRK    DCNWRK           Network
+     C                     MOVEL#1MTAG    DCMTAG           Message Field T
+     C                     MOVEL#1CYCD    DCCYCD           Currency
+     C                     MOVEL#1SNDR    DCSNDR           Sender
+     C                     MOVEL#1MTPY    DCMTPY           Message type
+     C                     Z-ADDP2SQNO    DCSQNO           Sequence No
+      *
+     C           KLCHSB    KLIST
+     C                     KFLD           DCNWRK           Network
+     C                     KFLD           DCMTAG           Message Field T
+     C                     KFLD           DCMTPY           Message type
+     C                     KFLD           DCCYCD           Currency
+     C                     KFLD           DCSNDR           Sender
+     C                     KFLD           DCSQNO           Sequence No
+     C           KLCHSB    CHAIN@DECDL0              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      * Move non-key fields to @DECDL0
+     C                     MOVEL'D'       DCRECI           Record Identifi
+     C                     MOVEL#1IND1    DCIND1           In Data Line 1
+     C                     MOVEL#1IND2    DCIND2           In Data Line 2
+     C                     MOVEL#1IND3    DCIND3           In Data Line 3
+     C                     MOVEL#1IND4    DCIND4           In Data Line 4
+     C                     MOVEL#1IND5    DCIND5           In Data Line 5
+     C                     MOVEL#1MDEQ    DCMDEQ           MIDAS Equivalent
+     C                     MOVEL#1MDID    DCMDID           MIDAS Equivalent
+     C                     MOVEL##JOB     DCAJOB           Job name
+     C                     MOVEL##USR     DCAUSR           User name
+     C                     Z-ADD##JTM     DCATIM           Action Time
+     C                     MOVELWUMRDT    DCARDT           Action Date
+     C                     MOVEL'I'       DCAACT           Action Type
+     C                     Z-ADDWURDNB    DCRDNB           Run day number
+      *
+     C                     UPDAT@DECDL0                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCCHRC    BEGSR
+      *================================================================
+      * Delete Record - Incoming Msg Translation  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @INFML0
+     C                     MOVEL#1NWRK    DCNWRK           Network
+     C                     MOVEL#1MTAG    DCMTAG           Message Field T
+     C                     MOVEL#1CYCD    DCCYCD           Currency
+     C                     MOVEL#1SNDR    DCSNDR           Sender
+     C                     MOVEL#1MTPY    DCMTPY           Message type
+     C                     Z-ADDP2SQNO    DCSQNO           Sequence No
+      *
+     C           KLCHSC    KLIST
+     C                     KFLD           DCNWRK           Network
+     C                     KFLD           DCMTAG           Message Field T
+     C                     KFLD           DCMTPY           Message type
+     C                     KFLD           DCCYCD           Currency
+     C                     KFLD           DCSNDR           Sender
+     C                     KFLD           DCSQNO           Sequence No
+     C           KLCHSC    CHAIN@DECDL0              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SCEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Use SETLL to release record lock
+     C           KLCHSC    SETLL@DECDL0              9091  *
+     C                     GOTO SCEXIT
+     C                     END                             FI #1DBRC
+      *
+      * USER: Processing before DBF update
+     C                     MOVEL'D'       DCAACT           Action Type
+     C                     MOVEL'*'       DCRECI           Record Identifi
+     C                     MOVEL##JOB     DCAJOB           Job name
+     C                     MOVEL##USR     DCAUSR           User name
+     C                     Z-ADD##JTM     DCATIM           Action Time
+     C                     MOVELWUMRDT    DCARDT           Action Date
+     C                     Z-ADDWURDNB    DCRDNB           Run day number
+     C                     UPDAT@DECDL0                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF change successful
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDCHRC    BEGSR
+      *================================================================
+      * Change Incoming Msg Trans - Incoming Msg Translation  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @DECDL0
+     C                     MOVEL#1NWRK    DCNWRK           Network
+     C                     MOVEL#1MTAG    DCMTAG           Message Field T
+     C                     MOVEL#1CYCD    DCCYCD           Currency
+     C                     MOVEL#1SNDR    DCSNDR           Sender
+     C                     MOVEL#1MTPY    DCMTPY           Message type
+     C                     Z-ADDP2SQNO    DCSQNO           Sequence No
+      *
+     C           KLCHSD    KLIST
+     C                     KFLD           DCNWRK           Network
+     C                     KFLD           DCMTAG           Message Field T
+     C                     KFLD           DCMTPY           Message type
+     C                     KFLD           DCCYCD           Currency
+     C                     KFLD           DCSNDR           Sender
+     C                     KFLD           DCSQNO           Message type
+     C           KLCHSD    CHAIN@DECDL0              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SDEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Use SETLL to release record lock
+     C           KLCHSD    SETLL@DECDL0              9091  *
+     C                     GOTO SDEXIT
+     C                     END                             FI #1DBRC
+      * Move non-key fields to @DECDL0
+     C                     MOVEL#1IND1    DCIND1           In Data Line 1
+     C                     MOVEL#1IND2    DCIND2           In Data Line 2
+     C                     MOVEL#1IND3    DCIND3           In Data Line 3
+     C                     MOVEL#1IND4    DCIND4           In Data Line 4
+     C                     MOVEL#1IND5    DCIND5           In Data Line 5
+     C                     MOVEL#1MDEQ    DCMDEQ           MIDAS Equivalent
+     C                     MOVEL#1MDID    DCMDID           MIDAS Equivalent
+     C                     MOVEL'D'       DCRECI           Record Identifi
+     C                     MOVEL##JOB     DCAJOB           Job name
+     C                     MOVEL##USR     DCAUSR           User name
+     C                     Z-ADD##JTM     DCATIM           Action Time
+     C                     MOVELWUMRDT    DCARDT           Action Date
+     C                     MOVEL'A'       DCAACT           Action Type
+     C                     Z-ADDWURDNB    DCRDNB           Run day number
+      *
+     C                     UPDAT@DECDL0                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF change successful
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         VBCKRL    BEGSR
+      *================================================================
+      * Check reference to BIS¦Midas¦ABS Message Net
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+     C                     MOVEL*BLANKS   #1NETD           Network Desc.
+      * If all low order keys not entered, exit
+     C           #1NWRK    IFEQ *BLANK                     Network
+     C                     GOTO VBEXIT
+     C                     END
+      *
+     C                     MOVEL#1NWRK    WQM     1
+     C           WQM       IFEQ '?'
+     C                     MOVEL'?'       #1NWRK    P
+     C                     MOVEL'Y'       W0PMT
+     C                     MOVEL'1'       *IN99
+     C                     MOVE *ON       *IN39                           162075
+     C                     END
+      *
+     C                     CALL 'AONWRKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option
+     C                     PARM #1NWRK    P@NWRK  6        I:Key field
+     C                     PARM *BLANKS   DSFDY            O:Format
+      *
+      * Analyse return code
+      *
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDEQ*BLANKS
+      * Record found - move back any virtuals
+     C                     MOVELDSFDY     DSNWRK
+      *
+      * If Network that on screen - delay
+      *
+     C           EDNWRK    IFNE #1NWRK                                 .
+     C                     MOVEL'1'       *IN99
+     C                     END
+     C                     MOVELEDNETD    #1NETD           Network Desc.
+     C                     MOVELEDNWRK    #1NWRK                       .
+     C                     GOTO VBEXIT
+     C                     END
+      *
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'Y'
+     C                     GOTO VBEXIT
+     C                     END
+      *
+      * Send message 'BIS¦Midas¦ABS M1101395'
+     C                     MOVEL'MIN0084' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0084' W0RTN
+      *================================================================
+     CSR         VBEXIT    ENDSR
+      /EJECT
+     CSR         VDCKRL    BEGSR
+      *================================================================
+      * Check reference to BIS¦Midas¦ABS Message Fie
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+     C                     MOVEL*BLANKS   #1SCFD           Msg Tag Desc.
+      * If all low order keys not entered, exit
+     C           #1MTAG    IFEQ *BLANK                     Message Field T
+     C*********************GOTO VDEXIT                                                        162335
+     C                     GOTO VDFOLW                                                        162335
+     C                     END
+      *
+     C                     MOVEL#1MTAG    WQM     1
+     C           WQM       IFEQ '?'
+     C                     MOVEL'?'       #1MTAG    P
+     C                     MOVEL'Y'       W0PMT
+     C                     MOVEL'1'       *IN99
+     C                     MOVE *ON       *IN36                           162075
+     C                     END
+      *
+      * Selection processing
+      *
+     C           ' ?'      CHECK#1MTAG                   90
+     C           *IN90     IFEQ '0'
+     C                     CALL 'AOMTAGR0'             9090Msg tag desc
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option
+     C                     PARM #1MTAG    P@MTAG  5        I:Key field
+     C                     PARM #1MTPY    P@MTPY  3        I:Key field
+     C                     PARM *BLANKS   DSFDY            O:Format
+      *
+      * Analyse return code
+      *
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDEQ*BLANKS
+      * Record found - move back any virtuals
+     C                     MOVELDSFDY     DSMTAG
+      *
+      * If Message tag not that on screen - delay
+      *
+     C           EFMTAG    IFNE #1MTAG                                 .
+     C                     MOVEL'1'       *IN99
+     C                     END
+     C                     MOVELEFSCFD    #1SCFD           Msg Tag Desc.
+     C                     MOVELEFMTAG    #1MTAG           Msg Tag     .
+     C*********************GOTO VDEXIT                                                        162335
+     C                     GOTO VDFOLW                                                        162335
+     C                     END
+      *
+     C                     END
+      *
+     C           KLVDEF    KLIST
+     C                     KFLD           EFMTAG           Message Field T
+     C                     KFLD           EFMTPY           Message type
+      * Setup key
+     C                     MOVEL#1MTAG    EFMTAG           Message Field T
+     C                     MOVEL#1MTPY    EFMTPY           Message type
+     C           KLVDEF    CHAIN@MTAGL1              90    *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ALL'     EFMTPY           Message type
+     C           KLVDEF    CHAIN@MTAGL1              90    *
+     C                     END
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     MOVELEFSCFD    #1SCFD           Msg Tag Desc.
+     C*********************GOTO VDEXIT                                                        162335
+     C                     GOTO VDFOLW                                                        162335
+     C                     END
+      *
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'Y'
+     C*********************GOTO VDEXIT                                                        162335
+     C                     GOTO VDFOLW                                                        162335
+     C                     END
+      *
+      * Send message 'BIS¦Midas¦ABS Message  NF'
+     C                     MOVEL'MIN0059' ZAMSID
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0059' W0RTN
+      ** Further checkings                                                                    162335
+     C           VDFOLW    TAG                                                                162335
+      ** To check existence of general X-ref translations                                     162335
+      ** (we don't allow for the type)                                                        162335
+     C           KTAGT1    KLIST                                                              162335
+     C                     KFLD           #1MTAG                                              162335
+      ** To check existence of one specific X-ref translation                                 162335
+     C           KTAGT2    KLIST                                                              162335
+     C                     KFLD           #1MTAG                                              162335
+     C                     KFLD           #1MTPY                                              162335
+     C           #1MTPY    IFEQ *BLANK                                                        162335
+     C           KTAGT1    SETLLMETAGTL2                 90                                   162335
+     C                     ELSE                                                               162335
+     C           KTAGT2    SETLLMETAGTL2                 90                                   162335
+     C                     END                                                                162335
+     C           *IN90     IFEQ '0'                                                           162335
+      *                                                                                       162335
+      ** When ? is entered we perform no validity checks                                      162335
+     C           W0PMT     IFNE 'Y'                                                           162335
+      *                                                                                       162335
+      ** Send message 'This combination isn't defined in Translation                          162335
+      ** X-Ref                                                                                162335
+     C                     MOVEL'MIN0324' ZAMSID                                              162335
+     C                     MOVEL'MEMSG   'ZAMSGF                                              162335
+     C                     EXSR ZASNMS                                                        162335
+     C                     MOVEL'MIN0324' W0RTN                                               162335
+      ** Highlight the message type                                                           162335
+     C                     SETON                     32                                       162335
+     C                     END                                                                162335
+     C                     END                                                                162335
+      *================================================================
+     CSR         VDEXIT    ENDSR
+      /EJECT
+     CSR         VECKRL    BEGSR
+      *================================================================
+      * Check reference to BIS¦Midas¦ABS Currency File
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+     C                     MOVEL*BLANKS   #1CYNM           Msg Typ Desc.
+      * If all low order keys not entered, exit
+     C           #1CYCD    IFEQ *BLANK                     Message type
+     C                     GOTO VEEXIT
+     C                     END
+      *
+     C                     MOVEL#1CYCD    WQM     1
+     C           WQM       IFEQ '?'
+     C                     MOVEL'?'       #1CYCD    P
+     C                     MOVEL'1'       *IN99
+     C                     MOVEL'Y'       W0PMT
+     C                     MOVE *ON       *IN38                           162075
+     C                     END
+      *
+      ** Access Currencies file via access program
+     C                     CALL 'AOCURRR0'             9090*1
+     C                     PARM *BLANKS   P@RTCD  7        *1
+     C                     PARM '*KEY   ' P@OPTN  7        *1
+     C                     PARM #1CYCD    P@CYCD  3        *1
+     C           DSCURR    PARM *BLANK    DSSDY
+      *
+      * If currency changed i.e. select use new ccy
+      * also defer confirm.
+      *
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDEQ*BLANKS
+     C           #1CYCD    ANDNEA6CYCD
+     C                     MOVELA6CYCD    #1CYCD           Currency Name
+     C                     MOVEL'1'       *IN99
+     C                     GOTO VEEXIT
+     C                     END
+      *
+      * If not found, find again using SWIFT currency code
+      *
+     C           #1NWRK    IFEQ 'SWIFT '
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDNE*BLANKS
+      *
+      * Open file if not already open
+      *
+     C           FIL003    IFNE 'Y'
+     C                     OPEN SDCURRL3
+     C                     MOVEL'Y'       FIL003  1
+     C                     END
+      *
+      * look SWIFT currency
+      *
+     C           #1CYCD    CHAIN@CURRL3              9090
+     C           *IN90     IFEQ '0'
+     C                     MOVEL*BLANKS   P@RTCD
+     C                     END
+     C                     END
+     C                     END
+      *
+      * Analyse return code
+      *
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDEQ*BLANKS
+      * Record found - move back any virtuals
+     C                     MOVELA6CYNM    #1CYNM           Currency Name
+     C                     GOTO VEEXIT
+     C                     END
+      *
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'Y'
+     C                     GOTO VEEXIT
+     C                     END
+      *
+      *
+      * Only reject currency if from SWIFT message
+      *
+      * Send message 'Currency code not found'
+     C           #1NWRK    IFEQ 'SWIFT '
+     C                     MOVEL'MIN0311' ZAMSID
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0311' W0RTN
+     C                     END
+      *================================================================
+     CSR         VEEXIT    ENDSR
+      /EJECT
+     CSR         VCCKRL    BEGSR
+      *================================================================
+      * Check reference to BIS¦Midas¦ABS Message Typ
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+     C                     MOVEL*BLANKS   #1MTPD           Msg Typ Desc.
+      * If all low order keys not entered, exit
+     C           #1MTPY    IFEQ *BLANK                     Message type
+     C                     GOTO VCEXIT
+     C                     END
+      *
+     C                     MOVEL#1MTPY    WQM     1
+     C           WQM       IFEQ '?'
+     C                     MOVEL'?'       #1MTPY    P
+     C                     MOVEL'1'       *IN99
+     C                     MOVEL'Y'       W0PMT
+     C                     MOVE *ON       *IN37                           162075
+     C                     END
+      *
+     C                     CALL 'AOMTPYR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option
+     C                     PARM #1MTPY    P@MTPY  3        I:Key field
+     C                     PARM *BLANKS   DSFDY            O:Format
+      *
+      * Analyse return code
+      *
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDEQ*BLANKS
+      * Record found - move back any virtuals
+     C                     MOVELDSFDY     DSMTPY
+      *
+      * If Message type not that on screen - delay
+      *
+     C           EEMTPY    IFNE #1MTPY                                 .
+     C                     MOVEL'1'       *IN99
+     C                     END
+     C                     MOVELEEMTPY    #1MTPY           Message type
+     C                     MOVELEEMTPD    #1MTPD           Msg Typ Desc.
+     C                     GOTO VCEXIT
+     C                     END
+      *
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'Y'
+     C                     GOTO VCEXIT
+     C                     END
+      *
+      * Send message 'BIS¦Midas¦ABS M1101260'
+     C                     MOVEL'MIN0058' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0058' W0RTN
+      *================================================================
+     CSR         VCEXIT    ENDSR
+      /EJECT
+     CSR         VFCKME    BEGSR
+      *================================================================
+      * Check MIDAS equivalent (A/C or Cust No)
+      *================================================================
+     C                     SETOF                     34                                       162079
+      *
+      * Set valid Midas equivalent flag
+      *
+     C                     MOVEL*BLANKS   #1MDID  1
+      *
+      * Move data to address structure
+      *
+     C           WUMBIN    IFNE 'Y'                        Multi Branched ?
+     C                     MOVEL#1MDE1    #1MDEQ
+     C                     END
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVEL#1MDEQ    ADDRSS
+      *
+     C                     MOVELADDRSS    WQM     1
+     C                     MOVELADDRSS    WQM2    2
+     C           WQM       IFEQ '?'
+     C           WQM2      IFEQ '??'
+     C                     MOVEL'??'      ADDRSS    P
+     C                     MOVEL'??'      #1MDEQ    P
+     C                     ELSE
+     C                     MOVEL'?'       ADDRSS    P
+     C                     MOVEL'?'       #1MDEQ    P
+     C                     END
+     C                     MOVEL'Y'       W0PMT
+     C                     MOVEL'1'       *IN99
+     C                     END
+      *
+      *  If first 5 Character are not blank but rest is blank
+      *  validate as a full nostro
+      *
+     C           ADFNOS    IFNE *BLANKS
+     C           ADFNEX    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+     C           ADDRSS    OREQ '??'
+     C           ADEXNN    ANDEQ*BLANKS
+      *
+      * Look up Nostro via Access Object
+      *
+     C           ADDRSS    IFEQ '??'
+     C                     MOVEL'?  '     ADFCCY
+     C                     MOVEL'? '      ADFNNB
+     C                     END
+      *
+      * Look up Nostro via Access Object
+      *
+     C                     CALL 'AONOSTR0'             9090
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM *BLANKS   P@CUST
+     C                     PARM ADFCCY    P@CYCD
+     C                     PARM *BLANKS   P@ACCD
+     C                     PARM *BLANKS   P@ACSN
+     C                     PARM ADFNNB    P@NONB  2
+     C                     PARM *BLANKS   P@BRCD
+     C                     PARM *BLANKS   P@CSSN 10
+     C                     PARM *BLANKS   P@PNOI  1
+     C           SDNOST    PARM *BLANKS   DSFDY
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AONOSTR0'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Nostro found mark as full nostro and get GL information
+      *
+     C           P@RTCD    IFEQ *BLANKS
+      *
+      * If selected then defer confirm
+      *
+     C                     MOVEL'1'       *IN99
+     C                     MOVEL'A'       #1MDID
+      *
+      *  Move account fields into ADDRSS
+      *
+     C                     MOVELA7CUST    ADGCNM
+     C                     MOVELA7CYCD    ADGCCY
+     C                     MOVELA7ACCD    ADGACD
+     C                     MOVELA7ACSN    ADGASQ
+     C                     MOVELA7BRCD    ADGBRC
+     C                     MOVELADDRSS    #1MDEQ
+     C                     MOVEL#1MDEQ    #1MDE1
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *  If first 6 Characters are numeric but rest is blank
+      *  validate as a customer reference
+      *
+      *  Only validate if #1MDID is blank
+      *
+     C           ADCNUM    IFNE *BLANKS
+     C           ADEXCN    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+     C           #1MDID    ANDEQ*BLANKS
+     C           ADDRSS    ANDNE'??'
+      *
+      *  Check first 6 characters are numeric and rest is blank
+      *
+     C                     MOVEL*BLANKS   I#FLD
+     C                     MOVELADDRSS    I#FLD  35
+     C           DIGITS    CHECKI#FLD     Y#      30     90
+      *
+      *  6 digits allowed
+      *
+     C           *IN90     IFEQ '1'
+     C           Y#        ANDEQ7
+      *
+     C                     CALL 'AOCUSTR0'             9090
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM ADCNUM    P@KEY1 10
+     C                     PARM *BLANKS   P@KYST  7
+     C           SDCUST    PARM *BLANKS   DSSDY
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AOCUSTR0'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Customer not found
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           P@KYST    ORNE '*CNUM  '
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'N'
+     C                     SETON                     3299
+      * Send message 'Customer no. not found'
+     C                     MOVEL'MIN0313' ZAMSID
+     C                     MOVEL#1MDEQ    ZAMSDA
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0313' W0RTN
+     C                     END
+     C                     GOTO VFEXIT
+     C                     END
+      *
+      *  Customer found mark as Customer
+      *
+     C                     MOVEL'C'       #1MDID
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *  If first 10 Characters are numeric but rest is blank
+      *  validate as a retail account
+      *
+      *  Only validate if #1MDID is blank
+      *
+     C           ADACNO    IFNE *BLANKS
+     C           ADEXAC    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+     C           #1MDID    ANDEQ*BLANKS
+      *
+      *  Check first 10 characters are numeric and rest is blank
+      *
+     C                     MOVEL*BLANKS   I#FLD
+     C                     MOVELADDRSS    I#FLD  35
+     C           DIGITS    CHECKI#FLD     Y#      30     90
+      *
+      *  10 digits allowed
+      *
+     C           *IN90     IFEQ '1'
+     C           Y#        ANDEQ11
+      *
+      *  Check account is on ACCNTAB
+      *
+     C                     CALL 'AOACCTR0'             9090
+     C                     PARM *BLANKS   P@RTCD           B:Return code
+     C                     PARM '*KEY   ' P@OPTN           I:Option
+     C                     PARM ADACNO    P@RETL           I:Retail key
+     C                     PARM *BLANKS   P@CUST           I:Key field 1
+     C                     PARM *BLANKS   P@CYCD           I:Key field 2
+     C                     PARM *BLANKS   P@ACCD           I:Key field 3
+     C                     PARM *BLANKS   P@ACSN           I:Key field 4
+     C                     PARM *BLANKS   P@BRCD           I:Key field 5
+     C                     PARM           P@ACCT           O:OUTPUT
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AOACCTR0'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 03 *
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Account not found
+      *
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDNE*BLANKS
+     C           RECI      ORNE 'D'
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'N'
+     C                     SETON                     3299
+      * Send message 'Account  no. not found'
+     C                     MOVEL'MIN0314' ZAMSID
+     C                     MOVEL#1MDEQ    ZAMSDA
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0314' W0RTN
+     C                     END
+     C                     GOTO VFEXIT
+     C                     END
+      *
+      *  Retail Account found mark as GL Account
+      *
+     C                     MOVEL'1'       *IN99
+     C                     MOVEL'A'       #1MDID
+      *
+      *  Move account fields into ADDRSS
+      *
+     C                     MOVELCNUM      ADGCNM
+     C                     MOVELCCY       ADGCCY
+     C                     MOVELACOD      ADGACD
+     C                     MOVELACSQ      ADGASQ
+     C                     MOVELBRCA      ADGBRC
+     C                     MOVELADDRSS    #1MDEQ
+     C                     MOVEL#1MDEQ    #1MDE1
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *  If first 10 Characters are non blank but rest is blank
+      *  validate as a customer shortname
+      *
+      *  Only validate if #1MDID is blank
+      *
+     C           ADCUST    IFNE *BLANKS
+     C           ADEXCS    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+     C           #1MDID    ANDEQ*BLANKS
+      *
+      * Check if name exists
+      *
+     C                     CALL 'AOCUSTR0'             9090
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM ADCUST    P@KEY1
+     C                     PARM *BLANKS   P@KYST
+     C           SDCUST    PARM *BLANKS   DSSDY
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AOCUSTR0'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 04 *
+     C                     Z-ADD4         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C********** P@KYST    OREQ '*CNUM  '                                                   MD049278
+     C********** *IN99     ANDEQ'0'                                                         MD049278
+     C********** P@KYST    ORNE '*CSHT  '                                                   MD049278
+     C           P@KYST    ORNE '*CNUM  '                                                   MD049278
+     C           P@KYST    ANDNE'*CSHT  '                                                   MD049278
+     C           *IN99     ANDEQ'0'
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'N'
+     C                     SETON                     3299
+      * Send message 'Customer no. not found'
+     C                     MOVEL'MIN0313' ZAMSID
+     C                     MOVEL#1MDEQ    ZAMSDA
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0313' W0RTN
+     C                     END
+     C                     GOTO VFEXIT
+     C                     END                             X001
+      *
+      *  Customer found mark as Customer
+      *
+     C                     MOVEL'C'       #1MDID
+     C                     MOVEL*BLANKS   #1MDEQ
+     C                     MOVELBBCUST    #1MDEQ
+     C                     MOVEL#1MDEQ    #1MDE1
+      *
+     C                     END
+      *
+      *  If 18 chars have been entered and multi branched , or
+      *  15 long and single branch , is a full account.
+      *
+     C           ADCHK1    IFNE *BLANKS
+     C           ADEXGL    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+     C           WUMBIN    ANDEQ'Y'
+     C           #1MDID    ANDNE'C'
+     C           ADCHK1    ORNE *BLANKS
+     C           ADEXG1    ANDEQ*BLANKS
+     C           ADCH26    ANDEQ*BLANKS
+     C           WUMBIN    ANDEQ'N'
+     C           #1MDID    ANDNE'C'
+      *
+      *  Customer number, account code and account sequence must be
+      *  numeric
+      *
+     C                     MOVELADGCNM    PTCNUM
+     C                     MOVELADGACD    PTACOD
+     C                     MOVELADGASQ    PTACSQ
+      *
+      *  Check first 12 characters are numeric
+      *
+     C                     MOVEL*BLANKS   I#FLD
+     C                     MOVELPTACCT    I#FLD  35
+     C           DIGITS    CHECKI#FLD     Y#      30     90
+      *
+      ***12*digits*allowed*************************************************                  BUG3339
+      ** 18 digits allowed now since account code has been increased to 10                   BUG3339
+      *
+     C           *IN90     IFEQ '1'
+     C********** Y#        ANDNE13                                                           BUG3339
+     C           Y#        ANDNE19                                                           BUG3339
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'N'
+     C                     SETON                     3299
+      * Send message 'Account  no. not found'
+     C                     MOVEL'MIN0314' ZAMSID
+     C                     MOVEL#1MDEQ    ZAMSDA
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0314' W0RTN
+     C                     END
+     C                     GOTO VFEXIT
+     C                     END
+      *
+      *  Set up branch depending on multibranching
+      *
+     C           WUMBIN    IFNE 'Y'
+     C                     MOVELBJSBRC    ADGBRC
+     C                     END
+      *
+     C                     CALL 'AOACCTR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option
+     C                     PARM *BLANKS   P@RETL 10        I:Retail key
+     C                     PARM ADGCNM    P@CUST  6        I:Key field 1
+     C                     PARM ADGCCY    P@CYCD  3        I:Key field 2
+     C**********           PARM ADGACD    P@ACCD  4        I:Key field 3                      CGL029
+     C                     PARM ADGACD    P@ACCD 10                                           CGL029
+     C                     PARM ADGASQ    P@ACSN  2        I:Key field 4
+     C                     PARM ADGBRC    P@BRCD  3        I:Key field 5
+     C                     PARM           P@ACCT           O:OUTPUT
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AOACCTR0'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 05 *
+     C                     Z-ADD5         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Account not found
+      *
+     C           *IN90     IFEQ '0'
+     C           P@RTCD    ANDNE*BLANKS
+     C           RECI      ORNE 'D'
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'N'
+     C                     SETON                     3299
+      * Send message 'Account  no. not found'
+     C                     MOVEL'MIN0314' ZAMSID
+     C                     MOVEL#1MDEQ    ZAMSDA
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0314' W0RTN
+     C                     END
+     C                     GOTO VFEXIT
+     C                     END
+      *
+      *  Retail Account found mark as GL Account
+      *
+     C                     MOVEL'A'       #1MDID
+      *
+      *  Move account fields into ADDRSS
+      *
+     C                     MOVELCNUM      ADGCNM
+     C                     MOVELCCY       ADGCCY
+     C                     MOVELACOD      ADGACD
+     C                     MOVELACSQ      ADGASQ
+     C                     MOVELBRCA      ADGBRC
+     C                     MOVELADDRSS    #1MDEQ
+     C                     MOVEL#1MDEQ    #1MDE1
+      *
+     C                     END
+      *                                                                                       162079
+      * If the value of the field has been converted into a                                   162079
+      * full general ledger account, we ensure the account currency                           162079
+      * is the same as the message currency (if specified)                                    162079
+      *                                                                                       162079
+     C           ADGCCY    IFNE *BLANKS                                                       162079
+     C           #1CYCD    ANDNE*BLANKS                                                       162079
+     C           ADGCCY    IFNE #1CYCD                                                        162079
+     C           W0PMT     IFEQ 'N'                                                           162079
+     C           WWNCCY    IFNE 'Y'                                                           162607
+     C                     MOVEL'Y'       WWNCCY  1                                           162607
+     C                     SETON                     34                                       162079
+     C                     SETON                     3299                                     162079
+      *
+     C                     MOVEL'MIN0323' ZAMSID                                              162079
+     C                     MOVEL'MEMSG   'ZAMSGF                                              162079
+     C                     EXSR ZASNMS                                                        162079
+     C                     MOVEL'MIN0323' W0RTN                                               162079
+     C                     ELSE                                                               162607
+     C                     MOVEL'N'       WWNCCY                                              162607
+     C                     END                                                                162607
+     C                     END                                                                162079
+     C                     GOTO VFEXIT                                                        162079
+     C                     END                                                                162079
+     C                     END                                                                162079
+      *
+      * If still not valid report error
+      *
+     C           #1MDID    IFEQ *BLANKS
+      * When ? is entered we perform no validity checks
+     C           W0PMT     IFEQ 'N'
+     C                     SETON                     3299
+      * Send message 'Customer no. not found'
+     C                     MOVEL'MIN0313' ZAMSID
+     C                     MOVEL#1MDEQ    ZAMSDA
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'MIN0313' W0RTN
+     C                     END
+     C                     END
+      *================================================================
+     CSR         VFEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+     C                     MOVEL*BLANK    P0RTN
+      *
+      * CASE: CTL.*CMD key is CF03
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     END                             *FI
+      * CASE: CTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     END                             *FI
+      *
+      * EDTRCD: Exit program - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Exit Program Processing
+     C/COPY WNCPYSRC,ME1510DEPP
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+      **                                                                                      CSC022
+      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ELSE                                                               CSC022
+     C           WCRSKP    IFEQ 'N'                                                           CSC022
+     C                     ROLBK                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      * Copy any undisplayed messages back to caller
+     C                     CALL 'Y2CPMSC'
+     C                     PARM           ##PGM
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Initialise indicators for re-entry
+     C                     MOVE '0'       *IN
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C                     MOVEL'MEMSG   'ZADFMF 10
+      * Define work field Action Code
+     C                     MOVEL*BLANK    WUACTC  1
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+     C                     Z-ADD0         Q       50
+     C                     MOVEL'0'       *IN77
+      * Open files first time only
+     C           W0OPN     IFEQ *BLANK
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+     C                     OPEN MEDECDL0
+      * Signal that files are now open
+     C                     MOVE 'Y'       W0OPN   1
+     C                     END
+      * Select initial mode
+     C           @1NROP    IFEQ *ZERO
+      * Add mode
+     C                     MOVEL'ADD'     W0PMD   3
+     C                     ELSE
+      * Change mode
+     C                     MOVEL'CHG'     W0PMD
+     C                     END
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialise program
+      * Retrieve Midas Date - R10 Standard Functions  *
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* Get Rundate - Rundate  *
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Set multi-branch indicator
+      *
+     C           WUMBIN    IFNE 'Y'                        Multi Branched ?
+     C                     MOVEL'0'       *IN75
+     C                     ELSE
+     C                     MOVEL'1'       *IN75
+     C                     END
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM *BLANKS   DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD6         W0ERNB           * DB ERROR 06 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD7         W0ERNB           * DB ERROR 07 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      **                                                                                      CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCRSKP  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   7                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCRSKP                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           @RTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD8         W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      ** For copysource SRERRC                                                                CSC022
+     C                     MOVE WCRSKP    WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      * EDTRCD: Initialise prog - R10 Copy source templates  *
+     C*EDTRCD: Cpysrc Templates Initialise Program C-spec
+     C/COPY WNCPYSRC,ME1510DCPG
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     C/EJECT
+      *================================================================
+      *                                                               *
+      *  SRWIND   : Control Window Processing                         *
+      *                                                               *
+      *================================================================
+     CSR         SRWIND    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRWIND'  @STK,Q
+      *
+      * If window processing call WN0010
+      *
+     C           BGWDPR    IFEQ 'Y'
+      *
+      *    /copy to move data into the data structure fields passed
+      *     as a parameter to the window controller
+      *
+      /COPY WNCPYSRC,ME1510MOV1
+     C                     SELEC
+     C           P1ACTC    WHEQ 'I'
+      *
+      *     Insert Processing
+      *
+      /COPY WNCPYSRC,ME1510MOV2
+     C           P1ACTC    WHEQ 'A'
+      *
+      *     Amend Processing
+      *
+      /COPY WNCPYSRC,ME1510MOV3
+     C           P1ACTC    WHEQ 'D'
+      *
+      *     Delete Processing
+      *
+      /COPY WNCPYSRC,ME1510MOV4
+     C           P1ACTC    WHEQ 'E'
+      *
+      *     Enquire Processing
+      *
+      /COPY WNCPYSRC,ME1510MOV5
+     C                     ENDSL
+      *
+     C                     CALL 'WN0010'
+     C                     PARM ##PGM     O#PGM  10
+     C                     PARM *BLANKS   O#CMD   2
+     C                     PARM P1ACTC    O#ACTN  1
+     C                     PARM           DATA
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM           EXTRA 256
+      *
+      *   /copy to move data back from the data structure fields passed
+      *    as a parameter to the window controller and control user
+      *    defined processing.
+      *
+      /COPY WNCPYSRC,ME1510MOV6
+      *
+     C           *LIKE     DEFN O#RTN     R#RTN
+     C           R#RTN     CABEQ*BLANKS   EXWIND
+      *
+      *  Check return code and send message on action
+      *  - set no update as some action has been specified.
+      *
+     C                     MOVEL'Y'       W0DCF
+      **                                                                                      CSC022
+      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C                     ROLBK
+     C                     ELSE                                                               CSC022
+     C           WCRSKP    IFEQ 'N'                                                           CSC022
+     C                     ROLBK                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+     C                     SELEC
+      *
+      * *Return code is *User QUIT requested
+      *
+     C           R#RTN     WHEQ 'Y2U9999'
+     C                     MOVEL'Y2U9999' P0RTN
+     C                     MOVEL'Y2U9999' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     EXSR ZYEXPG
+      *
+      * *Return code is WN Window Error
+      *
+     C           R#RTN     WHEQ 'USR0563'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      *
+      * *Return code is *DBF update error
+      *
+     C           R#RTN     WHEQ 'USR0567'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      *
+      * *Return code is *Previous Screen
+      *
+     C           R#RTN     WHEQ 'USR0790'
+     C                     MOVEL'MIN0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDSL
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXWIND    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *================================================================
+     C/EJECT
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY MECPYSRC,SRERRC
+     O*EDTRCD: Cpysrc Templates Initialise Program O-spec
+     O/COPY WNCPYSRC,ME1510DOPG
+**  CPY@
+(c) Finastra International Limited 2001

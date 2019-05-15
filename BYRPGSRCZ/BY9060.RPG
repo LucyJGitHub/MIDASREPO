@@ -1,0 +1,473 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Determine Maturity Category Type')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY9060 - Determine Maturity Category Type                    *
+      *                                                               *
+      *  Function:  This program determines the maturity date         *
+      *             category type for a given date.                   *
+      *                                                               *
+      *  Called By: BoE Extract Programs                              *
+      *                                                               *
+      *  (c) Finastra International Limited 1997                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN022             Date 03Apr05               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN022 - BOE Upgrade to MidasPlus.                           *
+      *                                                               *
+      *****************************************************************
+      *
+      ** File description for files defined
+     FBYRPDTPPIF  E                    DISK         KINFSR *PSSR
+      /EJECT
+      *
+      ** E-Specs for date conversion routines ZDATE1 & ZDATE2
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+      ** Array containing Copyright statement
+     E                    @CPY    1   1 80
+      *
+      ** The following are for Maturity Dates/Categories
+     E                    @MAT        9  5 0A@CAT    1                  egory
+      *
+      /COPY ZSRSRC,ZHOLE
+      *
+      /SPACE 3
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM DSPGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      *
+      ** Data Structure for Date Conversion routines ZDATE1 & ZDATE2
+     I                                        1   60WRKDAT
+     I                                        1   40WKDDMM
+     I                                        1   20WORKDD
+     I                                        3   40WORKMM
+     I                                        5   60WORKYY
+      *
+      /COPY ZSRSRC,ZHOLI
+      /COPY ZSRSRC,ZHOLDS
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LDETL - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Detail Processing
+     C                     EXSR #LDETL
+      *
+      ** Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDETL    BEGSR                                       **
+      *
+      *  Get maturity category using date received
+     C                     Z-ADD0         ULMPER
+     C                     Z-ADD1         #
+     C           ULIPDT    LOKUP@MAT,#               90  90
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVE @CAT,#    ULMCAT
+     C                     Z-ADD@MAT,#    ULMPER
+      *
+     C                     ELSE
+     C                     MOVE 'J'       ULMCAT
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                                       **
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LXMTC - Build array of maturity categories                  *
+      *                                                               *
+      * Called by:  INZSR                                             *
+      *                                                               *
+      * Calls     : SR/ZDATE1 - Validate/Convert Date to Midas Day No.*
+      *           : SR/ZDATE2 - Convert Midas Day No. to Date Format  *
+      *           : SR/ZFWDT  - Calculate Forward Working Day         *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           #LXMTC    BEGSR
+      *
+      ** Set indicator for ZDATE1/ZDATE2 format
+     C                     MOVE '0'       *IN98
+      *
+      ** Convert Report Date from BYRPDTPP to DDMMYY
+     C                     Z-ADDL0RPDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     WRKDAT
+     C           WKDDMM    IFEQ 2802
+     C           WKDDMM    OREQ 2902
+     C           WKDDMM    OREQ 3004
+     C           WKDDMM    OREQ 3006
+     C           WKDDMM    OREQ 3009
+     C           WKDDMM    OREQ 3011
+     C                     Z-ADD31        WORKDD
+     C                     END
+      *
+      ** Save Report Date in DDMMYY format
+     C                     Z-ADDWRKDAT    CONVD   60
+      *
+      ** Initialise array index
+     C                     Z-ADD0         #       30
+      *
+      *****************************************************************
+      * Maturity Date/Category A  -  (1 Day)                          *
+      *                                                               *
+      * Formula: Report Date + 1 Working Day Forward (Local Currency) *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'A'       @CAT,#
+      *
+     C                     Z-ADDL0RPDT    ZDAYNO
+     C                     Z-ADD1         ZNRDYS
+     C                     MOVE BJLCCY    ZCCY
+     C                     EXSR ZFWDT
+      *
+     C                     Z-ADDZDYNBR    @MAT,#
+      *
+      *****************************************************************
+      * Maturity Date/Category B  -  (9 Days)                         *
+      *                                                               *
+      * Formula: Report Date + 8 Days                                 *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'B'       @CAT,#
+      *
+     C           L0RPDT    ADD  8         @MAT,#
+      *
+      *****************************************************************
+      * Maturity Date/Category C  -  (1 Month )                       *
+      *                                                               *
+      * Formula: Report Date + 1 Month                                *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'C'       @CAT,#
+      *
+     C                     Z-ADDCONVD     WRKDAT
+     C                     ADD  1         WORKMM
+      *
+     C           WORKMM    IFGT 12
+     C                     SUB  12        WORKMM
+     C                     ADD  1         WORKYY
+     C                     END
+      *
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     DOWEQ'1'
+     C                     SUB  1         WORKDD
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+      *
+     C                     Z-ADDZDAYNO    @MAT,#
+      *
+      *****************************************************************
+      * Maturity Date/Category D  -  (3 Months )                      *
+      *                                                               *
+      * Formula: Report Date + 3 Months                               *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'D'       @CAT,#
+      *
+     C                     Z-ADDCONVD     WRKDAT
+     C                     ADD  3         WORKMM
+      *
+     C           WORKMM    IFGT 12
+     C                     SUB  12        WORKMM
+     C                     ADD  1         WORKYY
+     C                     END
+      *
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     DOWEQ'1'
+     C                     SUB  1         WORKDD
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+      *
+     C                     Z-ADDZDAYNO    @MAT,#
+      *
+      *****************************************************************
+      * Maturity Date/Category E  -  (6 Months )                      *
+      *                                                               *
+      * Formula: Report Date + 6 Months                               *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'E'       @CAT,#
+      *
+     C                     Z-ADDCONVD     WRKDAT
+     C                     ADD  6         WORKMM
+     C           WORKMM    IFGT 12
+     C                     SUB  12        WORKMM
+     C                     ADD  1         WORKYY
+     C                     END
+      *
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     DOWEQ'1'
+     C                     SUB  1         WORKDD
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+      *
+     C                     Z-ADDZDAYNO    @MAT,#
+      *
+      *****************************************************************
+      * Maturity Date/Category F  -  (1 Year )                        *
+      *                                                               *
+      * Formula: Report Date + 1 Year                                 *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'F'       @CAT,#
+      *
+     C                     Z-ADDCONVD     WRKDAT
+     C                     ADD  1         WORKYY
+      *
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     DOWEQ'1'
+     C                     SUB  1         WORKDD
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+      *
+     C                     Z-ADDZDAYNO    @MAT,#
+      *
+      *****************************************************************
+      * Maturity Date/Category G  -  (2 Years )                       *
+      *                                                               *
+      * Formula: Report Date + 2 Years                                *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'G'       @CAT,#
+      *
+     C                     Z-ADDCONVD     WRKDAT
+     C                     ADD  2         WORKYY
+      *
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     DOWEQ'1'
+     C                     SUB  1         WORKDD
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+      *
+     C                     Z-ADDZDAYNO    @MAT,#
+      *
+      *****************************************************************
+      * Maturity Date/Category H  -  (3 Years )                       *
+      *                                                               *
+      * Formula: Report Date + 3 Years                                *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'H'       @CAT,#
+      *
+     C                     Z-ADDCONVD     WRKDAT
+     C                     ADD  3         WORKYY
+      *
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     DOWEQ'1'
+     C                     SUB  1         WORKDD
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+      *
+     C                     Z-ADDZDAYNO    @MAT,#
+      *
+      *****************************************************************
+      * Maturity Date/Category I  -  (5 Years )                       *
+      *                                                               *
+      * Formula: Report Date + 5 Years                                *
+      *****************************************************************
+     C                     ADD  1         #
+     C                     MOVE 'I'       @CAT,#
+      *
+     C                     Z-ADDCONVD     WRKDAT
+     C                     ADD  5         WORKYY
+      *
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     DOWEQ'1'
+     C                     SUB  1         WORKDD
+     C                     Z-ADDWRKDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+      *
+     C                     Z-ADDZDAYNO    @MAT,#
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                                       **
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANK    ULRTCD  1
+     C                     MOVE *BLANK    ULERRI  1                    dicator
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+     C                     MOVEA@CPY      UL@CPY 80
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                                       **
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULIPDT  50
+     C                     PARM           ULMCAT  1                    egory
+     C                     PARM           ULMPER  50                   d date
+     C                     PARM           ULRTCD  1
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C                     PARM           SDBANK
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+      **Get BoE Report Extract Date
+     C                     READ BYRPDTPP                 90
+      *
+      **Set up arrays for maturity category date & types
+     C                     EXSR #LXMTC
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      **DATE MANIPULATION SUBROUTINES
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZFWDT
+      /EJECT
+      ********************************************************************
+      *
+      **ARRAY DATA
+      *
+      /COPY ZSRSRC,ZDATE2Z3
+**  @CPY
+(c) Finastra International Limited 1997

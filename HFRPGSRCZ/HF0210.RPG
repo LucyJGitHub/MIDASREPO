@@ -1,0 +1,218 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Delete entries by retention prd')
+/*OVRF*: OVRDBF JOURNAL HFJRNLPD                                    : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - HISTORY AND AUDIT FACILITY
+     F*                                                               *
+     F*  HF0210 - HAF Delete Entries by Retention Period              *
+     F*                                                               *
+     F*  Function : To remove journal entries within retention period *
+     F*  (COB)                                                        *
+     F*                                                               *
+     F*  Called By: HFC0210 - Delete entries by Retention Period      *
+     F*                                                               *
+     F*  Calls    :                                                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 167006             Date 07Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01379             Date 16SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  167006 - Change the size of the field DAY to 5,0 to store    *
+     F*           the Run Day No. correctly.                          *
+     F*  S01379 - HISTORY AND AUDIT FACILITY                          *
+     F*           NEW PROGRAM CREATED FOR SAR.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*  Compiler directive for file JOURNAL                          *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FJOURNAL UP  E                    DISK
+      *
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  01    - FIRST CYCLE PROCESSING                               *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ZDATE1   - CONVERT DATE TO MIDAS DAY NUMBER                  *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+      *
+      /SPACE 3
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+      /EJECT
+      *
+      ** INPUT PARAMETERS -  DATE AND RETENTION PERIOD
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           DAT     6
+     C                     PARM           RET     40
+      *
+      ** SET UP COPYRIGHT PARAMETER
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** DEFINE LOCAL DATA AREA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** FIRST CYCLE PROCESSING - FORMAT RETENTION DATE
+      *
+     C   01                GOTO NOTFCY
+      *
+      ** TEST DATE FORMAT FLAG FOR STANDARD ROUTINES
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     SETON                     01
+     C                     MOVELDAT       ZDATE
+     C                     EXSR ZDATE1
+     C***********          Z-ADDZDAYNO    DAY     40                      167006
+     C                     Z-ADDZDAYNO    DAY     50                      167006
+     C           DAY       SUB  RET       DAY
+      *
+      ** MAIN PROCESSING
+      *
+     C           NOTFCY    TAG
+     C                     MOVELJODATE    ZDATE
+     C                     EXSR ZDATE1
+      *
+      ** DECIDE WETHER DELETION HAS TO BE DONE
+      *
+     C           ZDAYNO    IFLT DAY
+     C                     DELETJOURNAL
+     C                     ELSE
+     C                     SETON                     LR
+     C                     END
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * ZDATE1 - CONVERT DATE TO MIDAS DAY NUMBER                     *
+      *          (THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YR)*
+      *                                                               *
+      * Called by:  MAIN PROCESSING                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           ZDATE1    BEGSR
+     C*
+     C*  CLEAR DAY NUMBER
+     C*
+     C                     Z-ADD0         ZDAYNO  50
+     C*
+     C*  CALCULATION TO DEFINE INPUT DATE FIELD
+     C*
+     C                     Z-ADDZDATE     ZDATE   60
+     C*
+     C*  GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS
+     C*
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C*
+     C*  ENSURE MONTH IS VALID
+     C*
+     C           ZMTH      COMP 0                      9999
+     C  N99      ZMTH      COMP 12                   99
+     C   99                GOTO ZDEND1                     BYPASS ERROR
+     C*
+     C*  CHECK FOR 30 DAY MONTHS
+     C*
+     C           ZMTH      COMP 4                        90IF 90 ON, 30
+     C  N90      ZMTH      COMP 6                        90DAY MONTH
+     C  N90      ZMTH      COMP 9                        90
+     C  N90      ZMTH      COMP 11                       90
+     C*
+     C*  ENSURE DAY IS VALID
+     C*
+     C           ZDAY      COMP 0                      9999
+     C   90N99   ZDAY      COMP 30                   99
+     C  N90N99   ZDAY      COMP 31                   99
+     C   99                GOTO ZDEND1                     BYPASS ERROR
+     C*
+     C*  CHECK FOR LEAP YEAR AND FEBRUARY
+     C*
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     91ON, LEAP YR
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON
+     C*                                                    PAST FEB =93
+     C*  IF FEBUARY FURTHER VALIDATE DAY
+     C*
+     C  N91 92   ZDAY      COMP 28                   99
+     C   91 92   ZDAY      COMP 29                   99
+     C   99                GOTO ZDEND1                     BYPASS ERROR
+     C*
+     C*  DETERMINE NUMBER OF DAYS FROM 31/12/1971      NO.OF 4 YR. SP  ANS
+     C*
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+     C*
+     C           ZDEND1    TAG
+     C                     SETOF                     909192
+     C                     SETOF                     9394
+     C*
+     C           ZDTE1E    ENDSR
+     C*
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

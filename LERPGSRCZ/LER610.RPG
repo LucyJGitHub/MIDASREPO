@@ -1,0 +1,1377 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Individual Facility History Report')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module                                *
+     F*                                                               *
+     F*  LER610 - FACILITY HISTORY REPORT                             *
+     F*                                                               *
+     F*  Function: Input Cycle On Request Individual Facility         *
+     F*            History Report. Report is produced using           *
+     F*            Customer, Facility and History start date          *
+     F*            parameters entered via LER600.                     *
+     F*                                                               *
+     F*  Called By: LERC61  - Facility History report component       *
+     F*                                                               *
+     F*  Calls: Nothing                                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      *                 251361             Date 22Nov07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 225591             Date 08Jul04               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 BUG3035            Date 03Jun04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 201127             Date 20Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      *                 200289             Date 19Nov01               *
+      *                 194912             Date 19Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 144337             Date 20Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 156766             Date 15Mar99               *
+      *                 154584             Date 15Feb99               *
+      *                 134808             Date 11Sep98               *
+     F*                 136783             Date 10AUG98               *
+      *                 125188             Date 07Nov97               *
+      *                 127716             Date 20Nov97               *
+     F*                 CLE004             Date 02Dec96               *
+     F*                 082744             Date 08Mar95               *
+     F*                 S01473             Date 02Aug94               *
+     F*                 BH3500             DATE 28AUG92               *
+     F*                 FS0005             DATE 31JUL92               *
+     F*                 BH3375             DATE 09JUL92               *
+     F*                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00164                                 *
+      *             WNCPYSRC,LEH00165                                 *
+      *             WNCPYSRC,LEH00166                                 *
+      *             WNCPYSRC,LEH00167                                 *
+      *             WNCPYSRC,LEH00168                                 *
+      *  CRE026 - Consumer Banking                                    *
+      *  251361 - Separation of Facility Event & Loan Events          *
+      *           in the detail line of the report                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  225591 - Facility history changes for repayments due to      *
+      *           rollover                                            *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  BUG3035 - Error on calculation when a rate change is done    *
+      *  CLE025 - Credit Lines                                        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  201127 - Recompiled over changes made in LER610P1.           *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *  200289 - Increase facility sequence number in FACHISA from   *
+      *           2 to 3.                                             *
+      *  194912 - Change multi-ccy action from 'ST' to 'MC'           *
+     F*  144337 - Report is distributed to default output queue       *
+     F*           even if Instruction Identifier is changed when      *
+     F*           report is requested.  Add one parameter (SEQ)       *
+     F*           when LERC61 calls LER61. Applied fix of SC          *
+     F*           120200.                                             *
+      *  156766 - Flag reversed loans with an asterisk to indicate    *
+      *           status of loan.                                     *
+      *  154584 - Reporting of facility history must be the same with *
+      *           the processing sequence in LER032                   *
+      *  134808 - History of Facility Manual Utilization shows same   *
+      *           narrative for all utilizations.                     *
+     F*  136783 - Facility history report shows duplicate details.    *
+     F*           Do not print reversed loans.                        *
+     F*  125188 - Principal transfer incorrectly processed             *
+     F*  127716 - Utilisation Amend types (US, UE, UI, & UD) are      *
+     F*           not considered; thus, defaulting into some other    *
+     F*           amend types.                                        *
+     F*  CLE004 - Customer Lending Enhancements - Syndications        *
+     F*  082744 - If Account Officer is blank, output 'Unknown'       *
+     F*           instead of database error - account officer is      *
+     F*           optional on Facilities Input screen.                *
+     F*  S01473 - Leo Midas Integration. Output LC Reference for      *
+     F*           Leo Facility History Actions. This amendment        *
+     F*           has already been added under fix number FS0005      *
+     F*           and added to core. This should not have happened    *
+     F*           Amend the fix number from FS0005 to S01473 to match *
+     F*           the rest of the enhancement                         *
+     F*  BH3500 - Correct spelling of 'Principal' in array ACT        *
+     F*  FS0005 - LEO/Midas Integration, output L/C Reference for     *
+     F*           for LEO Facility History actions.                   *
+     F*  BH3375 - BHF - Report layout confusing and therefore changed *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FFACHISH IF  E           K        DISK
+     F***FACHSAL1IF  E           K        DISK                            154584
+     FHISUPD  IF  E           K        DISK                               154584
+     F            HISACTF                           KIGNORE               154584
+     FLER610P1O   E             80     PRINTER      KINFDS SPOOL
+     FLER610AUO   E                    PRINTER      KINFDS SPOOLU
+     F/COPY WNCPYSRC,LEH00164
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    20  - Facility Key input error                             *
+     F*    32  - Error in 'READ' of FACHISH file                      *
+     F*    40  - Number of Decimal Places = 0                         *
+     F*    41  - Number of Decimal Places = 1                         *
+     F*    42  - Number of Decimal Places = 2                         *
+     F*    43  - Number of Decimal Places = 3                         *
+     F*    44  - Multi-Customer flag = Y                              *
+     F*    45  - Multi-Currency flag = Y                              *
+     F*    46  - Output Facility Event Date                           *
+     F*    47  - Revolving Credit Indicator = 'Y'                     *
+     F*    50  - Facility Type is valid                               *
+     F*    60  - Output L/C reference                                 *   S01473
+     F*    61  - LEO action type is invalid                           *   S01473
+      *    70  - Actual Facility Amount is negative.                  *                       CLE023
+      *    71  - Action is Loan Start, Multi-ccy rollover or rollover *                       CLE023
+     F*    80  - Overflow indicator                                   *
+     F*   81  - Prime Facility                                        *   CLE004
+     F*   82  - Participant Facility                                  *   CLE004
+     F*   83  - Internal Participant Facility                         *   CLE004
+      *    84  - CLE023 is installed                                  *                       CLE023
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SUB020  - Subroutine for Facility History.                   *
+     F*  SUB025  - Subroutine for setting up amounts and dates for    *
+     F*            the header.                                        *
+     F*  SUB026  - Subroutine for setting up amounts and dates for    *
+     F*            the details.                                       *
+      *  SRDTL2  - Subroutine for second detail format in the report  *                       CLE023
+     F*  SUB001  - Subroutine for initial processing.                 *
+     F*  AUDIT   - Open audit report and record on RCF.               *
+     F*  DBERR   - Subroutine to handle database errors.              *
+     F*                                                               *
+     F*  *PSSR   - Error processing routine - DUMPs and ends          *
+     F*             (This is called automatically if an unexpected    *
+     F*             error occurs).                                    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+     E********************ACT     1  13  2   @AC    26   ACTION TYPES     127716
+     E*******************ACT     1  21  2   @AC    26   ACTION TYPES127716125188
+     E**********          ACT     1  23  2   @AC    26   ACTION TYPES                  125188 194912
+     E**********          ACT     1  24  2   @AC    26   ACTION TYPES                  194912 CLE023
+     E**********          ACT     1  25  2   @AC    26   ACTION TYPES                  CLE023 CLE028
+     E**********          ACT     1  27  2   @AC    27   ACTION TYPES                  CLE028 CLE025
+     E**********          ACT     1  39  2   @AC    27   ACTION TYPES                 CLE025 BUG3035
+     E**********          ACT     1  40  2   @AC    27                               BUG3035 225591
+     E**********          PACT    1  10  2   PAC    26                                CLE023 225591
+     E**********          IACT    1  10  2   IAC    26                                CLE023 225591
+     E/COPY WNCPYSRC,LEH00165
+     E                    ACT     1  42  2   @AC    27                                       225591
+     E/COPY WNCPYSRC,LEH00166
+     E                    PACT    1  12  2   PAC    26                                       225591
+     E                    IACT    1  12  2   IAC    26                                       225591
+     E                    LACT    1   4  2   LAC    26   LEO ACTION TYPES S01473
+     E                    FTN     1   3  1   @FT    10   FACILITY TYPE IND
+     E                    MSG     1   1 40               MESSAGES         082744
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZEDITZ1                                                                    CLE023
+     E/COPY ZSRSRC,ZSEDITZ1                                                                   CLE023
+     I/EJECT
+      *
+     ILERSTS      DS                            128                                           251361
+      * LER Status Data area                                                                  251361
+     I                                       12  160BHISST                                    251361
+      *                                                                                       251361
+      ** File information data structure
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I            DS
+      * To split up entry parameters.
+     I                                        1  16 PARMDS
+     I                                        1   3 PFACT
+     I                                        4   5 PFCNO
+     I                                        6  11 PCUST
+     I                                       12  160PDAYN
+     I            DS
+      * To combine fac type and seq.
+     I                                        1   30FHFTYP
+     I                                        4   50FHFSEQ
+     I                                        1   50FHFACL
+     I                                        1   3 @FTYP
+     I                                        1   3 SFACT
+     I                                        4   5 SFCNO
+     I            DS
+      * To Set up correct decimal places
+     I                                    P   1   70OFAM0
+     I                                    P   1   71OFAM1
+     I                                    P   1   72OFAM2
+     I                                    P   1   73OFAM3
+     I                                    P   8  140AAMT0
+     I                                    P   8  141AAMT1
+     I                                    P   8  142AAMT2
+     I                                    P   8  143AAMT3
+     I                                    P  22  280CFAM0
+     I                                    P  22  281CFAM1
+     I                                    P  22  282CFAM2
+     I                                    P  22  283CFAM3
+     I                                    P  29  350DRAM0
+     I                                    P  29  351DRAM1
+     I                                    P  29  352DRAM2
+     I                                    P  29  353DRAM3
+     I                                    P  36  420UNDR0
+     I                                    P  36  421UNDR1
+     I                                    P  36  422UNDR2
+     I                                    P  36  423UNDR3
+     I            DS
+     I**********                              1   60FHCNUM                                    CSD027
+     I                                        1   6 FHCNUM                                    CSD027
+     I                                        1   6 SCUST
+     I                                       13  180@DAT
+     I**********                             19  200@SEQ                                      200289
+     I                                       19  210@SEQ                                      200289
+     I/COPY WNCPYSRC,LER610I001
+     I/COPY ZSRSRC,ZSEDITZ2                                                                   CLE023
+      *
+     IPSDS       SDS
+      *
+      ** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I                                      244 249 WSID
+      *
+     ILDA       E DS
+      * Database error DS
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+     I              AGMBIN                          MBIN
+      *
+     ISDCTRY    E DSSDCTRYPD
+      ** Country details
+      *
+     ISDFACT    E DSSDFACTPD
+      ** ICD Facility details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Type
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External DS for branch name details
+     I              A8BRNM                          BRNM
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      ** Customer Details
+      *
+     ISDACOF    E DSSDACOFPD
+      ** Account Officer Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISCSARD    E DSSCSARDPD                                              CLE004
+      **  Switchable Features File                                        CLE004
+      *                                                                   CLE004
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Main Processing.                                             *
+      *                                                               *
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           RPARM  16
+     C                     PARM           SEQ     5                       144337
+      *
+     C                     MOVE *BLANKS   RLOAN   6                                          QQQQQQ
+      *
+     C                     MOVELRPARM     PARMDS
+      *
+     C                     MOVELPCUST     SCUST
+     C                     MOVELPFACT     SFACT
+     C                     MOVELPFCNO     SFCNO
+     C                     MOVELPDAYN     SDAYN   50
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR SUB001
+      *
+     C           FHKEY     SETLLFACHISH
+     C           FHKEY     READEFACHISH                  20
+      *
+      *  Detail processing
+      *
+     C           *IN20     IFEQ '0'
+     C                     EXSR SUB020
+      *
+     C                     ELSE                            ***************
+     C                     MOVELFHCNUM    WKKEY  11        * DB ERROR 08 *
+     C                     MOVE FHFACL    WKKEY            ***************
+     C                     MOVELWKKEY     DBKEY
+     C                     MOVEL'008'     DBASE
+     C                     EXSR AUDIT
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           EXIT      TAG
+      *
+      **  All records read.
+     C                     WRITELER610T1
+      *
+     C                     MOVE PARMDS    RPARM
+     C/COPY WNCPYSRC,LER610C002
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUB020 ---  Subroutine for Facility History                  *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: SUB025                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SUB020    BEGSR
+      *
+      * sets up dates amounts and outputs.
+     C                     EXSR SUB025
+     C/COPY WNCPYSRC,LEH00167
+      *
+      ** If system is multi-branching, obtain branch number for output
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE FHBRCH    @AORL   3
+     C                     SETOF                     80
+     C                     CLOSELER610P1
+      *
+     C                     OPEN LER610P1
+     C                     Z-ADD0         PAGE
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     OUT  LDA
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM FHBRCH    SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+     C           *LOCK     IN   LDA
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** If system is multibranching obtain branch name for output
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FHBRCH    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVELFHBRCH    DBKEY            * DB ERROR 02 *
+     C                     MOVEL'002'     DBASE            ***************
+     C                     MOVEL'LER610'  DBPGM
+     C                     EXSR AUDIT
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Output header
+     C                     WRITELER610H1
+     C                     WRITELER610H2
+      *
+      ** If system multibranching
+     C                     END
+      *
+      ** If system is not multibranching set up single spool file
+     C           MBIN      IFNE 'Y'
+     C                     CLOSELER610P1
+     C                     MOVE 'Y'       P1OP    1
+     C                     SETOF                     80
+     C                     OPEN LER610P1
+     C                     Z-ADD0         PAGE
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     OUT  LDA
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+     C           *LOCK     IN   LDA
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Output header
+     C                     WRITELER610H1
+      *
+      ** MBIN IFNE 'Y' end
+     C                     END
+      *
+      ** Set Prime/Participant/Int. Participant Indicator.                CLE004
+      *                                                                   CLE004
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C                     MOVE *OFF      *IN81                           CLE004
+     C                     MOVE *OFF      *IN82                           CLE004
+     C                     MOVE *OFF      *IN83                           CLE004
+     C                     SELEC                                          CLE004
+     C           FHPRTR    WHEQ 'A'                                       CLE004
+     C                     MOVE *ON       *IN81                           CLE004
+     C           FHPRTR    WHEQ 'P'                                       CLE004
+     C                     MOVE *ON       *IN82                           CLE004
+     C           FHPRTR    WHEQ 'I'                                       CLE004
+     C                     MOVE *ON       *IN83                           CLE004
+     C                     ENDSL                                          CLE004
+     C                     ENDIF                                          CLE004
+     C                     WRITELER610D1
+      *
+      * Get amounts and write
+     C***********FAKEY     SETGTFACHSAL1                                  154584
+     C***********          READPFACHSAL1                 32               154584
+     C           FAKEY     SETGTFACHISAF                                  154584
+     C                     READPFACHISAF                 32               154584
+      *
+     C           *IN32     IFEQ '1'
+     C           FHCNUM    ORNE FACNUM
+     C           FHFACL    ORNE FAFCTY
+     C***********          READ FACHSAL1                 32               154584
+     C                     READ FACHISAF                 32               154584
+     C                     END
+      *
+     C           SDAYN     IFGT FADATE
+     C                     Z-ADDSDAYN     FADATE
+     C                     END
+      *                                                                                       251361
+     C                     Z-ADDBHISST    DFDAYN  50                                          251361
+      *                                                                                       251361
+      ** If no start date specified default value from                                        251361
+      ** LERSTS data area will be used                                                        251361
+      *                                                                                       251361
+     C           SDAYN     IFGT DFDAYN                                                        251361
+     C                     MOVELAPPDAT    FADAT                                               251361
+     C                     MOVEL@AC,13    ACTN                                                251361
+     C                     MOVEL*BLANKS   RLOAN                                               251361
+     C                     Z-ADD0         AAMT0                                               251361
+     C                     MOVE '1'       *IN47                                               251361
+     C                     Z-ADDFACFAM    CFAM0                                               251361
+     C                     Z-ADD0         DRAM0                                               251361
+     C                     Z-ADDFACFAM    UNDR0                                               251361
+     C                     WRITELER610D2                                                      251361
+     C                     ELSE                                                               251361
+     C                     MOVE 'PS'      FAACTN
+     C                     Z-ADD0         FAAAMT
+     C                     ENDIF                                                              251361
+      *
+     C           *IN32     DOWEQ'0'
+     C           FHCNUM    ANDEQFACNUM
+     C           FHFACL    ANDEQFAFCTY
+     C/COPY WNCPYSRC,LER610C003
+      *
+      ** Print only records of live loans.                                136783
+      *                                                                   136783
+     C           FAREVI    IFNE 'R'                                       136783
+      *                                                                   136783
+      ** set up dates, amounts and outputs.
+     C                     EXSR SUB026
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN46
+      *
+     C                     WRITELER610H1
+     C           MBIN      IFEQ 'Y'
+     C                     WRITELER610H2
+     C                     END
+      *
+     C                     WRITELER610D1
+     C                     WRITELER610D2
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C                     EXSR SRDTL2                                                        CLE023
+     C                     ENDIF                                                              CLE023
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN46
+     C                     ELSE
+      *
+     C                     WRITELER610D2
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C                     EXSR SRDTL2                                                        CLE023
+     C                     ENDIF                                                              CLE023
+      *
+     C                     END
+      *                                                                   136783
+     C                     END                                            136783
+     C/COPY WNCPYSRC,LER610C004
+      *
+     C***********          READ FACHSAL1                 32               154584
+     C                     READ FACHISAF                 32               154584
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUB025 --- Subroutine for setting up amounts and dates for   *
+      *             the header                                        *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SUB025    BEGSR
+      *
+     C                     MOVELSCUST     KEYC   10
+     C                     SETON                     50    Key
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           KEYC
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVEL'005'     DBASE            * DB ERROR 05 *
+     C                     MOVELSCUST     DBKEY            ***************
+     C                     EXSR AUDIT
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           FHMCUS    COMP 'Y'                      44
+     C           FHMCCY    COMP 'Y'                      45
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM FHFCCY    CURKEY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVELFHFCCY    DBKEY            * DB ERROR 04 *
+     C                     MOVEL'004'     DBASE            ***************
+     C                     EXSR DBERR
+     C                     EXSR AUDIT
+     C                     EXSR *PSSR
+     C                     END                             ** E001
+      *
+     C                     MOVEA'0000'    *IN,40
+     C           A6NBDP    COMP 1                    424041
+     C   42      A6NBDP    COMP 2                    43  42
+      *
+     C                     CALL 'AOACOFR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FHACOF    ACOKEY  2
+     C           SDACOF    PARM SDACOF    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                                   082744
+     C                     MOVELMSG,1     AZACON                          082744
+     C                     END                                            082744
+     C***********@RTCD     IFNE *BLANKS                    ***************082744
+     C***********          MOVEL'006'     DBASE            * DB ERROR 06 *082744
+     C***********          MOVELFHACOF    DBKEY            ***************082744
+     C***********          EXSR AUDIT                                     082744
+     C***********          EXSR DBERR                                     082744
+     C***********          EXSR *PSSR                                     082744
+     C***********          END                                            082744
+      *
+     C                     CALL 'AOCTRYR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FHCTYR    CNCD    2
+     C           SDCTRY    PARM SDCTRY    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVEL'001'     DBASE            * DB ERROR 01 *
+     C                     MOVELFHCTYR    DBKEY            ***************
+     C                     EXSR AUDIT
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     CALL 'AOFACTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @FTYP     FCTY    3
+     C           SDFACT    PARM SDFACT    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVEL'007'     DBASE            * DB ERROR 07 *
+     C                     MOVEL@FTYP     DBKEY            ***************
+     C                     EXSR AUDIT
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADDFHOFAM    OFAM0
+      *
+      * Get name of Facility/Commitment Ind.
+     C                     Z-ADD1         A
+     C           FHFTIN    LOKUPFTN,A                    50
+     C           *IN50     IFEQ '1'
+     C                     MOVEL@FT,A     @FACT  10
+     C                     ELSE
+     C                     MOVE *BLANKS   @FACT
+     C                     END
+      *
+      *  Convert dates
+     C                     Z-ADDFHDAPP    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    APPDAT  7
+     C                     Z-ADDZDATE     @DATE   60
+      *
+     C                     Z-ADDFHEXDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    EXPDAT  7
+     C                     Z-ADDZDATE     @DATE
+      *                                                                   BH3375
+      * Blank out save date
+     C                     MOVE *BLANKS   SAVDAT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUB026 --- Subroutine for setting up amounts and dates for   *
+      *             the details                                       *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SUB026    BEGSR
+      *
+     C           FADATE    IFEQ SAVDAT
+     C                     MOVE '0'       *IN46
+     C                     ELSE
+     C                     MOVE '1'       *IN46
+     C                     Z-ADDFADATE    SAVDAT  50
+     C                     Z-ADDFADATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     @DAT    60
+     C                     MOVE ZADATE    FADAT   7
+     C                     END
+      *
+     C                     Z-ADDFACFAM    CFAM0
+     C                     Z-ADDFADRAM    DRAM0
+      *                                                                                       CLE025
+      ** If CLE025 (Credit Lines) is installed, print Offset Amount                           CLE025
+      *                                                                                       CLE025
+     C           CLE025    IFEQ 'Y'                                                           CLE025
+     C           FAOFFS    ANDNE*ZERO                                                         CLE025
+     C                     Z-ADDFAOFFS    DRAM0                                               CLE025
+     C                     Z-SUBDRAM0     DRAM0                                               CLE025
+     C                     ENDIF                                                              CLE025
+      *                                                                                       CLE025
+     C                     Z-ADDFAUNDR    UNDR0
+     C                     Z-ADDFAAAMT    AAMT0
+      *                                                                                       CLE023
+      ** If CLE023 is installed, format necessary report fields.                              CLE023
+      *                                                                                       CLE023
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C                     Z-ADDA6NBDP    WCDPF   10                                          CLE023
+     C                     MOVE *BLANKS   ZFIELD                                              CLE023
+     C                     MOVE FAEXRT    ZFIELD                                              CLE023
+     C                     Z-ADD8         ZADEC                                               CLE023
+     C                     EXSR ZEDIT                                                         CLE023
+     C                     MOVE ZFIELD    REXRT                                               CLE023
+      *                                                                                       CLE023
+     C                     MOVE FARTMD    RRTMD                                               CLE023
+     C                     MOVE FALUCY    RLUCY                                               CLE023
+      *                                                                                       CLE023
+     C           FALUCY    IFNE *BLANKS                                                       CLE023
+     C                     CALL 'AOCURRR0'                                                    CLE023
+     C                     PARM '        '@RTCD                                               CLE023
+     C                     PARM '*KEY    '@OPTN                                               CLE023
+     C                     PARM FALUCY    CURKEY                                              CLE023
+     C           SDCURR    PARM SDCURR    DSSDY                                               CLE023
+      *                                                                                       CLE023
+     C           @RTCD     IFNE *BLANKS                                                       CLE023
+     C                     MOVELFALUCY    DBKEY                                               CLE023
+     C                     Z-ADD011       DBASE                                               CLE023
+     C                     EXSR DBERR                                                         CLE023
+     C                     EXSR AUDIT                                                         CLE023
+     C                     EXSR *PSSR                                                         CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+     C                     MOVE *BLANKS   ZECODE                                              CLE023
+     C                     MOVE 'J'       ZECODE                                              CLE023
+     C                     Z-ADDA6NBDP    ZDECS                                               CLE023
+     C                     Z-ADDFALUAM    ZFLD15                                              CLE023
+     C                     EXSR ZSEDIT                                                        CLE023
+     C                     MOVE ZOUT21    RLUAM                                               CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+     C           FAAFAM    IFLT 0                                                             CLE023
+     C                     MOVE *BLANKS   ZECODE                                              CLE023
+     C                     MOVE 'J'       ZECODE                                              CLE023
+     C                     Z-ADDWCDPF     ZDECS                                               CLE023
+     C                     Z-ADDFAAFAM    ZFLD15                                              CLE023
+     C                     EXSR ZSEDIT                                                        CLE023
+     C                     MOVE ZOUT21    RAFAM                                               CLE023
+     C                     ENDIF                                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE025
+      ** For CLE025 (Credit Lines), print the Deal Number instead                             CLE025
+      *                                                                                       CLE025
+     C           CLE025    IFEQ 'Y'                                                           CLE025
+     C           FAACTN    IFEQ 'FX'                                                          CLE025
+     C           FAACTN    OREQ 'F0'                                                          CLE025
+     C           FAACTN    OREQ 'S1'                                                          CLE025
+     C           FAACTN    OREQ 'M1'                                                          CLE025
+     C           FAACTN    OREQ 'C1'                                                          CLE025
+     C           FAACTN    OREQ 'I1'                                                          CLE025
+     C           FAACTN    OREQ 'D1'                                                          CLE025
+     C           FAACTN    OREQ 'FW'                                                          CLE025
+     C           FAACTN    OREQ 'FV'                                                          CLE025
+     C           FAACTN    OREQ 'IR'                                                          CLE025
+     C           FAACTN    OREQ 'IS'                                                          CLE025
+     C           FAACTN    OREQ 'MR'                                                         BUG3035
+     C**********           Z-ADDFADEAL    FALOAN                                       CLE025 CLE148
+     C                     MOVELFADEAL    FALOAN                                              CLE148
+     C                     ENDIF                                                              CLE025
+     C                     ENDIF                                                              CLE025
+      *                                                                   S01473
+      ** For LEO facility history actions set indicator for output of     S01473
+      ** L/C reference, and get LEO action narrative.                     S01473
+     C           FALCRF    IFNE *BLANKS                                   S01473
+     C                     SETON                     60                   S01473
+     C                     Z-ADD1         A                               S01473
+     C           FAACTN    LOKUPLACT,A                   61               S01473
+     C                     MOVELLAC,A     ACTN                            S01473
+     C                     ELSE                                           S01473
+      *
+      *  Get name of action type
+      *                                                                                       CLE023
+     C                     MOVE 'N'       WPSOLD  1                                           CLE023
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C           FAPTYP    IFEQ 66                                                            CLE023
+     C           FAPTYP    OREQ 67                                                            CLE023
+     C           FAPTYP    OREQ 69                                                            CLE023
+     C           FAPTYP    OREQ 72                                                            CLE023
+     C                     MOVE 'Y'       WPSOLD                                              CLE023
+     C                     ENDIF                                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+     C                     Z-ADD1         A       20
+     C           FARIND    IFEQ 'R'                                                           225591
+     C           FAACTN    IFEQ 'RE'                                                          225591
+     C                     MOVEL'RR'      FAACTN                                              225591
+     C                     ENDIF                                                              225591
+     C           FAACTN    IFEQ 'PI'                                                          225591
+     C                     MOVEL'PR'      FAACTN                                              225591
+     C                     ENDIF                                                              225591
+     C                     ENDIF                                                              225591
+      *                                                                                       CLE023
+      ** If WPSOLD is 'Y' (meaning CLE023 is on and Parts sold)                               CLE023
+      ** move the approriate action narrative for Parts sold.                                 CLE023
+      *                                                                                       CLE023
+     C           WPSOLD    IFEQ 'Y'                                                           CLE023
+     C           FAACTN    LOKUPPACT,A                   61                                   CLE023
+     C                     MOVELPAC,A     ACTN                                                CLE023
+     C                     ELSE                                                               CLE023
+      *                                                                                       CLE023
+      ** Otherwise, if CLE023 is on and loan is an IPP, move the                              CLE023
+      ** approriate action narrative for Internal Parts Purchased                             CLE023
+      *                                                                                       CLE023
+     C           FALPFI    IFEQ 'I'                                                           CLE023
+     C           CLE023    ANDEQ'Y'                                                           CLE023
+     C           FAACTN    LOKUPIACT,A                   61                                   CLE023
+     C                     MOVELIAC,A     ACTN                                                CLE023
+      *                                                                                       CLE023
+      ** Otherwise, CLE023 is not installed or loan is not a parts sold                       CLE023
+      ** and not an IPP.                                                                      CLE023
+      *                                                                                       CLE023
+     C                     ELSE                                                               CLE023
+     C           FAACTN    LOKUPACT,A                    50
+     C                     MOVEL@AC,A     ACTN
+      *                                                                                       CLE028
+      ** If action is 'IC' and flat rate personal loan, the narrative                         CLE028
+      ** should be 'Interest added on'.                                                       CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           FAPTYP    ANDEQ80                                                            CLE028
+     C           FAACTN    ANDEQ'IC'                                                          CLE028
+     C                     MOVEL@AC,27    ACTN                                                CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C                     ENDIF                                                              CLE023
+     C                     ENDIF                                                              CLE023
+     C           FARIND    IFEQ 'R'                                                           225591
+     C           FAACTN    IFEQ 'RR'                                                          225591
+     C                     MOVEL'RE'      FAACTN                                              225591
+     C                     ENDIF                                                              225591
+     C           FAACTN    IFEQ 'PR'                                                          225591
+     C                     MOVEL'PI'      FAACTN                                              225591
+     C                     ENDIF                                                              225591
+     C                     ENDIF                                                              225591
+      *                                                                   134808
+     C           FAACTN    IFEQ 'US'                                      134808
+     C           FAACTN    OREQ 'UI'                                      134808
+     C           FAACTN    OREQ 'UD'                                      134808
+     C           FAACTN    OREQ 'UE'                                      134808
+     C                     MOVELFASQNO    ACTN                            134808
+     C                     ENDIF                                          134808
+      *                                                                                       CLE025
+      ** Move the loan number to the printer file field                                       CLE025
+      *                                                                                       CLE025
+     C********** FALOAN    IFEQ *ZERO                                                  CLE025 CLE148
+     C           FALOAN    IFEQ *BLANKS                                                       CLE148
+     C                     MOVE *BLANKS   RLOAN                                               CLE025
+     C                     ELSE                                                               CLE025
+     C                     MOVE FALOAN    RLOAN                                               CLE025
+     C                     ENDIF                                                              CLE025
+      *                                                                                       CLE025
+      ** For FX Margin, print the Margin Currency                                             CLE025
+      *                                                                                       CLE025
+     C           CLE025    IFEQ 'Y'                                                           CLE025
+     C           FAACTN    ANDEQ'FM'                                                          CLE025
+     C**********           Z-ADD*ZERO     FALOAN                                       CLE025 CLE148
+     C                     MOVEL*BLANKS   FALOAN                                              CLE148
+     C                     MOVELFAMCY     RLOAN     P                                         CLE025
+     C                     ENDIF                                                              CLE025
+      *                                                                   S01473
+     C                     SETOF                     60                   S01473
+     C                     END                                            S01473
+      *
+     C           FARCIN    COMP 'Y'                      47
+     C*                                                                   BH3375
+     C** Set indicators for fields that are zero                          BH3375
+     C*                                                                   BH3375
+     C********** FALOAN    IFNE 0                                                      BH3375 CLE025
+     C           RLOAN     IFNE *BLANKS                                                       CLE025
+     C                     MOVE '1'       *IN10                           BH3375
+     C                     ELSE                                           BH3375
+     C                     MOVE '0'       *IN10                           BH3375
+     C                     END                                            BH3375
+      *                                                                   BH3375
+     C           FAAAMT    IFNE 0                                         BH3375
+     C                     MOVE '1'       *IN11                           BH3375
+     C                     ELSE                                           BH3375
+     C                     MOVE '0'       *IN11                           BH3375
+     C                     END                                            BH3375
+      *                                                                   BH3375
+     C           FHOLPC    IFNE 0                                         BH3375
+     C                     MOVE '1'       *IN12                           BH3375
+     C                     ELSE                                           BH3375
+     C                     MOVE '0'       *IN12                           BH3375
+     C                     END                                            BH3375
+      *                                                                   BH3375
+     C           FHNOMR    IFNE 0                                         BH3375
+     C                     MOVE '1'       *IN13                           BH3375
+     C                     ELSE                                           BH3375
+     C                     MOVE '0'       *IN13                           BH3375
+     C                     END                                            BH3375
+      *
+      ** Set on indicator to display asterisk next to record on           156766
+      ** report if loan has been reversed.                                156766
+      *                                                                   156766
+     C           FAREVI    IFEQ 'R'                                       156766
+     C                     MOVE '1'       *IN62                           156766
+     C                     ELSE                                           156766
+     C                     MOVE '0'       *IN62                           156766
+     C                     END                                            156766
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUB001 --- Subroutine for initial processing                 *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SUB001    BEGSR
+      *
+     C           *LOCK     IN   LDA
+      *
+      ** SET UP WORK FIELDS
+     C                     MOVEL'LER610  'DBPGM
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    ***************
+     C                     MOVEL'003'     DBASE            * DB ERROR 03 *
+     C                     MOVEL'BANK'    DBKEY            ***************
+     C                     EXSR AUDIT
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CLE004
+      ** Check if CLE004 is switched *ON                                  CLE004
+      *                                                                   CLE004
+     C                     MOVE 'N'       CLE004  1                       CLE004
+     C                     CALL 'AOSARDR0'                                CLE004
+     C                     PARM *BLANKS   @RTCD                           CLE004
+     C                     PARM '*VERIFY' @OPTN                           CLE004
+     C                     PARM 'CLE004'  @SARD   6                       CLE004
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE004
+      *                                                                   CLE004
+     C           @RTCD     IFEQ *BLANKS                                   CLE004
+     C                     MOVE 'Y'       CLE004                          CLE004
+     C                     END                                            CLE004
+      *                                                                   CLE004
+     C           @RTCD     IFNE *BLANKS                                   CLE004
+     C           @RTCD     ANDNE'*NRF   '                                 CLE004
+      *                                                                   CLE004
+      ** Call to program ended in error                                   CLE004
+      *                                                                   CLE004
+     C                     MOVEL'CLE004'  DBKEY            ***************CLE004
+     C                     MOVEL'009'     DBASE            * DB ERROR 09 *CLE004
+     C                     EXSR AUDIT                      ***************CLE004
+     C                     EXSR DBERR                                     CLE004
+     C                     EXSR *PSSR                                     CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                                       CLE023
+      ** Check if CLE023 is switched *ON.                                                     CLE023
+      *                                                                                       CLE023
+     C                     CALL 'AOSARDR0'                                                    CLE023
+     C                     PARM *BLANKS   @RTCD                                               CLE023
+     C                     PARM '*VERIFY' @OPTN                                               CLE023
+     C                     PARM 'CLE023'  @SARD                                               CLE023
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE023
+      *                                                                                       CLE023
+     C           @RTCD     IFEQ *BLANKS                                                       CLE023
+     C                     MOVE 'Y'       CLE023  1                                           CLE023
+     C                     MOVE '1'       *IN84                                               CLE023
+     C                     ELSE                                                               CLE023
+     C                     MOVE 'N'       CLE023                                              CLE023
+     C                     MOVE '0'       *IN84                                               CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+     C           @RTCD     IFNE *BLANKS                                                       CLE023
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE023
+      *                                                                                       CLE023
+      ** Call to program ended in error                                                       CLE023
+      *                                                                                       CLE023
+     C                     MOVEL'CLE023'  DBKEY                                               CLE023
+     C                     Z-ADD10        DBASE                                               CLE023
+     C                     EXSR AUDIT                                                         CLE023
+     C                     EXSR DBERR                                                         CLE023
+     C                     EXSR *PSSR                                                         CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE028
+      ** Check if CLE028 is switched *ON.                                                     CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   @RTCD                                               CLE028
+     C                     PARM '*VERIFY' @OPTN                                               CLE028
+     C                     PARM 'CLE028'  @SARD                                               CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           @RTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           @RTCD     IFNE *BLANKS                                                       CLE028
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE028
+      *                                                                                       CLE028
+      ** Call to program ended in error                                                       CLE028
+      *                                                                                       CLE028
+     C                     MOVEL'CLE028'  DBKEY                                               CLE028
+     C                     Z-ADD12        DBASE                                               CLE028
+     C                     EXSR AUDIT                                                         CLE028
+     C                     EXSR DBERR                                                         CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE025
+      ** Check if CLE025 (Credit Lines) is installed                                          CLE025
+      *                                                                                       CLE025
+     C                     CALL 'AOSARDR0'                                                    CLE025
+     C                     PARM *BLANKS   @RTCD                                               CLE025
+     C                     PARM '*VERIFY' @OPTN                                               CLE025
+     C                     PARM 'CLE025'  @SARD                                               CLE025
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE025
+      *                                                                                       CLE025
+     C           @RTCD     IFNE *BLANKS                                                       CLE025
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE025
+     C                     MOVEL@SARD     DBKEY                                               CLE025
+     C                     Z-ADD013       DBASE                                               CLE025
+     C                     EXSR AUDIT                                                         CLE025
+     C                     EXSR DBERR                                                         CLE025
+     C                     EXSR *PSSR                                                         CLE025
+     C                     ENDIF                                                              CLE025
+      *                                                                                       CLE025
+     C           @RTCD     IFEQ *BLANKS                                                       CLE025
+     C                     MOVEL'Y'       CLE025  1                                           CLE025
+     C                     MOVE *ON       *IN75                                               CLE025
+     C                     ELSE                                                               CLE025
+     C                     MOVEL'N'       CLE025                                              CLE025
+     C                     MOVE *OFF      *IN75                                               CLE025
+     C                     ENDIF                                                              CLE025
+      *
+     C/COPY WNCPYSRC,LER610C005
+     C**********           Z-ADD99        @SEQ                                                200289
+     C                     Z-ADD999       @SEQ                                                200289
+     C/COPY WNCPYSRC,LER610C001
+      * KEY LIST FOR FACHSAL1
+     C           FAKEY     KLIST
+     C                     KFLD           FHBRCH                          154584
+     C                     KFLD           FHCNUM
+     C                     KFLD           FHFACL
+     C                     KFLD           SDAYN
+     C                     KFLD           @SEQ
+      * KEY LIST FOR FACHISH
+     C           FHKEY     KLIST
+     C                     KFLD           FHCNUM
+     C                     KFLD           FHFTYP
+     C                     KFLD           FHFSEQ
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR --- Subroutine to perform Database Error processing    *
+      *                                                               *
+      *  CALLED FROM: Main Processing                                 *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD0         PAGE
+     C                     SETON                     20
+      *
+     C           DBASE     IFEQ 001
+     C                     MOVEL'SDCTRYPD'DBFILE
+     C                     END
+      *
+     C           DBASE     IFEQ 002
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     END
+      *
+     C           DBASE     IFEQ 003
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     END
+      *
+     C           DBASE     IFEQ 004
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     END
+      *
+     C           DBASE     IFEQ 005
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     END
+      *
+     C           DBASE     IFEQ 006
+     C                     MOVEL'SDACOFPD'DBFILE
+     C                     END
+      *
+     C           DBASE     IFEQ 007
+     C                     MOVEL'SDFACTPD'DBFILE
+     C                     END
+      *
+     C           DBASE     IFEQ 008
+     C                     MOVEL'FACHISH 'DBFILE
+     C                     END
+      *                                                                   CLE004
+     C           DBASE     IFEQ 009                                       CLE004
+     C           CLE004    ANDEQ'Y'                                       CLE004
+     C           DBASE     OREQ 013                                                           CLE025
+     C                     MOVEL'SCSARDPD'DBFILE                          CLE004
+     C                     END                                            CLE004
+      *
+     C                     SETON                     U7U8LR
+     C                     WRITELER61AU1
+     C                     WRITEDBFMT
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SUBROUTINE : AUDIT                                            *
+      *                                                               *
+      * CALLED IN MAIN PROCESSING IF PRINTER FILE NOT ALREADY OPENED  *
+      * (e.g., database error or successfully reconciled message on   *
+      *  audit report)                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+     C                     CLOSELER610AU
+      *
+      ** Open AU spool file
+     C                     OPEN LER610AU
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     OUT  LDA
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR
+      *
+     C           *LOCK     IN   LDA
+      *
+     C           ZSERR     IFEQ 'Y'
+      ** Error during ZSFILE processing, return to calling program
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                                                  CLE023
+      *****************************************************************                       CLE023
+      *                                                               *                       CLE023
+      *  SRDTL2 --- Subroutine for writing second line of detail      *                       CLE023
+      *             format                                            *                       CLE023
+      *                                                               *                       CLE023
+      *  CALLED FROM: SUB020                                          *                       CLE023
+      *  CALLS: Nothing                                               *                       CLE023
+      *                                                               *                       CLE023
+      *****************************************************************                       CLE023
+     C           SRDTL2    BEGSR                                                              CLE023
+      *                                                                                       CLE023
+      ** If CLE023 is installed, write second line of format details if                       CLE023
+      ** action is ST and loan ccy is not blank, or action is MC, or                          CLE023
+      ** action is RO and exchange rate is not zero or the actual                             CLE023
+      ** facility amount is negative.                                                         CLE023
+      *                                                                                       CLE023
+     C           FAACTN    IFEQ 'ST'                                                          CLE023
+     C           FALUCY    ANDNE*BLANKS                                                       CLE023
+     C           FAACTN    OREQ 'MC'                                                          CLE023
+     C           FAACTN    OREQ 'RO'                                                          CLE023
+     C           FAEXRT    ANDNE0                                                             CLE023
+     C           FAACTN    OREQ 'US'                                                          CLE023
+     C           FALUCY    ANDNEFHFCCY                                                        CLE023
+     C           FALUCY    ANDNE*BLANKS                                                       CLE023
+     C                     MOVE '1'       *IN71                                               CLE023
+     C                     ELSE                                                               CLE023
+     C                     MOVE '0'       *IN71                                               CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+     C           FAAFAM    IFLT 0                                                             CLE023
+     C                     MOVE '1'       *IN70                                               CLE023
+     C                     ELSE                                                               CLE023
+     C                     MOVE '0'       *IN70                                               CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+      ** If either *IN70 or *IN71 is on, print second detail line                             CLE023
+      *                                                                                       CLE023
+     C           *IN70     IFEQ '1'                                                           CLE023
+     C           *IN71     OREQ '1'                                                           CLE023
+     C                     WRITELER610D3                                                      CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+     C                     ENDSR                                                              CLE023
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS     *
+      *                                                               *
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                 *
+      *  CALLS: NOTHING                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      ****************************************************************
+     C/TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZEDITZ2                                                                    CLE023
+     C/COPY ZSRSRC,ZSEDITZ3                                                                   CLE023
+      ****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**
+FSFACILITY START
+WOWRITE OFF
+REREPAYMENT
+MTMATURITY
+ICINTEREST CAPITALISATION
+PIPRINCIPAL INCREASE
+PDPRINCIPAL DECREASE
+STLOAN START
+FIFACILITY INCREASE
+FDFACILITY DECREASE
+RCCHANGE TO REVOLVING CR IND
+RVREVERSAL
+PSPERIOD START
+PFTRANSFER OUT                                                            125188
+PTTRANSFER IN                                                             125188
+US999 UTILISATION START                                            127716 134808
+UE999 UTILISATION EXPIRY                                           127716 134808
+UI999 UTILISATION INCREASE                                         127716 134808
+UD999 UTILISATION DECREASE                                         127716 134808
+TCFACILITY TYPE CHANGE                                                    127716
+FRFACILITY REACTIVATION                                                   127716
+FEFACILITY EXPIRY                                                         127716
+FCFACILITY CLOSURE                                                        127716
+MCMULTI-CCY REDRAW                                                                            194912
+ROROLLOVER - FCLTY EXCH RATE                                                                  CLE023
+CHCHARGES ADDED-ON                                                                            CLE028
+ICINTEREST ADDED-ON                                                                           CLE028
+FXFX MARK-TO-MARKET REVAL.                                                                    CLE025
+F0FX EXPIRY                                                                                   CLE025
+S1MM LOAN START                                                                               CLE025
+M1MM LOAN MATURITY                                                                            CLE025
+C1MM LOAN INT. CAPITALISATN                                                                   CLE025
+I1MM LOAN PRIN. INCREASE                                                                      CLE025
+D1MM LOAN PRIN. DECREASE                                                                      CLE025
+FWFRA MARK-TO-MARKET REVAL.                                                                   CLE025
+FVFRA EXPIRY                                                                                  CLE025
+IRIRS MARK-TO-MARKET REVAL.                                                                   CLE025
+ISIRS EXPIRY                                                                                  CLE025
+FMFX MARGIN                                                                                   CLE025
+MRMM SPOT REVALUATION                                                                        BUG3035
+RRREPAYMENT ROLLOVER                                                                          225591
+PRPRINCIPAL INCREASE ROLLOVER                                                                 225591
+     X/COPY WNCPYSRC,LEH00168
+** PACT/PAC                                                                                   CLE023
+WOPARTS SOLD WRITE OFF                                                                        CLE023
+REPARTS SOLD REPAYMENT                                                                        CLE023
+MTPARTS SOLD MATURITY                                                                         CLE023
+ICPARTS SOLD INT CAP                                                                          CLE023
+PIPARTS SOLD PRINCIPAL INC                                                                    CLE023
+STPARTS SOLD START                                                                            CLE023
+PFPARTS SOLD TRANSFER OUT                                                                     CLE023
+PTPARTS SOLD TRANSFER IN                                                                      CLE023
+MCPARTS SOLD MULTI-CCY                                                                        CLE023
+ROPARTS SOLD ROLLOVER                                                                         CLE023
+RRPARTS SOLD REPAYMENT ROLL                                                                   225591
+PRPARTS SOLD PRINC INC ROLL                                                                   225591
+** IACT/IAC                                                                                   CLE023
+WOINT PART PURCH WRITE OFF                                                                    CLE023
+REINT PART PURCH REPAYMENT                                                                    CLE023
+MTINT PART PURCH MATURITY                                                                     CLE023
+ICINT PART PURCH INT CAP                                                                      CLE023
+PIINT PART PURCH PRINC INC                                                                    CLE023
+STINT PART PURCH START                                                                        CLE023
+PFINT PART PURCH TRANSF OUT                                                                   CLE023
+PTINT PART PURCH TRANSF IN                                                                    CLE023
+MCINT PART PURCH MULII-CCY                                                                    CLE023
+ROINT PART PURCH ROLLOVER                                                                     CLE023
+RRINT PART PURCH REPAY ROLL                                                                   225591
+PRINT PART PURCH PRIN IN RO                                                                   225591
+** LACT ** LEO ACTION NARRATIVES
+MTL/C EXPIRY
+PIL/C INCREASE
+REL/C NEGOTIATION/DECREASE
+STL/C ISSUANCE/CONFIRMATION
+**
+CCOMMITMENT
+FCONFIRMED
+GGUIDANCE
+**   MESSAGES - FOR UNKNOWN CODES                                         082744
+* ACCOUNT OFFICER UNKNOWN *                                               082744
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

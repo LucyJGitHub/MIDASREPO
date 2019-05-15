@@ -1,0 +1,811 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas RE T&N Accounts - Periods and Penalties')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  DSPF/RE4003DF- Periods and Penalties                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27460           Date 18Dec09               *
+      *                 195682             Date 18Dec09               *
+      *                 170739             Date 18Dec09               *
+      *                 139279             Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE073 - Interest Rate Rounding                              *
+      *  BUG27460 - Applied client fix EEE013 EPK040 AS0077 AS0001    *
+      *  EEE013 - Croatian Banking Requirements.                      *
+      *  EPK040 - Term Frequency.                                     *
+      *  195682 - Reinstate fixes 170739 and 139279 since they are    *
+      *           missing after the upgrade.                          *
+      *  170739 - Recompiled to correct display errors.               *
+      *  139279 - Added delete option to T & N default screen.        *
+      *  AS0077 - Selection of defaults.                              *
+      *  AS0001 - More fields need to be hidden in empty 2nd column.  *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+      *================================================================
+     A          R RE4003HH
+     A                                      OVERLAY
+     A            SUSER         10   O  1  2
+     A            SPGM          10   O  1 13
+     A            SRUNA          7   O  1 72
+     A            SJOB          10   O  2  2
+     A                                  2 31'Period & Penalty Details'
+     A                                      DSPATR(HI)
+     A                                  2 71TIME
+      *================================================================
+     A          R RE4003PP
+     A                                      CA03(03)
+      ** Start of change AS0077
+     A                                      CA15(15)
+      ** End of change AS0077
+     A                                      OVERLAY
+     A                                 20  2'Please enter default account'
+     A            SBRCA          3   B    +2
+     A N31                                   DSPATR(HI UL)
+     A  31                                   DSPATR(RI PC)
+     A            SCNUM          6   B    +1
+     A N31                                   DSPATR(HI UL)
+     A  31                                   DSPATR(RI PC)
+     A            SCCY           3   B    +1
+     A N31                                   DSPATR(HI UL)
+     A  31                                   DSPATR(RI PC)
+     A            SACOD         10   B    +1
+     A N31                                   DSPATR(HI UL)
+     A  31                                   DSPATR(RI PC)
+     A            SACSQ          2   B    +1
+     A N31                                   DSPATR(HI UL)
+     A  31                                   DSPATR(RI PC)
+      *================================================================
+     A          R RE4003F1
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+      ** Start of change AS0077
+     A                                    +2'F15=Toggle selection'
+      ** End of change AS0077
+      *================================================================
+     A          R RE4003F2
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                    +2'F7=Left'
+     A                                    +2'F8=Right'
+     A N73                                +2'F9=Insert'
+     A N73                                +2'F10=Delete'
+     A                                    +2'F12=Previous'
+      *================================================================
+     A          R RE4003DD
+      ** Start of change 139279
+     A                                      CA03(03) CA12(12)
+     A                                      CF07(07) CF08(08)
+     A N73                                  CA09(09) CA10(10)
+      ** End of change 139279
+     A                                      OVERLAY
+     A                                  4  2'Account:'
+     A            STEXT         55   O    +1
+     A                                      DSPATR(HI)
+     A                                  5  2'Period details:'
+     A                                    +2'Type (term/notice)'
+     A            STPRDI         1   B    +1
+     A N32N71                                DSPATR(HI)
+     A N32N71N70                             DSPATR(UL)
+     A  32N71                                DSPATR(RI PC)
+     A     71                                DSPATR(ND)
+     A        70
+     AO    71                                DSPATR(PR)
+     A                                    +2'Amount type'
+     A            SIRLI          1   B    +1
+     A N64N71                                DSPATR(HI)
+     A N64N71N70                             DSPATR(UL)
+     A  64N71                                DSPATR(RI PC)
+     A     71                                DSPATR(ND)
+     A        70
+     AO    71                                DSPATR(PR)
+     A                                    +2'Next date'
+     A            SMDAT0         6   B    +1
+     A N33N71                                DSPATR(HI)
+     A N33N71N70                             DSPATR(UL)
+     A  33N71                                DSPATR(RI PC)
+     A     71                                DSPATR(ND)
+     A        70
+     AO    71                                DSPATR(PR)
+     A                                  6 51'Available date'
+     A            SAVAL0         6   O    +1
+     A    N71                                DSPATR(HI)
+     A     71                                DSPATR(ND)
+     A                                  7  2'A-Y:Active, Z:Termination'
+     A            SEVNT1         1   O  7 30
+     A                                      DSPATR(HI)
+     A            SVDAT1         6   O    +1
+     A                                      DSPATR(HI)
+     A                                    +1'to'
+     A                                      DSPATR(HI)
+     A            SCEDE1         6   B    +1
+     A N65                                   DSPATR(HI)
+     A N65   N70                             DSPATR(UL)
+     A  65                                   DSPATR(RI PC)
+     A        70                             DSPATR(PR)
+     A            SEVNT2         1   O  7 53
+     A                                      DSPATR(HI)
+      * Start of change AS0001
+     A  72                                  DSPATR(ND)
+      ** End of change AS0001
+     A            SVDAT2         6   O    +1
+     A                                      DSPATR(HI)
+      ** Start of change AS0001
+     A  72                                  DSPATR(ND)
+      ** End of change AS0001
+     A                                    +1'to'
+     A  72                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            SCEDE2         6   B    +1
+     A N66                                   DSPATR(HI)
+     A N66   N70                             DSPATR(UL)
+     A  66                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A        70
+     AO 72                                   DSPATR(PR)
+     A                                  8  2'Length or freq, maturity'
+     A            SNDPD1         3   B  8 30
+     A N34                                   DSPATR(HI)
+     A N34   N70                             DSPATR(UL)
+     A  34                                   DSPATR(RI PC)
+     A        70                             DSPATR(PR)
+      ** Start of change EPK040
+     A            SNMPD1         2   B  8 34
+     A N34                                   DSPATR(HI)
+     A N34   N70                             DSPATR(UL)
+     A  34                                   DSPATR(RI PC)
+     A        70                             DSPATR(PR)
+     A            SFREQ1         1   B    +2
+     A N34                                   DSPATR(HI)
+     A N34   N70                             DSPATR(UL)
+     A  34                                   DSPATR(RI PC)
+     A        70                             DSPATR(PR)
+     A            SDAYM1         2   B    +1
+     A N34                                   DSPATR(HI)
+     A N34   N70                             DSPATR(UL)
+     A  34                                   DSPATR(RI PC)
+     A        70                             DSPATR(PR)
+      ** Start of change EPK040
+     A            SMDAT1         6   O    +2
+      ** End of change EPK040
+     A                                       DSPATR(HI)
+     A            SNDPD2         3   B  8 53
+     A N35                                   DSPATR(HI)
+     A N35   N70                             DSPATR(UL)
+     A  35                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A        70
+     AO 72                                   DSPATR(PR)
+      ** Start of change EPK040
+     A            SNMPD2         2   B  8 57
+     A N35                                   DSPATR(HI)
+     A N35   N70                             DSPATR(UL)
+     A  35                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A        70
+     AO 72                                   DSPATR(PR)
+      ** End of change EPK040
+     A            SFREQ2         1   B    +2
+     A N35                                   DSPATR(HI)
+     A N35   N70                             DSPATR(UL)
+     A  35                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A        70
+     AO 72                                   DSPATR(PR)
+     A            SDAYM2         2   B    +1
+     A N35                                   DSPATR(HI)
+     A N35   N70                             DSPATR(UL)
+     A  35                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A        70
+     AO 72                                   DSPATR(PR)
+      ** Start of change EPK040
+     A            SMDAT2         6   O    +2
+      ** End of change EPK040
+     A                                      DSPATR(HI)
+     A  72                                   DSPATR(ND)
+      ** Start of change CRE073
+     A**********                       10  2'DR:'                                             CRE073
+     A**********                       10  6'Int. base rate, spread'                          CRE073
+     A**********  SDRIB1         2   B 10 30                                                  CRE073
+     A                                  9  2'DR:'
+     A                                  9  6'Int. base rate, spread'
+     A            SDRIB1         2   B  9 30
+      ** End of change CRE073
+     A N36                                   DSPATR(HI)
+     A N36   N70                             DSPATR(UL)
+     A  36                                   DSPATR(RI PC)
+     A        70                             DSPATR(PR)
+     A            SDRIS1        13   B    +1
+      ** Start of change CRE073
+     A  11
+     A*N36******                             DSPATR(HI)                                       CRE073
+     AON36                                   DSPATR(HI)
+     A*N36***N70                             DSPATR(UL)                                       CRE073
+     A N36N11N70                             DSPATR(UL)
+     A**36******                             DSPATR(RI PC)                                    CRE073
+     A  36N11                                DSPATR(RI PC)
+     A  11
+     A********70                             DSPATR(PR)                                       CRE073
+     AO       70                             DSPATR(PR)
+      ** End of change CRE073
+     A            SSIGD1         1   B    +1
+      ** Start of change CRE073
+     A  11
+     A*N36******                             DSPATR(HI)                                       CRE073
+     AON36                                   DSPATR(HI)
+     A*N36***N70                             DSPATR(UL)                                       CRE073
+     A N36N11N70                             DSPATR(UL)
+     A**36******                             DSPATR(RI PC)                                    CRE073
+     A  36N11                                DSPATR(RI PC)
+     A  11
+     A********70                             DSPATR(PR)                                       CRE073
+     A**********  SDRIB2         2   B 10 53                                                  CRE073
+     AO       70                             DSPATR(PR)
+     A            SDRIB2         2   B  9 53
+      ** End of change CRE073
+     A N37                                   DSPATR(HI)
+     A N37   N70                             DSPATR(UL)
+     A  37                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SDRIS2        13   B    +1
+      ** Start of change CRE073
+     A  11
+     A*N37******                             DSPATR(HI)                                       CRE073
+     AON37                                   DSPATR(HI)
+     A*N37***N70                             DSPATR(UL)                                       CRE073
+     A N37N11N70                             DSPATR(UL)
+     A**37******                             DSPATR(RI PC)                                    CRE073
+     A  37N11                                DSPATR(RI PC)
+      ** End of change CRE073
+     A  72                                   DSPATR(ND)
+     A  70
+      ** Start of change CRE073
+     AO 11
+      ** End of change CRE073
+     AO 72                                   DSPATR(PR)
+     A            SSIGD2         1   B    +1
+      ** Start of change CRE073
+     A  11
+     A*N37******                             DSPATR(HI)                                       CRE073
+     AON37                                   DSPATR(HI)
+     A*N37***N70                             DSPATR(UL)                                       CRE073
+     A N37N11N70                             DSPATR(UL)
+     A**37******                             DSPATR(RI PC)                                    CRE073
+     A  37N11                                DSPATR(RI PC)
+      ** End of change CRE073
+     A  72                                   DSPATR(ND)
+     A  70
+      ** Start of change CRE073
+     AO 11
+      ** End of change CRE073
+     AO 72                                   DSPATR(PR)
+      ** Start of change CRE073
+     A        11                       10  6'Contractual spread'
+     A        11  SDCSP1        13   B 10 33
+     A N16                                   DSPATR(HI)
+     A N16N70                                DSPATR(UL)
+     A  16                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A        11  SDCSG1         1   B    +1
+     A N16                                   DSPATR(HI)
+     A N16N70                                DSPATR(UL)
+     A  16                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A        11  SDCSP2        13   B 10 56
+     A N17                                   DSPATR(HI)
+     A N17N70                                DSPATR(UL)
+     A  17                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A  72                                   DSPATR(ND)
+     A        11  SDCSG2         1   B    +1
+     A N17                                   DSPATR(HI)
+     A N17N70                                DSPATR(UL)
+     A  17                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A  72                                   DSPATR(ND)
+     A        11                       11  6'Rounding Method Frac/Dec'
+     A        11  SDRMT1         7   B 11 36
+     A N18                                   DSPATR(HI)
+     A N18N70                                DSPATR(UL)
+     A  18                                   DSPATR(RI PC)
+     A     70                                DSPATR(PR)
+     A        11  SDRFD1         4   B    +1
+     A N18                                   DSPATR(HI)
+     A N18N70                                DSPATR(UL)
+     A  18                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A        11  SDRMT2         7   B 11 59
+     A N19                                   DSPATR(HI)
+     A N19N70                                DSPATR(UL)
+     A  19                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A  72                                   DSPATR(ND)
+     A        11  SDRFD2         4   B    +1
+     A N19                                   DSPATR(HI)
+     A N19N70                                DSPATR(UL)
+     A  19                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A  72                                   DSPATR(ND)
+     A**********                       11  6'Int. type, subtype'                              CRE073
+     A**********  SDICT1         2   B 11 30                                                  CRE073
+     A                                 12  6'Int. type, subtype'
+     A            SDICT1         2   B 12 30
+      ** End of change CRE073
+     A N38                                   DSPATR(HI)
+     A N38   N70                             DSPATR(UL)
+     A  38                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SDCST1         5   B    +1
+     A N38                                   DSPATR(HI)
+     A N38   N70                             DSPATR(UL)
+     A  38                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********  SDICT2         2   B 11 53                                                  CRE073
+     A            SDICT2         2   B 12 53
+      ** End of change CRE073
+     A N39                                   DSPATR(HI)
+     A N39   N70                             DSPATR(UL)
+     A  39                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SDCST2         5   B    +1
+     A N39                                   DSPATR(HI)
+     A N39   N70                             DSPATR(UL)
+     A  39                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********                       12  6'Int. calc, fix, cap.'                            CRE073
+     A**********  SDRIC1         1   B 12 30                                                  CRE073
+     A                                 13  6'Int. calc, fix, cap.'
+     A            SDRIC1         1   B 13 30
+      ** End of change CRE073
+     A N40                                   DSPATR(HI)
+     A N40   N70                             DSPATR(UL)
+     A  40                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SDNIR1         1   B    +2
+     A N42                                   DSPATR(HI)
+     A N42   N70                             DSPATR(UL)
+     A  42                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SDRIF1         1   B    +2
+     A N44                                   DSPATR(HI)
+     A N44   N70                             DSPATR(UL)
+     A  44                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SDRDY1         4   B    +1
+     A N44                                   DSPATR(HI)
+     A N44   N70                             DSPATR(UL)
+     A  44                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********  SDRIC2         1   B 12 53                                                  CRE073
+     A            SDRIC2         1   B 13 53
+      ** End of change CRE073
+     A N41                                   DSPATR(HI)
+     A N41   N70                             DSPATR(UL)
+     A  41                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SDNIR2         1   B    +2
+     A N43                                   DSPATR(HI)
+     A N43   N70                             DSPATR(UL)
+     A  43                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SDRIF2         1   B    +2
+     A N45                                   DSPATR(HI)
+     A N45   N70                             DSPATR(UL)
+     A  45                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SDRDY2         4   B    +1
+     A N45                                   DSPATR(HI)
+     A N45   N70                             DSPATR(UL)
+     A  45                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********                       13  6'Int. alternative a/c'                            CRE073
+     A**********  SDACP1        24   B 13 30                                                  CRE073
+     A                                 14  6'Int. alternative a/c'
+     A            SDACP1        24   B 14 30
+      ** End of change CRE073
+     A N46                                   DSPATR(HI)
+     A N46   N70                             DSPATR(UL)
+     A  46                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********  SDACP2        24   B 13 53                                                  CRE073
+     A            SDACP2        24   B 14 53
+      ** End of change CRE073
+     A N47                                   DSPATR(HI)
+     A N47   N70                             DSPATR(UL)
+     A  47                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********                       14  6'Penalty, time, restrict'                         CRE073
+     A**********  SRTTD1         5   B 14 30                                                  CRE073
+     A                                 15  6'Penalty, time, restrict'
+     A            SRTTD1         5   B 15 30
+      ** End of change CRE073
+     A N48                                   DSPATR(HI)
+     A N48   N70                             DSPATR(UL)
+     A  48                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SDYBD1         1   B    +1
+     A N48                                   DSPATR(HI)
+     A N48   N70                             DSPATR(UL)
+     A  48                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SDRST1         1   B    +1
+     A N48                                   DSPATR(HI)
+     A N48   N70                             DSPATR(UL)
+     A  48                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********  SRTTD2         5   B 14 53                                                  CRE073
+     A            SRTTD2         5   B 15 53
+      ** End of change CRE073
+     A N49                                   DSPATR(HI)
+     A N49   N70                             DSPATR(UL)
+     A  49                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SDYBD2         1   B    +1
+     A N49                                   DSPATR(HI)
+     A N49   N70                             DSPATR(UL)
+     A  49                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SDRST2         1   B    +1
+     A N49                                   DSPATR(HI)
+     A N49   N70                             DSPATR(UL)
+     A  49                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A                                 16  2'CR:'
+     A                                 16  6'Int. base rate, spread'
+     A            SCRIB1         2   B 16 30
+     A N50                                   DSPATR(HI)
+     A N50   N70                             DSPATR(UL)
+     A  50                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SCRIS1        13   B    +1
+      ** Start of change CRE073
+     A  11
+     A*N50******                             DSPATR(HI)                                       CRE073
+     AON50                                   DSPATR(HI)
+     A*N50***N70                             DSPATR(UL)                                       CRE073
+     A N50N11N70                             DSPATR(UL)
+     A**50******                             DSPATR(RI PC)                                    CRE073
+     A  50N11                                DSPATR(RI PC)
+     A  11
+     A**70******                             DSPATR(PR)                                       CRE073
+     AO 70                                   DSPATR(PR)
+      ** End of change CRE073
+     A            SSIGC1         1   B    +1
+      ** Start of change CRE073
+     A  11
+     A*N50******                             DSPATR(HI)                                       CRE073
+     AON50                                   DSPATR(HI)
+     A*N50***N70                             DSPATR(UL)                                       CRE073
+     A N50N11N70                             DSPATR(UL)
+     A**50******                             DSPATR(RI PC)                                    CRE073
+     A  50N11                                DSPATR(RI PC)
+     A  11
+     A**70******                             DSPATR(PR)                                       CRE073
+     AO 70                                   DSPATR(PR)
+      ** End of change CRE073
+     A            SCRIB2         2   B 16 53
+     A N51                                   DSPATR(HI)
+     A N51   N70                             DSPATR(UL)
+     A  51                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SCRIS2        13   B    +1
+      ** Start of change CRE073
+     A  11
+     A*N51******                             DSPATR(HI)                                       CRE073
+     AON51                                   DSPATR(HI)
+     A*N51***N70                             DSPATR(UL)                                       CRE073
+     A N51N11N70                             DSPATR(UL)
+     A**51******                             DSPATR(RI PC)                                    CRE073
+     A  51N11                                DSPATR(RI PC)
+      ** End of change CRE073
+     A  72                                   DSPATR(ND)
+     A  70
+      ** Start of change CRE073
+     AO 11
+      ** End of change CRE073
+     AO 72                                   DSPATR(PR)
+     A            SSIGC2         1   B    +1
+      ** Start of change CRE073
+     A  11
+     A*N51******                             DSPATR(HI)                                       CRE073
+     AON51                                   DSPATR(HI)
+     A*N51***N70                             DSPATR(UL)                                       CRE073
+     A N51N11N70                             DSPATR(UL)
+     A**51******                             DSPATR(RI PC)                                    CRE073
+     A  51N11                                DSPATR(RI PC)
+      ** End of change CRE073
+     A  72                                   DSPATR(ND)
+     A  70
+      ** Start of change CRE073
+     AO 11
+      ** End of change CRE073
+     AO 72                                   DSPATR(PR)
+      ** Start of change CRE073
+     A        11                       17  6'Contractual spread'
+     A        11  SCCSP1        13   B 17 33
+     A N20                                   DSPATR(HI)
+     A N20N70                                DSPATR(UL)
+     A  20                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A        11  SCCSG1         1   B    +1
+     A N20                                   DSPATR(HI)
+     A N20N70                                DSPATR(UL)
+     A  20                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A        11  SCCSP2        13   B 17 56
+     A N21                                   DSPATR(HI)
+     A N21N70                                DSPATR(UL)
+     A  21                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A  72                                   DSPATR(ND)
+     A        11  SCCSG2         1   B    +1
+     A N21                                   DSPATR(HI)
+     A N21N70                                DSPATR(UL)
+     A  21                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A  72                                   DSPATR(ND)
+     A        11                       18  6'Rounding Method Frac/Dec'
+     A        11  SCRMT1         7   B 18 36
+     A N22                                   DSPATR(HI)
+     A N22N70                                DSPATR(UL)
+     A  22                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A        11  SCRFD1         4   B    +1
+     A N22                                   DSPATR(HI)
+     A N22N70                                DSPATR(UL)
+     A  22                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A        11  SCRMT2         7   B 18 59
+     A N23                                   DSPATR(HI)
+     A N23N70                                DSPATR(UL)
+     A  23                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A  72                                   DSPATR(ND)
+     A        11  SCRFD2         4   B    +1
+     A N23                                   DSPATR(HI)
+     A N23N70                                DSPATR(UL)
+     A  23                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A  72                                   DSPATR(ND)
+     A**********                       17  6'Int. type, subtype'                              CRE073
+     A**********  SCICT1         2   B 17 30                                                  CRE073
+     A                                 19  6'Int. type, subtype'
+     A            SCICT1         2   B 19 30
+      ** End of change CRE073
+     A N52                                   DSPATR(HI)
+     A N52   N70                             DSPATR(UL)
+     A  52                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SCCST1         5   B    +1
+     A N52                                   DSPATR(HI)
+     A N52   N70                             DSPATR(UL)
+     A  52                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********  SCICT2         2   B 17 53                                                  CRE073
+     A            SCICT2         2   B 19 53
+      ** End of change CRE073
+     A N53                                   DSPATR(HI)
+     A N53   N70                             DSPATR(UL)
+     A  53                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SCCST2         5   B    +1
+     A N53                                   DSPATR(HI)
+     A N53   N70                             DSPATR(UL)
+     A  53                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********                       18  6'Int. calc, fix, cap.'                            CRE073
+     A**********  SCRIC1         1   B 18 30                                                  CRE073
+     A                                 20  6'Int. calc, fix, cap.'
+     A            SCRIC1         1   B 20 30
+      ** End of change CRE073
+     A N54                                   DSPATR(HI)
+     A N54   N70                             DSPATR(UL)
+     A  54                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SCNIR1         1   B    +2
+     A N56                                   DSPATR(HI)
+     A N56   N70                             DSPATR(UL)
+     A  56                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SCRIF1         1   B    +2
+     A N58                                   DSPATR(HI)
+     A N58   N70                             DSPATR(UL)
+     A  58                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SCRDY1         4   B    +1
+     A N58                                   DSPATR(HI)
+     A N58   N70                             DSPATR(UL)
+     A  58                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********  SCRIC2         1   B 18 53                                                  CRE073
+     A            SCRIC2         1   B 20 53
+      ** End of change CRE073
+     A N55                                   DSPATR(HI)
+     A N55   N70                             DSPATR(UL)
+     A  55                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SCNIR2         1   B    +2
+     A N57                                   DSPATR(HI)
+     A N57   N70                             DSPATR(UL)
+     A  57                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SCRIF2         1   B    +2
+     A N59                                   DSPATR(HI)
+     A N59   N70                             DSPATR(UL)
+     A  59                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SCRDY2         4   B    +1
+     A N59                                   DSPATR(HI)
+     A N59   N70                             DSPATR(UL)
+     A  59                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********                       19  6'Int. alternative a/c'                            CRE073
+     A**********  SCACP1        24   B 19 30                                                  CRE073
+     A                                 21  6'Int. alternative a/c'
+     A            SCACP1        24   B 21 30
+      ** End of change CRE073
+     A N60                                   DSPATR(HI)
+     A N60   N70                             DSPATR(UL)
+     A  60                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********  SCACP2        24   B 19 53                                                  CRE073
+     A            SCACP2        24   B 21 53
+      ** End of change CRE073
+     A N61                                   DSPATR(HI)
+     A N61   N70                             DSPATR(UL)
+     A  61                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********                       20  6'Penalty, time, restrict'                         CRE073
+     A**********  SRTTC1         5   B 20 30                                                  CRE073
+     A                                 22  6'Penalty, time, restrict'
+     A            SRTTC1         5   B 22 30
+      ** End of change CRE073
+     A N62                                   DSPATR(HI)
+     A N62   N70                             DSPATR(UL)
+     A  62                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SDYBC1         1   B    +1
+     A N62                                   DSPATR(HI)
+     A N62   N70                             DSPATR(UL)
+     A  62                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+     A            SCRST1         1   B    +1
+     A N62                                   DSPATR(HI)
+     A N62   N70                             DSPATR(UL)
+     A  62                                   DSPATR(RI PC)
+     A  70                                   DSPATR(PR)
+      ** Start of change CRE073
+     A**********  SRTTC2         5   B 20 53                                                  CRE073
+     A            SRTTC2         5   B 22 53
+      ** End of change CRE073
+     A N63                                   DSPATR(HI)
+     A N63   N70                             DSPATR(UL)
+     A  63                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SDYBC2         1   B    +1
+     A N63                                   DSPATR(HI)
+     A N63   N70                             DSPATR(UL)
+     A  63                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+     A            SCRST2         1   B    +1
+     A N63                                   DSPATR(HI)
+     A N63   N70                             DSPATR(UL)
+     A  63                                   DSPATR(RI PC)
+     A  72                                   DSPATR(ND)
+     A  70
+     AO 72                                   DSPATR(PR)
+      *================================================================
+      ** Start of change AS0077
+     A          R RE4003S1
+     A                                      SFL
+     A  84                                  SFLNXTCHG
+     A            S1ACTN         1A  B  7  2
+     A N67                                  DSPATR(HI UL)
+     A  67                                  DSPATR(RI PC)
+     A            S1KEY1        24A  O    +2
+     A                                      DSPATR(HI)
+     A            S1NARR        50A  O    +2
+     A                                      DSPATR(HI)
+      *================================================================
+     A          R RE4003C1
+     A                                      CA03(03) CA05(05) CA15(15)
+     A N82                                  ROLLUP(28)
+     A                                      SFLCTL(RE4003S1)
+     A                                      SFLSIZ(0016)
+     A                                      SFLPAG(0015)
+     A                                      OVERLAY
+     A  80 83                               SFLINZ
+     A  80N83                               SFLCLR
+     A N80                                  SFLDSPCTL
+     A N25N80 81                            SFLDSP
+     A N80 81 82                            SFLEND
+     A            S1POSR         4  0H      SFLRCDNBR
+     A                                  4  2' '
+     A                                    +2'Default account         '
+     A                                    +2'Details'
+     A            S1POSN        24A  B  5  5
+     A                                      DSPATR(HI UL)
+      ** End of change AS0077
+      *================================================================
+     A          R PMSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            SPGM                      SFLPGMQ
+      *================================================================
+     A          R PMSGCTL                   TEXT('Program messages')
+     A                                      OVERLAY
+     A                                      SFLCTL(PMSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  98
+     AON98                                  SFLEND
+     A            SPGM                      SFLPGMQ
+      *================================================================

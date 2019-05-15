@@ -1,0 +1,82 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas LE Initialisation program for CAS016')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000021 - Lending Initialisation program for CAS016       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CAS016  *CREATE    Date 28Feb06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CAS016 - IAS18 EIR Recalculation (Fee Amortisation Over     */
+/*                Whole Period)                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCD &PMODE)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2006')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CHGJOB     SWS(00000000)
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+/** Clear LECFLSPD */
+ 
+             CLRPFM     FILE(LECFLSPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/** Mode 1 (First call) or Mode 2 (Second call) */
+ 
+             IF         COND((&PMODE *EQ '1') *OR (&PMODE *EQ '2')) +
+                          THEN(DO)
+                STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+                MONMSG     MSGID(CPF8351)
+ 
+                CALL       PGM(LE000021)
+ 
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                             CMDLBL(ABNOR))
+             ENDDO
+ 
+/** Mode 3 - Deletion */
+ 
+             IF         COND(&PMODE *EQ '3') THEN(DO)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CHGVAR     VAR(&RTCD) VALUE('*ERROR*')
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LEC000021 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

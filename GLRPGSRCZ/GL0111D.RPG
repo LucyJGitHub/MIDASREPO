@@ -1,0 +1,1492 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Delete batch')                                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0111D - Delete Batch                                       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR659451           Date 29Nov12               *
+      *                 AR792734A          Date 20Sep11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG7603            Date 26Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 03Nov03               *
+      *                 CGL016             Date 01Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *             S01408                     DATE  17MAY94          *
+      *             S01413                     DATE  21JUL93          *
+      *             E38270                     DATE  16JUN92          *
+      *             E32180                     DATE  07FEB92          *
+      *             E27263                     DATE  25SEP91          *
+      *             LN0840                     DATE  10OCT90          *
+      *             LN0832                     DATE  03OCT90          *
+      *             LN0714                     DATE  07Sep90          *
+      *             S01234                     DATE  29NOV89          *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR659451 - Search mechanism with scan limit is misleading to *
+      *             users. Remove the scanning limitation and scan    *
+      *             the database once from the first to last record   *
+      *             before displaying the search result. Applied      *
+      *             fix 258820. (Child: AR659452)                     *
+      *  AR792734A - Projected Account movement show incorrect        *
+      *              Available Balance when posting Cash Deposit.     *
+      *              Used CGL016 codes to insert shadow postings      *
+      *              when CRE023 is turned on (Child: AR792735A)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG7603 - Message waiting in job GL0111X in SIT system       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222373 - Correct parameters on program calls                 *
+      *  CGL016 - Projected Movements Update Prior to Authorisation   *
+      *  S01408 - Core hook GL0111DPC1 added                          *
+      *           Core hook GL0111DPC2 added                          *
+      *  S01413 - RETAIL 3 INCORPORATION:- 3 EXTRA PARAMETERS TO      *
+      *           ACCESS MIDAS MODULES - FOR RE3, IOA3 AND TAXES.     *
+      *  E38270 - DO NOT DISPLAY BRANCH IF MBIN IS 'N'.               *
+      *  E32180 - WHEN STD JOURNAL TEMPLATES ARE BEING DELETED,       *
+      *           GL0111X IS CALLED FROM CL PGM, GLC0111X, SO THAT    *
+      *           FILES AND MSGF CAN BE OVERRIDDEN                    *
+      *  E27263 - MULTIBRANCHING INDICATOR PARM NOT SET CORRECTLY     *
+      *           FOR CALL TO FC0040X.                                *
+      *  LN0840 - SUBMIT JOB TO DELETE BATCH AFTER REPORT             *
+      *  LN0832 - BATCH NUMBER PASSED AS PARM NO UPDATE TO GLBHNO     *
+      *           FOR THE REPORTS                                     *
+      *  LN0714 - Replace the call to the Batch Report Functions      *
+      *           which were called interactively with a call to      *
+      *           FC0040X for RCF in order for the reports to be      *
+      *           run in batch.                                       *
+      *  S01234 - JOURNAL ENTRY TEMPLATE ENHANCEMENTS                 *
+      *                                                               *
+      *****************************************************************
+     FGL0111D#CF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      * DSP: Midas GL Delete Batch
+      *
+     FGLJENSL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RTV : Midas GL Journal Entry Summary Rtv
+      *
+     FGLJENHL1IF  E           K        DISK
+      * RTV : Midas GL Journal Entry Header LF Rtv
+      *
+     FGLJENSL3IF  E           K        DISK
+      * RSQ : Midas GL Journal Entry Summary
+      *
+     E                    CPY@    1   1 80               Copyright     array
+     E/COPY WNCPYSRC,GL0111DE01
+     I*   Define MIDAS Rundate from data-area RUNDAT
+     I*
+     I*
+     I*
+     I*
+     I*
+     I*
+      * Renamed input format fields
+     I@BSREBX
+      * Midas GL Journal Entry Summary
+     I              BSBTNB                          WABTNB
+     I              BSCYCD                          WACYCD
+     I              BSBRCD                          WABRCD
+     I              BSDBTT                          WADBTT
+     I              BSCRTT                          WACRTT
+      *
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I            DS
+     I                                        1   30ULVAL2
+     I                                        1   99ULVALD
+      * Set up parameters :
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNO
+     I                                       11  11 SUCP
+     I                                       12  12 DTFF
+     I                                       13  13 MBIN
+     I/COPY WNCPYSRC,GL0111DI01
+     I*
+     IUUSDY     E DSDSSDY
+     I*
+     I* 800 Byte Data Structure for Incoming Data from Access Program
+     I*
+     IUUFDY     E DSDSFDY
+     I*
+     I* 200 Byte Data Structure for Incoming Data from Access Program
+     I*
+     ID@CURR    E DSSDCURRPD
+     I*
+     I*  Currency Codes DS for assigning data from Access
+     I*  Programs to work fields
+     I*
+     ID@MREF    E DSSDMREFPD
+     I*
+     I*  Mandatory Window Ref DS for assigning data from Access
+     I*  Programs to work fields
+     I*
+     ID@MMOD    E DSSDMMODPD
+     I*
+     I*  Midas Modules DS for assigning data from Access
+     I*  Programs to work fields
+     I*
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I : MAP Exit option
+     I                                        1   1 P1EXTO
+     IP2PARM      DS
+      * I :  Abbreviated Posting?
+     I                                        1   1 P2ABPS
+     IP3PARM      DS
+      * I :  Template Facility Used
+     I                                        1   1 P3TFUS
+     I***P4PARM*     DS                            156                                        CGL029
+     IP4PARM      DS                            176                                           CGL029
+      * RCD: Midas GL Journal Entry Header LF Rtv
+      * I : RST Batch number
+     I                                        1   3 P4BTNB
+      * I : MAP Branch Code - Alpha
+     I                                        4   6 P4BCDA
+      * I : MAP Dept Code
+     I                                        7   9 P4DPCD
+      * I : MAP Workstation id.
+     I                                       10  19 P4WSID
+      * I : MAP Hash integer calculated
+     I                                    P  20  270P4HICC
+      * I : MAP Hash decimal calculated
+     I                                    P  28  290P4HDCC
+      * I : MAP Hash item no.calculated
+     I                                    P  30  310P4HINC
+      * I : MAP Hash integer input
+     I                                    P  32  390P4HIIN
+      * I : MAP Hash decimal input
+     I                                    P  40  410P4HDIN
+      * I : MAP Hash item no.input
+     I                                    P  42  430P4HINI
+      * I : MAP Batch status flag
+     I                                       44  44 P4BTSF
+      * I : MAP Batch in use flag
+     I                                       45  45 P4BIUF
+      * I : MAP Shadow post indicator
+     I                                       46  46 P4SHPI
+      * I : MAP Retail advice print ind.
+     I                                       47  47 P4RAPI
+      * I : MAP Multiple Branch Batch
+     I                                       48  48 P4MBRB
+      * I : MAP Reversal / Void Indicator
+     I                                       49  49 P4RVVD
+      * I : MAP Batch Description
+     I                                       50  79 P4BDES
+      * I : MAP Spread Total
+     I                                    P  80  850P4SPTT
+      * I : MAP No. of Items to Spread to
+     I                                    P  86  870P4NIST
+      * I : MAP Spread Profile Code
+     I                                       88  91 P4SPRF
+      * I : MAP Debit/credit indicator
+     I                                       92  92 P4DCIN
+      * I : MAP Input Branch Cd  Alloc Fm
+     I                                       93  95 P4IBCF
+      * I : MAP Customer Number  Alloc Fm
+     I                                       96 101 P4CUSF
+      * I : MAP Currency Code    Alloc Fm
+     I                                      102 104 P4CYCF
+      * I : MAP Account Code     Alloc Fm
+     I**********                            105 108 P4ACCF                                    CGL029
+     I                                      105 108 QQ4ACF                                    CGL029
+      * I : MAP Account Seq No.  Alloc Fm
+     I                                      109 110 P4ACSF
+      * I : MAP Nostro No. (Item)Alloc Fm
+     I                                      111 112 P4NNBF
+      * I : MAP Retail A/c No.   Alloc Fm
+     I                                    P 113 1180P4RACF
+      * I : MAP Profit Centre    Alloc Fm
+     I                                      119 122 P4PRCF
+      * I : MAP Amount           Alloc Fm
+     I                                    P 123 1290P4AMTF
+      * I : MAP Input Branch Cd  Alloc To
+     I                                      130 132 P4IBCT
+      * I : MAP Currency Code    Alloc To
+     I                                      133 135 P4CYCT
+      * I : MAP Customer Number  Alloc To
+     I                                      136 141 P4CNAT
+      * I : MAP Account Code     Alloc To
+     I**********                            142 145 P4ACCT                                    CGL029
+     I                                      142 145 QQ4ACT                                    CGL029
+      * I : MAP Account Seq No.  Alloc To
+     I                                      146 147 P4ASNT
+      * I : MAP Nostro No. (Item)Alloc To
+     I                                      148 149 P4NNBT
+      * I : MAP Retail A/c No.   Alloc To
+     I                                    P 150 1550P4RACT
+      * I : MAP Type of Journal Entry
+     I                                      156 156 P4TOJE
+     I                                      157 166 P4ACCF                                    CGL029
+     I                                      167 176 P4ACCT                                    CGL029
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Set up Batch for Reports'
+      * Batch number
+     I                                        1   3 ZA0001
+      * Message data for 'Submit Call to GLC0111X'
+      * Batch number
+     I                                        1   3 ZA0002
+      * Message data for 'Submit Call to GL0111X'
+      * Batch number
+     I                                        1   3 ZA0003
+      *                                                                                      BUG7603
+     I                                        4   4 ZA0004                                   BUG7603
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1EXTO    PARM           WP0001  1        Exit option
+     C           P2ABPS    PARM           WP0002  1        Abbreviated Pos
+     C           P3TFUS    PARM           WP0003  1        Template Facili
+     C                     PARM           P4PARM           RCD: Journal En
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialise subfile control
+      * Hash numeric to character - Standard functions  *
+     C                     Z-ADDP4HICC    ULVALI           Integer portion
+     C                     Z-ADD*ZERO     ULVALD           Set Decimal
+     C                     Z-ADDP4HDCC    ULVAL2           Decimal portion
+      *
+     C                     CALL 'GL0138U'              90  <FORMAT AMOUNT>
+     C                     PARM           ULVALI 150       I:Integer
+     C                     PARM ULVALD    ULVAL3  99       I:Decimal
+     C                     PARM 3         ULDECP  10       I:Decimal place
+     C                     PARM '1'       ULEDIT  1        I:IBM Edit code
+     C                     PARM *BLANK    ULCHQP  1        I:Cheque prtct.
+     C                     PARM           ULRSLT 32        O:Formatted
+      *
+     C                     MOVE ULRSLT    #CFMAM           Formatted data
+      *
+      * Hash numeric to character - Standard functions  *
+     C                     Z-ADDP4HIIN    ULVALI           Integer portion
+     C                     Z-ADD*ZERO     ULVALD           Set Decimal
+     C                     Z-ADDP4HDIN    ULVAL2           Decimal portion
+     C                     CALL 'GL0138U'              90  <FORMAT AMOUNT>
+     C                     PARM           ULVALI 150       I:Integer
+     C                     PARM ULVALD    ULVAL3  99       I:Decimal
+     C                     PARM 3         ULDECP  10       I:Decimal place
+     C                     PARM '1'       ULEDIT  1        I:IBM Edit code
+     C                     PARM *BLANK    ULCHQP  1        I:Cheque prtct.
+     C                     PARM           ULRSLT 32        O:Formatted
+     C                     MOVE ULRSLT    #CFMA2           Formatted data
+      * Position DBF file
+     C           KPOS      KLIST
+     C                     KFLD           BSBTNB           Batch number
+     C                     KFLD           BSCYCD           Currency code
+     C                     KFLD           BSBRCD           Branch code
+      * Setup key
+     C                     MOVEL#2BTNB    BSBTNB           Batch number
+     C                     MOVEL#2CYCD    BSCYCD           Currency code
+     C                     MOVEL#2BRCD    BSBRCD           Branch code
+     C           KPOS      SETLL@BSREAJ
+     C           KRST      KLIST
+     C                     KFLD           BSBTNB           Batch number
+      * Setup key
+     C                     MOVEL#2BTNB    BSBTNB           Batch number
+     C           KRST      READE@BSREAJ                8782*82=EOF
+      * Save previous selector values
+     C           *LIKE     DEFN #2CYCD    WZCYCD
+     C                     MOVEL#2CYCD    WZCYCD           Currency code
+     C           *LIKE     DEFN #2BRCD    WZBRCD
+     C                     MOVEL#2BRCD    WZBRCD           Branch code
+     C           *LIKE     DEFN #2DBTT    WZDBTT
+     C                     MOVEL#2DBTT    WZDBTT           Debit total
+     C           *LIKE     DEFN #2CRTT    WZCRTT
+     C                     MOVEL#2CRTT    WZCRTT           Credit total
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C  N82                READP@BSREAJ                  90*
+     C  N82                READ @BSREAJ                  90*
+     C                     END
+      *
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      **Reset*count*of*DBF*records*read********************************                     AR659451
+     C**********           Z-ADD0         ##RRRD  50                                        AR659451
+      *................................................................
+      **Load*next*SFL*page*until*SFL*page*full,*or*********************                     AR659451
+      **Scan*limit*reached*********************************************                     AR659451
+      ** Load next SFL page until SFL page full                                             AR659451
+      *                                                                                     AR659451
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFPG
+     C********** ##RRRD    ANDLTW0SLM                                                       AR659451
+      * Check selection fields - if fail, read next record
+     C           #2CYCD    IFEQ *BLANK                     Currency code
+     C           #2BRCD    IFNE *BLANK                     Branch code
+     C           BSBRCD    CABNE#2BRCD    BB020            Branch code
+     C                     END
+     C                     END
+     C           #2DBTT    IFNE *ZERO                      Debit total
+     C           BSDBTT    CABNE#2DBTT    BB020            Debit total
+     C                     END
+     C           #2CRTT    IFNE *ZERO                      Credit total
+     C           BSCRTT    CABNE#2CRTT    BB020            Credit total
+     C                     END
+      * Load SFL fields
+     C                     EXSR MBFL#1
+     C                     MOVEL'Y'       W0RSL   1
+      * USER: Initialise subfile record from DBF record
+      * Release 10 Changes
+     C                     EXSR UASUBR                     Release 10 Chan
+      * DBF record not selected
+     C           W0RSL     CABNE'Y'       BB020
+      * Output to subfile
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      **Increment*scan*check*count*************************************                     AR659451
+     C**********           ADD  1         ##RRRD                                            AR659451
+     C           KRST      READE@BSREAJ                  82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      **If*scan*limit*reached,*display*error*message*******************                     AR659451
+     C********** ##RRRD    IFGE W0SLM                                                       AR659451
+      **Send*message*'*Scan*limit*reached'*****************************                     AR659451
+     C**********           MOVEL'Y2U0017' ZAMSID                                            AR659451
+     C**********           MOVEL'Y2USRMSG'ZAMSGF                                            AR659451
+     C**********           EXSR ZASNMS                                                      AR659451
+     C**********           ELSE                                                             AR659451
+     C                     Z-ADD0         ##RROK
+     C**********           END                                                              AR659451
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSA2
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C/COPY WNCPYSRC,GL0111DC01
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: Process command keys
+      * CASE: CTL.*CMD key is *Change mode
+     C           *IN09     IFEQ '1'                        *IF
+      * S01212 - Start
+      * Access MIDAS Modules. - MIDAS Modules  *
+     C*
+     C*  Access Midas Modules file for the file fields
+     C*
+     C                     CALL 'AOMMODR0'
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7        B:Return Cd
+     C                     PARM '*FIRST'  UUAPOP  7        I:Option
+     C           D@MMOD    PARM *BLANK    UUFDY            O:Format
+     C*
+     C* Assign work field to file field values.
+     C*
+     C                     MOVELBGMTMI    WUMTMI           Midas/Telex Module in
+     C                     MOVELBGSWFT    WUSWFT           SWIFT Funds Transfer
+     C                     MOVELBGSWST    WUSWST           SWIFT Securities Trad
+     C                     MOVELBGSWCL    WUSWCL           SWIFT Customer Lend
+     C                     MOVELBGSWSL    WUSWSL           SWIFT Syndicated Loan
+     C                     MOVELBGSWSM    WUSWSM           SWIFT Statements
+     C                     MOVELBGSWDL    WUSWDL           SWIFT Dealing
+     C                     MOVELBGSDGL    WUSDGL           Standing Data/Gen Leg
+     C                     MOVELBGDLFX    WUDLFX           Dealing : FX
+     C                     MOVELBGSYLN    WUSYLN           Syndicated Loans
+     C                     MOVELBGEXMG    WUEXMG           Exposure Management
+     C                     MOVELBGFNMO    WUFNMO           Financial Modeller
+     C                     MOVELBGSTRT    WUSTRT           Statuatory Returns
+     C                     MOVELBGCSLN    WUCSLN           Customer Lending
+     C                     MOVELBGRTBN    WURTBN           Retail Banking
+     C                     MOVELBGMSDL    WUMSDL           Midas/SWIFT Direct lk
+     C                     MOVELBGSECS    WUSECS           Securities
+     C                     MOVELBGAURC    WUAURC           Auto-Reconcilliations
+     C                     MOVELBGBDLI    WUBDLI           Bond Dealers Interfce
+     C                     MOVELBGDRSD    WUDRSD           DRS Standing Data
+     C                     MOVELBGDRCM    WUDRCM           DRS Control Module
+     C                     MOVELBGDRFE    WUDRFE           DRS Foreign Exchange
+     C                     MOVELBGDRMM    WUDRMM           DRS Money Markets
+     C                     MOVELBGDRAR    WUDRAR           DRS Arbitrage
+     C                     MOVELBGFDTR    WUFDTR           Funds Transfer
+     C                     MOVELBGDRCA    WUDRCA           DRS Common Applic's
+     C                     MOVELBGFUOP    WUFUOP           Futures & Options
+     C                     MOVELBGMTSL    WUMTSL           Midas/Telex Syn Loans
+     C                     MOVELBGMTDL    WUMTDL           Midas/Telex Dealing
+     C                     MOVELBGMTGL    WUMTGL           Midas/Telex Gen Ledg
+     C                     MOVELBGMTCL    WUMTCL           Midas/Telex Cust Len
+     C                     MOVELBGNWMI    WUNWMI           Network Midas
+     C                     MOVELBGFIIN    WUFIIN           FRA/IRS Indicator
+     C                     MOVELBGDLMM    WUDLMM           Dealing:Money Markets
+     C                     MOVELBGINCN    WUINCN           Internal Contracts
+     C                     MOVELBGTRMG    WUTRMG           Treasury Management
+     C                     MOVELBGRKMG    WURKMG           Risk Management
+     C                     MOVELBGTSKY    WUTSKY           TestKey
+     C                     MOVELBGMIDQ    WUMIDQ           Midas Q
+     C                     MOVELBGMFIC    WUMFIC           Microfiche
+     C                     MOVELBGIOAC    WUIOAC           Interest on Accounts
+     C                     MOVELBGWDPR    WUWDPR           Window Processing Req
+     C                     MOVELBGSARP    WUSARP           SAR's Processing Req
+     C                     MOVELBGFRIN    WUFRIN           French Return Ind
+     C                     MOVELBGLRIN    WULRIN           Lux Return Ind
+     C                     MOVELBGDRIN    WUDRIN           Dutch Return Ind
+     C                     MOVELBGGRIN    WUGRIN           German Return Ind
+     C                     MOVELBGBRIN    WUBRIN           Belgian Return Ind
+     C                     MOVELBGIRIN    WUIRIN           Italian Return Ind
+     C                     MOVELBGSWEI    WUSWEI           SWIFT External Intfce
+     C                     MOVELBGPFMG    WUPFMG           Portfolio Management
+     C                     MOVELBGCRMG    WUCRMG           Credit Management
+     C                     MOVELBGHORP    WUHORP           H.O. Reporting
+     C                     MOVELBGAVBL    WUAVBL           Average Balances
+     C                     MOVELBGMARG    WUMARG           Margins
+     C                     MOVELBGNTST    WUNTST           Taxes          S01413
+     C                     MOVELBGNXST    WUNXST           Retail 3       S01413
+     C                     MOVELBGNYST    WUNYST           Int on A/C 3   S01413
+     C*
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * Does Window Program Exist - Standard functions  *
+     C                     CALL 'AOWINS0'              90  Does Window Pro
+     C           WUAPRC    PARM WUAPRC    WQ0031  7        Access Pgm Retu
+     C                     PARM 'GL0123R' WQ0032 10        Window Program
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * CASE: WRK.Access Pgm Return Code is Access Error
+     C           WUAPRC    IFEQ '*CLOSE'                   *IF
+     C           WUAPRC    OREQ '*ERROR'
+     C           WUAPRC    OREQ '*OPEN'
+     C           WUAPRC    OREQ '*KEY'
+     C           WUAPRC    OREQ '*NRF'
+     C           WUAPRC    OREQ '*EMPTY'
+     C           WUAPRC    OREQ '*EOF'
+     C           WUAPRC    OREQ '*OPTION'
+     C           WUAPRC    OREQ '*CALL'
+     C           WUAPRC    OREQ '*SELECT'
+     C           WUAPRC    OREQ '*NOSEL'
+     C           WUAPRC    OREQ '*ID'
+     C                     MOVEL'N'       WUWNPE           Window Program
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'Y'       WUWNPE           Window Program
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: PAR.Abbreviated Posting? is No
+     C           P2ABPS    IFEQ 'N'                        *IF
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * CASE: WRK.Window Program Exists ? is Yes
+     C           WUWNPE    IFEQ 'Y'                        *IF
+      * S01234 - Start
+      * Maintain Gl Batch Posting - Journal Entry Posting  *
+     C                     CALL 'GL0122D'              90  Maintain Gl Bat
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM #2BTNB    WQ0033  3        Batch number
+     C                     PARM #PBCDA    WQ0034  3        Branch Code - A
+     C                     PARM #PDPCD    WQ0035  3        Dept Code
+     C                     PARM #PHINC    WQ0036  30       Hash item no.ca
+     C                     PARM #PMBRB    WQ0037  1        Multiple Branch
+     C                     PARM *BLANK    WQ0038  6        Branch Internal
+     C                     PARM 'E'       WQ0039  1        Action Code
+     C           WUEXTO    PARM *BLANK    WQ0040  1        Exit option
+     C                     PARM           WP0009  1        Interface Jrnl                     222373
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * S01234 - End
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Display GL Batch posting - Journal Entry Posting  *
+     C                     CALL 'GL0121D'              90  Display GL Batc
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM P4BTNB    WQ0041  3        Batch number
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Display GL Batch posting - Journal Entry Posting  *
+     C                     CALL 'GL0121D'              90  Display GL Batc
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM P4BTNB    WQ0042  3        Batch number
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Display GL Batch posting - Journal Entry Posting  *
+     C                     CALL 'GL0121D'              90  Display GL Batc
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM P4BTNB    WQ0043  3        Batch number
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     END                             *FI
+      * S01212 - End
+     C                     END                             *FI
+      * CASE: CTL.*CMD key is *Delete
+     C           *IN10     IFEQ '1'                        *IF
+      * S01234 - Start
+      * Start of Fix LN0714
+      * Submit Deleted Batch
+      * Submit the "Deleted Batch Report" to Batch
+      * Start of Fix LN0832
+      * Remove code to update the data area GLBHNO
+      * Setup message data for message
+     C                     MOVEL#2BTNB    ZA0001           Batch number
+      * Retrieve message Set up Batch for Reports
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2RVMGC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'GLX0226' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C           WUCPAR    PARM           W0MTX 132        Returned messag
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+      * Call FC0040X RCF Submit - Standard functions  *
+     C                     CALL 'FC0040X'              90  Call FC0040X RC
+     C                     PARM WURTN     WQ0044  7        *Return code
+     C                     PARM 'GL0123'  WQ0045 10        Calling Program
+     C                     PARM 'GL0101C' WQ0046 10        CL Controlling
+     C                     PARM '10001'   WQ0047  5        CL Sequence Num
+     C                     PARM WUCPAR    WQ0048100        Calling Paramet
+     C                     PARM WUMLBI    WQ0049  1        Multi-Branching
+     C                     PARM 'S'       WQ0050  1        Level
+     C                     PARM *BLANK    WQ0051  3        Entity
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * End of Fix LN0832
+      * End of Fix LN0714
+      * S01234 - End
+      * Start of Fix LN0840
+      * remove processing concerned with deleting a batch
+      * and submit a call to GL0111X instead.
+      * Start of Fix E32180
+      * If Temp. Facility used, call GL0111X from GLC0111X
+      * Else call GL0111X directly
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,GL0111DPC1                                           S01408
+     C*                                                                   S01408
+      *                                                                                      BUG7603
+     C                     MOVE P3TFUS    ZA0004                                             BUG7603
+      * CASE: PAR.Template Facility Used is Yes
+     C           P3TFUS    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVELP4BTNB    ZA0002           Batch number
+      *
+      * Execute message
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2EXMCC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'GLX0331' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C           W0RTN     IFNE *BLANK
+      * Error detected during execution
+     C                     SETON                     99    *
+     C                     END
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVELP4BTNB    ZA0003           Batch number
+      *
+      * Execute message
+     C                     MOVELZADFMF    ZAMSGF
+      *                                                                                       CGL016
+      * Submit job GLC0111 if CGL016 is on                                                    CGL016
+      *                                                                                       CGL016
+     C           CGL016    IFEQ 'Y'                                                           CGL016
+     C           CRE023    OREQ 'Y'                                                        AR792734A
+     C                     MOVE 'GLX0419' ZAMSID                                              CGL016
+     C                     ELSE                                                               CGL016
+     C**********           MOVE 'GLX0228' ZAMSID                                      CGL016 BUG7603
+     C                     MOVE 'GLX0331' ZAMSID                                             BUG7603
+     C                     ENDIF                                                              CGL016
+      *                                                                                       CGL016
+     C                     CALL 'Y2EXMCC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C******************** PARM 'GLX0228' ZAMSID  7        Message ID                         CGL016
+     C                     PARM           ZAMSID  7        Message ID                         CGL016
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C           W0RTN     IFNE *BLANK
+      * Error detected during execution
+     C                     SETON                     99    *
+     C                     END
+      *
+     C                     END                             *FI
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,GL0111DPC2                                           S01408
+     C*                                                                   S01408
+      * End of Fix E32180
+      * End of Fix LN0840
+     C                     MOVEL'*DELBCH' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         GBDSA2    BEGSR
+      *================================================================
+      * Set display attributes for Subfile control
+      *================================================================
+     C                     MOVEL'0'       *IN79
+     C           WUMBIN    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @BSREAJ fields to subfile
+      *================================================================
+     C                     MOVELBSBTNB    #1BTNB           Batch number
+     C                     MOVELBSBRCD    #1BRCD           Branch code
+     C                     Z-ADDBSDBTT    #1DBTT           Debit total
+     C                     Z-ADDBSCRTT    #1CRTT           Credit total
+     C                     MOVELBSCYCD    #1CYCD           Currency code
+     C                     Z-ADD*ZERO     #RCTDF           Currency Total
+     C                     MOVEL*BLANK    #RFMDR           Formatted Debit
+     C                     MOVEL*BLANK    #RFMCR           Formatted Credi
+     C                     MOVEL*BLANK    #RFMDF           Formatted Diffe
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                     Z-ADDP4NIST    #PNIST           No. of Items to
+     C                     Z-ADDP4AMTF    #PAMTF           Amount
+     C                     MOVELP4TOJE    #PTOJE           Type of Journal
+     C                     Z-ADDP4SPTT    #PSPTT           Spread Total
+     C                     MOVELP4SPRF    #PSPRF           Spread Profile
+     C                     MOVELP4DCIN    #PDCIN           Debit/credit in
+     C                     MOVELP4IBCF    #PIBCF           Input Branch Cd
+     C                     MOVELP4CUSF    #PCUSF           Customer Number
+     C                     MOVELP4CYCF    #PCYCF           Currency Code
+     C                     MOVELP4ACCF    #PACCF           Account Code
+     C                     MOVELP4ACSF    #PACSF           Account Seq No.
+     C                     MOVELP4NNBF    #PNNBF           Nostro No. (Ite
+     C                     Z-ADDP4RACF    #PRACF           Retail A/c No.
+     C                     MOVELP4PRCF    #PPRCF           Profit Centre
+     C                     MOVELP4IBCT    #PIBCT           Input Branch Cd
+     C                     MOVELP4CNAT    #PCNAT           Customer Number
+     C                     MOVELP4CYCT    #PCYCT           Currency Code
+     C                     MOVELP4ACCT    #PACCT           Account Code
+     C                     MOVELP4ASNT    #PASNT           Account Seq No.
+     C                     MOVELP4NNBT    #PNNBT           Nostro No. (Ite
+     C                     Z-ADDP4RACT    #PRACT           Retail A/c No.
+     C                     MOVELP1EXTO    #PEXTO           Exit option
+     C                     MOVEL*BLANK    #2CYCD           Currency code
+     C                     MOVEL*BLANK    #2BRCD           Branch code
+     C                     Z-ADDP4HIIN    #PHIIN           Hash integer in
+     C                     Z-ADDP4HDIN    #PHDIN           Hash decimal in
+     C                     Z-ADDP4HICC    #PHICC           Hash integer ca
+     C                     Z-ADDP4HDCC    #PHDCC           Hash decimal ca
+     C                     MOVELP4RVVD    #PRVVD           Reversal / Void
+     C                     MOVELP4BTSF    #PBTSF           Batch status fl
+     C                     MOVELP4BIUF    #PBIUF           Batch in use fl
+     C                     MOVELP4SHPI    #PSHPI           Shadow post ind
+     C                     MOVELP4RAPI    #PRAPI           Retail advice p
+     C                     Z-ADD*ZERO     #2DBTT           Debit total
+     C                     Z-ADD*ZERO     #2CRTT           Credit total
+     C                     MOVELP4BTNB    #2BTNB           Batch number
+     C                     MOVELP4BDES    #PBDES           Batch Descripti
+     C                     MOVELP4BCDA    #PBCDA           Branch Code - A
+     C                     MOVEL*BLANK    #CFMA2           Formatted amoun
+     C                     MOVELP4DPCD    #PDPCD           Dept Code
+     C                     MOVEL*BLANK    #CFMAM           Formatted amoun
+     C                     MOVELP4MBRB    #PMBRB           Multiple Branch
+     C                     Z-ADDP4HINI    #PHINI           Hash item no.in
+     C                     Z-ADDP4HINC    #PHINC           Hash item no.ca
+     C                     MOVELP4WSID    #PWSID           Workstation id.
+      * Check restriction within
+     C                     EXSR VACKRL
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get Last Record Details - Journal Entry Summary  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KPSSA     KLIST
+     C                     KFLD           WABTNB           Batch number
+     C                     KFLD           WACYCD           Currency code
+     C                     KFLD           WABRCD           Branch code
+      * Move fields to key list
+     C                     MOVELP4BTNB    WABTNB           Batch number
+     C                     MOVEL'999'     WACYCD           Currency code
+     C                     MOVEL'999'     WABRCD           Branch code
+     C           KPSSA     SETLL@BSREBX                    *
+     C                     READ @BSREBX                  90*
+      * DBF record not found
+     C   90                MOVEL'GLX0174' W0RTN   7
+     C           *IN90     DOWEQ'0'
+      * USER: Process DBF record
+      * PAR = DB1 By name
+     C                     MOVELWABTNB    WULBTH           Batch number
+     C                     MOVELWACYCD    WULTCY           Currency code
+     C                     MOVELWABRCD    WULBRH           Branch code
+     C                     GOTO SAEXIT                     *QUIT
+     C                     READ @BSREBX                  90*
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         UASUBR    BEGSR
+      *================================================================
+      * Release 10 Changes
+      *================================================================
+     C                     MOVEL'0'       WURERR           Retail Errors R
+     C                     MOVEL'N'       W0RSL            *Record selecte
+      * CASE: DB1.Currency code is Asterisks
+     C           BSCYCD    IFEQ '***'                      *IF
+     C                     Z-ADD*ZERO     WUNBDP           Number of Decim
+     C                     MOVELBSCYCD    #1CYCD           Currency code
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Access Currency. - Currency Codes  *
+     C*
+     C*  Access Currency codes file for the following fields
+     C*  Currency Name, Number of decimal places, Nostro Shortname
+     C*
+     C                     MOVELBSCYCD    UUCYCD
+     C                     CALL 'AOCURRR0'
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7        B:Return Cd
+     C                     PARM '*KEY'    UUAPOP  7        I:Option
+     C                     PARM           UUCYCD  3        I:Currency Code
+     C           D@CURR    PARM *BLANK    UUSDY            O:Format
+     C*
+     C* Assign work field to file field values.
+     C*
+     C                     MOVELA6CYCD    #1CYCD           Currency Code
+     C                     MOVELA6CYNM    WUCYNM           Currency Name
+     C                     MOVELA6NBDP    WUNBDP           No. Decimal Places
+     C                     MOVELA6NOSN    WUNOSN           Nostro Shortname
+     C*
+     C                     END                             *FI
+     C                     ADD  1         WURECP           Record Pointer
+      * CASE: WRK.Record Pointer is Equal to 1
+     C           WURECP    IFEQ 1                          *IF
+     C                     ADD  BSDBTT    WUCDRN           Currency DR Tot
+     C                     ADD  BSCRTT    WUCCRN           Currency CR Tot
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: WRK.Save Currency EQ DB1.Currency code
+     C           WUSCCY    IFEQ BSCYCD                     *IF
+     C                     ADD  BSDBTT    WUCDRN           Currency DR Tot
+     C                     ADD  BSCRTT    WUCCRN           Currency CR Tot
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVELWUSCCY    #1CYCD           Currency code
+      * Format Amount - Standard functions  *
+     C                     CALL 'GL0135U'              90  Format Amount
+     C                     PARM WUCDRN    WQ0001 150       Value
+     C                     PARM WUNBDP    WQ0002  10       Decimal places
+     C                     PARM 'J'       WQ0003  1        Edit code
+     C                     PARM *BLANK    WQ0004  1        Cheque protect
+     C           #RFMDR    PARM *BLANK    WQ0005 23        Formatted amoun
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Format Amount - Standard functions  *
+     C                     CALL 'GL0135U'              90  Format Amount
+     C                     PARM WUCCRN    WQ0006 150       Value
+     C                     PARM WUNBDP    WQ0007  10       Decimal places
+     C                     PARM 'J'       WQ0008  1        Edit code
+     C                     PARM *BLANK    WQ0009  1        Cheque protect
+     C           #RFMCR    PARM *BLANK    WQ0010 23        Formatted amoun
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C           WUCDRN    SUB  WUCCRN    #RCTDF           Currency Total
+      * Format Amount - Standard functions  *
+     C                     CALL 'GL0135U'              90  Format Amount
+     C                     PARM #RCTDF    WQ0011 150       Value
+     C                     PARM WUNBDP    WQ0012  10       Decimal places
+     C                     PARM 'J'       WQ0013  1        Edit code
+     C                     PARM *BLANK    WQ0014  1        Cheque protect
+     C           #RFMDF    PARM *BLANK    WQ0015 23        Formatted amoun
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * CASE: RCD.Currency Total difference is Not zero
+     C           #RCTDF    IFNE *ZERO                      *IF
+     C                     MOVEL'1'       WURERR           Retail Errors R
+     C                     END                             *FI
+      * Write a Subfile Record - Standard functions  *
+      *
+      * To write a new record to the subfile within the loading up of
+      * the subfile for a function. All fields must have already been
+      * setup in the RCD fields for the record.
+      *
+      * ##RR    - Relative record Number
+      * ##RROK  -
+      * #SFLRCD - Subfile record.
+      *
+     C                     ADD  1         ##RR       81
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+     C                     Z-ADDBSDBTT    WUCDRN           Currency DR Tot
+     C                     Z-ADDBSCRTT    WUCCRN           Currency CR Tot
+     C                     Z-ADD*ZERO     WUCDTN           Currency Diff T
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     MOVELBSCYCD    WUSCCY           Save Currency
+      * CASE: WRK.Last Batch EQ DB1.Batch number
+     C           WULBTH    IFEQ BSBTNB                     *IF
+      * CASE: WRK.Last Currency EQ DB1.Currency code
+     C           WULTCY    IFEQ BSCYCD                     *IF
+      * CASE: WRK.Last Branch EQ DB1.Branch code
+     C           WULBRH    IFEQ BSBRCD                     *IF
+     C                     MOVELWUSCCY    #1CYCD           Currency code
+      * Format Amount - Standard functions  *
+     C                     CALL 'GL0135U'              90  Format Amount
+     C                     PARM WUCDRN    WQ0016 150       Value
+     C                     PARM WUNBDP    WQ0017  10       Decimal places
+     C                     PARM 'J'       WQ0018  1        Edit code
+     C                     PARM *BLANK    WQ0019  1        Cheque protect
+     C           #RFMDR    PARM *BLANK    WQ0020 23        Formatted amoun
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Format Amount - Standard functions  *
+     C                     CALL 'GL0135U'              90  Format Amount
+     C                     PARM WUCCRN    WQ0021 150       Value
+     C                     PARM WUNBDP    WQ0022  10       Decimal places
+     C                     PARM 'J'       WQ0023  1        Edit code
+     C                     PARM *BLANK    WQ0024  1        Cheque protect
+     C           #RFMCR    PARM *BLANK    WQ0025 23        Formatted amoun
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C           WUCDRN    SUB  WUCCRN    #RCTDF           Currency Total
+      * Format Amount - Standard functions  *
+     C                     CALL 'GL0135U'              90  Format Amount
+     C                     PARM #RCTDF    WQ0026 150       Value
+     C                     PARM WUNBDP    WQ0027  10       Decimal places
+     C                     PARM 'J'       WQ0028  1        Edit code
+     C                     PARM *BLANK    WQ0029  1        Cheque protect
+     C           #RFMDF    PARM *BLANK    WQ0030 23        Formatted amoun
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * CASE: RCD.Currency Total difference is Not zero
+     C           #RCTDF    IFNE *ZERO                      *IF
+     C                     MOVEL'1'       WURERR           Retail Errors R
+     C                     END                             *FI
+      * Write a Subfile Record - Standard functions  *
+     C                     ADD  1         ##RR       81
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+     C                     Z-ADD*ZERO     WUCDRN           Currency DR Tot
+     C                     Z-ADD*ZERO     WUCCRN           Currency CR Tot
+     C                     Z-ADD*ZERO     WUCDTN           Currency Diff T
+     C                     Z-ADD*ZERO     WURECP           Record Pointer
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.Retail Errors Remaining is Retail Errors
+     C           WURERR    IFEQ '1'                        *IF
+      * Send message 'Retail errors remaining'
+     C                     MOVEL'GLX0077' ZAMSID
+     C                     MOVEL'*INFO  ' ZAMSTP           Message type
+     C                     EXSR ZASNMS
+      *
+     C                     END                             *FI
+      *================================================================
+     CSR         UAEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Check restriction within
+      *================================================================
+      * Name search required?
+     C                     MOVEL#2BTNB    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Batch number
+     C                     CALL 'GL0140S'              90  *
+     C                     PARM           W0RTN   7
+     C           #2BTNB    PARM #2BTNB    WQ0052  3        Batch number
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     CABNE*BLANK    VA999
+     C                     END
+      *................................................................
+      *
+     C           KLVABR    KLIST
+     C                     KFLD           BRBTNB           Batch number
+      * Setup key
+     C                     MOVEL#2BTNB    BRBTNB           Batch number
+     C           KLVABR    CHAIN@BRREAH              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     GOTO VAEXIT
+     C                     END
+     C           VA999     TAG
+      * Restrictor relation not satisfied
+      * Send message 'Journal Entry Header   NF'
+     C                     MOVEL'GLX0172' ZAMSID
+     C                     MOVEL'*PRV '   ZAPGRL           Rel queue
+     C                     EXSR ZASNMS
+     C                     MOVEL'GLX0172' P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Retail Errors Remaining
+     C                     MOVEL*BLANK    WURERR  1
+      * Define work field Number of Decimal Places
+     C                     Z-ADD*ZERO     WUNBDP  10
+      * Define work field Access Pgm Return Code
+     C                     MOVEL*BLANK    WUAPRC  7
+      * Define work field Currency Name
+     C                     MOVEL*BLANK    WUCYNM 14
+      * Define work field Nostro Shortname
+     C                     MOVEL*BLANK    WUNOSN 10
+      * Define work field Record Pointer
+     C                     Z-ADD*ZERO     WURECP  50
+      * Define work field Currency DR Total (GL)
+     C                     Z-ADD*ZERO     WUCDRN 150
+      * Define work field Currency CR Total (GL)
+     C                     Z-ADD*ZERO     WUCCRN 150
+      * Define work field Save Currency
+     C                     MOVEL*BLANK    WUSCCY  3
+      * Define work field Currency Diff Total (GL)
+     C                     Z-ADD*ZERO     WUCDTN 150
+      * Define work field Last Batch
+     C                     MOVEL*BLANK    WULBTH  3
+      * Define work field Last Currency
+     C                     MOVEL*BLANK    WULTCY  3
+      * Define work field Last Branch
+     C                     MOVEL*BLANK    WULBRH  3
+      * Obtain default message file
+     C           *NAMVAR   DEFN MIMGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Midas/Telex Module Ind.
+     C                     MOVEL*BLANK    WUMTMI  1
+      * Define work field SWIFT Funds Transfer
+     C                     MOVEL*BLANK    WUSWFT  1
+      * Define work field SWIFT Securities Trading
+     C                     MOVEL*BLANK    WUSWST  1
+      * Define work field SWIFT Customer Lending
+     C                     MOVEL*BLANK    WUSWCL  1
+      * Define work field SWIFT Syndicated Loans
+     C                     MOVEL*BLANK    WUSWSL  1
+      * Define work field SWIFT Statements
+     C                     MOVEL*BLANK    WUSWSM  1
+      * Define work field SWIFT Dealing
+     C                     MOVEL*BLANK    WUSWDL  1
+      * Define work field Standing data/Gen.Ledger
+     C                     MOVEL*BLANK    WUSDGL  1
+      * Define work field Dealing: FX
+     C                     MOVEL*BLANK    WUDLFX  1
+      * Define work field Syndicated Loans
+     C                     MOVEL*BLANK    WUSYLN  1
+      * Define work field Exposure Management
+     C                     MOVEL*BLANK    WUEXMG  1
+      * Define work field Financial Modeller
+     C                     MOVEL*BLANK    WUFNMO  1
+      * Define work field Statutary Returns
+     C                     MOVEL*BLANK    WUSTRT  1
+      * Define work field Customer Lending
+     C                     MOVEL*BLANK    WUCSLN  1
+      * Define work field Retail Banking
+     C                     MOVEL*BLANK    WURTBN  1
+      * Define work field Midas/Swift direct link
+     C                     MOVEL*BLANK    WUMSDL  1
+      * Define work field Securities
+     C                     MOVEL*BLANK    WUSECS  1
+      * Define work field Auto-reconciliations
+     C                     MOVEL*BLANK    WUAURC  1
+      * Define work field Bond Dealers Interface
+     C                     MOVEL*BLANK    WUBDLI  1
+      * Define work field DRS Standing Data
+     C                     MOVEL*BLANK    WUDRSD  1
+      * Define work field DRS Control module
+     C                     MOVEL*BLANK    WUDRCM  1
+      * Define work field DRS Foreign Exchange
+     C                     MOVEL*BLANK    WUDRFE  1
+      * Define work field DRS Money Market
+     C                     MOVEL*BLANK    WUDRMM  1
+      * Define work field DRS Arbitrage
+     C                     MOVEL*BLANK    WUDRAR  1
+      * Define work field Funds Transfer
+     C                     MOVEL*BLANK    WUFDTR  1
+      * Define work field DRS Common Applications
+     C                     MOVEL*BLANK    WUDRCA  1
+      * Define work field Futures & Options
+     C                     MOVEL*BLANK    WUFUOP  1
+      * Define work field Midas/Telex Synd. Loans
+     C                     MOVEL*BLANK    WUMTSL  1
+      * Define work field Midas/Telex Dealing
+     C                     MOVEL*BLANK    WUMTDL  1
+      * Define work field Midas/Telex Gen. Ledger
+     C                     MOVEL*BLANK    WUMTGL  1
+      * Define work field Midas/Telex Cust. Lending
+     C                     MOVEL*BLANK    WUMTCL  1
+      * Define work field Network Midas
+     C                     MOVEL*BLANK    WUNWMI  1
+      * Define work field FRA/IRS Indicator
+     C                     MOVEL*BLANK    WUFIIN  1
+      * Define work field Dealing: MM
+     C                     MOVEL*BLANK    WUDLMM  1
+      * Define work field Internal Contracts
+     C                     MOVEL*BLANK    WUINCN  1
+      * Define work field Treasury Management
+     C                     MOVEL*BLANK    WUTRMG  1
+      * Define work field Risk Management
+     C                     MOVEL*BLANK    WURKMG  1
+      * Define work field Testkey
+     C                     MOVEL*BLANK    WUTSKY  1
+      * Define work field Midas/Q
+     C                     MOVEL*BLANK    WUMIDQ  1
+      * Define work field Microfiche
+     C                     MOVEL*BLANK    WUMFIC  1
+      * Define work field Interest on accounts
+     C                     MOVEL*BLANK    WUIOAC  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field SAR's processing required
+     C                     MOVEL*BLANK    WUSARP  1
+      * Define work field French  return indicator
+     C                     MOVEL*BLANK    WUFRIN  1
+      * Define work field Lux     return indicator
+     C                     MOVEL*BLANK    WULRIN  1
+      * Define work field Dutch   return indicator
+     C                     MOVEL*BLANK    WUDRIN  1
+      * Define work field German  return indicator
+     C                     MOVEL*BLANK    WUGRIN  1
+      * Define work field Belgian return indicator
+     C                     MOVEL*BLANK    WUBRIN  1
+      * Define work field Italian return indicator
+     C                     MOVEL*BLANK    WUIRIN  1
+      * Define work field Swift External Interface
+     C                     MOVEL*BLANK    WUSWEI  1
+      * Define work field Portfolio Management
+     C                     MOVEL*BLANK    WUPFMG  1
+      * Define work field Credit Management.
+     C                     MOVEL*BLANK    WUCRMG  1
+      * Define work field Head Office Reporting
+     C                     MOVEL*BLANK    WUHORP  1
+      * Define work field Average Balances
+     C                     MOVEL*BLANK    WUAVBL  1
+      * Define work field Margins
+     C                     MOVEL*BLANK    WUMARG  1
+      * Define work field Taxes
+     C                     MOVEL*BLANK    WUNTST  1
+      * Define work field Retail 3
+     C                     MOVEL*BLANK    WUNXST  1
+      * Define work field Interest on Accounts 3
+     C                     MOVEL*BLANK    WUNYST  1
+      * Define work field Window Program Exists ?
+     C                     MOVEL*BLANK    WUWNPE  1
+      * Define work field Exit option
+     C                     MOVEL*BLANK    WUEXTO  1
+      * Define work field Calling Parameters
+     C                     MOVEL*BLANK    WUCPAR100
+      * Define work field *Return code
+     C                     MOVEL*BLANK    WURTN   7
+      * Define work field Multi-Branching indicator
+     C                     MOVEL*BLANK    WUMLBI  1
+      * Define work field Multibranching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Midas Rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Runday Number
+     C                     Z-ADD*ZERO     WURDNO  50
+      * Define work field Setup Complete
+     C                     MOVEL*BLANK    WUSUCP  1
+      * Define work field Date Format flag
+     C                     MOVEL*BLANK    WUDTFF  1
+     C                     Z-ADD09        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      **Scan*limit*****************************************************                     AR659451
+     C**********           Z-ADD500       W0SLM   50                                        AR659451
+      *................................................................
+     C                     MOVEL*BLANK    W0GRP   1
+      *                                                                   CGL016
+      ** Access SAR details for Projected Movements Update Prior to Auth. CGL016
+      *                                                                   CGL016
+     C                     MOVEL'N'       CGL016  1                       CGL016
+     C                     CALL 'AOSARDR0'                                CGL016
+     C                     PARM *BLANKS   PRTCD   7                       CGL016
+     C                     PARM '*VERIFY' POPTN   7                       CGL016
+     C                     PARM 'CGL016'  PSARD   6                       CGL016
+      *                                                                   CGL016
+     C           PRTCD     IFEQ *BLANK                                    CGL016
+     C                     MOVEL'Y'       CGL016                          CGL016
+     C                     ENDIF                                          CGL016
+      *                                                                   CGL016
+      ** Access SAR details for Two O'clock feature                                        AR792734A
+      *                                                                                    AR792734A
+     C                     MOVEL'N'       CRE023  1                                        AR792734A
+     C                     CALL 'AOSARDR0'                                                 AR792734A
+     C                     PARM *BLANKS   PRTCD   7                                        AR792734A
+     C                     PARM '*VERIFY' POPTN   7                                        AR792734A
+     C                     PARM 'CRE023'  PSARD   6                                        AR792734A
+      *                                                                                    AR792734A
+     C           PRTCD     IFEQ *BLANK                                                     AR792734A
+     C                     MOVEL'Y'       CRE023                                           AR792734A
+     C                     ENDIF                                                           AR792734A
+      *                                                                                    AR792734A
+      * USER: Initialise program
+      * Standard RPG Creation Par - Standard functions  *
+      * Copyright notice - Standard functions  *
+      * Last Amend Box - GL0111D - Journal Entry Summary  *
+      * Access Midas rundate - Standard functions  *
+     C*   Access MIDAS Rundate from data-area RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+     C                     MOVE RDNO      WURDNO
+     C                     MOVE SUCP      WUSUCP
+     C                     MOVE DTFF      WUDTFF
+     C                     MOVE MBIN      WUMBIN
+      * Start of Fix E27263
+     C                     MOVELWUMBIN    WUMLBI           Multi-Branching
+     C/COPY WNCPYSRC,GL0111DC02
+      * End of Fix E27263
+      * Define 800 Byte Dummy DS - Standard functions  *
+      * Define 200 Byte Dummy DS - Standard functions  *
+      * Currency Codes DS - Currency Codes  *
+      * Mand Window File DS - Mandatory Window File  *
+      * MIDAS Modules DS - MIDAS Modules  *
+      * Get Last Record Details - Journal Entry Summary  *
+     C                     EXSR SARVGN
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     C/COPY WNCPYSRC,GL0111DC03
+** CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,225 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_MLACTION - Account Officer Actions                                  */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*       Prev Amend No. BG18886            Date 05Jun08                        */
+/*                      BUG17953           Date 10Apr08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CSW037A            Date 02May05                        */
+/*                      CSD025             Date 11Jan05                        */
+/*                      BUG5377            Date 16Dec04                        */
+/*                      BUG5198            Date 16Dec04                        */
+/*                      BUG4521            Date 18Nov04                        */
+/*                      BUG3860            Date 11Aug04                        */
+/*                      BUG2703            Date 01Jul04                        */
+/*                      BUG3094            Date 08JUN04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG2643            Date 20May04                        */
+/*                      BUG2489            Date 10May04                        */
+/*                      BUG1447            Date 06May04                        */
+/*                      BUG1623            Date 26Mar04                        */
+/*                      CGP001  *CREATE    Date 05Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       BG18886 - Amend non-standard codes. Recompile only.                   */
+/*       BUG17953 - CCSID of tables cannot be changed (Recompile)              */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CLE106 - Syndications Manager (Recompile)                             */
+/*       CSW037A- Additional Field extended to 40 chars (recompile)            */
+/*       CSD025 - Customer De-Activation                                       */
+/*       BUG5377 - Views with subqueries fail at V5R3                          */
+/*       BUG5198 - Performance Enhancement (Recompiled)                        */
+/*       BUG4521 - Predeal Check Performance Enhancement (Recompiled)          */
+/*       BUG3860 - (recompile)                                                 */
+/*       BUG2703- Additional changes for deletion handling. (Recompile)        */
+/*       BUG3094- Change in V_MLCUST (Recompile)                               */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG2643- Recompile over changed V_MLCUST                              */
+/*       BUG2489 - Account officer enquiry should be filtered to show only     */
+/*                 actions pending                                             */
+/*       BUG1447 - Necessary Changes                                           */
+/*       BUG1623 - Illegal field names                                         */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+   (TYPE, LIMITID, LIMITTYPE, UTILISER, ENTITYCODE, EXPBRANCH, INSTRUMENT,      :
+***TENOR,*CURRENCY,*UTILISERTYPE*FOR*COLUMN*UTILI00001,*EXCESS,*STATUS,*********:BUG1623
+   TENOR, CURRENCY, UTSRTYPE, EXCESS, STATUS,                                   :BUG1623
+   AMOUNT, EXPIRYDATE, REVIEWDATE,MONOFFICER, APROFFICER, MONOFCRNAM,           :
+***APROFCRNAM,*NARRATIVE,*ACOFCODE,*ACTIONDATE,*OFFSET,*EXPOSURE,*AVLBLEAMT)****:BUG2489
+   APROFCRNAM, NARRATIVE, ACOFCODE, ACTIONDATE, ACTION, OFFSET, EXPOSURE,       :BUG2489
+   AVLBLEAMT)                                                                   :BUG2489
+  AS                                                                            :
+  SELECT                                                                        :
+   TYPE, LIMITID, LIMITTYPE,                                                    :
+**CASE**************************************************************************: /*BUG1447*/
+**WHEN*LIUTSRTYPE=1*THEN********************************************************: /*BUG1447*/
+**(SELECT*CUSRNM*||*','*||*CUSRTN*FROM*V_MLCUST*********************************: /*BUG1447*/
+**WHERE*CUSGLOB*=*LIUTSRCODE)***************************************************: /*BUG1447*/
+**WHEN*LIUTSRTYPE=2*THEN********************************************************: /*BUG1447*/
+**(SELECT*CGNAME*FROM*T_GRCUSTG*************************************************: /*BUG1447*/
+**WHERE*CAST(CGID*AS*CHAR(10))*=*LIUTSRCODE)************************************: /*BUG1447*/
+**WHEN*LIUTSRTYPE=3*THEN********************************************************: /*BUG1447*/
+**(SELECT*IDDESC*FROM*GPINDSPD**************************************************: /*BUG1447*/
+**WHERE*IDGIND*=*LIUTSRCODE)****************************************************: /*BUG1447*/
+**WHEN*LIUTSRTYPE=4*THEN********************************************************: /*BUG1447*/
+**(SELECT*IGNAME*FROM*T_GRINDSG*************************************************: /*BUG1447*/
+**WHERE*CAST(IGID*AS*CHAR(10))*=*LIUTSRCODE)************************************: /*BUG1447*/
+**WHEN*LIUTSRTYPE=7*THEN********************************************************: /*BUG1447*/
+**(SELECT*A4CNNM*FROM*GPCTRYPD**************************************************: /*BUG1447*/
+**WHERE*A4CNCD*=*LIUTSRCODE)****************************************************: /*BUG1447*/
+**WHEN*LIUTSRTYPE=8*THEN********************************************************: /*BUG1447*/
+**(SELECT*RGNAME*FROM*T_GRCTRYG*************************************************: /*BUG1447*/
+**WHERE*CAST(RGID*AS*CHAR(10))*=*LIUTSRCODE)************************************: /*BUG1447*/
+**END*AS*UTILISER,**************************************************************: /*BUG1447*/
+   V_MLUTILSR.UTSRNAME AS UTILISER,                                             : /*BUG1447*/
+   LIENTYCODE AS ENTITYCODE,                                                    :
+   LIEXPBRCH AS EXPBRANCH,                                                      :
+   CASE                                                                         :
+    WHEN LIMITTYPE='S' THEN 'Settlement Limit'                                  :
+   ELSE NGNAME                                                                  :             BG5377
+***ELSE*(*SELECT*NGNAME*FROM*T_GRINSTG******************************************:             BG5377
+****WHERE*LIINSTGRP*=*NGID*)****************************************************:             BG5377
+   END AS INSTRUMENT,                                                           :
+   LITENOR AS TENOR,                                                            :
+   CURRENCY,                                                                    :
+   CASE                                                                         :
+    WHEN LIUTSRTYPE=1 THEN 'Customer'                                           :
+    WHEN LIUTSRTYPE=2 THEN 'CustomerGroup'                                      :
+    WHEN LIUTSRTYPE=3 THEN 'Country'                                            :             BG5377
+    WHEN LIUTSRTYPE=4 THEN 'CountryGroup'                                       :             BG5377
+    WHEN LIUTSRTYPE=5 THEN 'Industry'                                           :             BG5377
+    WHEN LIUTSRTYPE=6 THEN 'IndustryGroup'                                      :             BG5377
+    WHEN LIUTSRTYPE=7 THEN 'Adhoc Customer Group'                               :             BG5377
+****WHEN*LIUTSRTYPE=3*THEN*'Industry'*******************************************:             BG5377
+****WHEN*LIUTSRTYPE=4*THEN*'IndustryGroup'**************************************:             BG5377
+****WHEN*LIUTSRTYPE=7*THEN*'Country'********************************************:             BG5377
+****WHEN*LIUTSRTYPE=8*THEN*'CountryGroup'***************************************:             BG5377
+***END*AS*UTILISERTYPE,*********************************************************:BUG1623
+   END AS UTSRTYPE,                                                             :BUG1623
+   CASE                                                                         :
+****WHEN*STATUS*=*'A'*THEN*EXPOSURE*-*AMOUNT************************************: /*BUG1447*/
+    WHEN STATUS = 'A'  AND COALESCE(EXPOSURE,0)<=AMOUNT THEN 0                  : /*BUG1447*/
+    WHEN STATUS = 'A' AND EXPOSURE > AMOUNT THEN COALESCE(EXPOSURE - AMOUNT,0)  : /*BUG1447*/
+    WHEN STATUS = 'I' THEN EXPOSURE                                             :
+    WHEN STATUS = 'E' THEN NULL                                                 :
+    WHEN STATUS = 'D' THEN NULL                                                 :
+   END AS EXCESS,                                                               :
+   STATUS,                                                                      :
+   AMOUNT,                                                                      :
+   EXPIRYDATE,                                                                  :
+   REVIEWDATE,                                                                  :
+   B.AZACOC AS MONOFFICER,                                                      :
+   A.AZACOC AS APROFFICER,                                                      :
+   B.ACGACO AS MONOFCRNAM,                                                      :
+   A.ACGACO AS APROFCRNAM,                                                      :
+   NARRATIVE,                                                                   :
+   CUSACO AS ACOFCODE,                                                          :
+   CASE                                                                         :
+    WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NULL                              :
+     AND EXPIRYDATE IS NULL THEN NULL                                           :
+    WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NULL                              :
+     AND EXPIRYDATE IS NOT NULL THEN EXPIRYDATE                                 :
+    WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NOT NULL                          :
+     AND EXPIRYDATE IS NULL THEN REVIEWDATE                                     :
+    WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NOT NULL                          :
+     AND EXPIRYDATE IS NOT NULL                                                 :
+     AND EXPIRYDATE >= REVIEWDATE THEN REVIEWDATE                               :
+    WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NOT NULL                          :
+      AND EXPIRYDATE IS NOT NULL                                                :
+     AND EXPIRYDATE < REVIEWDATE THEN EXPIRYDATE                                :
+    WHEN AMOUNT < EXPOSURE THEN                                                 :
+     ( SELECT MIN(DATE(BJRDNB + 719892))                                        :
+       AS RUNDATE FROM GZSDBANKPD )                                             :
+****WHEN*EXPOSURE*IS*NULL*AND*STATUS*=*'A'*THEN*********************************: /*BUG1447*/BUG2489
+    WHEN EXPOSURE IS NOT NULL AND STATUS = 'A' THEN                             :BUG2489
+     ( SELECT MIN(DATE(BJRDNB + 719892)) AS RUNDATE FROM GZSDBANKPD)            : /*BUG1447*/
+   END AS ACTIONDATE,                                                           :
+   CASE                                                                         :BUG2489
+   WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NULL AND EXPIRYDATE IS NULL        :BUG2489
+   THEN NULL                                                                    :BUG2489
+   WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NULL AND EXPIRYDATE IS NOT         :BUG2489
+   NULL THEN 'Expiry pending'                                                   :BUG2489
+   WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NOT NULL AND EXPIRYDATE IS         :BUG2489
+   NULL THEN 'Review pending'                                                   :BUG2489
+   WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NOT NULL AND EXPIRYDATE IS         :BUG2489
+   NOT NULL AND EXPIRYDATE >= REVIEWDATE THEN 'Review pending'                  :BUG2489
+   WHEN AMOUNT >= EXPOSURE AND REVIEWDATE IS NOT NULL AND EXPIRYDATE IS         :BUG2489
+   NOT NULL AND EXPIRYDATE < REVIEWDATE THEN 'Expiry pending'                   :BUG2489
+   WHEN AMOUNT <  EXPOSURE THEN 'In Excess'                                     :BUG2489
+   WHEN EXPOSURE IS NOT NULL AND STATUS = 'A' THEN 'In Excess'                  :BUG2489
+   END AS ACTION,                                                               :BUG2489
+   OFFSET,                                                                      :
+   EXPOSURE,                                                                    :
+   CASE                                                                         :
+    WHEN LIMITTYPE='C' AND STATUS = 'A'                                         :
+     THEN AMOUNT - COALESCE(EXPOSURE,0)                                         :
+    ELSE NULL                                                                   :
+   END AS AVLBLEAMT                                                             :
+  FROM V_MLACTLMT                                                               :
+  LEFT OUTER JOIN V_MLCUST ON LIUTSRCODE = CUSGLOB                              :
+  LEFT OUTER JOIN T_GRINSTG ON LIINSTGRP = NGID                                 :
+  INNER JOIN V_MLACOFA AS A ON LIAPROFCR = A.ACGACO                             :
+**INNER*JOIN*V_MLACOFA*AS*B*ON*LIMONOFCR*=*B.ACGACO;****************************: /*BUG1447*/
+  INNER JOIN V_MLACOFA AS B ON LIMONOFCR = B.ACGACO                             : /*BUG1447*/
+  INNER JOIN V_MLUTILSR ON LIUTSRTYPE = UTSRTYPE AND LIUTSRCODE=UTSRCODE;       : /*BUG1447*/
+                                                                                :
+  LABEL ON COLUMN V_MLACTION                                                    :
+  ( LIMITID TEXT IS 'Limit Id.',                                                :
+  LIMITTYPE TEXT IS 'Limit Type',                                               :
+  ENTITYCODE TEXT IS 'Entity Code',                                             :
+  EXPBRANCH TEXT IS 'Expiry Branch',                                            :
+  TENOR TEXT IS 'Tenor Code',                                                   :
+  CURRENCY TEXT IS 'Currency',                                                  :
+  STATUS TEXT IS 'Limit Status',                                                :
+  AMOUNT TEXT IS 'Limit Amount',                                                :
+  EXPIRYDATE TEXT IS 'Expiry Date',                                             :
+  REVIEWDATE TEXT IS 'Review Date',                                             :
+  MONOFFICER TEXT IS 'Account Officer Code',                                    :
+  APROFFICER TEXT IS 'Account Officer Code',                                    :
+  MONOFCRNAM TEXT IS 'Global A/c Officer Code',                                 :
+  APROFCRNAM TEXT IS 'Global A/c Officer Code',                                 :
+  NARRATIVE TEXT IS 'Narrative',                                                :
+  ACOFCODE TEXT IS 'Global Account Officer Code',                               :
+  OFFSET TEXT IS 'Offset',                                                      :
+  EXPOSURE TEXT IS 'Exposure' ) ;                                               :
+                                                                                :
+  LABEL ON COLUMN V_MLACTION                                                    :
+  ( LIMITID IS 'Limit Id.',                                                     :
+  LIMITTYPE IS 'Limit Type',                                                    :
+  ENTITYCODE IS 'Entity Code',                                                  :
+  EXPBRANCH IS 'Expiry Branch',                                                 :
+  TENOR IS 'Tenor Code',                                                        :
+  CURRENCY IS 'Currency',                                                       :
+  STATUS IS 'Limit Status',                                                     :
+  AMOUNT IS 'Limit Amount',                                                     :
+  EXPIRYDATE IS 'Expiry Date',                                                  :
+  REVIEWDATE IS 'Review Date',                                                  :
+  MONOFFICER IS 'Account Officer Code',                                         :
+  APROFFICER IS 'Account Officer Code',                                         :
+  MONOFCRNAM IS 'Global A/c Officer Code',                                      :
+  APROFCRNAM IS 'Global A/c Officer Code',                                      :
+  NARRATIVE IS 'Narrative',                                                     :
+  ACOFCODE IS 'Global Account Officer Code',                                    :
+  OFFSET IS 'Offset',                                                           :
+  EXPOSURE IS 'Exposure' ) ;                                                    :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GP Account Officer Actions                  ';                     :
+                                                                                :

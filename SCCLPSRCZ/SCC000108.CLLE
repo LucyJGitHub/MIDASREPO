@@ -1,0 +1,173 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Perform PEA Object Copy')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000108 - Perform PEA Object Copy                         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1037730          Date 15Oct12              */
+/*                      AR1033608          Date 15Oct12              */
+/*                      CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1037730 - Clear TO file when FROM file is empty           */
+/*                   (Child:AR1037731)                               */
+/*       AR1033608 - APISERVFL is looping (Child:AR1034521)          */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&ODOBNM &ODOBTP &DUMDM &DMLIBP)
+ 
+             DCL        VAR(&ODOBNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ODOBTP) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DUMDM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIBP) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SCC000108 - SC Perform PEA Object +
+                          Copy') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Update driving file that job is submitted  */
+ 
+             CALL       PGM(SC000109) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'ACTIVE')
+ 
+             IF         COND(&ODOBTP *EQ '*FILE') THEN(DO)
+             CPYF       FROMFILE(&DUMDM/&ODOBNM) +
+                          TOFILE(&DMLIBP/&ODOBNM) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE)
+ 
+/** If FROM file member is empty, not an error */
+ 
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)                        /*AR1037730*/
+             CLRPFM     FILE(&DMLIBP/&ODOBNM)                                          /*AR1037730*/
+             GOTO       CMDLBL(PASSED)                                                 /*AR1037730*/
+             ENDDO                                                                     /*AR1037730*/
+                                                                                       /*AR1037730*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)                        /*AR1037730*/
+             CLRPFM     FILE(&DMLIBP/&ODOBNM)                                          /*AR1037730*/
+             GOTO       CMDLBL(PASSED)                                                 /*AR1037730*/
+             ENDDO                                                                     /*AR1037730*/
+                                                                                       /*AR1037730*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(GOTO +
+                          CMDLBL(PASSED)) */                                           /*AR1037730*/
+ 
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(GOTO +
+                          CMDLBL(PASSED)) */                                           /*AR1037730*/
+ 
+/** If FROM file does not exist */
+ 
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)
+             SNDMSG     MSG(&ODOBNM *TCAT ' - FROM file does not +
+                          exist in ' *CAT &DUMDM *TCAT '.') +
+                          TOMSGQ(&DUMDM/RSTERR)
+ 
+             CALL       PGM(SC000109) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'NFOUND')
+             GOTO       CMDLBL(ENDP)
+             ENDDO
+ 
+/** If TO file does not exist */
+ 
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2861) EXEC(DO)
+             SNDMSG     MSG(&ODOBNM *TCAT ' - TO file does not +
+                          exist in ' *CAT &DMLIBP *TCAT '.') +
+                          TOMSGQ(&DUMDM/RSTERR)
+ 
+             CALL       PGM(SC000109) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'NFOUND')
+             GOTO       CMDLBL(ENDP)
+             ENDDO
+ 
+/** If from-file or to-file is locked, or to-file is in use  */
+ 
+             MONMSG     MSGID(CPF2952 CPF2909 CPF3130) EXEC(DO)
+             SNDMSG     MSG(&ODOBNM *TCAT ' - File is already in +
+                          use.') TOMSGQ(&DUMDM/RSTERR)
+ 
+             CALL       PGM(SC000109) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'FAILED')
+             GOTO       CMDLBL(ENDP)
+             ENDDO
+ 
+/** Other errors */
+ 
+             MONMSG     MSGID(CPF2817 CPF0000) EXEC(DO)
+             SNDMSG     MSG(&ODOBNM *TCAT ' - Copy command ended in +
+                          error.') TOMSGQ(&DUMDM/RSTERR)
+ 
+             CALL       PGM(SC000109) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'FAILED')
+             GOTO       CMDLBL(ENDP)
+             ENDDO
+             ENDDO
+ 
+             IF         COND(&ODOBTP *EQ '*DTAARA') THEN(DO)
+ 
+/** Check data area if existing */
+ 
+             CHKOBJ     OBJ(&DMLIBP/&ODOBNM) OBJTYPE(*DTAARA)
+ 
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             SNDMSG     MSG(&ODOBNM *TCAT ' - File does not +
+                          exist in ' *CAT &DMLIBP *TCAT '.') +
+                          TOMSGQ(&DUMDM/RSTERR)
+ 
+             CALL       PGM(SC000109) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'NFOUND')
+             GOTO       CMDLBL(ENDP)
+             ENDDO
+ 
+             CPYDTAARA  FMDTAARA(&DUMDM/&ODOBNM) +
+                          TODTAARA(&DMLIBP/&ODOBNM)
+ 
+/** Copy ended in error */
+ 
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             SNDMSG     MSG(&ODOBNM *TCAT ' - Copy command ended in +
+                          error.') TOMSGQ(&DUMDM/RSTERR)
+ 
+             CALL       PGM(SC000109) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'FAILED')
+             GOTO       CMDLBL(ENDP)
+             ENDDO
+             ENDDO
+ 
+/** Update driving file for a successful copy */
+ 
+PASSED:      CALL       PGM(SC000109) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'PASSED')
+ 
+/** Start physical file journaling */
+ 
+/**********  STRJRNPF   FILE(&ODOBNM) JRN(ICJRN) */                                    /*AR1033608*/
+             STRJRNPF   FILE(&ODOBNM) JRN(ICJRN) +
+                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)                              /*AR1033608*/
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(ENDP)
+ 
+ABNOR:       CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000108 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDP:        ENDPGM

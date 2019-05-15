@@ -1,0 +1,129 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Daily Journal - End Task Split')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC0340T4 - Midas GL Daily Journal - End Task Split         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &CNAM &CSEQ)
+ 
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLDLYPPD')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC0340T4 - Daily Journal - End Task +
+                          Split') TOMSGQ(MRUNQ)
+ 
+             IF         COND(&POSTNUM = '3') THEN(DO)
+                RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
+                IF         COND(&CURRCD = 0) THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/* Determine full DTAQLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
+ 
+/* Delete sub-task data queue */
+ 
+ LOOP:       DLTDTAQ    DTAQ(&DTAQLIB/&MEMBER)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
+ 
+/* Loop for all members in driving file */
+ 
+             GOTO       CMDLBL(LOOP)
+ 
+ REMOVE:
+ 
+/* Restore the original data if error */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Remove all members from driving file - GL Daily Postings Driver */
+ 
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Check if post '1' (every normal day) and */
+/* if Retail is off and Interest on Accounts is off */
+ 
+             IF         COND(&POSTNUM *EQ '1') THEN(DO)
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+             IF         COND((%SST(&MMOD 16 1) *EQ 'N') *AND +
+                          (%SST(&MMOD 23 1) *EQ 'N')) THEN(DO)
+ 
+/* Post '1' (every normal day) and Retail is off */
+/* and Interest on Accounts is off */
+/* Clear output files from GLC3320 - Midas GL Account */
+/* Balances Extract Detail file */
+ 
+                   CLRPFM     FILE(ABEXHH)
+                   CLRPFM     FILE(ABEXAG)
+                   CLRPFM     FILE(ABEXZY)
+             ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+ 
+/* Post '2 , '3', '4' */
+/* Clear output files from GLC3320 - Midas GL Account */
+/* Balances Extract Detail file */
+ 
+                   CLRPFM     FILE(ABEXHH)
+                   CLRPFM     FILE(ABEXAG)
+                   CLRPFM     FILE(ABEXZY)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program GLC0340T4 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

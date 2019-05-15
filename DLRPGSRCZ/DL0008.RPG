@@ -1,0 +1,524 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL LE, FT, RE & NT Extract File Update')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0008 - Citydealer LE, FT, RE & NT Extract File Update      *
+      *                                                               *
+      *  Function:  This program will be called by DLC0008 during     *
+      *  (N.D.S.U.) Next Day Setup. It will compare balances from the *
+      *             new transmitted values work file produced during  *
+      *             Close of Business against the balances already    *
+      *             sent to Citydealer during the previous Input      *
+      *             Cycle.  Details of any differences will be sent   *
+      *             to the DTAQ/DLCDDTAQ for transmission to City-    *
+      *             dealer once the Input Cycle is open.              *
+      *                                                               *
+      *  Called By: DLC0008                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 097255             Date 14Dec95               *
+      *                 096271             Date 22Nov95               *
+      *                 095724             DATE 09NOV95               *
+      *                 095637             DATE 08NOV95               *
+      *                 095306             DATE 01NOV95               *
+      *                 CCM002 *CREATE     DATE 04SEP95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  097255 - Database error on DLCDJNPD during 1st run after     *
+      *           installation. The program should write the record.  *
+      *  096271 - Citydealer amounts are reversed correctly but       *
+      *           Current Transmission amounts are not deleted.       *
+      *           Previous fix 095724 not quite correct.              *
+      *  095724 - Citydealer amounts are being reversed in error.     *
+      *  095637 - Values on Current Transmission file are doubled.    *
+      *  095306 - Recompiled due to printer file change.              *
+      *  CCM002 - Midas/Citydealer Interface (Phases V and VI)        *
+      *                                                               *
+      *****************************************************************
+     FDLCDNCL0IF  E           K        DISK
+     FDLCDCRL0UF  E           K        DISK         KINFSR *PSSR A
+     F*LCDJNPDUF**E**         K        DISK         KINFSR *PSSR          097255
+     FDLCDJNPDUF  E           K        DISK         KINFSR *PSSR A        097255
+     FDL0008AUO   E                    PRINTER                        UC
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  10         EOF read for LF/DLCDNCL0, DLCDCRL0 & PF/DLCDJNPD  *
+     F*  20         CHAIN fails for LF/DLCDNCL0 and LF/DLCDCRL0       *
+     F*  U7-U8      Database Error                                    *
+     F*  LR         Exit program                                      *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  #LINIT  -  Initial Processing                                *
+     F*  #LNEWD  -  Process all new transmission details              *
+     F*  #LCURD  -  Process all current transmitted details           *
+     F*  #LFNAL  -  Final Processing                                  *
+     F*  #LSEND  -  Sends a message to the Dataqueue                  *
+     F*  *PSSR   -  Program exception error routine                   *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     I** Temporary Data Structure for files DLCDCRL0/DLCDNCL0.
+     I*
+     I            DS
+     I                                        1   2 ULMTYP
+     I                                        3   5 ULBRCA
+     I                                        6   8 ULCCY
+     I                                        9  130ULVDAT
+     I                                       14  150ULNOSN
+     I                                       16  300ULAMT
+     I                                        1  30 ULCRNC
+     I*
+     I** Working Data Structure (Variables) for file DLCDCRL0 and
+     I** Dataqueue DLCDDTAQ.
+     I*
+     I            DS
+     I                                        1   2 WMOTYP
+     I                                        3   5 WBRCA
+     I                                        6   8 WCCY
+     I                                        9  130WVDAT0
+     I                                       14  150WNOSN
+     I                                       16  300WAMT
+     I                                        1  30 WCDCR
+     I                                       31  31 WSTAF
+     I                                       32  32 WTRMF
+     I                                        1  32 WDTAQ
+     I*
+     I** Data structure for files DLCDCRL0/DLCDNCL0.
+     I*
+     I            DS
+     I                                        1   2 MOTYP
+     I                                        3   5 BRCA
+     I                                        6   8 CCY
+     I                                        9  130VDAT0
+     I                                       14  150NOSN
+     I                                       16  300AMT
+     I                                        1  30 WCRNC
+     I*
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+      /EJECT
+     C*
+     C** Initialisation.
+     C*
+     C                     EXSR #LINIT
+     C*
+     C** Process all new transmission details.
+     C*
+     C                     EXSR #LNEWD
+     C*
+     C** Process all current transmitted details.
+     C*
+     C                     EXSR #LCURD
+     C*
+     C** Final Processing.
+     C*
+     C                     EXSR #LFNAL
+     C*
+     C                     MOVE '1'       *INLR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT  - Initial Processing.                                 *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Define parameters passed.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PJNRCN 10
+     C                     PARM           PJSEQN 100
+     C*
+     C** Set Key for file DLCDCRL0/DLCDNCL0.
+     C*
+     C           KCRNC     KLIST
+     C                     KFLD           ULMTYP
+     C                     KFLD           ULBRCA
+     C                     KFLD           ULCCY
+     C                     KFLD           ULVDAT
+     C                     KFLD           ULNOSN
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LNEWD  - Process all new transmission details                *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  #LSEND - Sends a message to the Dataqueue            *
+     C*          *PSSR  - Program exception error routine             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LNEWD    BEGSR
+     C*
+     C** Access the Bank Details.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0008'  DBPGM
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVE *BLANKS   WDIFF   1
+     C                     MOVE 'N'       WTRMF
+     C*
+     C** Read a record from the Citydealer New Transmission Values File
+     C*
+     C                     READ DLCDNCL0                 10
+     C*
+     C           *IN10     DOWEQ*OFF
+     C*
+     C** Access the corresponding record on the Citydealer Current
+     C** Transmitted Values File (Move the fields first into the
+     C** temporary variables).
+     C*
+     C                     MOVELWCRNC     ULCRNC
+     C*
+     C           KCRNC     CHAINDLCDCRL0             20
+     C*
+     C** If record is found and amounts are different OR
+     C** record not found.
+     C*
+     C           *IN20     IFEQ *OFF
+     C           AMT       ANDNEULAMT
+     C           *IN20     OREQ *ON
+     C*
+     C** Send a message to the Dataqueue.
+     C*
+     C           WDIFF     IFEQ 'Y'
+     C                     EXSR #LSEND
+     C                     ENDIF
+     C*
+     C** Setup fields.
+     C*
+     C                     MOVELULCRNC    WDTAQ
+     C                     MOVE 'Y'       WDIFF
+     C*
+     C** If record found and amounts from the files are different.
+     C*
+     C           *IN20     IFEQ *OFF
+     C           AMT       ANDNEULAMT
+     C*
+     C           ULAMT     SUB  AMT       WAMT
+     C*
+     C***If*Module/type*is*'LE'*or*'LP',*update*the*record*in*the*file.***095724
+     C** Only update current position if future valued.                   095724
+     C*
+     C***********MOTYP     IFEQ 'LE'                                      095724
+     C***********MOTYP     OREQ 'LP'                                      095724
+     C           ULVDAT    IFGE BJDNWD                                    095724
+     C                     Z-ADDULAMT     AMT
+     C                     UPDATDLCDCRD0
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** If record is NOT found.
+     C*
+     C           *IN20     IFEQ *ON
+     C                     Z-ADDULAMT     WAMT
+     C*
+     C***If*Module/type*is*'LE'*or*'LP',*write*the*new*record.*********** 095724
+     C** Only write new record if future valued.                          095724
+     C*
+     C***********ULMTYP    IFEQ 'LE'                                      095724
+     C***********ULMTYP    OREQ 'LP'                                      095724
+     C           ULVDAT    IFGE BJDNWD                                    095724
+     C                     MOVELULCRNC    WCRNC
+     C                     WRITEDLCDCRD0
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C***If*record*is*found*and*Module/type*is*not*'LE'*and*not*'LP',***  095724
+     C** If record is found which is not future valued,                   095724
+     C** delete the record.
+     C*
+     C           *IN20     IFEQ *OFF
+     C***********MOTYP     ANDNE'LE'                                      095724
+     C***********MOTYP     ANDNE'LP'                                      095724
+     C           ULVDAT    ANDLTBJDNWD                                    095724
+     C                     DELETDLCDCRD0
+     C                     ENDIF
+     C*
+     C** Read the next record from the Citydealer New Transmission
+     C** Values File.
+     C*
+     C                     READ DLCDNCL0                 10
+     C                     ENDDO
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LCURD  - Process all current transmitted details             *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  #LSEND - Sends a message to the Dataqueue            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LCURD    BEGSR
+     C*
+     C           *LOVAL    SETLLDLCDCRL0
+     C*
+     C** Read a record from the Citydealer Current Transmitted
+     C** Values File.
+     C*
+     C                     READ DLCDCRL0                 10
+     C*
+     C           *IN10     DOWEQ*OFF
+     C*
+     C** Access the corresponding record on the Citydealer
+     C** New Transmission Values File (Move the fields first into
+     C** the temporary variables).
+     C*
+     C                     MOVELWCRNC     ULCRNC
+     C*
+     C           KCRNC     CHAINDLCDNCL0             20
+     C*
+     C***If*record*is*NOT*found*and*Value*Date*from*the*file*is***        095724
+     C***greater*than*the*System*Run*Date.************************        095724
+     C** If record is NOT found.                                          095724
+     C*
+     C           *IN20     IFEQ *ON
+     C***********ULVDAT    ANDGTBJRDNB                                    095724
+     C*
+     C** Send a message to the Dataqueue.
+     C*
+     C           WDIFF     IFEQ 'Y'
+     C                     EXSR #LSEND
+     C                     ENDIF
+     C*
+     C** Setup fields.
+     C*
+     C                     MOVELULCRNC    WDTAQ
+     C                     MOVE 'Y'       WDIFF
+     C                     Z-ADD0         WAMT
+     C                     SUB  ULAMT     WAMT
+     C*
+     C                     ENDIF
+     C*
+     C** If record is NOT found or Value Date from the file is
+     C***less*than*or*equal*to*the*System*Run*Date,*delete*the*record.*** 095724
+     C** less than the Date of Next Working Day, delete the record.       095724
+     C*
+     C           *IN20     IFEQ *ON
+     C***********ULVDAT    ANDLEBJRDNB                                    095724
+     C***********ULVDAT    ANDLTBJDNWD                             095274 096271
+     C           ULVDAT    ORLT BJDNWD                                    096271
+     C                     DELETDLCDCRD0
+     C                     ENDIF
+     C*
+     C** Read the next record from the Citydealer Current
+     C** Transmitted Values File.
+     C*
+     C                     READ DLCDCRL0                 10
+     C                     ENDDO
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LFNAL - Final Processing                                     *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  #LSEND   - Sends a message to the Dataqueue          *
+     C*          BUDEALR0 - Background Update of Citydealer Dealing   *
+     C*                     ICD                                       *
+     C*          *PSSR    - Program exception error routine           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LFNAL    BEGSR
+     C*
+     C           WDIFF     IFEQ 'Y'
+     C                     MOVE 'Y'       WTRMF
+     C*
+     C** Send a message to the Dataqueue.
+     C*
+     C                     EXSR #LSEND
+     C*
+     C** Update the Last Transmission Date and time on the dealing ICD.
+     C*
+     C                     CALL 'BUDEALR0'
+     C*
+     C           *INU7     IFEQ *ON
+     C           *INU8     OREQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Read the Citydealer Extracted Journal Info File.
+     C*
+     C                     READ DLCDJNPD                 10
+     C*
+     C***If*record*is*NOT*found,*database*error.*********************     097255
+     C** If record is NOT found, write new record, else                   097255
+     C*
+     C           *IN10     IFEQ *ON
+     C************LOCK     IN   LDA                                       097255
+     C***********          MOVEL'DL0008'  DBPGM                           097255
+     C***********          Z-ADD2         DBASE            ***************097255
+     C***********          MOVEL'DLCDJNPD'DBFILE           *DB ERROR 002 *097255
+     C***********          MOVEL'*EOF'    DBKEY            ***************097255
+     C***********          OUT  LDA                                       097255
+     C***********          EXSR *PSSR                                     097255
+     C***********          ENDIF                                          097255
+     C*
+     C** Update the record on DLCDJNPD.
+     C*
+     C                     MOVEL*BLANKS   JNRCP                           097255
+     C                     MOVELPJNRCN    JNRCN                           097255
+     C                     Z-ADDPJSEQN    JOSEQN                          097255
+     C                     WRITEDLCDJND0                                  097255
+     C*                                                                   097255
+     C                     ELSE                                           097255
+     C                     MOVELJNRCN     JNRCP
+     C                     MOVELPJNRCN    JNRCN
+     C                     Z-ADDPJSEQN    JOSEQN
+     C                     UPDATDLCDJND0
+     C                     ENDIF                                          097255
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LSEND - Sends a message to the Dataqueue                     *
+     C*                                                               *
+     C* Called by :  #LNEWD  - Process all new transmission details   *
+     C*              #LCURD  - Process all current transmitted        *
+     C*                        details                                *
+     C*              #LFNAL  - Final Processing                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LSEND    BEGSR
+     C*
+     C* Set 'Start Flag' always to 'Y' to stop DL0003 performing the      095637
+     C* same updates to DLCDCRPD for Loan messages.                       095637
+     C*                                                                   095637
+     C***********WMOTYP    IFEQ 'LE'                                      095637
+     C***********WMOTYP    OREQ 'LP'                                      095637
+     C***********          MOVE 'N'       WSTAF                           095637
+     C***********          ELSE                                           095637
+     C                     MOVE 'Y'       WSTAF
+     C***********          ENDIF                                          095637
+     C*
+     C** Send the message to the Dataqueue.
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM 'DLCDDTAQ'PDTAQ  10
+     C                     PARM '*LIBL'   PLIB   10
+     C                     PARM 32        PLEN    50
+     C                     PARM WDTAQ     PMESS  32
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: #LNEWD  - Process all new transmission details     *
+     C*            #LFNAL  - Final Processing                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     OPEN DL0008AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEDL0008AU
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

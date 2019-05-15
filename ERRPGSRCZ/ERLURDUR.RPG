@@ -1,0 +1,678 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER LU Remaining Period')
+     H**********************************************************************
+     H*                                                                    *
+     H* MIDAS/ABS  EUROPEAN REPORTING - LUXEMBOURG                         *
+     H*                                                                    *
+     H* RPG/ERLURDUR - Remaining Period.                                   *
+     H*                                                                    *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 CAD026 PT          Date 13Jan99               *
+      *                 EMFIX1 PT          Date 22Dec98               *
+     H*                CEU007 PTF08          Date 01Dec98                  *
+     H*                ER_R10                Date 18OCT94                  *
+     H*                64423  PT             DATE 20DEC93                  *
+     H*                ER0328 TLI            DATE 18MAR93                  *
+     H*                ERL316 TLI            DATE 17FEB93                  *
+     H*                ERL309 AF             DATE 01FEB93                  *
+     H*                ERL203 TLI            DATE 14JAN93                  *
+     H*                ERL011 VT             DATE 04JAN93                  *
+     H*                                                                    *
+     H**********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     H*    CAD026   -   Period codes not correctly set up                  *
+     H*    EMFIX1   -   Dates must be checked before conversion            *
+     H*    CEU007   -   Holidays Changes For Reporting Interface.          *
+     F*    ER_R10   -   EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10     *
+     F*             -   REVIEW HOLIDAYS PROCESSING                         *
+     H*    64423    -   END OF PERIOD DATES INCORRECTLY CALCULATED         *
+     H*    ER0328   -   CODE '35' NEVER SETUP                              *
+     H*    ERL316   -   PF/TABLETJ not in Database ==> use ERTABTJ         *
+     H*    ERL309   -   Calcul of Period Without Holliday's                *
+     H*    ERL203   -   SETUP CODE 10 FOR DURATION EQUAL 2 DAYS            *
+     H*                 AMENDMENTS FOR I.B.L.C (LUX)                       *
+     H*    ERL011   -   CHANGE OF RESIDUAL PERIOD CODE IF END/REVIEW DATE  *
+     H*                 IS UNDEFINED. 95 ---> 90                           *
+     H**********************************************************************
+     H*                                                                    *
+     H* FUNCTION:    Calculate number of days between transaction          *
+     H*              reporting date and end/review date AND setup          *
+     H*              residual period code:  - 00  not applicable           *
+     H*                                     - 05  < or = 1 days            *
+     H*                                     - 10  = 2 days          ERL203 *
+     H*                                     - 15  > 1 days < or = 1 month  *
+     H*                                     - 25  > 1 month < or = 3 month *
+     H*                                     - 35  > 3 month < or = 6 month *
+     H*                                     - 45  > 6 month < or = 1 year  *
+     H*                                     - 55  > 1 year < or = 2 years  *
+     H*                                     - 65  > 2 years < or = 5 years *
+     H*                                     - 75  > 5 years < or = 7 years *
+     H*                                     - 85  > 7 years                *
+     H**************************************- 95  undefined         ERL011 *
+     H*                                     - 90  undefined         ERL011 *
+     H*                                                                    *
+     F*****************************************************************   ERL309
+     F*TABLETJ**IF*E          K        DISK                    UC  ERL309 ERL316
+     F*ERTABTJ*IF**E           K        DISK                   UC  ERL316 ER_R10
+     F*****************************************************************   ERL309
+      /EJECT                                                              ERL309
+     E**************      HCCY       25  3                         ERL309 ER_R10
+     E****ZDATE3*S/R ARRAR FOR HOLIDAYS                            ERL309 ER_R10
+     E**************                                               ERL309 ER_R10
+     E/COPY ZSRSRC,ZHOLE                                                  ER_R10
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      /EJECT
+     I*ABLETJF******                                               ERL309 ER_R10
+     I**************HCCY                            HOLC           ERL309 ER_R10
+     I**Rename*of*holiday currencies array on Holidays file        ERL309 ER_R10
+     I************DS                                               ERL309 ER_R10
+     I**************                          1  75 HOLC           ERL309 ER_R10
+     I**************                          1  75 HCCY           ERL309 ER_R10
+     I**Data*structure to load up holiday currency array           ERL309 ER_R10
+     I/COPY ZSRSRC,ZHOLDS                                                 ER_R10
+     I/COPY ZSRSRC,ZHOLI                                                  ER_R10
+     I/COPY ZSRSRC,ZDATE9Z2                                               CEU007
+     IWWDAT1      DS                              8                       CEU007
+     I                                        5   6 WWMTH1                CEU007
+     IWWDAT2      DS                              8                       CEU007
+     I                                        5   6 WWMTH2                CEU007
+      *
+      **  Data Structure for compilation  - Copyright Insertion:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+     I*
+      /EJECT
+      *===================================================================
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           PARM1   80       I: Reporting date
+     C                     PARM           PARM2   80       I: End Date
+     C                     PARM           PARM3   20       O: Remaining per. 1
+     C                     PARM           PARM4   3        I: Currency    ERL309
+     C                     PARM           PARM5   3        I: End Date LocCEU007
+     C                     PARM           PARM6   3        I: End Date CcyCEU007
+      *===================================================================
+      *
+     C                     MOVELPARM1     WKRPDT  80
+     C                     MOVELPARM2     WKENDT  80
+      *                                                                   EMFIX1
+     C           WKRPDT    IFEQ 0                                         EMFIX1
+     C                     Z-ADD0         INITPR  20                      EMFIX1
+     C                     GOTO SETUP                                     EMFIX1
+     C                     END                                            EMFIX1
+      *                                                                   EMFIX1
+     C           WKENDT    IFEQ 0                                         EMFIX1
+     C                     Z-ADD90        INITPR                          EMFIX1
+     C                     GOTO SETUP                                     EMFIX1
+     C                     END                                            EMFIX1
+      *                                                                   CEU007
+      ***  Check if the feature CEU007 is installed.                      CEU007
+      *                                                                   CEU007
+     C                     CALL 'AOSARDR0'                                CEU007
+     C                     PARM '       ' @RTCD   7                       CEU007
+     C                     PARM '*VERIFY' @OPTN   7                       CEU007
+     C                     PARM 'CEU007'  @SARD   6                       CEU007
+      *                                                                   CEU007
+     C           @RTCD     IFEQ *BLANKS                                   CEU007
+      *                                                                   CEU007
+      ***  It's existing, check if the end date is a working date         CEU007
+      ***  with the "End Date Settlement location Code" and the           CEU007
+      ***  "End Date Settlement currency code".                           CEU007
+      ***  If it's a working day :                                        CEU007
+      ***  =====> Nothing                                                 CEU007
+      ***  If it's a no working day and the same month :                  CEU007
+      ***  =====> Take the next working day                               CEU007
+      ***  If it's a no working day and not the same month :              CEU007
+      ***  =====> Take the previous working day                           CEU007
+      *                                                                   CEU007
+      ***  Convert end date in Midas format                               CEU007
+      *                                                                   CEU007
+     C                     Z-ADDWKENDT    @@DTIN                          CEU007
+     C                     EXSR ZA0680                                    CEU007
+     C                     Z-ADD@@MDNO    WWENDT  50                      CEU007
+      *                                                                   CEU007
+     C                     MOVELPARM6     ZCCY                            CEU007
+     C                     Z-ADDWWENDT    ZDAYNO                          CEU007
+     C                     MOVELPARM5     ZLOC                            CEU007
+      *                                                                   CEU007
+     C                     EXSR ZCHKH                                     CEU007
+      *                                                                   CEU007
+      ***  If ZIND = 'H' then the date is a holiday                       CEU007
+      ***  End date ==> next working day                                  CEU007
+      *                                                                   CEU007
+     C           ZIND      DOWEQ'H'                                       CEU007
+     C                     ADD  1         ZDAYNO                          CEU007
+     C                     EXSR ZCHKH                                     CEU007
+     C                     ENDDO                                          CEU007
+      *                                                                   CEU007
+      ***  Check if it's the same month                                   CEU007
+      *                                                                   CEU007
+     C                     Z-ADDZDAYNO    @@DAYN  50                      CEU007
+     C                     EXSR ZDATE9                                    CEU007
+     C                     MOVE @@VDT     WWDAT2                          CEU007
+     C                     MOVE WKENDT    WWDAT1                          CEU007
+      *                                                                   CEU007
+     C           WWMTH1    IFNE WWMTH2                                    CEU007
+      *                                                                   CEU007
+      ***  Take the first date and seach into the another direction       CEU007
+      ***  End date ==> previous working day                              CEU007
+      *                                                                   CEU007
+     C                     MOVEL'H'       ZIND                            CEU007
+     C                     Z-ADDWWENDT    ZDAYNO                          CEU007
+     C           ZIND      DOWEQ'H'                                       CEU007
+     C                     SUB  1         ZDAYNO                          CEU007
+     C                     EXSR ZCHKH                                     CEU007
+     C                     ENDDO                                          CEU007
+      *                                                                   CEU007
+     C                     ENDIF                                          CEU007
+      *                                                                   CEU007
+      ***  Filling the end date                                           CEU007
+      *                                                                   CEU007
+     C                     Z-ADDZDAYNO    @@DAYN                          CEU007
+     C                     EXSR ZDATE9                                    CEU007
+     C                     Z-ADD@@VDT     WKENDT                          CEU007
+      *                                                                   CEU007
+     C                     ENDIF                                          CEU007
+      *
+      **   If the reporting date has changed initialize period.
+     C***********WKRPDT    IFNE BKRPDT                                    CAD026
+     C                     EXSR SRINIT
+     C*********************END                                            CAD026
+      *
+      **   If the two input date are the sane do not process one more(save time)
+     C***********WKRPDT    IFEQ BKRPDT                                    CAD026
+     C***********WKENDT    ANDEQBKENDT                                    CAD026
+     C***********          GOTO SETUP                                     CAD026
+     C***********          END                                            CAD026
+      *
+     C***        WKRPDT    IFEQ 0                                         EMFIX1
+     C***                  Z-ADD0         INITPR  20                      EMFIX1
+     C***                  GOTO SETUP                                     EMFIX1
+     C***                  END                                            EMFIX1
+      ***                                                                 EMFIX1
+     C***        WKENDT    IFEQ 0                                         EMFIX1
+     C*********************Z-ADD95        INITPR                          ERL011
+     C***                  Z-ADD90        INITPR                   ERL011 EMFIX1
+     C***                  GOTO SETUP                                     EMFIX1
+     C***                  END                                            EMFIX1
+      *
+     C***********WKENDT    IFNE BKENDT                                    CAD026
+     C                     MOVELWKENDT    @@DTIN
+     C                     EXSR ZA0680
+     C                     MOVE @@MDNO    ENDT    50
+     C*********************END                                            CAD026
+      **************************************************************************
+     C**   Calcul period between to given date and setup corresponding code
+      **************************************************************************
+      *
+     C           ENDT      IFLE MD01
+     C                     Z-ADD05        INITPR
+     C                     GOTO SETUP
+     C                     END
+      *
+     C           ENDT      IFEQ MD02                                      ERL203
+     C                     Z-ADD10        INITPR                          ERL203
+     C                     GOTO SETUP                                     ERL203
+     C                     END                                            ERL203
+      *
+     C           ENDT      IFLE MD30
+     C                     Z-ADD15        INITPR
+     C                     GOTO SETUP
+     C                     END
+      *
+     C           ENDT      IFLE MD92
+     C                     Z-ADD25        INITPR
+     C                     GOTO SETUP
+     C                     END
+      *
+     C           ENDT      IFLE MD183
+     C                     Z-ADD35        INITPR
+     C                     GOTO SETUP                                     ER0328
+     C                     END
+      *
+     C           ENDT      IFLE MD365
+     C                     Z-ADD45        INITPR
+     C                     GOTO SETUP
+     C                     END
+      *
+     C           ENDT      IFLE MD730
+     C                     Z-ADD55        INITPR
+     C                     GOTO SETUP
+     C                     END
+      *
+     C           ENDT      IFLE MD1825
+     C                     Z-ADD65        INITPR
+     C                     GOTO SETUP
+     C                     END
+      *
+     C           ENDT      IFLE MDSEVE
+     C                     Z-ADD75        INITPR
+     C                     GOTO SETUP
+     C                     END
+      *
+     C           ENDT      IFGT MDSEVE
+     C                     Z-ADD85        INITPR
+     C                     END
+      *
+     C           SETUP     TAG                             *** SETUP PARM ***
+      *
+      ** Setup backup parameters to avoid proccessing
+     C                     Z-ADDWKRPDT    BKRPDT  80
+     C                     Z-ADDWKENDT    BKENDT  80
+      *
+      ** Setup output parameters
+     C                     MOVELINITPR    PARM3
+      *
+     C                     RETRN
+      *
+      ** Define in98 for compilation
+     C  N98                MOVE '0'       *IN98
+     C/EJECT
+     C*****************************************************************
+     C* SRINIT - Routine called only if reporting date has changed    *
+     C*****************************************************************
+     C           SRINIT    BEGSR
+      *
+     C           WKRPDT    IFNE 0
+      *
+      **   Convert reporting date in Midas format.
+     C                     MOVELWKRPDT    @@DTIN
+     C                     EXSR ZA0680
+     C                     MOVE @@MDNO    RPDT    50
+      *
+     C**   Calcul period between to given date
+     C*
+     C***********RPDT      ADD  1         MD01    50                      ERL309
+     C*                                                                   ERL309
+     C                     Z-ADDRPDT      ZDAYNO                          ERL309
+     C                     MOVE PARM4     ZCCY                            ERL309
+     C                     Z-ADD1         ZNRDYS                          ERL309
+     C*                                                                   ERL309
+     C*********************OPEN TABLETJ                            ERL309 ERL316
+     C**************       OPEN ERTABTJ                            ERL316 ER_R10
+     C**************       EXSR ZDATE3                             ERL309 ER_R10
+     C                     MOVE *BLANKS   ZLOC                            ER_R10
+     C                     EXSR ZFWDT                                     ER_R10
+     C*********************CLOSETABLETJ                            ERL309 ERL316
+     C**************       CLOSEERTABTJ                            ERL316 ER_R10
+     C                     Z-ADDZDYNBR    MD01    50                      ERL309
+     C*                                                                   ERL309
+     C***********RPDT      ADD  2         MD02    50             ERL203   ERL309
+     C*                                                                   ERL309
+     C                     Z-ADDRPDT      ZDAYNO                          ERL309
+     C                     Z-ADD2         ZNRDYS                          ERL309
+     C*                                                                   ERL309
+     C*********************OPEN TABLETJ                            ERL309 ERL316
+     C**************       OPEN ERTABTJ                            ERL316 ER_R10
+     C**************       EXSR ZDATE3                             ERL309 ER_R10
+     C                     EXSR ZFWDT                                     ER_R10
+     C*********************CLOSETABLETJ                            ERL309 ERL316
+     C**************       CLOSEERTABTJ                            ERL316 ER_R10
+     C                     Z-ADDZDYNBR    MD02    50                      ERL309
+     C*                                                                   ERL309
+     C*
+     C                     Z-ADD0         Y       20
+     C*********************Z-ADD1         M       20                      64423
+     C                     Z-ADD2         M       20                      64423
+     C                     EXSR SRINPR                     ONE MONTH
+     C*********************Z-ADDZDAYNO    MD30    50                      64423
+     C           ZDAYNO    SUB  1         MD30    50                      64423
+     C*
+     C*********************Z-ADD3         M                               64423
+     C                     Z-ADD4         M                               64423
+     C                     EXSR SRINPR                     THREE MONTHS
+     C*********************Z-ADDZDAYNO    MD92    50                      64423
+     C           ZDAYNO    SUB  1         MD92    50                      64423
+     C*
+     C*********************Z-ADD6         M                               64423
+     C                     Z-ADD7         M                               64423
+     C                     EXSR SRINPR                     SIX MONTHS
+     C*********************Z-ADDZDAYNO    MD183   50                      64423
+     C           ZDAYNO    SUB  1         MD183   50                      64423
+     C*
+     C                     Z-ADD1         Y
+     C*********************Z-ADD0         M                               64423
+     C                     Z-ADD1         M                               64423
+     C                     EXSR SRINPR                     ONE YEAR
+     C*********************Z-ADDZDAYNO    MD365   50                      64423
+     C           ZDAYNO    SUB  1         MD365   50                      64423
+     C*
+     C                     Z-ADD2         Y
+     C*********************Z-ADD0         M                               64423
+     C                     Z-ADD1         M                               64423
+     C                     EXSR SRINPR                     TWO YEARS
+     C*********************Z-ADDZDAYNO    MD730   50                      64423
+     C           ZDAYNO    SUB  1         MD730   50                      64423
+     C*
+     C                     Z-ADD5         Y
+     C*********************Z-ADD0         M                               64423
+     C                     Z-ADD1         M                               64423
+     C                     EXSR SRINPR                     FIVE YEARS
+     C*********************Z-ADDZDAYNO    MD1825  50                      64423
+     C           ZDAYNO    SUB  1         MD1825  50                      64423
+     C*
+     C                     Z-ADD7         Y
+     C*********************Z-ADD0         M                               64423
+     C                     Z-ADD1         M                               64423
+     C                     EXSR SRINPR                     SEVEN YEARS
+     C*********************Z-ADDZDAYNO    MDSEVE  50                      64423
+     C           ZDAYNO    SUB  1         MDSEVE  50                      64423
+      *
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*******************************************************************
+     C*  Subroutine to calculate a variable period between two dates
+     C*
+     C           SRINPR    BEGSR                           *** SRINPR ***
+     C                     MOVE WKRPDT    MTHDAY  40
+     C                     MOVELMTHDAY    MTH     20
+     C*********************MOVE MTHDAY    DAY     20                      64423
+     C                     Z-ADD1         DAY     20                      64423
+     C                     MOVELWKRPDT    CTYEAR  40
+     C                     MOVE CTYEAR    YEAR    20
+     C*
+     C*    ADD DESIRED CALENDER MONTH OR YEAR
+     C           YEAR      ADD  Y         YEAR
+     C           MTH       ADD  M         MTH
+     C           MTH       COMP 12                   50    GREATER THAN
+     C   50      MTH       SUB  12        MTH
+     C   50      YEAR      ADD  1         YEAR
+     C*
+     C*    REFORM DATE INTO PROPER FORMAT
+     C                     MOVELDAY       DYMTH   40
+     C                     MOVE MTH       DYMTH
+     C                     MOVELDYMTH     ZDATE
+     C                     MOVE YEAR      ZDATE
+     C*
+     C*    CHECK WHETHER DATE IS VALID
+     C           CHECK     TAG                             *** CHECK ***
+     C                     EXSR ZDATE1
+     C   99      ZDATE     SUB  10000     ZDATE
+     C   99                GOTO CHECK
+     C*
+     C                     ENDSR
+     C*******************************************************************
+     C/EJECT
+     C*******************************************************************
+     C*
+     C           ZA0680    BEGSR
+     C*
+     C**  CLEAR OUT ANY 'OLD' DATA IN FIELD
+     C                     Z-ADD0         @@MDNO  50
+     C*
+     C**   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+     C           @@YYYY    IFGE 2072                       B1
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+     C           @@CC      SUB  19        @@WK2   20       *1
+     C           @@WK2     MULT 36524     @@MDNO           *1
+     C*
+     C**  YEAR 2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C           @@YYYY    ADD  28        @@WK2
+     C*
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+     C*
+     C**  CHECK REMAINDER AND MONTH NUMBER
+     C           @@REM     IFEQ 0                          B1
+     C           @@MTH     ANDGT2                          B1
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+     C           @@REM     IFNE 0                          B1
+     C                     ADD  @YD,@@REM @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  ADD MONTHS THIS YEAR
+     C                     ADD  @MD,@@MTH @@MDNO
+     C*
+     C**  ADD DAYS THIS MONTH
+     C                     ADD  @@DAY     @@MDNO
+     C*
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+     C**              CONVERT TO A NUMBER OF DAYS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER. RESET ERROR INDICATOR
+     C                     Z-ADD0         ZDAYNO  50
+     C                     SETOF                     99
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID. BYPASS IF ERROR
+     C           ZMTH      IFLE 0
+     C           ZMTH      ORGT 12
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   ENSURE DAY IS VALID. BYPASS IF ERROR
+     C           ZDAY      IFLE 0
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   CHECK FOR 30 DAY MONTHS. BYPASS IF ERROR
+     C           ZMTH      IFEQ 4
+     C           ZMTH      OREQ 6
+     C           ZMTH      OREQ 9
+     C           ZMTH      OREQ 11
+     C**
+     C           ZDAY      IFGT 30
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C**   CHECK FOR 31 DAY MONTHS (ALL OTHERS BUT FEB). BYPASS IF ERROR
+     C           ZDAY      IFGT 31
+     C           ZMTH      ANDNE2
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   CHECK FOR LEAP YEAR: REMAINDER WILL BE ZERO IF IT IS A LEAP YR
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+     C**
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C           ZMTH      IFEQ 2
+     C**
+     C**   INVALID IF GREATER THAN 28 AND NOT A LEAP YEAR
+     C           ZLY       IFGT 0
+     C           ZDAY      ANDGT28
+     C                     SETON                     99
+     C                     GOTO ZDEND1                     BYPASS IF ERROR
+     C                     END
+     C**
+     C**   INVALID IF GREATER THAN 29 AND A LEAP YEAR - BYPASS IF ERROR
+     C           ZLY       IFEQ 0
+     C           ZDAY      ANDGT29
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.
+     C**
+     C**   MULTIPLY NO. OF FOUR-YEAR SPANS, BY NO. OF DAYS IN SPAN
+     C           ZLYR      MULT 1461      ZDAYNO
+     C**
+     C**   IF NOT A LEAP YEAR, ADD APPROPRIATE NO. OF DAYS FOR EXTRA
+     C**   YEARS USING REMAINDER FIELD (IE. 1, 2 OR 3 X 356)
+     C           ZLY       IFGT 0
+     C           ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO
+     C                     END
+     C**
+     C**   IF IT IS A LEAP YEAR, AND LATER THAN FEBRUARY, ADD ONE FOR
+     C**   29TH OF FEB
+     C           ZLY       IFEQ 0
+     C           ZMTH      ANDGT2
+     C           ZDAYNO    ADD  1         ZDAYNO
+     C                     END
+     C**
+     C**   ADD APPROPRIATE NUMBER OF DAYS FOR THE MONTH NUMBER
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO
+     C**
+     C**   ADD NUMBER OF DAYS IN MONTH
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+     C**
+     C**
+     C********************************************************************
+     C*************************************************************ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****ZDATE3*SR. TO CALCULATE ANY NUMBER OF WORKING           ERL309 ER_R10
+     C**************  DAYS FORWARD IN ANY CURRENCY.                ERL309 ER_R10
+     C**************  HOLIDAYS FILE ACCESSED BY CHAIN.             ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C***********ZDATE3    BEGSR                           *** ZDATERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****CALCULATIONS TO DEFINE INPUT FIELDS.                    ERL309 ER_R10
+     C**************       Z-ADDZDAYNO    ZDAYNO  50       STARTINGERL309 ER_R10
+     C**************       MOVE ZCCY      ZCCY    3        DATE CURERL309 ER_R10
+     C**************       Z-ADDZNRDYS    ZNRDYS  20       NBR OF WERL309 ER_R10
+     C**************                                       DAYS FORERL309 ER_R10
+     C*****CLEAR*COUNT OF NBR OF DAYS ADDED, & DEFINE ZDYNBR.      ERL309 ER_R10
+     C**************       Z-ADD0         ZDCNT   20               ERL309 ER_R10
+     C**************       Z-ADDZDAYNO    ZDYNBR  50               ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****LOOP*TO*INCREMENT DAY NUMBER AND CHECK FOR HOLIDAY.     ERL309 ER_R10
+     C***********ZDCNT     DOWLTZNRDYS                             ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C**************       ADD  1         ZDYNBR                   ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****CHAIN*FOR HOLIDAY RECORD 1 - IF NOT FOUND, NO HOLIDAY   ERL309 ER_R10
+     C***********ZDYNBR    CHAINTABLETJF             90            ERL309 ER_R10
+     C************IN90     IFEQ '1'                                ERL309 ER_R10
+     C***********RECI      ORNE 'D'                                ERL309 ER_R10
+     C**************       ADD  1         ZDCNT                    ERL309 ER_R10
+     C**************       GOTO ZDLOP1                             ERL309 ER_R10
+     C**************       END                                     ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****CHECK*IF*DAY IS HOLIDAY FOR CURRENCY.                   ERL309 ER_R10
+     C***********ZCCY      LOKUPHCCY                     93        ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****DETERMINE TYPE FOUND, IF INCLUDE AND NOT IN ARRAY/EXCLUDERL309 ER_R10
+     C*****IN*ARRAY, THEN MUST CHAIN TO RECORD 2 TO SEE IF IT IS A ERL309 ER_R10
+     C***********INEX      IFEQ 'E'                                ERL309 ER_R10
+     C************IN93     ANDEQ'1'                                ERL309 ER_R10
+     C***********INEX      OREQ 'I'                                ERL309 ER_R10
+     C************IN93     ANDEQ'0'                                ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****IF*BLANK*ENTRIES IN HCCY, THEN NO RECORD 2 WILL BE PRESEERL309 ER_R10
+     C***********'** '     LOKUPHCCY                     94ON IF NOERL309 ER_R10
+     C************IN94     IFEQ '1'                                ERL309 ER_R10
+     C**************       ADD  1         ZDCNT                    ERL309 ER_R10
+     C**************       GOTO ZDLOP1                             ERL309 ER_R10
+     C**************       END                                     ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****CHAIN*FOR HOLIDAY RECORD, RECORD 2                      ERL309 ER_R10
+     C**************       READ TABLETJF                 90        ERL309 ER_R10
+     C************IN90     IFEQ '1'                                ERL309 ER_R10
+     C***********RECI      ORNE 'D'                                ERL309 ER_R10
+     C***********HOL       ORNE ZDYNBR                             ERL309 ER_R10
+     C**************       ADD  1         ZDCNT                    ERL309 ER_R10
+     C**************       GOTO ZDLOP1                             ERL309 ER_R10
+     C**************       END                                     ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****CHECK*IF*DAY IS HOLIDAY FOR CURRENCY.                   ERL309 ER_R10
+     C***********ZCCY      LOKUPHCCY                     93        ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*****DETERMINE TYPE FOUND, IF INCLUDE AND NOT IN ARRAY/EXCLUDERL309 ER_R10
+     C*****IN*ARRAY, THEN NOT A HOLIDAY                            ERL309 ER_R10
+     C***********INEX      IFEQ 'E'                                ERL309 ER_R10
+     C************IN93     ANDEQ'1'                                ERL309 ER_R10
+     C***********INEX      OREQ 'I'                                ERL309 ER_R10
+     C************IN93     ANDEQ'0'                                ERL309 ER_R10
+     C***********ZDCNT     ADD  1         ZDCNT                    ERL309 ER_R10
+     C**************       END                                     ERL309 ER_R10
+     C**************       END                                     ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C****END*OF*DO*LOOP                                           ERL309 ER_R10
+     C***********ZDLOP1    TAG                             *** ZDLOERL309 ER_R10
+     C**************       END                                     ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C**************       ENDSR                                   ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C**************                                               ERL309 ER_R10
+     C*************************************************************ERL309 ER_R10
+      /EJECT                                                              ER_R10
+     C/COPY ZSRSRC,ZACCH                                                  ER_R10
+      /EJECT                                                              ER_R10
+     C/COPY ZSRSRC,ZFWDT                                                  ER_R10
+     C/COPY ZSRSRC,ZCHKH                                                  CEU007
+     C/COPY ZSRSRC,ZDATE9Z3                                               CEU007
+** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0680 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  CPY@
+(c) Finastra International Limited 2005

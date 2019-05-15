@@ -1,0 +1,1807 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Period set maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0100 - PERIOD SET & DETAIL MAINTENANCE                     *
+     F*                                                               *
+     F*  Function: This program displays a subfile of all records     *
+     F*  (I/C Int) held on the Period Set file LF/GLPERSL0. A summary *
+     F*            of fields from this file is displayed and options  *
+     F*            to delete, amend, enquire & insert can be taken    *
+     F*            on individual records.  A second screen is then    *
+     F*            displayed with the selected record's details.      *
+     F*            If amend, enquire or insert options are taken,     *
+     F*            additional programs are called which display       *
+     F*            Period Details for maintenance/insertion.          *
+     F*                                                               *
+     F*  Called by: Menu                                              *
+     F*                                                               *
+     F*  Calls: MC0110   - Period Details Maintenance - Enq/Amd       *
+     F*         MC0115   - Period Details Maintenance - Insert        *
+     F*         AOGELRR0 - Access General Ledger details              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201287             Date 07Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMC001             Date 18Mar96               *
+      *                 050829             Date 11Feb93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  201287 - Proper validation of start date in DDMMMYY format.  *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Allow a period set to be selected for Closed        *
+     F*           Period Maintenance if CMC001 feature is installed.  *
+     F*  050829 - US Date format should not be checked                *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FGLPERSL0UF  E           K        DISK         KCOMIT       A
+     F                                              KINFDS DSPERS
+     F                                              KINFSR INFSR
+     FGLPERDL3UF  E           K        DISK         KCOMIT
+     F                                              KINFDS DSPERD
+     F                                              KINFSR INFSR
+     FGLHBCGL2IF  E           K        DISK
+     FGLFCTLL0UF  E           K        DISK         KCOMIT
+     FMC0100DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE MC0100S1
+     F                                              KINFDS INFDS
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  02  -  SFLDSP                                                *
+      *  03  -  SFLDSPCTL                                             *
+      *  04  -  SFLEND                                                *
+      *  05  -  SFLCLR                                                *
+      *  06  -  SFLMSG - No data to display                           *
+      *  07  -  Positioner or Selection field changed                 *
+      *  10  -  Input Protected                                       *
+      *  11  -  Input Protected on Amend                              *
+      *  13  -  Reverse Image                                         *
+      *  14  -  Protect Periods per Term 1/2                          *
+      *  15  -  Enable F10 for delete                                 *
+      *  16  -  Chain to GLFCTLL0 failed                              *
+      *  18  -  Insert option taken                                   *
+      *  19  -  Insert first record on Period Set file                *
+      *  20  -  READC from subfile                                    *
+      *  22  -  Invalid Set Code entry                                *
+      *  23  -  Start Date too far in the future                      *
+      *  24  -  Data does not meet COMParison criteria                *
+      *  25  -  Screen read fail indicator                            *
+      *  26  -  Error on field validation                             *
+      *  30  -  Error on Set Code                                     *
+      *  31  -  Error on Periods per Annum                            *
+      *  32  -  Error on Start Date                                   *
+      *  33  -  Error on First Period Year                            *
+      *  34  -  Error on Periods per Term 1                           *
+      *  35  -  Error on Periods per Term 2                           *
+      *  36  -  Error on Frequency Code                               *
+      *  38  -  Error on Frequency Base Date                          *
+      *  39  -  Error on History Period                               *
+      *  40  -  Invalid Month Name in LOKUP operation                 *
+      *  60  -  SFLEND DSPF Indicator                                 *
+      *  80  -  EOF GLPERSL0                                          *
+      *  81  -  No record found GLPERDL3 on READP                     *
+      *  82  -  Record found GLHBCGL2                                 *
+      *  83  -  No record found GLPERSL0                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT    -  Initial Processing                                *
+      *  LDSFL   -  Load GLPERSL0 details into subfile                *
+      *  WRTSUB  -  Write record to subfile                           *
+      *  SCRN1   -  Display subfile screen                            *
+      *  INSFST  -  Insert First Period Set record                    *
+      *  INSERT  -  Insert new Period Set record                      *
+      *  AMDENQ  -  Amend/Enquire on Period Set record                *
+      *  DELETE  -  Delete a Period Set record                        *
+      *  VALID   -  Validate screen fields                            *
+      *  INITSC  -  Initialise screen fields                          *
+      *                                                               *
+      *  ZASNMS  -  Send message to pgm message queue                 *
+      *  INFSR   -  File Exception/Error handling                     *
+      *  *PSSR   -  Abnormal error conditions                         *
+      *  ZDATE1  -  Convert Date to Dayno. and report if error        *
+      *  ZDATE2  -  Convert Dayno. to Date for display                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E***********         MSG     1   3 80                                CMC001
+     E                    MSG     1   4 80                                CMC001
+      *  Screen message
+     E                    TAB1    1  12  3   TAB2    2
+      *  Tables to match month shortnames and numbers
+     E                    FQCD   17  17  1
+      *  Valid frequency codes
+      /COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+     ILDA       E DSLDA
+     IRUNDAT    E DS
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     ISDGELR    E DSSDGELRPD
+      **  General Ledger details
+      *
+     ISCSARD    E DSSCSARDPD                                              CMC001
+      **  Switchable Features file details                                CMC001
+      *                                                                   CMC001
+     IPSDS       SDS
+      *
+      **  Program Status DS
+      *
+     I                                      244 246 SWSID
+     I                                      254 263 SUSER
+     IINFDS       DS
+      *
+      **  INFDS Data Structure
+      *
+     I                                     *STATUS  STATUS
+     IDSPERS      DS
+      *
+      **  GLPERSL0 Data Structure
+      *
+     I                                     *STATUS  STPERS
+     IDSPERD      DS
+      *
+      **  GLPERDL3 Data Structure
+      *
+     I                                     *STATUS  STPERD
+     I            DS
+      *
+      **  Data Structure for shortname date
+      *
+     I                                        1   7 SHDATE
+     I                                        1   2 SDAY
+     I                                        3   5 SMON
+     I                                        6   7 SYR
+     I            DS
+      *
+      **  Data Structure for date
+      *
+     I                                        1   6 NDATE
+     I                                        1   2 NDAY
+     I                                        1   1 ND1                                       201287
+     I                                        3   4 NMON
+     I                                        5   6 NYR
+     I            DS
+      **  Data Structure for Message data
+     I                                        1 132 ZAMSDA
+     I                                        1   1 ZA0001
+     I                                        1   1 ZA0002
+     I                                        1   1 ZA0003
+     I                                        1   1 ZA0004
+     IPDKY        DS
+      *
+      **  Key fields for LF/GLPERDL3
+      *
+     I                                        1   1 KPSTC
+     I                                        2   60KSPDD
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Key List for GLPERDL3
+      *
+     C           PDKEY     KLIST
+     C                     KFLD           KPSTC
+     C                     KFLD           KSPDD
+      *
+      **  Initial Processing
+      *
+     C                     EXSR INIT
+     C           *INKC     DOWEQ'0'
+      *
+      **  Load subfile from first record on file or from positioner
+      *
+     C                     WRITEMC0100F1
+     C           SPSTCB    IFEQ *BLANKS
+     C           *LOVAL    SETLLGLPERSL0
+     C                     ELSE
+     C           SPSTCB    SETLLGLPERSL0
+     C                     END
+     C                     EXSR LDSFL
+     C           *IN19     IFEQ '0'
+     C                     MOVE 'N'       RLDEX   1
+     C                     END
+      *
+      **  Display screen until reload/exit requested
+      *
+     C           RLDEX     DOWEQ'N'
+      *
+      **  Display screen
+      *
+     C                     EXSR SCRN1
+      *
+      **  Process response:
+      **  Redisplay subfile using positioner and selection entries
+      *
+     C           *IN07     IFEQ '1'
+     C                     MOVE *BLANKS   SACTN
+     C                     MOVE 'Y'       RLDEX
+     C                     END
+      *
+      **  Insert new record
+      *
+     C                     MOVE '0'       *IN18
+     C           *INKI     IFEQ '1'
+     C                     MOVE '1'       *IN18
+     C                     EXSR INSERT
+     C                     END
+      *
+      **  Amend/Enquire on existing record
+      *
+     C           SACTN     IFEQ 'A'
+     C           SACTN     OREQ 'E'
+     C                     EXSR AMDENQ
+      *
+     C                     ELSE
+      *
+      **  Delete existing record
+      *
+     C           SACTN     IFEQ 'D'
+     C                     EXSR DELETE
+     C                     END
+     C                     END
+      *                                                                   CMC001
+      **  If action is 'C', call Closed Period Maintenance program        CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C           SACTN     ANDEQ'C'                                       CMC001
+     C                     CALL 'MC0120'                                  CMC001
+     C                     PARM           SPSTC                           CMC001
+     C                     PARM *BLANK    PACTN   1                       CMC001
+      *                                                                   CMC001
+      **  If returned action code is 'T', exit program                    CMC001
+      *                                                                   CMC001
+     C           PACTN     IFEQ 'T'                                       CMC001
+     C                     MOVE *ON       *INKC                           CMC001
+     C                     ELSE                                           CMC001
+      *                                                                   CMC001
+      **  F12 has been pressed from MC0120                                CMC001
+      *                                                                   CMC001
+     C                     MOVE *ON       *INKL                           CMC001
+     C                     ENDIF                                          CMC001
+     C                     ENDIF                                          CMC001
+      *
+      **  Exit program or redisplay subfile from first record.
+      *
+     C           *INKC     IFEQ '1'
+     C           *INKE     OREQ '1'
+     C           *INKL     OREQ '1'
+     C                     MOVE 'Y'       RLDEX
+     C                     END
+      *
+      **  End - Reload/Exit
+      *
+     C                     END
+      *
+      **  End - Cmd3 Exit
+      *
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT - SR TO INITIALISE FIELDS AND ACCESS STANDING DATA      *
+      *                                                               *
+      *    CALLED BY : Main Processing                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  In the Dataarea RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      ***********                                                         050829
+      ****Check*System*Date*Format,*DDMMYY*or*MMDDYY**********            050829
+      ***********                                                         050829
+     C***********AGDFF     IFEQ 'M'                                       050829
+     C***********          SETON                     98                   050829
+     C***********          END                                            050829
+     C                     SETOF                     98                   050829
+      *
+      **  Move run date (alpha) to screen field for display
+      *
+     C                     MOVELAGMRDT    SRUNA
+      *
+      **  Obtain General Ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      **  DB error if not found
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD10        DBASE            ***************
+     C                     MOVEL'*FIRST'  DBKEY            * DB ERROR 10 *
+     C                     MOVEL'MC0100'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CMC001
+      **  Check if Management Accounts Enhancement (CMC001 feature)       CMC001
+      **  is installed                                                    CMC001
+      *                                                                   CMC001
+     C                     MOVE 'N'       CMC001  1                       CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM *BLANKS   PRTCD                           CMC001
+     C                     PARM '*VERIFY' POPTN                           CMC001
+     C                     PARM 'CMC001'  PSARN   6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+     C           PRTCD     IFNE *BLANK                                    CMC001
+     C           PRTCD     IFNE '*NRF'                                    CMC001
+     C           *LOCK     IN   LDA                                       CMC001
+     C                     MOVEL'SCSARDPD'DBFILE                          CMC001
+     C                     MOVE *BLANKS   DBKEY                           CMC001
+     C                     Z-ADD12        DBASE            ***************CMC001
+     C                     MOVELPSARN     DBKEY            * DB ERROR 12 *CMC001
+     C                     MOVEL'MC0100'  DBPGM            ***************CMC001
+     C                     OUT  LDA                                       CMC001
+     C                     EXSR *PSSR                                     CMC001
+     C                     ENDIF                                          CMC001
+     C                     ELSE                                           CMC001
+     C                     MOVE 'Y'       CMC001                          CMC001
+     C                     ENDIF                                          CMC001
+      *
+      **  Set up and clear all positioner and selection work fields
+      *
+     C           *LIKE     DEFN SPSTCB    #PSTCB
+     C           *LIKE     DEFN SPSNMB    #PSNMB
+     C           *LIKE     DEFN SPPANB    #PPANB
+     C           *LIKE     DEFN SLDEDB    #LDEDB
+     C           *LIKE     DEFN SREELB    #REELB
+     C                     MOVEL*BLANK    #PSTCB
+     C                     MOVEL*BLANK    #PSNMB
+     C                     Z-ADD0         #PPANB
+     C                     MOVEL*BLANK    #LDEDB
+     C                     MOVEL*BLANK    #REELB
+      *
+      **  Setup message subfile
+      **  Clear all fields to send messages to message queue
+     C*
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C*
+     C                     MOVE *BLANKS   SPGMQ
+     C                     MOVEL'MC0100'  SPGMQ
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LDSFL - SR TO LOAD GLPERSL0 DETAILS INTO SUBFILE             *
+      *                                                               *
+      *    CALLED BY : Main Processing                                *
+      *                                                               *
+      *    CALLS     : SR/*PSSR                                       *
+      *                SR/WRTSUB                                      *
+      *                SR/INSFST                                      *
+      *                SR/ZDATE2                                      *
+      *                PGM/QDCXLATE                                   *
+      *                PGM/QCLSCAN                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LDSFL     BEGSR
+      *
+      **  Initialise subfile screen
+      *
+     C                     MOVEA'00'      *IN,02
+     C                     MOVEA'00'      *IN,05
+     C                     MOVE *BLANKS   SACTN
+     C                     WRITEMC0100C1
+      *
+      **  Access Period Sets File
+      *
+     C                     READ GLPERSL0                 80
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD1         RRN
+      *
+      **  Fill subfile with all records on file
+      *
+     C           *IN80     DOWEQ'0'
+     C                     MOVE STPSTC    SPSTC
+     C                     MOVE STPSNM    SPSNM
+     C                     MOVE STPPAN    SPPAN
+      *
+      **  Access last record on LF/GLPERDL3 for the Set,
+      **  'End of Period Date' is the 'Last Defined End Date'
+      *
+     C                     MOVELSTPSTC    KPSTC
+     C                     Z-ADD99999     KSPDD
+     C           PDKEY     SETGTGLPERDL3
+     C                     READPGLPERDL3                 81
+      *
+     C           DTPSTC    IFEQ STPSTC
+     C           *IN81     ANDEQ'0'
+     C           *LIKE     DEFN DTEPDD    LDEDWK
+     C                     MOVE DTEPDD    LDEDWK
+      *
+      **  Database Error if no Period Details exist for the Set
+      *
+     C                     ELSE
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERDL3'DBFILE           ***************
+     C                     MOVELPDKY      DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Field displayed in rev. image if less than 1 year in future
+      *
+     C                     MOVE '0'       *IN13
+     C           *LIKE     DEFN AGRDNB    RDNBWK
+     C                     Z-ADDAGRDNB    RDNBWK
+     C                     ADD  365       RDNBWK
+     C           LDEDWK    IFLT RDNBWK
+     C                     MOVE '1'       *IN13
+     C                     END
+      *
+      **  Convert 'Last Defined End Date' to DDMMMYY format
+      *
+     C                     Z-ADDLDEDWK    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SLDED
+      *
+      **  'Referenced Elsewhere' set to Y if related record exists
+      **  on Historic Balance Control Groups File
+      *
+     C           STPSTC    SETLLGLHBCGL2                 82
+     C           *IN82     IFEQ '1'
+     C           STPSTC    OREQ BKPSET
+     C                     MOVE 'Y'       SREEL
+     C                     ELSE
+     C                     MOVE 'N'       SREEL
+     C                     END
+      *
+      ** Ensure upper or lower case accepted in scan of description
+      *
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C                     CALL 'QDCXLATE'
+     C                     PARM 30        WQA5N   50
+     C                     PARM           SPSNMB
+     C                     PARM           WQB10X
+     C                     PARM 'QSYS'    WQC10X 10
+      *
+      ** Scan for search string
+      *
+     C           SPSNMB    IFNE *BLANK
+     C                     CALL 'QCLSCAN'
+     C                     PARM           SPSNM
+     C                     PARM 30        WQA3N   30
+     C                     PARM 1         WQB3N   30
+     C                     PARM           SPSNMB
+     C                     PARM 30        WQC3N   30
+     C                     PARM '1'       WQD1    1
+     C                     PARM '1'       WQE1    1
+     C                     PARM '?'       WQF1    1
+     C                     PARM           WQG3N   30
+     C                     END
+      *
+      **  Write record to subfile if selection criteria met
+      *
+     C           WQG3N     IFLT 1
+     C           SPSNMB    ANDNE*BLANK
+     C           SPPANB    ORNE SPPAN
+     C           SPPANB    ANDNE*ZERO
+     C           SLDEDB    ORNE SLDED
+     C           SLDEDB    ANDNE*BLANK
+     C           SREELB    ORNE SREEL
+     C           SREELB    ANDNE*BLANK
+     C                     ELSE
+     C                     EXSR WRTSUB
+     C                     END
+      *
+      **  When EOF set SFLEND
+      *
+     C                     READ GLPERSL0                 80
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN04
+     C                     END
+     C                     END
+      *
+      **  If no records selected write message to screen
+      *
+     C           RRN       IFEQ 1
+     C                     MOVE '1'       *IN05
+     C                     WRITEMC0100C1
+     C                     MOVEA'11'      *IN,02
+     C                     MOVEA'01'      *IN,05
+     C                     END
+      *
+      **  No records on Period Sets file,
+      **  If positioner field not blank, display 'no data' message
+      *
+     C                     ELSE
+     C           SPSTCB    IFNE *BLANK
+     C                     MOVE '1'       *IN05
+     C                     WRITEMC0100C1
+     C                     MOVEA'11'      *IN,02
+     C                     MOVEA'01'      *IN,05
+      *
+      **  Else  Insert First record on Period Set file
+      *
+     C                     ELSE
+     C                     EXSR INSFST
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  WRTSUB - SR TO WRITE RECORD TO SUBFILE                       *
+      *                                                               *
+      *    CALLED BY : SR/LDSFL                                       *
+      *                SR/INSFST                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTSUB    BEGSR
+      *
+      **  Write subfile record
+      *
+     C                     WRITEMC0100S1
+     C                     ADD  1         RRN     20
+     C                     MOVE '1'       *IN02
+     C                     MOVE '1'       *IN03
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SCRN1 - SR TO DISPLAY SUBFILE SCREEN                         *
+      *                                                               *
+      *    CALLED BY : Main Processing                                *
+      *                                                               *
+      *    CALLS     : SR/ZASNMS                                      *
+      *                PGM/Y2CLMSC                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SCRN1     BEGSR
+      *
+      **  Display subfile screen
+      *
+     C                     WRITEMC0100C0
+      *                                                                   CMC001
+      **  If Management Accounts Enhancement is installed, allow          CMC001
+      **  action 'C' for closure                                          CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C                     MOVE MSG,4     MSGDSP                          CMC001
+     C                     ELSE                                           CMC001
+     C                     MOVE MSG,1     MSGDSP
+     C                     ENDIF                                          CMC001
+     C                     WRITEMC0100F3
+     C                     EXFMTMC0100C1
+      *
+      **  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      **  If entry in positioner field, do not check for action code
+      *
+     C                     READ MC0100F3                 25
+     C           SPSTCB    IFEQ #PSTCB
+     C           SPSNMB    ANDEQ#PSNMB
+     C           SPPANB    ANDEQ#PPANB
+     C           SLDEDB    ANDEQ#LDEDB
+     C           SREELB    ANDEQ#REELB
+      *
+     C                     SETOF                     07
+     C           SACTN     DOUNE*BLANKS
+     C           *IN20     OREQ '1'
+     C                     READCMC0100S1                 20
+     C                     END
+      *
+      **  Invalid action code
+      *
+     C           SACTN     IFNE 'D'
+     C           SACTN     ANDNE'A'
+     C           SACTN     ANDNE'E'
+     C           SACTN     ANDNE' '
+      *                                                                   CMC001
+      **  If Management Accounts Enhancement is installed, action         CMC001
+      **  code 'C' is valid                                               CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'N'                                       CMC001
+     C           CMC001    OREQ 'Y'                                       CMC001
+     C           SACTN     ANDNE'C'                                       CMC001
+     C                     MOVE 'GLX0130' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                                            CMC001
+      *                                                                   CMC001
+     C                     END
+      *
+     C                     ELSE
+     C                     SETON                     07
+     C                     MOVE SPSTCB    #PSTCB
+     C                     MOVE SPSNMB    #PSNMB
+     C                     MOVE SPPANB    #PPANB
+     C                     MOVE SLDEDB    #LDEDB
+     C                     MOVE SREELB    #REELB
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INSFST - SR TO INSERT FIRST PERIOD SET RECORD                *
+      *                                                               *
+      *    CALLED BY : SR/LDSFL                                       *
+      *                                                               *
+      *    CALLS     : SR/INSERT                                      *
+      *                SR/*PSSR                                       *
+      *                SR/WRTSUB                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSFST    BEGSR
+      *
+      **  Display Insert screen
+      *
+     C                     MOVEA'11'      *IN,18
+     C                     EXSR INSERT
+      *
+      **  Record entered, prepare to display subfile
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     MOVE '0'       *IN19
+     C                     MOVE 'N'       RLDEX
+     C                     MOVEA'00'      *IN,02
+     C                     MOVEA'00'      *IN,05
+     C                     MOVE *BLANKS   SACTN
+     C                     WRITEMC0100C1
+      *
+      **  Access Period Sets File
+      *
+     C           *LOVAL    SETLLGLPERSL0
+     C                     READ GLPERSL0                 80
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD1         RRN
+      *
+      **  Fill subfile with records on file
+      *
+     C           *IN80     DOWEQ'0'
+     C                     MOVE STPSTC    SPSTC
+     C                     MOVE STPSNM    SPSNM
+     C                     MOVE STPPAN    SPPAN
+      *
+      **  Access last record on LF/GLPERDL3 for the Set,
+      **  'End of Period Date' is the 'Last Defined End Date'
+      *
+     C                     MOVELSTPSTC    KPSTC
+     C                     Z-ADD99999     KSPDD
+     C           PDKEY     SETGTGLPERDL3
+     C                     READPGLPERDL3                 81
+      *
+     C           *IN81     IFEQ '0'
+     C                     MOVE DTEPDD    LDEDWK
+     C                     ELSE
+      *
+      **  Database Error if no Period Details exist for the Set
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERDL3'DBFILE           ***************
+     C                     MOVELPDKY      DBKEY            * DB ERROR 08 *
+     C                     Z-ADD8         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Field displayed in rev. image if less than 1 year in future
+      *
+     C                     MOVE '0'       *IN13
+     C                     Z-ADDAGRDNB    RDNBWK
+     C                     ADD  365       RDNBWK
+     C           LDEDWK    IFLT RDNBWK
+     C                     MOVE '1'       *IN13
+     C                     END
+      *
+      **  Convert 'Last Defined End Date' to DDMMMYY format
+      *
+     C                     Z-ADDLDEDWK    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SLDED
+      *
+      **  'Referenced Elsewhere' set to Y if related record exists
+      **  on Historic Balance Control Groups File
+      *
+     C           STPSTC    SETLLGLHBCGL2                 82
+     C           *IN82     IFEQ '1'
+     C           STPSTC    OREQ BKPSET
+     C                     MOVE 'Y'       SREEL
+     C                     ELSE
+     C                     MOVE 'N'       SREEL
+     C                     END
+      *
+      **  Write record to subfile
+      *
+     C                     EXSR WRTSUB
+     C                     READ GLPERSL0                 80
+      *
+      **  When EOF set SFLEND
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN04
+     C                     END
+     C                     END
+      *
+      **  Else  Database Error if Period Set record not found
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERSL0'DBFILE           ***************
+     C                     MOVELSPSTC     DBKEY            * DB ERROR 09 *
+     C                     Z-ADD9         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Record not entered, F3 or F12 pressed, set indicators to
+      **  repeat process or exit pgm
+      *
+     C                     ELSE
+     C                     MOVE 'Y'       RLDEX
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INSERT - SR TO INSERT NEW PERIOD SET RECORD                  *
+      *                                                               *
+      *    CALLED BY : Main Processing                                *
+      *                SR/INSFST                                      *
+      *                                                               *
+      *    CALLS     : SR/INITSC                                      *
+      *                SR/VALID                                       *
+      *                SR/ZASNMS                                      *
+      *                PGM/Y2CLMSC                                    *
+      *                PGM/MC0115                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSERT    BEGSR
+      *
+      **  Clear screen
+      *
+     C                     WRITECLSCREEN
+     C                     MOVEA'00'      *IN,10
+     C                     MOVEA'00'      *IN,13
+     C                     MOVEA'0000000' *IN,30
+     C                     MOVEA'000'     *IN,38
+      *
+      **  Initialise fields for Period Sets file and for screen
+      *
+     C                     MOVE *BLANKS   STPSTC
+     C                     MOVE *BLANKS   STPSNM
+     C                     MOVE *BLANKS   STPFCD
+     C                     MOVE *BLANKS   STTYLC
+     C                     Z-ADD0         STPPAN
+     C                     Z-ADD0         STPTM1
+     C                     Z-ADD0         STPTM2
+     C                     Z-ADD0         STPFBD
+     C                     Z-ADD0         STHPYR
+     C                     Z-ADD0         STFPYR
+     C                     Z-ADD0         STLCD
+      *
+     C                     EXSR INITSC
+      *
+      **  Display screen until F3, F12 or no errors on validation
+      *
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN26     OREQ '0'
+     C                     WRITEMC0100F1
+     C                     WRITEMC0100C0
+     C                     MOVE MSG,2     MSGDSP
+     C                     EXFMTMC0100F4
+      *
+      **  Clear messages from program message queue.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      **  Validate entries
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR VALID
+     C                     END
+     C                     END
+      *
+      **  No errors, not F3, not F12 - update Period Sets file
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     MOVE 'I'       STTYLC
+     C                     Z-ADDAGRDNB    STLCD
+     C                     WRITE@BJREDS
+     C                     MOVE 'I'       SACTN
+      *
+      **  Release Period Detail record unless routine called via INSFST
+      **  then call 'Period Details Maintenance'
+      *
+     C           *IN19     IFEQ '0'
+     C                     EXCPTUNLCK3
+     C                     END
+     C                     CALL 'MC0115'
+     C                     PARM           STPSTC
+     C                     PARM           SACTN
+     C                     PARM           DYNOWK
+      *
+      **  Check returned value of action code for F3 or F12 and
+      **  prepare to redisplay subfile
+      *
+     C                     MOVE 'Y'       RLDEX
+     C           SACTN     IFEQ 'T'
+     C                     MOVE '1'       *INKC
+     C                     ELSE
+      *
+     C           SACTN     IFEQ 'X'
+     C                     MOVE '1'       *INKL
+     C                     ELSE
+     C                     MOVELSTPSTC    ZA0001
+     C                     MOVE 'GLX0299' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AMDENQ - SR TO AMEND/ENQUIRE ON PERIOD SET RECORD            *
+      *                                                               *
+      *    CALLED BY : Main Processing                                *
+      *                                                               *
+      *    CALLS     : SR/*PSSR                                       *
+      *                SR/ZDATE2                                      *
+      *                SR/VALID                                       *
+      *                SR/ZASNMS                                      *
+      *                PGM/Y2CLMSC                                    *
+      *                PGM/MC0110                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AMDENQ    BEGSR
+      *
+      **  Clear screen
+      *
+     C                     WRITECLSCREEN
+     C                     MOVEA'00'      *IN,10
+     C                     MOVEA'00'      *IN,13
+     C                     MOVEA'0000000' *IN,30
+     C                     MOVEA'000'     *IN,38
+      *
+     C           SPSTC     CHAINGLPERSL0             83
+      *
+      **  Database Error if Period Set record not found
+      *
+     C           *IN83     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERSL0'DBFILE           ***************
+     C                     MOVELSPSTC     DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Set up update/display indicators
+      *
+     C           SACTN     IFEQ 'A'
+     C                     MOVE '1'       *IN11
+     C           SREEL     IFEQ 'Y'
+     C                     MOVE '1'       *IN14
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN10
+     C                     END
+      *
+      **  Move file fields to screen fields for display
+      *
+     C                     MOVE STPSTC    SPSTC
+     C                     MOVE STPSNM    SPSNM
+     C                     MOVE STPPAN    SPPAN
+     C                     MOVE STPTM1    SPTM1
+     C                     MOVE STPTM2    SPTM2
+     C                     MOVE STPFCD    SPFCD
+     C                     MOVE STPFBD    SPFBD
+     C                     MOVE STHPYR    SHPYR
+     C                     MOVE STFPYR    SFPYR
+      *
+      **  Fetch 'Start Date' field from 1st Period Detail record
+      *
+     C                     MOVELSTPSTC    KPSTC
+     C                     Z-ADD0         KSPDD
+     C           PDKEY     SETLLGLPERDL3             81
+     C                     READ GLPERDL3                 81
+      *
+      **  Convert 'Last Defined End Date' to DDMMMYY format
+      *
+     C           *IN81     IFEQ '0'
+     C                     Z-ADDDTSPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SSPDD
+      *
+      **  Database Error if no Detail record found for the Period Set
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERDL3'DBFILE           ***************
+     C                     MOVELPDKY      DBKEY            * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Display screen until F3, F12 or no errors on validation
+      *
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN26     OREQ '0'
+     C           SACTN     IFEQ 'E'
+     C                     WRITEMC0100F2
+     C                     ELSE
+     C                     WRITEMC0100F1
+     C                     END
+     C                     WRITEMC0100C0
+     C                     MOVE MSG,2     MSGDSP
+     C                     EXFMTMC0100F4
+      *
+      ** Clear messages from program message queue.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      **  Validate entries
+      *
+     C           SACTN     IFEQ 'A'
+     C           *INKC     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR VALID
+     C                     END
+      *
+     C                     END
+      *
+      **  No errors, not F3, not F12 - update Period Sets file if Amend
+      **  Call 'Period Details Maintenance'
+      *
+     C           *INKC     IFNE '1'
+     C           *INKL     ANDNE'1'
+     C           SACTN     IFEQ 'A'
+     C                     MOVE SACTN     STTYLC
+     C                     Z-ADDAGRDNB    STLCD
+     C                     UPDAT@BJREDS
+     C                     END
+     C                     EXCPTUNLCK3
+     C                     CALL 'MC0110'
+     C                     PARM           STPSTC
+     C                     PARM           SREEL
+     C                     PARM           SACTN
+      *
+      **  Prepare to redisplay subfile with new record
+      *
+     C                     MOVE 'Y'       RLDEX
+     C           SACTN     IFEQ 'A'
+     C                     MOVELSTPSTC    ZA0002
+     C                     MOVE 'GLX0296' ZAMSID
+     C                     ELSE
+     C                     MOVELSTPSTC    ZA0003
+     C                     MOVE 'GLX0297' ZAMSID
+     C                     END
+      *
+      **  Check returned value of action code for F3 or F12
+      *
+     C           SACTN     IFEQ 'T'
+     C                     MOVE '1'       *INKC
+     C                     ELSE
+     C           SACTN     IFEQ 'X'
+     C                     MOVE '1'       *INKL
+     C                     ELSE
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DELETE - SR TO DELETE A PERIOD SET RECORD                    *
+      *                                                               *
+      *    CALLED BY : Main Processing                                *
+      *                                                               *
+      *    CALLS     : SR/*PSSR                                       *
+      *                SR/ZDATE2                                      *
+      *                SR/ZASNMS                                      *
+      *                PGM/Y2CLMSC                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DELETE    BEGSR
+      *
+      **  Check record is valid for deletion
+      *
+     C           SREEL     IFEQ 'N'
+      *
+      **  Clear screen
+      *
+     C                     WRITECLSCREEN
+     C                     MOVEA'00'      *IN,10
+     C                     MOVEA'001'     *IN,13
+     C                     MOVEA'0000000' *IN,30
+     C                     MOVEA'000'     *IN,38
+     C           SPSTC     CHAINGLPERSL0             83
+      *
+      **  Database Error if Period Set record not found
+      *
+     C           *IN83     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERSL0'DBFILE           ***************
+     C                     MOVELSPSTC     DBKEY            * DB ERROR 04 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Move file fields to screen fields for display
+      *
+     C                     MOVE '1'       *IN10
+     C                     MOVE STPSTC    SPSTC
+     C                     MOVE STPSNM    SPSNM
+     C                     MOVE STPPAN    SPPAN
+     C                     MOVE STPTM1    SPTM1
+     C                     MOVE STPTM2    SPTM2
+     C                     MOVE STPFCD    SPFCD
+     C                     MOVE STPFBD    SPFBD
+     C                     MOVE STHPYR    SHPYR
+     C                     MOVE STFPYR    SFPYR
+      *
+      **  Fetch 'Start Date' field from 1st Period Detail record
+      *
+     C                     MOVELSTPSTC    KPSTC
+     C                     Z-ADD0         KSPDD
+     C           PDKEY     SETLLGLPERDL3             81
+     C                     READ GLPERDL3                 81
+      *
+      **  Convert 'Last Defined End Date' to DDMMMYY format
+      *
+     C           *IN81     IFEQ '0'
+     C                     Z-ADDDTSPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SSPDD
+      *
+      **  Database Error if no Detail record found for the Period Set
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERDL3'DBFILE           ***************
+     C                     MOVELPDKY      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Display screen until F3, F10 or F12
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKJ     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     WRITEMC0100F1
+     C                     WRITEMC0100C0
+     C                     MOVE MSG,3     MSGDSP
+     C                     EXFMTMC0100F4
+      *
+      ** Clear messages from program message queue.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      **  Error if not valid cmd key
+      *
+     C           *INKC     IFNE '1'
+     C           *INKJ     ANDNE'1'
+     C           *INKL     ANDNE'1'
+     C                     MOVE '1'       *IN25
+     C                     MOVE 'GLX0294' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+      **  Delete record - Period Set file
+      *
+     C           *INKJ     IFEQ '1'
+     C           STPSTC    CHAINGLPERSL0             83
+     C  N83      STPSTC    DELETGLPERSL0             83
+      *
+      **  Database Error if Period Set record not found
+      *
+     C           *IN83     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERSL0'DBFILE           ***************
+     C                     MOVELSTPSTC    DBKEY            * DB ERROR 06 *
+     C                     Z-ADD6         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Delete related records - Period Details file
+      *
+     C                     MOVELSTPSTC    KPSTC
+     C                     Z-ADD0         KSPDD
+     C           PDKEY     SETLLGLPERDL3
+     C                     READ GLPERDL3                 81
+      *
+      **  Database Error if Period Detail record not found
+      *
+     C           *IN81     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GLPERDL3'DBFILE           ***************
+     C                     MOVELDTPSTC    DBKEY            * DB ERROR 07 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Delete all records for Set
+      *
+     C           DTPSTC    DOWEQSTPSTC
+     C           *IN81     ANDEQ'0'
+     C                     DELETGLPERDL3
+     C                     READ GLPERDL3                 81
+     C                     END
+      *
+      ** Update audit file
+      *
+     C                     MOVEL'GLPERSPD'FILE   10
+     C           FILE      CHAINGLFCTLL0             16
+      *
+      ** If chain fails then perform error handling
+      *
+     C           *IN16     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0100'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELFILE      DBKEY
+     C                     MOVEL'GLFCTLPA'DBFILE           ***************
+     C                     Z-ADD011       DBASE            * DBERROR 011 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Update fields on file.
+      *
+     C                     SUB  1         GFNORC
+     C                     ADD  1         GFNODL
+     C                     UPDAT@AHREAU
+     C                     COMIT
+      *
+     C                     MOVE 'Y'       RLDEX
+     C                     MOVELSTPSTC    ZA0004
+     C                     MOVE 'GLX0298' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      **  Selected record referenced elsewhere, & cannot be deleted
+      *
+     C                     ELSE
+     C                     MOVE 'GLX0295' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VALID - SR TO VALIDATE SCREEN FIELDS                         *
+      *                                                               *
+      *    CALLED BY : SR/INSERT                                      *
+      *                SR/AMDENQ                                      *
+      *                                                               *
+      *    CALLS     : SR/ZASNMS                                      *
+      *                SR/ZDATE1                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      **  Set error indicators off
+      *
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN26
+     C                     MOVEA'0000000' *IN,30
+     C                     MOVEA'000'     *IN,38
+      *
+      **  Validation for Insert only
+      *
+     C           *IN18     IFEQ '1'
+      *
+      **  Set code :
+      *
+     C                     MOVE SPSTC     STPSTC
+     C           SPSTC     CHAINGLPERSL0             83
+      *
+      **  Set Code should not already exist
+      *
+     C           *IN83     IFEQ '0'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN30
+     C                     MOVE 'GLX0302' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **  Valid entry : A - Z or 0 - 9
+      *
+     C                     ELSE
+     C           SPSTC     COMP 'A'                    24
+     C  N24      SPSTC     COMP '9'                  24
+     C  N24      SPSTC     COMP 'Z'                  22
+     C   22      SPSTC     COMP '0'                    24
+     C           *IN24     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN30
+     C                     MOVE 'GLX0303' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+      **  Periods per Annum :
+      **  Valid entry : 01 - 52  mandatory
+      *
+     C                     Z-ADDSPPAN     STPPAN
+     C           SPPAN     IFGT *ZEROS
+     C           SPPAN     COMP 01                     24
+     C  N24      SPPAN     COMP 52                   24
+     C           *IN24     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'GLX0304' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'GLX0304' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      **  Start Date :
+      **  Mandatory entry
+      *
+     C           SSPDD     IFEQ *BLANKS
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN32
+     C                     MOVE 'GLX0309' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **  Convert DDMMMYY format to DDMMYY
+      *
+     C                     ELSE
+     C                     MOVE SSPDD     SHDATE
+     C           SMON      LOKUPTAB1      TAB2           40
+     C           *IN40     IFEQ '1'                                                           201287
+     C                     MOVE TAB2      NMON
+     C                     MOVE SDAY      NDAY
+     C           ND1       IFEQ ' '                                                           201287
+     C                     MOVE '0'       ND1                                                 201287
+     C                     ENDIF                                                              201287
+     C                     MOVE SYR       NYR
+      *
+      **  Convert to Midas day number for comparison checking
+      *
+     C                     MOVE NDATE     ZDATE
+     C                     MOVELNDATE     ZDATE7  7                                           201287
+     C                     MOVE '0'       ZDATE7                                              201287
+     C                     TESTN          ZDATE7     41                                       201287
+     C           *IN41     IFEQ '1'                                                           201287
+     C                     EXSR ZDATE1
+     C                     ENDIF                                                              201287
+     C                     ENDIF                                                              201287
+      *                                                                                       201287
+      ** If date is invalid then send message and skip further                                201287
+      ** validation                                                                           201287
+      *                                                                                       201287
+     C           *IN99     IFEQ '1'                                                           201287
+     C           *IN41     OREQ '0'                                                           201287
+     C                     MOVELSHDATE    ZAMSDA                                              201287
+     C                     MOVEL'GLX0341' ZAMSID                                              201287
+     C                     EXSR ZASNMS                                                        201287
+     C                     MOVE '1'       *IN26                                               201287
+     C                     ELSE                                                               201287
+      *                                                                                       201287
+     C                     MOVE ZDAYNO    DYNOWK  50
+      *
+      **  Convert Run Date to format DDMMYY
+      *
+     C                     MOVE *BLANKS   SHDATE
+     C                     MOVE *BLANKS   NDATE
+     C                     MOVE AGMRDT    SHDATE
+     C                     MOVE SYR       NUMYR   20
+      *
+      **  Calculate comparison values
+      *
+     C           NUMYR     ADD  5         FIVYR   20
+     C           NUMYR     SUB  9         NINYR   20
+     C           SMON      LOKUPTAB1      TAB2           40
+     C                     MOVE TAB2      NMON
+     C                     MOVE SDAY      NDAY
+     C                     MOVE FIVYR     NYR
+      *
+      **  Convert date (Run Date + 5 years) to Midas day no.
+      *
+     C                     MOVE NDATE     ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    DYFIWK  50
+      *
+      **  Convert date (Run Date - 9 years) to Midas day no.
+      *
+     C                     MOVE NINYR     NYR
+     C                     MOVE NDATE     ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    DYNIWK  50
+      *
+      **  Validate Start Date
+      *
+     C           DYNOWK    COMP DYFIWK               23
+     C           DYNOWK    COMP DYNIWK                 24
+     C           *IN23     IFEQ '1'
+     C           *IN24     OREQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN32
+     C                     MOVE 'GLX0308' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ENDIF                                                              201287
+     C                     END
+      *
+      **  First Period Year :
+      **  Mandatory entry - must be numeric
+      *
+     C                     Z-ADDSFPYR     STFPYR
+     C           SFPYR     COMP 0001                   24
+     C  N24      SFPYR     COMP 9999                 24
+     C           *IN24     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN33
+     C                     MOVE 'GLX0310' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      **  End validation for Insert only
+      *
+     C                     END
+      *
+      **  Validate other entries for Amend & Insert
+      *
+      **  No Validation for Set Name :
+      *
+     C                     MOVELSPSNM     STPSNM
+      *
+      **  Periods per Term 1/2 :
+      **  Periods per Term must be factor of Periods per Annum
+      *
+     C                     Z-ADDSPTM1     STPTM1
+     C           SPTM1     IFNE *ZEROS
+     C           SPPAN     DIV  SPTM1     NUMB    30
+     C                     MVR            REMDR   30
+      *
+      **  Error if remainder field is not 0
+      *
+     C           REMDR     IFNE 0
+     C           NUMB      ORLT 0
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN34
+     C                     MOVE 'GLX0300' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+      **  Periods per Term 2 :
+      *
+     C                     Z-ADD0         NUMB
+     C                     Z-ADD0         REMDR
+     C                     Z-ADDSPTM2     STPTM2
+     C           SPTM2     IFNE *ZEROS
+     C           SPPAN     DIV  SPTM2     NUMB
+     C                     MVR            REMDR
+      *
+      **  Error if remainder field is not 0
+      *
+     C           REMDR     IFNE 0
+     C           NUMB      ORLT 0
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN35
+     C                     MOVE 'GLX0300' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+      **  Frequency Code:
+      **  Validate as per table FQCD
+      *
+     C                     MOVE SPFCD     STPFCD
+     C           SPFCD     IFNE *BLANKS
+     C           SPFCD     LOKUPFQCD                     24
+     C           *IN24     IFEQ '0'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     MOVE 'GLX0311' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      **  If valid per table, check entry against Periods per Annum
+      *
+     C           SPFCD     IFEQ 'Y'
+     C           SPPAN     ANDNE01
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+     C           SPFCD     IFEQ 'X'
+     C           SPPAN     ANDNE02
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+     C           SPFCD     IFEQ 'Q'
+     C           SPPAN     ANDNE04
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+     C           SPFCD     IFEQ 'T'
+     C           SPPAN     ANDNE06
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+     C           SPFCD     IFEQ 'L'
+     C           SPPAN     ANDNE12
+     C           SPFCD     OREQ 'B'
+     C           SPPAN     ANDNE12
+     C           SPFCD     OREQ 'M'
+     C           SPPAN     ANDNE12
+     C           SPFCD     OREQ 'R'
+     C           SPPAN     ANDNE12
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+     C           SPFCD     IFEQ 'S'
+     C           SPPAN     ANDNE24
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+     C           SPFCD     IFEQ 'F'
+     C           SPPAN     ANDNE26
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+     C           SPFCD     IFEQ '1'
+     C           SPPAN     ANDNE52
+     C           SPFCD     OREQ '2'
+     C           SPPAN     ANDNE52
+     C           SPFCD     OREQ '3'
+     C           SPPAN     ANDNE52
+     C           SPFCD     OREQ '4'
+     C           SPPAN     ANDNE52
+     C           SPFCD     OREQ '5'
+     C           SPPAN     ANDNE52
+     C           SPFCD     OREQ '6'
+     C           SPPAN     ANDNE52
+     C           SPFCD     OREQ '7'
+     C           SPPAN     ANDNE52
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+     C           *IN26     IFEQ '1'
+     C           *IN36     ANDEQ'1'
+     C                     MOVE 'GLX0301' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      **  Frequency Base Date :
+      **  Must be zero unless Frequency Code is M, Q, T, X or Y
+      *
+     C                     Z-ADDSPFBD     STPFBD
+     C           SPFCD     IFEQ 'M'
+     C           SPFCD     OREQ 'Q'
+     C           SPFCD     OREQ 'T'
+     C           SPFCD     OREQ 'X'
+     C           SPFCD     OREQ 'Y'
+      *
+     C           SPFBD     IFEQ *ZEROS
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN38
+     C                     MOVE 'GLX0305' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **  Valid entry : 01 - 31
+      *
+     C                     ELSE
+     C           SPFBD     COMP 01                     24
+     C  N24      SPFBD     COMP 31                   24
+     C           *IN24     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN38
+     C                     MOVE 'GLX0306' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+      **  Invalid if not zero
+      *
+     C                     ELSE
+     C           SPFBD     IFNE *ZEROS
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN38
+     C                     MOVE 'GLX0312' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END
+      *
+      **  History Period :
+      **  Valid entry : 0 - 9
+      *
+     C                     Z-ADDSHPYR     STHPYR
+     C           SHPYR     IFNE 0
+     C           SHPYR     COMP 0                      24
+     C  N24      SHPYR     COMP 9                    24
+     C           *IN24     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN39
+     C                     MOVE 'GLX0307' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INITSC - SR TO INITIALISE SCREEN FIELDS                      *
+      *                                                               *
+      *    CALLED BY : SR/INSERT                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INITSC    BEGSR
+      *
+      **  Initialise screen fields
+      *
+     C                     MOVEL*BLANKS   SPSTC
+     C                     MOVEL*BLANKS   SPSNM
+     C                     MOVEL*BLANKS   SPFCD
+     C                     MOVEL*BLANKS   SSPDD
+     C                     Z-ADD12        SPPAN
+     C                     Z-ADD0         SPTM1
+     C                     Z-ADD0         SPTM2
+     C                     Z-ADD0         SPFBD
+     C                     Z-ADD0         SHPYR
+     C                     Z-ADD0         SFPYR
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - SR TO SEND MESSAGE TO PROGRAM MESSAGE QUEUE         *
+      *                                                               *
+      *    CALLED BY : SR/SCRN1                                       *
+      *                SR/INSERT                                      *
+      *                SR/AMDENQ                                      *
+      *                SR/DELETE                                      *
+      *                SR/VALID                                       *
+      *                                                               *
+      *    CALLS     : PGM/Y2SNMGC                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      ** Declare message file name
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INFSR - SR FOR FILE EXEPTION/ERROR HANDLING                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      **  ROLL BACK CHANGES AND CANCEL PROGRAM
+      *
+     C                     ROLBK
+     C                     MOVE '*CANCL'  EXTTAG  6
+      *
+     C                     ENDSREXTTAG
+      *
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - SR TO HANDLE ABNORMAL ERROR CONDITIONS               *
+      *                                                               *
+      *    CALLED BY : SR/LDSFL                                       *
+      *                SR/INSFST                                      *
+      *                SR/AMDENQ                                      *
+      *                SR/DELETE                                      *
+      *                                                               *
+      *    CALLS     : PGM/DBERRCTL                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     ROLBK
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     O@PERDDX E                UNLCK3
+      ********************************************************************
+      *                                                                   CMC001
+      **  Add a new footer line to allow 'C' for closure                  CMC001
+      *                                                                   CMC001
+**  CPY@
+(c) Finastra International Limited 2001
+**   FOOTER SCREEN MESSAGE
+    A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh  F9=Go to 'Add' Mode
+    F3=Main Menu  F12=Previous
+    F3=Main Menu  F10=Delete  F12=Previous
+    A=Amend D=Delete E=Enquire C=Close F3=Main Menu F5=Refresh F9=Go to 'Add'
+** TAB1    TAB2
+JAN01
+FEB02
+MAR03
+APR04
+MAY05
+JUN06
+JUL07
+AUG08
+SEP09
+OCT10
+NOV11
+DEC12
+**   FREQUENCY CODES
+YXQTLBMRSF1234567
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,128 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/********************************************************************/
+/*                                                                  */
+/*            Midas GENERAL LEDGER MODULE                   */
+/*                                                                  */
+/*       GLC92 - INITIAL FILE SETUP                                 */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*       Prev Amend No. 241672A            Date 09Jan07              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      118670             Date 26Feb98              */
+/*                      102356             Date 15May96              */
+/*                      036796            DATE  10JAN94             */
+/*                      S01421            DATE  21/06/93            */
+/*                      S01340            DATE  07/02/92            */
+/*                      S01117            DATE  01/12/89            */
+/*                      E15036            DATE  11/10/88            */
+/*                      S01154            DATE  15/08/88            */
+/*                      E81123            DATE  23/03/87            */
+/*                      S01125            DATE  03/10/86            */
+/*                                                                  */
+/*------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       241672A - Initialise dataarea GLJENDTA.                     */
+/* 118670 - ERROR: COB halts in component SCC0404 (GLC01) because   */
+/*          ~~~~~~ data area GLSTAT is empty in position 26-30.     */
+/*          SOLN.: Initialise GLTEMP as well as GLSTAT.             */
+/*       102356 - Do not call GLC00X now because it will fail       */
+/*                when GL0610 attempts to access SDTRADPD, which    */
+/*                is not set up at this stage.                      */
+/*       036796 - OLPOS* AND PRONT* NOW INITIALISED IN NEW PGM      */
+/*                GLC00X CALLED FROM GLC92.   'NOSTRO EVENTS' AND   */
+/*                'EVENTS BY CCY' NO. OF DAYS FORWARD FIELDS, AND   */
+/*                SPOT REVALS FLAG, MOVED FROM DLSTAT TO GLSTAT.    */
+/*          S01421 - COB PROMPT DATA DEFAULTED ONTO DTAARA/GLSTAT   */
+/*                   AT FILE SETUP TIME  - BLI STEP 1 DEVELOPMENT   */
+/*          S01340 - ADD SET UP OF GLFCTLPA                         */
+/*          S01117 - RELEASE 10  MULTIBRANCHING                     */
+/*          E15036 - COMPONENT IS ENDING AND LEAVING A LOCK ON      */
+/*                   TABTB10                                        */
+/*          S01154  -  CHANGES FOR NEW GENERAL LEDGER  : NEW FILE   */
+/*          E81123 - MISLEADING MESSAGES DISPLAYED BY GLC93 AT      */
+/*                   INITIAL FILE SET-UP                            */
+/*                                                                  */
+/********************************************************************/
+/**/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&GLSTAT)   TYPE(*CHAR) LEN(256)
+             DCL        VAR(&GLJENDTA) TYPE(*CHAR) LEN(20)                               /*241672A*/
+/**/
+             RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)
+/**/
+             SNDPGMMSG  MSG('Initial General Ledger file setup') +
+                        TOMSGQ(MOPERQ)
+/**/
+             IF         COND(%SUBSTRING(&GLSTAT 11 5) = '     ') THEN(DO)
+/*           CHGDTAARA  DTAARA(GLSTAT) VALUE('009000095001000009000095+ S01117*/
+/*                      001000NNNNNNNNNNN NNNN  NNNNNOLDN')        */ /*S01117*/
+/************CHGDTAARA  DTAARA(GLSTAT) VALUE('009000095001000009000095 *036796*/
+/************ 001000NNNNNNNNNNN NNNN  NNNNNOLDN          N')   *S01117 *036796*/
+             CHGDTAARA  DTAARA(GLSTAT) VALUE('009000095001000009000095+
+              0010000505N     N NNNN  NNNNNOLDN          N')          /*036796*/
+/*                                                                 */
+/* THE FOLLOWING 2 CHGDTAARA COMMANDS DEFAULT THE VALUES FOR       */ /*S01421*/
+/* GL COB PROMPT.                                                  */ /*S01421*/
+/*                                                                 */
+             CHGDTAARA  DTAARA(GLSTAT  (69 5)) VALUE('NDDDD')         /*S01421*/
+/*                                                                 */
+             CHGDTAARA  DTAARA(GLSTAT  (89 1)) VALUE('N')             /*S01421*/
+                                                                      /*118670*/
+             RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)                /*118670*/
+             CHGDTAARA  DTAARA(GLTEMP) VALUE(&GLSTAT)                 /*118670*/
+                                                                      /*118670*/
+             RTVDTAARA  DTAARA(GLJENDTA) RTNVAR(&GLJENDTA)                               /*241672A*/
+             IF         COND(%SUBSTRING(&GLJENDTA 1 20) = +
+                          '                    ') THEN(DO)                               /*241672A*/
+             CHGDTAARA  DTAARA(GLJENDTA (1 20)) +
+                          VALUE('00000000000000000000')                                  /*241672A*/
+             ENDDO                                                                       /*241672A*/
+                                                                                         /*241672A*/
+                CALL       PGM(GL0920)
+                CALL       PGM(GL1110)                                /*S01125*/
+                CALL       PGM(GLC01)
+/*              CALL       PGM(GLC93)  PARM(BTRAN)                  *  *E81123*/
+/*              CALL       PGM(GLC93)  PARM(BTRN1)                  *  *S01154*/
+/**/
+                IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
+/*                 CALL       PGM(GLC93)  PARM(STRAN)               *  *E81123*/
+                   CALL       PGM(GLC93)  PARM(STRN1)                 /*E81123*/
+/**/                                                                  /*S01340*/
+                IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
+                   CALL       PGM(GL0925)                             /*S01340*/
+/**/                                                                  /*036796*/
+/*  CALL PROGRAM TO UPDATE OLPOS* AND PRONO*                           *036796*/
+                IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)           /*036796*/
+/***************CALL       PGM(GLC00X)                      */ /*036796 102356*/
+/**/
+                IF         COND(%SWITCH(XXXXXXX0))                   +
+                   THEN(SNDPGMMSG  MSG('General Ledger files setup') +
+                             TOMSGQ(MOPERQ))
+                ENDDO                                                 /*S01340*/
+                ENDDO                                                 /*036796*/
+                ENDDO
+                RCLRSC                                                /*E15036*/
+                ENDDO
+/**/
+             ELSE      CMD(SNDPGMMSG  MSG('General Ledger files +
+                                       exist  already') TOMSGQ(MOPERQ))
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

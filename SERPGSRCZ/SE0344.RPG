@@ -1,0 +1,1057 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Market Prices List')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module
+      *                                                               *
+      *  SE0344 - MARKET PRICES LIST                                  *
+      *                                                               *
+      *  Function:  This program produces a report, for audit         *
+      *   (I/C)     purposes, of all market prices defined to the     *
+      *   (COB)     system.                                           *
+      *             The sequence of the report is price type,         *
+      *             security, value date.                             *
+      *             The report is available in 3 modes (I,A,L):       *
+      *                                                               *
+      *  Called By: 1) SEC0301 - Audit Reports - Input Cycle          *
+      *             2) SEC0601 - Audit Reports - Close of Business    *
+      *             3) SEC0302 - Full Lists - On Request              *
+      *                                                               *
+      *             Frequency:                                        *
+      *             1) On request during I/C; an interim report       *
+      *                showing the latest status of market prices     *
+      *                inserted, amended or deleted during the day.   *
+      *             2) During COB; a report of all market prices      *
+      *                inserted, amended or deleted during the day.   *
+      *             3) On request; a report of all live market prices *
+      *                in the system (ie. deleted items are not       *
+      *                included).                                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSD010             Date 03May02               *
+      *                 201927             Date 16Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 14May01               *
+      *                 CAP060             Date 14May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             DATE 29APR96               *
+      *                 052254             DATE 10JAN94               *
+      *                 S01401             DATE 16JUN93               *
+      *                 S01397             DATE 10SEP92               *
+      *                 E38968             DATE 29JUN92               *
+      *                 E38656                  22APR92               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSD010 - Collateralised Lending (Securities and FX Pricing)  *
+      *  201927 - Printer Overflow. To correct increment in LINCNT.   *
+      *  CSD006 - Market Data Feed Changes                            *
+      *  CAP060 - Midas APIs, Full Security Prices API (recompile)    *
+      *  S01408 - Addition of core hooks: SE0344CCP1                  *
+      *                                   SE0344CCP2                  *
+      *                                   SE0344CCP3                  *
+      *                                   SE0344CCP4                  *
+      *                                   SE0344CCP5                  *
+      *                                   SE0344CCP6                  *
+      *                                   SE0344CCP7                  *
+      *                                   SE0344CCP8                  *
+      *                                   SE0344CCP9                  *
+      *                                   SE0344CP10                  *
+      *  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+      *           to 10,9                                             *
+      *  S01401 - MT5xx SWIFT Messages Feature:                       *
+      *          - Recompiled due to changes to files.                *
+      *  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+      *          - Recompiled due to changes to files.                *
+      *  E38968 - Customer, Book and Market removed from report.      *
+      *  E38656 - New program generated so that market and average    *
+      *           prices are produced on separate reports             *
+      *           (Average prices are produced in SE0345)             *
+      *                                                               *
+      *****************************************************************
+     F*
+     FPRICBLCDIF  E           K        DISK                           UC
+     FPRICB   IF  E           K        DISK                           UC
+     F            PRICEDF                           KRENAMEPRICEDFX
+     FTABSE   IF  E           K        DISK
+     F            TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F***CLINT***IF**E           K        DISK                            E38968
+     F************CLINTCAF                          KIGNORE               E38968
+     F************CLINTCCF                          KIGNORE               E38968
+     F************CLINTC1F                          KIGNORE               E38968
+     F************CLINTSEF                          KIGNORE               E38968
+     FSECTY   IF  E           K        DISK
+     FPRICEA  IF  E           K        DISK
+     FINVTP   IF  E           K        DISK                                                   CGL031
+     FSE0344P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FSE0344AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   36       'NO DETAILS TO REPORT'                             *
+     F*   40       INPUT PARAMETER IS I (INPUT CYCLE MODE)            *
+     F*   41       INPUT PARAMETER IS A (AUDIT MODE)                  *
+     F*   42       INPUT PARAMETER IS L (FULL LIST MODE)              *
+     F*   45       BRANCH IS NOT 0/NOT BANK WIDE PRICE                *
+     F****46-49****PRINT*MARKET*LEGEND*********************************** E38968
+     F*   50       END OF INPUT FILE / FILE READ ERROR                *
+     F*   51-53    PRINT AMD/INS/DEL LEGEND                           *
+     F*   54       PRINT 'DIFFERENCE' LEGEND                          *
+     F*   55       DETAIL REPORT OPEN                                 *
+     F****56*******NO*CLINTCB*RECORD************************************* E38968
+     F*   58       NO SECTY RECORD                                    *
+     F*   59       CSD006 SAR INSTALLED                               *   CSD006
+      *   60       Switchable Feature CSD010 installed indicator      *                       CSD010
+     F*   70       BOUNDARY WARNING INDICATOR ON ON PF/PRICED.        *
+     F*   71       PERCENTAGE WARNING INDICATOR ON ON PF/PRICED.      *
+     F*   72       EXTEL OPTION INDICATOR IS 'Y'                      *
+     F*   73       CGL031 SAR Installed                               *                       CGL031
+     F*   90-99    USED IN STANDARD SUB-ROUTINES                      *
+     F*   U7       DATABASE ERROR                                     *
+     F*   U8       DATABASE / CONTROL ERROR                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ACCBR  - ACCESS BRANCH DETAILS                               *
+     F*  DBERR  - DATABASE ERROR CONTROL                              *
+     F*  RCFAU  - RCF PROCESSING FOR AUDIT REPORT                     *
+     F*  RCFP1  - RCF PROCESSING FOR P1 REPORT                        *
+     F*  *PSSR  - ERROR HANDLING                                      *
+     F*   ZDATE2 - DAYNO - DATE CONVERSION                            *
+     F*   ZICDSE - ACCESS SE ICD                                      *
+     F*   ZSEDIT - INSERT DECIMAL POINTS/SIGN NUMERIC FIELD           *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+     I*
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I*
+     I              BJURPT                          TITL
+     IRUNDT       DS
+     I*
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ISPOOL       DS
+     I*
+     I** DS FOR LINE NO. TO HANDLE OVERFLOW
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IDSFDY     E DSDSFDY
+     I*
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     I*
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     I** DATA STRUCTURE FOR FILE KEYS
+     I*
+     I            DS
+     I                                        1  12 TRKEY
+     I                                        1   2 TRRECT
+     I                                        3   9 TRZZ7
+     I                                       10  12 TRPBRA
+      *                                                                   CSD006
+      * Data structure to format the data feed timestamp                  CSD006
+      *                                                                   CSD006
+     I                                        1  10 WKDATE                CSD006
+     I                                        1   4 WKCCYY                CSD006
+     I                                        6   7 WKDFMO                CSD006
+     I                                        9  10 WKDFDD                CSD006
+     I                                       11  18 WKTIME                CSD006
+     I                                       11  12 WKDFHH                CSD006
+     I                                       14  15 WKDFMI                CSD006
+     I                                       17  18 WKDFSS                CSD006
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CSD010
+      ** External Data Structure for SAR Details                                              CSD010
+      *                                                                                       CSD010
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C***DEFINE*KEYLIST*FOR*CHAINING*TO*CLINT*FILE*********************** E38968
+     C******************************************************************* E38968
+     C***********CLINTK    KLIST                                          E38968
+     C***********          KFLD           CBPCNM  60                      E38968
+     C***********          KFLD           CBRCDT  1                       E38968
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE0344'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** REGISTER SPOOL ENTRY FOR AU
+     C*
+     C                     EXSR RCFAU
+     C*
+     C** IN THE DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** CHECK SYSTEM FORMAT DATE, DDMMYY OR MMDDYY(98 ON)
+     C*
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C** INPUT PARAMETER :
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           SEQ     5
+     C                     PARM           ENT     3
+     C*
+     C** DEFINE WORK FIELDS
+     C*
+     C           *LIKE     DEFN LCD       ZLCD
+     C           *LIKE     DEFN CHTP      ZCHTP
+     C           *LIKE     DEFN TNLU      ZTNLU
+     C           *LIKE     DEFN SINS      ZINS
+     C           *LIKE     DEFN SAMD      ZAMD
+     C           *LIKE     DEFN SDEL      ZDEL
+      *                                                                   CSD006
+      **  Access SAR details file to see if CSD006  is installed.         CSD006
+      *                                                                   CSD006
+     C                     CALL 'AOSARDR0'                                CSD006
+     C                     PARM '       ' @RTCD                           CSD006
+     C                     PARM '*VERIFY' @OPTN                           CSD006
+     C                     PARM 'CSD006'  @SARD   6                       CSD006
+      *                                                                   CSD006
+     C           @RTCD     IFEQ *BLANK                                    CSD006
+     C                     MOVE '1'       *IN59                           CSD006
+     C                     ELSE                                           CSD006
+     C                     MOVE '0'       *IN59                           CSD006
+     C                     END                                            CSD006
+      *                                                                                       CSD010
+      **  Access SAR details file to see if CSD010 is installed.                              CSD010
+      *                                                                                       CSD010
+     C                     CALL 'AOSARDR0'                                                    CSD010
+     C                     PARM *BLANKS   PRTCD   7                                           CSD010
+     C                     PARM '*VERIFY' POPTN   7                                           CSD010
+     C                     PARM 'CSD010'  PSARD   6                                           CSD010
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD010
+      *                                                                                       CSD010
+     C           PRTCD     IFNE *BLANKS                                                       CSD010
+     C           PRTCD     ANDNE'*NRF    '                                                    CSD010
+     C           *LOCK     IN   LDA                                                           CSD010
+     C                     MOVE 'SCSARDPD'DBFILE                                              CSD010
+     C                     Z-ADD6         DBASE                                               CSD010
+     C                     MOVEL'CSD010'  DBKEY                                               CSD010
+     C                     OUT  LDA                                                           CSD010
+     C                     EXSR DBERR                                                         CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C           PRTCD     IFEQ *BLANKS                                                       CSD010
+     C                     MOVE 'Y'       CSD010  1                                           CSD010
+     C                     MOVE *ON       *IN60                                               CSD010
+     C                     ELSE                                                               CSD010
+     C                     MOVE 'N'       CSD010                                              CSD010
+     C                     MOVE *OFF      *IN60                                               CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CGL031
+      **  Access SAR details file to see if CGL031 is installed.                              CGL031
+      *                                                                                       CGL031
+     C                     CALL 'AOSARDR0'                                                    CGL031
+     C                     PARM '       ' PRTCD   7                                           CGL031
+     C                     PARM '*VERIFY' POPTN   7                                           CGL031
+     C                     PARM 'CGL031'  PSARD   6                                           CGL031
+      *                                                                                       CGL031
+     C                     MOVE '0'       *IN73                                               CGL031
+     C                     MOVE 'N'       CGL031  1                                           CGL031
+     C           PRTCD     IFEQ *BLANK                                                        CGL031
+     C                     MOVE '1'       *IN73                                               CGL031
+     C                     MOVE 'Y'       CGL031                                              CGL031
+     C                     END                                                                CGL031
+      *                                                                                       CGL031
+      ** Database Error                                                                       CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFNE *BLANKS                                                       CGL031
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL031
+     C           *LOCK     IN   LDA                                                           CGL031
+     C                     MOVEL'CGL031 ' DBKEY                                               CGL031
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL031
+     C                     Z-ADD6         DBASE                                               CGL031
+     C                     OUT  LDA                                                           CGL031
+     C                     EXSR DBERR                                                         CGL031
+     C                     ENDIF                                                              CGL031
+     C/EJECT
+     C*================================================================
+     C*  FIRST TIME PROCESSING
+     C*================================================================
+     C*
+     C** SET INDICATORS FOR REPORT HEADING & OPEN INPUT FILE
+     C*
+     C           MODE      IFEQ 'I'
+     C                     SETON                     40
+     C                     ELSE
+     C           MODE      IFEQ 'A'
+     C                     SETON                     41
+     C                     ELSE
+     C                     SETON                     42
+     C                     END
+     C                     END
+     C*
+     C** INITIALISE OUTPUT ENTITY FIELDS BY INPUT PARAMETER
+     C*
+     C                     MOVE ENT       PBRA
+     C*
+     C**   ACCESS BANK DETAILS, FOR TITLE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** ACCESS SE ICD RECORD
+     C*
+     C                     EXSR ZICDSE
+     C*
+     C** ERROR IN ZICDSE
+     C*
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'TABLE'   DBFILE           * DB ERROR 05 *
+     C                     MOVELZTABKY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C   40                OPEN PRICBLCD
+     C  N40                OPEN PRICB
+     C                     Z-ADD40        MAXCNT  20
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP1                                           S01408
+     C*                                                                   S01408
+     C/SPACE 3
+     C*================================================================
+     C*  M A I N   P R O C E S S I N G
+     C*================================================================
+     C   40                READ PRICBLCD                 50
+     C  N40                READ PRICB                    50
+     C*
+     C           *IN50     DOWNE'1'
+      *                                                                   CSD006
+      * Format the Data Feed Timestamp Field if CSD006 is on              CSD006
+      *                                                                   CSD006
+     C           *IN59     IFEQ *ON                                       CSD006
+     C                     MOVE PRDFTS    WKTMST 14                       CSD006
+     C                     MOVE ' /  /  ' WKDATE                          CSD006
+     C                     MOVE ' :  :  ' WKTIME                          CSD006
+     C           4         SUBSTWKTMST:1  WKCCYY                          CSD006
+     C           2         SUBSTWKTMST:5  WKDFMO                          CSD006
+     C           2         SUBSTWKTMST:7  WKDFDD                          CSD006
+     C           2         SUBSTWKTMST:9  WKDFHH                          CSD006
+     C           2         SUBSTWKTMST:11 WKDFMI                          CSD006
+     C           2         SUBSTWKTMST:13 WKDFSS                          CSD006
+     C                     ENDIF                                          CSD006
+     C*
+     C** If Extel Option Indicator is 'Y', set on indicator to output
+     C** the following fields
+     C*
+     C                     MOVE '0'       *IN72
+     C*
+     C           EXMO      IFEQ 'Y'
+     C                     MOVE '1'       *IN72
+     C*
+     C** If warning indicators are on on PF/PRICED, seton program
+     C**   indicators for output to report.
+     C*
+     C                     SETOF                     7071
+     C*
+     C** Boundary warning indicator.
+     C*
+     C           PBWN      IFEQ 'Y'
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C** Percentage warning indicator.
+     C*
+     C           PPWN      IFEQ 'Y'
+     C                     MOVE '1'       *IN71
+     C                     END
+     C*
+     C                     END
+     C*
+     C** A RECORD HAS BEEN READ :-
+     C** MOVE DATA INTO UNIQUE FIELDS
+     C*
+     C                     Z-ADDLCD       ZLCD
+     C                     MOVE CHTP      ZCHTP
+     C                     Z-ADDTNLU      ZTNLU
+     C*
+     C** IF PARM=I & LAST CHANGE DATE NOT = RUN DATE - IGNORE
+     C*
+     C           MODE      IFEQ 'I'
+     C           ZLCD      IFNE RUND
+     C                     GOTO NEXT
+     C                     END
+     C                     END
+     C*
+     C** I MODE - COUNT OF RECORDS CHANGED TODAY
+     C*
+     C           MODE      IFEQ 'I'
+     C           ZLCD      IFEQ RUND
+     C                     ADD  1         ZCHG
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP2                                           S01408
+     C*                                                                   S01408
+     C                     ADD  1         ZCHGP1
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP3                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C                     ELSE
+     C*
+     C** A MODE -
+     C*
+     C           MODE      IFEQ 'A'
+     C           RECI      IFNE '*'
+     C                     ADD  1         ZLIVE
+     C                     END
+     C           ZLCD      IFEQ RUND
+     C*
+     C** A MODE - COUNT OF RECORDS READ + LIVE RECORDS
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP4                                           S01408
+     C*                                                                   S01408
+     C                     ADD  1         ZCOUNT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP5                                           S01408
+     C*                                                                   S01408
+     C                     ELSE
+     C*
+     C**        - IGNORE IF LCD NOT EQUAL RUN DATE
+     C*
+     C                     GOTO NEXT
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** L MODE - COUNT OF LIVE RECORDS
+     C*
+     C           RECI      IFNE '*'
+     C                     ADD  1         ZLIVE
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP6                                           S01408
+     C*                                                                   S01408
+     C                     ADD  1         ZLIVP1
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP7                                           S01408
+     C*                                                                   S01408
+     C                     ELSE
+     C*
+     C** L MODE - IGNORE IF DELETED RECORD
+     C*
+     C                     GOTO NEXT
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** Only process those records for market prices
+     C*
+     C           PPRT      IFEQ 'V '
+     C*
+     C** RECORD TO BE PRINTED -
+     C** OPEN OUTPUT FILE IF REQUIRED FIRST TIME ONLY
+     C*
+     C           *IN55     IFEQ '0'
+     C                     SETON                     55
+     C                     Z-ADD70        LINCNT  20
+     C                     OPEN SE0344P1
+     C                     EXSR RCFP1
+     C                     END
+     C*
+     C** PRINT PAGE HEADINGS
+     C*
+     C           LINCNT    IFGT MAXCNT
+     C                     Z-ADD0         LINCNT
+     C                     WRITEHEADP1
+     C                     END
+     C*
+     C***FORMAT*OUTPUT*&*PRINT*FOR*CUSTOMER*NAME/TOWN******************** E38968
+     C***READ*CLINTCB*FILE*USING*KEY************************************* E38968
+     C***IF*NO*RECORD/RECORD*DELETED/CUSTOMER*NO.ZERO*-*PRINT*BLANK****** E38968
+     C******************************************************************* E38968
+     C***********PCNM      IFEQ 0                                         E38968
+     C***********          MOVE *BLANK    ZCRNM                           E38968
+     C***********          MOVE *BLANK    ZCTWN                           E38968
+     C***********                                                         E38968
+     C***********          ELSE                                           E38968
+     C***********          Z-ADDPCNM      CBPCNM                          E38968
+     C***********          MOVE 'A'       CBRCDT                          E38968
+     C***********CLINTK    CHAINCLINTCBF             56                   E38968
+     C************IN56     IFEQ '1'                                       E38968
+     C***********          MOVE *BLANK    ZCRNM                           E38968
+     C***********          MOVE *BLANK    ZCTWN                           E38968
+     C***********          ELSE                                           E38968
+     C***********RECI      IFNE '*'                                       E38968
+     C***********          MOVE CRNM      ZCRNM                           E38968
+     C***********          MOVE CTWN      ZCTWN                           E38968
+     C***********          ELSE                                           E38968
+     C***********          MOVE *BLANK    ZCRNM                           E38968
+     C***********          MOVE *BLANK    ZCTWN                           E38968
+     C***********          END                                            E38968
+     C***********          END                                            E38968
+     C***********          END                                            E38968
+     C*
+     C***FORMAT*OUTPUT*PRINT********************************************* E38968
+     C***MARKET*LEGEND*************************************************** E38968
+     C******************************************************************* E38968
+     C***********          SETOF                     464748               E38968
+     C***********          SETOF                     49                   E38968
+     C***********PMKT      IFEQ 'G'                                       E38968
+     C***********          SETON                     46                   E38968
+     C***********          ELSE                                           E38968
+     C***********PMKT      IFEQ 'P'                                       E38968
+     C***********          SETON                     47                   E38968
+     C***********          ELSE                                           E38968
+     C***********PMKT      IFEQ 'S'                                       E38968
+     C***********          SETON                     48                   E38968
+     C***********          ELSE                                           E38968
+     C***********          SETON                     49                   E38968
+     C***********          END                                            E38968
+     C***********          END                                            E38968
+     C***********          END                                            E38968
+     C*
+     C** FORMAT OUTPUT & PRINT
+     C** NOMINAL CURRENCY-READ SECTY FILE USING KEY
+     C*
+     C           PSSN      CHAINSECTYDF              58
+     C           *IN,58    IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SECTY'   DBFILE           * DB ERROR 04 *
+     C                     MOVELPSSN      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** FORMAT PRICE FOR PRINT OUTPUT
+     C*
+     C                     MOVE PPRC      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ZOUT17 17
+      *                                                                                       CSD010
+      ** If CSD010 is installed, format Bid Price, Offer Price                                CSD010
+      ** and Closing Price                                                                    CSD010
+      *                                                                                       CSD010
+     C           CSD010    IFEQ 'Y'                                                           CSD010
+      *                                                                                       CSD010
+      ** Bid Price                                                                            CSD010
+      *                                                                                       CSD010
+     C                     MOVE PRBDPR    ZFLD15                                              CSD010
+     C                     Z-ADD8         ZDECS                                               CSD010
+     C                     MOVE 'L'       ZECODE                                              CSD010
+     C                     EXSR ZSEDIT                                                        CSD010
+     C                     MOVE ZOUT21    PBIDPR 17                                           CSD010
+      *                                                                                       CSD010
+      ** Offer Price                                                                          CSD010
+      *                                                                                       CSD010
+     C                     MOVE PROFPR    ZFLD15                                              CSD010
+     C                     EXSR ZSEDIT                                                        CSD010
+     C                     MOVE ZOUT21    POFFPR 17                                           CSD010
+      *                                                                                       CSD010
+      ** Closing Price                                                                        CSD010
+      *                                                                                       CSD010
+     C                     MOVE PRCLPR    ZFLD15                                              CSD010
+     C                     EXSR ZSEDIT                                                        CSD010
+     C                     MOVE ZOUT21    PCLOPR 17                                           CSD010
+      *                                                                                       CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CGL031
+      ** Format Fiscal Price and Interest for print input if CGL031                           CGL031
+      ** is on switched on.                                                                   CGL031
+      *                                                                                       CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+      *                                                                                       CGL031
+      ** Set up key list for Investment Types File                                            CGL031
+      *                                                                                       CGL031
+     C           KPROT     KLIST                                                              CGL031
+     C                     KFLD           NMCY                                                CGL031
+     C                     KFLD           SITP                                                CGL031
+      *                                                                                       CGL031
+      ** Get processing type                                                                  CGL031
+      *                                                                                       CGL031
+     C           KPROT     CHAININVTP                90                                       CGL031
+     C           *IN90     IFEQ '0'                                                           CGL031
+      *                                                                                       CGL031
+      ** Display prices if Funds or Bonds                                                     CGL031
+      *                                                                                       CGL031
+     C           PROT      IFEQ '7'                                                           CGL031
+     C           PPRT      ANDEQ'V '                                                          CGL031
+     C           PROT      ORNE '4'                                                           CGL031
+     C           PROT      ANDNE'2'                                                           CGL031
+     C           PROT      ANDNE'7'                                                           CGL031
+     C           ISSP      ANDLT100                                                           CGL031
+     C           PPRT      ANDEQ'V '                                                          CGL031
+      *                                                                                       CGL031
+      ** Format Fiscal Price (Price Excluding Interest)                                       CGL031
+      *                                                                                       CGL031
+     C                     MOVE PEXI      ZFLD15                                              CGL031
+     C                     Z-ADD8         ZDECS                                               CGL031
+     C                     MOVE 'L'       ZECODE                                              CGL031
+     C                     EXSR ZSEDIT                                                        CGL031
+     C                     MOVE ZOUT21    DDPEXI 17                                           CGL031
+      *                                                                                       CGL031
+      ** Format Interest Price                                                                CGL031
+      *                                                                                       CGL031
+     C           PPRC      SUB  PEXI      WINTP  158                                          CGL031
+     C                     MOVE WINTP     ZFLD15                                              CGL031
+     C                     Z-ADD8         ZDECS                                               CGL031
+     C                     MOVE 'L'       ZECODE                                              CGL031
+     C                     EXSR ZSEDIT                                                        CGL031
+     C                     MOVE ZOUT21    DDINTP 17                                           CGL031
+      *                                                                                       CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE *BLANKS   DDPEXI                                              CGL031
+     C                     MOVE *BLANKS   DDINTP                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+     C*
+     C** FORMAT DETAILS FOR PRINT OUTPUT
+     C*
+     C                     SETOF                     515253
+     C           ZCHTP     IFEQ 'A'
+     C                     SETON                     51
+     C                     ELSE
+     C           ZCHTP     IFEQ 'I'
+     C                     SETON                     52
+     C                     ELSE
+     C           ZCHTP     IFEQ 'D'
+     C                     SETON                     53
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** FORMAT DATES FOR PRINT OUTPUT
+     C** VALUE DATE
+     C*
+     C                     Z-ADDPVDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ZVDATE
+     C*
+     C** LAST ACT DATE
+     C*
+     C                     Z-ADDZLCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ZLDATE
+     C*
+     C**********           ADD  2         LINCNT                                              201927
+     C**********           ADD  3         LINCNT                                       201927 CSD010
+      *                                                                                       CSD010
+     C           *IN59     IFEQ *ON                                                           CSD010
+     C                     ADD  4         LINCNT                                              CSD010
+     C                     ELSE                                                               CSD010
+     C                     ADD  2         LINCNT                                              CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C           CSD010    IFEQ 'Y'                                                           CSD010
+     C                     ADD  3         LINCNT                                              CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+      ** Check for overflow before printing details                                           CSD010
+      *                                                                                       CSD010
+     C           LINCNT    IFGT MAXCNT                                                        CSD010
+     C                     Z-ADD0         LINCNT                                              CSD010
+     C                     WRITEHEADP1                                                        CSD010
+      *                                                                                       CSD010
+     C           *IN59     IFEQ *ON                                                           CSD010
+     C                     ADD  4         LINCNT                                              CSD010
+     C                     ELSE                                                               CSD010
+     C                     ADD  2         LINCNT                                              CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C           CSD010    IFEQ 'Y'                                                           CSD010
+     C                     ADD  3         LINCNT                                              CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP8                                           S01408
+     C*                                                                   S01408
+     C                     WRITEDETAIL
+     C                     END
+     C*
+     C** NEXT
+     C*
+     C           NEXT      TAG                             ** NEXT TAG  **
+     C   40                READ PRICBLCD                 50
+     C  N40                READ PRICB                    50
+     C                     END
+     C/SPACE 3
+     C*
+     C** END OF FILE - IF DETAIL RECORDS WRITTEN - WRITE TOTAL LINE
+     C*
+     C           TOTALS    TAG                             ** TOTALS TAG**
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CCP9                                           S01408
+     C*                                                                   S01408
+     C           ZCOUNT    IFEQ 0
+     C           ZLIVP1    ANDEQ0
+     C           ZCHGP1    ANDEQ0
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0344CP10                                           S01408
+     C*                                                                   S01408
+     C                     ELSE
+     C*
+     C           *IN55     IFEQ '1'
+     C                     ADD  6         LINCNT
+     C           LINCNT    IFGT MAXCNT
+     C                     Z-ADD0         LINCNT
+     C                     WRITEHEADP1
+     C                     END
+     C                     WRITETOTAL
+     C                     END
+     C                     END
+     C*
+     C** WRITE '*** NO DETAILS TO REPORT ***' LINE
+     C*
+     C           *IN55     IFEQ '0'
+     C                     MOVE '1'       *IN36
+     C                     END
+     C*
+     C/SPACE 3
+     C*================================================================
+     C*  RUN CONTROL PROCESS
+     C*================================================================
+     C*
+     C** READ AUDIT RECORD
+     C*
+     C                     READ PRICEA                   50
+     C           *IN,50    IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'PRICEA'  DBFILE           * DB ERROR 02 *
+     C                     MOVE *BLANK    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** 'I' MODE - PRINT REPORT
+     C*
+     C           MODE      IFEQ 'I'
+     C*
+     C** DIFFERENCE MSG FOR   LIVE RECORDS CALCULATED AND AUDIT TOTAL
+     C*
+     C           SLRB      ADD  SINS      ZWORK
+     C           ZWORK     SUB  SDEL      ZWORK
+     C           ZWORK     IFNE ZLIVE
+     C           MBIN      IFEQ 'N'
+     C                     SETON                     U854
+     C                     ELSE
+     C           ENT       IFEQ 'ALL'
+     C                     SETON                     U854
+     C                     END
+     C                     END
+     C                     END
+     C                     WRITEHEADAU
+     C                     WRITECONTROLI
+     C*
+     C** 'A'/'L' MODE -
+     C*
+     C                     ELSE
+     C*
+     C** 'A' MODE - DO RUN CONTROLS
+     C*
+     C           MODE      IFEQ 'A'
+     C           SLRB      ADD  SINS      ZWORK
+     C           ZWORK     SUB  SDEL      ZWORK
+     C           ZWORK     IFNE ZLIVE
+     C           MBIN      IFEQ 'N'
+     C                     SETON                     U854
+     C                     ELSE
+     C           ENT       IFEQ 'ALL'
+     C                     SETON                     U854
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** - PRINT REPORT
+     C*
+     C                     WRITEHEADAU
+     C                     WRITECONTROLA
+     C*
+     C** 'L' MODE - DO RUN CONTROLS
+     C*
+     C                     ELSE
+     C           NORE      IFNE ZLIVE
+     C           MBIN      IFEQ 'N'
+     C                     SETON                     U854
+     C                     ELSE
+     C           ENT       IFEQ 'ALL'
+     C                     SETON                     U881
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** - PRINT REPORT
+     C*
+     C                     WRITEHEADAU
+     C                     WRITECONTROLL
+     C                     END
+     C                     END
+     C*
+     C** IF NO OUTPUT - WRITE MESSAGE TO THIS EFFECT
+     C*
+     C           *IN36     IFEQ '1'
+     C                     WRITENONE
+     C                     ELSE
+     C*
+     C** WRITE P1 '*** END OF REPORT ***' LINE IF P1 OPENED
+     C*
+     C           *IN55     IFEQ '1'
+      *                                                                                       CSD010
+     C                     ADD  4         LINCNT                                              CSD010
+     C           LINCNT    IFGT MAXCNT                                                        CSD010
+     C                     Z-ADD0         LINCNT                                              CSD010
+     C                     WRITEHEADP1                                                        CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C                     WRITETRAILP1
+     C                     END
+     C                     END
+     C*
+     C/SPACE 3
+     C*================================================================
+     C*  END OF PROGRAM
+     C*================================================================
+     C*
+     C           ENDPGM    TAG                             ** ENDPGM TAG**
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*    DBERR SR.- DATABASE ERROR SUBROUTINE
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR                           ** DBERR **
+     C*
+     C** DATABASE ERROR HANDLING , REPORT ETC.
+     C** WRITE DB ERROR DETAILS TO P1
+     C*
+     C           *IN55     IFEQ '1'
+     C                     ADD  9         LINCNT
+     C           LINCNT    IFGT MAXCNT
+     C                     WRITEHEADP1
+     C                     END
+     C                     WRITEERRORP1
+     C                     WRITETRAILP1
+     C                     END
+     C*
+     C** OUTPUT RUN CONTROL DETAILS FOR AU
+     C*
+     C                     WRITEHEADAU
+     C           MODE      IFEQ 'I'
+     C                     WRITECONTROLI
+     C                     ELSE
+     C           MODE      IFEQ 'A'
+     C                     WRITECONTROLA
+     C                     ELSE
+     C                     WRITECONTROLL
+     C                     END
+     C                     END
+     C*
+     C** OUTPUT DB ERROR DETAILS FOR AU
+     C*
+     C                     WRITEERROR
+     C*
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Error control subroutine                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

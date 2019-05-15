@@ -1,0 +1,355 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ZM format SWIFT Address 2')                      *
+      ****************************************************************
+      *                                                              *
+      *  Midas - MESSAGE MAINTENANCE UTILITIES.                       *
+      *                                                              *
+      *  ZM0050 - FORMAT OF SWIFT ADDRESS.                           *
+      *                                                              *
+      *  (c) Finastra International Limited 2001                      *
+      *        COMPANY CONFIDENTIAL.                                 *
+      *                                                              *
+      *  Note: Any change applied to ZM0050 may well be applied to    *
+      *        this program. For that reason, the previous CAR tags   *
+      *        have not been removed                                  *
+      *                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE075BO           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSW036   *CREATE   Date 15Dec04               *
+      * ----- CSW036 -------------------------------------------------*
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 CSW202             Date 20May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 155065             Date 30Jul01               *
+      *                 CSW201             Date 02May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01401             Date 10Feb93               *
+      *                                                              *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE075BO - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSW202 - SWIFT 2002 Standards Update                         *
+      *  155065 - Wrong error handling for access object AOCUSTR0.    *
+      *  CSW201 - SWIFT 2001 Standards Update                         *
+      *  S01401 - The generation of MT500 SWIFT Messages if the       *
+      *           option is available.                                *
+      *                                                               *
+      ****************************************************************
+      * PURPOSE.                                                     *
+      *                                                              *
+      *  To set up either an A or D type address for use within a    *
+      *  SWIFT format message and to set a flag dependant on         *
+      *  whether the input is a customer number , shortname or       *
+      *  counterparty nostro.                                        *
+      *                                                              *
+      *  The destination input may be either:-                       *
+      *  1.Customer Number.                                          *
+      *  2.Customer Shortname.                                       *
+      *  3.Counterparty nostro code.                                 *
+      *                                                              *
+      *  If the input is a customer number an 'A' is moved to field  *
+      *  ZSTYPE , for a customer shortname a 'B' is moved in and for *
+      *  a counterparty nostro a 'C' is moved in.                    *
+      *                                                              *
+      *  If the SWIFT address is present for the destination the     *
+      *  program will set up an A type address, otherwise a D type   *
+      *  address with the name and address.                          *
+      ****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** COPYRIGHT STATEMENT ARRAY.
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** External Data structure for Customer Details.
+      *
+     ISDCNST    E DSSDCNSTPD
+      ** External Data structure for Counterparty Nostro Codes.
+      *
+     IDSFDY     E DSDSFDY
+      ** 1st DS for access program , short data structure.
+      *
+     IDSSDY     E DSDSSDY
+      ** 2nd DS for access program , long data structure.
+     I*                                                                   CSW036
+     IDSLDY     E DSDSLDY                                                 CSW036
+     I** Very Large Data Structure for Access Objects                     CSW036
+      *
+     IMEBICD    E DSMEBICDPD                                                                  CSW201
+      ** Data Structure for BIC Directory                                                     CSW201
+      *                                                                                       CSW201
+     IMEBEIS    E DSMEBEISPD                                                                  CSW202
+      ** Data Structure for Business Entity Identifier file                                   CSW202
+      *                                                                                       CSW202
+      **  Entry of address information
+     C           *ENTRY    PLIST
+     C                     PARM           ZDEST  12
+     C                     PARM           ZSADD1 35
+     C                     PARM           ZSADD2 35
+     C                     PARM           ZSADD3 35
+     C                     PARM           ZSADD4 35
+     C                     PARM           ZSTAG   1
+     C                     PARM           ZSTYPE  1
+     C                     PARM           ZERR    1
+     C                     PARM           ZDBEI   1                                           CSW201
+      *
+     C                     MOVE *BLANKS   ZSADD1
+     C                     MOVE *BLANKS   ZSADD2
+     C                     MOVE *BLANKS   ZSADD3
+     C                     MOVE *BLANKS   ZSADD4
+     C                     MOVE *BLANKS   ZSTAG
+     C                     MOVE *BLANKS   ZSTYPE
+     C                     MOVE *BLANKS   ZERR
+      *****************************************************************              CSW202 CLE075BO
+      ***Check*if*SWIFT*2002*changes*is*on.****************************              CSW202 CLE075BO
+      *****************************************************************              CSW202 CLE075BO
+     C**********           CALL 'SWIF2002'                                           CSW202 CLE075BO
+     C**********           PARM *BLANKS   P@RTCD  7                                  CSW202 CLE075BO
+      *****************************************************************              CSW202 CLE075BO
+     C********** P@RTCD    IFEQ 'CSW2002'                                            CSW202 CLE075BO
+     C**********           MOVEL'Y'       CSW202  1                                  CSW202 CLE075BO
+     C**********           ELSE                                                      CSW202 CLE075BO
+     C**********           MOVEL'N'       CSW202                                     CSW202 CLE075BO
+     C**********           ENDIF                                                     CSW202 CLE075BO
+      *****************************************************************              CSW036 CLE075BO
+      ***Access*SAR*details*file*to*check*for*presence*of*CSW036*******              CSW036 CLE075BO
+      *****************************************************************              CSW036 CLE075BO
+     C**********           CALL 'AOSARDR0'                                           CSW036 CLE075BO
+     C**********           PARM '       ' RTCDA   7                                  CSW036 CLE075BO
+     C**********           PARM '*VERIFY' RTCDB   7                                  CSW036 CLE075BO
+     C**********           PARM 'CSW036'  RTCDC   6                                  CSW036 CLE075BO
+      *****************************************************************              CSW036 CLE075BO
+     C**********           CLEARCSW036                                               CSW036 CLE075BO
+     C********** RTCDA     IFEQ *BLANK                                               CSW036 CLE075BO
+     C**********           MOVE 'Y'       CSW036  1                                  CSW036 CLE075BO
+     C**********           ENDIF                                                     CSW036 CLE075BO
+      *
+      ** Initially check for counterparty nostro.
+     C                     MOVELZDEST     @CNCD
+      *
+     C                     CALL 'AOCNSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM           @CNCD   8
+     C           SDCNST    PARM SDCNST    DSFDY
+      *
+      ** If found set address type to 'C' (C/party nostro), and set up
+      ** addresses
+     C           @RTCD     IFEQ *BLANKS                    b*1
+     C                     MOVE 'C'       ZSTYPE
+      *
+     C           AWSWID    IFNE *BLANKS                    b*2
+     C                     MOVELAWSWID    ZSADD1
+     C                     MOVE 'A'       ZSTAG
+      *                                                                                       CSW201
+      ** If ZDBEI is 'Y', check if SWIFT ID exists in BIC Directory,                          CSW201
+      ** then set ZSTAG to 'D' and setup address fields.                                      CSW201
+      *                                                                                       CSW201
+     C           ZDBEI     IFEQ 'Y'                                                           CSW201
+     C                     MOVELAWSWID    WSWFID                                              CSW201
+     C                     EXSR SRSBIC                                                        CSW201
+     C           PFMTA     IFEQ 'N'                                                           CSW201
+     C                     MOVEL'D'       ZSTAG                                               CSW201
+     C                     MOVELAWCPNM    ZSADD1                                              CSW201
+     C                     MOVELAWCNTN    ZSADD2                                              CSW201
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF                                                              CSW201
+     C                     ELSE                            x*2
+     C                     MOVELAWCPNM    ZSADD1
+     C                     MOVELAWCNTN    ZSADD2
+     C                     MOVE 'D'       ZSTAG
+     C                     END                             e*2
+      *
+      ** Else assume that address is customer
+     C                     ELSE                            x*1
+      *
+      ** Check for customer number or shortname
+     C                     MOVELZDEST     @KEY1
+      *
+     C*********************CALL 'AOCUSTR0'                                CSW036
+     C                     CALL 'AOCUSTR1'                                CSW036
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSW036
+     C           SDCUST    PARM SDCUST    DSLDY                           CSW036
+      ***********                                                         S01401
+      ***Error*handling.                                                  S01401
+     C***********@RTCD     IFNE *BLANKS                    b*2            S01401
+     C***********          MOVE '1'       ZERR                            S01401
+     C***********          ELSE                            x*2            S01401
+      ***********                                                         S01401
+      ***Set*up*address type for customer                                 S01401
+     C***********@KYST     IFEQ '*CNUM'                    b*3            S01401
+     C***********          MOVE 'A'       ZSTYPE                          S01401
+     C***********          ELSE                            x*3            S01401
+     C***********          MOVE 'B'       ZSTYPE                          S01401
+     C***********          END                             e*3            S01401
+     C*                                                                   S01401
+     C***Indicate*if*Customer*Number*or*Shortname;*else*return*in* S01401 155065
+     C********** @KYST     IFEQ '*CNUM  '                          S01401 155065
+     C**********           MOVE 'A'       ZSTYPE                   S01401 155065
+     C**********           ELSE                                    S01401 155065
+     C********** @KYST     IFEQ '*CSHT  '                          S01401 155065
+     C**********           MOVE 'B'       ZSTYPE                   S01401 155065
+     C**********           ELSE                                    S01401 155065
+     C**********           MOVE '1'       ZERR                     S01401 155065
+     C**********           END                                     S01401 155065
+     C**********           END                                     S01401 155065
+      *                                                                   155065
+      ** Error handling.                                                  155065
+      *                                                                   155065
+     C           @RTCD     IFNE *BLANKS                    b*2            155065
+     C                     MOVE '1'       ZERR                            155065
+     C                     ELSE                            x*2            155065
+      *                                                                   155065
+      ** Set up address type for customer.                                155065
+      *                                                                   155065
+     C           @KYST     IFEQ '*CNUM'                    b*3            155065
+     C                     MOVE 'A'       ZSTYPE                          155065
+     C                     ELSE                            x*3            155065
+     C                     MOVE 'B'       ZSTYPE                          155065
+     C                     END                             e*3            155065
+      *
+      ** If there is a swift address on file use it , else use the
+      ** customer name and address.
+     C********** ZERR      IFNE '1'                                S01401 155065
+     C           BBCSID    IFNE *BLANKS
+     C                     MOVELBBCSID    ZSADD1           b*3
+     C           BBCSI2    IFNE *BLANKS                                   CSW036
+     C           CSW036    ANDEQ'Y'                                       CSW036
+     C                     MOVELBBCSI2    ZSADD1                          CSW036
+     C                     ENDIF                                          CSW036
+     C                     MOVE 'A'       ZSTAG
+      *                                                                                       CSW201
+      ** If ZDBEI is 'Y', check if SWIFT ID exists in BIC Directory,                          CSW201
+      ** then set ZSTAG to 'D' and setup address fields.                                      CSW201
+      *                                                                                       CSW201
+     C           ZDBEI     IFEQ 'Y'                                                           CSW201
+     C                     MOVELBBCSID    WSWFID                                              CSW201
+     C           BBCSI2    IFNE *BLANKS                                   CSW036
+     C           CSW036    ANDEQ'Y'                                       CSW036
+     C                     MOVELBBCSI2    WSWFID                          CSW036
+     C                     ENDIF                                          CSW036
+     C                     EXSR SRSBIC                                                        CSW201
+     C           PFMTA     IFEQ 'N'                                                           CSW201
+     C                     MOVEL'D'       ZSTAG                                               CSW201
+     C                     MOVELBBCNA1    ZSADD1                                              CSW201
+     C                     MOVELBBCNA2    ZSADD2                                              CSW201
+     C                     MOVELBBCNA3    ZSADD3                                              CSW201
+     C                     MOVELBBCNA4    ZSADD4                                              CSW201
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF                                                              CSW201
+     C                     ELSE                            x*3
+     C                     MOVELBBCNA1    ZSADD1
+     C                     MOVELBBCNA2    ZSADD2
+     C                     MOVELBBCNA3    ZSADD3
+     C                     MOVELBBCNA4    ZSADD4
+     C                     MOVE 'D'       ZSTAG
+     C                     END                             e*3
+      *
+     C                     END                             e*2
+      *
+     C                     END                             e*1
+      *
+      **  Termination Processing.
+     C**********           SETON                     LR                                     CLE075BO
+     C                     RETRN                                                            CLE075BO
+      /EJECT                                                                                  CSW201
+      *****************************************************************                       CSW201
+      *  SRSBIC - SR to check if SWIFT ID exists in BIC directory.    *                       CSW201
+      *                                                               *                       CSW201
+      *  Called by: Main processing                                   *                       CSW201
+      *****************************************************************                       CSW201
+      *                                                                                       CSW201
+     C           SRSBIC    BEGSR                                                              CSW201
+      *                                                                                       CSW201
+     C                     MOVE 'Y'       PFMTA   1                                           CSW201
+      *                                                                                       CSW201
+     C                     CALL 'AOBICDV0'                                                    CSW201
+     C                     PARM *BLANKS   PRTCD  10                                           CSW201
+     C                     PARM           WSWFID 18                                           CSW201
+     C                     PARM           PTYPE   7                                           CSW201
+     C           MEBICD    PARM MEBICD    DSSDY                                               CSW201
+      *                                                                                       CSW201
+      ** If SWIFT ID exists in BIC directory and subtype is either                            CSW201
+      ** 'BEID' or 'TRCO', set PFMTA to 'N'.                                                  CSW201
+      *                                                                                       CSW201
+     C           PTYPE     IFEQ '*BIC'                                                        CSW201
+      *                                                                                       CSW202
+      ** Call AOBEISR0 when CSW202 is switched on                                             CSW202
+      *                                                                                       CSW202
+     C           CSW202    IFEQ 'Y'                                                           CSW202
+     C                     CALL 'AOBEISR0'                                                    CSW202
+     C                     PARM *BLANKS   P@RTCD                                              CSW202
+     C                     PARM '*VERIFY' POPTN   7                                           CSW202
+     C                     PARM BDSUBT    PBICD   4                                           CSW202
+     C           MEBEIS    PARM MEBEIS    DSFDY                                               CSW202
+     C                     ENDIF                                                              CSW202
+      *                                                                                       CSW202
+     C           BDSUBT    IFEQ 'BEID'                                                        CSW201
+     C           CSW202    ANDEQ'N'                                                           CSW202
+     C           BDSUBT    OREQ 'TRCO'                                                        CSW201
+     C           CSW202    ANDEQ'N'                                                           CSW202
+     C           P@RTCD    OREQ *BLANKS                                                       CSW202
+     C           CSW202    ANDEQ'Y'                                                           CSW202
+     C                     MOVEL'N'       PFMTA                                               CSW201
+     C                     ENDIF                                                              CSW201
+     C                     ENDIF                                                              CSW201
+      *                                                                                       CSW201
+     C                     ENDSR                                                              CSW201
+      *****************************************************************                       CSW201
+      *                                                               *                     CLE075BO
+      *  INZSR - Initial Subroutine.                                  *                     CLE075BO
+      *                                                               *                     CLE075BO
+      *****************************************************************                     CLE075BO
+     C           *INZSR    BEGSR                                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** Check if SWIFT 2002 changes is on.                                                 CLE075BO
+      *                                                                                     CLE075BO
+     C                     CALL 'SWIF2002'                                                  CLE075BO
+     C                     PARM *BLANKS   P@RTCD  7                                         CLE075BO
+      *                                                                                     CLE075BO
+     C           P@RTCD    IFEQ 'CSW2002'                                                   CLE075BO
+     C                     MOVEL'Y'       CSW202  1                                         CLE075BO
+     C                     ELSE                                                             CLE075BO
+     C                     MOVEL'N'       CSW202                                            CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** Access SAR details file to check for presence of CSW036                            CLE075BO
+      *                                                                                     CLE075BO
+     C                     CALL 'AOSARDR0'                                                  CLE075BO
+     C                     PARM '       ' RTCDA   7                                         CLE075BO
+     C                     PARM '*VERIFY' RTCDB   7                                         CLE075BO
+     C                     PARM 'CSW036'  RTCDC   6                                         CLE075BO
+      *                                                                                     CLE075BO
+     C                     CLEARCSW036                                                      CLE075BO
+     C           RTCDA     IFEQ *BLANK                                                      CLE075BO
+     C                     MOVE 'Y'       CSW036  1                                         CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+     C                     ENDSR                                                            CLE075BO
+      *****************************************************************                     CLE075BO
+      **  End
+** CPY@
+(c) Finastra International Limited 2001

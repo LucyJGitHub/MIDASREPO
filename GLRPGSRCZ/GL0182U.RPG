@@ -1,0 +1,268 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Edit Spread Journal Postings')                *
+     H/TITLE Change Journal Postings For Spread Jnl
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*  Midas  GENERAL LEDGER MODULE
+     F*                                                               *
+     F*   GL0182U - CHANGE SPREAD POSTING DETAILS                     *
+     F*                                                               *
+     F*  Function: This program performs similar functions as GL0181U *
+     F*            for existing posting records. Amendments made in   *
+     F*            GL0163R to Journal Header file (GLJENHPD) are      *
+     F*            applied to posting records (GLJENPPD) through      *
+     F*            this program.                                      *
+     F*                                                               *
+     F*  Called by: GL0163R - Edit Spread Journal Header              *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1093096          Date 30Sep13               *
+      *                 CAP207             Date 10Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                XXXXXX            DATE : XXXXXXX               *
+     F*                                                               *
+      *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1093096 - ABC - Reservations not removed for JRNE          *
+      *              (Child: AR1093097) (Recompile)                   *
+      *  CAP207 - Account Balance Check extended to other APIs        *
+      *           (Recompile)                                         *
+      *                                                               *
+     F*****************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FGLJENHL1IF  E           K        DISK
+      * RTV: GL Journal Entry Header File  Retrieval index
+      *
+     FGLJENPL0UF  E           K        DISK
+      * UPD: GL Batch Posting          Update index
+     F/COPY WNCPYSRC,GL0182UF01
+      *
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  86  -  End of File General Ledger Batch Header               *
+      *  88  -  End of File Spread Profile Detail file                *
+      *  89  -  End of File General Ledger Batch Detail               *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80               Copyright     array
+      /SPACE 3
+      *
+     IA@CPY       DS
+      *
+      **  Copyright array
+      *
+     I                                        1  80 CPY@
+     ISPDT        DS
+      *
+      **  Key fields for LF/GLSPDTL1
+      *
+     I                                        1   4 KSPRF
+     I                                        5   8 KPCCD
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P@BHNO  3        Batch No
+     C                     PARM           P@NRTV 30        Narrative
+     C                     PARM           P@VLDT  50       Value Date
+     C                     PARM           P@SPCU  1        Sprd Pfl Code use
+      *
+     C           KLCHSE    KLIST
+     C                     KFLD           BTBTNB
+     C                     KFLD           BTBINB
+      *
+     C                     MOVEA'0000'    *IN,20
+      *
+      **  Locate Header Details using Batch Number
+      *
+     C           P@BHNO    SETLL@BRREAH
+     C                     READ @BRREAH                  86
+      *
+     C           *IN86     IFEQ '0'
+      *
+      **  Once Jnl Header Record found Amend first 'FROM' Posting in GL
+      **  Batch Posting File.
+      *
+     C                     MOVELP@BHNO    BTBTNB
+     C                     Z-ADD1         BTBINB
+      *
+     C           KLCHSE    SETLL@BTREAK
+     C                     READ @BTREAK                  89
+     C/COPY WNCPYSRC,GL0182UC01
+     C           *IN89     IFEQ '0'
+     C           BTBINB    ANDEQ1
+     C           BRAMTF    IFNE BTPTAM
+     C                     MOVE '1'       *IN20
+     C                     Z-ADDBRAMTF    BTPTAM
+     C                     END
+     C           BRDCIN    IFNE BTDCIN
+     C                     MOVE BRDCIN    BTDCIN
+     C                     END
+     C           P@VLDT    IFNE *ZERO
+     C                     MOVE '1'       *IN22
+     C                     Z-ADDP@VLDT    BTVLDT
+     C                     END
+     C           P@NRTV    IFNE *BLANK
+     C                     MOVE '1'       *IN23
+     C                     EXSR CHKNAR
+     C/COPY WNCPYSRC,GL0182UC02
+     C                     END
+      *
+      **  Update posting record
+      *
+     C                     UPDAT@BTREAK
+     C                     END
+      *
+      **  Amend other 'TO' Postings details
+      *
+      *
+      **  If Spread Profile method used, read Spread Profile Details
+      **  for Spread Factor & Profit Centre
+      **  Calculate Posting amount = From Amt x Spread Factor
+      **                                        -------------
+      **                                        Spread Total
+      *
+     C           P@SPCU    IFEQ 'Y'
+     C                     READ @BTREAK                  89
+     C/COPY WNCPYSRC,GL0182UC03
+     C           *IN89     IFEQ '0'
+      *
+     C           BTBTNB    DOWEQP@BHNO
+     C           *IN89     ANDEQ'0'
+      *
+     C           BRDCIN    IFEQ 'C'
+     C                     MOVE 'D'       BTDCIN
+     C                     ELSE
+     C                     MOVE 'C'       BTDCIN
+     C                     END
+      *
+     C           *IN22     IFEQ '1'
+     C                     Z-ADDP@VLDT    BTVLDT
+     C                     END
+      *
+     C           *IN23     IFEQ '1'
+     C                     EXSR CHKNAR
+     C/COPY WNCPYSRC,GL0182UC04
+     C                     END
+      *
+     C           BTSPFC    DIV  BRSPTT    SPRAMT  99
+     C           SPRAMT    MULT BRAMTF    BTPTAM    H
+     C                     ADD  BTPTAM    WRKTOT 130
+     C                     UPDAT@BTREAK
+     C                     READ @BTREAK                  89
+     C/COPY WNCPYSRC,GL0182UC10
+     C                     END
+      *
+      **  If last posting record,
+      **  Calc difference = FROM Posting amt - Total TO Posting amts
+      **  Add difference to First posting amt
+      *
+     C           BRAMTF    SUB  WRKTOT    WRKREM 130
+      *
+     C                     MOVELP@BHNO    BTBTNB
+     C                     Z-ADD2         BTBINB
+      *
+     C           KLCHSE    SETLL@BTREAK
+     C                     READ @BTREAK                  89
+      *
+     C           WRKREM    ADD  BTPTAM    BTPTAM
+     C                     UPDAT@BTREAK
+     C                     END
+      *
+     C                     ELSE
+      *
+      **  Spread Total + No. of Items method used
+      *
+     C                     READ @BTREAK                  89
+     C/COPY WNCPYSRC,GL0182UC05
+     C           BTBTNB    DOWEQP@BHNO
+     C           *IN89     ANDEQ'0'
+      *
+     C           BRDCIN    IFEQ 'C'
+     C                     MOVE 'D'       BTDCIN
+     C                     ELSE
+     C                     MOVE 'C'       BTDCIN
+     C                     END
+      *
+     C           *IN22     IFEQ '1'
+     C                     Z-ADDP@VLDT    BTVLDT
+     C                     END
+      *
+     C           *IN23     IFEQ '1'
+     C                     EXSR CHKNAR
+     C/COPY WNCPYSRC,GL0182UC06
+     C                     END
+      *
+     C           *IN20     IFEQ '1'
+     C                     Z-ADD0         BTPTAM
+     C                     END
+      *
+     C                     UPDAT@BTREAK
+     C                     READ @BTREAK                  89
+     C/COPY WNCPYSRC,GL0182UC07
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CHKNAR - SR TO CHECK NARRATIVE FOR NARRATIVE CODE            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHKNAR    BEGSR
+      *
+     C**  Check Narrative for Narrative code
+     C*
+     C                     MOVE P@NRTV    URNARR 28
+      *
+     C           P@NRTV    IFNE *BLANK
+     C           URNARR    IFEQ *BLANK
+     C                     MOVELP@NRTV    BTNVCD
+     C                     MOVEL*BLANK    BTNRDC
+     C/COPY WNCPYSRC,GL0182UC08
+     C                     ELSE
+     C                     MOVELP@NRTV    BTNRDC
+     C                     MOVEL*BLANK    BTNVCD
+     C/COPY WNCPYSRC,GL0182UC09
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C**********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

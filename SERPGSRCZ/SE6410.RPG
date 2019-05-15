@@ -1,0 +1,454 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Calc precious metal a/c balances')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                  *
+     F*                                                               *
+     F*  RPG/SE6410 - Calculate Precious Metal Account Balances       *
+     F*                                                               *
+     F*  Function:  This Program calculates Precious Metal Account    *
+     F*  (COB)      Balances and extracts them                        *
+     F*                                                               *
+     F*  Called by: SEC6410 - Calculate Precious Metal A/C Balances   *
+     F*             SEC6281 - Missing Custody Fees Report             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 27Aug99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 091522             Date 16Aug95               *
+      *                 S01464             Date 04Apr94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPB001 - 'Private Banking' Module                            *
+      *  CGL007 - Account Postings Enquiry.  Recompile.               *
+     F*  091522 - Safe Custody Fees - Private Banking (CSE001)        *
+     F*  S01464 - Safe Custody Fees                                   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*
+     F** Open query file
+     FSEACCNLLIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F** Dealing postings
+     FSEGEDLL0IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**   Portfolio customer definition. prefix - QB                     091522
+     FSDPLCSL0IF  E           K        DISK         KINFSR *PSSR          091522
+     F*                                                                   091522
+     F** Precious metal account balances
+     FSEPMABPDO   E           K        DISK         KINFSR *PSSR
+     F*
+     F** Audit printer file
+     FSE6410AUO   E                    PRINTER      KINFSR *PSSR
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F*                  ------------------------                     *
+     F*     40 - Record not found/End of file indicator               *
+     F*     41 - READE Fail on file SEGEDLL0                          *
+     F*     45 - Live Record not found on SDPLCSL0                    *   091522
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E*****************************************************************
+     E*
+     E** Array for copyright
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     I*
+     I** Rename SEGEDLL0 fields
+     IAPOSTPDF
+     I              CNUM                            GECNUM
+     I              CCY                             GECCY
+     I              ACOD                            GEACOD
+     I              ACSQ                            GEACSQ
+     I              DRCR                            GEDRCR
+     I              PSTA                            GEDLPD
+     I              VALD                            GEVDAT
+     I              BRCA                            GEBRCA
+     I*
+     I** Data structure for compilation - Copyright insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I** Data area for update processing
+     ISDSTAT    EUDS
+     I*
+     I** Program Status Data Structure
+     IPSDS       SDS
+     I                                      244 253 DDWID
+     I                                      254 263 USER
+     I*
+     I** Local Data Area for database errors
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** Bank details
+     ISDBANK    E DSSDBANKPD
+     ISDSCFE    E DSSDSCFEPD                                              091522
+     I** Safe Custody Fees ICD                                            091522
+     ISDMMOD    E DSSDMMODPD                                              091522
+     I** Modules                                                          091522
+     ISDCUST    E DSSDCUSTPD                                              CPB001
+     I** CUSTOMER DETAILS                                                 CPB001
+     I*
+     I** Short DS for access programs
+     IDSFDY     E DSDSFDY
+     I** Long DS for access programs                                      091522
+     IDSSDY     E DSDSSDY                                                 091522
+     I** Very Long DS for access programs                                 CPB001
+     IDSLDY     E DSDSLDY                                                 CPB001
+     I*                                                                   091522
+     I            DS                                                      091522
+     I**********                              1   60CNUM                               091522 CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        1   6 KCNUM                 091522
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** Key list for LF/SEGEDLL0
+     C*
+     C           KEY1      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C** Initialisation
+     C*
+     C                     EXSR #A
+     C*
+     C** Main processing
+     C*
+     C                     EXSR #B
+     C*
+     C** End of program
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*           INDEX TO SUBROUTINES                                *
+     C*          ----------------------                               *
+     C*                                                               *
+     C*    1.  #A     - Initialisation                                *
+     C*    2.  #B     - Main processing                               *
+     C*    3.  #BA    - Add posting amount to precious metal a/c bal  *
+     C*    4.  #BB    - Write record to PF/SEPMABPD                   *
+     C*    5.  #PSSR  - Error handling subroutine                     *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B        - MAIN PROCESSING                                  *
+     C*                                                               *
+     C*  CALLS     - #BA, #BB                                         *
+     C*                                                               *
+     C*  CALLED BY - MAINLINE                                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** Read Query File record
+     C*
+     C                     READ SEACCNLL                 40
+     C           *IN40     DOWEQ'0'
+     C*
+     C** For each record on the Query File
+     C*
+     C                     Z-ADDCLBL      WWCLBL
+     C           KEY1      SETLLSEGEDLL0
+     C           KEY1      READESEGEDLL0                 41
+     C           *IN41     DOWEQ'0'
+     C*
+     C** Increment Precious Metal A/C Balance for each
+     C**   valid DEALING record
+     C*
+     C                     EXSR #BA
+     C           KEY1      READESEGEDLL0                 41
+     C                     END
+     C*
+     C** Write record to physical file SEPMABPD
+     C*
+     C                     EXSR #BB
+     C*
+     C** Increment count of records written to PF/SEPMABPD
+     C*
+     C                     ADD  1         WWRCNT
+     C*
+     C** Read next Query File record
+     C*
+     C                     READ SEACCNLL                 40
+     C                     END
+     C                     MOVE WWRCNT    RRNORW
+     C                     WRITEFORMAT1
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BA       - THIS SUBROUTINE ADDS POSTING AMOUNT              *
+     C*              FROM LF/SEGEDLL0 TO A/C BALANCE WORK FIELD       *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - #B                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #BA       BEGSR
+     C*
+     C** If Value Date <= Event Control Date
+     C*
+     C           GEVDAT    IFLE WWMECD
+     C*
+     C** If Debit/Credit indicator = 1
+     C*
+     C           GEDRCR    IFEQ 1
+     C                     SUB  GEDLPD    WWCLBL
+     C                     ELSE
+     C*
+     C** If Debit/Credit indicator = 1
+     C*
+     C           GEDRCR    IFEQ 0
+     C                     ADD  GEDLPD    WWCLBL
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BB       - THIS SUBROUTINE WRITES A RECORD TO PF/SEPMABPD   *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - #B                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #BB       BEGSR
+     C*
+     C** Move QRYF fields to SEPMABPD fields
+     C*
+     C                     MOVE CNUM      SGCNUM
+     C                     MOVE CCY       SGCCY
+     C                     MOVE ACOD      SGACOD
+     C                     MOVE ACSQ      SGACSQ
+     C*                                                                   091522
+     C                     MOVEL'N'       WWVAL   1                       CPB001
+     C*  if PM module is on, find if cust is PM cust                      091522
+     C           BGPFMG    IFEQ 'Y'                                       091522
+     C           FBCFCP    ANDEQ'P'                                       091522
+     C*                                                                   091522
+     C           CNUM      IFNE WCNUM                                     091522
+     C**********           MOVE CNUM      WCNUM   60                                   091522 CSD027
+     C                     MOVE CNUM      WCNUM   6                                           CSD027
+     C*                                                                   091522
+     C**   Access PF/SDPLCSL0 with customer number                        091522
+     C           KCNUM     CHAINSDPLCSL0             45                   091522
+     C*                                                                   091522
+     C**   If live record is not found                                    091522
+     C           *IN45     IFEQ '0'                                       091522
+     C           QBRECI    ANDNE'D'                                       091522
+     C                     MOVEL'Y'       WWVAL                           CPB001
+     C******               SETON                     45                   CPB001
+     C                     END                                            091522
+     C                     END                                            091522
+     C                     END                                            091522
+     C*  if PB module is on, find if cust is PB cust                      CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C           FBCFCP    ANDEQ'P'                                       CPB001
+     C*                                                                   CPB001
+     C           CNUM      IFNE WCNUM                                     CPB001
+     C                     MOVE CNUM      @KEY1                           CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM *BLANKS   @RTCD   7                       CPB001
+     C                     PARM '*KEY   ' @OPTN   7                       CPB001
+     C                     PARM           @KEY1  10                       CPB001
+     C                     PARM *BLANKS   @KYST   7                       CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+     C           @RTCD     IFEQ *BLANKS                                   CPB001
+     C           BBPRBA    ANDEQ'Y'                                       CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE 'Y'       WWVAL                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   CPB001
+     C           WWVAL     IFEQ 'Y'                                       CPB001
+     C                     MOVE *ON       *IN45                           CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE *OFF      *IN45                           CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   091522
+     C**   If Fees by Customer or customer not a PM customer              091522
+     C**   Or not a PB Customer                                           CPB001
+     C           FBCFCP    IFEQ 'C'                                       091522
+     C           *IN45     OREQ '1'                                       091522
+     C                     MOVE *BLANKS   SGPTFR
+     C                     ELSE                                           091522
+     C                     MOVE PTFR      SGPTFR                          091522
+     C                     END                                            091522
+     C                     MOVE BRCA      SGBRCA
+     C                     Z-ADDWWCLBL    SGCLBL
+     C                     WRITESEPMABP0
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #A         - THIS SUBROUTINE PERFORMS INITIALISATION         *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - MAINLINE                                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C** Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE6410'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   091522
+     C** Access Safe Custody Fees ICD                                     091522
+     C*                                                                   091522
+     C                     CALL 'AOSCFER0'                                091522
+     C                     PARM '       ' @RTCD   7                       091522
+     C                     PARM '*FIRST ' @OPTN   7                       091522
+     C           SDSCFE    PARM SDSCFE    DSFDY                           091522
+     C*                                                                   091522
+     C           @RTCD     IFNE *BLANK                                    091522
+     C           *LOCK     IN   LDA                                       091522
+     C                     MOVE 'SDSCFEPD'DBFILE           ************   091522
+     C                     MOVEL@OPTN     DBKEY            * DBERR 02 *   091522
+     C                     Z-ADD2         DBASE            ************   091522
+     C                     OUT  LDA                                       091522
+     C                     EXSR *PSSR                                     091522
+     C                     END                                            091522
+     C*                                                                   091522
+     C** Access Modules file                                              091522
+     C*                                                                   091522
+     C                     CALL 'AOMMODR0'                                091522
+     C                     PARM '       ' @RTCD   7                       091522
+     C                     PARM '*FIRST ' @OPTN   7                       091522
+     C           SDMMOD    PARM SDMMOD    DSSDY                           091522
+     C*                                                                   091522
+     C           @RTCD     IFNE *BLANK                                    091522
+     C           *LOCK     IN   LDA                                       091522
+     C                     MOVE 'SDMMODPD'DBFILE           ************   091522
+     C                     MOVEL@OPTN     DBKEY            * DBERR 03 *   091522
+     C                     Z-ADD3         DBASE            ************   091522
+     C                     OUT  LDA                                       091522
+     C                     EXSR *PSSR                                     091522
+     C                     END                                            091522
+     C*
+     C** Write headings for audit report
+     C*
+     C                     WRITEHEADER
+     C*
+     C** Define work fields
+     C*
+     C           *LIKE     DEFN SGCLBL    WWCLBL
+     C                     Z-ADD0         WWRCNT  50
+     C                     MOVE MECD      WWMECD  50
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR     - PROGRAM ERROR HANDLING ROUTINE                   *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - NONE                                             *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     WRITEDBERROR
+     C*
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+** CPY@
+(c) Finastra International Limited 2001

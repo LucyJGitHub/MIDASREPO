@@ -1,0 +1,561 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Selection program')
+/*OVRF*: OVRDBF JRNFILE2 HFFILEPD                                   : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0500 - HF Selection Program                                *
+     F*                                                               *
+     F*  Function:  This program allows the user to select various    *
+     F*  (I/C INT)  items and parameters.                             *
+     F*                                                               *
+     F*  Called By: HFC0500 - Display information online.             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 065338             Date 04Nov94               *
+      *                 S01379             Date 05Oct92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  065338 - If file/item has been deleted then do not display   *
+     F*           it for file selection.                              *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*  Compiler directive for file JRNFILE2                         *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*       01       CMD/3 IS PRESSED
+     F*       05       CMD/5 IS PRESSED
+     F*       02 62    CMD/17 IS PRESSED
+     F*       03 63    CMD/18 IS PRESSED
+     F*       04 64    CMD/19 IS PRESSED
+     F*       06 66    CMD/20 IS PRESSED
+     F*       07 67    CMD/21 IS PRESSED
+     F*
+     F*       30       SUBFILE  HF0500DF
+     F*       31       FILE HFFILEPD
+     F*       40       SFLDSP
+     F*       41       SFLCLR
+     F*       46       POSITION CURSOR / PROTECT
+     F*       49       ERROR, MOD-FIELD
+     F*       50       FIRST PART OF SCREEN TO BE PROCESSED
+     F*       51-59    SECOND PART OF SCREEN, FIELDS
+     F*       80       ERROR MESSAGE
+     F*
+     F*       U5       REQUEST FOR DISPLAY PROGRAM TO BE CALLED
+     F*       U6       REQUEST ON A NON PERMANENT PHYSICAL FILE
+     F*
+     F*  90 - 99  ACT-SUBROUTINES
+     F*
+     F*  U7,U8    STANDARD-MIDAS ERROR
+     F*----------------------------------------------------------------
+     F*
+     FHF0500DFCF  E                    WORKSTN
+     F                                        RECNO KSFILE HF0500F3
+     F*
+     FHFFILEPDIF  E                    DISK
+     F                                              KRECNO RRNJ
+     F*
+     FJRNFILE2IF  E                    DISK
+     F            HFFILEP0                          KRENAMEFILES2
+     F                                              KRECNO RRN
+     FHFUSERPDIF  E           K        DISK
+     F*
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    ITAB      999  1               ITEM-TAB
+     E                    SET        25  1               SELECTION
+     E                    SET1       25  1               SELECTION-OLD
+     E*-------------------------------------------------------------------
+     IJRN        UDS                            256
+     I                                        1   1 PUSER
+     I                                        2  11 USER
+     I                                       12  12 PPGM
+     I                                       13  22 PGM
+     I                                       23  32 FILE
+     I                                       33  33 LDAMOD
+     I                                       34  370POS
+     I                                       38  410PLEN
+     I                                       42  51 LDAF1
+     I                                       52  61 LDAF2
+     I                                       62  71 LDAF3
+     I                                       72  81 LDAF4
+     I                                       82  91 LDAF5
+     I                                       92 101 LDAF6
+     I                                      102 161 PARAM
+     I                                      162 162 PCOMM
+     I                                      163 1720COMM
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 SUSER
+     I*
+     I*---------------------------------------------------------------
+     C/EJECT
+     C*****************************************************************
+     C** B E G I N N   O F    M A I N   P R O G R A M M
+     C*****************************************************************
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA            RUN DATE
+     C                     MOVELWSID      SWSID
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+      *
+     C                     MOVEL'HF0500'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+     C*
+     C           *NAMVAR   DEFN           JRN
+     C           *LOCK     IN   JRN
+     C           *ENTRY    PLIST
+     C                     PARM           USR    10
+     C*
+     C           USR       CHAINHFUSERPD             30
+     C                     MOVEAUIT       ITAB
+     C*
+     C           RESTA     TAG
+     C  N80                MOVEL'A'       MOD
+     C  N80                MOVEL*BLANKS   JOUSER
+     C  N80                MOVEL*BLANKS   JOPGM
+     C  N80                Z-ADD0         JOCCID
+     C* CLEAR SUBFILE
+     C                     SETOF                     40    * SFLDSP
+     C                     SETON                     41    * SFLCLR
+     C                     WRITEHF0500F4
+     C                     WRITEHF0500C0
+     C                     Z-ADD0         RECNO   40
+     C                     SETOF                     41    * SFLCLR
+     C                     SETON                     40    * SFLDSP
+     C* WRITE SUBFILE
+     C                     SETOF                     31
+     C                     Z-ADD1         RRNJ    90
+     C           RRNJ      SETLLHFFILEPD
+     C                     READ HFFILEPD                 31
+     C           *IN31     DOWEQ'0'                        B1 START DO
+     C           ENAB      IFEQ 'E'                          B2
+     C           HEADER    ANDEQ'0'
+      *                                                                   065338
+     C           HFDATE    IFEQ *BLANKS                                   065338
+     C                     Z-ADDITEM      Y       30
+     C                     MOVELITAB,Y    TESTF   1
+     C           TESTF     IFEQ 'Y'                            B3
+     C                     MOVEL*BLANKS   OPT
+     C                     MOVEL*BLANKS   TAX
+     C                     MOVEL*BLANKS   TBX
+     C                     MOVEL*BLANKS   SEL
+     C                     MOVEL*BLANKS   FILN
+     C                     MOVELTEXT      TAX
+     C                     MOVELTEXK      TBX
+     C                     MOVELFFILE     FILN
+     C                     Z-ADDSTRPOS    STRP
+     C                     Z-ADDLENBUF    LENB
+     C                     ADD  1         RECNO
+     C                     DO   25        Z       20             B4 DO
+     C           Z         IFLE LENBUF                             B5
+     C                     MOVEL' '       SET,Z
+     C                     ELSE
+     C                     MOVEL'#'       SET,Z
+     C                     END                                     E5
+     C                     END                                   E4 DO
+     C                     MOVEASET       SEL
+     C                     WRITEHF0500F3
+     C                     WRITEHF0500C0
+     C                     END                                 E3
+     C                     END                                            065338
+      *                                                                   065338
+     C                     END                               E2
+     C                     READ HFFILEPD                 31
+     C                     END                             E1 END DO
+      *
+     C  N80                SETON                     80
+     C                     MOVEL*BLANKS   TAX1
+     C                     MOVEL*BLANKS   TBX1
+     C                     MOVEL*BLANKS   SEL1
+     C                     MOVEL*BLANKS   S1
+     C                     MOVEL*BLANKS   F1
+     C                     MOVEL*BLANKS   S2
+     C                     MOVEL*BLANKS   F2
+     C                     MOVEL*BLANKS   S3
+     C                     MOVEL*BLANKS   F3
+     C                     MOVEL*BLANKS   S4
+     C                     MOVEL*BLANKS   F4
+     C                     MOVEL*BLANKS   S5
+     C                     MOVEL*BLANKS   F5
+     C                     MOVEL*BLANKS   S6
+     C                     MOVEL*BLANKS   F6
+     C                     SETOF                     054950
+     C                     SETOF                     515253
+     C                     SETOF                     545556
+     C                     SETOF                     575859
+     C                     SETOF                     626364
+     C                     SETOF                     6667
+     C* INPUT TOP-OF-SCREEN
+     C           START     TAG
+     C* SUBFILE EMPTY ?
+     C           RECNO     IFEQ 0
+      *
+     C                     MOVEL'HAF0065' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     80
+     C                     WRITEHF0500F2
+     C                     WRITEHF0500C0
+     C                     EXFMTHF0500F1
+     C                     CALL 'SCC0250'
+     C                     GOTO ENDPGM
+     C                     END
+     C*
+     C                     WRITEHF0500F5
+     C                     WRITEHF0500C0
+     C                     EXFMTHF0500F4
+     C                     CALL 'SCC0250'
+     C                     Z-ADD0         NOK     10
+     C                     SETOF                     4980
+     C                     SETOF                     30
+     C                     SETOF                     626364
+     C                     SETOF                     6667
+     C* END ?
+     C           *IN01     IFEQ '1'
+     C                     GOTO ENDPGM
+     C                     END
+     C* INIT ?
+     C           *IN05     IFEQ '1'
+     C                     GOTO RESTA
+     C                     END
+     C* OTHER CMD-KEYS
+     C                     SETOF                     99
+     C   02
+     COR 03
+     COR 04
+     COR 06
+     COR 07                SETON                     99
+     C  N99                GOTO START
+     C   02                SETON                     62
+     C   03                SETON                     63
+     C   04                SETON                     64
+     C   06                SETON                     66
+     C   07                SETON                     67
+     C* FIELDS
+     C                     MOVELJOUSER    USER
+     C           JOUSER    IFNE *BLANKS
+     C                     MOVEL'Y'       PUSER
+     C                     ELSE
+     C                     MOVEL'N'       PUSER
+     C                     END
+      *
+     C                     Z-ADDJOCCID    COMM
+     C           JOCCID    IFNE 0
+     C                     MOVEL'Y'       PCOMM
+     C                     ELSE
+     C                     MOVEL'N'       PCOMM
+     C                     END
+      *
+     C                     MOVELJOPGM     PGM
+     C           JOPGM     IFNE *BLANKS
+     C                     MOVEL'Y'       PPGM
+     C                     ELSE
+     C                     MOVEL'N'       PPGM
+     C                     END
+     C           MOD       IFNE 'I'
+     C           MOD       ANDNE'A'
+     C           MOD       ANDNE'C'
+     C           MOD       ANDNE'R'
+      *
+     C                     MOVEL'HAF0064' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     SETON                     4980
+     C                     GOTO START
+     C                     ELSE
+     C                     MOVELMOD       LDAMOD
+     C                     END
+     C*
+     C           *IN50     IFEQ '1'
+     C                     GOTO XXX
+     C                     END
+     C   06                GOTO XXX
+     C* SUBFILE PROCESSING
+     C                     Z-ADD0         COUN    20
+     C           LOOPR     TAG
+     C                     READCHF0500F3                 30
+     C           *IN30     IFEQ '0'                        E1
+     C           OPT       IFEQ ' '
+     C                     GOTO LOOPR
+     C                     END
+      *
+     C                     MOVEL*BLANKS   PARAM
+     C                     MOVEASEL       SET
+     C                     MOVEASEL       SET1
+     C                     DO   25        Z       20         B2 DO
+     C           Z         IFGT LENB                           B3
+     C                     MOVEL' '       SET,Z
+     C                     MOVEL'#'       SET1,Z
+     C                     END                                 E3
+     C                     END                               E2 DO
+     C                     MOVEASET       PARAM
+     C                     MOVELPARAM     SEL1
+     C                     MOVELTAX       TAX1
+     C                     MOVELTBX       TBX1
+     C*
+     C                     MOVELFILN      FILE
+     C                     Z-ADDSTRP      POS
+     C                     Z-ADDLENB      PLEN
+     C                     MOVEASET1      SEL
+     C                     UPDATHF0500F3
+     C                     END
+     C           *IN30     DOWEQ'0'                        * START DO
+     C           OPT       IFNE ' '
+     C                     ADD  1         COUN
+     C                     END
+     C                     READCHF0500F3                 30
+     C                     END                             * END DO
+     C*
+     C           COUN      IFEQ 0
+      *
+     C                     MOVEL'HAF0062' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     Z-ADD1         NOK
+     C                     END
+     C           COUN      IFGT 1
+      *
+     C                     MOVEL'HAF0063' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     Z-ADD1         NOK
+     C                     END
+      * END OF CHECKING
+     C           NOK       IFNE 0
+     C                     SETON                     80
+     C                     GOTO RESTA
+     C                     END
+      *
+     C                     MOVEL*BLANKS   LDAF1
+     C                     MOVEL*BLANKS   LDAF2
+     C                     MOVEL*BLANKS   LDAF3
+     C                     MOVEL*BLANKS   LDAF4
+     C                     MOVEL*BLANKS   LDAF5
+     C                     MOVEL*BLANKS   LDAF6
+     C*
+     C                     SETON                     50
+     C                     Z-ADD1         RRN     90
+     C                     Z-ADD0         SS
+     C           RRN       SETLLJRNFILE2
+     C           LOOP      TAG
+     C                     READ JRNFILE2                 99
+     C           *IN99     IFEQ '1'
+     C           *IN52     IFEQ '1'
+     C                     GOTO PART2
+     C                     ELSE
+     C                     SETOF                     51
+     C                     GOTO XXX
+     C                     END
+     C                     END
+     C           FFILE     IFNE FILE
+     C                     GOTO LOOP
+     C                     END
+      *
+     C                     ADD  1         SS      20
+     C           SS        IFEQ 1
+     C                     SETON                     51
+     C                     MOVELFFORM     F1
+     C                     END
+     C           SS        IFEQ 2
+     C                     SETON                     52
+     C                     MOVELFFORM     F2
+     C                     END
+     C           SS        IFEQ 3
+     C                     SETON                     53
+     C                     MOVELFFORM     F3
+     C                     END
+     C           SS        IFEQ 4
+     C                     SETON                     54
+     C                     MOVELFFORM     F4
+     C                     END
+     C           SS        IFEQ 5
+     C                     SETON                     55
+     C                     MOVELFFORM     F5
+     C                     END
+     C           SS        IFEQ 6
+     C                     SETON                     56
+     C                     MOVELFFORM     F6
+     C                     END
+     C                     GOTO LOOP
+     C* INPUT BOTTOM-OF-SCREEN
+     C           PART2     TAG
+     C                     WRITEHF0500F2
+     C                     WRITEHF0500C0
+     C                     EXFMTHF0500F1
+     C                     CALL 'SCC0250'                  Retrieve MSGF
+     C                     MOVEL*BLANKS   LDAF1
+     C                     MOVEL*BLANKS   LDAF2
+     C                     MOVEL*BLANKS   LDAF3
+     C                     MOVEL*BLANKS   LDAF4
+     C                     MOVEL*BLANKS   LDAF5
+     C                     MOVEL*BLANKS   LDAF6
+     C                     Z-ADD0         OK
+     C                     SETOF                     80
+     C* END ?
+     C           *IN01     IFEQ '1'
+     C                     GOTO ENDPGM
+     C                     END
+     C* INIT ?
+     C           *IN05     IFEQ '1'
+     C                     GOTO RESTA
+     C                     END
+     C           *IN51     IFEQ '1'
+     C           S1        IFNE ' '
+     C                     MOVELF1        LDAF1
+     C                     ELSE
+     C                     Z-ADD1         OK      10
+     C                     END
+     C                     END
+     C           *IN52     IFEQ '1'
+     C           S2        IFNE ' '
+     C                     MOVELF2        LDAF2
+     C                     ELSE
+     C                     Z-ADD1         OK      10
+     C                     END
+     C                     END
+     C           *IN53     IFEQ '1'
+     C           S3        IFNE ' '
+     C                     MOVELF3        LDAF3
+     C                     ELSE
+     C                     Z-ADD1         OK      10
+     C                     END
+     C                     END
+     C           *IN54     IFEQ '1'
+     C           S4        IFNE ' '
+     C                     MOVELF4        LDAF4
+     C                     ELSE
+     C                     Z-ADD1         OK      10
+     C                     END
+     C                     END
+     C           *IN55     IFEQ '1'
+     C           S5        IFNE ' '
+     C                     MOVELF5        LDAF5
+     C                     ELSE
+     C                     Z-ADD1         OK      10
+     C                     END
+     C                     END
+     C           *IN56     IFEQ '1'
+     C           S6        IFNE ' '
+     C                     MOVELF6        LDAF6
+     C                     ELSE
+     C                     Z-ADD1         OK      10
+     C                     END
+     C                     END
+      * if ok = 0 all record formats have been excluded
+      * EXCEPT IF THERE ARE NO RECORD FORMATS TO BE EXCLUDED
+     C           OK        IFEQ 0
+     C           *IN52     ANDEQ'1'
+      *
+     C                     MOVEL'HAF0061' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     SETON                     80
+     C                     GOTO PART2
+     C                     END
+      *
+     C           XXX       TAG
+     C                     SETOF                     U2U3U4
+     C                     SETOF                     99U6
+     C   62                SETON                     02
+     C   63                SETON                     03
+     C   64                SETON                     04
+     C   66                SETON                     06
+     C   67                SETON                     07
+     C   02
+     COR 03
+     COR 04
+     COR 06
+     COR 07                SETON                     99
+     C  N99                GOTO RESTA
+     C   02                SETON                     U2
+     C   03                SETON                     U3
+     C   04                SETON                     U4
+     C   06                SETON                     U6
+     C   07                SETON                     U7
+     C                     OUT  JRN
+     C*
+     C*
+     C           ENDPGM    TAG                             * ENDPGM TAG
+     C*
+     C   U7 U8             DUMP
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+     C** E N D    O F    M A I N   P R O G R A M M
+     C*****************************************************************
+     C**
+**  CPY@
+(c) Finastra International Limited 2001

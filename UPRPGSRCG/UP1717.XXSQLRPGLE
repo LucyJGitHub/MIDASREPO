@@ -1,0 +1,210 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+      *****************************************************************
+/*S*D****RPGSQLBND*****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1717 - Process Action File for T_GRMENUH                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP031 *CREATE     Date 13Nov04               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP031 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     DACTFDS         E DS                  EXTNAME(UPGMUHPD)  PREFIX(X)
+      *
+     DDeletedInd       S              2B 0                                      Ind. var. MHDELETED
+     DDefaultInd       S              2B 0                                      Ind. var. MHDEFAULT
+      *
+     C/EXEC SQL WHENEVER SQLERROR GO TO TAGSQLERR
+     C/END-EXEC
+      *
+      * Set pointer for retrieving record from UPGMUHPD.
+     C/EXEC SQL DECLARE ActionF_crsr CURSOR FOR
+     C+  Select *
+     C+  from UPGMUHPD
+     C+  Order by MHACTC, MHID
+     C/END-EXEC
+      *
+      * Open UPGMUHPD.
+     C/EXEC SQL
+     C+  Open ActionF_crsr
+     C/END-EXEC
+      *
+      * Get record from UPGMUHPD into fields prefixed with X.
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XMHACTC,
+     C+    :XMHID,
+     C+    :XMHTYPE,
+     C+    :XMHUSER,
+     C+    :XMHSNAME,
+     C+    :XMHNAME,
+     C+    :XMHDELETED:DeletedInd,
+     C+    :XMHDEFAULT:DefaultInd
+     C/END-EXEC
+      *
+      * Process while there is no error or not EOF.
+     C                   DOW       SQLCOD =  0
+      *
+     C                   IF        XMHACTC = 'I'
+      *
+      * If insert, insert record into T_GRMENUH overriding the system
+      *    generated value of field MHID with XMHID.
+     C/EXEC SQL
+     C+ Insert into T_GRMENUH (
+     C+ MHID,
+     C+ MHTYPE,
+     C+ MHUSER,
+     C+ MHSNAME,
+     C+ MHNAME,
+     C+ MHDELETED,
+     C+ MHDEFAULT
+     C+ )
+     C+ OVERRIDING SYSTEM VALUE
+     C+ values(
+     C+ :XMHID,
+     C+ :XMHTYPE,
+     C+ :XMHUSER,
+     C+ :XMHSNAME,
+     C+ :XMHNAME,
+     C+ :XMHDELETED:DeletedInd,
+     C+ :XMHDEFAULT:DefaultInd
+     C+ )
+     C/END-EXEC
+      *
+     C                   ENDIF                                                  FI Insert
+      *
+      * If Delete, delete record from file T_GRMENUH.
+     C                   IF        XMHACTC = 'D'
+      *
+     C/EXEC SQL
+     C+ Delete from T_GRMENUH
+     C+ where MHID = :XMHID
+     C/END-EXEC
+      *
+      * Error if no record found, run *PSSR.
+     C                   IF        SQLCOD = 100                                 Record not found
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDIF                                                  FI Delete
+      *
+      * If Action code = AMEND then read next record.
+     C                   IF        XMHACTC = 'A'
+      *
+     C                   MOVEL     XMHID         IDX              15 0
+      *
+      * Get next record from file UPGMUHPD.
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XMHACTC,
+     C+    :XMHID,
+     C+    :XMHTYPE,
+     C+    :XMHUSER,
+     C+    :XMHSNAME,
+     C+    :XMHNAME,
+     C+    :XMHDELETED:DeletedInd,
+     C+    :XMHDEFAULT:DefaultInd
+     C/END-EXEC
+      *
+      * If key fields of the next record from UPGMUHPD do not match or
+      * no more record, run *PSSR.
+     C                   IF        XMHID <> IDX  OR
+     C                             SQLCOD = 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * Update T_GRMENUH with values from UPGMUHPD record.
+     C/EXEC SQL
+     C+ Update T_GRMENUH  set
+     C+    MHTYPE      = :XMHTYPE,
+     C+    MHUSER      = :XMHUSER,
+     C+    MHSNAME     = :XMHSNAME,
+     C+    MHNAME      = :XMHNAME,
+     C+    MHDELETED   = :XMHDELETED:DeletedInd,
+     C+    MHDEFAULT   = :XMHDEFAULT:DefaultInd
+     C+ where MHID  = :XMHID
+     C/END-EXEC
+      *
+      * Error if no record found in T_GRMENUH
+     C                   IF        SQLCOD = 100                                 Record not found
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDIF                                                  FI Amend
+      *
+      * Get next record from Action file UPGMUHPD
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XMHACTC,
+     C+    :XMHID,
+     C+    :XMHTYPE,
+     C+    :XMHUSER,
+     C+    :XMHSNAME,
+     C+    :XMHNAME,
+     C+    :XMHDELETED:DeletedInd,
+     C+    :XMHDEFAULT:DefaultInd
+     C/END-EXEC
+      *
+     C                   ENDDO                                                  ODW SQLCOD = 0
+      *
+     C/EXEC SQL
+     C+  Close  ActionF_crsr
+     C/END-EXEC
+      *
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+     C     TAGSQLERR     TAG
+      *
+     C                   EXSR      *PSSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR

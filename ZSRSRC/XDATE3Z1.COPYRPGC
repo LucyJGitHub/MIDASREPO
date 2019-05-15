@@ -1,0 +1,101 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+1107 C********************************************************************
+1108 C**
+1109 C**   XDATE3 SR. TO CALCULATE ANY NUMBER OF WORKING
+1110 C**              DAYS BACK IN ANY CURRENCY.
+1111 C**
+1112 C**       THIS SR. CAN BE USED WHEN THE INPUT CYCLE IS RUNNING AS
+1113 C**       HOLIDAY RECORDS ARE ACCESSED BY CHAIN. THEREFORE NEWLY
+1114 C**       ADDED RECORDS IN THE OVERFLOW AREA CAN ALSO BE ACCESSED.
+1115 C**
+1116 C           XDATE3    BEGSR                           *** ZDATE3 ***
+1117 C**
+1118 C**   CALCULATIONS TO DEFINE INPUT FIELDS.
+1119 C                     Z-ADDZDAYNO    ZDAYNO  50       STARTING DATE
+1120 C                     MOVE ZCCY      ZCCY    3        DATE CURRENCY
+1121 C                     Z-ADDZNRDYS    ZNRDYS  20       NBR OF WORKING
+1122 C**                                                   DAYS BACK
+1123 C**   CLEAR COUNT OF NBR OF DAYS SUBTRACTED, & DEFINE ZDYNBR.
+1124 C                     Z-ADD0         ZDCNT   20
+1125 C                     Z-ADDZDAYNO    ZDYNBR  50
+1126 C**
+1127 C**   LOOP TO DECREMENT DAY NUMBER AND CHECK FOR HOLIDAY.
+1128 C           XDLOP1    TAG                             ** ZDLOP1 TAG *
+1129 C**
+1130 C                     SETOF                     9596
+1131 C           ZDYNBR    SUB  1         ZDYNBR
+1132 C**
+1133 C**   SET KEY FOR FIRST HOLIDAY RECORD.
+1134 C                     MOVEL'22    '  ZDHKEY 12
+1135 C                     MOVELZDYNBR    ZWRK6   6
+1136 C                     MOVE '1'       ZWRK6
+1137 C                     MOVE ZWRK6     ZDHKEY
+1138 C**
+1139 C**   CHAIN FOR HOLIDAY RECORD, RECORD 1 OR 2
+1140 C           XDHCHN    TAG                             ** ZDHCHN TAG *
+1141 C**
+     C**                   MOVEA*BLANKS   XCCY
+1142 C           ZDHKEY    CHAINTABSE                90    ON NOT THERE
+     C**N90                MOVEAHCCY      XCCY
+1143 C  N90      RECI      COMP 'D'                  9090  DELETED
+1144 C**
+1145 C**   NO RECORD 1 FOUND, IS NOT A HOLIDAY
+1146 C   90N95             GOTO XDOAGN
+1147 C**
+1148 C**   NO RECORD 2 FOUND
+1149 C   90 95 96          GOTO XDLOP1                     EXC. NOT FOUND
+1150 C   90 95N96          GOTO XDOAGN                     INC. NOT FOUND
+1151 C**
+1152 C**   DETERMINE TYPE FOUND, INCLUDE OR EXCLUDE
+1153 C           INEX      COMP 'E'                  92  91
+1154 C**
+1155 C**   CHECK IF DAY IS HOLIDAY FOR CURRENCY.
+1156 C           ZCCY      LOKUPXCCY                     93
+1157 C   91 93             GOTO XDOAGN                     EXCLUDE FOUND
+1158 C   92 93             GOTO XDLOP1                     INCLUDE FOUND
+1159 C**
+1160 C**   IF EXCLUDE OR INCLUDE NOT FOUND CHECK
+1161 C**   FOR SECOND HOLIDAY RECORD, IF REQUIRED.
+1162 C           '   '     LOKUPXCCY                     94ON IF NO RCD.2
+1163 C                     MOVE ZDHKEY    ZWRK1   1
+1164 C           ZWRK1     COMP '1'                      95
+1165 C   91 95             SETON                     96
+1166 C   95N94             MOVE '2'       ZDHKEY
+1167 C   95N94             GOTO XDHCHN                     GET SECOND REC
+1168 C**
+1169 C   91                GOTO XDLOP1                     EXC. NOT FOUND
+1170 C   92                GOTO XDOAGN                     INC. NOT FOUND
+1171 C**
+1172 C**   INCREMENT COUNT AND CHECK IF REQUIRED NUMBER OF DAYS
+1173 C**   HAS BEEN SUBTRACTED. IF NOT, GO THROUGH LOOP1 AGAIN.
+1174 C           XDOAGN    TAG                             ** ZDOAGN TAG *
+1175 C**
+1176 C           ZDCNT     ADD  1         ZDCNT
+1177 C           ZDCNT     COMP ZNRDYS                 97
+1178 C   97                GOTO XDLOP1
+1179 C**
+1180 C                     ENDSR
+1181 C**
+1182 C**
+1183 C********************************************************************
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

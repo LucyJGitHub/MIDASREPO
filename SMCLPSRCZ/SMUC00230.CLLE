@@ -1,0 +1,87 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(SMUC00230F) TOFILE(UPMBRLTPD) SHARE(*NO)        */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Blank associated customer where zero')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00230 - Migration Program to blank associated customer  */
+/*                   fields in GLAVBLPD and GLHIBLPD where they are  */
+/*                   equal to '000000'.                              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP039  *CREATE    Date 16Mar11              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP039 - Blank associated customer where zero for MC        */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&AVBLCOUNT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&HIBLCOUNT) TYPE(*DEC) LEN(5 0)
+ 
+             DCLF       FILE(SMUC00230F)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2011')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             DLTF       FILE(QTEMP/MBRLIST)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SMUC00230F)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(SMUC00230F)
+ 
+             DSPFD      FILE(GLAVBLPD) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/MBRLIST)
+             DSPFD      FILE(GLHIBLPD) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/MBRLIST) OUTMBR(*FIRST *ADD)
+             CPYF       FROMFILE(QTEMP/MBRLIST) +
+                          TOFILE(QTEMP/SMUC00230F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&MLNAME *NE ' ') THEN(DO)
+                IF         COND(&MLFILE *EQ 'GLAVBLPD') THEN(DO)
+                   CHGVAR     VAR(&AVBLCOUNT) VALUE(&AVBLCOUNT + 1)
+                   OVRDBF     FILE(GLAVBLPD) MBR(&MLNAME)
+                   CALL       PGM(SMU00230)
+                   DLTOVR     FILE(GLAVBLPD)
+                ENDDO
+                IF         COND(&MLFILE *EQ 'GLHIBLPD') THEN(DO)
+                   CHGVAR     VAR(&HIBLCOUNT) VALUE(&HIBLCOUNT + 1)
+                   OVRDBF     FILE(GLHIBLPD) MBR(&MLNAME)
+                   CALL       PGM(SMU00231)
+                   DLTOVR     FILE(GLHIBLPD)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

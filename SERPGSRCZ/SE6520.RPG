@@ -1,0 +1,2897 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER customer/book redemptions maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6520 - SE Customer/Book Positions Maintenance              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 234054             Date 14Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 26Aug99               *
+      *                 CGL011             Date 20Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 23Nov98               *
+      *                 S01496             Date 12Oct94               *
+      *                 S10978             Date 12Mar93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  234054 - Portfolio Ref. not correctly setup for Dummy Cust   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPB001 - 'Private Banking' Module                            *
+      *  CGL011 - Collateral Processing for Midas                     *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F**   VA - SE Early Redemptions Allocation - Upd Idx
+     FSEERALL0UF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+     F*
+     F*****BJ*-*Bank*Details*-*Rtv*Idx*********************************   S01496
+     F***SDBANKL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   VA - SE Early Redemptions Allocation - Rtv Idx
+     FSEERALL1IF  E           K        DISK
+     F            SEERALD0                          KRENAMESEERALD1
+     F                                              KINFSR *PSSR
+     F*
+     F**   Client Depot Positions by BRCD/SESN/DDPT/MRKT/DATE/CNUM/PTFR
+     F***CDEPY***IF**E           K        DISK                            S01496
+     FSECDEPL4IF  E           K        DISK                               S01496
+     F                                              KINFSR *PSSR
+     F*
+     F**   User Depot Positions by BRCD/SESN/DDPT/MRKT/BOOK/DATE
+     F***UDEPX***IF**E           K        DISK                            S01496
+     FSEUDEPL0IF  E           K        DISK                               S01496
+     F                                              KINFSR *PSSR
+     F*
+     F*****Portfolio*Management*ICD*-*Rtv*Idx**************************   S01496
+     F***SDPORTL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****Securities*Trading*Data*-*Rtv*Idx***************************   S01496
+     F***SDSTRDL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****Customer*Details********************************************   S01496
+     F***SDCUSTL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****Modules*Details*-*Rtv*Idx***********************************   S01496
+     F***SDMMODL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   Security Details
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F*****Portfolio*Customers*by*Customer*Number**********************   S01496
+     F***SDPLCSLLIF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     FPMPORTLLIF  E           K        DISK                           UC  CPB001
+     F                                              KINFSR *PSSR          CPB001
+     F*
+     F**   Display file - SE Customer/Book Redemptions Maintenance
+     FSE6520DFCF  E                    WORKSTN      KINFDS SCRDS
+     F                                              KINFSR *PSSR
+     F                                        #1RRN KSFILE #SFLNUM
+     ******************************************************************
+      /EJECT
+     *********************************************************************
+      *
+      * ID F  C  H  L    Function of indicators
+      * ---------------------------------------
+      *
+      *   KC : CMD  3 - End of program
+      *   KE : CMD  5 - Reset Screen
+      *   KL : CMD 12 - Previous screen
+      *
+      *   LR :    Last record
+      *   U7/U8 : Database error
+      *
+      *   27 : Rollup subfile
+      *   30 : End of Subfile
+      *
+      *   45 : First Cycle
+      *   55 : Multibranching indicator                                   S01496
+      *   56 : Portfolio Management indicator                             S01496
+      *
+      *   60 : Reverse Image on 'Customer Number' (Review from)
+      *   61 : Reverse Image on 'Changed Allocation'
+      *   63 : Non-display 'Customer Number' and 'Portfolio Reference'
+      *   64 : Non-display 'Book Code'
+      *   65 : Non-display 'Position at Ex-Date'
+      *   66 : Reverse Image on 'Nominal Allocated'
+      *   67 : Non-display 'Profit Centre'                                CAC005
+      *                                                                   CPB001
+      *   70 : Read PMPORTLL                                              CPB001
+      *
+      *   80 : Display Subfile control
+      *   81 : Display Subfile
+      *   84 : Subfile Next Change
+      *
+      *   90-99 : Used by Standard Subroutines
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+      * Name of the Subroutines
+      * -----------------------
+      *
+      *       P001  - Initial processing
+      *       P002  - Main processing
+      *       P003  - Termination processing
+      *
+      *       P004  - Clear Subfile
+      *       P005  - Build the first subfile page
+      *       P006  - Build the next subfile page
+      *       P007  - Validate subfile records
+      *       P008  - Update file SEERALL1
+      *       P009  - Calculate Available Nominal
+      *       P010  - Test if Warning Error
+      *
+      *       V001  - Validate 'Nominal Allocated'
+      *
+      *       U001  - Write a record in the subfile
+      *       U002  - Write/Update ER Allocation file
+      *
+      *       S001  - Subfile First lines
+      *       S002  - Subfile Detail lines
+      *       S003  - Subfile Last line
+      *
+      *       *PSSR - "Standard" Database error processing
+      *
+      * Name of the Standard Subroutines
+      * --------------------------------
+      *
+      *       ZASNMS - Send Message to Program's message queue
+      *       ZASIGN - Validate and right-align signed numeric fields
+      *       ZSEDIT - Insert a decimal point and sign into a numeric field
+      *                and blank out leading zeros
+      *       ZDATE2 - Dates Validation and Conversion
+      *
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E*
+     E**   FOR COMPILATION - COPYRIGHT INSERTION
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E                    ZS3        17  1               ZASIGN SR. ARRAY
+     E                    ZS4        16  1               ZASIGN SR. ARRAY
+     E                    ZS5        15  1               ZASIGN SR. ARRAY
+     E*
+     E**   ARRAYS USED BY ZDATE2
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E*
+     E                    NARR    1   1 27               NARRATIVE
+     E*
+     E                    POWER8  1   8  8 4             POWER8 ARRAY
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E/COPY WNCPYSRC,SE6520E001
+     I*
+     I**   PROGRAM DATA STRUCTURE
+     I*
+     IPGMDS     ESDSY2PGDSP
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     I*
+     IINFDS1    E DSY2I1DSP
+     I*
+     ISCRDS       DS
+     I                                      197 205 DSPNUM
+     I                                    B 378 3790CPFPOS
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR
+     I*
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     IDSE207      DS
+     I                                        1  13 WAVAIL
+     I                                       14  26 WCPOS
+     I                                       27  39 WBLOCK
+     I*                                                                   S01496
+     ISDBANK    E DSSDBANKPD                                              S01496
+     I**  Data structure for bank details                                 S01496
+     I*                                                                   S01496
+     ISDMMOD    E DSSDMMODPD                                              S01496
+     I**  Data structure for module details                               S01496
+     I*                                                                   S01496
+     ISDCUST    E DSSDCUSTPD                                              S01496
+     I**  Data structure for customer details                             S01496
+     I*                                                                   S01496
+     ISDSTRD    E DSSDSTRDPD                                              S01496
+     I**  Data structure for securities trading details                   S01496
+     I*                                                                   S01496
+     ISDPORT    E DSSDPORTPD                                              S01496
+     I**  Data structure for portfolio management details                 S01496
+     I*                                                                   S01496
+     ISDPLCS    E DSSDPLCSPD                                              S01496
+     I**  Data structure for portfolio customer details                   S01496
+     I*                                                                   S01496
+     IDSSDY     E DSDSSDY                                                 S01496
+     I**  Long data structure for access objects                          S01496
+     I*                                                                   S01496
+     IDSLDY     E DSDSLDY                                                 CPB001
+     I**  Very Long data structure for access objects                     CPB001
+     I*                                                                   CPB001
+     *********************************************************************
+      /EJECT
+     C********************************************************************
+     C**    P R O G R A M   S T A R T
+     C********************************************************************
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR P001
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR P002
+     C*
+     C**   TERMINATION PROCESSING
+     C*
+     C                     EXSR P003
+     C*
+     C********************************************************************
+     C**    P R O G R A M     E N D
+     C********************************************************************
+      /EJECT
+     ******************************************************************
+     C* P001   : INITIAL PROCESSING                                   *
+     ******************************************************************
+     C*
+     C           P001      BEGSR
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*
+     C**   INITIALISE KEY AND WORKING FIELDS
+     C*
+     C                     MOVE *BLANKS   WWLOT
+     C                     MOVEL'SE6520'  DBPGM  10
+     C*
+     C                     MOVE *BLANKS   #CUST
+     C                     Z-ADD0         WWRRN   40       SAVE RCD.NBR.
+     C*
+     C           KEY1      KLIST
+     C***********          KFLD           KUDBR   30                      S01496
+     C                     KFLD           KUDBR   3                       S01496
+     C                     KFLD           KUDSN  10
+     C**********           KFLD           KUDPT   60                                          CSD027
+     C                     KFLD           KUDPT   6                                           CSD027
+     C                     KFLD           KUDMK
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           KUDBR
+     C                     KFLD           KUDSN
+     C                     KFLD           KUDPT
+     C                     KFLD           KUDMK
+     C                     KFLD           KUDBK   2
+     C                     KFLD           KEXDT   50
+     C*
+     C           KEY3      KLIST
+     C                     KFLD           #REFN
+     C                     KFLD           KUDBR
+     C                     KFLD           KUDPT
+     C                     KFLD           WERTP   1
+     C                     KFLD           KUDBK
+     C**********           KFLD           WCNUM   60                                          CSD027
+     C                     KFLD           WCNUM   6                                           CSD027
+     C                     KFLD           WPTFR   4
+     C*
+     C           KEY4      KLIST
+     C                     KFLD           KUDBR
+     C                     KFLD           KUDSN
+     C                     KFLD           KUDPT
+     C                     KFLD           KUDMK
+     C**********           KFLD           KCDCN   60                                          CSD027
+     C                     KFLD           KCDCN   6                                           CSD027
+     C                     KFLD           KPTFR   4
+     C                     KFLD           KEXDT
+     C*
+     C           KEY5      KLIST
+     C                     KFLD           KUDBR
+     C                     KFLD           KUDSN
+     C                     KFLD           KUDPT
+     C                     KFLD           KUDMK
+     C                     KFLD           KCDCN
+     C                     KFLD           KPTFR
+     C*
+     C           KEY6      KLIST
+     C***********          KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KPTFR   4
+     C                     KFLD           KSECN  10
+     C                     KFLD           KBLTY   2
+     C                     KFLD           KBLST   1
+     C                     KFLD           KBEDT   50
+     C*
+     C**   ENTRY PARAMETERS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           WRTCD   1        Return Code
+     C                     PARM           #REFN   6        ER Reference
+     C                     PARM           KUDSN  10        Security Shortname
+     C                     PARM           WNMDP   1        Nominal Decimals
+     C                     PARM           KUDMK   1        Market Indicator
+     C                     PARM           WEXDT   5        Ex-Date
+     C                     PARM           WRDAT   5        Redemption Date
+     C                     PARM           ##MRDT  7        Run Date
+     C                     PARM           #STAT   1        Status
+     C                     PARM           #BRCD   3        Branch
+     C                     PARM           #DEPT   6        Depot
+     C                     PARM           WNOMR  13        Nominal to be Redeem.
+     C                     PARM           WNOMA  13        Nominal allocated
+     C                     PARM           WALLC   1        Allocation Updated
+     C*
+     C**   ACCESS THE SECURITY DETAIL FILE TO RETRIEVE THE TRADE DENOMINATION
+     C*
+     C           KUDSN     CHAINSECTY                89
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C           *IN89     IFEQ '1'
+     C                     MOVEL'001'     DBASE   30       *****************
+     C***********          MOVEL'SECTY'   DBFILE 10        ** DB ERROR 01 S01496
+     C                     MOVE 'SECTY'   DBFILE 10        * DB ERROR 01 *S01496
+     C                     MOVEL#SECN     DBKEY  29        *****************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**   RE-FORMAT TRADE DENOMINATION TO CURRENCY DECIMAL PLACES
+     C*
+     C           NMDP      IFLT 4
+     C           NMDP      ADD  5         DEC     10
+     C           SDNM      MULT POWER8,DECWSDNM  150
+     C                     ELSE
+     C           SDNM      MULT 10000     WSDNM
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WSDNM     ZFLD15
+     C                     MOVE WNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WORK1  15
+     C*
+     C*
+     C**   SETUP NUMBER OF POSITION BEFORE AND AFTER THE DECIMAL POINT
+     C**   (FOR STANDARD SUBROUTINE ZASIGN)
+     C*
+     C                     MOVE WNMDP     ZSDEC
+     C           15        SUB  ZSDEC     ZSDIG
+     C*
+     C**   SETUP 'TO BE REDEEMDED' FIELD
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WNOMR     ZFLD15
+     C                     MOVE WNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #NOMR
+     C*
+     C**   SETUP 'ALLOCATED' FIELD
+     C*
+     C           WNOMA     IFNE *BLANKS                    B*1
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WNOMA     ZFLD15
+     C                     MOVE WNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #NOMA
+     C                     ELSE                            X*1
+     C                     MOVE *BLANKS   #NOMA
+     C                     END                             E*1
+     C*
+     C**   SETUP 'SECURITY' FIELD
+     C*
+     C                     MOVE KUDSN     #SECN
+     C*
+     C**   SETUP 'EX-DATE' FIELD
+     C*
+     C                     MOVE WEXDT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     #EXDT
+     C*
+     C**   SETUP 'REDEEM. DATE' FIELD
+     C*
+     C                     MOVE WRDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     #RDAT
+     C*
+     C**   ACCESS TO SECURITIES TRADING DATA FILE TO RETRIEVE THE 'ER DUMMY
+     C**   CUSTOMER NUMBER'
+     C*
+     C************LOVAL    SETLLSDSTRDL1                                  S01496
+     C***********          READ SDSTRDL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSTRDR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'002'     DBASE   30       *****************
+     C***********          MOVEL'SDSTRDL1'DBFILE 10        ** DB ERROR 02 S01496
+     C                     MOVE 'SDSTRDPD'DBFILE 10        * DB ERROR 02 *S01496
+     C                     MOVEL*BLANKS   DBKEY  29        *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**********           MOVE BVERCU    ERDUM   60                                          CSD027
+     C                     MOVE BVERCU    ERDUM   6                                           CSD027
+     C*
+     C**   ACCESS TO MODULES DETAILS FILE TO RETRIEVE THE 'PORTFOLIO
+     C**   MANAGEMENT INDICATOR'
+     C*
+     C************LOVAL    SETLLSDMMODL1                                  S01496
+     C***********          READ SDMMODL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOMMODR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDMMOD    PARM SDMMOD    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'003'     DBASE            *****************
+     C***********          MOVEL'SDMMODL1'DBFILE           ** DB ERROR 03 S01496
+     C                     MOVE 'SDMMODPD'DBFILE           * DB ERROR 03 *S01496
+     C                     MOVEL*BLANKS   DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*                                                                   S01496
+     C**  Setup multibranching indicator                                  S01496
+     C*                                                                   S01496
+     C           BGMBIN    IFEQ 'Y'                                       S01496
+     C                     MOVE '1'       *IN55                           S01496
+     C                     END                                            S01496
+     C*
+     C**   IF 'PORTFOLIO MANAGEMENT' PRESENT
+     C*
+     C           BGPFMG    IFEQ 'Y'                        B*1
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01496
+     C**  Setup the portfolio management indicator                        S01496
+     C*                                                                   S01496
+     C                     MOVE '1'       *IN56                           S01496
+     C*
+     C**   ACCESS TO PORTFOLIO MANAGEMENT FILE TO RETRIEVE THE 'REFERENCE
+     C**   ATTACHED TO "9997"'
+     C*
+     C************LOVAL    SETLLSDPORTL1                                  S01496
+     C***********          READ SDPORTL1                 89               S01496
+     C*                                                                   S01496
+     C           BGPFMG    IFEQ 'Y'                                       CPB001
+     C                     CALL 'AOPORTR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDPORT    PARM SDPORT    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                        B*2            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'004'     DBASE            *****************
+     C***********          MOVEL'SDPORTL1'DBFILE           ** DB ERROR 04 S01496
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 04 *S01496
+     C                     MOVEL*BLANKS   DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*2
+     C                     ENDIF                                          CPB001
+     C                     END                             E*1
+     C*
+     C**   ACCESS TO BANK DETAILS TO RETRIEVE THE MIDAS RUN DATE
+     C*
+     C************LOVAL    SETLLSDBANKL1                                  S01496
+     C***********          READ SDBANKL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOBANKR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*FIRST'  WLOPTN  7                       S01496
+     C           SDBANK    PARM SDBANK    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'005'     DBASE   30       *****************
+     C***********          MOVEL'SDBANKL1'DBFILE 10        ** DB ERROR 05 S01496
+     C                     MOVE 'SDBANKPD'DBFILE 10        * DB ERROR 05 *S01496
+     C                     MOVEL*BLANKS   DBKEY  29        *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**   DETERMINE DATE FORMAT
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*
+     C**   ACCESS THE CUSTOMER DETAIL FILE TO RETRIEVE THE SHORTNAME
+     C*
+     C***********#DEPT     CHAINSDCUSTL1             89                   S01496
+     C*                                                                   S01496
+     C                     CALL 'AOCUSTR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM #DEPT     WLCUST 10                       S01496
+     C                     PARM           WLKYST  7                       S01496
+     C           SDCUST    PARM SDCUST    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                                       S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'006'     DBASE            *****************
+     C***********          MOVEL'SDCUSTL1'DBFILE           ** DB ERROR 06 S01496
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 06 *S01496
+     C                     MOVEL#DEPT     DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE BBCSSN    #DEPN
+      *                                                                   CAC005
+      ** Check if CAC005 is installed                                     CAC005
+      *                                                                   CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD   7                       CAC005
+     C                     PARM '*VERIFY' POPTN   7                       CAC005
+     C                     PARM 'CAC005'  PSARD   7                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE 'Y'       CAC005  1                       CAC005
+     C                     MOVE *OFF      *IN67                           CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE 'N'       CAC005                          CAC005
+     C                     MOVE *ON       *IN67                           CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C**   SELECT THE PROGRAM MSGQ FOR ERROR MSG
+     C*
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'SEUSRMSG'PMSGF  10
+     C*
+     C**   FILL IN FIELDS FOR SUBROUTINE ZASNMS
+     C*
+     C                     MOVEL'SE6520'  ZAPGM  10        Message queue
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C**   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C                     WRITE#MSGCTL
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     ******************************************************************
+     C* P002   : MAIN PROCESSING                                      *
+     ******************************************************************
+     C*
+     C           P002      BEGSR
+     C*
+     C                     MOVE 'N'       ERMSG
+     C*
+     C**   WHILE CMD3 AND CMD12 NOT PRESSED
+     C*
+     C           *INKC     DOWEQ'0'                        B*1
+     C           *INKL     ANDEQ'0'
+     C*
+     C**   IF IT'S THE FIRST TIME PROCESSING OR F5 IS PRESSED
+     C*
+     C           *IN45     IFEQ '0'                        B*2
+     C           *INKE     OREQ '1'
+     C*
+     C                     MOVE '0'       *IN45
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN66
+     C*
+     C**   INITIALISE WARNING INDICATORS
+     C*
+     C                     MOVE 'N'       ERMSG
+     C*
+     C                     MOVE 'N'       #1WARN
+     C                     MOVE 'N'       #2WARN
+     C                     MOVE 'N'       #3WARN
+     C                     MOVE 'N'       #4WARN
+     C                     MOVE 'N'       #5WARN
+     C                     MOVE 'N'       #6WARN
+     C                     MOVE 'N'       #7WARN
+     C*
+     C                     MOVE *BLANKS   #2CALL
+     C*
+     C**   CLEAR SUBFILE
+     C*
+     C                     EXSR P004
+     C*
+     C**   BUILD THE FIRST SUBFILE PAGE
+     C*
+     C                     EXSR P005
+     C*
+     C                     MOVE '1'       *IN45
+     C                     END                             E*2
+     C*
+     C**   IF ROLLUP IS PRESSED AND IF NO ERROR DETECTED (EXCEPT WARNING)
+     C*
+     C           *IN27     IFEQ '1'                        B*2
+     C           ERMSG     ANDEQ'N'
+     C*
+     C**   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C**   BUILD THE NEXT SUBFILE PAGE
+     C*
+     C                     EXSR P006
+     C                     END                             E*2
+     C*
+     C**   IF A REVIEW FIELD IS CHANGED AND NO ERROR DETECTED (EXCEPT WARNING)
+     C*
+     C           #CUST     IFNE #HCUST                     B*2
+     C           ERMSG     ANDEQ'N'
+     C*
+     C**   CLEAR SUBFILE
+     C*
+     C                     EXSR P004
+     C*
+     C                     MOVE '1'       *IN47
+     C*
+     C**   BUILD THE NEXT SUBFILE PAGE BUT STARTING AT 'CUSTOMER' FROM 'REVIEW'
+     C*
+     C                     EXSR P006
+     C*
+     C                     MOVE '0'       *IN47
+     C*
+     C**   RESET 'REVIEW FROM' FIELD
+     C*
+     C                     MOVE *BLANKS   #CUST
+     C                     MOVE *BLANKS   #HCUST
+     C                     END                             E*2
+     C*
+     C**   SETUP SCREEN TIME
+     C*
+     C                     TIME           ##TME            Screen time.
+     C*
+     C**   EXECUTE THE SUBFILE CONTROL RECORD
+     C*
+     C                     WRITE#MSGCTL
+     C                     EXFMT#CTLNUM
+     C*
+     C**   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C**   IF NO FUNCTION IS PRESSED
+     C**   VALIDATE ALL SUBFILE RECORDS
+     C*
+     C           *IN46     IFEQ '0'                        B*2
+     C                     EXSR P007
+     C*
+     C**   IF NO ERROR PRESENT IN SUBFILE (EXCEPT WARNING)
+     C**   UPDATE FILE
+     C*
+     C           ERMSG     IFEQ 'N'                        B*3
+     C           WARNIN    ANDEQ'N'
+     C                     EXSR P008
+     C                     END                             E*3
+     C                     END                             E*2
+     C*
+     C**   IF CMD12 OR CMD3 IS PRESSED AND IF STATUS IS 'AUTHORISATION'
+     C**   AND IF 'TO BE REDEEMED' AND 'ALLOCATED' AMOUNTS ARE DIFFERENT
+     C*
+     C           *INKC     IFEQ '1'                        B*2
+     C           #STAT     ANDEQ'X'
+     C           #NOMR     ANDNE#NOMA
+     C           *INKL     OREQ '1'
+     C           #STAT     ANDEQ'X'
+     C           #NOMR     ANDNE#NOMA
+     C                     MOVE '0'       *INKC
+     C                     MOVE '0'       *INKL
+     C                     MOVE 'Y'       ERMSG   1
+     C                     MOVEL'ER65200' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     ******************************************************************
+     C* P003   : TERMINATION PROCESSING                               *
+     ******************************************************************
+     C*
+     C           P003      BEGSR
+     C*
+     C**   IF CMD12 PRESSED
+     C*
+     C           *INKL     IFEQ '1'                        B*1
+     C                     MOVE '2'       WRTCD
+     C                     END                             E*1
+     C*
+     C**   IF CMD3 PRESSED
+     C*
+     C           *INKC     IFEQ '1'                        B*1
+     C                     MOVE '3'       WRTCD
+     C                     END                             E*1
+     C*
+     C**   END OF PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     C*****************************************************************
+     C* P004  - TO CLEAR THE SUBFILE                                  *
+     C*****************************************************************
+     C           P004      BEGSR
+     C*
+     C**   CLEAR SUBFILE
+     C*
+     C                     MOVE '1'       *IN80
+     C                     WRITE#CTLNUM
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     Z-ADD*ZEROS    #1RRN
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P005   : BUILD FIRST SUBFILE PAGE                             *
+     ******************************************************************
+     C*
+     C           P005      BEGSR
+     C*
+     C**   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C**   INITIALISE INPUT FIELDS AND ERROR INDICATOR
+     C*
+     C                     MOVE *BLANKS   #CUST
+     C                     MOVE *BLANKS   #HCUST
+     C                     MOVE *BLANKS   #1CALL
+     C                     MOVE *BLANKS   #2CALL
+     C*
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN66
+     C*
+     C**   RESET SUBFILE NEXT CHANGE INDICATOR
+     C*
+     C                     MOVE '0'       *IN84            No SFLNXTCHG
+     C*
+     C                     MOVE 'N'       #1WARN
+     C                     MOVE 'N'       #2WARN
+     C                     MOVE 'N'       #3WARN
+     C                     MOVE 'N'       #4WARN
+     C                     MOVE 'N'       #5WARN
+     C                     MOVE 'N'       #6WARN
+     C                     MOVE 'N'       #7WARN
+     C*
+     C**   INIT SCREEN LINE NUMBER
+     C*
+     C                     Z-ADD0         WWCPT   20
+     C*
+     C**   SET FIRST LINE OF SUBFILE
+     C*
+     C                     EXSR S001
+     C*
+     C*****SET*KEY*FIELDS*FOR*LF/CDEPY*WITH*BRANCH,*SECURITY,*DEPOT*AND*MAS01496
+     C***********                                                         S01496
+     C***********KEY1      SETLLCDEPY                                     S01496
+     C*                                                                   S01496
+     C**   Set key fields for LF/SECDEPL4 with branch, security,          S01496
+     C**   depot and market                                               S01496
+     C*                                                                   S01496
+     C           KEY1      SETLLSECDEPL4                                  S01496
+     C*
+     C**   SET DETAIL LINES OF SUBFILE
+     C*
+     C                     EXSR S002
+     C*
+     C**   SET LAST LINE OF SUBFILE
+     C*
+     C                     EXSR S003
+     C*
+     C**   SAVE POSITION
+     C*
+     C                     Z-ADD#1RRN     WWRRN            SAVE SFL.RCD.NBR.
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* S001   : SET FIRST LINES OF SUBFILE                           *
+     ******************************************************************
+     C*
+     C           S001      BEGSR
+     C*
+     C*****SET*KEY*FIELDS*FOR*LF/UDEPX*WITH*BRANCH,*SECURITY,*DEPOT*AND*MAS01496
+     C*                                                                   S01496
+     C**   Set key fields for LF/SEUDEPL0 with branch, security,          S01496
+     C**   depot and market                                               S01496
+     C*
+     C                     MOVE #BRCD     KUDBR
+     C                     MOVE #DEPT     KUDPT
+     C*
+     C***********KEY1      SETLLUDEPX                                     S01496
+     C           KEY1      SETLLSEUDEPL0                                  S01496
+     C*
+     C**   READ NEXT RECORD TO RETRIEVE FIRST BOOK
+     C*
+     C***********          READ UDEPX                    30               S01496
+     C                     READ SEUDEPL0                 30               S01496
+     C*
+     C**   IF NOT SAME BRANCH, SECURITY SHORTNAME AND DEPOT
+     C*
+     C***********KUDBR     IFNE UDBR                       B*1            S01496
+     C           KUDBR     IFNE UDBA                       B*1            S01496
+     C           KUDSN     ORNE UDSN
+     C           KUDPT     ORNE UDPT
+     C                     MOVE '1'       *IN30
+     C                     END                             E*1
+     C*
+     C**   DO WHILE END OF FILE NOT REACHED AND LINE COUNTER LOWER THAN 12
+     C*
+     C           *IN30     DOWEQ'0'                        B*1
+     C           WWCPT     ANDLT12
+     C*
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C*
+     C**   SET GREATER WITH BRANCH, SECURITY, DEPOT, MARKET, EX-DATE AND BOOK
+     C*
+     C                     MOVE UDBK      KUDBK
+     C                     MOVE WEXDT     KEXDT   50
+     C*
+     C***********KEY2      SETGTUDEPX                30                   S01496
+     C***********          READPUDEPX                    30               S01496
+     C           KEY2      SETGTSEUDEPL0             30                   S01496
+     C                     READPSEUDEPL0                 30               S01496
+     C*
+     C**   IF SAME BRANCH, SECURITY, DEPOT, MARKET AND BOOK
+     C*
+     C           *IN30     IFEQ '0'                        B*2
+     C***********KUDBR     ANDEQUDBR                                      S01496
+     C           KUDBR     ANDEQUDBA                                      S01496
+     C           KUDSN     ANDEQUDSN
+     C           KUDPT     ANDEQUDPT
+     C           KUDMK     ANDEQUDMK
+     C           KUDBK     ANDEQUDBK
+     C*
+     C**   USE 'NOMINAL - VALUE DATE BASIS' AS 'EX-DATE POSITION' SUBFILE FIELD
+     C*
+     C                     Z-ADDUDNV      W1PEXA 150
+     C*
+     C                     MOVE 'B'       WERTP
+     C**********           Z-ADD*ZEROS    WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WPTFR
+     C                     MOVE UDBK      KUDBK
+     C*
+     C**   ACCESS EARLY REDEMPTIONS - ALLOCATIONS FILE
+     C*
+     C           KEY3      CHAINSEERALL1             89
+     C*
+     C**   IF A RECORD IS FOUND AND RECI NOT EQUAL TO '*'
+     C**   VALIDATE 'NOMINAL ALLOCATED'
+     C*
+     C           *IN89     IFEQ '0'                        B*3
+     C           VCRECI    ANDNE'*'
+     C                     Z-ADDVCNOMA    W1NOMA 150
+     C                     EXSR V001
+     C                     Z-ADDVCNOMA    W1NOMA
+     C                     ELSE                            X*3
+     C                     Z-ADD*ZEROS    W1NOMA
+     C                     END                             E*3
+     C*
+     C**   SETON INDICATOR TO PROTECT AND NON-DISPLAY 'CUSTOMER' AND 'PORTFOLIO'
+     C*
+     C                     MOVE '1'       *IN63
+     C*
+     C**   ADD 1 TO LINE COUNTER
+     C*
+     C                     ADD  1         #1RRN      81    SFLRCDNBR
+     C                     ADD  1         WWCPT            SCREEN LINE NBR
+     C*
+     C**   WRITE A SUBFILE RECORD
+     C*
+     C                     MOVE '1'       *IN40
+     C                     EXSR U001
+     C                     MOVE '0'       *IN40
+     C*
+     C**   INITIALISE WARNING INDICATORS
+     C*
+     C           *IN45     IFEQ '0'                        B*3
+     C                     MOVE 'N'       #3WARN
+     C                     MOVE 'N'       #4WARN
+     C                     MOVE 'N'       #5WARN
+     C                     MOVE 'N'       #6WARN
+     C                     MOVE 'N'       #7WARN
+     C                     END                             E*3
+     C                     END                             E*2
+     C*
+     C                     Z-ADD*HIVAL    KEXDT
+     C*
+     C**   SET GREATER WITH BRANCH, SECURITY, DEPOT, MARKET, EX-DATE AND BOOK
+     C*
+     C***********KEY2      SETGTUDEPX                30                   S01496
+     C           KEY2      SETGTSEUDEPL0             30                   S01496
+     C*
+     C**   READ NEXT RECORD TO FIND NEXT BOOK
+     C*
+     C***********          READ UDEPX                    30               S01496
+     C                     READ SEUDEPL0                 30               S01496
+     C*
+     C**   IF CHANGE OF BRANCH, SECURITY SHORTNAME OR DEPOT
+     C*
+     C***********KUDBR     IFNE UDBR                       B*2            S01496
+     C           KUDBR     IFNE UDBA                       B*2            S01496
+     C           KUDSN     ORNE UDSN
+     C           KUDPT     ORNE UDPT
+     C                     MOVE '1'       *IN30
+     C                     END                             E*2
+     C*
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* S002   : SET DETAIL LINES OF SUBFILE                          *
+     ******************************************************************
+     C*
+     C           S002      BEGSR
+     C*
+     C**   READ NEXT RECORD TO RETRIEVE FIRST CUSTOMER
+     C*
+     C***********          READ CDEPY                    30               S01496
+     C                     READ SECDEPL4                 30               S01496
+     C*
+     C**   IF NOT SAME BRANCH, SECURITY SHORTNAME AND DEPOT
+     C*
+     C***********KUDBR     IFNE CDBR                       B*1            S01496
+     C           KUDBR     IFNE CDPA                       B*1            S01496
+     C           KUDSN     ORNE CDSN
+     C           KUDPT     ORNE CDPT
+     C                     MOVE '1'       *IN30
+     C                     END                             E*1
+     C*
+     C**   LOAD SUBFILE
+     C*
+     C           *IN30     DOWEQ'0'                        B*1
+     C           WWCPT     ANDLT12
+     C*
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C*
+     C**   SET GREATER WITH BRANCH, SECURITY, DEPOT, MARKET, CUST, PTFR, EX-DATE
+     C*
+     C                     MOVE WEXDT     KEXDT   50
+     C**********           Z-ADDCDCN      KCDCN                                               CSD027
+     C                     MOVE CDCN      KCDCN                                               CSD027
+     C                     MOVE PTFR      KPTFR
+     C*
+     C***********KEY4      SETGTCDEPY                                     S01496
+     C***********          READPCDEPY                    30               S01496
+     C           KEY4      SETGTSECDEPL4                                  S01496
+     C                     READPSECDEPL4                 30               S01496
+     C*
+     C**   IF SAME BRANCH, SECURITY, DEPOT, MARKET, CUSTOMER AND PORTFOLIO
+     C**   AND IF IT IS NOT THE DUMMY CUSTOMER
+     C*
+     C           *IN30     IFEQ '0'                        B*2
+     C***********KUDBR     ANDEQCDBR                                      S01496
+     C           KUDBR     ANDEQCDPA                                      S01496
+     C           KUDSN     ANDEQCDSN
+     C           KUDPT     ANDEQCDPT
+     C           KUDMK     ANDEQCDMK
+     C           KCDCN     ANDEQCDCN
+     C           KPTFR     ANDEQPTFR
+     C           CDCN      ANDNEERDUM
+     C*
+     C**   USE 'NOMINAL - VALUE DATE BASIS' AS 'EX-DATE POSITION' SUBFILE FIELD
+     C*
+     C                     Z-ADDCDNV      W1PEXA
+     C*
+     C                     MOVE 'P'       WERTP
+     C                     MOVE *BLANKS   KUDBK
+     C                     MOVE PTFR      WPTFR
+     C**********           Z-ADDCDCN      WCNUM                                               CSD027
+     C                     MOVE CDCN      WCNUM                                               CSD027
+     C*
+     C**   ACCESS EARLY REDEMPTIONS - ALLOCATIONS FILE
+     C*
+     C           KEY3      CHAINSEERALL1             89
+     C*
+     C**   IF A RECORD IS FOUND AND RECI NOT EQUAL TO '*'
+     C**   VALIDATE 'NOMINAL ALLOCATED'
+     C*
+     C           *IN89     IFEQ '0'                        B*3
+     C           VCRECI    ANDNE'*'
+     C                     Z-ADDVCNOMA    W1NOMA
+     C                     EXSR V001
+     C                     Z-ADDVCNOMA    W1NOMA
+     C                     ELSE                            X*3
+     C                     Z-ADD*ZEROS    W1NOMA
+     C                     END                             E*3
+     C*
+     C**   INITIALISE WARNING INDICATORS
+     C*
+     C           *IN45     IFEQ '0'                        B*3
+     C                     MOVE 'N'       #3WARN
+     C                     MOVE 'N'       #4WARN
+     C                     MOVE 'N'       #5WARN
+     C                     MOVE 'N'       #6WARN
+     C                     MOVE 'N'       #7WARN
+     C                     END                             E*3
+     C*
+     C**   SETON INDICATOR TO PROTECT AND NON-DISPLAY 'BOOK'
+     C*
+     C                     MOVE '1'       *IN64
+     C*
+     C**   ADD 1 TO LINE COUNTER
+     C*
+     C                     ADD  1         #1RRN      81    SFLRCDNBR
+     C                     ADD  1         WWCPT            SCREEN LINE NBR
+     C*
+     C**   WRITE A SUBFILE RECORD
+     C*
+     C                     MOVE '1'       *IN41
+     C                     EXSR U001
+     C                     MOVE '0'       *IN41
+     C                     END                             E*2
+     C*
+     C                     Z-ADD*HIVAL    KEXDT
+     C*
+     C**   SET GREATER WITH BRANCH, SECURITY, DEPOT, MARKET, CUST, PTFR, EX-DATE
+     C*
+     C***********KEY4      SETGTCDEPY                                     S01496
+     C           KEY4      SETGTSECDEPL4                                  S01496
+     C*
+     C**   READ NEXT RECORD TO FIND NEXT CUSTOMER
+     C*
+     C***********          READ CDEPY                    30               S01496
+     C                     READ SECDEPL4                 30               S01496
+     C*
+     C**   IF CHANGE OF BRANCH, SECURITY SHORTNAME OR DEPOT
+     C*
+     C***********KUDBR     IFNE CDBR                       B*2            S01496
+     C           KUDBR     IFNE CDPA                       B*2            S01496
+     C           KUDSN     ORNE CDSN
+     C           KUDPT     ORNE CDPT
+     C                     MOVE '1'       *IN30
+     C                     END                             E*2
+     C*
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* S003   : SET LAST LINE OF SUBFILE                             *
+     ******************************************************************
+     C*
+     C           S003      BEGSR
+     C*
+     C**   IF LINE COUNTER IS LOWER THAN NUMBER OF LINE PER SUBFILE PAGE
+     C*
+     C           WWCPT     IFLT 12                         B*1
+     C*
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C*
+     C                     MOVE 'P'       WERTP
+     C                     MOVE *BLANKS   KUDBK
+     C*
+     C**   USE THE DUMMY CUSTOMER NUMBER
+     C*
+     C**********           Z-ADDERDUM     WCNUM                                               CSD027
+     C                     MOVE ERDUM     WCNUM                                               CSD027
+     C*
+     C**   IF PM IS PRESENT, USE DEFAULT '9997' PORTFOLIO
+     C*
+     C           BGPFMG    IFEQ 'Y'                        B*2
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*
+     C                     MOVE *BLANKS   #1PREF
+     C                     MOVE *BLANKS   WPTFR
+     C                     MOVE ERDUM     KPNUM   6
+     C*
+     C**   ACCESS PORTFOLIO CUSTOMERS FILE TO CHECK IF THE DUMMY CUSTOMER
+     C**   IS A PORTFOLIO CUSTOMER
+     C*
+     C***********KPNUM     CHAINSDPLCSLL             89                   S01496
+     C*                                                                   S01496
+     C**   PM IS PRESENT, PB IS OFF                                       CPB001
+     C           BGPFMG    IFEQ 'Y'                                       CPB001
+     C                     CALL 'AOPLCSR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM KPNUM     WLCUST                          S01496
+     C           SDPLCS    PARM SDPLCS    DSSDY                           S01496
+     C*
+     C**   IF RECORD IS FOUND (CUSTOMER IS A PORTFOLIO CUSTOMER)
+     C*
+     C************IN89     IFEQ '0'                        B*3            S01496
+     C           WLRTCD    IFEQ *BLANK                                    S01496
+     C           BGN4ST    IFNE 'Y'                                       CPB001
+     C                     MOVE '9997'    WPTFR
+     C***********          MOVE P9R997    #1PREF                          S01496
+     C                     MOVE FCR997    #1PREF                          S01496
+     C                     ENDIF                                          CPB001
+     C                     MOVE 'Y'       WWPMC   1                       CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE 'N'       WWPMC                           CPB001
+     C                     END                             E*3
+     C                     ENDIF                                          CPB001
+     C*                                                                   CPB001
+     C**   PB IS PRESENT                                                  CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C*                                                                   CPB001
+     C**   ACCESS PB CUSTOMERS FILE TO CHECK IF THE DUMMY CUSTOMER        CPB001
+     C**   IS A PORTFOLIO CUSTOMER                                        CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM *BLANKS   @RTCD   7                       CPB001
+     C                     PARM '*KEY   ' @OPTN   7                       CPB001
+     C                     PARM KPNUM     @KEY1  10                       CPB001
+     C                     PARM *BLANKS   @KYST   7                       CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+     C           @RTCD     IFEQ *BLANKS                                   CPB001
+     C           BBPRBA    ANDEQ'Y'                                       CPB001
+     C                     MOVE 'Y'       WWPBC   1                       CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE 'N'       WWPBC                           CPB001
+     C                     END                                            CPB001
+     C                     ENDIF                           Fi BGN4ST = Y  234054
+     C*                                                                   CPB001
+     C**   VALUE DEFAULTED IF THE CUSTOMER IS A PM CUSTOMER               CPB001
+     C**   OR A PB CUSTOMER                                               CPB001
+     C           WWPMC     IFEQ 'Y'                                       CPB001
+     C           WWPBC     OREQ 'Y'                                       CPB001
+     C                     OPEN PMPORTLL                                  CPB001
+     C           ERDUM     SETLLPMPORTLL                                  CPB001
+     C                     READ PMPORTLL                 70               CPB001
+      *                                                                   CPB001
+     C           *IN70     IFEQ '0'                                       CPB001
+     C           PNCNUM    ANDEQERDUM                                     CPB001
+     C                     MOVE PNPTFR    WPTFR                           CPB001
+     C                     MOVE PNPTFR    #1PREF                          CPB001
+     C                     ENDIF                                          CPB001
+     C                     CLOSEPMPORTLL                                  CPB001
+     C                     ENDIF                                          CPB001
+     C***                  ENDIF                                   CPB001 234054
+     C                     END                             E*2
+     C*
+     C**   ACCESS EARLY REDEMPTIONS - ALLOCATIONS
+     C*
+     C           KEY3      CHAINSEERALL1             89
+     C*
+     C**   IF A RECORD IS FOUND AND RECI NOT EQUAL TO '*'
+     C**   VALIDATE 'NOMINAL ALLOCATED'
+     C*
+     C           *IN89     IFEQ '0'                        B*2
+     C           VCRECI    ANDNE'*'
+     C                     Z-ADDVCNOMA    W1NOMA 150
+     C*
+     C           WSDNM     IFNE *ZEROS                     B*3
+     C           W1NOMA    DIV  WSDNM     SNWORK
+     C                     MULT WSDNM     SNWORK
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS NOT A MULTIPLE OF THE TRADE DENOMINATION
+     C**   WARNING ERROR
+     C*
+     C           SNWORK    IFNE W1NOMA                     B*4
+     C                     MOVE '1'       *IN66
+     C                     MOVELWORK1     ZAMSDA
+     C                     MOVEL'ER65209' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*4
+     C                     END                             E*3
+     C*
+     C                     ELSE                            X*2
+     C                     Z-ADD*ZEROS    W1NOMA
+     C                     END                             E*2
+     C*
+     C**   PROTECT AND NON-DISPLAY 'BOOK' AND 'EX-DATE POSITION'
+     C*
+     C                     MOVE '1'       *IN64
+     C                     MOVE '1'       *IN65
+     C*
+     C**   ADD 1 TO LINE COUNTER
+     C*
+     C                     ADD  1         #1RRN      81    SFLRCDNBR
+     C                     ADD  1         WWCPT            SCREEN LINE NBR
+     C*
+     C**   WRITE A SUBFILE RECORD
+     C*
+     C                     EXSR U001
+     C*
+     C**   TO SEE THE '+' SIGN AT THE BOTTOM OF THE SCREEN
+     C*
+     C                     ELSE                            X*1
+     C                     MOVE '0'       *IN30
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P006   : BUILD NEXT SUBFILE PAGE                              *
+     ******************************************************************
+     C*
+     C           P006      BEGSR
+     C*
+     C**   RESET SUBFILE NEXT CHANGE INDICATOR
+     C*
+     C                     MOVE '0'       *IN84            No SFLNXTCHG
+     C*
+     C**   INIT SCREEN LINE NUMBER
+     C*
+     C                     Z-ADD0         WWCPT   20
+     C*
+     C*****SET*KEY*FIELDS*FOR*LF/CDEPY*WITH*BRANCH,*SECURITY,*DEPOT*AND*MAS01496
+     C*                                                                   S01496
+     C**   Set key fields for LF/SECDEPL4 with branch, security,          S01496
+     C**   depot and market                                               S01496
+     C*
+     C                     MOVE #BRCD     KUDBR
+     C                     MOVE #DEPT     KUDPT
+     C*
+     C**   IF PROCESSING RUNNING FORM 'REVIEW FROM'
+     C*
+     C           *IN47     IFEQ '1'                        B*2
+     C                     MOVE *BLANKS   KPTFR
+     C                     MOVE #CUST     KCDCN
+     C***********KEY5      SETLLCDEPY                                     S01496
+     C           KEY5      SETLLSECDEPL4                                  S01496
+     C                     END                             E*2
+     C*
+     C**   IF PROCESSING RUNNING FORM 'ROLLUP'
+     C*
+     C           *IN27     IFEQ '1'                        B*2
+     C                     MOVE '0'       *IN27
+     C                     MOVE WWRRN     #1RRN
+     C           #1RRN     CHAIN#SFLNUM              88
+     C                     MOVE #1CUST    KCDCN
+     C*
+     C**   IF PORTFOLIO REFERENCE IS EQUAL TO THE 'REFERENCE ATTACHED TO "9997"
+     C*
+     C***********#1PREF    IFEQ P9R997                     B*3            S01496
+     C           #1PREF    IFEQ FCR997                     B*3            S01496
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9997'    KPTFR
+     C                     ELSE                            X*3
+     C                     MOVE #1PREF    KPTFR
+     C                     END                             E*3
+     C*
+     C***********KEY5      SETGTCDEPY                                     S01496
+     C           KEY5      SETGTSECDEPL4                                  S01496
+     C                     END                             E*2
+     C*
+     C**   SET DETAIL LINES OF SUBFILE
+     C*
+     C                     EXSR S002
+     C*
+     C**   SET LAST LINE OF SUBFILE
+     C*
+     C                     EXSR S003
+     C*
+     C**   SAVE POSITION
+     C*
+     C                     Z-ADD#1RRN     WWRRN            SAVE SFL.RCD.NBR.
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P007   : VALIDATE SUBFILE RECORD                              *
+     ******************************************************************
+     C*
+     C           P007      BEGSR
+     C*
+     C**   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C**   READ CHANGED SUBFILE RECORD
+     C*
+     C                     READC#SFLNUM                  87
+     C*
+     C**   SETUP THE RRN WITH THE CURRENT CPF'S POSITION WITHIN THE SUBFILE
+     C**   (IF ENTER PRESSED BUT NO DATA ENTERED)
+     C*
+     C           *IN87     IFEQ '1'                        B*1
+     C                     Z-ADDCPFPOS    #1RRN
+     C                     END                             E*1
+     C*
+     C                     MOVE 'N'       ERMSG   1
+     C                     MOVE 'N'       WARNIN  1
+     C*
+     C**   DO WHILE END OF FILE IS NOT REACHED
+     C*
+     C           *IN87     DOWEQ'0'                        B*1
+     C*
+     C**   INITIALISE REVERSE IMAGE INDICATORS
+     C*
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN66
+     C*
+     C           #1CALL    IFNE *BLANKS                    B*2
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1CALL    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    W1CALL 150
+     C*
+     C**   IF 'CHANGED ALLOCATION' IS NOT A VALID NUMERIC FIELD
+     C*
+     C           *IN99     IFEQ '1'                        B*3
+     C                     MOVE 'Y'       ERMSG
+     C                     MOVE '1'       *IN61            Reverse image
+     C                     MOVEL'ER65204' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE                            X*3
+     C*
+     C                     MOVE ZFSIGN    WFSIGN  1
+     C*
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1PEXA    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    W1PEXA
+     C*
+     C           WSDNM     IFNE *ZEROS                     B*1
+     C           W1CALL    DIV  WSDNM     SNWORK
+     C                     MULT WSDNM     SNWORK
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS NOT A MULTIPLE OF THE TRADE DENOMINATION
+     C**   WARNING ERROR
+     C*
+     C           SNWORK    IFNE W1CALL                     B*2
+     C           #7WARN    ANDEQ'N'
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'Y'       WARNIN
+     C                     MOVE 'Y'       #7WARN
+     C                     MOVELWORK1     ZAMSDA
+     C                     MOVEL'ER65210' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C**   FOR ALL RECORDS EXCEPT FOR THE DUMMY CUSTOMER
+     C*
+     C**********           MOVE #1CUST    W1CUST  60                                          CSD027
+     C                     MOVE #1CUST    W1CUST  6                                           CSD027
+     C           W1CUST    IFNE ERDUM                      B*4
+     C*
+     C**   IF 'EX-DATE POSITION' IS NOT SAME SIGN AS 'CHANGED ALLOCATION'
+     C**   WARNING ERROR
+     C*
+     C           ZFSIGN    IFNE WFSIGN                     B*5
+     C           #1WARN    ANDEQ'N'
+     C           ZFSIGN    ORNE WFSIGN
+     C           #1CALL    ANDNE#2CALL
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'Y'       WARNIN
+     C                     MOVE 'Y'       #1WARN
+     C                     MOVEL'ER65205' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*5
+     C*
+     C**   IF 'EX-DATE POSITION' IS LOWER THAN 'CHANGED ALLOCATION', WARNING
+     C**   (IN ABSOLUTE VALUE)
+     C*
+     C           W1PEXA    IFLT W1CALL                     B*5
+     C           #2WARN    ANDEQ'N'
+     C           W1PEXA    ORLT W1CALL
+     C           #1CALL    ANDNE#2CALL
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'Y'       WARNIN
+     C                     MOVE 'Y'       #2WARN
+     C                     MOVEL'ER65206' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*5
+     C*
+     C**   IF CURRENT RECORD IS A CUSTOMER AND IS NOT THE DUMMY CUSTOMER
+     C*
+     C           #1BOOK    IFEQ *BLANKS                    B*5
+     C*
+     C                     MOVE #1CUST    WCUST
+     C*
+     C***********#1PREF    IFEQ P9R997                     B*6            S01496
+     C           #1PREF    IFEQ FCR997                     B*6            S01496
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9997'    WPORTF
+     C                     ELSE                            X*6
+     C                     MOVE #1PREF    WPORTF
+     C                     END                             E*6
+     C*
+     C**   CALCULATE 'AVAILABLE NOMINAL'
+     C*
+     C                     EXSR P009
+     C*
+     C           WFSIGN    IFEQ '-'                        B*6
+     C                     Z-SUBW1CALL    W1CALL
+     C                     END                             E*6
+     C*
+     C**   SETUP CORRECTLY THE 'NOMINAL ALLOCATED' FIELD
+     C*
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1NALL    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    W1NALL
+     C*
+     C           ZFSIGN    IFEQ '-'                        B*6
+     C                     Z-SUBW1NALL    W1NALL
+     C                     END                             E*6
+     C*
+     C           WFSIGN    IFEQ '+'                        B*6
+     C*
+     C**   ADD THE NOMINAL ALREADY ALLOCATED TO THE AVAILABLE NOMINAL
+     C**   SUB                               TO THE NOMINAL ALREADY BLOCKED
+     C*
+     C           W1NMBL    IFNE *HIVAL                     B*7
+     C*
+     C           W1NALL    IFGT *ZEROS                     B*8
+     C           W1ANOM    ADD  W1NALL    W1ANOM
+     C           W1NMBL    SUB  W1NALL    W1NMBL
+     C                     END                             E*8
+     C*
+     C                     END                             E*7
+     C*
+     C**   IF AVAILABLE NOMINAL IS LOWER THAN ZERO
+     C*
+     C           W1ANOM    IFLT *ZEROS                     B*7
+     C                     Z-ADD*ZEROS    W1ANOM
+     C                     END                             E*7
+     C*
+     C**   IF 'CHANGED ALLOCATION' IS GREATER THAN 'AVAILABLE NOMINAL'
+     C**   WARNING ERROR
+     C*
+     C           W1CALL    IFGT W1ANOM                     B*7
+     C           #6WARN    ANDEQ'N'
+     C           W1CALL    ORGT W1ANOM
+     C           #1CALL    ANDNE#2CALL
+     C*
+     C                     EXSR P011
+     C*
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'Y'       WARNIN
+     C                     MOVE 'Y'       #6WARN
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVELDSE207    ZAMSDA
+     C                     MOVEL'ER65208' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*7
+     C                     END                             E*6
+     C                     END                             E*5
+     C                     END                             E*4
+     C                     END                             E*3
+     C                     ELSE                            X*2
+     C                     Z-ADD*ZEROS    W1CALL
+     C                     END                             E*2
+     C*
+     C**   IF NO ERROR AND NO WARNING IS SEND FOR CURRENT SUBFILE RECORD
+     C**   AND 'CHANGED ALLOCATION' NOT EQUAL TO ZEROS
+     C*
+     C           ERMSG     IFEQ 'N'                        B*2
+     C           WARNIN    ANDEQ'N'
+     C           #1CALL    ANDNE*BLANKS
+     C*
+     C                     MOVE WNOMA     WWNOM  130
+     C*
+     C**   SETUP CORRECTLY THE 'NOMINAL ALLOCATED' FIELD
+     C*
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1NALL    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    W1NALL 150
+     C*
+     C           ZFSIGN    IFEQ '-'                        B*3
+     C                     Z-SUBW1NALL    W1NALL
+     C                     END                             E*3
+     C*
+     C**   SETUP CORRECTLY THE 'CHANGED ALLOCATION' FIELD
+     C*
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1CALL    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    W1CALL 150
+     C*
+     C           ZFSIGN    IFEQ '-'                        B*3
+     C                     Z-SUBW1CALL    W1CALL
+     C                     END                             E*3
+     C*
+     C**   CALCULATE THE 'ALLOCATED' TOTAL
+     C**     1. ADD 'CHANGED ALLOCATION' TO 'ALLOCATED' TOTAL FIELD
+     C**     2. SUBTRACT 'NOMINAL ALLOCATED' FROM 'ALLOCATED' TOTAL FIELD
+     C*
+     C           WWNOM     ADD  W1CALL    WWNOM
+     C           WWNOM     SUB  W1NALL    WWNOM
+     C*
+     C**   EDIT CORRECTLY THE 'ALLOCATED' TOTAL AT THE TOP OF THE SCREEN
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADDWWNOM     ZFLD15
+     C                     MOVE WNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #NOMA
+     C                     MOVE WWNOM     WNOMA
+     C                     END                             E*2
+     C*
+     C**   SETUP PROTECT INDICATORS
+     C*
+     C           #1BOOK    IFEQ *BLANKS                    B*2
+     C                     MOVE '0'       *IN63
+     C                     MOVE '1'       *IN64
+     C                     ELSE
+     C                     MOVE '1'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     END                             E*2
+     C*
+     C**   SETON SUBFILE NEXT CHANGE INDICATOR
+     C*
+     C           #1CALL    IFEQ *BLANKS                    B*2
+     C                     EXSR P010
+     C                     MOVE '0'       *IN84
+     C                     ELSE                            X*2
+     C                     MOVE '1'       *IN84
+     C                     END                             E*2
+     C*
+     C                     MOVE #1CALL    #2CALL
+     C*
+     C**   UPDATE SUBFILE RECORD
+     C*
+     C                     UPDAT#SFLNUM
+     C*
+     C**   WRITE ERROR MESSAGE(S)
+     C*
+     C                     WRITE#MSGCTL
+     C*
+     C**   READ CHANGED SUBFILE RECORD
+     C*
+     C                     READC#SFLNUM                  87
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P008   : UPDATE FILE                                          *
+     ******************************************************************
+     C*
+     C           P008      BEGSR
+     C*
+     C**   READ FIRST RECORD OF SUBFILE
+     C*
+     C                     READC#SFLNUM                  87
+     C*
+     C           *IN87     IFEQ '1'                        B*1
+     C                     Z-ADD1         #1RRN
+     C                     END                             E*1
+     C*
+     C**   DO WHILE END OF SUBFILE IS NOT REACHED
+     C*
+     C           *IN87     DOWEQ'0'                        B*1
+     C*
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1CALL    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    W1CALL 150
+     C*
+     C**   ACCESS TO ER ALLOCATIONS FILE BY SETUP KEY FIELDS WITH CURRENT RECORD
+     C*
+     C                     MOVE #BRCD     KUDBR
+     C                     MOVE #DEPT     KUDPT
+     C*
+     C           #1BOOK    IFNE *BLANKS                    B*2
+     C                     MOVE 'B'       WERTP
+     C                     ELSE                            X*2
+     C                     MOVE 'P'       WERTP
+     C                     END                             E*2
+     C*
+     C                     MOVE #1BOOK    KUDBK
+     C                     MOVE #1CUST    WCNUM
+     C*
+     C**   IF PORTFOLIO REFERENCE IS EQUAL TO THE 'REFERENCE ATTACHED TO "9997"
+     C*
+     C***********#1PREF    IFEQ P9R997                     B*2            S01496
+     C           #1PREF    IFEQ FCR997                     B*2            S01496
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9997'    WPTFR
+     C                     ELSE
+     C                     MOVE #1PREF    WPTFR
+     C                     END                             E*2
+      *                                                                   CAC005
+      ** If CAC005 is installed, convert screen field book/book profit    CAC005
+      ** centre into pseudo book                                          CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           #1BOOK    ANDNE*BLANKS                                   CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD   7                       CAC005
+     C                     PARM '*PSEUDO' POPTN   7                       CAC005
+     C                     PARM #1BOOK    PBKCD   2                       CAC005
+     C                     PARM SPRFC     PPRFC   4                       CAC005
+     C                     PARM           PPSBK   2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPPSBK     KUDBK                           CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C           KEY3      CHAINSEERALL0             88
+     C*
+     C**   REPLACE 'NOMINAL ALLOCATED' BY 'CHANGED ALLOCATION' AMOUNT
+     C**   AND MOVE BLANKS IN 'CHANGED ALLOCATION'
+     C*
+     C           ZFSIGN    IFEQ '-'                        B*2
+     C                     Z-SUBW1CALL    W1CALL
+     C                     END                             E*2
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE W1CALL    ZFLD15
+     C                     MOVE WNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #1NALL
+     C*
+     C**   WRITE/UPDATE ER ALLOCATIONS FILE
+     C*
+     C                     EXSR U002
+     C*
+     C                     MOVE 'Y'       WALLC
+     C*
+     C**   TEST IF WARNING
+     C*
+     C           WARNIN    IFEQ 'N'
+     C                     EXSR P010
+     C                     END
+     C*
+     C**   SETUP PROTECT INDICATORS
+     C*
+     C           #1BOOK    IFEQ *BLANKS                    B*2
+     C                     MOVE '0'       *IN63
+     C                     MOVE '1'       *IN64
+     C                     ELSE
+     C                     MOVE '1'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     END                             E*2
+     C*
+     C**   SETOF SUBFILE NEXT CHANGE INDICATOR
+     C*
+     C                     MOVE '0'       *IN84            SFLNXTCHG
+     C*
+     C**   UPDATE SUBFILE RECORD
+     C*
+     C                     MOVE *BLANKS   #1CALL
+     C                     MOVE *BLANKS   #2CALL
+     C                     MOVE 'N'       #1WARN
+     C                     MOVE 'N'       #2WARN
+     C                     MOVE 'N'       #3WARN
+     C                     MOVE 'N'       #4WARN
+     C                     MOVE 'N'       #5WARN
+     C                     MOVE 'N'       #6WARN
+     C                     MOVE 'N'       #7WARN
+     C                     UPDAT#SFLNUM
+     C*
+     C**   WRITE ERROR MESSAGE(S)
+     C*
+     C                     WRITE#MSGCTL
+     C*
+     C**   READ FIRST RECORD OF SUBFILE
+     C*
+     C                     READC#SFLNUM                  87
+     C                     END                             E*1
+     C*
+     C                     MOVE 'N'       ERMSG
+     C*
+     C**   EXECUTE COMMITMENT CONTROL TO FIX ALL INSERTED RECORDS
+     C*
+     C                     COMIT
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P009   : CALCULATE AVAILABLE NOMINAL                          *
+     ******************************************************************
+     C*
+     C           P009      BEGSR
+     C*
+     C**   CALL 'RETRIEVE BLOCK NOMINAL' PROGRAM
+     C*
+     C                     MOVE 'Y'       WPOST
+     C                     MOVE 'P'       WBLTY
+     C                     MOVE *BLANKS   WNOMBL
+     C                     MOVE *BLANKS   WNOMPO
+     C                     MOVE BJRDNB    WRDNB
+     C*
+     C                     CALL 'SE6710'               99
+     C                     PARM           WRDNB   5        Run Date
+     C                     PARM           WPOST   1        Obtain Position
+     C                     PARM           #BRCD            Branch Code
+     C                     PARM           KUDSN            Security Shortname
+     C                     PARM           WCUST   6        Customer
+     C                     PARM           WPORTF  4        Portfolio
+     C                     PARM           WBLTY   1        Block Type
+     C                     PARM           WNOMBL 13        Nom. already Blocked
+     C                     PARM           WNOMPO 13        Nominal Position
+     C                     PARM 'N'       WCOLF   1                       CGL011
+     C                     PARM *ZEROS    WCOLA  15                       CGL011
+     C*
+     C**   IF ERROR INDICATOR OF THE PROGRAM CALL IS ON
+     C**         DATABASE ERROR
+     C*
+     C           *IN99     IFEQ '1'                        B*1
+     C                     MOVEL'007'     DBASE            *****************
+     C                     MOVEL*BLANKS   DBFILE           ** DB ERROR 07 **
+     C                     MOVELNARR,1    DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C**   SETUP CORRECTLY THE NOMINAL ALREADY BLOCKED
+     C*
+     C                     MOVE WNOMBL    W1NMBL 130
+     C                     MOVE WNOMPO    W1NMPO 130
+     C                     MOVE WCOLA     WWCOLL 150                      CGL011
+     C*
+     C**   CALCULATE THE AVAILABLE NOMINAL
+     C**   (IT'S THE NOMINAL POSITION MINUS NOMINAL ALREADY BLOCKED)
+     C*
+     C                     Z-ADD*ZEROS    W1ANOM
+     C           W1NMPO    SUB  W1NMBL    W1ANOM 130
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* U001   : WRITE A RECORD IN THE SUBFILE                        *
+     ******************************************************************
+     C*
+     C           U001      BEGSR
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE *BLANKS   SPRFC                           CAC005
+     C*
+     C*****IF*RECORD*FROM*LF/UDEPX*************************************   S01496
+     C*                                                                   S01496
+     C**   If record from LF/SEUDEPL0                                     S01496
+     C*
+     C           *IN40     IFEQ '1'                        B*1
+     C                     MOVE '1'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE UDBK      #1BOOK
+      *                                                                   CAC005
+      ** If CAC005 is installed, retrieve book and book profit centre     CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD                           CAC005
+     C                     PARM '*USER  ' POPTN                           CAC005
+     C                     PARM           PBKCD                           CAC005
+     C                     PARM           PPRFC                           CAC005
+     C                     PARM UDBK      PPSBK                           CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPBKCD     #1BOOK                          CAC005
+     C                     MOVELPPRFC     SPRFC                           CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *
+     C                     MOVE *BLANKS   #1CUST
+     C                     MOVE *BLANKS   #1PREF
+     C                     MOVE UDNV      ZFLD15
+     C                     ELSE                            X*1
+     C*
+     C*****IF*RECORD*FROM*LF/CDEPY*************************************   S01496
+     C*                                                                   S01496
+     C**   If record from LF/SECDEPL4                                     S01496
+     C*
+     C           *IN41     IFEQ '1'                        B*2
+     C                     MOVE '0'       *IN63
+     C                     MOVE '1'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE *BLANKS   #1BOOK
+     C                     MOVE CDCN      #1CUST
+     C*
+     C           PTFR      IFEQ '9997'                     B*3
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C***********          MOVE P9R997    #1PREF                          S01496
+     C                     MOVE FCR997    #1PREF                          S01496
+     C                     ELSE
+     C                     MOVE PTFR      #1PREF
+     C                     END                             E*3
+     C*
+     C                     MOVE CDNV      ZFLD15
+     C*
+     C**   IF RECORD FOR DUMMY CUSTOMER
+     C*
+     C                     ELSE                            X*2
+     C                     MOVE '0'       *IN63
+     C                     MOVE '1'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE *BLANKS   #1BOOK
+     C                     MOVE ERDUM     #1CUST
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C**   SETUP POSITION AT EX-DATE
+     C*
+     C           *IN40     IFEQ '1'
+     C           UDNV      ANDNE*ZEROS
+     C           *IN41     OREQ '1'
+     C           CDNV      ANDNE*ZEROS
+     C                     MOVE WNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #1PEXA
+     C                     ELSE
+     C                     MOVE *BLANKS   #1PEXA
+     C                     END
+     C*
+     C**   IF RECORD FROM LF/SEERALL1
+     C*
+     C           W1NOMA    IFNE *ZEROS                     B*1
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE W1NOMA    ZFLD15
+     C                     MOVE WNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #1NALL
+     C                     ELSE                            X*1
+     C                     MOVE *BLANKS   #1NALL
+     C                     END                             E*1
+     C*
+     C**   WRITE A RECORD IN THE SUBFILE
+     C*
+     C                     WRITE#SFLNUM
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* U002   : WRITE/UPDATE ER ALLOCATION FILE                      *
+     ******************************************************************
+     C*
+     C           U002      BEGSR
+     C*
+     C           W1CALL    IFEQ *ZEROS
+     C                     MOVE '*'       VCRECI
+     C                     ELSE
+     C                     MOVE 'D'       VCRECI
+     C                     END
+     C*
+     C                     Z-ADDBJRDNB    VCLCD
+     C*
+     C                     MOVE ##USR     VCLUID
+     C                     MOVE #REFN     VCERRF
+     C                     MOVE #BRCD     VCBRCD
+     C                     MOVE #DEPT     VCDDPT
+     C*
+     C           #1BOOK    IFNE *BLANKS                    B*1
+     C                     MOVE 'B'       VCERTP
+     C                     ELSE                            X*1
+     C                     MOVE 'P'       VCERTP
+     C                     END                             E*1
+     C*
+     C           W1CALL    IFNE *ZEROS
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1NALL    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    VCNOMA
+     C*
+     C           ZFSIGN    IFEQ '-'                        B*2
+     C                     Z-SUBVCNOMA    VCNOMA
+     C                     END                             E*2
+     C                     ELSE                            X*1
+     C                     MOVE *BLANKS   #1NALL
+     C                     END                             E*1
+     C*
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1PEXA    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    VCEXPO
+     C*
+     C           ZFSIGN    IFEQ '-'                        B*1
+     C                     Z-SUBVCEXPO    VCEXPO
+     C                     END                             E*1
+     C*
+     C                     MOVE #1BOOK    VCBOOK
+     C                     MOVE #1CUST    VCCNUM
+     C                     MOVE WPTFR     VCPTFR
+      *                                                                   CAC005
+      ** If CAC005 is installed, convert screen field book/book profit    CAC005
+      ** centre into pseudo book                                          CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           #1BOOK    ANDNE*BLANKS                                   CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD   7                       CAC005
+     C                     PARM '*PSEUDO' POPTN   7                       CAC005
+     C                     PARM #1BOOK    PBKCD   2                       CAC005
+     C                     PARM SPRFC     PPRFC   4                       CAC005
+     C                     PARM           PPSBK   2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPPSBK     VCBOOK                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C                     MOVE #SECN     VCSESN
+     C                     Z-ADD*HIVAL    VCBEDT
+     C                     MOVE *BLANKS   VCTRRF
+     C                     MOVE *BLANKS   VCRVRF
+     C*
+     C**   IF RECORD IS FOUND
+     C*
+     C           *IN88     IFEQ '0'                        B*1
+     C                     MOVE 'A'       VCCHTP
+     C                     UPDATSEERALD0
+     C                     ELSE                            X*1
+     C                     Z-ADD*ZEROS    VCTNL1
+     C                     Z-ADD*ZEROS    VCPMNO
+     C                     Z-ADD*ZEROS    VCCFNO
+     C                     MOVE 'I'       VCCHTP
+     C                     WRITESEERALD0
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P010   : TEST IF WARNING ERROR                                *
+     ******************************************************************
+     C*
+     C           P010      BEGSR
+     C*
+     C                     MOVE '0'       *IN66
+     C*
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1NALL    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    W1NOMA
+     C                     MOVE ZFSIGN    W1SIGN
+     C*
+     C           WSDNM     IFNE *ZEROS                     B*1
+     C           W1NOMA    DIV  WSDNM     SNWORK 150
+     C                     MULT WSDNM     SNWORK
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS NOT A MULTIPLE OF THE TRADE DENOMINATION
+     C**   WARNING ERROR
+     C*
+     C           SNWORK    IFNE W1NOMA                     B*2
+     C                     MOVE '1'       *IN66
+     C                     MOVELWORK1     ZAMSDA
+     C                     MOVEL'ER65209' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C**   FOR ALL RECORDS EXCEPT FOR THE DUMMY CUSTOMER
+     C*
+     C**********           MOVE #1CUST    W1CUST  60                                          CSD027
+     C                     MOVE #1CUST    W1CUST  6                                           CSD027
+     C           W1CUST    IFNE ERDUM                      B*1
+     C*
+     C                     MOVE *BLANKS   ZFLD17
+     C                     MOVEL#1PEXA    ZFLD17
+     C                     EXSR ZASIGN
+     C                     MOVE ZOUT15    W1PEXA
+     C                     MOVE ZFSIGN    W2SIGN
+     C*
+     C**   IF 'EX-DATE POSITION' IS NOT SAME SIGN AS 'NOMINAL ALLOCATED'
+     C**   WARNING ERROR
+     C*
+     C           W1SIGN    IFNE W2SIGN                     B*2
+     C           W1NOMA    ANDNE*ZEROS
+     C                     MOVE '1'       *IN66
+     C                     MOVEL'ER65201' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*2
+     C*
+     C**   IF 'EX-DATE POSITION' IS LOWER THAN 'NOMINAL ALLOCATED'
+     C**   IN ABSOLUTE TERMS, WARNING ERROR
+     C*
+     C           W1PEXA    IFLT W1NOMA                     B*2
+     C                     MOVE '1'       *IN66
+     C                     MOVEL'ER65202' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*2
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS DIFFERENT THAN ZERO BUT EX-DATE POSITION
+     C**   IS ZERO, WARNING ERROR
+     C*
+     C           W1NOMA    IFNE *ZEROS                     B*2
+     C           W1PEXA    ANDEQ*ZEROS
+     C                     MOVE '1'       *IN66
+     C                     MOVEL'ER65203' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*2
+     C*
+     C**   IF CURRENT RECORD IS A CUSTOMER (NOT THE DUMMY CUSTOMER)
+     C*
+     C           #1BOOK    IFEQ *BLANKS                    B*2
+     C*
+     C                     MOVE #1CUST    WCUST
+     C*
+     C***********#1PREF    IFEQ P9R997                     B*3            S01496
+     C           #1PREF    IFEQ FCR997                     B*3            S01496
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9997'    WPORTF
+     C                     ELSE                            X*3
+     C                     MOVE #1PREF    WPORTF
+     C                     END                             E*3
+     C*
+     C**   CALCULATE 'AVAILABLE NOMINAL'
+     C*
+     C                     EXSR P009
+     C*
+     C           W1SIGN    IFEQ '-'                        B*6
+     C                     Z-SUBW1NALL    W1NALL
+     C                     END                             E*6
+     C*
+     C**   ADD THE NOMINAL ALREADY ALLOCATED TO THE AVAILABLE NOMINAL
+     C**   SUB                               TO THE NOMINAL ALREADY BLOCKED
+     C*
+     C           W1NMBL    IFNE *HIVAL                     B*2
+     C*
+     C           W1SIGN    IFEQ '+'                        B*3
+     C           W1ANOM    ADD  W1NOMA    W1ANOM
+     C           W1NMBL    SUB  W1NOMA    W1NMBL
+     C                     END                             E*3
+     C*
+     C                     END                             E*2
+     C*
+     C**   IF AVAILABLE NOMINAL IS LOWER THAN ZERO
+     C*
+     C           W1ANOM    IFLT *ZEROS                     B*3
+     C                     Z-ADD*ZEROS    W1ANOM
+     C                     END                             E*3
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS GREATER OR EQUAL THAN ZEROS
+     C*
+     C           W1SIGN    IFEQ '+'                        B*3
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS GREATER THAN 'AVAILABLE NOMINAL'
+     C**   WARNING ERROR
+     C*
+     C           W1NOMA    IFGT W1ANOM                     B*4
+     C           W1NOMA    ANDNE*ZEROS
+     C                     EXSR P011
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'Y'       #6WARN
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVELDSE207    ZAMSDA
+     C                     MOVEL'ER65207' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*4
+     C                     END                             E*3
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P011   : SETUP PARAMETERS FOR ERROR MESSAGE                   *
+     ******************************************************************
+     C*
+     C           P011      BEGSR
+     C*
+     C                     MOVE WNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE W1ANOM    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WAVAIL
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE W1NMPO    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCPOS
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE W1NMBL    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WBLOCK
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* V001   : VALIDATE 'NOMINAL ALLOCATED'                         *
+     ******************************************************************
+     C*
+     C           V001      BEGSR
+     C*
+     C           WSDNM     IFNE *ZEROS                     B*1
+     C           W1NOMA    DIV  WSDNM     SNWORK
+     C                     MULT WSDNM     SNWORK
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS NOT A MULTIPLE OF THE TRADE DENOMINATION
+     C**   WARNING ERROR
+     C*
+     C           SNWORK    IFNE W1NOMA                     B*2
+     C           #7WARN    ANDEQ'N'
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'Y'       #7WARN
+     C                     MOVELWORK1     ZAMSDA
+     C                     MOVEL'ER65209' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C**   FIND THE SIGN OF THE 'NOMINAL ALLOCATED'
+     C*
+     C           W1NOMA    IFLT *ZEROS                     B*1
+     C                     MOVE '-'       W1SIGN  1
+     C                     Z-SUBW1NOMA    W1NOMA
+     C                     ELSE                            X*1
+     C                     MOVE '+'       W1SIGN
+     C                     END                             E*1
+     C*
+     C**   FIND THE SIGN OF THE 'EX-DATE POSITION'
+     C*
+     C           W1PEXA    IFLT *ZEROS                     B*1
+     C                     MOVE '-'       W2SIGN  1
+     C                     Z-SUBW1PEXA    W1PEXA
+     C                     ELSE                            X*1
+     C                     MOVE '+'       W2SIGN
+     C                     END                             E*1
+     C*
+     C**   IF 'EX-DATE POSITION' IS NOT SAME SIGN AS 'NOMINAL ALLOCATED'
+     C**   WARNING ERROR
+     C*
+     C           W1SIGN    IFNE W2SIGN                     B*1
+     C           #3WARN    ANDEQ'N'
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'Y'       #3WARN
+     C                     MOVEL'ER65201' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*1
+     C*
+     C**   IF 'EX-DATE POSITION' IS LOWER THAN 'NOMINAL ALLOCATED'
+     C**   IN ABSOLUTE TERMS, WARNING ERROR
+     C*
+     C           W1PEXA    IFLT W1NOMA                     B*1
+     C           #4WARN    ANDEQ'N'
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'Y'       #4WARN
+     C                     MOVEL'ER65202' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*1
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS DIFFERENT THAN ZERO BUT EX-DATE POSITION
+     C**   IS ZERO, WARNING ERROR
+     C*
+     C           W1PEXA    IFEQ *ZEROS                     B*1
+     C           #5WARN    ANDEQ'N'
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'Y'       #5WARN
+     C                     MOVEL'ER65203' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*1
+     C*
+     C**   IF CURRENT RECORD IS A CUSTOMER (NOT THE DUMMY CUSTOMER)
+     C*
+     C           VCBOOK    IFEQ *BLANKS                    B*1
+     C*
+     C                     MOVE VCCNUM    WCUST
+     C                     MOVE PTFR      WPORTF
+     C*
+     C**   CALCULATE 'AVAILABLE NOMINAL'
+     C*
+     C                     EXSR P009
+     C*
+     C**   ADD THE NOMINAL ALREADY ALLOCATED TO THE AVAILABLE NOMINAL
+     C**   SUB                               TO THE NOMINAL ALREADY BLOCKED
+     C*
+     C           W1NMBL    IFNE *HIVAL                     B*2
+     C*
+     C           W1SIGN    IFEQ '+'                        B*3
+     C           W1ANOM    ADD  W1NOMA    W1ANOM
+     C           W1NMBL    SUB  W1NOMA    W1NMBL
+     C                     END                             E*3
+     C*
+     C                     END                             E*2
+     C*
+     C**   IF 'NOMINAL ALLOCATED' IS GREATER THAN 'AVAILABLE NOMINAL'
+     C**   WARNING ERROR
+     C*
+     C           W1NOMA    IFGT W1ANOM                     B*2
+     C           W1SIGN    ANDEQ'+'
+     C           #6WARN    ANDEQ'N'
+     C*
+     C**   IF AVAILABLE NOMINAL IS LOWER THAN ZERO
+     C*
+     C           W1ANOM    IFLT *ZEROS                     B*3
+     C                     Z-ADD*ZEROS    W1ANOM
+     C                     END                             E*3
+     C*
+     C                     EXSR P011
+     C*
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'Y'       #6WARN
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVELDSE207    ZAMSDA
+     C                     MOVEL'ER65207' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* *PSSR - TO PROCESS ABNORMAL END OF PROGRAM                    *
+     ******************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE 'E'       WRTCD
+     C*
+     C**   UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*
+     C**   ROLLBACK CHANGES, PRINT DUMP AND CANCEL PROGRAM
+     C*
+     C                     ROLBK
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     *****************************************************************
+     C*  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE            *
+     *****************************************************************
+     C*
+     C           ZASNMS    BEGSR
+     C*
+     C**   MESSAGE FILE SPECIFIED USE PMSGF
+     C*
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C**   CLEAR ALL FIELDS FOR DEFAULT MECHANISM NEXT TIME
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** ZASIGN subroutine to validate and right-align signed numeric    *
+     C** fields                                                          *
+     C**     Input fields:   ZFLD17 17/                                  *
+     C**                     ZSDIG  2/0                                  *
+     C**                     ZSDEC  1/0                                  *
+     C**                                                                 *
+     C**     Arrays:         ZS3    17/1/                                *
+     C**                     ZS4    15/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT15 15/                                  *
+     C**                     ZFSIGN  1/                                  *
+     C**                                                                 *
+     C** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     C**                                                                 *
+     C**       90         Decimal point found                            *
+     C**       91         Blank character found                          *
+     C**       92         After 1st time pass                            *
+     C**       93         Decimal point processed                        *
+     C**       95         No trailing blanks after decimal point position*
+     C**       96         Character 'M' found                            *
+     C**       97         Character 'T' found                            *
+     C**       99         SR ended abnormally - data invalid             *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     CSR         ZASIGN    BEGSR                           *** ZASIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZS3.
+     C**
+     C                     MOVEAZFLD17    ZS3
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C**
+     C                     Z-ADDZSDIG     ZSDIG   20
+     C                     Z-ADDZSDEC     ZSDEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C**
+     C                     MOVE ' '       ZS4
+     C                     MOVEAZS4       ZFLD17 17
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C                     MOVE ' '       ZFSIGN  1
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C**
+     C           ZSDIG     ADD  ZSDEC     ZSINT   20
+     C           ZSINT     CABGT15        ZSEND      99
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C**
+     C                     DO   17        ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C**
+     C           ZS3,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZSEND
+     C**
+     C**   Check for 'M' constant. Error if not followed by '+', '-' or
+     C**   blank.
+     C**
+     C           ZS3,ZX    COMP 'M'                      96
+     C           *IN96     IFEQ '1'
+     C           ZX        CABGT9         ZSEND      99
+     C                     ADD  1         ZX
+     C           ZS3,ZX    IFNE ' '
+     C           ZS3,ZX    ANDNE'+'
+     C           ZS3,ZX    ANDNE'-'
+     C                     SETON                     99
+     C                     GOTO ZSEND
+     C                     END
+     C                     SUB  1         ZX
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZS3
+     C**
+     C                     MOVE ' '       ZS3,ZX
+     C**
+     C** Fetch next arry element to check for '+' or '-' and bypass
+     C** embedded blank edit as 'M' now replaced by ' '
+     C**
+     C                     ADD  1         ZX
+     C                     END
+     C**
+     C**   Check for 'T' constant. Error if not followed by '+', '-' or
+     C**   blank.
+     C**
+     C           ZS3,ZX    COMP 'T'                      97
+     C           *IN97     IFEQ '1'
+     C           ZX        CABGT12        ZSEND      99
+     C                     ADD  1         ZX
+     C           ZS3,ZX    IFNE ' '
+     C           ZS3,ZX    ANDNE'+'
+     C           ZS3,ZX    ANDNE'-'
+     C                     SETON                     99
+     C                     GOTO ZSEND
+     C                     END
+     C                     SUB  1         ZX
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZS3
+     C**
+     C                     MOVE ' '       ZS3,ZX
+     C**
+     C** Fetch next arry element to check for '+' or '-' and bypass
+     C** embedded blank edit as 'T' now replaced by ' '
+     C**
+     C                     ADD  1         ZX
+     C                     END
+     C**
+     C**   Check for '-' constant. Error if not followed by blank
+     C**
+     C           ZS3,ZX    IFEQ '-'
+     C           ZX        IFLT 17
+     C                     ADD  1         ZX
+     C           ZS3,ZX    CABNE' '       ZSEND      9999
+     C                     SUB  1         ZX
+     C                     END
+     C**
+     C** Place '-' in output sign field
+     C**
+     C                     MOVE '-'       ZFSIGN
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZS3
+     C**
+     C                     MOVE ' '       ZS3,ZX
+     C**
+     C                     END
+     C**
+     C**   Check for '+' constant. Error if not followed by blank
+     C**
+     C           ZS3,ZX    IFEQ '+'
+     C                     ADD  1         ZX
+     C           ZX        IFLE 17
+     C           ZS3,ZX    CABNE' '       ZSEND      9999
+     C                     END
+     C                     SUB  1         ZX
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZS3
+     C**
+     C                     MOVE ' '       ZS3,ZX
+     C                     END
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C**
+     C   96
+     COR 97                SUB  1         ZX
+     C           ZS3,ZX    COMP ' '                      91
+     C   91 92             GOTO ZSTAG1
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C**
+     C  N90N91   ZS3,ZX    COMP '0'                    99
+     C  N90N91N99ZS3,ZX    COMP '9'                  99
+     C   99                GOTO ZSEND
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZSINT, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C**
+     C  N90N91             ADD  1         ZY         92
+     C           ZY        IFLE 15
+     C  N90N91             MOVE ZS3,ZX    ZS4,ZY
+     C                     END
+     C   90                Z-ADDZY        ZSINT      93  93
+     C**
+     C** End of array read loop.
+     C**
+     C                     END
+     C**
+     C           ZSTAG1    TAG                             ** ZSTAG1 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZS3 BY 1 MILLION
+     C**
+     C           *IN96     IFEQ '1'
+     C                     ADD  6         ZSINT
+     C                     ADD  6         ZSDIG
+     C                     END
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZS3 BY 1 THOUSAND
+     C**
+     C           *IN97     IFEQ '1'
+     C                     ADD  3         ZSINT
+     C                     ADD  3         ZSDIG
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED, MULTIPLY BY RESPECTIVE AMOUNT
+     C**
+     C   96                DO   6
+     C                     ADD  1         ZY
+     C                     MOVE '0'       ZS4,ZY
+     C                     END
+     C**
+     C   97                DO   3
+     C                     ADD  1         ZY
+     C                     MOVE '0'       ZS4,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZSINT
+     C**
+     C  N93                Z-ADDZY        ZSINT
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C**
+     C                     MOVE *BLANKS   ZFLD17
+     C   91 92             MOVEAZS3,ZX    ZFLD17
+     C   91 92   ZFLD17    CABNE' '       ZSEND      9999
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C**
+     C           ZSINT     COMP ZSDIG                99
+     C           ZY        SUB  ZSINT     ZX
+     C  N99      ZSDEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZSEND
+     C   95                GOTO ZSTAG2
+     C**
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C**
+     C                     DO   ZX
+     C                     ADD  1         ZY
+     C                     MOVE '0'       ZS4,ZY
+     C                     END
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING TO ARRAY, ZS5.
+     C**
+     C           ZSTAG2    TAG                             ** ZSTAG2 TAG *
+     C                     MOVE '0'       ZS5
+     C                     Z-ADD15        ZX
+     C                     Z-ADD16        ZY
+     C                     DO   16
+     C           ZS4,ZY    IFNE ' '
+     C                     MOVE ZS4,ZY    ZS5,ZX
+     C                     SUB  1         ZX
+     C                     END
+     C                     SUB  1         ZY
+     C                     END
+     C**
+     C**   Replace leading blanks with zeros.
+     C**
+     C                     Z-ADD1         ZX
+     C                     DO   15
+     C           ZS5,ZX    IFEQ ' '
+     C                     MOVE '0'       ZS5,ZX
+     C                     ADD  1         ZX
+     C                     ELSE
+     C                     GOTO ZSTAG3
+     C                     END
+     C                     END
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFLD17.
+     C**
+     C           ZSTAG3    TAG                             ** ZSTAG3 TAG *
+     C                     MOVEAZS5       ZOUT15 15
+     C**
+     C**   If output sign field is not -ive, make +ive.
+     C**
+     C           ZFSIGN    IFNE '-'
+     C                     MOVE '+'       ZFSIGN
+     C                     END
+     C**
+     C                     SETOF                     9697
+     C**
+     CSR         ZSEND     ENDSR                           * ZSEND ENDSR *
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C********************************************************************
+     C**                                                                 *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a     *
+     C** numeric field and to blank out leading zeros (optionaly         *
+     C** inserting commas).                                              *
+     C**     Input fields:   ZFLD15 15/0                                 *
+     C**                     ZDECS  1/0                                  *
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *
+     C**                                                                 *
+     C**     Arrays:         ZS1    15/1/0                               *
+     C**                     ZS2    21/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT21 21                                   *
+     C**                                                                 *
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  NARR
+ERROR CALL PGM 'SE6710'
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

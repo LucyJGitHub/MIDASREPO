@@ -1,0 +1,295 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CSC056*/
+/********************************************************************/
+/*                                                                  */
+/*        Midas - System Control Module                     */
+/*                                                                  */
+/*      SCCLRRE  -  CLEAR RETAIL 2 DAILY FILES                      */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CSC056  *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CDL013             Date 10Jul06              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CEU024             Date 14Jul98              */
+/*                      103710             Date 22Jan98              */
+/*                      CCB003             Date 31Jan97              */
+/*                         S01408             DATE 26APR96          */
+/*                         086412             DATE 13APR95          */
+/*                         S01408             DATE 10MAY95          */
+/*                         071052             DATE 23MAY94          */
+/*                         S01413             DATE 13JAN94          */
+/*                         S01343             DATE 15AUG91          */
+/*                         RT0058             DATE 02MAY91          */
+/*                         S01117             DATE 14FEB90          */
+/*                         S01125             DATE 21/10/86         */
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1     */
+/*       CDL013 - Tiered Withholding Tax                             */
+/*       CEU024 - EMU Retail Teller Support Enhancement              */
+/*      103710  -  Do not clear RACTR* to allow reconciliation.     */
+/*                 Components are cleared in REC3860 before use.    */
+/*      CCB003  -  CoB Performance Enhancements                     */
+/*                 Clear report extract files                       */
+/*      S01408  -  Addition of core hook SCCLRREMPS                 */
+/*                 Addition of core hook SCCLRREINT                 */
+/*      086412  -  CLEAR REAIXA, REAIXD AND REAIXZ                  */
+/*      S01408  -  Addition of core hook SCCLRREMPE                 */
+/*      071052  -  REVDZZ IS REDUNDANT - DO NOT CLEAR               */
+/*      S01413  -  PROGRAM USE FILES WHICH ARE NO MORE USE RE3      */
+/*      S01343  -  SC/RR/SD MODULE RENAME PROJECT.                  */
+/*                 - SCCLRRE RENAMED FROM SDCLRRE.                  */
+/*      RT0058  -  REMOVE REFERENCES TO LETTERS OF CREDIT FILES     */
+/*                 BECAUSE THE MODULE IS REDUNDANT.                 */
+/*      S01117  -  MULTIBRANCHING                                   */
+/*                 PROGRAM AMENDED TO INCLUDE PF/RE0340EX           */
+/*      S01125  -  PROGRAM AMENDED TO INCLUDE RETAIL I FILES WHICH  */
+/*                 ARE STILL USED BY RETAIL II                      */
+/********************************************************************/
+/*                                                                  */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                /*CEU024*/
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)                /*CEU024*/
+             DCL        VAR(&PSAR) TYPE(*CHAR) LEN(6)                 /*CEU024*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)             /*CEU024*/
+             DCL        VAR(&CEU024) TYPE(*CHAR) LEN(1)               /*CEU024*/
+             DCL        VAR(&CDL013) TYPE(*CHAR) LEN(7)                                   /*CDL013*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CDL013*/
+/*                                                                   */
+/**/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SCCLRREINT                                          */
+                                                                      /*S01408*/
+             SNDPGMMSG  TOMSGQ(MRUNQ) +
+                         MSG('Clear Retail Module Daily Files')
+                                                                      /*S01408*/
+/**/                                                                  /*CEU024*/
+/* Check if Retail Teller Support Enhancement is installed         */ /*CEU024*/
+/**/                                                                  /*CEU024*/
+             CHGVAR     VAR(&PSAR) VALUE('CEU024')                    /*CEU024*/
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                  /*CEU024*/
+             CALL  PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSAR &SCSARD)    /*CEU024*/
+             IF         COND(&PRTCD *EQ '       ') +
+                  THEN(CHGVAR VAR(&CEU024) VALUE('Y'))                /*CEU024*/
+/**/                                                                  /*CEU024*/
+/* Check if error found                                            */ /*CEU024*/
+/**/                                                                  /*CEU024*/
+             IF         COND(&PRTCD *NE '       ' *AND +
+                  &PRTCD *NE '*NRF   ') THEN(DO)                      /*CEU024*/
+                  GOTO       CMDLBL(ERROR)                            /*CEU024*/
+             ENDDO                                                    /*CEU024*/
+/*  CDL013 - Call to access AOSARDR0 re CDL013 is switched on        */                   /*CDL013*/
+/*                                                                   */                   /*CDL013*/
+             CALL       PGM(AOSARDR0) PARM(&CDL013 '*VERIFY' 'CDL013' +
+                          &SFMT)                                                          /*CDL013*/
+/*/COPY WNCPYSRC,SCCLRREMPS                                          */
+                                                                      /*S01408*/
+/**/
+/*     TRAILER FILE       */
+/**/
+             CLRPFM     FILE(RTZZ) MBR(ACRL)
+             CLRPFM     FILE(RTZZ) MBR(AXFI)
+             CLRPFM     FILE(RTZZ) MBR(BCHG)
+             CLRPFM     FILE(RTZZ) MBR(IBPA)
+             CLRPFM     FILE(RTZZ) MBR(ODAC)
+             CLRPFM     FILE(RTZZ) MBR(RABEX)
+/************CLRPFM     FILE(RTZZ) MBR(SRETAC)              S01117*/
+             CLRPFM     FILE(RTZZ) MBR(RETAC)
+             CLRPFM     FILE(RTZZ) MBR(RACT)
+             CLRPFM     FILE(RTZZ) MBR(REFRL)
+             CLRPFM     FILE(RTZZ) MBR(SOEX)
+/**/
+             CLRPFM     FILE(ACRLAR)
+             CLRPFM     FILE(AXFIAX)
+             CLRPFM     FILE(BCHGHH)
+             CLRPFM     FILE(BCHGIP)                       /*S01125*/
+             CLRPFM     FILE(BCHGR1)
+             CLRPFM     FILE(BCHGZZ)
+             CLRPFM     FILE(DRECT)                        /*S01125*/
+             CLRPFM     FILE(DRTPOHH)
+             CLRPFM     FILE(DRTPOPD)
+             CLRPFM     FILE(DRTPORA)
+             CLRPFM     FILE(DRTPOZZ)
+             CLRPFM     FILE(GEDLMHH)
+             CLRPFM     FILE(GEDLMPD)
+             CLRPFM     FILE(GEDLMZZ)
+/************CLRPFM     FILE(GEICCHH)                 */   /*S01413*/
+/************CLRPFM     FILE(GEICCPD)                 */   /*S01413*/
+/************CLRPFM     FILE(GEICCZZ)                 */   /*S01413*/
+/**/                                                                  /*CEU024*/
+/* If Retail Teller Support Enhancement is installed clear         */ /*CEU024*/
+/* Retail Posting Extension file                                   */ /*CEU024*/
+/**/                                                                  /*CEU024*/
+             IF         COND(&CEU024 *EQ 'Y') +
+                        THEN(CLRPFM     FILE(GETT1APD))               /*CEU024*/
+             CLRPFM     FILE(HELDOHA)
+             CLRPFM     FILE(HELDOHB)
+             CLRPFM     FILE(HELDOHC)
+             CLRPFM     FILE(IBPAIB)
+             CLRPFM     FILE(ICHGA)
+             CLRPFM     FILE(ICHGR1)
+             CLRPFM     FILE(ICHGR2)
+             CLRPFM     FILE(ICHGR3)
+             CLRPFM     FILE(ICHGZ)
+             CLRPFM     FILE(INTACAH)                      /*S01125*/
+             CLRPFM     FILE(INTACZ1)                      /*S01125*/
+             CLRPFM     FILE(MADJPF)
+             CLRPFM     FILE(MEMOX)                        /*S01125*/
+             CLRPFM     FILE(ODACON)
+             CLRPFM     FILE(RABEXOR)
+/************CLRPFM     FILE(RACTRF)                  */   /*103710*/
+/************CLRPFM     FILE(RACTRG)                  */   /*103710*/
+/************CLRPFM     FILE(RACTZZ)*/
+/************CLRPFM     FILE(REBMSA)                  */   /*S01413*/
+/************CLRPFM     FILE(REBMSB1)                 */   /*S01413*/
+/************CLRPFM     FILE(REBMSM)                  */   /*S01413*/
+/************CLRPFM     FILE(REBMSS)                  */   /*S01413*/
+/************CLRPFM     FILE(REBMSZ)                  */   /*S01413*/
+/************CLRPFM     FILE(RECAPA)                  */   /*S01413*/
+/************CLRPFM     FILE(RECAPD)                  */   /*S01413*/
+/************CLRPFM     FILE(RECAPZ)                  */   /*S01413*/
+             CLRPFM     FILE(REDEXAA)
+             CLRPFM     FILE(REDEXAB)
+             CLRPFM     FILE(REDEXAC)
+             CLRPFM     FILE(REFRLRL)
+             CLRPFM     FILE(REAIXA)                                  /*086412*/
+             CLRPFM     FILE(REAIXD)                                  /*086412*/
+             CLRPFM     FILE(REAIXZ)                                  /*086412*/
+/************CLRPFM     FILE(REGAPA)                  */   /*S01413*/
+/************CLRPFM     FILE(REGAPZ)                  */   /*S01413*/
+/************CLRPFM     FILE(REGAP000)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP100)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP111)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP112)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP113)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP114)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP120)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP200)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP211)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP212)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP213)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP214)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP300)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP400)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP501)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP502)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP503)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP504)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP601)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP602)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP611)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP612)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP700)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP800)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP801)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP810)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP811)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP812)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP813)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP814)                */   /*S01413*/
+/************CLRPFM     FILE(REGAP820)                */   /*S01413*/
+/************CLRPFM     FILE(REGENA)                  */   /*S01413*/
+/************CLRPFM     FILE(REGEND)                  */   /*S01413*/
+/************CLRPFM     FILE(REGENZ)                  */   /*S01413*/
+/************CLRPFM     FILE(REISTA)                  */   /*S01413*/
+/************CLRPFM     FILE(REISTZ)                  */   /*S01413*/
+/************CLRPFM     FILE(REIST000)                */   /*S01413*/
+/************CLRPFM     FILE(REIST100)                */   /*S01413*/
+/************CLRPFM     FILE(REIST111)                */   /*S01413*/
+/************CLRPFM     FILE(REIST112)                */   /*S01413*/
+/************CLRPFM     FILE(REIST113)                */   /*S01413*/
+/************CLRPFM     FILE(REIST114)                */   /*S01413*/
+/************CLRPFM     FILE(REIST120)                */   /*S01413*/
+/************CLRPFM     FILE(REIST200)                */   /*S01413*/
+/************CLRPFM     FILE(REIST211)                */   /*S01413*/
+/************CLRPFM     FILE(REIST212)                */   /*S01413*/
+/************CLRPFM     FILE(REIST213)                */   /*S01413*/
+/************CLRPFM     FILE(REIST214)                */   /*S01413*/
+/************CLRPFM     FILE(REIST300)                */   /*S01413*/
+/************CLRPFM     FILE(REIST400)                */   /*S01413*/
+/************CLRPFM     FILE(REIST501)                */   /*S01413*/
+/************CLRPFM     FILE(REIST502)                */   /*S01413*/
+/************CLRPFM     FILE(REIST503)                */   /*S01413*/
+/************CLRPFM     FILE(REIST504)                */   /*S01413*/
+/************CLRPFM     FILE(REIST601)                */   /*S01413*/
+/************CLRPFM     FILE(REIST602)                */   /*S01413*/
+/************CLRPFM     FILE(REIST611)                */   /*S01413*/
+/************CLRPFM     FILE(REIST612)                */   /*S01413*/
+/************CLRPFM     FILE(REIST800)                */   /*S01413*/
+/************CLRPFM     FILE(REIST801)                */   /*S01413*/
+             CLRPFM     FILE(RETACRE)
+/************CLRPFM     FILE(REVDAA)                  */   /*S01413*/
+/************CLRPFM     FILE(REVDPD)                  */   /*S01413*/
+/************CLRPFM     FILE(REVDR1)                  */   /*S01413*/
+/************CLRPFM     FILE(REVDR2)                  */   /*S01413*/
+/************CLRPFM     FILE(REVDR3)                  */   /*S01413*/
+/************CLRPFM     FILE(REVDZZ)                      */ /*REVDZZ*/
+             CLRPFM     FILE(RE0340EX)                       /*S01117*/
+             CLRPFM     FILE(RPOSTHH)                        /*S01125*/
+             CLRPFM     FILE(RPOSTPD)
+             CLRPFM     FILE(RPOSTZZ)
+/************CLRPFM     FILE(SEBCMHH) **/                             /*RT0058*/
+/************CLRPFM     FILE(SEBCMPD) **/                             /*RT0058*/
+/************CLRPFM     FILE(SEBCMZZ) **/                             /*RT0058*/
+/************CLRPFM     FILE(SEBXMHH) **/                             /*RT0058*/
+/************CLRPFM     FILE(SEBXMPD) **/                             /*RT0058*/
+/************CLRPFM     FILE(SEBXMZZ) **/                             /*RT0058*/
+             CLRPFM     FILE(SOEXSO)
+             CLRPFM     FILE(SRCIPPF)                      /*S01125*/
+             CLRPFM     FILE(SRCIP3)
+             CLRPFM     FILE(SRCIP2HH)
+             CLRPFM     FILE(SRCIP2P1)
+             CLRPFM     FILE(SRCIP2P2)
+             CLRPFM     FILE(SRCIP2P3)
+             CLRPFM     FILE(SRCIP2ZZ)
+             CLRPFM     FILE(SREVCA)
+/************CLRPFM     FILE(SREVCP)                  */   /*S01413*/
+/************CLRPFM     FILE(SREVCR1)                 */   /*S01413*/
+/************CLRPFM     FILE(SREVCR2)                 */   /*S01413*/
+/************CLRPFM     FILE(SREVCR3)                 */   /*S01413*/
+/************CLRPFM     FILE(SREVCZ)                  */   /*S01413*/
+             CLRPFM     FILE(STNDOSA)
+             CLRPFM     FILE(STNDOSB)
+             CLRPFM     FILE(STNDOSC)
+             CLRPFM     FILE(STOPOSD)
+             CLRPFM     FILE(STOPOSE)
+             CLRPFM     FILE(UPRINA)
+             CLRPFM     FILE(UPRIND)
+             CLRPFM     FILE(UPRINZ)
+             CLRPFM     FILE(REHISXPD)                                /*CCB003*/
+             CLRPFM     FILE(REINCXPD)                                /*CCB003*/
+/*    CDL013 Tiered withholding tax                                  */                   /*CDL013*/
+/*           Clear the new deal/account tax extract file             */                   /*CDL013*/
+/*                                                                   */                   /*CDL013*/
+             IF         COND(&CDL013 *EQ ' ') THEN(DO)                                    /*CDL013*/
+             CLRPFM     FILE(GLXTAXPD)                                                    /*CDL013*/
+             ENDDO                                                                        /*CDL013*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SCCLRREMPE                                          */
+                                                                      /*S01408*/
+/**/
+             SNDPGMMSG  TOMSGQ(MRUNQ) +
+                         MSG('Retail Module Daily Files Cleared')
+/**/
+              GOTO      CMDLBL(END)                                   /*CEU024*/
+ERROR:                                                                /*CEU024*/
+             CHGJOB     SWS(XXXXXX11)                                 /*CEU024*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCCLRRE ended abnormally - see job log') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)           /*CEU024*/
+END:                                                                  /*CEU024*/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

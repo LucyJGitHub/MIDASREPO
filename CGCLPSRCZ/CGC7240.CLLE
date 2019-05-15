@@ -1,0 +1,54 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Interest Scale get the lending interest')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       CGC7240 - Interest Scale get Lending from date              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE148             Date 23Jul12              */
+/*                      CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE148 - Alpha Loan Reference                               */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BRCA &CNUM &LNRF &INTD &VDAT &INFD +
+                          &FRLS &RTCD)
+ 
+/*  Declare the variables                                       */
+ 
+             DCL        VAR(&BRCA) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+/**********  DCL        VAR(&LNRF) TYPE(*DEC) LEN(6 0)          */                        /*CLE148*/
+             DCL        VAR(&LNRF) TYPE(*CHAR) LEN(6)                                     /*CLE148*/
+             DCL        VAR(&INTD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&VDAT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&INFD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&FRLS) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+/*  If first pass override the file */
+             IF         COND(&FRLS *EQ 'FIRST') THEN(DO)
+                 OVRDBF     FILE(LEHISTL4) OVRSCOPE(*JOB) SHARE(*NO)
+             ENDDO
+ 
+/*  Call the  program */
+             CALL       PGM(CG7240) PARM(&BRCA &CNUM &LNRF &INTD +
+                          &VDAT &INFD &FRLS &RTCD)
+ 
+/*  If last pass delete the override */
+             IF         COND(&FRLS *EQ 'LAST') THEN(DO)
+                 DLTOVR     FILE(*ALL)
+             ENDDO
+ 
+/*  Logical end of the program */
+ END:        ENDPGM

@@ -1,0 +1,545 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Transfer batches to history files')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL2560 - Transfer Batches to History Files                   *
+      *                                                               *
+      *  Function: This program will transfer all the batch entries   *
+      *  I/C INT   from the daily files into the History files.       *
+      *                                                               *
+      *  Called By: GLC01                                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027587           Date 19Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL013             Date 20Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 08Jan02               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP032             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU013             Date 09Apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD027587 - Unable to used the C for Copy and T for Template  *
+      *             (Recompile)                                       *
+      *  CGL013 - MT94x Message Generation.                           *
+      *  CPK014 - Release 4 packaging:                                *
+      *           - Move values to Timestamp fields due to creation   *
+      *             parameter changes.                                *
+      *  CAP032 - Conversion of Journal Batch Entry inputs into       *
+      *           modular structure to use as APIs.                   *
+      *  CEU013 - EMU Account Postings Narrative                      *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLJENHL1IF  E           K        DISK
+     FGLJENPL1IF  E           K        DISK
+     FGLJENSL1IF  E           K        DISK
+     FGLJENXL2IF  E           K        DISK                                                   CGL013
+     F                                              KINFSR *PSSR                              CGL013
+     FGLJEHHPDO   E                    DISK                      A
+     FGLJEHPPDO   E                    DISK                      A
+     FGLJEHSPDO   E                    DISK                      A
+     FGLJEHXPDO   E                    DISK                      A                            CGL013
+     F                                              KINFSR *PSSR                              CGL013
+     FGL2560AUO   E                    PRINTER
+     F/COPY WNCPYSRC,GL2560F001
+      *
+      *****************************************************************
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *  15  End of file for LF/GLJENHL1
+      *  16  End of file for LF/GLJENPL1
+      *  17  End of file for LF/GLJENSL1
+      *  18  Record Found for LF/GLJENXL2                                                     CGL013
+      *  25  Write to file GLJEHHPD fails
+      *  26  Write to file GLJEHPPD fails
+      *  27  Write to file GLJEHSPD fails
+      *  28  Write to file GLJEHXPD fails                                                     CGL013
+      *  35  MT94x Message Generation Installed                                               CGL013
+      *
+      ******************************************************************
+      *                                                                *
+      *  Index to Subroutines                                          *
+      *                                                                *
+      *  01  INIT    -  Initial processing                             *
+      *  02  DETAIL  -  Processes each record on daily Batch files     *
+      *  03  HHWRT   -  Writes records to GLJEHHPD                     *
+      *  04  HPWRT   -  Writes records to GLJEHPPD                     *
+      *  05  HSWRT   -  Writes records to GLJEHSPD                     *
+      *  06  *PSSR   -  Exception Error processing                     *
+      *  07  SRHXWR  -  Writes records to GLJEHXPD                     *                      CGL013
+      *                                                                *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Copyright array
+      /SPACE 3
+     ICPYR@#      DS
+     I*
+     I** Data Structure for compilation - Copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank details
+     ISCSARD    E DSSCSARDPD                                                                  CGL013
+      ** Data Structure for SAR Details                                                       CGL013
+      *                                                                                       CGL013
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for Access Programs, short Data Structure
+     ILDA       E DSLDA
+     I*
+     I**     Local Data Area
+     IPSDS       SDS
+     I*
+     I** Program Status Data Structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     C/EJECT
+      ******************************************************************
+      *                                                                *
+      *  MAIN                                                          *
+      *                                                                *
+      *  This section calls SR's INIT and DETAIL then ends the program.*
+      *                                                                *
+      ******************************************************************
+     C**   Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Perform Initial processing
+     C                     EXSR INIT
+      *
+      **  Perform Detail processing
+     C                     EXSR DETAIL
+      *
+      **  Write out Report Header, Details and End of Report text
+     C                     WRITEGL2560H
+     C                     WRITEGL2560D
+     C                     WRITEGL2560T
+      *
+     C                     SETON                         LR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT  -  Calls AOBANKR0 to retrieve header information for       *
+      *          report, If Record is not found reports a Database       *
+      *          error.
+      *                                                                  *
+      * CALLED BY  :  MAIN                                               *
+      *                                                                  *
+      * CALLS      :  DBERR                                              *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C** Use Access program AOBANKR0 to retrieve header information
+     C** for report
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C** If error found by access program exit
+     C** program via database error subroutine
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'GL2560'  DBPGM            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   CEU013
+     C                     CALL 'AOSARDR0'                                CEU013
+     C                     PARM '       ' @RTCD   7                       CEU013
+     C                     PARM '*VERIFY' @OPTN   7                       CEU013
+     C                     PARM 'CEU013'  WSARD   6                       CEU013
+     C*                                                                   CEU013
+     C           @RTCD     IFEQ *BLANK                                    CEU013
+     C                     MOVE 'Y'       CEU013  1                       CEU013
+     C                     ELSE                                           CEU013
+     C                     MOVE 'N'       CEU013                          CEU013
+     C                     ENDIF                                          CEU013
+      *                                                                                       CGL013
+      ** Determine if MT94x Message Generation is installed.                                  CGL013
+      *                                                                                       CGL013
+     C                     CALL 'AOSARDR0'                                                    CGL013
+     C                     PARM *BLANKS   PRTCD   7                                           CGL013
+     C                     PARM '*VERIFY 'POPTN   7                                           CGL013
+     C                     PARM 'CGL013'  PSARD   6                                           CGL013
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL013
+      *                                                                                       CGL013
+      ** Database Error                                                                       CGL013
+      *                                                                                       CGL013
+     C           PRTCD     IFNE *BLANK                                                        CGL013
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL013
+     C           *LOCK     IN   LDA                                                           CGL013
+     C                     MOVEL'CGL013'  DBKEY                                               CGL013
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL013
+     C                     MOVE 'GL2560'  DBPGM                                               CGL013
+     C                     Z-ADD006       DBASE                                               CGL013
+     C                     MOVE *ON       *INU7                                               CGL013
+     C                     MOVE *ON       *INU8                                               CGL013
+     C                     OUT  LDA                                                           CGL013
+     C                     EXSR *PSSR                                                         CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+     C           PRTCD     IFEQ *BLANKS                                                       CGL013
+     C                     MOVE 'Y'       CGL013  1                                           CGL013
+     C                     MOVE *ON       *IN35                                               CGL013
+     C                     ELSE                                                               CGL013
+     C                     MOVE 'N'       CGL013                                              CGL013
+     C                     MOVE *OFF      *IN35                                               CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+      ** Key List for Midas GL Journal Entry - Additional Information                         CGL013
+      ** by Batch Number and Batch Item Number                                                CGL013
+      *                                                                                       CGL013
+     C           KGLJNX    KLIST                                                              CGL013
+     C                     KFLD           KBTNB   3                                           CGL013
+     C                     KFLD           KBINB   30                                          CGL013
+      *
+      ** Initialise number of records written to zero
+     C                     Z-ADD0         NHRW
+     C                     Z-ADD0         NPRW
+     C                     Z-ADD0         NXRW                                                CGL013
+     C                     Z-ADD0         NSRW
+     C/COPY WNCPYSRC,GL2560C002
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETAIL - Reads LF/GLJENHL1, GLJENPL1 and GLJENSL1 and, while     *
+      *          records exist, writes records to GLJEHHPD, GLJEHPPD     *
+      *          and GLJEHSPD respectively                               *
+      *                                                                  *
+      * CALLED BY  :  MAIN                                               *
+      *                                                                  *
+      * CALLS      :  HHWRT, HPWRT, HSWRT                                *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           DETAIL    BEGSR
+      *
+      ** Read LF/GLJENHL1
+     C                     READ GLJENHL1                 15
+      *
+      ** Process while records exist
+     C           *IN15     DOWEQ'0'
+     C                     EXSR HHWRT
+      *
+      ** Read ahead for LF/GLJENHL1
+     C                     READ GLJENHL1                 15
+     C                     END
+      *
+      ** Read LF/GLJENPL1
+     C                     READ GLJENPL1                 16
+      *
+      ** Process while records exist
+     C           *IN16     DOWEQ'0'
+     C                     EXSR HPWRT
+      *                                                                                       CGL013
+      ** If MT94x Message Generation is installed, for each posting                           CGL013
+      ** in GLJENPPD that will be transferred to GLJEHPPD,if additional                       CGL013
+      ** information exists in GLJENXPD for the same batch and item                           CGL013
+      ** number, output the same to GLJEHXPD.                                                 CGL013
+      *                                                                                       CGL013
+     C           CGL013    IFEQ 'Y'                                                           CGL013
+     C                     MOVELBTBTNB    KBTNB                                               CGL013
+     C                     Z-ADDBTBINB    KBINB                                               CGL013
+      *                                                                                       CGL013
+     C           KGLJNX    CHAINGLJENXL2             18                                       CGL013
+      *                                                                                       CGL013
+     C           *IN18     IFEQ *OFF                                                          CGL013
+     C                     EXSR SRHXWR                                                        CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+     C                     ENDIF                                                              CGL013
+      *
+      ** Read ahead for LF/GLJENPL1
+     C                     READ GLJENPL1                 16
+     C                     END
+      *
+      ** Read LF/GLJENSL1
+     C                     READ GLJENSL1                 17
+      *
+      ** Process while records exist
+     C           *IN17     DOWEQ'0'
+     C                     EXSR HSWRT
+      *
+      ** Read ahead for LF/GLJENSL1
+     C                     READ GLJENSL1                 17
+     C                     END
+     C/COPY WNCPYSRC,GL2560C001
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * HHWRT - Write a record to PF/GLJEHHPD and add one to the         *
+      *          number of records written                               *
+      *                                                                  *
+      * CALLED BY  :  DETAIL                                             *
+      *                                                                  *
+      * CALLS      :                                                     *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           HHWRT     BEGSR
+      *
+      ** Move Values to fields for update of PF/GLJEHHPD
+     C                     Z-ADDBJRDNB    HHBEDT
+     C                     MOVELBRBTNB    HHBTNB
+     C                     MOVELBRBCDA    HHBCDA
+     C                     MOVELBRDPCD    HHDPCD
+     C                     MOVELBRWSID    HHWSID
+     C                     Z-ADDBRHIIN    HHHIIN
+     C                     Z-ADDBRHDIN    HHHDIN
+     C                     Z-ADDBRHINI    HHHINI
+     C                     MOVELBRSHPI    HHSHPI
+     C                     MOVELBRRAPI    HHRAPI
+     C                     MOVELBRMBRB    HHMBRB
+     C                     MOVELBRRVVD    HHRVVD
+     C                     MOVELBRBDES    HHBDES
+     C                     MOVELBRFRNT    HHFRNT                          CAP032
+     C                     MOVELBRAFRT    HHAFRT                          CAP032
+     C                     MOVELBRTMST    HHTMST                                              CPK014
+      *
+      ** Write a record to PF/GLJEHHPD
+     C                     WRITEGLJEHHD0               25
+      *
+     C           *IN25     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVEL'GLJEHHD0'DBFILE           ***************
+     C                     MOVE 'GL2560'  DBPGM            * DBERROR 002 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Add one to Number of Records Written.
+     C                     ADD  1         NHRW
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * HPWRT - Write a record to PF/GLJEHPPD and add one to the         *
+      *          number of records written                               *
+      *                                                                  *
+      * CALLED BY  :  DETAIL                                             *
+      *                                                                  *
+      * CALLS      :                                                     *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           HPWRT     BEGSR
+      *
+      ** Move Values to fields for update of PF/GLJEHPPD
+     C                     Z-ADDBJRDNB    HPBEDT
+     C                     MOVELBTBTNB    HPBTNB
+     C                     Z-ADDBTBINB    HPBINB
+     C                     MOVELBTIBCA    HPIBCA
+     C                     MOVELBTCUST    HPCUST
+     C                     MOVELBTCYCD    HPCYCD
+     C                     MOVELBTACCD    HPACCD
+     C                     MOVELBTACSN    HPACSN
+     C                     MOVELBTNNBI    HPNNBI
+     C                     MOVELBTRACN    HPRACN
+     C                     MOVELBTRINO    HPRINO
+     C                     MOVELBTRINE    HPRINE
+     C                     MOVELBTTRTY    HPTRTY
+     C                     Z-ADDBTPTAM    HPPTAM
+     C                     MOVELBTDCIN    HPDCIN
+     C                     Z-ADDBTPTDT    HPPTDT
+     C                     Z-ADDBTVLDT    HPVLDT
+     C                     MOVELBTNVCD    HPNVCD
+     C                     MOVELBTNRDC    HPNRDC
+     C                     MOVELBTACTY    HPACTY
+     C                     MOVELBTACNB    HPACNB
+     C                     MOVELBTCQNB    HPCQNB
+     C                     MOVELBTCOIN    HPCOIN
+     C                     MOVELBTSWCR    HPSWCR
+     C                     MOVELBTPRCN    HPPRCN
+     C                     MOVELBTBCBH    HPBCBH
+     C                     MOVELBTRADP    HPRADP
+     C                     MOVELBTSHPI    HPSHPI
+     C                     Z-ADDBTRRNM    HPRRNM
+     C                     MOVELBTRNBE    HPRNBE
+     C                     MOVELBTRARC    HPRARC
+     C                     MOVELBTTSTY    HPTSTY
+     C                     MOVELBTBKCD    HPBKCD
+     C                     Z-ADDBTSPFC    HPSPFC
+     C                     MOVELBTRVDI    HPRVDI
+     C           CEU013    IFEQ 'Y'                                       CEU013
+     C                     MOVELBTOCCY    HPOCCY                          CEU013
+     C                     Z-ADDBTOAMT    HPOAMT                          CEU013
+     C                     END                                            CEU013
+     C                     MOVELBTFRNT    HPFRNT                          CAP032
+     C                     MOVELBTAFRT    HPAFRT                          CAP032
+     C                     MOVELBTTMST    HPTMST                                              CPK014
+      *
+      ** Write a record to PF/GLJEHPPD
+     C                     WRITEGLJEHPD0               26
+      *
+     C           *IN26     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVEL'GLJEHPD0'DBFILE           ***************
+     C                     MOVE 'GL2560'  DBPGM            * DBERROR 003 *
+     C                     Z-ADD003       DBASE            ***************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Add one to Number of Records Written.
+     C                     ADD  1         NPRW
+     C/COPY WNCPYSRC,GL2560C003
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * HSWRT - Write a record to PF/GLJEHSPD and add one to the         *
+      *          number of records written                               *
+      *                                                                  *
+      * CALLED BY  :  DETAIL                                             *
+      *                                                                  *
+      * CALLS      :                                                     *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           HSWRT     BEGSR
+      *
+      ** Move Values to fields for update of PF/GLJEHSPD
+     C                     Z-ADDBJRDNB    HSBEDT
+     C                     MOVELBSBTNB    HSBTNB
+     C                     MOVELBSCYCD    HSCYCD
+     C                     MOVELBSBRCD    HSBRCD
+     C                     Z-ADDBSDBTT    HSDBTT
+     C                     Z-ADDBSCRTT    HSCRTT
+      *
+      ** Write a record to PF/GLJEHSPD
+     C                     WRITEGLJEHSD0               27
+      *
+     C           *IN27     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVEL'GLJEHSD0'DBFILE           ***************
+     C                     MOVE 'GL2560'  DBPGM            * DBERROR 004 *
+     C                     Z-ADD004       DBASE            ***************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Add one to Number of Records Written.
+     C                     ADD  1         NSRW
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,GL2560C004
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR - Exception Error Processing.  Performed when SDBANKPD is  *
+      *         in error, write to GLJEHHPD, GLJEHPPD or GLJEHSPD fails  *
+      *         or an exception error occurs.                            *
+      *                                                                  *
+      * CALLED BY  :  INIT, HHWRT, HPWRT, HSWRT                          *
+      *                                                                  *
+      * CALLS      :                                                     *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      * Check that this is the first time through the routine
+      * to prevent recursive calling which would loop the program.
+     C           RUN1      IFNE 'Y'
+     C                     MOVE 'Y'       RUN1    1
+      *
+      ** Write out Header and error Texts if Database Error.
+     C           *INU7     IFEQ '1'
+     C                     WRITEGL2560H
+     C                     WRITEGL2560E
+     C                     OUT  LDA
+     C                     END
+      *
+      ** Dump Program and Return control
+     C                     DUMP
+     C                     END
+     C                     RETRN
+      *
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+      *****************************************************************                       CGL013
+      *                                                               *                       CGL013
+      *  SRHXWR - Write a record to PF/GLJEHXPD and add one to the    *                       CGL013
+      *         number of records written                             *                       CGL013
+      *                                                               *                       CGL013
+      *  Called by: DETAIL                                            *                       CGL013
+      *                                                               *                       CGL013
+      *  Calls: None                                                  *                       CGL013
+      *                                                               *                       CGL013
+      *****************************************************************                       CGL013
+      *                                                                                       CGL013
+     C           SRHXWR    BEGSR                                                              CGL013
+      *                                                                                       CGL013
+      ** Move Values to fields for update of PF/GLJEHXPD                                      CGL013
+      *                                                                                       CGL013
+     C                     Z-ADDBAPTDT    HAPTDT                                              CGL013
+     C                     MOVELBABTNB    HABTNB                                              CGL013
+     C                     Z-ADDBABINB    HABINB                                              CGL013
+     C                     MOVELBAADI1    HAADI1                                              CGL013
+     C                     MOVELBAADI2    HAADI2                                              CGL013
+     C                     MOVELBAADI3    HAADI3                                              CGL013
+     C                     MOVELBAADI4    HAADI4                                              CGL013
+     C                     MOVELBAADI5    HAADI5                                              CGL013
+     C                     MOVELBAADI6    HAADI6                                              CGL013
+     C                     MOVELBAAERI    HAAERI                                              CGL013
+      *                                                                                       CGL013
+      ** Write a record to PF/GLJEHXPD                                                        CGL013
+      *                                                                                       CGL013
+     C                     WRITEGLJEHXD0               28                                     CGL013
+      *                                                                                       CGL013
+     C           *IN28     IFEQ *ON                                                           CGL013
+     C           *LOCK     IN   LDA                                                           CGL013
+     C                     MOVE *BLANK    DBKEY                                               CGL013
+     C                     MOVEL'GLJEHXPD'DBFILE                                              CGL013
+     C                     MOVE 'GL2560'  DBPGM                                               CGL013
+     C                     Z-ADD005       DBASE                                               CGL013
+     C                     MOVE *ON       *INU7                                               CGL013
+     C                     MOVE *ON       *INU8                                               CGL013
+     C                     OUT  LDA                                                           CGL013
+     C                     EXSR *PSSR                                                         CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+      ** Add one to Number of Records Written.                                                CGL013
+      *                                                                                       CGL013
+     C                     ADD  1         NXRW                                                CGL013
+      *                                                                                       CGL013
+     C                     ENDSR                                                              CGL013
+      /EJECT                                                                                  CGL013
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas CB Start or re-enter a zone COB')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Module                            */
+/*                                                                   */
+/*       CBC000560 - Start or Re-enter a Zone COB                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK018  *CREATE    Date 19Apr04              */
+/*                      Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       CPK018 - Simplify the starting and re-entering of a COB.    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSTEMID)
+ 
+             DCL        VAR(&SYSTEMID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*****Build*XLIB*name****/                                                                /*CSC043*/
+/** Build XPLIB name. Programs are now in XPLIB. */                                       /*CSC043*/
+ 
+/**********  CHGVAR     VAR(&XLIB) VALUE(&SYSTEMID *CAT 'XLIB')   */                      /*CSC043*/
+             CHGVAR     VAR(&XLIB) VALUE(&SYSTEMID *CAT 'XPLIB')                          /*CSC043*/
+ 
+/* Set up library list for the COB zone */
+ 
+             CALL       PGM(&XLIB/UPC0014) PARM(&SYSTEMID)
+ 
+/* Delete and recreate the COB environment data area */
+ 
+             DLTDTAARA  DTAARA(QTEMP/COBENVIRON)
+             MONMSG     MSGID(CPF2105)
+ 
+             CRTDTAARA  DTAARA(QTEMP/COBENVIRON) TYPE(*CHAR) +
+                          LEN(200) TEXT('Midas CB COB environment +
+                          parameters')
+ 
+/* Initialise the data area */
+ 
+             CHGDTAARA  DTAARA(QTEMP/COBENVIRON (1 2)) VALUE(&SYSTEMID)
+ 
+/* Enter the system */
+ 
+             CALL       PGM(MIDASPLUS)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+/* Abnormal termination */
+ 
+             SNDPGMMSG  MSG('Program CBC000560 ended abnormally - +
+                          see joblog') TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+END:
+ 
+             ENDPGM

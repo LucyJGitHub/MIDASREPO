@@ -1,0 +1,151 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Application Programming Interfaces               */
+/*                                                                   */
+/*       APCCHKTRNS - Check valid/invalid API transaction files      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CCB023 *REDUNDANT  Date 06Aug12              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      CAP190             Date 19May08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BUG14581A          Date 13Aug07              */
+/*                     BUG14581           Date 10Aug07               */
+/*                     BUG13549           Date 16Feb07               */
+/*                     BUG13365           Date 15Feb07               */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                     CAP185             Date 21Apr06               */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                     190678             Date 27Apr01               */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                     CAP006  *CREATE    Date 15Jan99               */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*     CCB023 - COB Restructure - Input Cycle Termination            */
+/*              Restructuring                                        */
+/*     CER059 - German Feature Upgrade to Delhi                      */
+/*     CAP190 - Customer Exchange MQ Enabling. (Recompiled)          */
+/*     BUG14581A - Coding Error in BUG14581                          */
+/*     BUG14581 - APCCHKTRNS Component Fails even if SDAPIPD field   */
+/*                GHHTIN and GHHTVL is equal to 'N'.                 */
+/*     BUG13549 - Reverse MQ Series Interface Changes. Add checking  */
+/*                of Repair Queue table (APCHKRPRQS).                */
+/*     BUG13365 - COB should not proceed if Repair Queue file has    */
+/*              records. Create a report that will show all the      */
+/*              transactions awaiting repair.                        */
+/*     CAP185 - MQ Series Interface                                  */
+/*     190678 - End program when SAR CAP002 is not switched on.      */
+/*     CAP006 - Conversion of Midas inputs to modular API structure  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&VALID) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&INVAL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) VALUE(CAP002)   /*190678*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*190678*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*190678*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*190678*/
+             DCL        VAR(&CAP002) TYPE(*CHAR) LEN(1)               /*190678*/
+             DCL        VAR(&CAP185) TYPE(*CHAR) LEN(1)                                   /*CAP185*/
+             DCL        VAR(&INVALMQ) TYPE(*CHAR) LEN(1)                                /*BUG13549*/
+             DCLF       FILE(SDAPIPD)                                                   /*BUG14581*/
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**/                                                                  /*190678*/
+/* Check if CAP002 is installed */                                    /*190678*/
+/**/                                                                  /*190678*/
+             RCVF                                                                       /*BUG14581*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG14581*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*190678*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*190678*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)    /*190678*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*190678*/
+ 
+/**/                                                                                      /*CAP185*/
+/* Check if CAP185 is installed */                                                        /*CAP185*/
+/**/                                                                                      /*CAP185*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CAP185*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CAP185*/
+             CHGVAR     VAR(&SARD) VALUE('CAP185')                                        /*CAP185*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CAP185*/
+ 
+             CHGVAR     VAR(&CAP185) VALUE('N')                                           /*CAP185*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CAP185) VALUE('Y'))                                        /*CAP185*/
+/*  Check for unauthorised deals                                   */
+ 
+             IF         COND(&CAP185 = 'Y') THEN(DO)                                      /*CAP185*/
+/*           CALL       PGM(APCHKRPRQS) PARM(&INVAL)                         /*CAP185*/ /*BUG13549*/
+             CALL       PGM(APCHKRPRQS) PARM(&INVALMQ)                                  /*BUG13549*/
+             ENDDO                                                                        /*CAP185*/
+                                                                                          /*CAP185*/
+/*           ELSE       CMD(DO)                                              /*CAP185*/ /*BUG13549*/
+                                                                                          /*CAP185*/
+             CALL       PGM(APCHKTRANS) PARM(&VALID &INVAL)
+ 
+/**********  IF         COND(&VALID *EQ 'N') THEN(DO)                  */               /*BUG14581*/
+             IF         COND((&VALID *EQ 'N') *AND (&GHHTVL *EQ 'Y')) THEN(DO)          /*BUG14581*/
+                CHGJOB     SWS('XXXXXX11')
+             SNDMSG     MSG('Transactions outstanding on valid API +
+                          files') TOMSGQ(MOPERQ)
+             ENDDO
+                                                                                          /*CAP185*/
+/*           ENDDO                                                           /*CAP185*/ /*BUG13549*/
+ 
+/*           IF         COND(&INVAL *EQ 'N') THEN(DO)                                   /*BUG13549*/
+/**********  IF         COND((&INVAL *EQ 'N') *OR (&INVALMQ *EQ +
+                          'N')) THEN(DO)                               */  /*BUG13549*/ /*BUG14581*/
+/**********  IF         COND((&INVAL *EQ 'N') *OR (&INVALMQ *EQ +
+                          'N') *AND (&GHHTIN = 'Y')) THEN(DO)          */ /*BUG14581*/ /*BUG14581A*/
+             IF         COND((&INVAL *EQ 'N') *OR (&INVALMQ *EQ +
+                          'N')) THEN(DO)                                               /*BUG14581A*/
+             IF         COND(&GHHTIN = 'Y') THEN(DO)                                   /*BUG14581A*/
+                CHGJOB     SWS('XXXXXX11')
+/*           IF         COND(&CAP185 = 'Y') THEN(DO)                       /*BUG13365*/ /*BUG13549*/
+             IF         COND((&CAP185 = 'Y') *AND (&INVALMQ = 'N')) +
+                          THEN(DO)                                                      /*BUG13549*/
+             CALL       PGM(AP0015LE)                                                   /*BUG13365*/
+             SNDMSG     MSG('Transactions outstanding on Repair +
+                          Queue Table, pls. see report AP0015LE') +
+                          TOMSGQ(MOPERQ)                                                /*BUG13365*/
+             ENDDO                                                                      /*BUG13365*/
+             ELSE       CMD(DO)                                                         /*BUG13365*/
+             SNDMSG     MSG('Transactions outstanding on invalid API +
+                          files') TOMSGQ(MOPERQ)
+             ENDDO                                                                      /*BUG13365*/
+             ENDDO                                                                     /*BUG14581A*/
+                                                                                        /*BUG13365*/
+             ENDDO
+ 
+             ENDDO                                                    /*190678*/
+                                                                      /*190678*/
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDMSG     MSG('APCCHKTRNS terminated abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

@@ -1,0 +1,335 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Delete unneeded journal entries')
+/*OVRF*: OVRDBF JOURNAL HFJRNLPD                                    : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - HISTORY AND AUDIT FACILITY
+     F*                                                               *
+     F*  HF0200 - HAF Delete Unneeded Journal Entries                 *
+     F*                                                               *
+     F*  Function : To romove unwanted journal entries                *
+     F*  (COB)                                                        *
+     F*                                                               *
+     F*  Called By: HFC0200 - Extract journal entires in COB          *
+     F*                                                               *
+     F*  Calls    :                                                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 091250             Date 24Feb95               *
+     F*                 S01379             Date 16SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  091250 - Print File HF0200P1 renamed to HF0200AU as it is    *
+     F*           really an audit report.                             *
+     F*  S01379 - HISTORY AND AUDIT FACILITY                          *
+     F*           NEW PROGRAM CREATED FOR SAR.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*  Compiler directive for file JOURNAL                          *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FJOURNAL UF  E                    DISK
+     F                                              KRECNO RRN
+     FHFPGMSPDIT  F      10           EDISK
+     F*F0200P1O***E*************11*****PRINTER******KINFDS*SPOOL          091250
+     FHF0200AUO   E             11     PRINTER      KINFDS SPOOL          091250
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  01    - BEFORE AND AFTER IMAGES DIFFERENT                    *
+     F*  11    - OVERFLOW CHECK                                       *
+     F*  20    - PROGRAM TO OMIT INDEX                                *
+     F*  60    - OVERFLOW CHECK                                       *
+     F*  99    - EOF JOURNAL                                          *
+     F*                                                               *
+     F* U7,U8  - PROGRAM EXCEPTION ERROR ROUTINE                      *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  DEL   - DELETE RECORD FROM PF/JOURNAL                        *
+     F*  OFLW  - OVERFLOW CHECK                                       *
+     F* *PSSR  - PROGRAM EXCEPTION ERROR ROUTINE                      *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    BEF        38256               TABLE OF RECORD
+     E                    AFT        38256               TABLE OF RECORD
+     E                    C         100 10 0             COUNTER OF OMITS
+     E    HFPGMSPD        PGMO    1 100 10               PGMS TO OMIT
+      /EJECT
+      *
+     ISPOOL       DS
+      **  SPOOL INFORMATION DATA STRUCTURE FOR MAIN PRINT
+      *
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+      *
+     ILDA       E DSLDA
+      **  STANDARD LOCAL DATA AREA FIELDS
+      *
+     ISDBANK    E DSSDBANKPD
+      **  EXTERNAL DS FOR BANK DETAILS
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+      /EJECT
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     Z-ADDRRN       RRN     90
+     C                     Z-ADD0         Y       20
+     C                     Z-ADD0         KEPT    60
+      *
+      ** DEFINE LOCAL DATA AREA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** READ SDBANKL1 VIA ACCESS PROGRAM AOBANKR0
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   RTCD    7
+     C                     PARM '*FIRST ' OPTN    7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** IF NO RECORD FOUND ON SDBANKL1 SET UP DATABASE ERROR
+      *
+     C           RTCD      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'HF0200'  DBPGM            ************
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERR 001*
+     C                     MOVELOPTN      DBKEY            ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** MAIN PROCESSING
+      *
+     C           BEGIN     TAG
+      *
+      ** READ JOURNAL FILE RECORD, EXIT IF EOF
+      *
+     C                     READ JOURNAL                  99
+     C   99                SETON                     LR
+     C   99                GOTO END
+      *
+      ** IF JOURNAL PROGRAM IS A PROGRAM TO OMIT, DELETE THE JOURNAL ENTRY
+      *
+      * IF THE JOURNAL ENTRY IS NOT A 'BEFORE IMAGE, READ THE NEXT JE
+      *
+     C           JOPGM     IFEQ *BLANKS
+     C                     ADD  1         KEPT
+     C                     GOTO BEGIN
+     C                     ELSE
+      *
+     C                     Z-ADD1         INDX    30
+     C           JOPGM     LOKUPPGMO,INDX                20
+     C   20                ADD  1         C,INDX
+     C   20                EXSR DEL
+     C   20                GOTO BEGIN
+      *
+     C                     END
+      *
+      * THE NEXT TESTS DECIDE IF ONLY BEFORE AND/OR AFTER IMAGES ARE
+      * TO BE TREATED
+      *
+      * IF THE JOURNAL ENTRY IS NOT A 'BEFORE IMAGE, READ THE NEXT JE
+      *
+     C           JOENTT    IFNE 'UB'
+     C                     ADD  1         KEPT
+     C                     GOTO BEGIN
+     C                     END
+      *
+      * CHECK IF THE BEFORE (BEF) AND AFTER (AFT) IMAGES ARE THE SAME
+      *
+      * FIRSTLY, MOVE THE FIRST JE RECORD INTO BEF FIELD
+      *
+     C                     MOVEAJOESD     BEF
+     C                     Z-ADDRRN       OLDRRN  90
+      *
+      * THEN READ THE NEXT JE RECORD
+      *
+     C                     READ JOURNAL                  99
+     C   99                SETON                     LR
+     C   99                GOTO END
+      *
+      * AND MOVE THE SECOND JE RECORD INTO AFT FIELD
+      *
+     C                     MOVEAJOESD     AFT
+     C                     SETOF                     01
+      *
+      * NOW COMPARE THE BEFORE AND AFTER JE RECORDS
+      *
+     C                     DO   38        Y
+     C           BEF,Y     IFNE AFT,Y
+     C                     SETON                     01
+     C                     END
+     C                     END
+      *
+      * IF BEFORE AND AFTER IMAGES ARE DIFFERENT, INCREMENT 'KEPT' COUNTER
+      * BY TWO
+      *
+     C   01                ADD  2         KEPT
+     C   01                GOTO BEGIN
+      *
+      * OTHERWISE, INCREMENT 'DOUB' COUNTER BY TWO SINCE
+      * BOTH ENTRIES HAVE TO BE DELETED
+      *
+     C                     Z-ADDRRN       RRN2    90
+     C                     EXSR DEL
+     C           OLDRRN    SETLLJOURNAL
+     C                     READ JOURNAL                  99
+     C                     EXSR DEL
+     C                     ADD  2         DOUB    60
+     C           RRN2      SETGTJOURNAL
+     C                     GOTO BEGIN
+      *
+      ** FINAL PROCESSING
+      *
+     C           END       TAG
+      *
+      ** WRITE REPORT HEADING
+      *
+     C                     WRITEHF0200F1
+      *
+      ** PRINT OMITTED RECORDS
+      *
+     C           1         DO   100       INDX
+     C           PGMO,INDX IFNE *BLANKS
+     C           C,INDX    ANDNE0
+     C                     MOVELPGMO,INDX NAME
+     C                     Z-ADDC,INDX    COUN
+     C                     EXSR OFLW
+     C           *IN60     IFEQ '1'
+     C                     WRITEHF0200F1
+     C                     END
+     C                     WRITEHF0200F2
+     C                     END
+     C                     END
+      *
+      * PRINT NUMBER OF DELETED DOUBLE RECORDS
+      * AND PRINT NUMBER OF KEPT RECORDS
+      *
+     C                     Z-ADDDOUB      F4DOUB
+     C                     Z-ADDKEPT      F4KEPT
+     C                     EXSR OFLW
+     C           *IN60     IFEQ '1'
+     C                     WRITEHF0200F1
+     C                     END
+     C                     WRITEHF0200F4
+      *
+      * WRITE TRAILER
+      *
+     C                     EXSR OFLW
+     C           *IN60     IFEQ '1'
+     C                     WRITEHF0200F1
+     C                     END
+     C                     WRITEHF0200F3
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * DEL    - DELETE RECORD FROM PF/JOURNAL                        *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DEL       BEGSR
+     C                     DELETJOURNAL
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * OFLW   - OVERFLOW CHECK                                       *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OFLW      BEGSR
+      *
+      ** NUMBER OF REMAINING LINES REQUIRED
+      *
+     C                     Z-ADD6         RQDLN   20
+      *
+      ** NUMBER OF REMAINING LINES IS THE OVERFLOW LINE NUMBER MINUS
+      ** THE CURRENT LINE NUMBER
+      *
+     C           OFLLN     SUB  PRTLN     DIFLN   20
+      *
+      ** IF THIS IS LESS THAN THE NUMBER REQUIRED, ALERT NEED FOR A NEW
+      ** PAGE
+      *
+     C           DIFLN     IFLT RQDLN
+     C                     SETON                     60
+     C                     ELSE
+     C                     SETOF                     60
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - PROGRAM EXCEPTION ERROR ROUTINE                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001

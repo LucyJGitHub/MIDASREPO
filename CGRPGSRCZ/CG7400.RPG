@@ -1,0 +1,208 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Audit Letter Reminder Housekeeping')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7400 - CG Audit Letter Reminder Housekeeping               *
+      *                                                               *
+      *  Function: This program deletes record from audit letter      *
+      *            reminder file - CGAUHSPD whose Status Flag is set  *
+      *            to 'C' (Confirmation received) and Processing Date *
+      *            is before the Account Posting Retention Period     *
+      *                                                               *
+      *  Called By: CGC7400 - CG Audit Letter Reminder Housekeeping   *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23253           Date 13Mar09               *
+      *                 CER041  *CREATE    Date 15May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23253 - Add 'Acknowledgement Reception' and 'Date of      *
+      *             Reception' (Recompile)                            *
+      *  CER041 - Audit Letters Correspondence                        *
+      *           (Upgrade of FGE132 and FGE171)                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     FCGAUHSL0UF  E           K        DISK
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /EJECT
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Data structure for definition of bank specific details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+     IDSSDY     E DSDSSDY
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Main routine - Main controlling subroutine                   *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *LOVAL    SETLLCGAUHSL0
+     C                     READ CGAUHSL0                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C           FFLAG     IFEQ 'C'
+     C           BKAPRP    MULT 31        WDATE   50
+     C           BJRDNB    SUB  WDATE     WDATE
+      *
+     C           FPDAT     IFLT WDATE
+     C                     DELETCGAUHSL0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ CGAUHSL0                 89
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  -  INZSR                                         *
+      *  Function    -  Initial processing - First Call Only          *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -                                                *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Error, record not found
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'CG7400 ' DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CALL 'AOGELRR1'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDGELR    PARM SDGELR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+      *
+      ** Database Error
+      *
+     C                     MOVEL'SDGELRPD'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD02        DBASE
+     C                     MOVEL'CG7400 ' DBPGM
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *                                                               *
+      *  Called by: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2008

@@ -1,0 +1,182 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Initialise files for S01456 ON')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - DATABASE UPGRADE UTILITY PROG
+     F*                                                               *
+     F*  Utility to update files:   MKCTLD &  CMPRND                  *
+     F*   (USED WHEN S01456 IS SWITCHED ON)                           *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*    PREV AMEND NO.                     DATE                    *
+     F*                                       DATE                    *
+     F*                                                               *
+     F*****************************************************************
+     F*   CREATED FOR S01456                                          *
+     F*   MD046248 - Finastra Rebranding                              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FMKCTLD  UF  E                    DISK
+     FCMPRND  O   E                    DISK
+     F*
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       89         UPDAT MKCTLD
+     F*
+     F*       99         READ EOF MKCTLD
+     F*
+     F*****************************************************************
+     F*
+     E                    CPY@    1   1 80
+     E*
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E** SR.ARRAY FOR ZACCH, ZCHKH AND ZFWDT                              S01195
+     E*
+     E*****************************************************************
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I** SR. DS   FOR ZACCH, ZCHKH AND ZFWDT                              S01195
+     I*                                                                   S01195
+     I/EJECT                                                              S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     I** SR. DS   FOR ZACCH, ZCHKH AND ZFWDT                              S01195
+     I*                                                                   S01195
+     ILCMP        DS
+     I** Data Area To Form CL Component.
+     I*
+     I                                        1   4 FFC1
+     I                                        5   70N
+     I                                        8  10 BLANK
+     I*                                                                   S01456
+     ILDA         DS                            256
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*    Local Data Area
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/EJECT                                                              S01195
+     C*================================================================
+     C*               P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C**   Reset LDA
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVE 'FF0051  'DBPGM
+     C                     OUT  LDA
+      *                                                                   S01332
+      *                                                                   S01332
+      ** Set Up 'FFC1' Constant For Component Names.
+     C*
+     C                     MOVE 'FFC1'    FFC1
+     C*
+      ** Write components FFC1003 to FFC1015 Inclusive.
+     C*
+     C           3         DO   15        N
+     C                     WRITECMPRNDF
+     C                     END
+     C*
+      ** Write components FFC1021 to FFC1028 Inclusive.
+     C*
+     C           21        DO   28        N
+     C                     WRITECMPRNDF
+     C                     END
+     C*
+      ***  Write component FFC1060.
+     C*
+     C           60        DO   60        N
+     C                     WRITECMPRNDF
+     C                     END
+     C*
+      ** Write component FFC1080
+     C*
+     C           80        DO   80        N
+     C                     WRITECMPRNDF
+     C                     END
+     C*
+     C*
+     C*
+     C** Read the first record and update the remaining records.
+     C*
+     C                     READ MKCTLD                   99
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ** DBERR  03 **S01117
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVEL'MRKT'    DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           *IN99     DOWEQ'0'
+     C*
+     C                     MOVE 'N'       EOMCHK
+     C*
+     C**   PROPOSE NEXT BUSINESS DATE                                     S01456
+     C*                                                                   S01456
+     C                     Z-ADD0         ZNRDYS                          S01456
+     C                     Z-ADDBUSD      ZDAYNO                          S01456
+     C                     ADD  1         ZDAYNO                          S01456
+     C                     EXSR ZFWDT                                     S01456
+     C                     Z-ADDZDYNBR    NXBDT                           S01456
+     C*                                                                   S01456
+     C                     UPDATMKCTLDF                89
+     C*
+     C                     READ MKCTLD                   99
+     C*
+     C                     ENDDO
+     C*
+     C                     SETON                         LR
+     C*
+     C********************************************************************
+     C**
+     C           DBERR     BEGSR                           ** DBERR SR **
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     RETRN
+     C                     ENDSR
+      *
+      *                                                                   S01332
+     C*****************************************************************
+     C*                                                                   S01195
+     C/EJECT                                                              S01195
+     C** ZACCH  SUBROUTINE                                                S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C*
+     C** ZFWDT  SUBROUTINE                                                S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+     C*                                                                   S01195
+     C/EJECT                                                              S01195
+     C** ZCHKH  SUBROUTINE                                                S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C*                                                                   S01195
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,482 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG General Ledger Statements - Driver')          *
+/*OVRF*: OVRDBF (CGSTMTLU) (CGSTMTL1)                               : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG4500 - General Ledger Statements - Driver                  *
+      *                                                               *
+      *  Function:  This program reads a file of all Statements to be *
+      *             produced, and for each one calls the Statement    *
+      *             Extract Process.                                  *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 086161             Date 29Mar95               *
+      *                 082060             Date 24Jan95               *
+      *                 S01522             DATE 22NOV94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  086161 - Change to IGNDECERR(*YES)                           *
+      *  082060 - Redefine Binary fields as Decimal (9,0 Packed)      *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  50   -    No Record found on LF/ACCNT or LF/ACCNTL0          *
+      *  55   -    No Record found on LF/CGSTMTL1 or LF/CGSTMTLU      *
+      *  90   -    ROLBK indicator                                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *................................................................
+      *
+      **  Files for use under Commitment Control
+     FACCNTL0 UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FCGSTMTLUUF  E           K        DISK                           UC
+      **  (Overridden version of CGSTMTL1)
+     F            @STMTL1                           KRENAME@STMTLU
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      *................................................................
+      *
+      **  Files for use under NO Commitment Control
+     FACCNT   UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            ACCNTABF                          KRENAME@ACCNTAB
+     FCGSTMTL1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F/COPY WNCPYSRC,CG4500F001
+     E/SPACE 5
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     I/SPACE 5
+     I*
+     IDSPARM    E DSCGSTMTL1
+     I**  External DS for parameter passed to CG4510
+     I*
+     I            DS
+     I**  DS to format full Account ID for ACCNT DB Error
+     I**********                              1  18 ##ACID                                    CGL029
+     I                                        1  24 ##ACID                                    CGL029
+     I**********                              1   60##CNUM                                    CSD027
+     I                                        1   6 ##CNUM                                    CSD027
+     I                                        7   9 ##CCY
+     I**********                             10  130##ACOD                                    CGL029
+     I**********                             14  150##ACSQ                                    CGL029
+     I**********                             16  18 ##BRCA                                    CGL029
+     I                                       10  190##ACOD                                    CGL029
+     I                                       20  210##ACSQ                                    CGL029
+     I                                       22  24 ##BRCA                                    CGL029
+     I*
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     I/COPY WNCPYSRC,CG4500I001
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRMAIN - Main processing                                    *
+      *   SRINZ  - Initialise Fields on Each Invocation               *
+      *   SRINIT - Initial processing - On First Call                 *
+      *   SRAUDT - Audit Report Processing                            *
+      *   *PSSR  - Exception/Error Handling                           *
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      **  Main processing
+     C                     EXSR SRMAIN
+      *
+      **  Audit processing
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CG4500 - Statements Extract                    *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Access the Statement Driver file ...
+     C           W0CMT     IFEQ 'YES'
+     C           *LOVAL    SETLL@STMTLU
+     C                     READ @STMTLU                  55
+     C                     ELSE
+     C           *LOVAL    SETLL@STMTL1
+     C                     READ @STMTL1                  55
+     C                     ENDIF
+      *
+      **  For each record found ...
+     C           *IN55     DOWEQ*OFF
+      *
+      **  Increment the count of Statement records read.
+     C                     ADD  1         ##SREC  50
+      *
+      **  Set up the parameters and call the Extract program.
+     C                     CALL 'CG4510'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL##RTCD    W0KEY
+      *
+     C                     EXSR SRAUDT
+      *                                                    ***************
+     C                     MOVEL'CG4510  'W0FILE           * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  If the program is running under COMIT control, update the
+      **  Driver record.
+     C           W0CMT     IFEQ 'YES'
+     C                     MOVE 'P'       SDRECI
+     C                     UPDAT@STMTLU
+     C                     ENDIF
+      *
+      **  Update the appropriate ACCNT record, if the Update parameter
+      **  is 'Y'.
+     C           SDUPDA    IFEQ 'Y'
+      *
+      **  Access the appropriate ACCNT record.
+     C           W0CMT     IFEQ 'YES'
+     C                     MOVEL'ACCNTL0 'W0FILE
+     C           ##ACKY    CHAINACCNTABF             50
+     C                     ELSE
+     C                     MOVEL'ACCNT   'W0FILE
+     C           ##ACKY    CHAIN@ACCNTAB             50
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ *ON
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     MOVE SDCNUM    ##CNUM
+     C                     MOVE SDCCY     ##CCY
+     C                     MOVE SDACOD    ##ACOD
+     C                     MOVE SDACSQ    ##ACSQ
+     C                     MOVE SDBRCA    ##BRCA           ***************
+     C                     MOVEL##ACID    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Update the appropriate ACCNT record, if the Update parameter
+      **  is 'Y'.
+     C                     Z-ADDSDULSD    LSTD
+     C                     Z-ADDSDUNXD    NSTD
+     C                     Z-ADDSDULSP    LSTP
+     C                     Z-ADDSDUCFB    CFSB
+     C                     Z-ADDSDUYTD    YTDB
+     C                     MOVE SDUGLB    GLBT
+     C           W0CMT     IFEQ 'YES'
+     C                     UPDATACCNTABF
+     C                     ELSE
+     C                     UPDAT@ACCNTAB
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG4500C001
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG4500C003
+      *
+      **  COMIT successful transactions.
+     C                     COMIT
+      *
+      **  Read next posting for account
+     C           W0CMT     IFEQ 'YES'
+     C                     READ @STMTLU                  55
+     C                     ELSE
+     C                     READ @STMTL1                  55
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4500AU'I#SPLN
+     C                     MOVEL'CG4500  'I#REF
+     C                     MOVE 'CGD1296' I#TITL
+     C                     MOVE 'CGD1297' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      *
+      **  Key list for full Account
+     C           ##ACKY    KLIST
+     C                     KFLD           SDCNUM
+     C                     KFLD           SDCCY
+     C                     KFLD           SDACOD
+     C                     KFLD           SDACSQ
+     C                     KFLD           SDBRCA
+      *
+      **  Open the appropriate files for the input COMIT parameter.
+     C           W0CMT     IFEQ 'YES'
+     C                     OPEN ACCNTL0
+     C                     OPEN CGSTMTLU
+     C                     ELSE
+     C                     OPEN ACCNT
+     C                     OPEN CGSTMTL1
+     C                     ENDIF
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##SREC
+      *
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+     C/COPY WNCPYSRC,CG4500C002
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *                CG9020   - Write Data to UDC Data Files - Audit*
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4500  'I#REF
+     C                     MOVE 'CGD1296' I#TITL
+     C                     MOVE 'CGD1297' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'CGSTMTL1'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##SREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD1296' W0TITL  7
+     C                     PARM 'CGD1297' W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4500  'I#REF
+     C                     MOVE 'CGD1296' I#TITL
+     C                     MOVE 'CGD1297' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

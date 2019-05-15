@@ -1,0 +1,1317 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE CoB Confirmations Msg. Generation')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - LENDING MODULE                                       *
+     F*                                                               *
+     F*  LE4505 - EOD CONFIRMATION MESSAGE EXTRACTION                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD045010           Date 05Apr17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 CSW213             Date 03Jun13               *
+      *                 AR830785           Date 07May13
+      *                 CLE075BO           Date 06Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      *                 255986B            Date 17Nov09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW025             Date 26Mar02               *
+      *                 179848             Date 27Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 188219             Date 19Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 154799             Date 24Feb99               *
+      *                 151295             Date 18Feb99               *
+     F*                 137909             Date 17Jul98               *
+     F*                 CEU004             Date 02Feb98               *
+     F*                 120819             DATE 05FEB98               *
+     F*                 102441             DATE 30OCT97               *
+     F*                 123333             Date 29Sep97               *
+     F*                 CLE004             Date 02Dec96               *
+     F*                 087614             Date 17May95
+     F*                 S01518             Date 03Oct93               *
+     F*                 062037             DATE 09DEC93               *
+     F*                 056739             DATE 06DEC93               *
+     F*                 051522             DATE 24FEB93               *
+     F*                 S01392             DATE 05OCT92               *
+     F*                 E33003             DATE 06DEC91               *
+     F*                 E31467             DATE 08NOV91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD045010 - Component LEC06A 10008 looping during COB caused  *
+      *             by CGL184. Recompile due to changes in ZFRQB3.    *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           for LE Transactions                                 *
+      *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
+      *  AR830785 - Looping on insert of accrued interest adjustment  *
+      *             Extended core fix 263533. (Child: AR830786)       *
+      *  CLE075BO - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  255986B - Recompiled due to changes in MGF330PD              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSW025 - Midas Message Manager                               *
+      *           - Pass original change type                         *
+      *  179848 - Field 34 has a wrong interest amount.  Recompiled   *
+      *           over changed in PF/MGF330PD.                        *
+      *  188219 - Do not allow processing to SR/FSET if Loan number   *
+      *           from PF/LENXTAB is not equal to the record read     *
+      *           in PF/LOAMSDK.                                      *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  154799 - Recompiled due to changes in /COPY,ZACCH            *
+      *  151295 - Problems authorising repayment schedules            *
+      *           Recompiled due to changes in ZCHKH                  *
+     F*  137909 - Ensure correct nostro currency is used when nostro  *
+     F*           exists for both transaction and settlement currency.*
+     F*           New settlement currency field added to confirmation *
+     F*           messages. Only use if CEU004 is on.                 *
+      *  CEU004 - LE Settlement Ccy Conversion Upgrade to DBA R2.0    *
+     F*  120819 - Fix 062037 causes database error when pgm processes *
+     F*           loan amendment with settlement instructions from    *
+     F*           previous loan amendment on file. Change program to  *
+     F*           do READE instead of READP on LOAMS file.            *
+     F*  102441 - Incorrect database error reported in COB - allow    *
+     F*           for loans matured today because loan status set to  *
+     F*           'M' previously in COB, in LEC0605 (LE0450).         *
+     F*  123333 - Repayment may be in facility currency and will      *
+     F*           need to be converted.                               *
+     F*  CLE004 - Customer Lending Enhancements - Syndications.       *
+     F*  087614 - Only access SDNOSTPD if settlement is across a      *
+     F*           nostro.                                             *
+     F*         - Also, the nostro location is the last 3 characters  *
+     F*           of nostro shortname, not first 3 characters.        *
+     F*  S01518 - BLI Lending Swift Enhancements.                     *
+     F*  062037 - Check first the Settlement Inst. before getting     *
+     F*           the Nostro Details. But re-read LOAMSDK since the   *
+     F*           current records' Settlement Inst is being over-     *
+     F*           written by the next records'.                       *
+     F*  056739 - Recompiled when account line for fields :56: and    *
+     F*           :57: are added.                                     *
+     F*  051522 - FIELDS ON FILES NOT SET UP OR ARE INCORRECT         *
+     F*  S01392 - JAPANESE SUB MODULE ENHANCEMENTS                    *
+     F*  E33003 - Database error processing should allow the record   *
+     F*           ID on CLOAN to be 'R' as well as 'D'.               *
+     F*  E31467 - LOAN SUB-TYPE CONTAINS PROCESSING TYPE              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     FLENXT   IF  E           K        DISK
+     F            LENXTAAF                          KIGNORE
+     F            LENXTACF                          KIGNORE
+     FLOAMS   IF  E           K        DISK
+     F            LOAMSDHF                          KIGNORE
+     F            LOAMSZ1F                          KIGNORE
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F                                              KCOMIT
+     FSDCURRL1IF  E           K        DISK                                                 CLE075BO
+     FMGF330PDO   E                    DISK
+     F                                              KCOMIT
+     FLE4505AUO   E                    PRINTER                        UC
+      *
+     C/EJECT
+      *****************************************************************
+      *
+      *    Function of indicators
+      *
+      *    10    EOF LENXTAB/PF
+      *    11    EOF CLOAN/LF
+      *    12    Full cache indicator                                                       CLE075BO
+      *    20    MESSAGE TYPE NOT GENERATED FOR CUSTOMER
+      *    21    CONFIRMATIONS NOT GENERATED FOR CUSTOMER
+      *    22    MESSAGE GROUP NOT GENERATED FOR CUSTOMER
+      *    30    NO AMMENDMENTS EXIST FOR THIS EXTRACT RECORD
+      *    31    EOF LOAMS/LF
+      *    40    ERROR ON WRITE TO FILE
+      *    49    Cache Hit for Currency Codes                                               CLE075BO
+      *    76    Cache hit for Nostro array                                                 CLE075BO
+      *    91    FREQB WORK INDICATOR
+      *    U7U8LR        DB ERROR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                                   123333
+      **  Array containing powers of 10.                                  123333
+     E                    PWR     1   7  7 3                              123333
+      *                                                                   123333
+     E/COPY ZSRSRC,ZDATE2Z1                                               S01392
+     E                    CPY@    1   1 80
+      *
+      **  Copyright array
+      *
+     E                    NGN        15  3
+      *
+      **  Array of message types not generated for customer
+      *
+     E/COPY ZSRSRC,ZHOLE
+     E/COPY ZSRSRC,ZFREQBZ1                                               S01392
+      *                                                                                     CLE075BO
+      ** Caches Arrays                                                                      CLE075BO
+      *                                                                                     CLE075BO
+     E                    #CCY      250  3                                                  CLE075BO
+     E                    #NOS      200 13 0             Nostro Array                       CLE075BO
+     E                    #NSS      200 13 0             Nostro Sorted                      CLE075BO
+     E                    #NSK      200  5               Nostro Cache Key                   CLE075BO
+      *
+     ILENXTABF
+     I              RECI                            XRECI
+     I              BRCA                            XBRCA
+     I              LNRF                            XLNRF
+     I              CCY                             XCCY
+     I              AMTP                            XAMTP
+     I              TAMT                            XTAMT
+      *
+      **  Rename conflicting LENXT fields
+      *
+     ICLOANCLF
+     I              RECI                            LRECI
+     I              LNRF                            LLNRF
+     I              BRCA                            LBRCA
+     I              VDAT                            LVDAT
+     I              CCY                             LCCY
+     I              SCCY                            STCY                  137909
+      *
+      **  Rename conflicting CLOAN fields
+      *
+     ILOAMSDKF
+     I              RECI                            ARECI
+     I              LNRF                            ALNRF
+     I              BRCA                            ABRCA
+     I              LTYP                            ALTYP
+     I              VDAT                            AVDAT
+     I              AMTP                            AAMTP
+     I              CCY                             ACCY
+     I              PRAM                            APRAM
+     I              INTA                            AINTA
+     I              CNUM                            ACNUM
+     I              WTXA                            AWTXA
+     I              FEAM                            AFEAM
+     I              TAMT                            ATAMT
+     I              REPT                            AREPT
+     I              RSTM                            ARSTM                 S01518
+     I              RONS                            ARONS                 S01518
+     I              RIBN                            ARIBN                 S01518
+     I              RIBA                            ARIBA                 S01518
+     I              ROBN                            AROBN                 S01518
+     I              ROCN                            AROCN                 S01518
+     I              PSTM                            APSTM                 S01518
+     I              PONS                            APONS                 S01518
+     I              PIBN                            APIBN                 S01518
+     I              PIBA                            APIBA                 S01518
+     I              POBN                            APOBN                 S01518
+     I              POCN                            APOCN                 S01518
+     I              RCRN                            ARCRN                 S01518
+     I              RCRA                            ARCRA                 S01518
+     I              RVNO                            ARVNO                 S01518
+     I              AWBN                            AAWBN                 S01518
+     I              AWBA                            AAWBA                 S01518
+     I              BENN                            ABENN                 S01518
+     I              BENA                            ABENA                 S01518
+      *
+      **  Rename conflicting LOAMS fields
+      *
+     I**********  DS                             12                                           CGL029
+     I**********                              1  12 OSAC                                      CGL029
+     I            DS                                                                          CGL029
+     I                                        1  18 OSAC                                      CGL029
+     I                                        1   2 NOSNO
+     I                                        1   6 KCUST
+     I**********                              7  10 KACOD                                     CGL029
+     I**********                             11  12 KSEQN                                     CGL029
+     I                                        7  16 KACOD                                     CGL029
+     I                                       17  18 KSEQN                                     CGL029
+      *
+      **  Data structure for access to settlement location
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *                                                                                       CLE141
+      ** CLE141 Business Day Convention                                                       CLE141
+      *                                                                                       CLE141
+     IARCY        DS                             30                                           CLE141
+     I                                        1   3 C1PI                                      CLE141
+     I                                        4   6 C2PI                                      CLE141
+     I                                        7   9 C3PI                                      CLE141
+     I                                       10  12 C4PI                                      CLE141
+     I                                       13  15 C5PI                                      CLE141
+     I                                       16  18 C6PI                                      CLE141
+     I                                       19  21 C7PI                                      CLE141
+     I                                       22  24 C8PI                                      CLE141
+     I                                       25  27 C9PI                                      CLE141
+     I                                       28  30 C0PI                                      CLE141
+     IALOC        DS                             30                                           CLE141
+     I                                        1   3 L1PI                                      CLE141
+     I                                        4   6 L2PI                                      CLE141
+     I                                        7   9 L3PI                                      CLE141
+     I                                       10  12 L4PI                                      CLE141
+     I                                       13  15 L5PI                                      CLE141
+     I                                       16  18 L6PI                                      CLE141
+     I                                       19  21 L7PI                                      CLE141
+     I                                       22  24 L8PI                                      CLE141
+     I                                       25  27 L9PI                                      CLE141
+     I                                       28  30 L0PI                                      CLE141
+      *
+      **  RUNDAT data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      **  Data structure for bank file
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      **  Data structure for customer file
+      *
+     ISDMMOD    E DSSDMMODPD
+      *
+      **  Data structure for MIDAS modules
+      *
+     I***SDNOST*   E DSSDNOSTPD                                                             CLE075BO
+     ISDNOST    E DSSDNOSTPD                200                                             CLE075BO
+      *
+      **  Data structure for nostro file
+      *
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACC1                                    CGL029
+      *
+     I*****         BKAPDT                          APDA                  S01392
+      *
+      ** Data structure for general ledger details
+      ** Field renamed for use by FREQB/sr
+      *
+     I***SDCURR    E DSSDCURRPD                                                      123333 CLE075BO
+     ISDCURR    E DSSDCURRPD                250                                             CLE075BO
+      *
+     IDSFDY     E DSDSFDY
+      *
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      **  Long data structure for access programs
+      *
+     I/COPY ZSRSRC,ZHOLI
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Local data area
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      ****INIT**-*initial*process**************************************                     CLE075BO
+      *   *INZSR - Initial Process                                    *                     CLE075BO
+      *   SETF  - Set up GDF file                                     *
+      *   DEST  - determine destination customer address              *
+      *   VALD  - generate message type for destination customer ?    *
+      *   ACUM  - accumulate event amounts                            *
+      *   F330  - format fields for MT330                             *
+      *   FSET  - determine future settlement location                *
+      *   FREQB - increment day no. depending on repayment freq.      *
+      *   STCY1 - Set up settlement currency for MT330                *   137909
+      *   *PSSR - error handling                                      *
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      ****Calls*-*INIT*initial*process*********************************                     CLE075BO
+      *           SETF set up GDF file                                *
+      *           DEST determine destination customer                 *
+      *           VALD generate message for destination customer ?    *
+      *****************************************************************
+      *****************************************************************                     CLE075BO
+      ****Perform*initial*process**************************************                     CLE075BO
+      *****************************************************************                     CLE075BO
+     C**********           EXSR INIT                                                        CLE075BO
+      *
+      **  Read first confirmations extract record
+      *
+     C                     READ LENXT                    10
+      *
+      **  Do until EOF
+      *
+     C           *IN10     DOWEQ'0'
+      *
+      **  Set up generation driver file fields
+      *
+     C                     EXSR SETF
+      *
+      **  Access corresponding loan record
+      *
+     C           XLNRF     CHAINCLOAN                11
+     C                     MOVE CHTP      @CHG    1                                           CSW025
+      *
+     C************IN11     IFEQ '1'                                       E33003
+     C***********LRECI     ORNE 'D'                                       E33003
+     C           LRECI     IFNE 'D'                                       E33003
+     C           LRECI     ANDNE'R'                                       E33003
+     C           LRECI     ANDNE'M'                                       102441
+     C           *IN11     OREQ '1'                                       E33003
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVELXLNRF     DBKEY            * DB ERROR 001*
+     C                     MOVEL'CLOAN'   DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   123333
+      * Get no. of dec. places.                                           123333
+     C                     Z-ADDCURARR    A                                                 CLE075BO
+     C           LCCY      LOKUP#CCY,A                   49                                 CLE075BO
+     C           *IN49     IFEQ '1'                                                         CLE075BO
+     C           A         OCUR SDCURR                                                      CLE075BO
+     C                     ELSE                                                             CLE075BO
+     C                     CALL 'AOCURRR0'                                123333
+     C                     PARM '*MSG'    @RTCD                           123333
+     C                     PARM '*KEY'    @OPTN                           123333
+     C                     PARM LCCY      @CURR   3                       123333
+     C           SDCURR    PARM SDCURR    DSSDY                           123333
+      *                                                                   123333
+     C           @RTCD     IFNE *BLANKS                                   123333
+     C           *LOCK     IN   LDA                                       123333
+     C                     Z-ADD9         DBASE                           123333
+     C                     MOVELLCCY      DBKEY                           123333
+     C                     MOVEL'SDCURRPD'DBFILE                          123333
+     C                     OUT  LDA                                       123333
+     C                     EXSR *PSSR                                     123333
+     C                     ENDIF                                          123333
+     C                     ENDIF                                                            CLE075BO
+     C                     Z-ADDA6NBDP    L#NBDP  10                      123333
+      *
+      **  Determine destination customer address
+      *
+     C                     EXSR DEST
+      *
+      **  Write message if message type required for customer
+      *
+     C           CHTP      IFNE 'R'
+     C                     EXSR VALD
+     C                     END
+      *
+      **  Read next confirmation extract record
+      *
+     C                     READ LENXT                    10
+      *
+     C                     END
+      *
+      **  Terminate program
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      ****INIT*-*inital*process****************************************                     CLE075BO
+      *   *INZSR - Initial Process                                    *                     CLE075BO
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C********** INIT      BEGSR                                                            CLE075BO
+     C           *INZSR    BEGSR                                                            CLE075BO
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'LE4505'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for report title
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 002*
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Determine date format for FREQB/SR
+      *
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+      *
+      **  Access SDGELRPD for accruals profit date
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 003*
+     C                     MOVE 'SDGELRPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+      *
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+     C*                                                                   S01518
+     C**  Access SAR details file to see if S01518 is installed           S01518
+      *                                                                   S01518
+     C                     CALL 'AOSARDR0'                                S01518
+     C                     PARM '       ' @RTCD   7                       S01518
+     C                     PARM '*VERIFY' @OPTN   7                       S01518
+     C                     PARM 'S01518'  @SARD   6                       S01518
+      *                                                                   S01518
+     C           @RTCD     IFEQ *BLANK                                    S01518
+     C                     MOVE 'Y'       S01518  1                       S01518
+     C                     ELSE                                           S01518
+     C           @RTCD     IFNE '*NRF   '                                 S01518
+     C           *LOCK     IN   LDA                                       S01518
+     C                     MOVEL'SCSARDPD'DBFILE           ************   S01518
+     C                     MOVEL@SARD     DBKEY            * DBERR 05 *   S01518
+     C                     Z-ADD5         DBASE            ************   S01518
+     C                     OUT  LDA                                       S01518
+     C                     EXSR *PSSR                                     S01518
+     C                     ELSE                                           S01518
+     C                     MOVE 'N'       S01518                          S01518
+     C                     END                                            S01518
+     C                     END                                            S01518
+      *                                                                   CLE004
+      **  Access SAR details file to see if CLE004 is installed           CLE004
+      *                                                                   CLE004
+     C                     CALL 'AOSARDR0'                                CLE004
+     C                     PARM '       ' @RTCD   7                       CLE004
+     C                     PARM '*VERIFY' @OPTN   7                       CLE004
+     C                     PARM 'CLE004'  @SARD   6                       CLE004
+      *                                                                   CLE004
+     C           @RTCD     IFEQ *BLANK                                    CLE004
+     C                     MOVE 'Y'       CLE004  1                       CLE004
+     C                     ELSE                                           CLE004
+     C           @RTCD     IFNE '*NRF   '                                 CLE004
+     C           *LOCK     IN   LDA                                       CLE004
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE004
+     C                     MOVEL@SARD     DBKEY            * DBERR 08 *   CLE004
+     C                     Z-ADD8         DBASE            ************   CLE004
+     C                     OUT  LDA                                       CLE004
+     C                     EXSR *PSSR                                     CLE004
+     C                     ELSE                                           CLE004
+     C                     MOVE 'N'       CLE004                          CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CEU004
+      ** Access SAR details file to see if CEU004 is installed            CEU004
+      *                                                                   CEU004
+     C                     MOVE 'N'       CEU004  1        Set SAR Flag   CEU004
+      *                                                                   CEU004
+     C                     CALL 'AOSARDR0'                 Rtv SAR Dtls   CEU004
+      *                                                    Input:         CEU004
+     C                     PARM '       ' @RTCD   7        -Return Code   CEU004
+     C                     PARM '*VERIFY' @OPTN   7        -Option        CEU004
+     C                     PARM 'CEU004'  @SARD   6        -SAR No        CEU004
+      *                                                                   CEU004
+     C           @RTCD     IFEQ *BLANK                     If Found       CEU004
+     C                     MOVE 'Y'       CEU004            Set SAR Flag  CEU004
+      *                                                                   CEU004
+     C                     ELSE                            Else           CEU004
+     C           @RTCD     IFNE '*NRF   '                   If # NoRecFnd CEU004
+     C                     MOVEL'SCSARDPD'DBFILE             Set File     CEU004
+     C                     MOVEL'*VERIFY' DBKEY              Set Key      CEU004
+     C                     Z-ADD11        DBASE              Set DBase RefCEU004
+     C                     OUT  LDA                          Wrt Record   CEU004
+     C                     EXSR *PSSR                        Exec SR PSSR CEU004
+     C                     ENDIF                            End If        CEU004
+     C                     ENDIF                           End If         CEU004
+      *                                                                                       CLE141
+      ** Check if CLE141 is switched on                                                       CLE141
+      *                                                                                       CLE141
+     C                     MOVEL'N'       CLE141  1                                           CLE141
+     C                     CALL 'AOSARDR0'                                                    CLE141
+     C                     PARM *BLANKS   @RTCD                                               CLE141
+     C                     PARM '*VERIFY' @OPTN                                               CLE141
+     C                     PARM 'CLE141'  @SARD                                               CLE141
+     C           @RTCD     IFEQ *BLANKS                                                       CLE141
+     C                     MOVEL'Y'       CLE141                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                     CLE075BO
+      ** Full Cache SDCURRPD                                                                CLE075BO
+      *                                                                                     CLE075BO
+     C           *LOVAL    SETLLSDCURRL1                                                    CLE075BO
+     C                     Z-ADD250       A       30                                        CLE075BO
+     C           A         OCUR SDCURR                                                      CLE075BO
+     C                     READ SDCURRL1                 12                                 CLE075BO
+     C                     MOVE A6CYCD    #CCY,A                                            CLE075BO
+     C           *IN12     DOWEQ'0'                                                         CLE075BO
+     C           A         ANDGT0                                                           CLE075BO
+     C                     SUB  1         A                                                 CLE075BO
+     C           A         OCUR SDCURR                                                      CLE075BO
+     C                     READ SDCURRL1                 12                                 CLE075BO
+     C                     MOVE A6CYCD    #CCY,A                                            CLE075BO
+     C                     ENDDO                                                            CLE075BO
+     C           A         IFEQ 0                                                           CLE075BO
+     C                     MOVEL'SDCURRPD'DBFILE                                            CLE075BO
+     C                     MOVEL'OVRFLOW' DBKEY                                             CLE075BO
+     C                     SETON                     U7U8LR                                 CLE075BO
+     C                     EXSR *PSSR                                                       CLE075BO
+     C                     ENDIF                                                            CLE075BO
+     C                     Z-ADDA         CURARR  30                                        CLE075BO
+      *                                                                                     CLE075BO
+      ** LRU element key and record arrival sequence                                        CLE075BO
+      *                                                                                     CLE075BO
+     C                     Z-ADD0         NOSKEY 130                                        CLE075BO
+     C           *LIKE     DEFN NOSKEY    NOSSEQ                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** Set start index to upper limit of LRU Caching arrays                               CLE075BO
+      *                                                                                     CLE075BO
+     C                     Z-ADD200       NOSIDX  40                                        CLE075BO
+     C           *LIKE     DEFN NOSIDX    NOSPRV                                            CLE075BO
+     C           *LIKE     DEFN NOSIDX    F                                                 CLE075BO
+      *                                                                                     CLE075BO
+      ** Initialize work fields of LRU array routines                                       CLE075BO
+      *                                                                                     CLE075BO
+     C                     MOVE *BLANK    NOSIC   1                                         CLE075BO
+     C                     MOVE *BLANKS   KEYNOS  5                                         CLE075BO
+     C                     Z-ADD200       NOSPRV                                            CLE075BO
+     C                     Z-ADD200       F                                                 CLE075BO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *    SETF - Set up GDF file                                     *
+      *    Called by - main process                                   *
+      *****************************************************************
+      *
+     C           SETF      BEGSR
+      *
+      **  Clear message fields not used by LE
+      **  if S01518 is off                                                S01518
+      *
+     C                     MOVE *BLANKS   MGPIBN
+     C                     Z-ADD0         MGTOTI
+     C                     Z-ADD0         MGNOTD
+     C                     MOVE *BLANKS   MGAWBA
+     C                     MOVE *BLANKS   MGRVNO
+     C                     MOVE *BLANKS   MGBENN
+     C                     MOVE *BLANKS   MGBRKC
+     C                     MOVE *BLANKS   MGEVTP
+      *
+     C                     MOVE '330'     @TYP    3        *MT330 message*
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   DEST - determine destination customer                       *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           DEST      BEGSR
+      *
+      **  Using customer no. of deal
+      *
+     C                     MOVE CNUM      @DEST   8
+      *
+      **  Access SDCUSTPD with access object
+      *
+     C                     MOVE *BLANKS   @KEY1  10
+     C                     MOVE *BLANKS   @KYST   7
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @DEST     @KEY1
+     C                     PARM *BLANKS   @KYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVEL@DEST     DBKEY            * DB ERROR 004*
+     C                     MOVEL'SDCUSTPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** Load array with fields containing message types not to be
+      ** generated for this customer
+      *
+     C                     MOVE BBNG01    NGN,1
+     C                     MOVE BBNG02    NGN,2
+     C                     MOVE BBNG03    NGN,3
+     C                     MOVE BBNG04    NGN,4
+     C                     MOVE BBNG05    NGN,5
+     C                     MOVE BBNG06    NGN,6
+     C                     MOVE BBNG07    NGN,7
+     C                     MOVE BBNG08    NGN,8
+     C                     MOVE BBNG09    NGN,9
+     C                     MOVE BBNG10    NGN,10
+     C                     MOVE BBNG11    NGN,11
+     C                     MOVE BBNG12    NGN,12
+     C                     MOVE BBNG13    NGN,13
+     C                     MOVE BBNG14    NGN,14
+     C                     MOVE BBNG15    NGN,15
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   VALD - generate message type for destination customer ?     *
+      *   Called by - main process                                    *
+      *   Calls - ACUM accumulate event amounts                       *
+      *         - F330 format message fields                          *
+      *         - SEQN update CLOAN/LF with incremented sequence no.s *
+      *****************************************************************
+      *
+     C           VALD      BEGSR
+      *
+      **  Check message type to be generated for destination customer
+      *
+     C           @TYP      LOKUPNGN                      20
+     C           '3**'     LOKUPNGN                      21
+     C           '33*'     LOKUPNGN                      22
+      *
+     C           *IN20     IFNE '1'
+     C           *IN21     ANDNE'1'
+     C           *IN22     ANDNE'1'
+      *
+      **  Accumulate event amounts
+      *
+     C                     EXSR ACUM
+      *
+      **  Format message fields
+      *
+     C                     EXSR F330
+      *
+     C                     COMIT
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   ACUM - Accumulate amounts for all events for this loan      *
+      *   Called by - VALD                                            *
+      *   Calls - FBAL calculate forward balance                      *
+      *         - FSET determine future settlement location           *
+      *         - FREQB increment day no. depending on repay freq.    *
+      *         - ZFWDT calculate nth working day                     *
+      *****************************************************************
+      *
+     C           ACUM      BEGSR
+      *
+      **  Initialise forward balance work field to carried forward
+      **  principal amount and date work field to todays date
+      *
+     C                     MOVE CPAM      FORBAL 130
+     C                     MOVE BJRDNB    AMDAT   50
+     C                     Z-ADD0         AMSEQ   30
+      *
+      **  Set up key to locate start of ammendments to this loan
+      *
+     C           AMKEY     KLIST
+     C                     KFLD           XLNRF
+     C                     KFLD           AMDAT
+     C                     KFLD           AMSEQ
+      *
+     C           AMKEY     SETGTLOAMS                30
+      *
+      **  Check next ammendment is to this loan
+      *
+     C           *IN30     IFNE '1'
+     C                     READ LOAMS                    31
+     C           ALNRF     IFEQ XLNRF
+      *
+      **  Loop to accumulate ammendment amounts and adjust accordingly
+      *
+     C           *IN31     DOWNE'1'
+     C           ALNRF     ANDEQXLNRF
+     C           AVDAT     ANDLEVDATS
+      *
+      **  Adjust carried forward principal according to ammendment type
+      *
+     C                     EXSR FBAL
+      *
+      ** Read next Loan Amendment
+      *
+     C                     READ LOAMS                    31
+      *
+     C                     END
+     C*                                                                   062037
+     C** Retrieve last valid record for further processing.               062037
+     C*                                                                   062037
+     C           *IN31     IFNE '1'                                       062037
+     C***********          READPLOAMS                    31         062037120819
+     C           AMKEY     READELOAMS                    31               120819
+     C                     END                                            062037
+     C*                                                                   062037
+     C                     END
+     C                     END
+      *
+      **  If there are repayments to be made...
+      *
+     C           NRPD      IFNE 0
+     C           RFRQ      ANDNE*BLANKS
+     C*
+     C** If settlement instructions are not equal to '00'                 062037
+     C*                                                                   062037
+     C           OSAC      IFNE *BLANKS                                   062037
+      *                                                                   188219
+      ** NEED TO CHECK IF LOAN NUMBER READ IN PF/LOAMSDK IS EQUAL TO      188219
+      ** LOAN NUMBER BEING PROCESSED FROM PF/LENXTAB                      188219
+      *                                                                   188219
+     C           ALNRF     ANDEQXLNRF                                     188219
+      *
+      **  Find future settlement location
+      *
+     C                     EXSR FSET
+     C                     ELSE                                           062037
+     C                     MOVE *BLANKS   FLOC                            062037
+     C                     END                                            062037
+      *
+      **  Set up inputs for repayment calculation
+      *
+     C                     MOVE RFRQ      ZFREQ   1
+     C                     Z-ADDRBDT      ZDAYNO  50
+     C                     Z-ADDRDYN      ZMDAY   20
+     C                     MOVE XCCY      ZCCY
+     C                     MOVE FLOC      ZLOC
+      *
+      **  Loop to accumulate repayment amounts and adjust forward
+      **  balance accordingly
+      *
+     C                     Z-ADDNRPD      NEXTDT
+      *
+     C           NEXTDT    DOWLEVDATS
+     C           NEXTDT    ANDGENRPD                                                        AR830785
+     C           ZFREQ     ANDNE*BLANK
+      *
+     C                     SUB  RAMT      FORBAL
+     C*****                EXSR FREQB                                    S01392
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** SETP      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** SETP      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** SETP      ANDEQ08                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** SETP      ANDEQ02                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** SETP      ANDEQ12                                                    CLE141 CLE141A
+     C                     EXSR ZFRQB3                                                        CLE141
+     C**********           MOVEL'F'       PMODE                                       CLE141 CLE141A
+     C**********           CALL 'LEZBDYRF'                                            CLE141 CLE141A
+     C**********           PARM           ZDAYNO                                      CLE141 CLE141A
+     C**********           PARM *ZEROS    ZNRDYS                                      CLE141 CLE141A
+     C**********           PARM           ARCY                                        CLE141 CLE141A
+     C**********           PARM           ALOC                                        CLE141 CLE141A
+     C**********           PARM 'F'       PMODE   1                                   CLE141 CLE141A
+     C**********           PARM *ZEROS    ZDYNBR                                      CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                   CLE141A
+     C                     PARM           ZDAYNO                                             CLE141A
+     C                     PARM           ARCY                                               CLE141A
+     C                     PARM           ALOC                                               CLE141A
+     C                     PARM *BLANKS   PPAYC   1                                          CLE141A
+     C                     PARM BJDFIN    PDFIN   1                                          CLE141A
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                         CLE141A
+     C                     Z-ADDPAJDT     ZDYNBR                                             CLE141A
+     C                     ELSE                                                               CLE141
+     C                     EXSR ZFREQB                                   S01392
+     C                     Z-ADD*ZERO     ZNRDYS
+     C                     EXSR ZFWDT
+     C                     ENDIF                                                              CLE141
+     C                     MOVE ZDYNBR    NEXTDT  50
+      *
+     C                     END
+     C                     END
+      *
+      **  Set forward balance to zero if negative
+      *
+     C           FORBAL    IFLE 0
+     C                     Z-ADD0         FORBAL
+     C                     END
+     C/COPY WNCPYSRC,LE4505C001
+      *
+      **  Put Extract Total Amount in Principal field if not zero
+      *
+     C           XTAMT     IFGT 0
+     C/COPY WNCPYSRC,LE4505C002
+     C                     Z-ADDXTAMT     MGPCPL
+     C                     ELSE
+     C                     Z-ADDFORBAL    MGPCPL
+     C/COPY WNCPYSRC,LE4505C003
+     C                     END
+      *
+      **  Output forward balance as New Amount
+      *
+     C                     Z-ADDFORBAL    MGNAMT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   F330 - Format message specific fields for MT330             *
+      *   Called by - VALD                                            *
+      *****************************************************************
+      *
+     C           F330      BEGSR
+      *
+      **  Format fields for MT330
+      *
+     C                     MOVEL'LE'      MGMODI
+      *
+     C                     MOVELBJRDNB    MGTDAT
+     C                     MOVELCNUM      MGCNUM
+     C                     MOVELXLNRF     MGTNUM
+     C                     MOVELLBRCA     MGBRCA
+     C                     Z-ADDVDATS     MGVDAT
+     C                     MOVELLCCY      MGCCY
+      *
+     C                     Z-ADDMDAT      MGMDAT
+     C                     Z-ADDINTR      MGINTR
+     C                     Z-ADDNIDT      MGNIDT
+     C                     Z-ADDSLID      MGSLID
+     C                     MOVELICBS      MGICBS
+     C                     MOVELIPFR      MGIPFR
+     C                     MOVELXAMTP     MGAMTP
+     C                     MOVELLTYP      MGTTYP
+     C***********          MOVELPTYP      MGTSTP                          E31467
+     C                     MOVELSUTP      MGTSTP                          E31467
+     C                     MOVELCHTP      MGCHTP
+     C                     MOVELTSTN      MGAWBN
+     C                     MOVELOSDA      MGPONS
+     C                     MOVELOSDB      MGPOBR
+     C                     MOVELOMDB      MGROBR
+     C                     MOVELOMDA      MGRONS                          051522
+     C                     MOVELSDST      MGPSTM                          051522
+     C                     MOVELMDST      MGRSTM                          051522
+     C           S01518    IFEQ 'Y'                                       S01518
+     C                     MOVELRIBN      MGRIBN                          S01518
+     C                     MOVELRIBA      MGRIBA                          S01518
+     C                     MOVELPIBN      MGPIBN                          S01518
+     C                     MOVELPIBA      MGPIBA                          S01518
+     C                     MOVELAWBA      MGAWBA                          S01518
+     C                     MOVELRVNO      MGRVNO                          S01518
+     C                     MOVELBENN      MGBENN                          S01518
+     C                     ELSE                                           S01518
+     C                     MOVELCNUM      MGBENN                          051522
+     C                     END                                            S01518
+     C                     MOVEL'L'       MGLORD                          051522
+      *
+      ** Move settlement currency.                                        137909
+     C           CEU004    IFEQ 'Y'                                       137909
+     C                     EXSR STCY1                                     137909
+     C                     ENDIF                                          137909
+      *                                                                   137909
+     C           MGCHTP    IFEQ *BLANK                                                        CSW025
+     C                     MOVE @CHG      MGCHTP                                              CSW025
+     C                     ENDIF                                                              CSW025
+     C                     WRITEMGF330D0               40
+      *
+     C           *IN40     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVEL@TYP      DBKEY            * DB ERROR 006*
+     C                     MOVEL'MGF330PD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   FBAL - Calculate forward balance                            *
+      *   Called by - ACUM ( event amount accumulation SR )           *
+      *****************************************************************
+      *
+     C           FBAL      BEGSR
+      *
+      **  Principal Increase
+      *
+     C           AAMTP     IFEQ 'PI'
+     C           AAMTP     OREQ 'PT'                                      CLE004
+     C           CLE004    ANDEQ'Y'                                       CLE004
+     C                     ADD  APRAM     FORBAL
+     C                     END
+      *
+      **  Repayment
+      *
+     C           AAMTP     IFEQ 'RE'
+      *                                                                   123333
+      * May be in facility currency, so convert to loan currency.         123333
+     C           ACCY      IFNE LCCY                                      123333
+      *                                                                   123333
+     C                     Z-ADDCURARR    A                                                 CLE075BO
+     C           ACCY      LOKUP#CCY,A                   49                                 CLE075BO
+     C           *IN49     IFEQ '1'                                                         CLE075BO
+     C           A         OCUR SDCURR                                                      CLE075BO
+     C                     ELSE                                                             CLE075BO
+     C                     CALL 'AOCURRR0'                                123333
+     C                     PARM '*MSG'    @RTCD                           123333
+     C                     PARM '*KEY'    @OPTN                           123333
+     C                     PARM ACCY      @CURR   3                       123333
+     C           SDCURR    PARM SDCURR    DSSDY                           123333
+      *                                                                   123333
+     C           @RTCD     IFNE *BLANKS                                   123333
+     C           *LOCK     IN   LDA                                       123333
+     C                     Z-ADD10        DBASE                           123333
+     C                     MOVELACCY      DBKEY                           123333
+     C                     MOVEL'SDCURRPD'DBFILE                          123333
+     C                     OUT  LDA                                       123333
+     C                     EXSR *PSSR                                     123333
+     C                     ENDIF                                          123333
+     C                     ENDIF                                                            CLE075BO
+      *                                                                   123333
+     C           L#NBDP    SUB  A6NBDP    W#PWR   10                      123333
+     C                     ADD  4         W#PWR                           123333
+     C           FMDI      IFEQ 'D'                                       123333
+     C           PWR,W#PWR MULT FCXR      W#FRAT 179H                     123333
+     C                     ELSE                                           123333
+     C           PWR,W#PWR DIV  FCXR      W#FRAT    H                     123333
+     C                     ENDIF                                          123333
+      *                                                                   123333
+     C                     MULT W#FRAT    APRAM     H                     123333
+     C                     MULT W#FRAT    ATAMT     H                     123333
+     C                     ENDIF                                          123333
+      *                                                                   123333
+     C           AREPT     IFLT 3
+     C                     SUB  APRAM     FORBAL
+     C                     ELSE
+     C                     SUB  ATAMT     FORBAL
+     C                     END
+     C                     END
+      *
+      **  Manual Repayment
+      *
+     C           AAMTP     IFEQ 'MR'
+     C           AAMTP     OREQ 'PF'                                      CLE004
+     C           CLE004    ANDEQ'Y'                                       CLE004
+     C                     Z-ADDAPRAM     WORK   130
+     C                     ADD  AINTA     WORK
+     C                     ADD  AWTXA     WORK
+     C                     ADD  AFEAM     WORK
+     C                     SUB  WORK      FORBAL
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   FSET - Obtain future settlement location                    *
+      *   Called by - ACUM ( event amount accumulation SR )           *
+      *****************************************************************
+      *
+     C           FSET      BEGSR
+      *                                                                   087614
+     C                     MOVE *BLANKS   FLOC                            087614
+      ** FOR TYPE 01,02,07,08 OR 12, SETTLEMENT LOCATION IS DETERMINED    087614
+      ** BY THE NOSTRO BRANCH.                                            087614
+     C           SETP      IFEQ 01                                        087614
+     C           SETP      OREQ 02                                        087614
+     C           SETP      OREQ 07                                        087614
+     C           SETP      OREQ 08                                        087614
+     C           SETP      OREQ 12                                        087614
+      *
+      **  Our settlement ac. can be Nostro no. or full ac. name
+      *
+     C           KACOD     IFEQ *BLANKS
+     C                     MOVE NOSNO     @NOSN   2
+     C                     MOVE *BLANKS   @CUST   6
+     C                     ELSE
+     C                     MOVE KCUST     @CUST
+     C                     MOVE *BLANKS   @NOSN
+     C                     END
+      *                                                                   CEU004
+      ** If feature CEU004 is on                                          CEU004
+      ** If Settlement currency for EMU non-blank, set the Nostro CurrencyCEU004
+      *                                                                   CEU004
+     C           CEU004    IFEQ 'Y'                        If Feature On  CEU004
+      *                                                                   CEU004
+     C           SCCY      IFNE *BLANKS                     If SetCcy # BlCEU004
+     C                     MOVE SCCY      XCCY               Set Currency CEU004
+     C                     ENDIF                            End If        CEU004
+      *                                                                   CEU004
+     C                     ENDIF                           End If         CEU004
+      *
+      **  Using our settlement ac and currency from LENXTAB/pf
+      **  access SDNOSTPD with access object
+      *
+     C                     MOVELXCCY      KEYNOS                                            CLE075BO
+     C                     MOVE @NOSN     KEYNOS                                            CLE075BO
+     C                     ADD  1         NOSSEQ                                            CLE075BO
+     C                     EXSR CHKNOS                                                      CLE075BO
+      *                                                                                     CLE075BO
+      ** Use details from array if KEYNOS is found, otherwise,                              CLE075BO
+      ** retrieve details from program call                                                 CLE075BO
+      *                                                                                     CLE075BO
+     C           NOSIC     IFEQ 'Y'                                                         CLE075BO
+      *                                                                                     CLE075BO
+      ** Set occurence to index found from #NSK array                                       CLE075BO
+      *                                                                                     CLE075BO
+     C           F         OCUR SDNOST                                                      CLE075BO
+      *                                                                                     CLE075BO
+     C                     ELSE                                                             CLE075BO
+      *                                                                                     CLE075BO
+     C           NOSIDX    IFNE 0                                                           CLE075BO
+     C                     Z-ADDNOSIDX    F                                                 CLE075BO
+     C                     ELSE                                                             CLE075BO
+     C                     Z-ADD1         F                                                 CLE075BO
+     C                     MOVEA#NOS      #NSS                                              CLE075BO
+     C                     SORTA#NSS                                                        CLE075BO
+     C                     Z-ADD#NSS,1    NOSKEY                                            CLE075BO
+     C           NOSKEY    LOKUP#NOS,F                   76                                 CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+     C           F         OCUR SDNOST                                                      CLE075BO
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CUST
+     C                     PARM           XCCY
+     C                     PARM           KACOD
+     C                     PARM           KSEQN
+     C                     PARM           @NOSN
+     C                     PARM *BLANKS   @KEY6   3
+     C                     PARM *BLANKS   @KEY7  10
+     C                     PARM *BLANKS   @KEY8   1
+     C           SDNOST    PARM SDNOST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '007'     DBASE            * * * * * * * *
+     C                     MOVELOSAC      DBKEY            * DB ERROR 007*
+     C                     MOVEL'SDNOSTPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      **  Save Nostro location
+      *
+     C***********          MOVELA7NOSN    FLOC    3                       087614
+     C                     MOVE A7NOSN    FLOC    3                       087614
+     C                     EXSR ADDNOS                                                      CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *
+     C                     END
+     C                     END                                            087614
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************   137909
+      *****************************************************************   137909
+      *   STCY1- If CEU004 (EMU enhancement) is on set up             *   137909
+      *          settlement currency.                                 *   137909
+      *   Called by - F330                                            *   137909
+      *****************************************************************   137909
+      *                                                                   137909
+     C           STCY1     BEGSR                                          137909
+      *                                                                   137909
+      ** Use payment settlement currency if entered. Otherwise use loan   137909
+      ** currency.                                                        137909
+     C           STCY      IFNE *BLANKS                                   137909
+     C                     MOVE STCY      MGSTCY                          137909
+     C                     ELSE                                           137909
+     C                     MOVE LCCY      MGSTCY                          137909
+     C                     ENDIF                                          137909
+      *                                                                   137909
+     C                     ENDSR                                          137909
+     C/EJECT                                                              137909
+      *****************************************************************   137909
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      *
+     C                     OPEN LE4505AU
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     WRITELE4505D0
+     C                     WRITELE4505D1
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                     CLE075BO
+      *                                                               *                     CLE075BO
+      *  CHKNOS - Check Nostro details in array                       *                     CLE075BO
+      *                                                               *                     CLE075BO
+      *****************************************************************                     CLE075BO
+     C           CHKNOS    BEGSR                                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** Reinitialize work fields                                                           CLE075BO
+      *                                                                                     CLE075BO
+     C                     MOVEL*BLANK    NOSIC                                             CLE075BO
+     C                     MOVE *OFF      *IN76                                             CLE075BO
+     C           KEYNOS    IFNE *BLANKS                                                     CLE075BO
+      *                                                                                     CLE075BO
+      ** Check previous base rate details if it's                                           CLE075BO
+      ** same with current details                                                          CLE075BO
+      *                                                                                     CLE075BO
+     C                     Z-ADDNOSPRV    F                                                 CLE075BO
+      *                                                                                     CLE075BO
+      ** Defend against index being 0                                                       CLE075BO
+      ** Set current index to starting index                                                CLE075BO
+      *                                                                                     CLE075BO
+     C           F         IFEQ 0                                                           CLE075BO
+     C                     Z-ADDNOSIDX    F                                                 CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** If the KEYNOS being checked is the same then use the index                         CLE075BO
+      ** of the current detail rather than doing a LOKUP                                    CLE075BO
+      *                                                                                     CLE075BO
+     C           KEYNOS    IFEQ #NSK,F                                                      CLE075BO
+     C                     MOVE *ON       *IN76                                             CLE075BO
+     C                     ELSE                                                             CLE075BO
+      *                                                                                     CLE075BO
+     C           NOSIDX    IFEQ 0                                                           CLE075BO
+     C                     Z-ADD1         F                                                 CLE075BO
+     C                     ELSE                                                             CLE075BO
+     C                     Z-ADDNOSIDX    F                                                 CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+     C           KEYNOS    LOKUP#NSK,F                   76                                 CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** Save the last accessed detail to NOSPRV                                            CLE075BO
+      ** Set the indicator to show the data was found                                       CLE075BO
+      *                                                                                     CLE075BO
+     C           *IN76     IFEQ *ON                                                         CLE075BO
+     C                     MOVE NOSSEQ    #NOS,F                                            CLE075BO
+     C                     Z-ADDF         NOSPRV                                            CLE075BO
+     C                     MOVEL'Y'       NOSIC                                             CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+     C                     ENDIF                                                            CLE075BO
+     C                     ENDSR                                                            CLE075BO
+      *****************************************************************                     CLE075BO
+      *                                                               *                     CLE075BO
+      *  ADDNOS - Add Nostro details to array                         *                     CLE075BO
+      *                                                               *                     CLE075BO
+      *****************************************************************                     CLE075BO
+     C           ADDNOS    BEGSR                                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** If there is still room in the array then add the details                           CLE075BO
+      *                                                                                     CLE075BO
+     C           NOSIDX    IFNE 0                                                           CLE075BO
+     C                     SUB  1         NOSIDX                                            CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+     C                     MOVELKEYNOS    #NSK,F                                            CLE075BO
+     C                     ADD  NOSSEQ    #NOS,F                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** Set last accessed detail to NOSPRV So that CHKNOS checks this                      CLE075BO
+      ** latest detail first                                                                CLE075BO
+      *                                                                                     CLE075BO
+     C                     Z-ADDF         NOSPRV                                            CLE075BO
+      *                                                                                     CLE075BO
+     C                     ENDSR                                                            CLE075BO
+      *****************************************************************
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZFWDT
+     C/COPY ZSRSRC,ZBKDT
+     C/COPY ZSRSRC,ZCHKH                                                  S01392
+     C/COPY ZSRSRC,ZFREQBZ2                                               S01392
+     C/COPY ZSRSRC,ZDATE1Z2                                               S01392
+     C/COPY ZSRSRC,ZDATE2Z4                                               S01392
+     C/COPY ZSRSRC,ZFRQB3                                                                     CLE141
+     C********************************************************************
+** Pwr                                                                    123333
+0000001                                                                   123333
+0000010                                                                   123333
+0000100                                                                   123333
+0001000                                                                   123333
+0010000                                                                   123333
+0100000                                                                   123333
+1000000                                                                   123333
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031

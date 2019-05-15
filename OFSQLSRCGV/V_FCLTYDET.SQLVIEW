@@ -1,0 +1,79 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending                                              */
+/*                                                                             */
+/*       V_FCLTYDET - Credit Line Utilisation and Collateral Enquiry           */
+/*                                                                             */
+/*       (c) Finastra International Limited 2012                               */
+/*                                                                             */
+/*       Last Amend No. MD052296           Date 26Nov18                        */
+/*       Prev Amend No. MD046248           Date 27Oct17                        */
+/*                      CLE156 *CREATE     Date 12Dec12                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD052296 - Problems caused by use of special characters               */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CLE156 - Credit Line Utilisation and Collateral Enquiry               */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT  FM.BRCA AS FCFBRC,                                                    :
+   FM.CNUM AS FCFCUS,                                                           :
+   FM.FACT AS FCFTYP,                                                           :
+   FM.FCNO AS FCFSEQ,                                                           :
+   FM.TRCA AS FCTRCA,                                                           :
+   FM.FCCY AS FCFCCY,                                                           :
+   FM.PRTR AS FCPRTR,                                                           :
+   FM.FAMT AS FCFAMT,                                                           :
+   FM.RECI AS FCRECI,                                                           :
+   FM.DTEX AS FCDTEX,                                                           :
+   FN.CAMD AS FCCAMD,                                                           :
+   FM.CNUM AS PADCNUM,                                                          :
+   DIGITS(FM.FACT) AS PADFACT,                                                  :
+   DIGITS(FM.FCNO) AS PADFCNO,                                                  :
+/**FM.BRCA*||*FM.CNUM*||*DIGITS(FM.FACT)*||*DIGITS(FM.FCNO)*AS*FCLTY,**********/:           MD052296
+/**CASE*WHEN*CANM*=*''*AND*CAFT*=*0*AND*CAFN*=*0*THEN*''*ELSE*FM.BRCA||CANM||**/:           MD052296
+/**DIGITS(CAFT)*||*DIGITS(CAFN)*END*AS*FCLTY_CA********************************/:           MD052296
+   FM.BRCA CONCAT FM.CNUM CONCAT DIGITS(FM.FACT) CONCAT DIGITS(FM.FCNO)         :           MD052296
+   AS FCLTY,                                                                    :           MD052296
+   CASE WHEN CANM = '' AND CAFT = 0 AND CAFN = 0 THEN '' ELSE FM.BRCA CONCAT    :           MD052296
+   CANM CONCAT                                                                  :           MD052296
+   DIGITS(CAFT) CONCAT DIGITS(CAFN) END AS FCLTY_CA                             :           MD052296
+  FROM  GZFCLTYFM FM INNER JOIN                                                 :
+   GZFCLTYFN FN ON (FN.CNUM = FM.CNUM AND FN.FACT = FM.FACT                     :
+   AND FN.FCNO = FM.FCNO AND FM.BRCA = FN.ZZ003)                                :
+   WHERE FM.RECI = 'D'                                                          :
+  UNION SELECT FM.BRCA AS FCFBRC,                                               :
+   FM.CNUM AS FCFCUS,                                                           :
+   FM.FACT AS FCFTYP,                                                           :
+   FM.FCNO AS FCFSEQ,                                                           :
+   FM.TRCA AS FCTRCA,                                                           :
+   FM.FCCY AS FCFCCY,                                                           :
+   FM.PRTR AS FCPRTR,                                                           :
+   FM.FAMT AS FCFAMT,                                                           :
+   FM.RECI AS FCRECI,                                                           :
+   FM.DTEX AS FCDTEX,                                                           :
+   FN.CAMD AS FCCAMD,                                                           :
+   FM.CNUM AS PADCNUM,                                                          :
+   DIGITS(FM.FACT) AS PADFACT,                                                  :
+   DIGITS(FM.FCNO) AS PADFCNO,                                                  :
+/**FM.BRCA*||*FM.CNUM*||*DIGITS(FM.FACT)*||*DIGITS(FM.FCNO)*AS*FCLTY,***********:           MD052296
+   FM.BRCA CONCAT FM.CNUM CONCAT DIGITS(FM.FACT) CONCAT DIGITS(FM.FCNO)         :           MD052296
+   AS FCLTY,                                                                    :           MD052296
+   CASE WHEN CANM='' AND CAFT = 0 AND CAFN = 0                                  :
+   THEN ''                                                                      :
+/**ELSE*FM.BRCA*||*CANM*||*DIGITS(CAFT)*||*DIGITS(CAFN)*END*AS*FCLTY_CA*********:           MD052296
+   ELSE FM.BRCA CONCAT CANM CONCAT DIGITS(CAFT) CONCAT DIGITS(CAFN) END         :           MD052296
+   AS FCLTY_CA                                                                  :           MD052296
+   FROM GZLEAGFMPD FM                                                           :
+   INNER JOIN GZLEAGFNPD FN ON ( FN.CNUM = FM.CNUM AND FN.FACT = FM.FACT        :
+   AND FN.FCNO = FM.FCNO AND FM.BRCA = FN.ZZ003)                                :
+   WHERE FM.RECI = 'D';                                                         :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas OF Credit Utilisation & Collateral-Based Enq';                     :
+                                                                                :

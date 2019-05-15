@@ -1,0 +1,346 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CPP for FETCH command')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC0013V - CPP for FETCH command                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015             Date 19Jun12              */
+/*                      XXXXXXXX           Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT015 - Rewrite for Midas Plus naming conventions.         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MBR &TYPE &PSRCF &MOD &TOMBR &OVERWRITE)
+ 
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PSRCF) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MOD) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OVERWRITE) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&TOSRCF) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&TOSRC) TYPE(*CHAR) STG(*DEFINED) +
+                          LEN(10) DEFVAR(&TOSRCF)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) STG(*DEFINED) +
+                          LEN(10) DEFVAR(&TOSRCF 11)
+             DCL        VAR(&FMSRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SPFX) TYPE(*CHAR) STG(*DEFINED) LEN(2) +
+                          DEFVAR(&FMSRCF)
+             DCL        VAR(&STYPE) TYPE(*CHAR) STG(*DEFINED) LEN(3) +
+                          DEFVAR(&FMSRCF 3)
+             DCL        VAR(&SSRC) TYPE(*CHAR) STG(*DEFINED) LEN(3) +
+                          DEFVAR(&FMSRCF 6)
+             DCL        VAR(&SSFX) TYPE(*CHAR) STG(*DEFINED) LEN(2) +
+                          DEFVAR(&FMSRCF 9)
+             DCL        VAR(&LIBS) TYPE(*CHAR) LEN(500)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+/* This variable contains all of the source file suffixes and is used to */
+/*  loop for the search.                                                 */
+             DCL        VAR(&SFX) TYPE(*CHAR) LEN(100) VALUE('Z +
+                          DMDPDTDVDADFPRDZCMG GMGPGTGVGAGRGF')
+             DCL        VAR(&SFXPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&LIBPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&FOUND) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ESCAPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NOTFOUND) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MBREXIST) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&SBRRTN) TYPE(*INT) LEN(4)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+/* Perform initial set up of variables. */
+             CHGVAR     VAR(&TOSRCF) VALUE(&PSRCF)
+             RTVDTAARA  DTAARA(FETCH) RTNVAR(&LIBS)
+             IF         COND(&MOD *EQ 'QQ') THEN(DO)
+                CHGVAR     VAR(&SPFX) VALUE(%SST(&MBR 1 2))
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&SPFX) VALUE(&MOD)
+             ENDDO
+             IF         COND(&TOMBR *EQ '*MBR') THEN(DO)
+                CHGVAR     VAR(&TOMBR) VALUE(&MBR)
+             ENDDO
+ 
+/* Perform special processing for prefixes 'ZS' and 'QW'. */
+             IF         COND(&MOD *EQ 'ZS') THEN(DO)
+                CHGVAR     VAR(&FMSRCF) VALUE('ZSRSRC')
+                CALLSUBR   SUBR(SEARCHLIB)
+                GOTO       CMDLBL(SEARCHEND)
+             ENDDO
+             IF         COND(&MOD *EQ 'QW') THEN(DO)
+                CHGVAR     VAR(&SPFX) VALUE('QW')
+                CHGVAR     VAR(&STYPE) VALUE('IND')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+                GOTO       CMDLBL(SEARCHEND)
+             ENDDO
+ 
+/* Perform specific processing based on TYPE. */
+             IF         COND(&TYPE *EQ 'DDS') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('DDS')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+ 
+                IF         COND(&FOUND *NE 'Y') THEN(DO)
+                   CHGVAR     VAR(&SSRC) VALUE('CTR')
+                   CALLSUBR   SUBR(SFX)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'SQL') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('SQL')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'RPG') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('RPG')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+                IF         COND(&FOUND *NE 'Y') THEN(DO)
+                   CHGVAR     VAR(&SSRC) VALUE('CTR')
+                   CALLSUBR   SUBR(SFX)
+                   IF         COND(&FOUND *NE 'Y') THEN(DO)
+                      CHGVAR     VAR(&STYPE) VALUE('GEN')
+                      CHGVAR     VAR(&SSRC) VALUE('SRC')
+                      CALLSUBR   SUBR(SFX)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'CL') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('CLP')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+                IF         COND(&FOUND *NE 'Y') THEN(DO)
+                   CHGVAR     VAR(&SSRC) VALUE('CTR')
+                   CALLSUBR   SUBR(SFX)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'PGM') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('PGM')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'SRVPGM') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('SVP')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'CMD') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('CMD')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'PNLGRP') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('PNL')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'DTAARA') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('DTA')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'DTAQ') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('DTQ')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'TBL') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('TBL')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'VLDL') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('VDL')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+             IF         COND(&TYPE *EQ 'CPY') THEN(DO)
+                CHGVAR     VAR(&STYPE) VALUE('CPY')
+                CHGVAR     VAR(&SSRC) VALUE('SRC')
+                CALLSUBR   SUBR(SFX)
+             ENDDO
+ 
+SEARCHEND:
+             IF         COND(&SBRRTN *EQ 1) THEN(DO)
+                CHGVAR     VAR(&ESCAPE) VALUE('N')
+                SNDPGMMSG  MSG('Unauthorised to source file' *BCAT +
+                             &FMSRCF *BCAT 'in library' *BCAT &LIB +
+                             *TCAT '.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If the member was not found then send error message ... */
+             IF         COND(&FOUND *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&ESCAPE) VALUE('N')
+                SNDPGMMSG  MSG('Unable to find member' *BCAT &MBR *TCAT +
+                             ', module' *BCAT &SPFX *TCAT '.') +
+                             MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* ... else prepare to copy. */
+             ELSE       CMD(DO)
+                IF         COND(&TOSRC *EQ '*MBR') THEN(DO)
+                   CHGVAR     VAR(&TOSRC) VALUE(&FMSRCF)
+                ENDDO
+                IF         COND(&TOMBR *EQ '*MBR') THEN(DO)
+                   CHGVAR     VAR(&TOMBR) VALUE(&MBR)
+                ENDDO
+             ENDDO
+/* Check if 'to' source file and member exist. */
+             CHKOBJ     OBJ(&TOLIB/&TOSRC) OBJTYPE(*FILE) +
+                          MBR(&TOMBR) AUT(*CHANGE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTSRCPF   FILE(&TOLIB/&TOSRC) RCDLEN(112) TEXT('Source +
+                             file created by FETCH utility.') CCSID(*HEX)
+                CHGVAR     VAR(&MBREXIST) VALUE('N')
+             ENDDO
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                CHGVAR     VAR(&MBREXIST) VALUE('N')
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                CHGVAR     VAR(&ESCAPE) VALUE('N')
+                SNDPGMMSG  MSG('Unauthorised to source file' *BCAT +
+                             &TOSRC *BCAT 'in library' *BCAT &TOLIB +
+                             *TCAT '.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If the member exists and OVERWRITE is set to '*NO' then send message ... */
+             IF         COND(&MBREXIST *EQ 'Y' *AND &OVERWRITE *EQ +
+                          '*NO') THEN(DO)
+                CHGVAR     VAR(&ESCAPE) VALUE('N')
+                SNDPGMMSG  MSG('Unable to overwrite' *BCAT &TOLIB *TCAT +
+                             '/' *TCAT &TOSRC *TCAT ', member' *BCAT +
+                             &TOMBR *TCAT '.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&MBREXIST *EQ 'Y') THEN(DO)
+                   RMVM       FILE(&TOLIB/&TOSRC) MBR(&TOMBR)
+                ENDDO
+                CPYF       FROMFILE(&LIB/&FMSRCF) +
+                             TOFILE(&TOLIB/&TOSRC) FROMMBR(&MBR) +
+                             TOMBR(&TOMBR) MBROPT(*REPLACE)
+                CHGVAR     VAR(&ESCAPE) VALUE('N')
+                SNDPGMMSG  MSG('Member' *BCAT &MBR *BCAT 'in' *BCAT +
+                             &LIB *TCAT '/' *TCAT &FMSRCF *BCAT +
+                             'successfully copied.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                IF         COND(&ESCAPE *NE 'N') THEN(DO)
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+                ENDDO
+             ENDDO
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Loop through libraries.                                           */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SEARCHLIB)
+ 
+/* Loop through different 'targets'. */
+             CHGVAR     VAR(&LIBPOS) VALUE(1)
+             CHGVAR     VAR(&LIB) VALUE(%SST(&LIBS &LIBPOS 10))
+             DOUNTIL    COND(&LIB *EQ ' ' *OR &FOUND *EQ 'Y')
+                CHGVAR     VAR(&NOTFOUND) VALUE('N')
+                CHKOBJ     OBJ(&LIB/&FMSRCF) OBJTYPE(*FILE) MBR(&MBR) +
+                             AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9815) EXEC(DO)
+                   CHGVAR     VAR(&NOTFOUND) VALUE('Y')
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   CHGVAR     VAR(&FOUND) VALUE('Y')
+                   CHGVAR     VAR(&SBRRTN) VALUE(1)
+                   GOTO       CMDLBL(SEARCHLIBE)
+                ENDDO
+                IF         COND(&NOTFOUND *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&FOUND) VALUE('Y')
+                ENDDO
+                IF         COND(&FOUND *NE 'Y') THEN(DO)
+                   CHGVAR     VAR(&LIBPOS) VALUE(&LIBPOS + 10)
+                   CHGVAR     VAR(&LIB) VALUE(%SST(&LIBS &LIBPOS 10))
+                ENDDO
+             ENDDO
+ 
+SEARCHLIBE:
+             ENDSUBR    RTNVAL(&SBRRTN)
+/* End of subroutine SEARCHLIB. */
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Loop through suffixes for DDS                                     */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SFX)
+ 
+/* Loop through different 'targets'. */
+             CHGVAR     VAR(&SFXPOS) VALUE(1)
+             CHGVAR     VAR(&SSFX) VALUE(%SST(&SFX &SFXPOS 2))
+             DOUNTIL    COND(&SSFX *EQ ' ' *OR &FOUND *EQ 'Y')
+                IF         COND(&SSFX *EQ 'Z ' *AND &TYPE *EQ 'CPY') +
+                             THEN(DO)
+                   CHGVAR     VAR(&SSFX) VALUE('  ')
+                ENDDO
+                CALLSUBR   SUBR(SEARCHLIB) RTNVAL(&SBRRTN)
+                IF         COND(&SBRRTN *EQ 1) THEN(DO)
+                   GOTO       CMDLBL(SFXE)
+                ENDDO
+                IF         COND(&FOUND *NE 'Y') THEN(DO)
+                   CHGVAR     VAR(&SFXPOS) VALUE(&SFXPOS + 2)
+                   CHGVAR     VAR(&SSFX) VALUE(%SST(&SFX &SFXPOS 2))
+                ENDDO
+             ENDDO
+ 
+SFXE:
+             ENDSUBR    RTNVAL(&SBRRTN)
+/* End of subroutine SFX. */
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,487 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Facilities Update For Dealing')               *
+     H*****************************************************************
+     H*                                                               *
+     H*          MIDAS ABS - EUROPEAN REPORTING SYSTEM                *
+     H*                                                               *
+     H*  ER0530 - Facilities Update for Dealing                       *
+     H*                                                               *
+      *  (c) Finastra International Limited 2005                      *
+     H*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Aug05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ER0141             Date 29Dec92               *
+      *                 ER0116                 Date 15DEC92           *
+     H*                                                               *
+     H*****************************************************************
+     H*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+     H*   ER0141 - Create a new extention record when new facil.      *
+     H*   ER0116 - Program created                                    *
+     H*            Add B/f Cumulative Exposure amount field (BFCE)    *
+     H*            for use with loans entered in Dealing module.      *
+     H*                                                               *
+     F*****************************************************************
+      *
+      *            DL Customers Deals File
+     FCUSDE   IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+      *
+      *            Bank Data
+     FSDBANKL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      *            General Ledger Details
+     FSDGELRL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      *            Customer Lending Facility File
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+      *
+      *            Currency Codes
+     FSDCURRL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      *            Customer Lending Facility Extension File
+     F**FCLTYMY4UF  E           K        DISK         KINFSR *PSSR        ER0141
+     F***FCLTYMY4UF  E           K        DISK         KINFSR *PSSR A        ER0141           CER001
+     FLEFCX1L0UF  E           K        DISK         KINFSR *PSSR A        ER0141              CER001
+      *
+      *****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*       50         VALUE DATE A/C KEYS GENERATED (Bit 1, ACEI)
+     F*       51         MATURITY DATE A/C KEYS GENERATED (Bit 2, ACEI)
+     F*       90         GENERAL FILE READ ERROR
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+      *****************************************************************
+      *
+      ** ARRAY USED IN CURRENCY AMOUNT CONVERSION
+      *
+     E                    POWER   1   7  7 3
+      *
+      ** ARRAY FOR COPYRIGHT
+      *
+     E                    CPY@    1   1 80
+      /EJECT
+      *
+      ** DATA STRUCTURE FOR C/L FACILITY FILE ACCESS
+      *
+     I            DS
+     I                                        1  12 WWKEY
+     I**********                              1   60KKCNUM                                   CSD027A
+     I                                        1   6 KKCNUM                                   CSD027A
+     I                                        7   90KKFACT
+     I                                       10  110KKFCNO
+     I                                       12  12 KKRCTP
+      *
+      ** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          P R O G R A M   E N T R Y                            *
+      *                                                               *
+      *===============================================================*
+      *
+     C           SDBANK    KLIST
+     C                     KFLD           KKBANK           * Bank
+      *
+     C           SDGELR    KLIST
+     C                     KFLD           KKGNLG           * General Ledger
+      *
+     C           FCLTYA    KLIST
+     C                     KFLD           KKCNUM           * Customer No.
+     C                     KFLD           KKFACT           * Facility Type
+     C                     KFLD           KKFCNO           * Facility No.
+     C                     KFLD           KKRCTP           * Record Type
+      *
+     C           FCLTYM    KLIST
+     C                     KFLD           KKCNUM           * Customer No.
+     C                     KFLD           KKFACT           * Facility Type
+     C                     KFLD           KKFCNO           * Facility No.
+      *
+     C           SDCURR    KLIST
+     C                     KFLD           KKCYCD           * Currency Code
+      *
+     C           *LIKE     DEFN BJBANK    KKBANK
+     C           *LIKE     DEFN BKGNLG    KKGNLG
+     C           *LIKE     DEFN A6CYCD    KKCYCD
+      *
+     C           *LIKE     DEFN BKAPDT    @@EVCD           * Event Control Date
+      *
+      *===============================================================*
+      *
+      ** Perform Initialisation routine
+      *
+     C                     EXSR #INIT
+      *
+      *---------------------------------------------------------------*
+      *
+      ** Process all records from DL Customer Deals File that are in
+      **   the MM Deals File (DEALSDC).
+      *
+     C           *INLR     DOWEQ'0'                        *----------1
+     C                     READ DEALSDCF                 LR
+      *
+      ** Perform Main Processing (ignore if Facility Reference = *zeroes)
+      *
+     C           *INLR     IFEQ '0'                        *---------2
+     C           FACT      ANDNE*ZEROS                     * Facility Type
+     C           FCNO      ANDNE*ZEROS                     * Facility No.
+     C                     EXSR #MAIN
+     C                     END                             *---------2
+      *
+     C                     END                             *----------1
+      *
+      *---------------------------------------------------------------*
+      *
+     C                     RETRN
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #INIT  - INITIALISATION PROCESSING                   *
+      *                                                               *
+      *===============================================================*
+     C           #INIT     BEGSR
+      *
+      ** Prepare LDA
+      *
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'ER0530'  DBPGM
+      *
+      ** Get Installation Control Data record 1 for
+      **   Date of Next Working Day
+      *
+     C                     MOVEL'BANK'    KKBANK           * Bank
+     C           SDBANK    CHAINSDBANKL0             90
+      *
+      ** Installation Control Data record 1 not found
+      *
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'001'     DBASE            ************
+     C                     MOVEL'SDBANKL0'DBFILE           * ERROR 01 *
+     C                     MOVELKKBANK    DBKEY            ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** Get General Ledger record 1 for
+      **   Accrual/Profit Date
+      *
+     C                     MOVEL'GELR'    KKGNLG           * General Ledger
+     C           SDGELR    CHAINSDGELRL0             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'002'     DBASE            ************
+     C                     MOVEL'SDGELRL0'DBFILE           * ERROR 02 *
+     C                     MOVELKKGNLG    DBKEY            ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** If Accrual/Profit Date >= Date of Next Working Day, then
+      **   adjust/set Event Control Date accordingly
+      *
+     C           BKAPDT    IFGE BJDNWD                     *----------1
+     C           BJDNWD    SUB  1         @@EVCD
+     C                     ELSE
+     C                     Z-ADDBKAPDT    @@EVCD
+     C                     END                             *----------1
+      *
+     C           #INIT9    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #MAIN  - MAIN PROCESSING                             *
+      *                                                               *
+      *===============================================================*
+     C           #MAIN     BEGSR
+      *
+      ** Determine if Value Date A/c Keys have been generated
+      *
+     C                     TESTB'1'       ACEI           50*ON = Exist
+      *
+      ** Determine if Maturity Date A/c Keys have been generated
+      *
+     C                     TESTB'2'       ACEI           51*ON = Exist
+      *
+      ** Determine if Event Control Date has passed Value Date of Deal
+      **   and if Value Date A/c Keys don't exist (*IN50 = *OFF)
+      *
+     C           @@EVCD    IFGE VDAT                       *----------1
+     C           *IN50     ANDEQ'0'
+     C                     EXSR #CONV
+     C                     ADD  WWAMTO    VNBFCE           * from SCONV
+      *                    =====
+     C******               UPDATFCLTYMF4                                  ER0141
+     C           *IN85     IFEQ '0'                                       ER0141
+     C                     UPDATFCLTYMF4                                  ER0141
+     C                     ELSE                                           ER0141
+     C**********           Z-ADDCNUM      VNCNUM                                      ER0141 CSD027A
+     C                     MOVE CNUM      VNCNUM                                             CSD027A
+     C                     Z-ADDFACT      VNFACT                          ER0141
+     C                     Z-ADDFCNO      VNFCNO                          ER0141
+     C                     Z-ADDWWAMTO    VNBFCE           * from SCONV   ER0141
+     C                     WRITEFCLTYMF4                                  ER0141
+     C                     END                                            ER0141
+      *                    =====
+     C                     END                             *----------1
+      *
+      ** Determine if Event Control Date has passed Maturity Date of
+      **   Deal & if Maturity Date A/c Keys don't exist (*IN50 = *OFF)
+      *
+     C           @@EVCD    IFGE MDAT                       *----------1
+     C           *IN51     ANDEQ'0'
+     C                     EXSR #CONV
+     C                     SUB  WWAMTO    VNBFCE           * from SCONV
+      *                    =====
+     C******               UPDATFCLTYMF4                                  ER0141
+     C           *IN85     IFEQ '0'                                       ER0141
+     C                     UPDATFCLTYMF4                                  ER0141
+     C                     ELSE                                           ER0141
+     C**********           Z-ADDCNUM      VNCNUM                                      ER0141 CSD027A
+     C                     MOVE CNUM      VNCNUM                                             CSD027A
+     C                     Z-ADDFACT      VNFACT                          ER0141
+     C                     Z-ADDFCNO      VNFCNO                          ER0141
+     C                     Z-SUBWWAMTO    VNBFCE           * from SCONV   ER0141
+     C                     WRITEFCLTYMF4                                  ER0141
+     C                     END                                            ER0141
+      *                    =====
+     C                     END                             *----------1
+      *
+      ** Determine if Event Control Date has passed Value Date of Deal
+      **   and if Deal has been reversed
+      *
+     C           @@EVCD    IFGE VDAT                       *----------1
+     C           RECI      ANDEQ'R'
+     C                     EXSR #CONV
+     C                     SUB  WWAMTO    VNBFCE           * from SCONV
+      *                    =====
+     C******               UPDATFCLTYMF4                                  ER0141
+     C           *IN85     IFEQ '0'                                       ER0141
+     C                     UPDATFCLTYMF4                                  ER0141
+     C                     ELSE                                           ER0141
+     C**********           Z-ADDCNUM      VNCNUM                                      ER0141 CSD027A
+     C                     MOVE CNUM      VNCNUM                                             CSD027A
+     C                     Z-ADDFACT      VNFACT                          ER0141
+     C                     Z-ADDFCNO      VNFCNO                          ER0141
+     C                     Z-SUBWWAMTO    VNBFCE           * from SCONV   ER0141
+     C                     WRITEFCLTYMF4                                  ER0141
+     C                     END                                            ER0141
+      *                    =====
+     C                     END                             *----------1
+      *
+     C           #MAIN9    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #CONV  - CONVERSION PROCESSING                       *
+      *                                                               *
+      *===============================================================*
+     C           #CONV     BEGSR
+      *
+      ** Access Facilities File (for Facility Currency)
+      *
+     C**********           Z-ADDCNUM      KKCNUM           * Customer No.                    CSD027A
+     C                     MOVE CNUM      KKCNUM           * Customer No.                    CSD027A
+     C                     Z-ADDFACT      KKFACT           * Facility Type
+     C                     Z-ADDFCNO      KKFCNO           * Facility No.
+     C                     MOVE 'A'       KKRCTP           * Record Type
+     C           FCLTYA    CHAINFCLTY                90
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'003'     DBASE            ************
+     C                     MOVELWWKEY     DBKEY            * ERROR 03 *
+     C                     MOVEL'FCLTY   'DBFILE           ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** Access Facilities Extension File (for Exposure Amount)
+      *
+     C                     MOVE ' '       KKRCTP           * Record Type
+     C******     FCLTYM    CHAINFCLTYMY4             90                   ER0141
+     C******     *IN90     IFEQ '1'                        *----------1   ER0141
+     C******               MOVEL'004'     DBASE            ************   ER0141
+     C******               MOVELWWKEY     DBKEY            * ERROR 04 *   ER0141
+     C******               MOVEL'FCLTYMY4'DBFILE           ************   ER0141
+     C******               EXSR *PSSR                                     ER0141
+     C******               END                             *----------1   ER0141
+     C********** FCLTYM    CHAINFCLTYMY4             85                   ER0141              CER001
+     C           FCLTYM    CHAINLEFCX1L0             85                   ER0141              CER001
+      *
+      ** Access Currency File (for Deal Currency attributes)
+      *
+     C                     MOVE CCY       KKCYCD           * Currency Code
+     C           SDCURR    CHAINSDCURRL0             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'005'     DBASE            ************
+     C                     MOVELKKCYCD    DBKEY            * ERROR 05 *
+     C                     MOVEL'SDCURRL0'DBFILE           ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** Store attributes into conversion parameters
+      *
+     C                     Z-ADDA6SPRT    WWSRI            * Ccy Spot Rate
+     C                     Z-ADDA6NBDP    WWDPI            * Ccy Decs.
+     C                     MOVE A6MDIN    WWMDI            * x or /
+      *
+      ** Access Currency File (for Facility Currency attributes)
+      *
+     C                     MOVE FCCY      KKCYCD           * Currency Code
+     C           SDCURR    CHAINSDCURRL0             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'006'     DBASE            ************
+     C                     MOVELKKCYCD    DBKEY            * ERROR 06 *
+     C                     MOVEL'SDCURRL0'DBFILE           ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** Store attributes into conversion parameters
+      *
+     C                     Z-ADDA6SPRT    WWSRO            * Ccy Spot Rate
+     C                     Z-ADDA6NBDP    WWDPO            * Ccy Decs.
+     C                     MOVE A6MDIN    WWMDO            * x or /
+      *
+      ** Convert Principal Amount from Deal Ccy to Facility Ccy
+      *
+     C                     Z-ADDPCPL      WWAMTI           * Ccy Amount
+     C                     EXSR SCONV
+      *
+     C           #CONV9    ENDSR
+      *===============================================================*
+      /EJECT
+     C*===============================================================*
+      **
+      ** *PSSR  S/R
+      **
+     C*===============================================================*
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C*===============================================================*
+     C/EJECT
+     C*===============================================================*
+     C**                                                                 *
+     C**  SCONV - Converts an amount from one currency to another.       *
+     C**                                                                 *
+     C**  Input Fields - WWAMTI 15/0 amount in input currency            *
+     C**                 WWSRI  13/8 spot rate for input currency        *
+     C**                 WWSRO  13/8 spot rate for output currency       *
+     C**                 WWDPI  1/0  no. of decimals for input currency  *
+     C**                 WWDPO  1/0  no. of decimals for output currency *
+     C**                 WWMDI  1    mult/div indicator for input curr.  *
+     C**                 WWMDO  1    mult/div indicator for output curr. *
+     C**                                                                 *
+     C**  Arrays       - POWER  powers of 10                             *
+     C**                                                                 *
+     C**  Output Fields- WWAMTO 15/0 output amount converted to new curr *
+     C**                                                                 *
+     C**  CALLS    - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           SCONV     BEGSR                           **  SCONV    **
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDWWAMTI    WWAMTI 150
+     C                     Z-ADD0         WWAMTO 150
+     C           *LIKE     DEFN A6SPRT    WWSRI
+     C           *LIKE     DEFN A6SPRT    WWSRO
+     C           *LIKE     DEFN A6NBDP    WWDPI
+     C           *LIKE     DEFN A6NBDP    WWDPO
+     C           *LIKE     DEFN A6MDIN    WWMDI
+     C           *LIKE     DEFN A6MDIN    WWMDO
+     C*
+     C           WWDPO     SUB  WWDPI     Z       10
+     C           Z         ADD  4         Z
+     C*
+     C           WWMDI     IFNE WWMDO
+     C*
+     C** MULT/DIV INDICATORS DIFFERENT
+     C           WWSRI     MULT WWSRO     WWRATE 159H
+     C                     ELSE
+     C*
+     C** MULT/DIV INDICATORS THE SAME
+     C           WWSRO     IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           WWSRI     DIV  WWSRO     WWRATE    H
+     C                     END
+     C*
+     C           WWMDI     IFEQ 'D'
+     C           WWRATE    IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           POWER,Z   DIV  WWRATE    WWRATE    H
+     C                     ELSE
+     C           POWER,Z   MULT WWRATE    WWRATE    H
+     C                     END
+     C*
+     C           WWAMTI    MULT WWRATE    WWAMTO    H
+     C*
+     C           SC0       ENDSR                           **  SC0      **
+     C********************************************************************
+      /EJECT
+**   POWER - POWERS OF 10 FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Finastra International Limited 2005

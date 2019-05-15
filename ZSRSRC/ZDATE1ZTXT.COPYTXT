@@ -1,0 +1,110 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+  STANDARD SUBROUTINE - ZDATE1
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+   To validate a date in DDMMYY or MMDDYY format and if valid convert
+   to a number of days.
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC ZDATE1Z1 should be included in the 'E' specifications
+   /COPY ZSRSRC ZDATE1Z2 should be included in the subroutine section
+   ZDATE1Z3 needs to be copied into the pgm source at the appropriate
+    point in the compile time array data section.
+ 
+   Notes: (1)- Sequence of array details & data needs to be consistent.
+          (2)- If ZDATE2 is required in same pgm use ZDATE2Z1 instead
+               of ZDATE1Z1, as ZDATE1 uses a subset of the arrays in
+               ZDATE2. Remember to use corresponding array data
+               (ZDATE2Z3).
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+   The program using ZDATE1 must  have the following field/arrays
+   defined at the appropriate place in the source statements:-
+ 
+   ZYDY   -     A compile time array of four four-digit elements
+                containing the cumulative number of days in a
+                four year period, the first element/year being
+                the leap year.  The source statements to define
+                the array, and the array data are contained in the
+                source library member ZDATE1.
+ 
+   ZMDY   -     A compile time array of thirteen three-digit elements
+                containing the cumulative number of days in a year,
+                by month.  Note that the first element is a zero
+                entry to facilitate use of this array.  The source
+                statements to define the array, and the array data,
+                are contained in the source library member ZDATE1.
+ 
+   Input:
+   ~~~~~
+ 
+   ZDATE   -     A six digit field containing the date to be validated
+                 and converted.
+ 
+   98 - indicator: - On if the date format of the system is MMDDYY,
+                     off if date format is DDMMYY.  This indicator
+                     is set in subroutine ZSYSTM.  If the ZSYSTM
+                     subroutine is not used, indicator 98 must be
+                     set on if the field DATF (on the
+                     installation control data record code 10) is
+                     M.
+ 
+   Procedure:
+   ~~~~~~~~~
+ 
+   1.   ZDATE is split into three two-digit fields, containing the
+        year, month and day numbers, names ZYEAR, ZMTH and ZDAY,
+        as dictated by the date format (*IN98).
+ 
+   2. - ZMTH is validated to ensure it is in the range 1 to 12.  If
+        the month is invalid, the rest of the subroutine is bypassed.
+ 
+   3. - ZMTH is checked to determine if it is a 30 day month.
+ 
+   4. - ZDAY is validated to ensure it is in the range 1 to 31 or
+        1 to 30 if the month is a 30 day month.  If the day is
+        invalid the rest of the subroutine is bypassed.
+ 
+   5. - ZYEAR and ZMTH are tested for leap year and February.  ZYEAR
+        is adjusted for 1972 being year 0.
+ 
+   6. - ZDAY is further validated if the month is February for the
+        range 1 to 28 or if a leap year, 1 to 29.
+        If the day is invalid the rest of the subroutine is bypassed.
+ 
+   7. - The day number is calculated.  Base is day one, 1/1/72.
+ 
+   N.B. No validation is carried out on year number as input year 70
+        would be assumed to mean 2070.
+ 
+   Output:
+   ~~~~~~
+ 
+   ZDAYNO - a five digit field containing the day no. for the input
+            date.  If an invalid date was input this field will be
+            zero.
+ 
+   Indicator 99 - If an invalid date was input this indicator will be
+                  on.

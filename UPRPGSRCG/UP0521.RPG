@@ -1,0 +1,359 @@
+     H        1
+      *****************************************************************
+/*XBIA*  OVRDBF FILE(UPP04P) TOFILE(UPP04PPD)                         *                       CPK016
+/*XBIB*  OVRDBF FILE(UPP02P) TOFILE(UPP02APD)                         *                       CPK016
+/*XBIC*  OVRDBF FILE(UPP03P) TOFILE(UPP03PPD)                         *                       CPK016
+/*XBID*  OVRDBF FILE(UPP05P) TOFILE(UPP05APD)                         *                       CPK016
+/*XBIE*  OVRDBF FILE(UPP06P) TOFILE(UPP06PPD)                         *                       CPK016
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Writing of compare file - post V4R4 level')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade Module                                       *
+      *                                                               *
+      *  UP0521 - Writing of compare file, post-V4R4 OS level         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK016             Date 16Apr03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CUP008 *C *CREATE  Date 17Jul00               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPK016 - UPP0* files renamed.                                *
+      *  CUP008 - OS V4R4M0 has changed the layout of the outfile     *
+      *            produced by CMPPFM.                                *
+      *                                                               *
+      *****************************************************************
+     FUPP04P  IP  F     220            DISK
+     FUPP02P  UF  E           K        DISK                      A
+     FUPP03P  O   E                    DISK                      A
+     FUPP05P  IF  E           K        DISK
+     FUPP06P  UF  E           K        DISK                      A
+     FQRPGL   IF  F     112            DISK
+      *
+     E                    CPY@    1   1 80
+      *
+     E                    INS     1   1 80
+     IQRPGL   NS
+     I                                        1   62SRCSEQ
+     I                                        7  120SRCDAT
+     I                                       13 112 SRCDTA
+     IUPP04P  NS
+     I                                        1 159 DATA
+     I                                        1   1 CMBLKL
+     I                                        2   3 CMCOID
+     I                                        4   4 CMDASH
+     I                                        5 104 XXRECD
+     I                                      105 105 CMBLK1
+     I                                      106 109 CMTYPE
+     I                                      110 114 CMNBCH
+     I                                      115 115 CMNEWC
+     I                                      118 122 CMNELN
+     I                                      123 123 CMOLDC
+     I                                      126 130 CMOLLN
+     I                                      131 131 CMBLK2
+     I                                    P 132 1340CMRELN
+     I                                      135 135 CMTYPA
+     I                                      136 1412CMCSEQ
+     I                                      142 1470CMCDAT
+     I                                      148 148 CMSUGA
+     I                                      149 153 CMLINN
+     I                                      154 158 CMLINB
+     I                                      159 163 CMLINE
+     I        NS  **
+     I                                        1   2 NECOID
+     I                                        6 105 NERECD
+     I                                      123 127 NEOLLN
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *IN01     IFEQ '0'
+     C                     MOVEL'1'       *IN01
+     C                     Z-ADD0         WMRELN  50
+     C                     END
+      *
+     C                     Z-ADD*ZEROS    CMCSEQ
+     C                     Z-ADD*ZEROS    CMCDAT
+     C                     MOVEL'0'       *IN02
+     C           KL1       KLIST
+     C                     KFLD           XXRECD
+     C                     KFLD           WMNELN  50
+     C           KL2       KLIST
+     C                     KFLD           XXRECD
+     C                     KFLD           WMOLLN  50
+     C                     MOVELCMNELN    WMNELN
+     C                     MOVELCMOLLN    WMOLLN
+     C                     MOVEL'0'       *IN02
+     C           *IN03     IFEQ '1'
+     C                     MOVELXMOLLN    WMOLLN
+     C                     MOVEL'0'       *IN03
+     C                     SUB  1         WMNBCH
+     C                     END
+      *
+     C           KL2       CHAINUPP05PR              50
+     C           *IN50     IFEQ '0'
+     C                     Z-ADDODTSEQ    CMCSEQ
+     C                     Z-ADDODTDAT    CMCDAT
+     C           CMCOID    IFEQ '  '
+     C           CMDASH    ANDEQ' '
+     C                     MOVEL'F'       CMSUGA
+     C                     MOVEL'F'       CMTYPA
+     C                     MOVEL'F'       XXTYPA  1
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C           CMCOID    IFEQ 'D '
+     C           CMDASH    ANDEQ'-'
+     C           CMCOID    OREQ 'RO'
+     C           CMDASH    ANDEQ'-'
+     C                     MOVEL'O'       CMSUGA
+     C                     MOVEL'O'       CMTYPA
+     C                     MOVEL'F'       XXTYPA
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C           CMCOID    IFEQ 'DM'
+     C           CMDASH    ANDEQ'-'
+     C                     MOVEL'O'       CMSUGA
+     C                     MOVEL'O'       CMTYPA
+     C                     MOVEL'F'       XXTYPA
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C           CMCOID    IFEQ 'IM'
+     C           CMDASH    ANDEQ'-'
+     C                     MOVEL'N'       CMSUGA
+     C                     MOVEL'N'       CMTYPA
+     C                     MOVEL'N'       XXTYPA
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C           CMCOID    IFEQ 'RO'
+     C           CMDASH    ANDEQ'-'
+     C                     MOVEL'O'       CMSUGA
+     C                     MOVEL'O'       CMTYPA
+     C                     MOVEL'F'       XXTYPA
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           CMCOID    IFEQ 'I '
+     C           CMDASH    ANDEQ'-'
+     C           CMCOID    OREQ 'RN'
+     C           CMDASH    ANDEQ'-'
+     C                     MOVEL'N'       CMTYPA
+     C                     MOVEL'N'       CMSUGA
+     C                     MOVEL'N'       XXTYPA
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C           CMCOID    IFEQ 'IM'
+     C           CMDASH    ANDEQ'-'
+     C                     MOVEL'N'       CMTYPA
+     C                     MOVEL'N'       CMSUGA
+     C                     MOVEL'N'       XXTYPA
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C           CMCOID    IFEQ 'RN'
+     C           CMDASH    ANDEQ'-'
+     C                     MOVEL'N'       CMTYPA
+     C                     MOVEL'N'       CMSUGA
+     C                     MOVEL'N'       XXTYPA
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C           CMCOID    IFEQ 'RO'
+     C           CMDASH    ANDEQ'-'
+     C                     MOVEL'O'       CMSUGA
+     C                     MOVEL'O'       CMTYPA
+     C                     MOVEL'F'       XXTYPA
+     C                     MOVEL'1'       *IN02
+     C                     END
+      *
+     C                     END
+      *
+     C           CMTYPE    IFEQ 'RPL='
+     C           NEOLLN    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN03
+     C                     MOVELCMOLLN    XMOLLN  5
+     C                     MOVELCMNBCH    WMNBCH  50
+     C                     END
+     C           CMCOID    IFEQ 'I '
+     C           CMDASH    ANDEQ'-'
+     C           WMNBCH    ANDGT*ZEROS
+     C           CMCOID    OREQ 'RN'
+     C           CMDASH    ANDEQ'-'
+     C           WMNBCH    ANDGT*ZEROS
+     C                     MOVELCMOLLN    XMOLLN  5
+     C                     MOVE '1'       *IN03
+     C                     END
+      *
+     C           *IN02     IFEQ '1'
+      *
+     C           *IN04     IFEQ '1'
+      *
+     C           WMTYPA    IFNE XXTYPA
+     C                     MOVELCMCOID    YMCOID  2
+     C                     MOVELCMDASH    YMDASH  1
+     C                     MOVE XXRECD    YMRECD100
+     C                     MOVELCMBLK1    YMBLK1  1
+     C                     MOVELCMTYPE    YMTYPE  4
+     C                     MOVELCMNBCH    YMNBCH  5
+     C                     MOVELCMNEWC    YMNEWC  1
+     C                     MOVELCMNELN    YMNELN  5
+     C                     MOVELCMOLDC    YMOLDC  1
+     C                     MOVELCMOLLN    YMOLLN  5
+     C                     MOVELCMBLK2    YMBLK2  1
+     C                     Z-ADDCMRELN    YMRELN  50
+     C                     MOVELCMTYPA    YMTYPA  1
+     C                     Z-ADDCMCSEQ    YMCSEQ  62
+     C                     Z-ADDCMCDAT    YMCDAT  60
+     C                     MOVELCMSUGA    YMSUGA  1
+     C                     MOVELCMLINN    YMLINN  5
+     C                     MOVELCMLINB    YMLINB  5
+     C                     MOVELCMLINE    YMLINE  5
+      *
+     C                     MOVEL*BLANKS   CMCOID
+     C                     MOVEL*BLANKS   CMDASH
+     C                     MOVEL*BLANKS   CMBLK1
+     C                     MOVEL*BLANKS   CMTYPE
+     C                     MOVEL*BLANKS   CMNBCH
+     C                     MOVEL*BLANKS   CMNEWC
+     C                     MOVEL*BLANKS   CMNELN
+     C                     MOVEL*BLANKS   CMOLDC
+     C                     MOVEL*BLANKS   CMOLLN
+     C                     MOVEL*BLANKS   CMBLK2
+     C                     MOVEL'X'       CMTYPA
+     C                     Z-ADD*ZEROS    CMCSEQ
+     C                     Z-ADD*ZEROS    CMCDAT
+     C                     MOVEL'X'       CMSUGA
+     C                     MOVEL*BLANKS   CMLINN
+     C                     MOVEL*BLANKS   CMLINB
+     C                     MOVEL*BLANKS   CMLINE
+      *
+     C                     ADD  1         WMRELN
+     C                     Z-ADDWMRELN    CMRELN
+     C                     MOVEL*BLANKS   CMRECD
+     C                     MOVELINS,1     CMRECD
+     C                     MOVE CMRECD    DRECD 100
+     C                     BITOF'01234567'LRECD   1
+     C                     BITON'27'      LRECD
+     C                     MOVEL*BLANKS   VRECD
+     C                     MOVELLRECD     VRECD
+     C                     MOVELVRECD     CMRECD
+     C                     MOVE DRECD     CMRECD
+     C                     WRITEUPP02PR
+     C                     MOVELYMCOID    CMCOID
+     C                     MOVELYMDASH    CMDASH
+     C                     MOVE YMRECD    XXRECD
+     C                     MOVELYMBLK1    CMBLK1
+     C                     MOVELYMTYPE    CMTYPE
+     C                     MOVELYMNBCH    CMNBCH
+     C                     MOVELYMNEWC    CMNEWC
+     C                     MOVELYMNELN    CMNELN
+     C                     MOVELYMOLDC    CMOLDC
+     C                     MOVELYMOLLN    CMOLLN
+     C                     MOVELYMBLK2    CMBLK2
+     C                     Z-ADDYMRELN    CMRELN
+     C                     MOVELYMTYPA    CMTYPA
+     C                     Z-ADDYMCSEQ    CMCSEQ
+     C                     Z-ADDYMCDAT    CMCDAT
+     C                     MOVELYMSUGA    CMSUGA
+     C                     MOVELYMLINN    CMLINN
+     C                     MOVELYMLINB    CMLINB
+     C                     MOVELYMLINE    CMLINE
+     C                     END
+     C                     END
+     C                     MOVEL'      '  CMRECD
+     C                     MOVE XXRECD    CMRECD
+      *
+     C                     ADD  1         WMRELN
+     C                     Z-ADDWMRELN    CMRELN
+     C                     MOVEL*BLANKS   VRECD
+     C           CMSUGA    IFEQ 'N'
+     C                     MOVE XXRECD    DRECD
+     C                     BITOF'01234567'LRECD
+     C                     BITON'27'      LRECD
+     C                     MOVELLRECD     VRECD   6
+     C           CMCOID    IFEQ 'DM'
+     C           CMCOID    OREQ 'IM'
+     C                     MOVE 'MV'      VRECD
+     C                     END
+     C                     MOVELVRECD     CMRECD
+     C                     MOVE DRECD     CMRECD
+     C                     END
+     C           CMSUGA    IFEQ 'O'
+     C                     MOVELXXRECD    DRECD
+     C                     BITOF'01234567'LRECD
+     C                     BITON'26'      LRECD
+     C                     MOVELLRECD     VRECD
+     C           CMCOID    IFEQ 'DM'
+     C           CMCOID    OREQ 'IM'
+     C                     MOVE 'MV'      VRECD
+     C                     END
+     C                     MOVELVRECD     CMRECD
+     C                     MOVE DRECD     CMRECD
+     C                     END
+     C           CMTYPA    IFEQ 'N'
+     C                     Z-ADDCMRELN    CCRELN
+     C                     MOVELCMTYPA    CCTYPA
+     C                     MOVELCMSUGA    CCSUGA
+     C                     WRITEUPP03PR
+     C                     END
+     C                     MOVEL*BLANKS   C6KEY
+     C           CMCOID    IFEQ 'DM'
+     C           CMCOID    OREQ 'IM'
+     C                     MOVELCMNELN    C6KEY
+     C                     MOVE CMOLLN    C6KEY
+     C                     Z-ADDCMRELN    C6RELN
+     C                     WRITEUPP06PR
+     C                     END
+     C           CMCOID    IFEQ 'IM'
+     C           CMCOID    OREQ 'I '
+     C           CMCOID    OREQ 'RO'
+     C                     MOVELCMNELN    UUNELN  50
+     C           UUNELN    CHAINQRPGL                61
+     C           *IN61     IFEQ '0'
+     C                     Z-ADDSRCDAT    CMCDAT
+     C                     END
+     C                     END
+     C                     WRITEUPP02PR
+     C                     MOVELXXTYPA    WMTYPA  1
+     C                     MOVE '1'       *IN04
+      *
+     C                     END
+      *
+     CLR                   MOVEL*LOVAL    KEY6   10
+     CLR         KEY6      SETLLUPP06PR
+     CLR                   READ UPP06PR                  57
+     CLR         *IN57     DOWEQ'0'
+     CLR                   Z-ADDC6RELN    A1RELN  50
+     CLR                   READ UPP06PR                  57
+     CLR                   Z-ADDC6RELN    B1RELN  50
+     CLR         A1RELN    CHAINUPP02P               60
+     CLR         *IN60     IFEQ '0'
+     CLR                   MOVELB1RELN    CMLINN
+     CLR                   UPDATUPP02PR
+     CLR                   END
+     CLR         B1RELN    CHAINUPP02P               60
+     CLR         *IN60     IFEQ '0'
+     CLR                   MOVELA1RELN    CMLINN
+     CLR                   UPDATUPP02PR
+     CLR                   END
+     CLR                   READ UPP06PR                  57
+     CLR                   END
+      *
+**  CPY@
+(c) Finastra International Limited 2001
+**   INSERTED LINES
+*---------------------------------------------------------------------*

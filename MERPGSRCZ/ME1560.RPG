@@ -1,0 +1,411 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Message Tag Translation X-ref Print')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1560 - Message Tag Translation X-ref Print                 *
+      *                                                               *
+      *  Function:  To list all of the entries in the                 *
+      *             Message Tag Translation X-ref Table.              *
+      *                                                               *
+      *  Called By: MEC1560 - Message Tag Translation Listing Ctl Prc *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 162671             Date 23Jun99               *
+      *                 CFT003  *CREATE    Date 07May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  162671 - Default translation field                           *
+      *  CFT003 - Straight Through Processing Phase 1                 *
+      *           Based on ME1560 original references S01489/HUB001   *
+      *                                                               *
+      *****************************************************************
+     F****METAGTL1IF  E           K        DISK                                               162671
+     FMETAGTPDIF  E           K        DISK                                                   162671
+      **  Message Tag Translation X-ref Retrieval Index
+      *
+     FME1560P1O   E                    PRINTER      KINFDS SPOOL
+      **  Message Tag Translation X-ref Printer File
+      *
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   10    -  Printed record indicator                           *
+      *   15    -  Change in message type                             *
+      *   16    -  For field 'DEFAULT TRANSLATION-...'                *                       162671
+      *   17    -  To blank field 'DEFAULT TRANSLATION-...'           *                       162671
+      *   20    -  Printer overflow indicator                         *
+      *                                                               *
+      *   U7    -  Database error                                     *
+      *   U8    -  Database error                                     *
+      *   LR    -  Last record indicator                              *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   #HINIT   - Initialisation processing                        *
+      *   #HCLRF   - Clear work fields                                *
+      *   #HMVVL   - Move values to output fields                     *
+      *   #HPEND   - End the program processing                       *
+      *   *PSSR    - Handles abnormal error conditions                *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      * Copyright notice for inclusion in all programs
+      *
+     I/EJECT
+      *
+     ISPOOL       DS
+      ** File information data structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ILDA         DS                            256
+      *
+      **  Local data area
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IRUNDT       DS
+      *
+      **  Standard Data Area Layout for System Flags and Run Date
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data Structure for Bank Details
+      *
+     I              BJURPT                          TITL
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for Access Programs, Short Data Structure
+      *
+     C/EJECT
+      *================================================================
+      *   M A I N   P R O C E S S I N G
+      *================================================================
+      *
+      **  Initialisation process
+      *
+     C                     EXSR #HINIT
+      *
+      **  Print the header and do an initial read on the file
+      *
+     C                     WRITEHEADER
+     C*********************READ METAGTL1                 LR                                   162671
+     C                     READ METAGTPD                 LR                                   162671
+     C                     MOVE '0'       *IN10
+     C                     MOVE '1'       *IN15
+      *                                                                                       162671
+     C           *INLR     IFEQ '0'                                                           162671
+     C           TGDFLT    IFEQ 'Y'                                                           162671
+      * Display field 'DEFAULT TRANSLATION-YES'                                               162671
+     C                     SETON                     16                                       162671
+     C                     ELSE                                                               162671
+      * Display field 'DEFAULT TRANSLATION-NO'                                                162671
+     C                     SETOF                     16                                       162671
+     C                     ENDIF                                                              162671
+     C                     ENDIF                                                              162671
+      *
+     C           *INLR     DOWEQ'0'
+     C                     Z-ADD0         @HCTR   20
+     C                     MOVELTGMTPY    #HMTPY
+     C                     MOVELTGDFLT    WDFLT                                               162671
+      *
+      **  Clear output fields
+      *
+     C                     EXSR #HCLRF
+      *
+      **  Set up output fields for printing one detail line
+      *
+     C           *INLR     DOUEQ'1'
+     C           #HMTPY    ORNE TGMTPY
+     C           @HCTR     OREQ 10
+     C           WDFLT     ORNE TGDFLT                                                        162671
+      *
+     C                     ADD  1         @HCTR
+     C                     EXSR #HMVVL
+      *
+     C*********************READ METAGTL1                 LR                                   162671
+     C                     READ METAGTPD                 LR                                   162671
+      *
+     C                     END
+      *                                                                                       162671
+      *
+      **  Print detail record
+      *
+     C                     WRITEDTLRCD                 20
+     C                     MOVE '1'       *IN10
+     C                     MOVE '0'       *IN15
+      *                                                                                       162671
+     C           WDFLT     IFEQ TGDFLT                                                        162671
+      * Blank field 'DEFAULT TRANSLATION...'                                                  162671
+     C                     SETON                     17                                       162671
+     C                     ENDIF                                                              162671
+      *                                                                                       162671
+     C           WDFLT     IFNE TGDFLT                                                        162671
+      ** Special case when theres a break in the message type                                 162671
+     C           #HMTPY    ORNE TGMTPY                                                        162671
+     C                     SETOF                     17                                       162671
+     C           TGDFLT    IFEQ 'Y'                                                           162671
+      * Display field 'DEFAULT TRANSLATION-YES'                                               162671
+     C                     SETON                     16                                       162671
+     C                     ELSE                                                               162671
+      * Display field 'DEFAULT TRANSLATION-NO'                                                162671
+     C                     SETOF                     16                                       162671
+     C                     ENDIF                                                              162671
+     C                     ENDIF                                                              162671
+      *
+      **  If there is a change in message type, set indicator for
+      **  proper spacing between records
+      *
+     C           TGMTPY    IFNE #HMTPY
+     C                     MOVE '1'       *IN15
+     C                     END
+      *
+      **  If overflow occurs, print headings and detail record
+      **  on the next page
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN20
+     C                     END
+      *
+     C                     END
+      *
+      **  End the program processing
+      *
+     C                     EXSR #HPEND
+      *
+      *================================================================
+      *   E N D   O F   M A I N   P R O C E S S I N G
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #HINIT  Subroutine to perform initial processing.            *
+      *                                                               *
+      *      Called by     Main Processing                            *
+      *      Calls         DBSR                                       *
+      *                                                               *
+      *****************************************************************
+     C           #HINIT    BEGSR
+      *
+      ** Receive entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ
+      *
+      ** Copyright Insertion
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Prepare LDA variables
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME1560'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** In the data area RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Get bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Error in SDBANKPD
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           *LIKE     DEFN TGDFLT    WDFLT                                               162671
+      *                                                                                       162671
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #HCLRF  Subroutine to clear output fields.                   *
+      *                                                               *
+      *      Called by     Main Processing                            *
+      *      Calls         Nothing                                    *
+      *                                                               *
+      *****************************************************************
+     C           #HCLRF    BEGSR
+      *
+      **  Initialise work fields
+      *
+     C                     MOVE *BLANKS   #HMTPY
+     C                     MOVE *BLANKS   #1MTAG
+     C                     MOVE *BLANKS   #2MTAG
+     C                     MOVE *BLANKS   #3MTAG
+     C                     MOVE *BLANKS   #4MTAG
+     C                     MOVE *BLANKS   #5MTAG
+     C                     MOVE *BLANKS   #6MTAG
+     C                     MOVE *BLANKS   #7MTAG
+     C                     MOVE *BLANKS   #8MTAG
+     C                     MOVE *BLANKS   #9MTAG
+     C                     MOVE *BLANKS   #10MTG
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #HMVVL  Subroutine to move values to output fields.          *
+      *                                                               *
+      *      Called by     Main Processing                            *
+      *      Calls         Nothing                                    *
+      *                                                               *
+      *****************************************************************
+     C           #HMVVL    BEGSR
+      *
+      **  Set up fields for printing depending on the current column
+      *
+     C           @HCTR     IFEQ 1
+     C                     MOVELTGMTPY    #HMTPY
+     C                     MOVELTGMTAG    #1MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 2
+     C                     MOVELTGMTAG    #2MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 3
+     C                     MOVELTGMTAG    #3MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 4
+     C                     MOVELTGMTAG    #4MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 5
+     C                     MOVELTGMTAG    #5MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 6
+     C                     MOVELTGMTAG    #6MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 7
+     C                     MOVELTGMTAG    #7MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 8
+     C                     MOVELTGMTAG    #8MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 9
+     C                     MOVELTGMTAG    #9MTAG
+     C                     END
+      *
+     C           @HCTR     IFEQ 10
+     C                     MOVELTGMTAG    #10MTG
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #HPEND  Subroutine to end program processing                 *
+      *                                                               *
+      *      Called by     Main Processing                            *
+      *      Calls         Nothing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #HPEND    BEGSR
+      *
+      ** Write footer with checks for the printer overflow
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN20
+     C                     END
+     C                     WRITEFOOTER
+      *
+      ** Ensure Report Spool File Recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ** Error During ZSFILE Processing, Return to Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   Subroutine to handle abnormal error conditions       *
+      *                                                               *
+      *       Called by    #HINIT                                     *
+      *       Calls        Nothing                                    *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+** CPY@   **      Object Copyright
+(c) Finastra International Limited 2001

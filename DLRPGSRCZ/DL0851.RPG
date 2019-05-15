@@ -1,0 +1,1121 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Deal number input gaps report')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0851  -  Deal Numbers Input Gaps Report                    *
+      *                                                               *
+      *  Function:  This program produces a report showing the        *
+      *   (I/C)     deal numbers used as of rundate under the ranges  *
+      *             defined to the system by the user.                *
+      *                                                               *
+      *  Called By: DLC0904 - Deal Number Input Gaps - Input Cycle    *
+      *             DLC0808 - Deal Number Input Gaps - CoB On Req     *
+      *                                                               *
+      *  Calls :    None                                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CDL098             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 216316             Date 06Jun06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG7266            Date 08Jul05               *
+      *                 237063             Date 20Nov05               *
+      *                 229544             Date 15Sep04               *
+      *                 BUG7411            Date 01Jun05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG2590            Date 07May04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 205911             Date 23May02               *
+      *                 169253  *REWRITE   Date 15May02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CDL098 - Cancelled Deal Numbers                              *      
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  216316 - MOVEL of ZFIELD (16A) into ARRGNB (2A) only sets    *
+      *           ARRGNB to blanks.                                   *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG7266 - DL0851 is wrong for range 800000 - 998888          *
+      *  237063 - EU Tax fixes upgrade to MP build 103 (Recompile).   *
+      *  229544 - Recompiled due to inserted fields in DLCHISPD.      *
+      *  BUG7411- CDL028 fields missing from DLGHISPD (Recompile)     *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG2590- Invalid DB error if ' 0' range
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *           , MMDELDPP, MMDENBPP AND MMDENSPP .                 *
+      *  205911 - Correct range sequence number and alignment of next *
+      *           available deal number on DL0851P1.                  *
+      *  169253 - Program rewritten. Report Deal Number Input Gaps    *
+      *           using front office files.                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     FDLGAPNL0IF  E           K        DISK
+      **  Deals front office files  keyed on deal transaction date
+      *
+     FDL0851P1O   E                    PRINTER      KINFDS SPOOL      UC
+      **  Deal number input input gaps report
+      *
+     FDL0851AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      **  Deal number input gaps audit
+      *
+     FSDDLNOL3IF  E           K        DISK
+      **  SD Deal number ranges
+      *
+     FSDDLNOL0UF  E           K        DISK
+      **  SD Deal number ranges - update index
+      *
+     FDEALSALLIF  E           K        DISK
+     F            DEALSDBF                          KRENAMEDEALSDB1
+     F            DEALSDCF                          KRENAMEDEALSDC1
+     F            DEALSDDF                          KRENAMEDEALSDD1
+     F            DEALSDEF                          KRENAMEDEALSDE1
+     F            DEALSDGF                          KRENAMEDEALSDG1
+     F            MMDELDP0                          KRENAMEMMDELDP1
+     F            MMDENBP0                          KRENAMEMMDENBP1
+     F            MMDENSP0                          KRENAMEMMDENSP1
+     F            FXDEALP0                          KRENAMEFXDEALP1
+     F            DLBHISD0                          KRENAMEDLBHISD1
+     F            DLCHISD0                          KRENAMEDLCHISD1
+     F            DLDHISD0                          KRENAMEDLDHISD1
+     F            DLEHISD0                          KRENAMEDLEHISD1
+     F            DLGHISD0                          KRENAMEDLGHISD1
+      **  All deal numbers including historic
+      *
+     FDLCANCI0IF  E           K        DISK                                                   CDL098
+      *                                                                                       CDL098
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10 - Input Cycle                                             *
+      *  20 - EoF on DLGAPNL0                                         *
+      *  21 - Read fail on SDDLNOPD                                   *
+      *  28 - For equal condition                                     *
+      *  29 _ For greater than condition                              *
+      *  30 - Previously reported deal number                         *
+      *  31 - More than one deal numbers not used                     *
+      *  40 - Ranges not used by system                               *
+      *  41 - End of ranges reached                                   *
+      *  42 - Unallocated range                                       *
+      *  50 - Printing of last range previously reported deal number  *
+      *  51 - Chain on DEALSALL                                       *
+      *  60 - DLNO is equal/greater than the last deal in range       *                       205911
+      *  98 - Date format indicator                                   *
+      *  90 - 99  - Used by external subroutines                      *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #INIT  - Initial processing                                  *
+      *  #OVERF - Check for overflow                                  *
+      *  #RNGRD - Read-in range details                               *
+      *  #RANGE - Set up ranges array                                 *
+      *  #CHKST - Check deal status                                   *
+      *  #TRAIL - Write report trailers                               *
+      *  #ENDP  - End program                                         *
+      *  #ZSFIL - Zsfile processing                                   *
+      *  #DBERR - Data base error processing                          *
+      *  *PSSR  - Error Handling Subroutine                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDATE9Z1
+      *
+     E                    CPY@    1   1 80
+      **  Copyright array
+      *
+     E                    RNM       100  3 0
+     E                    RNA       100 30
+     E                    FNR       100  6 0
+     E                    LNR       100  6 0
+     E                    NAN       100  6 0
+     E                    MSD       100  6 0                                                  CDL098
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+      ** Rename fields with common names  to simplify processing
+      *
+     I@ARREC5
+     I              ARRGNB                          @RCFNB
+     I              ARLCD                           @RAAVA
+     I              ARTYLC                          @RADST
+     I              ARFDIR                          @RCGNB
+     I              ARLDIR                          @RCHNB
+     I              ARRGDS                          @RARTX
+     I              ARNADN                          @RCINB
+      *
+     IDLGAPND0
+     I              WKDLNO                          DLNO
+     I              WKDDLT                          DDLT
+     I              WKDSTS                          DSTS
+     I              WKCHTP                          CHTP
+     I              WKDTYP                          DTYP
+     I              WKDYER                          DYER
+     I              WKDMON                          DMON
+     I              WKDDAY                          DDAY
+      *
+     ISPOOL       DS
+      **  Spool information data structure
+     I                                       83  90 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+      *
+     ISPOOLU      DS
+      **  Spool information data structure
+     I                                       83  90 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ILDA        UDS                            256
+      **  Data structure for database error
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I            DS
+      **  Data structure for transaction date
+      *
+     I                                        1   80TRNDAY
+     I                                        1   40DYER
+     I                                        5   60DMON
+     I                                        7   80DDAY
+     I            DS
+      **  Data structure for run date
+      *
+     I                                        1   80RUNDAY
+     I                                        1   40RYER
+     I                                        5   60RMON
+     I                                        7   80RDAY
+     ISCSARD    E DSSCSARDPD                                                                  CDL098
+      ** External DS for SAR Details                                                          CDL098
+      *                                                                                       CDL098
+     ISDBANK    E DSSDBANKPD
+      **  Data structure for bank details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+     I/COPY ZSRSRC,ZDATE9Z2
+      *
+      *****************************************************************
+      *  M A I N   P R O C E S S I N G                                *
+      *****************************************************************
+      *
+      **  Perform initial processing
+      *
+     C                     EXSR #INIT
+      *
+      **  Position file to Deal Transaction Date = Rundate
+      *
+     C           K@KEY     SETLLDLGAPNL0
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C           K@KEY     SETLLDLGAPNL0             71                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C           *IN71     IFEQ *OFF                                                          CDL098
+     C           CDL098    ANDEQ'Y'                                                           CDL098
+     C           CDL098    OREQ 'N'                                                           CDL098
+      *
+      **  Read the record on file
+      *
+     C                     READ DLGAPNL0                 20
+      *
+      **  Loop
+      *
+     C           TRNDAY    DOWEQRUNDAY
+     C           *IN20     ANDEQ'0'
+      *
+      ** Increment count of records read
+      *
+     C                     ADD  1         @COUNT  40
+      *
+     C           CHKAGN    TAG
+      *
+      ** Select processing for this deal number
+      *
+     C                     SELEC
+      *
+      ** Deal number is out of range
+      *
+     C           DLNO      WHLT FDELR
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+      *                                                                                       CDL098
+     C           DDLT      IFEQ 'D'                                                           CDL098
+     C                     MOVE *ON       *IN04                                               CDL098
+     C                     ELSE                                                               CDL098
+     C                     MOVE *OFF      *IN04                                               CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C                     EXSR #OVERF
+     C                     WRITEOUTRNG
+      *
+      ** Indicator 29 is set on to ensure WDLNO contains initial DLNO.
+      *
+     C                     MOVE '1'       *IN29
+      *
+      ** End of range
+      *
+     C           DLNO      WHGT LDELR
+     C                     EXSR #OUTRG
+     C                     EXSR #RNGRD
+     C                     MOVE *OFF      *IN30
+      *
+     C           *IN20     IFEQ *OFF
+     C                     GOTO CHKAGN
+     C                     ENDIF
+      *
+      ** Indicator 29 is set on to ensure WDLNO contains initial DLNO.
+      *
+     C                     MOVE '1'       *IN29
+      *
+      ** Deal number has been previously reported as not used
+      *
+     C           DLNO      WHLT NADLR
+     C           DDLT      IFEQ 'D'
+     C           DTYP      ANDNE'NX'
+     C           DDLT      OREQ 'R'
+     C           DTYP      ANDEQ'NX'
+     C                     EXSR #OVERF
+     C                     WRITEREVERS
+     C                     ELSE
+     C           *IN29     IFEQ '1'
+     C           *IN28     OREQ '0'
+     C           *IN29     ANDEQ'0'
+     C                     Z-ADDDLNO      WDLNO   60
+     C                     ENDIF
+     C           DLNO      ADD  1         WDLADV  60
+      *
+      ** DLGAPNL0 is read in advance to check if the next deal number is
+      ** in range.
+      *
+     C                     READ DLGAPNL0                 20
+     C           TRNDAY    IFEQ RUNDAY                                                       BUG7266
+     C           *IN20     ANDEQ*OFF                                                         BUG7266
+     C           DLNO      IFLT NADLR
+      *
+      ** Next deal number is checked if it is a reverse.
+      *
+     C           DDLT      IFEQ 'D'
+     C           DTYP      ANDNE'NX'
+     C           DDLT      OREQ 'R'
+     C           DTYP      ANDEQ'NX'
+     C                     MOVE '1'       *IN29
+     C                     MOVE '0'       *IN28
+     C                     ELSE
+      *
+      ** Next deal number is compared to WDLADV to verify if it is in
+      ** range.
+      *
+     C           DLNO      IFGT WDLADV
+     C                     MOVE '1'       *IN29
+     C                     MOVE '0'       *IN28
+     C                     ENDIF
+     C           DLNO      IFEQ WDLADV
+     C                     MOVE '1'       *IN28
+     C                     MOVE '0'       *IN29
+     C                     ENDIF
+     C           DLNO      IFLT WDLADV
+     C                     MOVE '0'       *IN28
+      *
+      ** End of file for reading in advance is checked.
+      *
+     C           *IN20     IFEQ '1'
+     C                     MOVE '1'       *IN29
+     C                     ELSE
+     C                     MOVE '0'       *IN29
+      *
+      ** Endif for end of file checking.
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Endif for checking of next deal number if it is a reverse.
+      *
+     C                     ENDIF
+     C                     ELSE                                                              BUG7266
+     C                     MOVE *OFF      *IN28                                              BUG7266
+     C                     MOVE *ON       *IN29                                              BUG7266
+     C                     ENDIF                                                             BUG7266
+     C                     ELSE
+     C                     MOVE '0'       *IN28
+     C                     MOVE '1'       *IN29
+     C                     ENDIF
+      *
+      ** Indicator 50 is set on when during equal condition to print
+      ** WDLPRV when indicator 29 is set on.
+      *
+     C           *IN28     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     Z-ADDDLNO      WDLPRV  60
+     C                     ENDIF
+     C           DLNO      IFGE LDELR                                                         205911
+     C                     MOVE '1'       *IN60                                               205911
+     C                     ENDIF                                                              205911
+     C                     EXSR #OVERF
+     C                     WRITEPREVRP
+     C                     MOVE '0'       *IN60                                               205911
+     C                     MOVE *ON       *IN30
+     C           *IN29     IFEQ '1'
+     C                     MOVE '0'       *IN50
+     C                     ENDIF
+      *
+      ** DLGAPNL0 is read prior to the previous deal number.
+      *
+     C                     READPDLGAPNL0                 20
+     C                     ENDIF
+      *
+      ** Deal number is equal to the next available deal in range
+      *
+     C           DLNO      WHEQ WNADL
+     C                     EXSR #CHKST
+     C           DLNO      ADD  1         WNADL
+      *
+      ** Deal number(s) before this deal is reported as not used
+      *
+     C           DLNO      WHGT WNADL
+      *                                                                                       CDL098
+      ** Check first if deals are to be reported as "MISSING".                                CDL098
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C                     Z-ADDWNADL     GAPNO                                               CDL098
+      *                                                                                       CDL098
+      ** Clear array MSD (List Of Missing Deals)                                              CDL098
+      *                                                                                       CDL098
+     C                     Z-ADD0         MD      30                                          CDL098
+     C                     CLEARMSD                                                           CDL098
+     C           GAPNO     DOWLTDLNO                                                          CDL098
+     C           GAPNO     IFLT DLNO                                                          CDL098
+      *                                                                                       CDL098
+     C           GAPNO     CHAINDLCANCI0             73                                       CDL098
+     C           *IN73     IFEQ *OFF                                                          CDL098
+     C           CLRECI    ANDEQ'D'                                                           CDL098
+     C                     SETOF                     73                                       CDL098
+     C                     ELSE                                                               CDL098
+     C                     SETON                     73                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITEGAPS                                                          CDL098
+      *                                                                                       CDL098
+      ** Add "MISSING" Deal Number to array MSD (Missing Deals)                               CDL098
+      *                                                                                       CDL098
+     C           *IN73     IFEQ '0'                                                           CDL098
+     C                     ADD  1         MD                                                  CDL098
+     C                     MOVE GAPNO     MSD,MD                                              CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ADD  1         GAPNO                                               CDL098
+     C                     MOVEL'0'       *IN60                                               CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDDO                                                              CDL098
+      *                                                                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C           DLNO      SUB  1         @DLNOB
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'N'                                                           CDL098
+     C           @DLNOB    COMP WNADL                31
+     C                     EXSR #OVERF
+     C                     WRITENOTUSE
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+      *                                                                                       CDL098
+      **  Verify deals from array msd (missing deals) if already reported as missing          CDL098
+      *                                                                                       CDL098
+     C                     MOVE WNADL     TWNADL  60                                          CDL098
+     C                     MOVE WNADL     TWNAD2  60                                          CDL098
+     C                     MOVE @DLNOB    TDLNOB  60                                          CDL098
+     C           TWNADL    DOWLETDLNOB                                                        CDL098
+     C           TWNADL    LOKUPMSD                      74                                   CDL098
+     C           *IN74     IFEQ '0'                                                           CDL098
+     C           *IN75     IFEQ '0'                                                           CDL098
+     C                     MOVE TWNADL    WNADL                                               CDL098
+     C                     MOVE '1'       *IN75                                               CDL098
+     C                     ELSE                                                               CDL098
+     C                     MOVE '1'       *IN31                                               CDL098
+     C                     MOVE TWNADL    @DLNOB                                              CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ELSE                                                               CDL098
+     C           *IN75     IFEQ '1'                                                           CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITENOTUSE                                                        CDL098
+     C                     MOVE '0'       *IN75                                               CDL098
+     C                     MOVE '0'       *IN31                                               CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ADD  1         TWNADL                                              CDL098
+     C                     ENDDO                                                              CDL098
+     C           *IN75     IFEQ '1'                                                           CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITENOTUSE                                                        CDL098
+     C                     MOVE '0'       *IN75                                               CDL098
+     C                     MOVE '0'       *IN31                                               CDL098
+     C                     ENDIF                                                              CDL098
+     C                     MOVE TWNAD2    WNADL                                               CDL098
+     C                     MOVE TDLNOB    @DLNOB                                              CDL098
+     C                     ENDIF                                                              CDL098
+      *
+      ** Check status of this deal if deleted
+      *
+     C                     EXSR #CHKST
+      *
+     C           DLNO      ADD  1         WNADL
+      *
+      ** Indicator 29 is set on to ensure WDLNO contains initial DLNO.
+      *
+     C                     MOVE '1'       *IN29
+      *
+     C                     ENDSL
+      *
+      ** Check if WNADL is greater than the last deal in range
+      *
+     C           WNADL     IFGT LDELR
+     C                     Z-ADDFDELR     WNADL
+     C           WNADL     CHAINDEALSALL             51
+     C           *IN51     DOWEQ'0'
+     C           WNADL     ANDLELDELR
+     C                     ADD  1         WNADL
+     C           WNADL     CHAINDEALSALL             51
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     READ DLGAPNL0                 20
+      *
+     C                     ENDDO
+      *                                                                                       CDL098
+     C                     ELSE                                                               CDL098
+     C                     EXSR #RNGRD                                                        CDL098
+     C                     ENDIF                                                              CDL098
+      *
+      ** Check for remaining ranges
+      *
+     C           *IN41     DOWEQ*OFF
+     C                     EXSR #OUTRG
+     C                     EXSR #RNGRD
+     C                     ENDDO
+      *
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+      *                                                                                       CDL098
+     C           *LOVAL    SETLLDLCANCI0                                                      CDL098
+     C                     READ DLCANCI0                 74                                   CDL098
+      *                                                                                       CDL098
+     C           *IN74     DOWEQ*OFF                                                          CDL098
+     C                     Z-ADD1         XX      30                                          CDL098
+      *                                                                                       CDL098
+      ** Check for deal number not in any of the deal ranges                                  CDL098
+      *                                                                                       CDL098
+     C           CLDLNO    IFLT FNR,XX                                                        CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITEOORCAN                                                        CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C           XX        DOWLESAVX                                                          CDL098
+     C                     Z-ADDXX        YY      30                                          CDL098
+     C                     ADD  1         XX                                                  CDL098
+      *                                                                                       CDL098
+     C           XX        IFLE SAVX                                                          CDL098
+      *                                                                                       CDL098
+     C           CLDLNO    IFGT LNR,YY                                                        CDL098
+     C           CLDLNO    ANDLTFNR,XX                                                        CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITEOORCAN                                                        CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDIF                                                              CDL098
+     C                     ENDDO                                                              CDL098
+      *                                                                                       CDL098
+     C           CLDLNO    IFGT LNR,SAVX                                                      CDL098
+     C                     EXSR #OVERF                                                        CDL098
+     C                     WRITEOORCAN                                                        CDL098
+     C                     ENDIF                                                              CDL098
+      *                                                                                       CDL098
+     C                     READ DLCANCI0                 74                                   CDL098
+     C                     ENDDO                                                              CDL098
+      *                                                                                       CDL098
+     C                     ENDIF                                                              CDL098
+      *
+      ** Output trailer records
+      *
+     C                     EXSR #TRAIL
+      *
+      **  Seton last record indicator and return to calling program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *******************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #INIT - Initial Processing                                   *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  #DBERR - Database error handling subroutine      *
+      *              #RANGE - Set up ranges array                     *
+      *              #ZSFIL - Zsfile processing                       *
+      *              #RNGRD - Read-in range                           *
+      *                                                               *
+      *****************************************************************
+     C           #INIT     BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Set on indicator for Interim report
+      *
+     C           *INU1     IFEQ *ON
+     C                     MOVE *ON       *IN10
+     C                     ENDIF
+      *
+      **  Set on switch 1 if Input Cycle
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQN   5
+      *
+      ** Define the LDA as an external data structure before
+      ** processing (for error handling)
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initialise database error fields
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0851  'DBPGM
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     OUT  LDA
+      *
+      ** Access Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERROR 001 *
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR #DBERR
+     C                     SETON                     U7U8LR
+     C                     ENDIF
+      *
+      ** Ind 98 on if date format ind = 'M'
+      *
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Build key
+      *
+     C                     MOVE BJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     RYER    40
+     C                     MOVE @@VDT     @TEMP   40
+     C                     MOVEL@TEMP     RMON    20
+     C                     MOVE @TEMP     RDAY    20
+      *
+      ** Set up KLIST
+      *
+     C                     Z-ADD0         @KDEAL
+     C           K@KEY     KLIST
+     C                     KFLD           RYER
+     C                     KFLD           RMON
+     C                     KFLD           RDAY
+     C                     KFLD           @KDEAL  60
+      *
+      ** Initialise count of records read
+      *
+     C                     Z-ADD0         @COUNT
+      *                                                                                       CDL098
+      ** Check if enhancement CDL098 (Cancelled Deal Numbers) is ON                           CDL098
+      *                                                                                       CDL098
+     C                     MOVE 'N'       CDL098  1                                           CDL098
+     C                     CALL 'AOSARDR0'                                                    CDL098
+     C                     PARM *BLANKS   PRTCD   7                                           CDL098
+     C                     PARM '*VERIFY' POPTN   7                                           CDL098
+     C                     PARM 'CDL098'  PSARD   6                                           CDL098
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL098
+      *                                                                                       CDL098
+     C           PRTCD     IFEQ *BLANKS                                                       CDL098
+     C                     MOVE 'Y'       CDL098                                              CDL098
+     C                     ENDIF                                                              CDL098
+      *
+      ** Set up range arrays
+      *
+     C                     EXSR #RANGE
+      *
+      ** If ranges are not used by the system, no details to report
+      *
+     C           *IN40     IFEQ *ON
+     C                     OPEN DL0851AU
+     C                     Z-ADDSFNUMU    ZSNUM1
+     C                     MOVELSFILEU    SFILE1
+     C                     EXSR #ZSFIL
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     CLOSEDL0851AU
+     C                     EXSR #ENDP
+     C                     ELSE
+      *
+      ** Open printer file and output report headings
+      *
+     C                     OPEN DL0851P1
+     C                     MOVE 'Y'       P1OPEN  1
+     C                     Z-ADDSFNUM     ZSNUM1
+     C                     MOVELSFILE     SFILE1
+     C                     EXSR #ZSFIL
+     C                     WRITEHEADP1
+     C                     WRITECOLHDG
+     C                     ENDIF
+      *
+      ** Read in first range
+      *
+     C                     EXSR #RNGRD
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #ENDP  - Subroutine to return to calling program             *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *              #INIT - Initial Processing                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ENDP     BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CHKST - Check status of deal                                *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  #OVERF - Check for overflow                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CHKST    BEGSR
+      *
+     C           DDLT      IFEQ 'D'
+      *
+      ** Do not process deal type NX with RECI='D' (Live), only process
+      ** NX with RECI='R' (Reversed).
+      *
+     C           DTYP      ANDNE'NX'
+     C           DDLT      OREQ 'R'
+     C           DTYP      ANDEQ'NX'
+      *
+     C                     EXSR #OVERF
+     C                     WRITEREVERS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #OUTRG - Output Range details                                *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  #OVERF - Check for overflow                      *
+      *              #DBERR - Database error processing               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #OUTRG    BEGSR
+      *
+      ** Check if range used today
+      *
+     C           WNADL     IFEQ NADLR                      Next avail unchanged
+     C           *IN30     IFEQ '0'                        No prev reported deal
+     C                     EXSR #OVERF
+     C                     WRITERAGNOT                     Range not used today
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set next available deal number - only on EoD Run
+      *
+     C           *INU1     IFEQ *OFF
+     C                     MOVE RANGR     ARRGNB
+     C           RANGR     IFEQ 0                                                            BUG2590
+     C                     MOVE ' 0'      ARRGNB                                             BUG2590
+     C                     ELSE                                                              BUG2590
+     C           RANGR     IFLT 10
+     C                     MOVE *BLANKS   ZFIELD 16
+     C**********           MOVELARRGNB    ZFIELD                                              216316
+     C                     MOVE ARRGNB    ZFIELD                                              216316
+     C                     Z-ADD0         ZADEC   10
+     C                     EXSR ZEDIT
+     C**********           MOVELZFIELD    ARRGNB                                              216316
+     C                     MOVE ZFIELD    ARRGNB                                              216316
+     C                     ENDIF
+     C                     ENDIF                                                             BUG2590
+     C           ARRGNB    CHAINSDDLNOL0             99
+      *
+     C           *IN99     IFEQ '0'
+     C                     MOVE WNADL     ARNADN
+     C                     UPDAT@ARREC2
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVELARRGNB    DBKEY            * DBERROR 002 *
+     C                     MOVEL'SDDLNOPD'DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR #DBERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     EXSR #OVERF
+     C                     WRITENXTAVL
+      *
+      **   Set last deal number in last range
+      *
+     C                     Z-ADDLDELR     LRLDEL  60
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #RNGRD - Read in range details                               *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *              #INIT  - Initial Processing                      *
+      *                                                               *
+      *  Calls    :  #OVERF - Check for overflow                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #RNGRD    BEGSR
+      *
+     C                     MOVE *OFF      *IN30
+      *
+      ** Increment index
+      *
+     C           X         ADD  1         X
+      *
+      ** Store array elements
+      *
+     C                     Z-ADDRNM,X     RANGR   30
+     C                     Z-ADDFNR,X     FDELR   60
+     C                     Z-ADDLNR,X     LDELR   60
+     C                     Z-ADDNAN,X     NADLR   60
+     C                     MOVE RNA,X     DDELR  30
+      *
+      ** Check if end of ranges reached
+      *
+     C           FDELR     IFEQ 0
+     C                     Z-ADD999999    FDELR
+     C                     MOVE *ON       *IN41            End of range
+     C                     ENDIF
+      *
+      ** Check for unallocated range
+      *
+     C           LRLDEL    IFNE 999999
+     C           LRLDEL    ADD  1         LRLDE1  60
+     C                     ELSE
+     C                     Z-ADDLRLDEL    LRLDE1
+     C                     ENDIF
+      *
+     C           FDELR     IFGT LRLDE1
+      *
+     C           FDELR     IFNE 999999
+     C           FDELR     SUB  1         FDEL1   60
+     C                     ELSE
+     C                     Z-ADDFDELR     FDEL1
+     C                     ENDIF
+      *
+     C                     EXSR #OVERF
+     C                     WRITEUNALOC
+      *
+      ** Check if current deal is out of range , ie, falling within
+      ** the unallocated range
+      *
+     C                     MOVE *ON       *IN42
+     C                     ENDIF
+      *
+     C           *IN41     IFEQ *OFF
+      *
+      ** Write range details
+      *
+     C                     MOVE RANGR     RNGENO  2                                           205911
+     C                     EXSR #OVERF
+     C                     WRITERANGE
+     C                     ENDIF
+      *
+      ** Set up work field for next available deal number
+      *
+     C                     Z-ADDNADLR     WNADL
+     C**********           MOVE RANGR     RNGENO  2                                           205911
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #OVERF - Check for overflow                                  *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  Calls    :  none                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #OVERF    BEGSR
+      *
+      **  If overflow occurs, write details on a new page
+      *
+     C           LINE      IFGE 57
+     C                     WRITEHEADP1
+     C                     WRITECOLHDG
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #RANGE - Output Range details                                *
+      *                                                               *
+      *  Called By:  #INIT - Initial Processing                       *
+      *                                                               *
+      *  Calls    :  none                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #RANGE    BEGSR
+      *
+     C                     Z-ADD1         X
+     C                     READ @ARREC5                  21
+      *
+      ** Loop to read and store ranges
+      *
+     C           *IN21     DOWEQ'0'
+     C                     MOVE @RCFNB    RNM,X
+     C                     Z-ADD@RCGNB    FNR,X
+     C                     Z-ADD@RCHNB    LNR,X
+     C                     Z-ADD@RCINB    NAN,X
+     C                     MOVE @RARTX    RNA,X
+      *
+     C                     READ @ARREC5                  21
+     C                     ADD  1         X       30
+      *
+     C                     ENDDO
+      *
+      ** Check that ranges are used
+      *
+     C           X         IFEQ 1
+     C           FNR,1     IFEQ 0
+     C           LNR,1     OREQ 0
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CDL098    IFEQ 'Y'                                                           CDL098
+     C                     Z-ADDX         SAVX    30                                          CDL098
+     C                     SUB  1         SAVX                                                CDL098
+     C                     ENDIF                                                              CDL098
+     C                     Z-ADD0         X
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #TRAIL - Output report trailers                              *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  #OVERF - Check for overflow                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #TRAIL    BEGSR
+      *
+      ** Write report trailer
+      *
+     C                     EXSR #OVERF
+     C                     WRITETRAILER
+     C                     CLOSEDL0851P1
+      *
+      ** Write audit trailer
+      *
+     C                     OPEN DL0851AU
+     C                     WRITEHEADAU
+     C                     WRITETRAILAU
+     C                     CLOSEDL0851AU
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #ZSFIL - Subroutine to call ZSFILE                           *
+      *                                                               *
+      *  Called By:  Main processing                                  *
+      *                                                               *
+      *  Calls    :  *PSSR - Error Handling Subroutine                *
+      *                                                               *
+      *****************************************************************
+     C           #ZSFIL    BEGSR
+      *
+      **  Ensure Report Spool File recorded by RCF
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQN   5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1 10
+     C                     PARM           ZSNUM1  60
+     C                     PARM           ZSERR   1
+      *
+      **  If an error occurred during ZSFILE processing,
+      **  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #DBERR - Database Error Processing                           *
+      *                                                               *
+      *  Called By:  #GINIT - Initial Processing                      *
+      *              #GCUST - Access Account Details                  *
+      *                                                               *
+      *  Calls    :  *PSSR - Error Handling Subroutine                *
+      *                                                               *
+      *****************************************************************
+     C           #DBERR    BEGSR
+      *
+      **  Open audit printer file and ensure it is recorded by RCF
+      *
+     C                     OPEN DL0851AU
+     C                     Z-ADDSFNUMU    ZSNUM1
+     C                     MOVELSFILEU    SFILE1
+     C                     EXSR #ZSFIL
+      *
+      **  Output audit report header and details of database error
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEDL0851AU
+      *
+      **  If DL0851P1 is open, output reference of the database error
+      *
+     C           P1OPEN    IFEQ 'Y'
+     C           LINE      IFGE 56
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     WRITEDBERRF
+     C                     CLOSEDL0851P1
+     C                     ENDIF
+      *
+      **  Call standard database error handling subroutine
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Database Error Handling Subroutine                   *
+      *                                                               *
+      *  Called By:  #DBERR - Database error processing               *
+      *              #ZSFIL                                           *
+      *  Calls    :  -                                                *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZEDITZ2
+      *
+     C/COPY ZSRSRC,ZDATE9Z3
+      *
+     C/COPY ZSRSRC,ZDATE9Z4
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2002

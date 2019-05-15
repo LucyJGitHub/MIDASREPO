@@ -1,0 +1,1271 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Midas-Fontis i/face - daily statement gen')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-Fontis Interface                               *
+      *                                                               *
+      *  GL2804 - Daily Statement Generation                          *
+      *                                                               *
+      *  Function:  To maintain the Fontis Accounts file and generate *
+      *             MT940 format messages to be passed through the    *
+      *             Midas-Fontis Interface                            *
+      *                                                               *
+      *  Close of Business                                            *
+      *                                                               *
+      *  Called By: GLC2804 - Fontis Message Generation               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201583             Date 13Jun02               *
+      *                 196077             Date 15Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 181476             Date 13Jul00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW020             Date 11Jan00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 165717             DATE 06JAN97               *
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL004 *CREATE     DATE 06JAN97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  201583 - Output field 64 even when it is zero.               *
+      *  196077 - Ensure that SWIFT transaction ID has the correct    *
+      *           value.                                              *
+      *  181476 - Value date and posting date are in wrong order for  *
+      *            field :61:.                                        *
+      *  CSW020 - SWIFT Decimal Places                                *
+      *           Add a new parameter for program ZM0040              *
+      *  165717 - Field :25: should contain the Midas Retail Number if*
+      *           retail account numbers are supported by the system. *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  CGL004 - Midas-Fontis Interface                              *
+      *                                                               *
+      *****************************************************************
+     FRCPOSTL0IF  E           K        DISK
+     FGLACBTL0IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FGLFNARL0IF  E           K        DISK
+     F/COPY WNCPYSRC,GL2804F001
+     FGLFONAL0UF  E           K        DISK
+     FGLFREFL0UF  E           K        DISK                      A
+     FGLFDTAPDO   E                    DISK
+     F/COPY WNCPYSRC,GL2804F002
+     FGL2804AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *   21        Member not found on message ref. file GLFREFL0    *
+      *   22        No Record Found/Last record on GLFONAL0           *
+      *   23        Account not found on account master file ACCNT    *
+      *   24        Acc not found on today's acc bal. file GLACBTL0   *
+      *   25        Acc not found on today's posting file APOSTPDF    *
+      *   26        No Rec Found/Last rec on Narrative file GLFNARL0  *
+      *   30        Balances don't match - error on write of mesg.    *
+      *   31        Error on write of detail line                     *
+      *   40        End of year                                       *
+      *                                                               *
+      *   U7 & U8   Database error                                    *
+      *   nn        X                                                 *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+     E/COPY WNCPYSRC,GL2804E001
+      *
+      /SPACE 3
+     IGLACBLF
+     I              LDBL                            LDBLO
+     I              CLBL                            CLBLO
+      ** Rename opening account balances
+      *
+     I/COPY WNCPYSRC,GL2804I001
+     ILDA       E DSLDA                         256
+      ** LDA for database error reporting
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IGLFONT    E DSGLFONTDA                    256
+      ** FONTIS Data Area
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I                                      264 269 @NUM
+      ** Program Status Data Structure - gives Job name, user and
+      ** number
+     ISDBANK    E DSSDBANKPD
+      ** Data structure for bank details table
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Data structure for currency details
+      *
+     ISCSARD    E DSSCSARDPD
+      ** SAR file details
+      *
+     I/COPY WNCPYSRC,GL2804I002
+     ISDMMOD    E DSSDMMODPD                                              165717
+      * Data Structure for Midas Module Details Access Program            165717
+     I*                                                                   165717
+     ISDRETL    E DSSDRETLPD                                              165717
+      * Data Structure for Retail Data Access Program                     165717
+      *                                                                   165717
+     IMNM         DS
+     I                                        1  10 W@MNM
+     I                                        2   7 W@MDAT
+      ** Member name - date
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      ** File Information Data Structure for GL2804AU
+      *
+     I@20         DS
+     I                                        1   2 @PFX
+     I                                        3   8 @DAT
+     I                                        9  120@TIM
+     I                                       13  150@SEQ
+      ** Transaction Reference Number data structure
+      *
+     I            DS
+     I**********                              1  18 F1FULA                                    CGL029
+     I                                        1  24 F1FULA                                    CGL029
+     I                                        1   3 F1BRCD
+     I**********                              4   90F1CNUM                                    CSD027
+     I                                        4   9 F1CNUM                                    CSD027
+     I                                       10  12 F1CCY
+     I**********                             13  160F1ACOD                                    CGL029
+     I**********                             17  180F1ACSQ                                    CGL029
+     I                                       13  220F1ACOD                                    CGL029
+     I                                       23  240F1ACSQ                                    CGL029
+      ** Full Account Data Structure
+      *
+     I            DS
+     I                                        1 256 @DATA
+     I                                        1   4 @TAG4
+     I                                        1   5 @TAG5
+     I/COPY WNCPYSRC,GL2804I004
+     I                                        5 256 @DAT4
+     I                                        6 256 @DAT5
+      ** Message data
+      *
+     I            DS
+     I                                        1   7 SPOS
+     I                                        6   7 @SPID
+      ** Source of posting
+      *
+     I            DS
+     I                                        1   9 @28
+     I                                        1   50@28S1
+     I I            '/'                       6   6 @28SL
+     I                                        7   8 @28S2
+     I                                        7   9 @28S3
+      ** Field :28:
+      *
+     I            DS
+     I                                        1  25 @60F
+     I                                        1   1 @60FS1
+     I                                        2   7 @60FS2
+     I                                        8  10 @60FS3
+     I                                       11  25 @60FS4
+      ** Field :60F:
+      *
+     I            DS
+     I**********                              1  64 @61                                       CGL029
+     I                                        1  70 @61                                       CGL029
+     I                                        1   6 @61S1
+     I                                        7  10 @61S2
+     I                                       11  11 @61S3
+      ** SWIFT Currency field (@61S4) not required
+     I                                       12  26 @61S5
+     I                                       27  30 @61S6
+     I                                       27  27 @61S6A
+     I                                       28  30 @61S6B
+     I                                       31  46 @61S7
+     I                                       47  64 @61S8
+     I                                       47  48 @61S8A
+     I                                       49  50 @61S8B
+     I                                       51  64 @61S8C
+     I                                       49  64 @61S8F
+     I                                       49  49 @61SF1
+     I**********                             50  64 @61SF2                                    CGL029
+     I                                       50  70 @61SF2                                    CGL029
+      ** Field :61: subfields 1 to 8
+      *
+     I            DS
+     I                                        1  25 @62F
+     I                                        1   1 @62FS1
+     I                                        2   7 @62FS2
+     I                                        8  10 @62FS3
+     I                                       11  25 @62FS4
+      ** Field :62F:
+      *
+     I            DS
+     I                                        1  25 @64
+     I                                        1   1 @64S1
+     I                                        2   7 @64S2
+     I                                        8  10 @64S3
+     I                                       11  25 @64S4
+      ** Field :64:
+      *
+     I            DS
+     I                                        1  13 @GLREF
+     I                                        1   3 @BRCA
+     I                                        4   6 @DPMT
+     I                                        7  13 @SPOS
+      ** GL posting reference for field :61: subfield 8
+      *
+     I            DS
+     I                                        1 256 @F4DAT
+     I I            '{1:F01'                  1   6 @F4S1
+     I                                        7  18 @F4S2
+     I I            '0000000000}{2:I940'     19  36 @F4S3
+     I I            '            '           37  48 @F4S4
+     I I            'U3003}{4:'              49 128 @F4S5
+      ** Swift Header
+     I/COPY WNCPYSRC,GL2804I003
+      *
+      /EJECT
+      *
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   INIT      Initial process                                   *
+      *   MAIN      Main detail process                               *
+      *   CREATE    Create ISO MT940                                  *
+      *   FLD20     Create field :20: (Transaction Reference Number)  *
+      *   FLD25     Create field :25: (Account i/d)                   *
+      *   FLD28     Create field :28:(Statement number/sequence)      *
+      *   FLD60F    Create field :60F: (Opening Balance)              *
+      *   FLD61     Create all field :61:s (Postings)                 *
+      *   SF6       Format field :61:, subfield 6                     *
+      *   SF7       Format field :61:, subfield 7                     *
+      *   SF8       Format field :61:, subfield 8                     *
+      *   SF9       Format field :61:, subfield 9                     *
+      *   FLD62F    Create field :62F: (Closing Balance)              *
+      *   FLD64     Create field :64: (Closing Available Balance)     *
+      *   CLSDWN    Closing Processing                                *
+      *   AUDIT     Audit Trail Report                                *
+      *   *PSSR     Process errors                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+      *
+      *================================================================
+      *  P R O G R A M    S T A R T                                   *
+      *================================================================
+      *
+      ** Receive Parameter List
+     C           *ENTRY    PLIST
+     C                     PARM           MNM    10
+      *
+      ** Execute initial process
+     C                     EXSR INIT
+      *
+      ** Execute main detail process
+     C                     EXSR MAIN
+      *
+      ** Execute closing process
+     C                     EXSR CLSDWN
+      *
+      ** Terminate RPG program with member name being passed back
+      ** to calling program
+     C                     SETON                     LR
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Function    :  Perform initial processing                     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  AOBANKR0                                       *
+      *             :  AOSARDR0                                       *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Initialise object copyright statement
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Initialise LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'GL2804'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Initialise record counters
+     C                     Z-ADD0         W@RED
+     C                     Z-ADD0         W@UPD
+     C                     Z-ADD0         W@DEL
+     C                     Z-ADD0         W@WRI
+      *
+      ** Initialise work field for value date
+     C                     MOVE *BLANKS   W@61S2  6
+      *
+      ** Set up key list for full account id.
+     C           K#ACID    KLIST
+     C                     KFLD           F1CNUM
+     C                     KFLD           F1CCY
+     C                     KFLD           F1ACOD
+     C                     KFLD           F1ACSQ
+     C                     KFLD           F1BRCD
+      *
+      ** Set up key list to access narrative table
+     C           K#FNAR    KLIST
+     C                     KFLD           L#TTYP  2
+     C                     KFLD           L#FTTR  1
+      *
+      ** Open Audit printer file PRTF/GL2804AU
+     C                     OPEN GL2804AU
+      *
+      ** Access SDBANKPD for bank ICD
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM           SDBANK
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 001  *
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Dataarea GLFONTA
+      *
+     C           *NAMVAR   DEFN GLFONTDA  GLFONT
+     C                     IN   GLFONT
+      *
+      ** Determine if this is the last run of the year
+     C                     MOVE *BLANKS   W@DNWD  6
+     C                     CALL 'ZM0060'
+     C                     PARM BJDNWD    ZMDAY   50
+     C           W@DNWD    PARM           ZMDATE  6
+      *
+     C                     MOVELW@DNWD    W@DAT2  2
+     C                     MOVE BJMRDT    W@DAT3  2
+     C           W@DAT2    IFNE W@DAT3
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+      *
+      ** Determine the member name
+     C                     MOVEL'S'       W@MNM
+     C                     Z-ADDBJRDNB    W@DAT4  50
+     C                     CALL 'ZM0060'
+     C                     PARM W@DAT4    ZMDAY   50
+     C           W@MDAT    PARM           ZMDATE  6
+     C/COPY WNCPYSRC,GL2804C003
+      *
+      ** Check whether switchable feature CGL005, to use field 28c
+      ** instead of 28 is switched on.
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CGL005'  @SAR    6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CGL005  1
+     C                     ENDIF
+     C/COPY WNCPYSRC,GL2804C001
+      *
+      ** Check whether Retail installed and Retail A/C Numbers supported  165717
+      *                                                                   165717
+     C                     CALL 'AOMMODR0'                                165717
+     C                     PARM '*MSG    '@RTCD   7                       165717
+     C                     PARM '*FIRST  '@OPTN   7                       165717
+     C                     PARM           SDMMOD                          165717
+      *                                                                   165717
+     C           @RTCD     IFNE *BLANKS                                   165717
+     C           *LOCK     IN   LDA                                       165717
+     C                     MOVE '007'     DBASE            * * * * * * * *165717
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 007  *165717
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * * *165717
+     C                     OUT  LDA                                       165717
+     C                     EXSR *PSSR                                     165717
+     C                     ENDIF                                          165717
+      *                                                                   165717
+     C           BGRTBN    IFEQ 'Y'                                       165717
+     C           BGNXST    OREQ 'Y'                                       165717
+     C                     CALL 'AORETLR0'                                165717
+     C                     PARM '*MSG   ' @RTCD   7                       165717
+     C                     PARM '*FIRST ' @OPTN   7                       165717
+     C                     PARM           SDRETL                          165717
+      *                                                                   165717
+     C           @RTCD     IFNE *BLANKS                                   165717
+     C           *LOCK     IN   LDA                                       165717
+     C                     MOVE '008'     DBASE            * * * * * * * *165717
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 008  *165717
+     C                     MOVEL'SDRETLPD'DBFILE           * * * * * * * *165717
+     C                     OUT  LDA                                       165717
+     C                     EXSR *PSSR                                     165717
+     C                     ENDIF                                          165717
+     C                     ENDIF                                          165717
+      *
+      ** Check whether switchable feature CSW020, SWIFT decimal           CSW020
+      ** places is switched on.                                           CSW020
+     C                     CALL 'AOSARDR0'                                CSW020
+     C                     PARM *BLANKS   @RTCD                           CSW020
+     C                     PARM '*VERIFY' @OPTN                           CSW020
+     C                     PARM 'CSW020'  @SAR    6                       CSW020
+      *                                                                   CSW020
+     C           @RTCD     IFEQ *BLANK                                    CSW020
+     C                     MOVE 'Y'       CSW020  1                       CSW020
+     C                     MOVE 'N'       WSWDPC  1                       CSW020
+     C                     ELSE                                           CSW020
+     C                     MOVE ' '       WSWDPC                          CSW020
+     C                     ENDIF                                          CSW020
+      *                                                                   CSW020
+     C                     ENDSR                           INIT
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  MAIN                                           *
+      * Function    :  Perform main detail processing                 *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  CREATE                                         *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+     C                     READ GLFONAL0                 22
+      *
+      ** Write title header
+     C                     WRITEGL2804A1
+      *
+     C           *IN22     DOWEQ'0'                        B01
+      *
+     C                     MOVE F1FULA    W@ACC
+     C                     ADD  1         W@RED
+      *
+     C           K#ACID    CHAINACCNT                23
+      *
+      ** If record not found DELETE fontis records
+     C           *IN23     IFEQ '1'                        B02
+     C                     DELETGLFONAD0
+     C                     ADD  1         W@DEL
+     C                     ELSE                            X02
+      *
+      ** Live account details are found
+     C           RECI      IFEQ 'D'                        B03
+     C           F1FONA    ANDEQ'Y'
+     C           F1ATVD    ANDLEBJDNWD
+     C           F1DATV    ANDEQ*ZEROS
+     C           RECI      OREQ 'D'
+     C           F1FONA    ANDEQ'Y'
+     C           F1ATVD    ANDLEBJDNWD
+     C           F1DATV    ANDGEBJDNWD
+      *
+      ** Set up & initialise running account balance field
+     C                     MOVE *BLANKS   W@RABF 150
+      *
+      ** Generate MT940 message
+     C                     EXSR CREATE
+      *
+     C                     Z-ADDBJDNWD    F1WD42
+     C           *IN40     IFEQ '1'                        B04
+     C                     Z-ADD0         F1FNSQ
+     C                     ELSE                            X04
+     C                     ADD  1         F1FNSQ
+     C                     ENDIF                           E04
+     C                     UPDATGLFONAD0
+     C                     ADD  1         W@UPD
+     C                     ENDIF                           E03
+     C                     ENDIF                           E02
+     C                     READ GLFONAL0                 22
+     C                     ENDDO                           E01
+      *
+     C                     ENDSR                           MAIN
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  CREATE                                         *
+      * Function    :  Create ISO MT940 message for transmission      *
+      *                to FONTIS                                      *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  FLD20      Create field :20:                   *
+      *                FLD25      Create field :25:                   *
+      *                FLD28      Create field :28:                   *
+      *                FLD60F     Create field :60F:                  *
+      *                FLD61      Create all field :61:s              *
+      *                FLD62F     Create field :62F:                  *
+      *                FLD64      Create field :64:                   *
+      *****************************************************************
+      *
+     C           CREATE    BEGSR
+      *
+      ** Access start of day opening balance
+     C           K#ACID    CHAINGLACBTL0             24
+     C           *IN24     IFEQ '1'                        B01
+      *
+      ** Set opening balance to zero if not found
+     C                     Z-ADD0         CLBLO
+     C                     Z-ADD0         LDBLO
+     C                     ENDIF                           E01
+      *
+      ** Set up running account balance.
+     C                     Z-ADDLDBLO     W@RABF
+      *
+      ** Write Swift Header to PF/GLFDTAPD
+     C                     MOVE F6FNBC    @F4S2
+     C                     MOVEL@F4DAT    F4DATA
+     C                     WRITEGLFDTAD0
+      *
+      ** Create field :20: (Transaction Reference Number)
+     C                     EXSR FLD20
+      *
+      ** Create field :25: (Account i/d)
+     C                     EXSR FLD25
+      *
+      ** Create field :28:(Statement number/sequence)
+     C                     EXSR FLD28
+      *
+      ** Create field :60F: (Opening Balance)
+     C                     EXSR FLD60F
+      *
+      ** Access first posting for this account
+     C           K#ACID    CHAINAPOSTPDF             25
+      *
+      ** Compare account id read from RCPOSTL0 with that currently
+      ** being processed on GLFONAL0
+      *
+     C           *IN25     DOWEQ'0'                        B01
+     C           F1CNUM    ANDEQCNUM
+     C           F1CCY     ANDEQCCY
+     C           F1ACOD    ANDEQACOD
+     C           F1ACSQ    ANDEQACSQ
+     C           F1BRCD    ANDEQBRCA
+      *
+      ** Create all field :61:s (Postings)
+     C                     EXSR FLD61
+      *
+      ** Create field :86: (Narrative)
+     C/COPY WNCPYSRC,GL2804C008
+     C                     EXSR FLD86
+     C/COPY WNCPYSRC,GL2804C004
+      *
+      ** Maintain Running Account Balance
+     C           @61S3     IFEQ 'D'                        B02
+     C                     ADD  PSTA      W@RABF
+     C                     ELSE                            X02
+     C                     SUB  PSTA      W@RABF
+     C                     ENDIF                           E02
+      *
+      ** Read next record
+     C                     READ APOSTPDF                 25
+     C                     ENDDO                           E01
+      *
+      ** Create field :62F: (Closing Balance)
+     C                     EXSR FLD62F
+      *
+      ***If*Cleared*balance*is*not*zero,*create*field*:64:************                        201583
+      ** Create field :64:                                                                    201583
+      ** (Closing Available Balance)
+     C********** CLBL      IFNE 0                          B01                                201583
+     C                     EXSR FLD64
+     C**********           ENDIF                           E01                                201583
+      *
+      **     <<< FOR FUTURE DEVELOPMENT >>>
+      ** Tag :65: (Forward Available Balance)
+      ** This is an appropiate position to add coding for this tag
+     C/COPY WNCPYSRC,GL2804C005
+      *
+      ** Write Swift Trailer to PF/GLFDTAPD
+     C                     CLEAR@DATA
+     C                     MOVEL'-}'      @DATA
+     C                     MOVE @DATA     F4DATA
+     C                     WRITEGLFDTAD0
+      *
+     C                     ENDSR                           CREATE
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD20                                          *
+      * Function    :  Create field :20: (Transaction Reference       *
+      *                Number)                                        *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD20     BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':20:'    @TAG4
+     C                     MOVEL'MF'      @PFX
+     C                     MOVELW@MDAT    @DAT
+      *
+      ** Initialise Transaction Reference time subfield
+     C                     TIME           W#NEWT  60
+     C           W#NEWT    IFEQ W#OLDT                     B01
+     C                     ADD  1         @SEQ
+     C                     ELSE                            X01
+     C                     Z-ADD1         @SEQ
+     C                     Z-ADDW#NEWT    W#OLDT  60
+     C           W#OLDT    DIV  100       @TIM
+     C                     ENDIF                           E01
+      *
+     C                     MOVEL@20       @DAT4
+     C                     MOVEL@DATA     F4DATA
+      *
+      ** Write record to file
+     C                     WRITEGLFDTAD0
+      *
+      ** Keep a count of the number of records written to GLFDTAPD
+     C                     ADD  1         W@WRI
+      *
+     C                     ENDSR                           FLD20
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD25                                          *
+      * Function    :  Create field :25: (Account i/d)                *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD25     BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':25:'    @TAG4
+     C           ATYP      IFEQ 'R'                                       165717
+     C           BMRANR    ANDEQ'Y'                                       165717
+     C           ACNO      ANDNE*ZEROS                                    165717
+     C                     MOVELACNO      @DAT4                           165717
+     C                     ELSE                                           165717
+     C                     MOVELF1FULA    @DAT4
+     C                     END                                            165717
+     C/COPY WNCPYSRC,GL2804C010
+     C                     MOVEL@DATA     F4DATA
+      *
+      ** Write record to file
+     C                     WRITEGLFDTAD0
+      *
+     C                     ENDSR                           FLD25
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD28                                          *
+      * Function    :  Create field :28:(Statement number/Sequence)   *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD28     BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+      *
+      ** If CGL005 switched off, output field 28.
+     C           CGL005    IFNE 'Y'
+     C                     MOVEL':28:'    @TAG4
+     C           F1FNSQ    ADD  1         @28S1
+     C                     MOVEL'1 '      @28S2
+     C                     MOVEL@28       @DAT4
+     C                     MOVEL@DATA     F4DATA
+      *
+      ** If CGL005 switched on, output field 28C.
+     C                     ELSE
+     C                     MOVEL':28C:'   @TAG5
+     C           F1FNSQ    ADD  1         @28S1
+     C                     MOVEL'1 '      @28S3
+     C                     MOVEL@28       @DAT5
+     C                     MOVEL@DATA     F4DATA
+     C                     ENDIF
+      *
+      ** Write record to file
+     C                     WRITEGLFDTAD0
+      *
+     C                     ENDSR                           FLD28
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD60F                                         *
+      * Function    :  Create field :60F: (Opening balance)           *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *                ZM0040     Return ccy/amount in ISO format     *
+      *****************************************************************
+      *
+     C           FLD60F    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':60F:'   @TAG5
+      *
+      ** Set up subfield 1 (Debit/Credit indicator) nb. zero = debit
+     C           LDBLO     IFGT 0                          B01
+     C                     MOVE 'D'       @60FS1
+     C                     Z-ADDLDBLO     @WKAMT
+     C                     ELSE                            X01
+     C                     MOVE 'C'       @60FS1
+     C                     Z-SUBLDBLO     @WKAMT 130
+     C                     ENDIF                           E01
+      *
+      ** Set up subfield 2 (date) and store for later use
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C           @60FS2    PARM           ZMDATE  6
+     C                     MOVE ZMDATE    @RUND   6
+      *
+      ** Set up subfields 3 and 4 (Currency and Amount) nb. use
+      ** currency code returned by ZM0040 in s/f 3 because this should
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM @WKAMT    ZAMNT  130
+     C                     PARM F1CCY     ZCCY    3
+     C           @60FS4    PARM           ZSAMNT 15
+     C           @60FS3    PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+     C                     PARM WSWDPC    ZSWDPC  1                       CSW020
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 002  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C                     MOVEL@60F      @DAT5
+     C                     MOVE @DATA     F4DATA
+      *
+      ** Write record to file
+     C                     WRITEGLFDTAD0
+      *
+     C                     ENDSR                           FLD60F
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD61                                          *
+      * Function    :  Create all field :61:s (postings)              *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *                ZM0040     Return ccy/amount in ISO format     *
+      *                SF6        Create subfield 6                   *
+      *                SF7        Create subfield 7                   *
+      *                SF8        Create subfield 8                   *
+      *                SF9        Create subfield 9                   *
+      *****************************************************************
+      *
+     C           FLD61     BEGSR
+      *
+      ** Format all field :61:s
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     CLEAR@61
+     C                     MOVEL':61:'    @TAG4
+      *
+      ***Set*up*subfield*1*(posting*date,*YYMMDD)                                             181476
+     C***********PSTD      IFNE 0                          B01                                181476
+     C***********          CALL 'ZM0060'                                                      181476
+     C***********          PARM PSTD      ZMDAY   50                                          181476
+     C***********@61S1     PARM           ZMDATE  6                                           181476
+     C***********          ENDIF                           E01                                181476
+      ** Set up subfield 1 (value date, YYMMDD)                                               181476
+     C                     CALL 'ZM0060'                                                      181476
+     C                     PARM VALD      ZMDAY   50                                          181476
+     C           @61S1     PARM           ZMDATE  6                                           181476
+      *
+      ***Set*up*subfield*2*(value*date,*MMDD)                                                 181476
+     C***********          CALL 'ZM0060'                                                      181476
+     C***********          PARM VALD      ZMDAY   50                                          181476
+     C***********W@61S2    PARM           ZMDATE  6                                           181476
+     C***********          MOVE W@61S2    @61S2                                               181476
+      ** Set up subfield 2 (posting date, MMDD)                                               181476
+     C           PSTD      IFNE 0                          B01                                181476
+     C                     CALL 'ZM0060'                                                      181476
+     C                     PARM PSTD      ZMDAY   50                                          181476
+     C           W@61S2    PARM           ZMDATE  6                                           181476
+     C                     MOVE W@61S2    @61S2                                               181476
+     C                     ENDIF                                                              181476
+      *
+      ** Set up subfield 3 (debit/credit indicator)
+     C           DRCR      IFEQ 0                          B01
+     C                     MOVE 'D'       @61S3
+     C                     ELSE                            X01
+     C                     MOVE 'C'       @61S3
+     C                     ENDIF                           E01
+      *
+      ** Set up subfield 5 (posting amount)
+     C                     Z-ADDPSTA      @WKAMT
+     C                     CALL 'ZM0040'
+     C                     PARM @WKAMT    ZAMNT  130
+     C                     PARM F1CCY     ZCCY    3
+     C           @61S5     PARM           ZSAMNT 15
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+     C                     PARM WSWDPC    ZSWDPC                          CSW020
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 003  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Format subfield 6
+     C                     EXSR SF6
+      *
+      ** Format subfield 7
+     C                     EXSR SF7
+      *
+      ** Format subfield 8
+     C                     EXSR SF8
+      *
+      ** When all subfields for this line formatted, compress and
+      ** output to file.
+     C           @DAT4     CAT  @61S1:0   @DAT4
+     C           @DAT4     CAT  @61S2:0   @DAT4
+     C           @DAT4     CAT  @61S3:0   @DAT4
+     C           @DAT4     CAT  @61S5:0   @DAT4
+     C           @DAT4     CAT  @61S6:0   @DAT4
+     C           @DAT4     CAT  @61S7:0   @DAT4
+     C           @DAT4     CAT  @61S8:0   @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     F4DATA
+      *
+      ** Write record to file
+     C                     WRITEGLFDTAD0
+      *
+      ** Format subfield 9
+     C                     EXSR SF9
+      *
+     C                     ENDSR                           FLD61
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SF6                                            *
+      * Function    :  Create subfield 6 for field :61:               *
+      *                                                               *
+      * Called by   :  FLD61                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SF6       BEGSR
+      *
+      ** First character of subfield 6 should always be 'F'
+     C                     MOVE 'F'       @61S6A
+      *
+      ** Fill K-list fields to chain for Transaction Type ID
+     C********** SWCR      IFNE *BLANKS                    B01                                196077
+     C           PREF      IFNE *BLANKS                                                       196077
+     C                     MOVE 'Y'       L#FTTR
+     C                     ELSE                            X01
+     C                     MOVE 'N'       L#FTTR
+     C                     ENDIF                           E01
+      *
+     C                     MOVELOTTP      L#TTYP
+      *
+     C           K#FNAR    CHAINGLFNARD0             26
+     C           *IN26     IFEQ '0'                        B01
+     C                     MOVE F2STTI    @61S6B
+     C                     ELSE                            X01
+      *
+      ** If unable to set up code, default to 'MSC' - miscellaneous
+     C                     MOVE 'MSC'     @61S6B
+     C                     ENDIF                           E01
+      *
+     C                     ENDSR                           SF6
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SF7                                            *
+      * Function    :  Create subfield 7 for field :61:               *
+      *                                                               *
+      * Called by   :  FLD61                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SF7       BEGSR
+      *
+      ** Use SWIFT common reference if available
+     C           SWCR      IFNE *BLANKS                    B01
+     C                     MOVELSWCR      @61S7
+      *
+      ** else - use 16 characters of Posting Narrative
+     C                     ELSE                            X01
+     C                     MOVELPNAR      @61S7
+     C                     ENDIF                           E01
+      *
+     C                     ENDSR                           SF7
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SF8                                            *
+      * Function    :  Create subfield 8 for field :61:               *
+      *                                                               *
+      * Called by   :  FLD61                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SF8       BEGSR
+      *
+      ** If Funds Transfer, use Payment Reference
+     C           PREF      IFNE *BLANKS                    B01
+     C                     MOVELPREF      @61S8F
+      *
+      ** else if Other transaction, use Transaction module code
+     C                     ELSE                            X01
+     C           OTRF      IFNE *BLANKS                    B02
+     C                     MOVELF2TRMD    @61SF1
+     C           F2TRMD    IFNE ' '                        B03
+     C                     MOVE OTRF      @61SF2
+     C                     ENDIF                           E03
+      *
+      ** else just use source of posting
+     C                     ELSE                            X02
+      ** Use branch, department, source of posting
+     C                     MOVE 'GL'      @61S8B
+     C                     MOVELBRCA      @BRCA
+     C                     MOVELDPMT      @DPMT
+     C                     MOVELSPOS      @SPOS
+     C                     MOVEL@GLREF    @61S8C
+      *
+     C                     ENDIF                           E02
+     C                     ENDIF                           E01
+      *
+     C           @61S8     IFNE *BLANKS                    B01
+      *
+      ** Subfield 8 should always begin with '//'
+     C                     MOVE '//'      @61S8A
+     C                     ENDIF                           E01
+      *
+     C                     ENDSR                           SF8
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SF9                                            *
+      * Function    :  Create subfield 9 for field :61:               *
+      *                                                               *
+      * Called by   :  FLD61                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SF9       BEGSR
+      *
+      ** Clear tag & data fields for writing of subfield 9
+     C                     CLEAR@DATA
+      *
+      ** Retrieve SwiftNarrative from narrative table else Source of Posting
+     C           *IN26     IFEQ '0'                        B01
+     C                     MOVELF2NATV    @DATA
+     C                     ELSE                            X01
+     C                     MOVELSPOS      @DATA
+     C                     END                             E01
+     C/COPY WNCPYSRC,GL2804C002
+      *
+      ** If data in subfield 9, write to file
+     C           @DATA     IFNE *BLANKS                    B01
+     C                     MOVE @DATA     F4DATA
+     C                     WRITEGLFDTAD0
+     C                     ENDIF                           E01
+      *
+     C                     ENDSR                           SF9
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD86                                          *
+      * Function    :  Create field :86: (narrative)                  *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+      *
+     C           FLD86     BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':86:'    @TAG4
+      *
+      ** Set up posting narrative
+     C                     MOVELPNAR      @DAT4
+     C/COPY WNCPYSRC,GL2804C009
+     C                     MOVEL@DATA     F4DATA
+     C                     WRITEGLFDTAD0
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,GL2804C006
+      *
+      *****************************************************************
+      * Subroutine  :  FLD62F                                         *
+      * Function    :  Create field :62F: (closing balance)           *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0040     Return ccy/amount in ISO format     *
+      *****************************************************************
+      *
+     C           FLD62F    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':62F:'   @TAG5
+      *
+      ** Set up subfield 1 (Debit/Credit indicator) nb. zero = credit
+     C           LDBL      IFLE 0                          B01
+     C                     MOVE 'C'       @62FS1
+     C                     Z-SUBLDBL      @WKAMT
+     C                     ELSE                            X01
+     C                     MOVE 'D'       @62FS1
+     C                     Z-ADDLDBL      @WKAMT
+     C                     ENDIF                           E01
+      *
+      ** If balances don't match write out error message
+     C           LDBL      IFNE W@RABF                     B01
+     C                     WRITEGL2804A3               30
+     C                     ENDIF                           E01
+      *
+      ** Set up subfield 2 (date)
+     C                     MOVE @RUND     @62FS2
+      *
+      ** Set up subfields 3 and 4 (Currency and Amount) nb. use
+      ** currency code returned by ZM0040 in s/f 3 because this should
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM @WKAMT    ZAMNT  130
+     C                     PARM F1CCY     ZCCY    3
+     C           @62FS4    PARM           ZSAMNT 15
+     C           @62FS3    PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+     C                     PARM WSWDPC    ZSWDPC                          CSW020
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 004  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C                     MOVEL@62F      @DAT5
+     C                     MOVE @DATA     F4DATA
+      *
+      ** Write record to file
+     C                     WRITEGLFDTAD0
+      *
+     C                     ENDSR                           FLD62F
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD64                                          *
+      * Function    :  Create field :64: (closing available balance)  *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0040     Return ccy/amount in ISO format     *
+      *****************************************************************
+      *
+     C           FLD64     BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':64:'    @TAG4
+      *
+      ** Set up subfield 1 (Debit/Credit indicator) nb. zero = credit
+     C           CLBL      IFLE 0                          B01
+     C                     MOVE 'C'       @64S1
+     C                     Z-SUBCLBL      @WKAMT
+     C                     ELSE                            X01
+     C                     MOVE 'D'       @64S1
+     C                     Z-ADDCLBL      @WKAMT
+     C                     ENDIF                           E01
+      *
+      ** Set up subfield 2 (date)
+     C                     MOVE @RUND     @64S2
+      *
+      ** Set up subfields 3 and 4 (Currency and Amount) nb. use
+      ** currency code returned by ZM0040 in s/f 3 because this should
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM @WKAMT    ZAMNT  130
+     C                     PARM F1CCY     ZCCY    3
+     C           @64S4     PARM           ZSAMNT 15
+     C           @64S3     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+     C                     PARM WSWDPC    ZSWDPC                          CSW020
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '005'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 005  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C                     MOVEL@64       @DAT4
+     C                     MOVE @DATA     F4DATA
+      *
+      ** Write record to file
+     C                     WRITEGLFDTAD0
+      *
+     C                     ENDSR                           FLD64
+      /EJECT
+     C/COPY WNCPYSRC,GL2804C007
+      *
+      *****************************************************************
+      * Subroutine  :  CLSDWN                                         *
+      * Function    :  Closing Processing                             *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+      *
+     C           CLSDWN    BEGSR
+      *
+      ** Check for an index record for that day's member
+      *
+     C           MNM       CHAINGLFREFL0             21
+      *
+     C           *IN21     IFEQ '1'
+     C                     MOVE MNM       F3MBRN
+     C                     MOVE 'P'       F3DNLS
+     C                     Z-ADD0         F3RSTN
+     C                     MOVE *BLANKS   F3RSTU
+     C                     Z-ADD0         F3RSTD
+     C                     Z-ADD0         F3RTIM
+     C                     Z-ADD0         F3DLDL
+     C                     Z-ADD0         F3TDNL
+     C                     MOVE *BLANKS   F3DLFN
+     C                     WRITEGLFREFD0
+     C                     ELSE
+     C                     MOVE 'P'       F3DNLS
+     C                     Z-ADD0         F3RSTN
+     C                     MOVE *BLANKS   F3RSTU
+     C                     Z-ADD0         F3RSTD
+     C                     Z-ADD0         F3RTIM
+     C                     Z-ADD0         F3DLDL
+     C                     Z-ADD0         F3TDNL
+     C                     MOVE *BLANKS   F3DLFN
+     C                     UPDATGLFREFD0
+     C                     ENDIF
+      *
+      ** Output Audit Trail Report
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR                           CLSDWN
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  AUDIT                                          *
+      * Function    :  Produce Audit Trail Report                     *
+      *                                                               *
+      * Called by   :  CLSDWN                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      ** If no record found on the file PF/GLFONAPD
+     C           *IN22     IFEQ '1'                        B01
+     C           W@RED     ANDEQ0
+      *
+      ** Write 'no messages to report'
+     C                     WRITEGL2804A4
+     C                     ELSE                            X01
+      *
+      ** Write out details
+     C                     WRITEGL2804A2               31
+     C                     ENDIF                           E01
+      *
+      ** Write out 'End of Report'
+     C                     WRITEGL2804A6
+      *
+      ** Close Audit printer file PRTF/GL2804AU
+     C                     CLOSEGL2804AU
+      *
+     C                     ENDSR                           AUDIT
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Function    :  Called autmatically if a program error occurs  *
+      *                or directly in case of database errors.        *
+      *                This program DUMPs the program just once.      *
+      *                                                               *
+      * Called by   :  Automatically                                  *
+      *                INIT                                           *
+      *                                                               *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+      ** Check to see if *PSSR has been already called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ** DUMP and write database error report
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     WRITEGL2804A5
+     C                     WRITEGL2804A6
+      *
+      ** Close Audit printer file PRTF/GL2804AU
+     C                     CLOSEGL2804AU
+      *
+     C                     ENDIF
+      *
+      ** If *PSSR already run, end program.
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+      *
+      ********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

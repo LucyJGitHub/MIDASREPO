@@ -1,0 +1,869 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BTS report prompt program')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Standing Data module
+     F*                                                               *
+     F*  SD4500 - BTS report prompt program                           *
+     F*                                                               *
+     F*  Function:  To prompt and validate the month/year combination *
+     F*             required for the report and convert it to a Midas *
+     F*             day number.                                       *
+     F*                                                               *
+     F*  Midas Phase: Input Cycle                                     *
+     F*                                                               *
+     F*  Called By: FCC0401                                           *
+     F*             FCC0403                                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 188032             Date 30Apr01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 098892             Date 14Jun96               *
+     F*                 S01411             DATE 08JUN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  188032 - BTS monthly report not running normally.  Job       *
+      *           produces program dump.                              *
+     F*  098892 - Array index error because because array index for   *
+     F*           month no. was 1 long. Redefine it as a 2 packed     *
+     F*           decimal field.                                      *
+     F*  S01411 - New program for Business Transaction Statistics     *
+     F*           Switchable Feature.                                 *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F*   SCREEN -  Display screen to user.
+     F*   VALID  -  Validate screen values.
+     F*   CALC   -  Calculate End and Start date for month/year
+     F*             combination.
+     F*   CMDK   -  Check command keys.
+     F*   YRSUBR -  Calculate start date in year-to-date mode.
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*  25       Month found in lokup operation
+     F*  30       Month in error
+     F*  31       Year in error
+     F*  35       Enquiry mode screen should be output only
+     F*  36       Program called in year-to-date mode
+     F*  37       Program called in monthly mode
+     F*  40       Year is not four digits
+     F*  59       Screen message queue indicators
+     F*  80       Error indicator
+     F*  98       Date format indicator
+     F*  99       To determine whether a field is numeric
+     F*  U7 & U8  Standard Database error indicators
+     F*  LR       Last Record - End of Program
+     F**---------------------------------------------------------------
+     FSD4500DFCF  E                    WORKSTN
+      *
+      *
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array to check that YEAR is four digits
+      *
+     E                    YEARCK      4  1
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+     E/COPY ZSRSRC,ZALIGNZ1
+      /SPACE 3
+      *
+     E                    MNTHN  12  12  2 0
+     E                    MNTHA  12  12  3
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      * Define layout of SDBANKPD for AOBANKR0 call return string
+      *
+     IBANK      E DSSDBANKPD
+      *
+      * Define Access Object call output string
+      *
+     I@FMT      E DSDSFDY
+      *
+      * Define Access Object call output string
+      *
+     I            DS
+     I                                        1   20MONTHN
+     I                                        1   2 MONTHA
+      *
+      * Data structure to convert Month to numeric
+      *
+     I            DS
+     I                                        1   20YEARN
+     I                                        1   2 YEARA
+      *
+      * Data structure to convert year to numeric
+      *
+     I            DS
+     I                                        1   6 DATE6A
+     I                                        1   2 DATEDD
+     I                                        3   4 DATEMM
+     I                                        3   40DATEMN
+     I                                        5   6 DATEYY
+     I                                        5   60DATEYN
+     I                                        1   60DATE6N
+      *
+      * Data structure to convert date to numeric
+      *
+     I                                        1   40YRWRKN
+     I                                        1   4 YRWRKA
+      *
+      * Data structure to convert Year to alpha
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Program Initiation Processing:                                *
+      *                                                               *
+      * Sets up the copyright statement.                              *
+      * Obtains rundate.                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Obtain rundate from SDBANKPD
+      *
+     C                     MOVEL'*FIRST'  BANKOP  7
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM           BANKRC  7        Return code
+     C                     PARM           BANKOP           Option
+     C           BANK      PARM BANK      @FMT             Format
+      *
+      ** Check for error in SDBANKPD
+      *
+     C           BANKRC    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SD4500'  DBPGM            **************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001*
+     C                     MOVEL'BANK'    DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** determine which date format is being used
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** Move midas run date into screen date field
+      *
+     C                     MOVE BJMRDT    SRUNA
+      *
+      ** Initialise work and other fields
+      *
+     C                     MOVE 'Y'       INVALD  1
+     C                     MOVE *BLANKS   ENDDAT 10
+     C                     MOVE *BLANKS   STRDAT  5
+     C                     MOVEL'SD4500'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+     C                     MOVE *BLANKS   PRARM  10
+     C                     Z-ADD0         WRKEND  50
+     C                     Z-ADD0         ENDPAR  50
+     C                     Z-ADD0         WUSTDT  50
+     C                     Z-ADD0         WUYEAR  20
+     C                     Z-ADD0         WUYRFR  40
+     C                     Z-ADD0         WUCUYR  40
+     C                     Z-ADD0         WUMNTH  20
+     C                     Z-ADD0         YRWRK   20
+     C                     MOVE *BLANKS   WUYER2  2
+     C                     MOVE *BLANKS   WUMNTS  3
+     C                     MOVE *BLANKS   WUWRK5  5
+     C                     MOVE *BLANKS   WUWRK4  4
+      *
+      ** Initialise MSDID and MSG file fields
+      *
+     C                     MOVE *BLANKS   WUMSID  7
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+      *
+      ** Find out The current month and year, from Midas run date
+      ** Find out The current year
+      *
+     C                     MOVE BJMRDT    WUYEAR
+      *
+      ** Find out The current month
+      *
+     C                     MOVE BJMRDT    WUWRK5
+     C                     MOVELWUWRK5    WUMNTS
+     C*********************Z-ADD1         Y       10                      098892
+     C                     Z-ADD1         Y       20                      098892
+     C           WUMNTS    LOKUPMNTHA,Y                  25
+     C           *IN25     IFEQ '1'
+     C                     Z-ADDMNTHN,Y   WUMNTH
+     C                     END
+      *
+      *****************************************************************
+      *                                                               *
+      * Program Main Processing:                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@RFRQ  1
+     C                     PARM           P@RPAR100
+     C                     PARM           P@RACT  1
+     C                     PARM           P@RCMD  1
+      *
+      ** Set approprate indicator on to determine
+      ** the screen title, whether year-to-date or monthly
+      *
+     C           P@RFRQ    IFEQ 'Y'
+     C                     MOVE '1'       *IN36
+     C                     ELSE
+     C                     MOVE '1'       *IN37
+     C                     END
+      *
+      ** Only in amend, or enquiry mode
+      *
+     C           P@RACT    IFEQ 'A'
+     C           P@RACT    OREQ 'E'
+      *
+      ** Split the prompt parameter into it's component parts,
+      ** find month and year from end date
+      *
+     C                     MOVELP@RPAR    PRARM
+     C                     MOVE PRARM     ENDPAR
+     C                     Z-ADDENDPAR    ZDAYNO
+      *
+      ** Convert day number to date
+      *
+     C                     EXSR ZDATE2
+      ** Month
+     C                     MOVE ZDATE     WUWRK4
+     C                     MOVELWUWRK4    MONTH
+      ** Year
+     C                     MOVE WUWRK4    YRWRK
+     C           YRWRK     IFGT 71
+     C           YRWRK     ADD  1900      YRWRKN
+     C                     ELSE
+     C           YRWRK     ADD  2000      YRWRKN
+     C                     END
+      *
+     C                     MOVE YRWRKA    YEAR
+      *
+      ** Enquirey, screen should be output only
+      *
+     C           P@RACT    IFEQ 'E'
+     C                     MOVE '1'       *IN35
+     C                     END
+      *
+     C                     END
+      *
+      ** Display the screen
+      *
+     C                     EXSR SCREEN
+      *
+      ** Calculate the start and finish dates for the report
+      *
+     C                     EXSR CALC
+      *
+      ** Set on LR and exit programe
+      *
+     C                     EXSR ENDP
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SCREEN - Display screen to user.                              *
+      *                                                               *
+      * Called by: Main.                                              *
+      * CallS    : VALID                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SCREEN    BEGSR
+      *
+      ** Write screen
+      *
+     C                     EXFMTSD4500F1
+      *
+      ** Check command keys
+      *
+     C                     EXSR CMDK
+      *
+      ** Process until valid, or exit requested
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           INVALD    ANDEQ'Y'
+      *
+      ** Validate screen input
+      *
+     C                     EXSR VALID
+      *
+      ** If errors still exist, write screen, else exit.
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITESD4500C0
+     C                     EXFMTSD4500F1
+      *
+      ** Check command keys
+      *
+     C                     EXSR CMDK
+      *
+     C                     ELSE
+     C                     MOVE 'N'       INVALD
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * VALID  - Validate screen values.                              *
+      *                                                               *
+      * Called by: SCREEN                                             *
+      * Calls    : ZDATE1                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      *
+     C                     MOVE *BLANKS   ZFIELD
+      *
+      ** Clear screen message queue
+      *
+     C                     MOVEA'0000'    *IN,59
+     C                     CALL 'SCC0250'
+      *
+      ** Set error indicator off
+      *
+     C                     MOVEA'00'      *IN,30
+     C                     MOVE 0         *IN40
+     C                     MOVE 0         *IN80
+      *
+      ** Month has not been entered, send error message
+      *
+     C           MONTH     IFEQ *BLANK
+     C                     MOVEL'USR1900' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN80
+      *
+     C                     ELSE
+      *
+      ** Month has been entered, check if it is numeric
+      *
+     C                     MOVELMONTH     ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    MONTH
+     C                     MOVE ZFIELD    MONTHA
+      *
+      ** Month must be in the range 1 to 12
+      *
+     C           MONTHN    IFLT 1
+     C           MONTHN    ORGT 12
+     C                     MOVEL'USR1905' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN80
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** Month has been entered but not numeric, send error message
+      *
+     C                     MOVEL'USR1902' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN80
+     C                     END
+     C                     END
+      *
+      ** Year has not been entered, send error message
+      *
+     C           YEAR      IFEQ *BLANK
+     C                     MOVEL'USR1901' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+      *
+      ** Year has been entered, check it is numeric
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELYEAR      ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     Z-ADD4         ZADIG
+     C                     EXSR ZALIGN
+      *
+      ** Year is numeric.
+      *
+     C           *IN99     IFEQ '0'
+      *
+      ** Make sure four digits have been entered
+      *
+     C                     MOVEAYEAR      YEARCK
+     C                     Z-ADD1         X       10
+     C           *IN40     DOWEQ'0'
+     C           X         ANDLE4
+     C           YEARCK,X  IFEQ ' '
+     C                     MOVE '1'       *IN40
+      *
+     C                     ELSE
+      *
+     C                     ADD  1         X
+     C                     END
+     C                     END
+      *
+      ** If less than four digits have been entered, or there are
+      ** embeded blanks, send error message
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVEL'USR1904' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+     C                     END
+      *
+     C                     MOVE ZFIELD    YEAR
+      *
+     C                     ELSE
+      *
+      ** Year is not numeric, send error message
+      *
+     C                     MOVEL'USR1903' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+     C                     END
+     C                     END
+      *
+      ** If no errors
+      *
+     C           *IN80     IFEQ '0'
+      *
+      ** Convert the values entered into Midas day number
+      *
+     C                     MOVE '01'      DATEDD
+     C                     MOVE MONTH     DATEMM
+     C                     MOVE YEAR      DATEYY
+     C                     Z-ADDDATE6N    ZDATE
+      *                                                                   188032
+      ** ZDATE is in DDMMYY format because of the Data Structure defined  188032
+      ** for DATE6N.  Need to setof *IN98 before calling ZDATE1 and just  188032
+      ** restore the original value after the routine. If *IN98='1', then 188032
+      ** MMDDYY format, otherwise, DDMMYY.                                188032
+      *                                                                   188032
+     C                     MOVE *IN98     @WTEMP  1                       188032
+     C                     MOVE '0'       *IN98                           188032
+      *
+     C                     EXSR ZDATE1
+      *                                                                   188032
+     C                     MOVE @WTEMP    *IN98                           188032
+      *
+      ** Save this date to use later for monthly report
+      *
+     C                     Z-ADDZDAYNO    WUSTDT
+      *
+      ** If IN99 is on then an invalid date has been entered
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN80
+     C                     END
+      *
+      ** Make sure that month/year combination entered is not
+      ** later than current month/year
+      ** WUYRFR = year entered, WUCUYR = Current year.
+      *
+     C                     MOVE YEAR      WUYRFR
+      *
+      ** Year must be in the range 1972 to 2071.
+      *
+     C           WUYRFR    IFLT 1972
+     C           WUYRFR    ORGT 2071
+     C                     MOVEL'USR1908' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+     C                     END
+      *
+     C           WUYEAR    IFGT 71
+     C           WUYEAR    ADD  1900      WUCUYR
+     C                     ELSE
+     C           WUYEAR    ADD  2000      WUCUYR
+     C                     END
+      *
+     C           WUYRFR    IFGE WUCUYR
+      *
+      ** Year entered is equal to this year, but month
+      ** entered is greater than current month
+      *
+     C           WUYRFR    IFEQ WUCUYR
+      *
+     C           DATEMN    IFGT WUMNTH
+     C                     MOVEL'USR1906' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVEA'11'      *IN,30
+     C                     MOVE '1'       *IN80
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** Year entered is greater than current year
+      *
+     C                     MOVEL'USR1906' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     MOVEA'11'      *IN,30
+     C                     MOVE '1'       *IN80
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CALC   - Calculate Start and End dates for month/year         *
+      *          combination.                                         *
+      *                                                               *
+      * Called by: Main.                                              *
+      * Calls    : ZDATE1                                             *
+      *            YRSUBR                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CALC      BEGSR
+      *
+      ** Calculate End date
+      *
+      ** For february
+      *
+     C           DATEMN    IFEQ 2
+     C                     MOVE '29'      DATEDD
+     C                     Z-ADDDATE6N    ZDATE
+      *                                                                   188032
+      ** ZDATE is in DDMMYY format because of the Data Structure defined  188032
+      ** for DATE6N.  Need to setof *IN98 before calling ZDATE1 and just  188032
+      ** restore the original value after the routine. If *IN98='1', then 188032
+      ** MMDDYY format, otherwise, DDMMYY.                                188032
+      *                                                                   188032
+     C                     MOVE *IN98     @WTEMP                          188032
+     C                     MOVE '0'       *IN98                           188032
+      *
+     C                     EXSR ZDATE1
+      *                                                                   188032
+     C                     MOVE @WTEMP    *IN98                           188032
+      *
+      ** If IN99 is ON then invalid date (not leap year)
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '28'      DATEDD
+     C                     Z-ADDDATE6N    ZDATE
+      *                                                                   188032
+      ** ZDATE is in DDMMYY format because of the Data Structure defined  188032
+      ** for DATE6N.  Need to setof *IN98 before calling ZDATE1 and just  188032
+      ** restore the original value after the routine. If *IN98='1', then 188032
+      ** MMDDYY format, otherwise, DDMMYY.                                188032
+      *                                                                   188032
+     C                     MOVE *IN98     @WTEMP                          188032
+     C                     MOVE '0'       *IN98                           188032
+      *
+      ** Convert to midas run day number
+      *
+     C                     EXSR ZDATE1
+      *                                                                   188032
+     C                     MOVE @WTEMP    *IN98                           188032
+      *
+      ** Move calculated End and Start dates into parameter
+      *
+     C                     MOVE ZDAYNO    ENDDAT
+     C                     MOVELENDDAT    P@RPAR
+      *
+     C                     ELSE
+     C                     MOVE ZDAYNO    ENDDAT
+     C                     MOVELENDDAT    P@RPAR
+     C                     END
+     C                     END
+      *
+      ** For April, June, September and Novebmer 30 days.
+      *
+     C           DATEMN    IFEQ 4
+     C           DATEMN    OREQ 6
+     C           DATEMN    OREQ 9
+     C           DATEMN    OREQ 11
+     C                     MOVE '30'      DATEDD
+     C                     Z-ADDDATE6N    ZDATE
+      *                                                                   188032
+      ** ZDATE is in DDMMYY format because of the Data Structure defined  188032
+      ** for DATE6N.  Need to setof *IN98 before calling ZDATE1 and just  188032
+      ** restore the original value after the routine. If *IN98='1', then 188032
+      ** MMDDYY format, otherwise, DDMMYY.                                188032
+      *                                                                   188032
+     C                     MOVE *IN98     @WTEMP                          188032
+     C                     MOVE '0'       *IN98                           188032
+      *
+      ** Convert to midas run day number
+      *
+     C                     EXSR ZDATE1
+      *                                                                   188032
+     C                     MOVE @WTEMP    *IN98                           188032
+      *
+      ** Move calculated End and Start dates into parameter
+      *
+     C                     MOVE ZDAYNO    ENDDAT
+     C                     MOVELENDDAT    P@RPAR
+     C                     END
+      *
+      ** For January, March, May, July, August, October and December
+      ** 31 days.
+      *
+     C           DATEMN    IFEQ 1
+     C           DATEMN    OREQ 3
+     C           DATEMN    OREQ 5
+     C           DATEMN    OREQ 7
+     C           DATEMN    OREQ 8
+     C           DATEMN    OREQ 10
+     C           DATEMN    OREQ 12
+      *
+     C                     MOVE '31'      DATEDD
+     C                     Z-ADDDATE6N    ZDATE
+      *                                                                   188032
+      ** ZDATE is in DDMMYY format because of the Data Structure defined  188032
+      ** for DATE6N.  Need to setof *IN98 before calling ZDATE1 and just  188032
+      ** restore the original value after the routine. If *IN98='1', then 188032
+      ** MMDDYY format, otherwise, DDMMYY.                                188032
+      *                                                                   188032
+     C                     MOVE *IN98     @WTEMP                          188032
+     C                     MOVE '0'       *IN98                           188032
+      *
+      ** Convert to midas run day number
+      *
+     C                     EXSR ZDATE1
+      *                                                                   188032
+     C                     MOVE @WTEMP    *IN98                           188032
+      *
+      ** Move calculated End and Start dates into parameter
+      *
+     C                     MOVE ZDAYNO    ENDDAT
+     C                     MOVELENDDAT    P@RPAR
+     C                     END
+      *
+      *  Calculate Start date
+      ** Save start date to be passed back to calling program
+      *
+      ** If monthly report is requested, Start date will be equal to
+      ** first day of month specified.
+      ** otherwise, Start date will be equal to first day of the year
+      ** being processed, calculated from 'previous end of year date'
+      ** obtained from SDBANKPD.
+      *
+      *
+      ** Monthly mode
+      *
+     C           P@RFRQ    IFEQ 'M'
+     C                     MOVE WUSTDT    STRDAT
+     C                     MOVELSTRDAT    P@RPAR
+     C                     ELSE
+      *
+      ** Year-to-date mode
+      *
+     C                     EXSR YRSUBR
+     C                     MOVELSTRDAT    P@RPAR
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+     C********************************************************************
+     C*
+     C*  S/R CMDK - TO CHECK COMMAND KEYS
+     C*  Called by :
+     C*  Calls     : None
+     C********************************************************************
+      *
+     C           CMDK      BEGSR
+      *
+      ** F3 pressed, change the return code to 'E' and return to
+      ** calling program.
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       P@RACT
+     C                     EXSR ENDP
+     C                     END
+      *
+      ** F12 pressed, change the return code to 'F' and return to
+      ** calling program.
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'F'       P@RACT
+     C                     EXSR ENDP
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+     C********************************************************************
+     C*
+     C*  S/R ENDP - TO TERMINATE PROGRAM
+     C*  Called by : VALID
+     C*  Calls     : None
+     C********************************************************************
+      *
+     C           ENDP      BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      /EJECT
+     C********************************************************************
+     C*
+     C*  S/R YRSUBR -  Claculate Start date for year-to-date mode
+     C*  Called by : CALC
+     C*  Calls     : ZDATE1
+     C*              ZDATE2
+     C********************************************************************
+      *
+     C           YRSUBR    BEGSR
+      *
+      ** Calculate start date from previous end of year date.
+      *
+     C           BJPEYD    ADD  1         ZDAYNO
+      *
+     C                     EXSR ZDATE2
+      *
+      ** Extract the last two digits of year entered
+      ** move it into ZDATE, and converted to day number format
+      *
+     C                     MOVE YEAR      WUYER2
+     C                     MOVE WUYER2    ZDATE
+      *
+     C                     EXSR ZDATE1
+      *
+      ** If date converted is greater than end date,
+      ** subtract 1 from year.
+      *
+     C                     MOVE ENDDAT    WRKEND
+     C           ZDAYNO    IFGT WRKEND
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     YEARA
+      *
+     C           YEARN     IFEQ 0
+     C                     Z-ADD99        YEARN
+     C                     ELSE
+     C           YEARN     SUB  1         YEARN
+     C                     END
+      *
+     C                     MOVE YEARA     ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    STRDAT
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZDAYNO    STRDAT
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: Program initiation processing                      *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   MNTHN - MONTHS IN NUMBERS
+010203040506070809101112
+**   MNTHA - MONTH NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

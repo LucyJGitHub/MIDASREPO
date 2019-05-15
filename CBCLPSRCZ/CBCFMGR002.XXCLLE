@@ -1,0 +1,168 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                  /*AR1096969*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Close of Business Processing                      */
+/*                                                                 */
+/*       CBCFMGR002 - Midas CB File Manager - Remove and           */
+/*                      Add LF Mbrs                                */
+/*                                                                 */
+/*       (C) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. AR1096969*REDUNDANTDate 21Mar13            */
+/*       Prev Amend No. AR544186 *CREATE  Date 01Aug12             */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       AR1096969 - CBCFMGR_nn jobs should no longer run in our   */
+/*                   system                                        */
+/*                 - CCB022B - COB Restructure - COB File Manager  */
+/*                   (Missed out for drop2A delivery)              */
+/*       AR544186 - Improve performance of LEC0604/LEC07003 in     */
+/*                  COB (Child:AR544188)                           */
+/*                                                                 */
+/*******************************************************************/
+             PGM        PARM(&FILE &ACTION)
+ 
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(+
+                           C) Copyright Misys International Banking +
+                           Systems 2012')
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVLFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVLFNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVMBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JOBDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SENT) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&COMPLETED) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&DATA1) TYPE(*CHAR) LEN(350)
+             DCL        VAR(&MSGLEN1) TYPE(*DEC) LEN(5 0) VALUE(350)
+             DCL        VAR(&DATA2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLEN2) TYPE(*DEC) LEN(5 0) VALUE(10)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+ 
+             DCLF       FILE(CBPFLFJ0)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/** Check value of &ACTION parameter */
+ 
+             IF         COND((&ACTION *NE '*REMOVE') *AND +
+                           (&ACTION *NE '*ADD')) +
+                           THEN(GOTO CMDLBL(END))
+ 
+/** Retrieve library of file */
+ 
+             RTVOBJD    OBJ(*LIBL/&FILE) OBJTYPE(*FILE) RTNLIB(&LIB)
+ 
+/** Open JLF linking physical files, logical files and */
+/** ADDLFM parameters */
+ 
+             OVRDBF     FILE(CBPFLFJ0) SHARE(*YES)
+             OPNQRYF    FILE((CBPFLFJ0)) QRYSLT('MBBOL *EQ "' *CAT +
+                           &LIB *CAT '" *AND MBBOF +
+                           *EQ "' *CAT &FILE +
+                           *CAT '"') KEYFLD((CBLFLIB) (CBLFNAME) +
+                           (CBMBNAME))
+ 
+/** Process *REMOVE request */
+ 
+             IF         COND(&ACTION *NE '*REMOVE') THEN(GOTO +
+                           CMDLBL(ADD))
+ 
+ READR:      RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
+ 
+             IF         COND((&CBLFLIB = &SVLFLIB) *AND (&CBLFNAME= +
+                           &SVLFNAME) *AND (&CBMBNAME = &SVMBNAME)) +
+                           THEN(GOTO CMDLBL(READR))
+ 
+             RMVM       FILE(&CBLFLIB/&CBLFNAME) MBR(&CBMBNAME)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&SVLFLIB) VALUE(&CBLFLIB)
+             CHGVAR     VAR(&SVLFNAME) VALUE(&CBLFNAME)
+             CHGVAR     VAR(&SVMBNAME) VALUE(&CBMBNAME)
+ 
+             GOTO       CMDLBL(READR)
+ 
+/** Process *ADD request */
+ 
+ ADD:        RTVJOBA    NBR(&JOBNBR)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+             CHGVAR     VAR(&JOBDTAQ) VALUE('Q_' *CAT &JOBNBR)
+             DLTDTAQ    DTAQ(&DPLIB/&JOBDTAQ)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTDTAQ    DTAQ(&DPLIB/&JOBDTAQ) MAXLEN(10)
+ 
+ READA:      RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(RCV))
+ 
+             IF         COND((&CBLFLIB = &SVLFLIB) *AND +
+                           (&CBLFNAME = +
+                           &SVLFNAME) *AND (&CBMBNAME = &SVMBNAME)) +
+                           THEN(GOTO CMDLBL(READA))
+ 
+             CHGVAR     VAR(&DATA1) VALUE(&JOBDTAQ *CAT &CBLFLIB +
+                           *CAT &CBLFNAME *CAT &CBMBNAME *CAT +
+                           &CBDTAMBR *CAT &CBMBTEXT *CAT &CBSHARE)
+ 
+             CALL       PGM(QSNDDTAQ) PARM('CBADLFDTAQ' &DPLIB +
+                           &MSGLEN1 &DATA1)
+ 
+             CHGVAR     VAR(&SENT) VALUE(&SENT + 1)
+ 
+             CHGVAR     VAR(&SVLFLIB) VALUE(&CBLFLIB)
+             CHGVAR     VAR(&SVLFNAME) VALUE(&CBLFNAME)
+             CHGVAR     VAR(&SVMBNAME) VALUE(&CBMBNAME)
+ 
+             GOTO       CMDLBL(READA)
+ 
+ RCV:        IF         COND(&SENT = 0) THEN(GOTO CMDLBL(EOF))
+ 
+ RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&JOBDTAQ &DPLIB +
+                           &MSGLEN2 &DATA2 &RCVWAIT)
+ 
+             IF         COND(%SST(&DATA2 1 9) = 'COMPLETED') THEN(DO)
+               CHGVAR     VAR(&COMPLETED) VALUE(&COMPLETED + 1)
+             ENDDO
+ 
+             IF         COND(&COMPLETED *EQ &SENT) THEN(DO)
+               DLTDTAQ    DTAQ(&DPLIB/&JOBDTAQ)
+               GOTO CMDLBL(EOF)
+             ENDDO
+ 
+             GOTO       CMDLBL(RCVDTAQ)
+ 
+ EOF:        DLTOVR     FILE(CBPFLFJ0)
+ 
+             RCLRSC
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(GOTO +
+                           CMDLBL(END))
+ 
+/** Error processing - Send message to MOPERQ */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ ABNOR:      CHGVAR     &MSG VALUE('Program CBCFMGR002 terminated +
+                           abnormally')
+             SNDMSG     TOMSGQ(MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CLOF       OPNID(CBPFLFJ0)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&MIBSCPY) VALUE('(C) Copiright Misys +
+                           International Banking Systems 2012')
+ ENDPGM

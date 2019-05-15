@@ -1,0 +1,802 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Funding GAP accrual report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  MC0561 - Funding GAP Accrual Report                          *
+      *                                                               *
+      *  Function:  This program prints the details of the Funding    *
+      *   (COB)     GAP Accrual postings.                             *
+      *                                                               *
+      *  Called By: MCC0560 - Funding GAP Accrual Report - Control Pgm*
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 164849             Date 28Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158557  *CREATE    Date 28Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  164849 - This program should not call ZSFILE for the audit   *
+      *           report.                                             *
+      *  158557 - PCA015, Provide a Funding Gap Accrual Report        *
+      *           New report program.                                 *
+      *                                                               *
+      *****************************************************************
+     F*
+     FMCGEXTL0IF  E           K        DISK         KINFSR *PSSR
+     F**  Funding GAP Accrual Extract File
+     F*
+     FMC0560AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+     F**  Funding GAP Accrual Report - Audit
+     F*
+     FMC0560P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     F**  Funding GAP Accrual Report - Detail
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Multibranching ON                                     *
+     F*   20  - EOF in Funding GAP Accrual Extract File               *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7+U8 - Database Error                                        *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SRINIT - Program Initialisation                              *
+     F*  SRDETL - Process Funding GAP Accrual Details                 *
+     F*  SRCBRC - Process Change in Branch                            *
+     F*  SRBRCD - Get Branch Details                                  *
+     F*  SRCYCD - Get Currency Details                                *
+     F*  SRWDTL - Print Detail line                                   *
+     F*  SRSUMM - Print Summary line                                  *
+     F*  SRAUDT - Print Audit Report                                  *
+     F*  *PSSR  - Program Error Processing Subroutine                 *
+     F*  SRRCF1 - RCF Processing for P1 Report                        *
+     F***SRRCFA*-*RCF*Processing*for*Audit*Report**********************                       164849
+     F*                                                               *
+     F*  ZFRPED - Edit an Amount based on edit code passed            *
+     F*  ZEDIT  - Edit an Amount                                      *
+     F*  ZDATE2 - Convert Day Number to a Date                        *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**  Array containing Copyright statement
+     E*
+     E                    DED       999  5 0A
+     E**  Diary event dates
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZEDITZ1
+     E*
+     I/EJECT
+     I*
+     ILDA       E DSLDA                         256
+     I*
+     I**  Local data area for database error details
+     I**  *LOCK IN LDA immediately before and OUT LDA immediately
+     I**  after each database error handling.
+     I**
+     I**                                    134 141 DBFILE
+     I**       Defines:                     142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     I*
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I*
+     IRUNDAT    E DSRUNDAT
+     I**  Data Area giving Installation Control Details
+     I*
+     ISPOOL1      DS
+     I**  File Information Data Structure for MC0560P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     I*
+     ISPOOLU      DS
+     I**  File Information Data Structure for MC0560AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  External data structure for Bank Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I**  External data structure for Branch Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  External data structure for Currency Details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  First data structure for Access Programs, short DS
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Second data structure for Access Programs, long DS
+     I*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C**  Set up copyright parameter.
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C**  Perform Initialisation.
+     C*
+     C                     EXSR SRINIT
+     C*
+     C**  Process Funding GAP Accrual Details.
+     C*
+     C                     EXSR SRDETL
+     C*
+     C**  Print Audit Report.
+     C*
+     C                     EXSR SRAUDT
+     C*
+     C**  End Program and Return.
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRINIT - Program Initialisation                              *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine                 *
+     C*  Calls    :  AOBANKR0 - Bank details access object            *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR                           ** SRINIT **
+     C*
+     C           KGEXT     KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WCUST
+     C                     KFLD           WCURR
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WPRFC
+     C*
+     C**  Initialise LDA field.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Call Access Program for Bank Details - Title, Run Date and
+     C**  Run Day Number.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0561  'DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Check System Date Format, DDMMYY (*IN98 off)
+     C**                            MMDDYY (*IN98 on).
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+     C*
+     C**  Access RUNDAT for multibranching indicator.
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN10
+     C                     ENDIF
+     C*
+     C**  Initialise Report Work fields.
+     C*
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         WTACR  150
+     C                     MOVE 'N'       WOPEN1  1
+     C                     MOVE 'N'       WSUMM   1
+     C                     MOVE *BLANK    WBRCA   3
+     C                     MOVE *BLANK    WCUST   6
+     C                     MOVE *BLANK    WCURR   3
+     C**********           MOVE *BLANK    WACOD   4                                           CGL029
+     C                     MOVE *BLANK    WACOD  10                                           CGL029
+     C                     MOVE *BLANK    WACSQ   2
+     C                     MOVE *BLANK    WPRFC   4
+     C*
+     C           SRINI9    ENDSR                           ** SRINI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRDETL - Process Funding GAP Accrual Details                 *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine.                *
+     C*  Calls    :  SRCBRC - Process Change in Branch                *
+     C*              SRWDTL - Print detail line.                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRDETL    BEGSR                           ** SRDETL **
+     C*
+     C**  Read all records from LF/MCGEXTL0.
+     C*
+     C           *LOVAL    SETLLMCGEXTL0
+     C                     READ MCGEXTL0                 20
+     C*
+     C           *IN20     DOWEQ*OFF
+     C*
+     C**  Change of Branch.
+     C*
+     C           GPBRCA    IFNE WBRCA
+     C                     EXSR SRCBRC
+     C                     ENDIF
+     C*
+     C**  Write detail line.
+     C*
+     C                     EXSR SRWDTL
+     C*
+     C                     READ MCGEXTL0                 20
+     C*
+     C                     ENDDO
+     C*
+     C           SRDET9    ENDSR                           ** SRDET9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCBRC - Process Change in Branch                            *
+     C*                                                               *
+     C*  Called By:  SRDETL - Process Funding GAP Accrual Details     *
+     C*  Calls    :  SRBRCD - Get Branch Details                      *
+     C*              SRSUMM - Print Summary Line                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCBRC    BEGSR                           ** SRCBRC **
+     C*
+     C**  If P1 report is open...
+     C*
+     C           WOPEN1    IFEQ 'Y'
+     C*
+     C**  Print summary line if required.
+     C*
+     C           WSUMM     IFEQ 'Y'
+     C                     EXSR SRSUMM
+     C                     ENDIF
+     C*
+     C**  If multi-branching and requested by branch, print '*** END OF,
+     C**  REPORT FOR BRANCH ***' and close it.
+     C*
+     C           *IN10     IFEQ '1'
+     C*
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0560D0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0560D4
+     C                     CLOSEMC0560P1
+     C                     MOVE 'N'       WOPEN1
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Get branch details.
+     C*
+     C                     EXSR SRBRCD
+     C*
+     C           SRCBR9    ENDSR                           ** SRCBR9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRWDTL - Print Detail Line                                   *
+     C*                                                               *
+     C*  Called By:  SRDETL - Process Funding GAP Accrual Details     *
+     C*  Calls    :  SRCYCD - Get Currency Details                    *
+     C*              SRSUMM - Print Summary Line                      *
+     C*              SRRCF1 - RCF Processing for P1 Report            *
+     C*              ZFRPED - Edit an Amount                          *
+     C*              ZEDIT  - Format an Amount                        *
+     C*              ZDATE2 - Convert Day Number to a Date            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRWDTL    BEGSR                           ** SRWDTL **
+     C*
+     C**  On Change of Profit Centre account.
+     C*
+     C           GPBRCA    IFNE WBRCA
+     C           GPCUST    ORNE WCUST
+     C           GPCURR    ORNE WCURR
+     C           GPACOD    ORNE WACOD
+     C           GPACSQ    ORNE WACSQ
+     C           GPPRFC    ORNE WPRFC
+     C*
+     C                     MOVE GPBRCA    WBRCA
+     C                     MOVE GPCUST    WCUST
+     C                     MOVE GPCURR    WCURR
+     C                     MOVE GPACOD    WACOD
+     C                     MOVE GPACSQ    WACSQ
+     C                     MOVE GPPRFC    WPRFC
+     C*
+     C                     MOVE GPBRCA    RBRCA
+     C                     MOVE GPCUST    RCUST
+     C                     MOVE GPCURR    RCURR
+     C                     MOVE GPACOD    RACOD
+     C                     MOVE GPACSQ    RACSQ
+     C                     MOVE GPPRFC    RPRFC
+     C*
+     C**  Get Last Accrual Date for this Profit Centre Account.
+     C*
+     C           KGEXT     SETGTMCGEXTL0
+     C           KGEXT     REDPEMCGEXTL0                 20
+     C           *IN20     DOWEQ'0'
+     C           GPACIN    ANDNE'Y'
+     C           KGEXT     REDPEMCGEXTL0                 20
+     C                     ENDDO
+     C*
+     C           *IN20     IFEQ '0'
+     C                     Z-ADDGPFDAT    WAFDAT  50
+     C                     ELSE
+     C                     Z-ADD0         WAFDAT
+     C                     ENDIF
+     C*
+     C           KGEXT     SETLLMCGEXTL0
+     C           KGEXT     READEMCGEXTL0                 20
+     C*
+     C                     ELSE
+     C*
+     C**  No Change of Profit Centre account.
+     C*
+     C                     MOVE *BLANKS   RBRCA
+     C                     MOVE *BLANKS   RCUST
+     C                     MOVE *BLANKS   RCURR
+     C                     MOVE *BLANKS   RACOD
+     C                     MOVE *BLANKS   RACSQ
+     C                     MOVE *BLANKS   RPRFC
+     C*
+     C                     ENDIF
+     C*
+     C**  Print details of postings.
+     C*
+     C           GPFDAT    IFLE WAFDAT
+     C*
+     C**  Open printer file MC0560P1 if not yet open.
+     C*
+     C           WOPEN1    IFNE 'Y'
+     C                     OPEN MC0560P1
+     C                     MOVE 'Y'       WOPEN1
+     C*
+     C           *IN10     IFEQ '1'
+     C                     MOVE GPBRCA    SENTY
+     C                     ELSE
+     C                     MOVE *BLANKS   SENTY
+     C                     ENDIF
+     C*
+     C                     EXSR SRRCF1
+     C*
+     C                     WRITEMC0560D0
+     C*
+     C                     ENDIF
+     C*
+     C                     EXSR SRCYCD
+     C*
+     C**  Format 'From Date'.
+     C*
+     C                     Z-ADDGPFDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RFDAT
+     C*
+     C**  Format 'To Date'.
+     C*
+     C                     Z-ADDGPTDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RTDAT
+     C*
+     C**  Format Balance.
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVEL*BLANKS   BLSIGN  2
+     C           GPBALN    IFLT 0
+     C                     MOVE 'CR'      BLSIGN
+     C           GPBALN    MULT -1        TEMPBL 150
+     C                     MOVELTEMPBL    ZFLD15
+     C                     ELSE
+     C                     MOVELGPBALN    ZFLD15
+     C                     ENDIF
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RBALN
+     C*
+     C**  Format Spread/Rate.
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE GPRTSP    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RRTSP
+     C*
+     C**  Format Accrual Amount.
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVEL*BLANKS   ACSIGN  2
+     C           GPACRL    IFLT 0
+     C                     MOVE 'CR'      ACSIGN
+     C           GPACRL    MULT -1        TEMPAC 150
+     C                     MOVELTEMPAC    ZFLD15
+     C                     ELSE
+     C                     MOVELGPACRL    ZFLD15
+     C                     ENDIF
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RACRL
+     C*
+     C**  Check that sufficient lines remain for the Format.  If not,
+     C**  write out the Main Headings on a new page.
+     C*
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0560D0
+     C                     ENDIF
+     C*
+     C**  Write Report Detail.
+     C*
+     C                     WRITEMC0560D1
+     C*
+     C**  If Accrual Date.
+     C*
+     C           GPACIN    IFEQ 'Y'
+     C           WSUMM     IFEQ 'Y'
+     C                     ADD  GPACRL    WTACR
+     C                     EXSR SRSUMM
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'Y'       WSUMM
+     C                     ADD  GPACRL    WTACR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           SRWDT9    ENDSR                           ** SRWDT9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSUMM - Print Summary Lines                                 *
+     C*                                                               *
+     C*  Called By:  SRCBRC - Process Change in Branch                *
+     C*              SRWDTL - Print Detail Line                       *
+     C*  Calls    :  ZFRPED - Edit an Amount                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRSUMM    BEGSR                           ** SRSUMM **
+     C*
+     C**  Format Summary Accrual amount.
+     C*
+     C                     Z-ADD0         ZFLD15
+     C                     MOVEL*BLANKS   SMSIGN  2
+     C           WTACR     IFLT 0
+     C                     MOVE 'CR'      SMSIGN
+     C           WTACR     MULT -1        TEMPSM 150
+     C                     MOVELTEMPSM    ZFLD15
+     C                     ELSE
+     C                     MOVELWTACR     ZFLD15
+     C                     ENDIF
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RTACR
+     C*
+     C**  Check that sufficient lines remain for the Format.  If not,
+     C**  write out the Main Headings on a new page.
+     C*
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0560D0
+     C                     ENDIF
+     C*
+     C**  Write summary detail line.
+     C*
+     C                     WRITEMC0560D2
+     C*
+     C                     MOVE 'N'       WSUMM
+     C                     Z-ADD0         WTACR
+     C*
+     C           SRSUM9    ENDSR                           ** SRSUM9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRAUDT - Print Audit Report                                  *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine.                *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C***Calls****:**SRRCFA*-*RCF*Processing*for*Audit*Report**********                       164849
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRAUDT    BEGSR                           ** SRAUDT **
+     C*
+     C**  P1 REPORT...
+     C*
+     C           WOPEN1    IFEQ 'Y'
+     C*
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+     C*
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0560D0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0560D4
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0560D0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0560D3
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  AU REPORT...
+     C*
+     C**  If error occured or no record has been processed,
+     C**  create/output audit report.
+     C*
+     C           *INU7     IFEQ *ON
+     C           WOPEN1    ORNE 'Y'
+     C*
+     C                     OPEN MC0560AU
+     C**********           EXSR SRRCFA                                                        164849
+     C                     WRITEMC0560A0
+     C*
+     C           *INU7     IFEQ *ON
+     C                     WRITEMC0560A2
+     C                     ELSE
+     C                     WRITEMC0560A1
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           SRAUD9    ENDSR                           ** SRAUD9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRBRCD - Get Branch Details                                  *
+     C*                                                               *
+     C*  Called By:  SRCBRC - Process Change in Branch                *
+     C*  Calls    :  AOBRCHR0 - Branch details access object          *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRBRCD    BEGSR                           ** SRBRCD **
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM GPBRCA    WWBRCD  3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0561  'DBPGM
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELGPBRCA    DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVELA8BRNM    RBRNM
+     C*
+     C           SRBRC9    ENDSR                           ** SRBRC9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCYCD - Get Currency Details                                *
+     C*                                                               *
+     C*  Called By:  SRWDTL - Print Detail Line                       *
+     C*  Calls    :  AOCURRR0 - Currency details access object        *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCYCD    BEGSR                           ** SRCYCD **
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM GPCURR    WWCYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0561  'DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELGPCURR    DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     Z-ADDA6NBDP    WDECP   10
+     C*
+     C           SRCYC9    ENDSR                           ** SRCYC9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Program Error Processing Subroutine                 *
+     C*                                                               *
+     C*  Called By:  SRINIT - Program Initialisation                  *
+     C*              SRBRCD - Get Branch Details                      *
+     C*              SRCYCD - Get Currency Details                    *
+     C*  Calls    :  SRAUDT - Print Audit Report                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C**  Check to see that *PSSR has not already been called.
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+     C*
+     C**  If *PSSR already run, then just end the program here.
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C           WPSS9     ENDSR                           ** *PSSR9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRRCF1 - RCF Processing for P1 Report                        *
+     C*                                                               *
+     C*  Called By:  SRWDTL - Print Detail Line                       *
+     C*  Calls    :  ZSFILE - Setup Spool File                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRRCF1    BEGSR                           ** SRRCF1 **
+     C*
+     C**  Ensure Report Spool File recorded by RCF.
+     C*
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C**  If Error occurs during ZSFILE processing, then return to the
+     C**  Calling Program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C           SRRC19    ENDSR                           ** SRRC19 **
+     C*
+     C*****************************************************************
+     C*EJECT***********************************************************                       164849
+     C*****************************************************************                       164849
+     C*****************************************************************                       164849
+     C***SRRCFA*-*RCF*Processing*for*Audit*Report**********************                       164849
+     C*****************************************************************                       164849
+     C***Called*By:**SRAUDT*-*Print*Audit*Report***********************                       164849
+     C***Calls****:**ZSFILE*-*Setup*Spool*File*************************                       164849
+     C*****************************************************************                       164849
+     C*****************************************************************                       164849
+     C**********                                                                              164849
+     C********** SRRCFA    BEGSR                           ** SRRCFA **                       164849
+     C**********                                                                              164849
+     C****Ensure*Audit*Spool*File*recorded*by*RCF.*********************                       164849
+     C**********                                                                              164849
+     C**********           Z-ADDSFNUMU    ZSNUMU  60                                          164849
+     C**********                                                                              164849
+     C**********           CALL 'ZSFILE'                                                      164849
+     C**********           PARM *BLANKS   SEQ                                                 164849
+     C**********           PARM *BLANKS   SENTY                                               164849
+     C**********           PARM           SFILEU                                              164849
+     C**********           PARM           ZSNUMU                                              164849
+     C**********           PARM *BLANK    ZSERR                                               164849
+     C**********                                                                              164849
+     C****If*Error*occurs*during*ZSFILE*processing,*then*return*to*the*                       164849
+     C****Calling*Program.*********************************************                       164849
+     C**********                                                                              164849
+     C********** ZSERR     IFEQ 'Y'                                                           164849
+     C**********           SETON                     U7U8LR                                   164849
+     C**********           RETRN                                                              164849
+     C**********           ENDIF                                                              164849
+     C**********                                                                              164849
+     C********** SRRCF9    ENDSR                           ** SRRCF9 **                       164849
+     C**********                                                                              164849
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

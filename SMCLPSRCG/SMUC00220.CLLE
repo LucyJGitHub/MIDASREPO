@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Upgrade Bridge files')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00220 - Upgrade Bridge logical files                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT008              Date 08Feb11             */
+/*                      B27832  *CREATE     Date 08Jul10             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT008  - CRTOBJ rewrite.                                   */
+/*                 Change of CRTOBJ parameters.                      */
+/*       B27832 -  Compile Bridge Files                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2010')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+/* Retrieve old system prefix. */
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                          'BrgMidasGlobalPrefix' &SVAL1 +
+                          'BrgDeliveredSrcLib' &SVAL2 ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ')
+             IF         COND(&RTNCDE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR +
+                          %SST(&SVAL2 1 4) *EQ '*NRF') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&LIB) VALUE(&PFX *TCAT 'GVLIB')
+             CHGVAR     VAR(&OWNER) VALUE(&PFX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&PFX *TCAT 'DATABASE')
+             CHGVAR     VAR(&SRCLIB) VALUE(%SST(&SVAL2 1 10))
+ 
+/* Delete files from GVLIB. */
+             DLTF       FILE(&LIB/UPDLVCL6)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Compile Bridge files. */
+/**********  CRTOBJ     SRCMBR(UPDLVCL6) SRCFILE(&SRCLIB/UPDDSSRCGV) +                 */ /*CUT008*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CUT008*/
+             CRTOBJ     OBJ(&LIB/UPDLVCL6) +
+                          SRCFILE(&SRCLIB/UPDDSSRCGV) SRCMBR(*OBJ) +
+                          OWNER(&OWNER) AUTL(&AUTL)                                       /*CUT008*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

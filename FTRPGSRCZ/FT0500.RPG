@@ -1,0 +1,2001 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Payment charges audit and report')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                            *
+     F*                                                               *
+     F*  FT0500 - FT Payments Charges Audit Trail                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1061250          Date 28Nov12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 176332             Date 04Apr01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01508             Date 27Jun94               *
+      *                 S01494             Date 25May94               *
+     F*                 067526             DATE 24FEB94               *
+     F*                 E29899             DATE 21MAR91               *
+     F*                 S01117             DATE 01OCT90               *
+     F*                 S01194             DATE 01OCT90               *
+     F*                 S01182             DATE 05APR90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1061250 - FTC0500 component failed due to Non-Working      *
+      *              Day COB                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  176332 - Records containing fields other than the branch are *
+      *           not included in the report. Applied fix 168893.     *
+     F*  S01508 - BLI Extended Payment Charges                        *
+     F*  S01494 - BLI Funds Transfer Enhancements                     *
+     F*  067526 - IF THE PAYMENT CHARGES BRANCH DOES NOT EXIST ON     *
+     F*           BRANCH CODES FILE, OUTPUT  < BRANCH NOT FOUND >     *
+     F*           INSTEAD OF DATABASE ERROR.                          *
+     F*  E29899 - OUTPUT TO PRINTER FILE ONLY,WHEN AUDIT MODE ENTERED *
+     F*           OUTPUT TO PRINTER FILE FOR TYPE CAN GIVE            *
+     F*           **IAMENDED** CHANGE SIZE OF FIELD                   *
+     F*  S01117 - RELEASE 10 MULTIBRANCHING CHANGES                   *
+     F*  S01194 - STANDING DATA CHANGES                               *
+     F*  S01182 - 'MATURED HELD PERIOD' REPORTED IN MONTHS            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*  FUNCTION OF INDICATORS
+     F*
+     F*  10     MULTIBRANCHING INDICATOR                                  S01117
+     F*  11     SYSTEM LEVEL INDICATOR                                    S01117
+     F*  12     ENTITY='ALL' INDICATOR                                    S01117
+     F*  14     DETAIL PRINTER FILE OPENED SUCCESSFULLY                   S01117
+     F*  15     AUDIT MODE INDICATOR                                      E29899
+     F*  30-33  NUMBER OF DECIMAL PLACES FOR BASE CURRENCY
+     F*  50     DATABASE ERROR
+     F*  51     END OF FILE INDICATOR                                     S01117
+     F*  52     TABLETR CHAIN FAIL                                        S01117
+     F*  53     FX/CHANGE COMMISSION IS ACTIVE                            S01508
+     F*  54     RECORD READ IS SOLELY FOR BRANCH                          S01508
+     F*  60     OVERFLOW ON PRINTOUT (ONLY FOR SHOW)
+     F*
+     F*PYCHGDD*IF**E********************DISK                              S01117
+     F***PYCHGDB*IF**E***********K********DISK******************   S01117 S01508
+     FPYCHGL2 IF  E           K        DISK                               S01508
+     FPYCHGL1 IF  E           K        DISK                               S01508
+     F            PYCHGDDF                          KRENAMEPYCHGDD1       S01508
+     FSDCGRPL1IF  E           K        DISK                               S01508
+     F/COPY WNCPYSRC,FT0500F001
+     FTABFP   IF  E           K        DISK
+     F            TABTB20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F************TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABLETHF                          KIGNORE               S01117
+     F            TABTE10F                          KIGNORE               S01117
+     F            TABTG40F                          KIGNORE               S01117
+     F*FT0500P1O***E*******************DISK                           UC  S01117
+     FFT0500P1O   E                    DISK         KINFDS SPOOL1     UC  S01117
+     FFT0500AUO   E                    PRINTER      KINFDS SPOOLU         S01194
+     E                    CPY@    1   1 80
+     E********************TXT     1   2 30                         067526 S01508
+     E                    TXT     1   3 31                                S01508
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*     DATA AREA DATA STRUCTURE FOR HANDLING DB ERRORS
+     I*
+     I*LDA*******EUDS                                                     S01194
+     ILDA        UDS                            256                       S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*
+     I*     DATA STRUCTURE FOR HANDLING DECIMAL PLACES
+     I*
+     I            DS
+     I* RESIDENT TO NON-RESIDENT RANGE 1 START
+     I                                        1  110RNS10
+     I                                        1  111RNS11
+     I                                        1  112RNS12
+     I                                        1  113RNS13
+     I* RESIDENT TO NON-RESIDENT RANGE 1 END
+     I                                       12  220RNE10
+     I                                       12  221RNE11
+     I                                       12  222RNE12
+     I                                       12  223RNE13
+     I* RESIDENT TO NON-RESIDENT RANGE 2 START
+     I                                       23  330RNS20
+     I                                       23  331RNS21
+     I                                       23  332RNS22
+     I                                       23  333RNS23
+     I* RESIDENT TO NON-RESIDENT RANGE 2 END
+     I                                       34  440RNE20
+     I                                       34  441RNE21
+     I                                       34  442RNE22
+     I                                       34  443RNE23
+     I* RESIDENT TO NON-RESIDENT RANGE 3 START
+     I                                       45  550RNS30
+     I                                       45  551RNS31
+     I                                       45  552RNS32
+     I                                       45  553RNS33
+     I* RESIDENT TO NON-RESIDENT RANGE 3 END
+     I                                       56  660RNE30
+     I                                       56  661RNE31
+     I                                       56  662RNE32
+     I                                       56  663RNE33
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 1
+     I                                       67  770RNMN10
+     I                                       67  771RNMN11
+     I                                       67  772RNMN12
+     I                                       67  773RNMN13
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 1
+     I                                       78  880RNMX10
+     I                                       78  881RNMX11
+     I                                       78  882RNMX12
+     I                                       78  883RNMX13
+     I* RESIDENT TO RESIDENT RANGE 1 START
+     I                                       89  990RRS10
+     I                                       89  991RRS11
+     I                                       89  992RRS12
+     I                                       89  993RRS13
+     I* RESIDENT TO RESIDENT RANGE 1 END
+     I                                      100 1100RRE10
+     I                                      100 1101RRE11
+     I                                      100 1102RRE12
+     I                                      100 1103RRE13
+     I* RESIDENT TO RESIDENT RANGE 2 START
+     I                                      111 1210RRS20
+     I                                      111 1211RRS21
+     I                                      111 1212RRS22
+     I                                      111 1213RRS23
+     I* RESIDENT TO RESIDENT RANGE 2 END
+     I                                      122 1320RRE20
+     I                                      122 1321RRE21
+     I                                      122 1322RRE22
+     I                                      122 1323RRE23
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 1
+     I                                      133 1430RRMN10
+     I                                      133 1431RRMN11
+     I                                      133 1432RRMN12
+     I                                      133 1433RRMN13
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 1
+     I                                      144 1540RRMX10
+     I                                      144 1541RRMX11
+     I                                      144 1542RRMX12
+     I                                      144 1543RRMX13
+     I* NON-RESIDENT TO NON-RESIDENT MINIMUM CHARGE
+     I                                      155 1650NNMN0
+     I                                      155 1651NNMN1
+     I                                      155 1652NNMN2
+     I                                      155 1653NNMN3
+     I* NON-RESIDENT TO NON-RESIDENT MAXIMUM CHARGE
+     I                                      166 1760NNMX0
+     I                                      166 1761NNMX1
+     I                                      166 1762NNMX2
+     I                                      166 1763NNMX3
+     I* CHEQUE CHARGE
+     I                                      177 1870CQCH0
+     I                                      177 1871CQCH1
+     I                                      177 1872CQCH2
+     I                                      177 1873CQCH3
+     I* NON-RESIDENT TO NON-RESIDENT MAXIMUM CHARGE
+     I**************************************188 1980THRH0                 S01194
+     I**************************************188 1981THRH1                 S01194
+     I**************************************188 1982THRH2                 S01194
+     I**************************************188 1983THRH3                 S01194
+     I* SWIFT PRIORTY CHARGE
+     I                                      199 2090SPCH0
+     I                                      199 2091SPCH1
+     I                                      199 2092SPCH2
+     I                                      199 2093SPCH3
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 2
+     I                                      210 2200RNMN20
+     I                                      210 2201RNMN21
+     I                                      210 2202RNMN22
+     I                                      210 2203RNMN23
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 2
+     I                                      221 2310RNMX20
+     I                                      221 2311RNMX21
+     I                                      221 2312RNMX22
+     I                                      221 2313RNMX23
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 3
+     I                                      232 2420RNMN30
+     I                                      232 2421RNMN31
+     I                                      232 2422RNMN32
+     I                                      232 2423RNMN33
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 3
+     I                                      243 2530RNMX30
+     I                                      243 2531RNMX31
+     I                                      243 2532RNMX32
+     I                                      243 2533RNMX33
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 2
+     I                                      254 2640RRMN20
+     I                                      254 2641RRMN21
+     I                                      254 2642RRMN22
+     I                                      254 2643RRMN23
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 2
+     I                                      265 2750RRMX20
+     I                                      265 2751RRMX21
+     I                                      265 2752RRMX22
+     I                                      265 2753RRMX23
+     I*                                                                   S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 4 START                            S01508
+     I                                      276 2860RNS40                 S01508
+     I                                      276 2861RNS41                 S01508
+     I                                      276 2862RNS42                 S01508
+     I                                      276 2863RNS43                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 4 END                              S01508
+     I                                      287 2970RNE40                 S01508
+     I                                      287 2971RNE41                 S01508
+     I                                      287 2972RNE42                 S01508
+     I                                      287 2973RNE43                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 5 START                            S01508
+     I                                      298 3080RNS50                 S01508
+     I                                      298 3081RNS51                 S01508
+     I                                      298 3082RNS52                 S01508
+     I                                      298 3083RNS53                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 5 END                              S01508
+     I                                      309 3190RNE50                 S01508
+     I                                      309 3191RNE51                 S01508
+     I                                      309 3192RNE52                 S01508
+     I                                      309 3193RNE53                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 6 START                            S01508
+     I                                      320 3300RNS60                 S01508
+     I                                      320 3301RNS61                 S01508
+     I                                      320 3302RNS62                 S01508
+     I                                      320 3303RNS63                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 6 END                              S01508
+     I                                      331 3410RNE60                 S01508
+     I                                      331 3411RNE61                 S01508
+     I                                      331 3412RNE62                 S01508
+     I                                      331 3413RNE63                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 7 START                            S01508
+     I                                      342 3520RNS70                 S01508
+     I                                      342 3521RNS71                 S01508
+     I                                      342 3522RNS72                 S01508
+     I                                      342 3523RNS73                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 7 END                              S01508
+     I                                      353 3630RNE70                 S01508
+     I                                      353 3631RNE71                 S01508
+     I                                      353 3632RNE72                 S01508
+     I                                      353 3633RNE73                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 8 START                            S01508
+     I                                      364 3740RNS80                 S01508
+     I                                      364 3741RNS81                 S01508
+     I                                      364 3742RNS82                 S01508
+     I                                      364 3743RNS83                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 8 END                              S01508
+     I                                      375 3850RNE80                 S01508
+     I                                      375 3851RNE81                 S01508
+     I                                      375 3852RNE82                 S01508
+     I                                      375 3853RNE83                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 9 START                            S01508
+     I                                      386 3960RNS90                 S01508
+     I                                      386 3961RNS91                 S01508
+     I                                      386 3962RNS92                 S01508
+     I                                      386 3963RNS93                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 9 END                              S01508
+     I                                      397 4070RNE90                 S01508
+     I                                      397 4071RNE91                 S01508
+     I                                      397 4072RNE92                 S01508
+     I                                      397 4073RNE93                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 0 START                            S01508
+     I                                      408 4180RNS00                 S01508
+     I                                      408 4181RNS01                 S01508
+     I                                      408 4182RNS02                 S01508
+     I                                      408 4183RNS03                 S01508
+     I* RESIDENT TO NON-RESIDENT RANGE 0 END                              S01508
+     I                                      419 4290RNE00                 S01508
+     I                                      419 4291RNE01                 S01508
+     I                                      419 4292RNE02                 S01508
+     I                                      419 4293RNE03                 S01508
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 4                         S01508
+     I                                      430 4400RNMN40                S01508
+     I                                      430 4401RNMN41                S01508
+     I                                      430 4402RNMN42                S01508
+     I                                      430 4403RNMN43                S01508
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 4                         S01508
+     I                                      441 4510RNMX40                S01508
+     I                                      441 4511RNMX41                S01508
+     I                                      441 4512RNMX42                S01508
+     I                                      441 4513RNMX43                S01508
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 5                         S01508
+     I                                      452 4620RNMN50                S01508
+     I                                      452 4621RNMN51                S01508
+     I                                      452 4622RNMN52                S01508
+     I                                      452 4623RNMN53                S01508
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 5                         S01508
+     I                                      463 4730RNMX50                S01508
+     I                                      463 4731RNMX51                S01508
+     I                                      463 4732RNMX52                S01508
+     I                                      463 4733RNMX53                S01508
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 6                         S01508
+     I                                      474 4840RNMN60                S01508
+     I                                      474 4841RNMN61                S01508
+     I                                      474 4842RNMN62                S01508
+     I                                      474 4843RNMN63                S01508
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 6                         S01508
+     I                                      485 4950RNMX60                S01508
+     I                                      485 4951RNMX61                S01508
+     I                                      485 4952RNMX62                S01508
+     I                                      485 4953RNMX63                S01508
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 7                         S01508
+     I                                      496 5060RNMN70                S01508
+     I                                      496 5061RNMN71                S01508
+     I                                      496 5062RNMN72                S01508
+     I                                      496 5063RNMN73                S01508
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 7                         S01508
+     I                                      507 5170RNMX70                S01508
+     I                                      507 5171RNMX71                S01508
+     I                                      507 5172RNMX72                S01508
+     I                                      507 5173RNMX73                S01508
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 8                         S01508
+     I                                      518 5280RNMN80                S01508
+     I                                      518 5281RNMN81                S01508
+     I                                      518 5282RNMN82                S01508
+     I                                      518 5283RNMN83                S01508
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 8                         S01508
+     I                                      529 5390RNMX80                S01508
+     I                                      529 5391RNMX81                S01508
+     I                                      529 5392RNMX82                S01508
+     I                                      529 5393RNMX83                S01508
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 9                         S01508
+     I                                      540 5500RNMN90                S01508
+     I                                      540 5501RNMN91                S01508
+     I                                      540 5502RNMN92                S01508
+     I                                      540 5503RNMN93                S01508
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 9                         S01508
+     I                                      551 5610RNMX90                S01508
+     I                                      551 5611RNMX91                S01508
+     I                                      551 5612RNMX92                S01508
+     I                                      551 5613RNMX93                S01508
+     I* RESIDENT TO NON-RESIDENT MINIMUM CHARGE 0                         S01508
+     I                                      562 5720RNMN00                S01508
+     I                                      562 5721RNMN01                S01508
+     I                                      562 5722RNMN02                S01508
+     I                                      562 5723RNMN03                S01508
+     I* RESIDENT TO NON-RESIDENT MAXIMUM CHARGE 0                         S01508
+     I                                      573 5830RNMX00                S01508
+     I                                      573 5831RNMX01                S01508
+     I                                      573 5832RNMX02                S01508
+     I                                      573 5833RNMX03                S01508
+     I* RESIDENT TO RESIDENT RANGE 3 START                                S01508
+     I                                      584 5940RRS30                 S01508
+     I                                      584 5941RRS31                 S01508
+     I                                      584 5942RRS32                 S01508
+     I                                      584 5943RRS33                 S01508
+     I* RESIDENT TO RESIDENT RANGE 3 END                                  S01508
+     I                                      595 6050RRE30                 S01508
+     I                                      595 6051RRE31                 S01508
+     I                                      595 6052RRE32                 S01508
+     I                                      595 6053RRE33                 S01508
+     I* RESIDENT TO RESIDENT RANGE 4 START                                S01508
+     I                                      606 6160RRS40                 S01508
+     I                                      606 6161RRS41                 S01508
+     I                                      606 6162RRS42                 S01508
+     I                                      606 6163RRS43                 S01508
+     I* RESIDENT TO RESIDENT RANGE 4 END                                  S01508
+     I                                      617 6270RRE40                 S01508
+     I                                      617 6271RRE41                 S01508
+     I                                      617 6272RRE42                 S01508
+     I                                      617 6273RRE43                 S01508
+     I* RESIDENT TO RESIDENT RANGE 5 START                                S01508
+     I                                      628 6380RRS50                 S01508
+     I                                      628 6381RRS51                 S01508
+     I                                      628 6382RRS52                 S01508
+     I                                      628 6383RRS53                 S01508
+     I* RESIDENT TO RESIDENT RANGE 5 END                                  S01508
+     I                                      639 6490RRE50                 S01508
+     I                                      639 6491RRE51                 S01508
+     I                                      639 6492RRE52                 S01508
+     I                                      639 6493RRE53                 S01508
+     I* RESIDENT TO RESIDENT RANGE 6 START                                S01508
+     I                                      650 6600RRS60                 S01508
+     I                                      650 6601RRS61                 S01508
+     I                                      650 6602RRS62                 S01508
+     I                                      650 6603RRS63                 S01508
+     I* RESIDENT TO RESIDENT RANGE 6 END                                  S01508
+     I                                      661 6710RRE60                 S01508
+     I                                      661 6711RRE61                 S01508
+     I                                      661 6712RRE62                 S01508
+     I                                      661 6713RRE63                 S01508
+     I* RESIDENT TO RESIDENT RANGE 7 START                                S01508
+     I                                      672 6820RRS70                 S01508
+     I                                      672 6821RRS71                 S01508
+     I                                      672 6822RRS72                 S01508
+     I                                      672 6823RRS73                 S01508
+     I* RESIDENT TO RESIDENT RANGE 7 END                                  S01508
+     I                                      683 6930RRE70                 S01508
+     I                                      683 6931RRE71                 S01508
+     I                                      683 6932RRE72                 S01508
+     I                                      683 6933RRE73                 S01508
+     I* RESIDENT TO RESIDENT RANGE 8 START                                S01508
+     I                                      694 7040RRS80                 S01508
+     I                                      694 7041RRS81                 S01508
+     I                                      694 7042RRS82                 S01508
+     I                                      694 7043RRS83                 S01508
+     I* RESIDENT TO RESIDENT RANGE 8 END                                  S01508
+     I                                      705 7150RRE80                 S01508
+     I                                      705 7151RRE81                 S01508
+     I                                      705 7152RRE82                 S01508
+     I                                      705 7153RRE83                 S01508
+     I* RESIDENT TO RESIDENT RANGE 9 START                                S01508
+     I                                      716 7260RRS90                 S01508
+     I                                      716 7261RRS91                 S01508
+     I                                      716 7262RRS92                 S01508
+     I                                      716 7263RRS93                 S01508
+     I* RESIDENT TO RESIDENT RANGE 9 END                                  S01508
+     I                                      727 7370RRE90                 S01508
+     I                                      727 7371RRE91                 S01508
+     I                                      727 7372RRE92                 S01508
+     I                                      727 7373RRE93                 S01508
+     I* RESIDENT TO RESIDENT RANGE 0 START                                S01508
+     I                                      738 7480RRS00                 S01508
+     I                                      738 7481RRS01                 S01508
+     I                                      738 7482RRS02                 S01508
+     I                                      738 7483RRS03                 S01508
+     I* RESIDENT TO RESIDENT RANGE 0 END                                  S01508
+     I                                      749 7590RRE00                 S01508
+     I                                      749 7591RRE01                 S01508
+     I                                      749 7592RRE02                 S01508
+     I                                      749 7593RRE03                 S01508
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 3                             S01508
+     I                                      760 7700RRMN30                S01508
+     I                                      760 7701RRMN31                S01508
+     I                                      760 7702RRMN32                S01508
+     I                                      760 7703RRMN33                S01508
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 3                             S01508
+     I                                      771 7810RRMX30                S01508
+     I                                      771 7811RRMX31                S01508
+     I                                      771 7812RRMX32                S01508
+     I                                      771 7813RRMX33                S01508
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 4                             S01508
+     I                                      782 7920RRMN40                S01508
+     I                                      782 7921RRMN41                S01508
+     I                                      782 7922RRMN42                S01508
+     I                                      782 7923RRMN43                S01508
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 4                             S01508
+     I                                      793 8030RRMX40                S01508
+     I                                      793 8031RRMX41                S01508
+     I                                      793 8032RRMX42                S01508
+     I                                      793 8033RRMX43                S01508
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 5                             S01508
+     I                                      804 8140RRMN50                S01508
+     I                                      804 8141RRMN51                S01508
+     I                                      804 8142RRMN52                S01508
+     I                                      804 8143RRMN53                S01508
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 5                             S01508
+     I                                      815 8250RRMX50                S01508
+     I                                      815 8251RRMX51                S01508
+     I                                      815 8252RRMX52                S01508
+     I                                      815 8253RRMX53                S01508
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 6                             S01508
+     I                                      826 8360RRMN60                S01508
+     I                                      826 8361RRMN61                S01508
+     I                                      826 8362RRMN62                S01508
+     I                                      826 8363RRMN63                S01508
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 6                             S01508
+     I                                      837 8470RRMX60                S01508
+     I                                      837 8471RRMX61                S01508
+     I                                      837 8472RRMX62                S01508
+     I                                      837 8473RRMX63                S01508
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 7                             S01508
+     I                                      848 8580RRMN70                S01508
+     I                                      848 8581RRMN71                S01508
+     I                                      848 8582RRMN72                S01508
+     I                                      848 8583RRMN73                S01508
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 7                             S01508
+     I                                      859 8690RRMX70                S01508
+     I                                      859 8691RRMX71                S01508
+     I                                      859 8692RRMX72                S01508
+     I                                      859 8693RRMX73                S01508
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 8                             S01508
+     I                                      870 8800RRMN80                S01508
+     I                                      870 8801RRMN81                S01508
+     I                                      870 8802RRMN82                S01508
+     I                                      870 8803RRMN83                S01508
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 8                             S01508
+     I                                      881 8910RRMX80                S01508
+     I                                      881 8911RRMX81                S01508
+     I                                      881 8912RRMX82                S01508
+     I                                      881 8913RRMX83                S01508
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 9                             S01508
+     I                                      892 9020RRMN90                S01508
+     I                                      892 9021RRMN91                S01508
+     I                                      892 9022RRMN92                S01508
+     I                                      892 9023RRMN93                S01508
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 9                             S01508
+     I                                      903 9130RRMX90                S01508
+     I                                      903 9131RRMX91                S01508
+     I                                      903 9132RRMX92                S01508
+     I                                      903 9133RRMX93                S01508
+     I* RESIDENT TO RESIDENT MINIMUM CHARGE 0                             S01508
+     I                                      914 9240RRMN00                S01508
+     I                                      914 9241RRMN01                S01508
+     I                                      914 9242RRMN02                S01508
+     I                                      914 9243RRMN03                S01508
+     I* RESIDENT TO RESIDENT MAXIMUM CHARGE 0                             S01508
+     I                                      925 9350RRMX00                S01508
+     I                                      925 9351RRMX01                S01508
+     I                                      925 9352RRMX02                S01508
+     I                                      925 9353RRMX03                S01508
+     I*                                                                   S01494
+     I                                      936 9460CNS10                 S01494
+     I                                      936 9461CNS11                 S01494
+     I                                      936 9462CNS12                 S01494
+     I                                      936 9463CNS13                 S01494
+     I*                                                                   S01494
+     I                                      947 9570CNE10                 S01494
+     I                                      947 9571CNE11                 S01494
+     I                                      947 9572CNE12                 S01494
+     I                                      947 9573CNE13                 S01494
+     I*                                                                   S01494
+     I                                      958 9680CNS20                 S01494
+     I                                      958 9681CNS21                 S01494
+     I                                      958 9682CNS22                 S01494
+     I                                      958 9683CNS23                 S01494
+     I*                                                                   S01494
+     I                                      969 9790CNE20                 S01494
+     I                                      969 9791CNE21                 S01494
+     I                                      969 9792CNE22                 S01494
+     I                                      969 9793CNE23                 S01494
+     I*                                                                   S01494
+     I                                      980 9900CNS30                 S01494
+     I                                      980 9901CNS31                 S01494
+     I                                      980 9902CNS32                 S01494
+     I                                      980 9903CNS33                 S01494
+     I*                                                                   S01494
+     I                                      99110010CNE30                 S01494
+     I                                      99110011CNE31                 S01494
+     I                                      99110012CNE32                 S01494
+     I                                      99110013CNE33                 S01494
+     I*                                                                   S01494
+     I                                     100210120CNS40                 S01494
+     I                                     100210121CNS41                 S01494
+     I                                     100210122CNS42                 S01494
+     I                                     100210123CNS43                 S01494
+     I*                                                                   S01494
+     I                                     101310230CNE40                 S01494
+     I                                     101310231CNE41                 S01494
+     I                                     101310232CNE42                 S01494
+     I                                     101310233CNE43                 S01494
+     I*                                                                   S01494
+     I                                     102410340CNS50                 S01494
+     I                                     102410341CNS51                 S01494
+     I                                     102410342CNS52                 S01494
+     I                                     102410343CNS53                 S01494
+     I*                                                                   S01494
+     I                                     103510450CNE50                 S01494
+     I                                     103510451CNE51                 S01494
+     I                                     103510452CNE52                 S01494
+     I                                     103510453CNE53                 S01494
+     I*                                                                   S01494
+     I                                     104610560CNS60                 S01494
+     I                                     104610561CNS61                 S01494
+     I                                     104610562CNS62                 S01494
+     I                                     104610563CNS63                 S01494
+     I*                                                                   S01494
+     I                                     105710670CNE60                 S01494
+     I                                     105710671CNE61                 S01494
+     I                                     105710672CNE62                 S01494
+     I                                     105710673CNE63                 S01494
+     I*                                                                   S01494
+     I                                     106810780CNS70                 S01494
+     I                                     106810781CNS71                 S01494
+     I                                     106810782CNS72                 S01494
+     I                                     106810783CNS73                 S01494
+     I*                                                                   S01494
+     I                                     107910890CNE70                 S01494
+     I                                     107910891CNE71                 S01494
+     I                                     107910892CNE72                 S01494
+     I                                     107910893CNE73                 S01494
+     I*                                                                   S01494
+     I                                     109011000CNS80                 S01494
+     I                                     109011001CNS81                 S01494
+     I                                     109011002CNS82                 S01494
+     I                                     109011003CNS83                 S01494
+     I*                                                                   S01494
+     I                                     110111110CNE80                 S01494
+     I                                     110111111CNE81                 S01494
+     I                                     110111112CNE82                 S01494
+     I                                     110111113CNE83                 S01494
+     I*                                                                   S01494
+     I                                     111211220CNS90                 S01494
+     I                                     111211221CNS91                 S01494
+     I                                     111211222CNS92                 S01494
+     I                                     111211223CNS93                 S01494
+     I*                                                                   S01494
+     I                                     112311330CNE90                 S01494
+     I                                     112311331CNE91                 S01494
+     I                                     112311332CNE92                 S01494
+     I                                     112311333CNE93                 S01494
+     I*                                                                   S01494
+     I                                     113411440CNS00                 S01494
+     I                                     113411441CNS01                 S01494
+     I                                     113411442CNS02                 S01494
+     I                                     113411443CNS03                 S01494
+     I*                                                                   S01494
+     I                                     114511550CNE00                 S01494
+     I                                     114511551CNE01                 S01494
+     I                                     114511552CNE02                 S01494
+     I                                     114511553CNE03                 S01494
+     I*                                                                   S01494
+     I                                     115611660CNMN10                S01494
+     I                                     115611661CNMN11                S01494
+     I                                     115611662CNMN12                S01494
+     I                                     115611663CNMN13                S01494
+     I*                                                                   S01494
+     I                                     116711770CNMX10                S01494
+     I                                     116711771CNMX11                S01494
+     I                                     116711772CNMX12                S01494
+     I                                     116711773CNMX13                S01494
+     I*                                                                   S01494
+     I                                     117811880CNMN20                S01494
+     I                                     117811881CNMN21                S01494
+     I                                     117811882CNMN22                S01494
+     I                                     117811883CNMN23                S01494
+     I*                                                                   S01494
+     I                                     118911990CNMX20                S01494
+     I                                     118911991CNMX21                S01494
+     I                                     118911992CNMX22                S01494
+     I                                     118911993CNMX23                S01494
+     I*                                                                   S01494
+     I                                     120012100CNMN30                S01494
+     I                                     120012101CNMN31                S01494
+     I                                     120012102CNMN32                S01494
+     I                                     120012103CNMN33                S01494
+     I*                                                                   S01494
+     I                                     121112210CNMX30                S01494
+     I                                     121112211CNMX31                S01494
+     I                                     121112212CNMX32                S01494
+     I                                     121112213CNMX33                S01494
+     I*                                                                   S01494
+     I                                     122212320CNMN40                S01494
+     I                                     122212321CNMN41                S01494
+     I                                     122212322CNMN42                S01494
+     I                                     122212323CNMN43                S01494
+     I*                                                                   S01494
+     I                                     123312430CNMX40                S01494
+     I                                     123312431CNMX41                S01494
+     I                                     123312432CNMX42                S01494
+     I                                     123312433CNMX43                S01494
+     I*                                                                   S01494
+     I                                     124412540CNMN50                S01494
+     I                                     124412541CNMN51                S01494
+     I                                     124412542CNMN52                S01494
+     I                                     124412543CNMN53                S01494
+     I*                                                                   S01494
+     I                                     125512650CNMX50                S01494
+     I                                     125512651CNMX51                S01494
+     I                                     125512652CNMX52                S01494
+     I                                     125512653CNMX53                S01494
+     I*                                                                   S01494
+     I                                     126612760CNMN60                S01494
+     I                                     126612761CNMN61                S01494
+     I                                     126612762CNMN62                S01494
+     I                                     126612763CNMN63                S01494
+     I*                                                                   S01494
+     I                                     127712870CNMX60                S01494
+     I                                     127712871CNMX61                S01494
+     I                                     127712872CNMX62                S01494
+     I                                     127712873CNMX63                S01494
+     I*                                                                   S01494
+     I                                     128812980CNMN70                S01494
+     I                                     128812981CNMN71                S01494
+     I                                     128812982CNMN72                S01494
+     I                                     128812983CNMN73                S01494
+     I*                                                                   S01494
+     I                                     129913090CNMX70                S01494
+     I                                     129913091CNMX71                S01494
+     I                                     129913092CNMX72                S01494
+     I                                     129913093CNMX73                S01494
+     I*                                                                   S01494
+     I                                     131013200CNMN80                S01494
+     I                                     131013201CNMN81                S01494
+     I                                     131013202CNMN82                S01494
+     I                                     131013203CNMN83                S01494
+     I*                                                                   S01494
+     I                                     132113310CNMX80                S01494
+     I                                     132113311CNMX81                S01494
+     I                                     132113312CNMX82                S01494
+     I                                     132113313CNMX83                S01494
+     I*                                                                   S01494
+     I                                     133213420CNMN90                S01494
+     I                                     133213421CNMN91                S01494
+     I                                     133213422CNMN92                S01494
+     I                                     133213423CNMN93                S01494
+     I*                                                                   S01494
+     I                                     134313530CNMX90                S01494
+     I                                     134313531CNMX91                S01494
+     I                                     134313532CNMX92                S01494
+     I                                     134313533CNMX93                S01494
+     I*                                                                   S01494
+     I                                     135413640CNMN00                S01494
+     I                                     135413641CNMN01                S01494
+     I                                     135413642CNMN02                S01494
+     I                                     135413643CNMN03                S01494
+     I*                                                                   S01494
+     I                                     136513750CNMX00                S01494
+     I                                     136513751CNMX01                S01494
+     I                                     136513752CNMX02                S01494
+     I                                     136513753CNMX03                S01494
+     I*                                                                   S01494
+     I                                     137613860CRS10                 S01494
+     I                                     137613861CRS11                 S01494
+     I                                     137613862CRS12                 S01494
+     I                                     137613863CRS13                 S01494
+     I*                                                                   S01494
+     I                                     138713970CRE10                 S01494
+     I                                     138713971CRE11                 S01494
+     I                                     138713972CRE12                 S01494
+     I                                     138713973CRE13                 S01494
+     I*                                                                   S01494
+     I                                     139814080CRS20                 S01494
+     I                                     139814081CRS21                 S01494
+     I                                     139814082CRS22                 S01494
+     I                                     139814083CRS23                 S01494
+     I*                                                                   S01494
+     I                                     140914190CRE20                 S01494
+     I                                     140914191CRE21                 S01494
+     I                                     140914192CRE22                 S01494
+     I                                     140914193CRE23                 S01494
+     I*                                                                   S01494
+     I                                     142014300CRS30                 S01494
+     I                                     142014301CRS31                 S01494
+     I                                     142014302CRS32                 S01494
+     I                                     142014303CRS33                 S01494
+     I*                                                                   S01494
+     I                                     143114410CRE30                 S01494
+     I                                     143114411CRE31                 S01494
+     I                                     143114412CRE32                 S01494
+     I                                     143114413CRE33                 S01494
+     I*                                                                   S01494
+     I                                     144214520CRS40                 S01494
+     I                                     144214521CRS41                 S01494
+     I                                     144214522CRS42                 S01494
+     I                                     144214523CRS43                 S01494
+     I*                                                                   S01494
+     I                                     145314630CRE40                 S01494
+     I                                     145314631CRE41                 S01494
+     I                                     145314632CRE42                 S01494
+     I                                     145314633CRE43                 S01494
+     I*                                                                   S01494
+     I                                     146414740CRS50                 S01494
+     I                                     146414741CRS51                 S01494
+     I                                     146414742CRS52                 S01494
+     I                                     146414743CRS53                 S01494
+     I*                                                                   S01494
+     I                                     147514850CRE50                 S01494
+     I                                     147514851CRE51                 S01494
+     I                                     147514852CRE52                 S01494
+     I                                     147514853CRE53                 S01494
+     I*                                                                   S01494
+     I                                     148614960CRS60                 S01494
+     I                                     148614961CRS61                 S01494
+     I                                     148614962CRS62                 S01494
+     I                                     148614963CRS63                 S01494
+     I*                                                                   S01494
+     I                                     149715070CRE60                 S01494
+     I                                     149715071CRE61                 S01494
+     I                                     149715072CRE62                 S01494
+     I                                     149715073CRE63                 S01494
+     I*                                                                   S01494
+     I                                     150815180CRS70                 S01494
+     I                                     150815181CRS71                 S01494
+     I                                     150815182CRS72                 S01494
+     I                                     150815183CRS73                 S01494
+     I*                                                                   S01494
+     I                                     151915290CRE70                 S01494
+     I                                     151915291CRE71                 S01494
+     I                                     151915292CRE72                 S01494
+     I                                     151915293CRE73                 S01494
+     I*                                                                   S01494
+     I                                     153015400CRS80                 S01494
+     I                                     153015401CRS81                 S01494
+     I                                     153015402CRS82                 S01494
+     I                                     153015403CRS83                 S01494
+     I*                                                                   S01494
+     I                                     154115510CRE80                 S01494
+     I                                     154115511CRE81                 S01494
+     I                                     154115512CRE82                 S01494
+     I                                     154115513CRE83                 S01494
+     I*                                                                   S01494
+     I                                     155215620CRS90                 S01494
+     I                                     155215621CRS91                 S01494
+     I                                     155215622CRS92                 S01494
+     I                                     155215623CRS93                 S01494
+     I*                                                                   S01494
+     I                                     156315730CRE90                 S01494
+     I                                     156315731CRE91                 S01494
+     I                                     156315732CRE92                 S01494
+     I                                     156315733CRE93                 S01494
+     I*                                                                   S01494
+     I                                     157415840CRS00                 S01494
+     I                                     157415841CRS01                 S01494
+     I                                     157415842CRS02                 S01494
+     I                                     157415843CRS03                 S01494
+     I*                                                                   S01494
+     I                                     158515950CRE00                 S01494
+     I                                     158515951CRE01                 S01494
+     I                                     158515952CRE02                 S01494
+     I                                     158515953CRE03                 S01494
+     I*                                                                   S01494
+     I                                     159616060CRMN10                S01494
+     I                                     159616061CRMN11                S01494
+     I                                     159616062CRMN12                S01494
+     I                                     159616063CRMN13                S01494
+     I*                                                                   S01494
+     I                                     160716170CRMX10                S01494
+     I                                     160716171CRMX11                S01494
+     I                                     160716172CRMX12                S01494
+     I                                     160716173CRMX13                S01494
+     I*                                                                   S01494
+     I                                     161816280CRMN20                S01494
+     I                                     161816281CRMN21                S01494
+     I                                     161816282CRMN22                S01494
+     I                                     161816283CRMN23                S01494
+     I*                                                                   S01494
+     I                                     162916390CRMX20                S01494
+     I                                     162916391CRMX21                S01494
+     I                                     162916392CRMX22                S01494
+     I                                     162916393CRMX23                S01494
+     I*                                                                   S01494
+     I                                     164016500CRMN30                S01494
+     I                                     164016501CRMN31                S01494
+     I                                     164016502CRMN32                S01494
+     I                                     164016503CRMN33                S01494
+     I*                                                                   S01494
+     I                                     165116610CRMX30                S01494
+     I                                     165116611CRMX31                S01494
+     I                                     165116612CRMX32                S01494
+     I                                     165116613CRMX33                S01494
+     I*                                                                   S01494
+     I                                     166216720CRMN40                S01494
+     I                                     166216721CRMN41                S01494
+     I                                     166216722CRMN42                S01494
+     I                                     166216723CRMN43                S01494
+     I*                                                                   S01494
+     I                                     167316830CRMX40                S01494
+     I                                     167316831CRMX41                S01494
+     I                                     167316832CRMX42                S01494
+     I                                     167316833CRMX43                S01494
+     I*                                                                   S01494
+     I                                     168416940CRMN50                S01494
+     I                                     168416941CRMN51                S01494
+     I                                     168416942CRMN52                S01494
+     I                                     168416943CRMN53                S01494
+     I*                                                                   S01494
+     I                                     169517050CRMX50                S01494
+     I                                     169517051CRMX51                S01494
+     I                                     169517052CRMX52                S01494
+     I                                     169517053CRMX53                S01494
+     I*                                                                   S01494
+     I                                     170617160CRMN60                S01494
+     I                                     170617161CRMN61                S01494
+     I                                     170617162CRMN62                S01494
+     I                                     170617163CRMN63                S01494
+     I*                                                                   S01494
+     I                                     171717270CRMX60                S01494
+     I                                     171717271CRMX61                S01494
+     I                                     171717272CRMX62                S01494
+     I                                     171717273CRMX63                S01494
+     I*                                                                   S01494
+     I                                     172817380CRMN70                S01494
+     I                                     172817381CRMN71                S01494
+     I                                     172817382CRMN72                S01494
+     I                                     172817383CRMN73                S01494
+     I*                                                                   S01494
+     I                                     173917490CRMX70                S01494
+     I                                     173917491CRMX71                S01494
+     I                                     173917492CRMX72                S01494
+     I                                     173917493CRMX73                S01494
+     I*                                                                   S01494
+     I                                     175017600CRMN80                S01494
+     I                                     175017601CRMN81                S01494
+     I                                     175017602CRMN82                S01494
+     I                                     175017603CRMN83                S01494
+     I*                                                                   S01494
+     I                                     176117710CRMX80                S01494
+     I                                     176117711CRMX81                S01494
+     I                                     176117712CRMX82                S01494
+     I                                     176117713CRMX83                S01494
+     I*                                                                   S01494
+     I                                     177217820CRMN90                S01494
+     I                                     177217821CRMN91                S01494
+     I                                     177217822CRMN92                S01494
+     I                                     177217823CRMN93                S01494
+     I*                                                                   S01494
+     I                                     178317930CRMX90                S01494
+     I                                     178317931CRMX91                S01494
+     I                                     178317932CRMX92                S01494
+     I                                     178317933CRMX93                S01494
+     I*                                                                   S01494
+     I                                     179418040CRMN00                S01494
+     I                                     179418041CRMN01                S01494
+     I                                     179418042CRMN02                S01494
+     I                                     179418043CRMN03                S01494
+     I*                                                                   S01494
+     I                                     180518150CRMX00                S01494
+     I                                     180518151CRMX01                S01494
+     I                                     180518152CRMX02                S01494
+     I                                     180518153CRMX03                S01494
+     I*                                                                   S01494
+     I** INFDS for P1 file .                                              S01117
+     ISPOOL1      DS                                                      S01117
+     I                                       83  92 SFILE1                S01117
+     I                                    B 123 1240SFNUM1                S01117
+     I** INFDS for AU file                                                S01194
+     ISPOOLU      DS                                                      S01194
+     I                                       83  92 SFILEU                S01194
+     I                                    B 123 1240SFNUMU                S01194
+     I*                                                                   S01494
+     ISCSARD    E DSSCSARDPD                                              S01494
+     I** External data structure for SAR file details                     S01494
+     I*                                                                   S01494
+     IDSFDY     E DSDSFDY                                                 S01494
+     I** Short data structure for access objects                          S01494
+     C                     MOVEACPY@      BIS@   80
+     C************************************************************
+     C* MAIN PROCESSING
+     C************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @PSEQ   5                       S01117
+     C                     PARM           @PLEV   1                       S01117
+     C                     PARM           @PENT   3                       S01117
+     C                     PARM           RTYPE   1
+     C           *NAMVAR   DEFN           LDA                             S01194
+     C                     MOVE *BLANK    DBPGM
+     C                     MOVE 'FT0500'  DBPGM
+     C* INITIALISE SPOOL FILE DETAILS                                     S01117
+     C                     MOVEL@PSEQ     ZSEQ                            S01117
+     C*                                                                   S01117
+     C           RTYPE     IFEQ 'A'                                       E29899
+     C                     SETON                     15                   E29899
+     C                     END                                            E29899
+     C*                                                                   S01117
+     C* CALL ZSFILE ONCE FOR THE AUDIT FILE.                              S01117
+     C*                                                                   S01117
+     C                     EXSR ZSFAU                                     S01117
+     C*                                                                   S01494
+     C** Check if S01494 (FX/Change Commission) is available              S01494
+     C*                                                                   S01494
+     C                     EXSR CHKSAR                                    S01494
+     C*                                                                   S01508
+     C** Declare key list for PYCHGL2/PYCHGL1                             S01508
+     C*                                                                   S01508
+     C           PYKEY     KLIST                                          S01508
+     C                     KFLD           KYBR    3                       S01508
+     C                     KFLD           KYCNUM  60                      S01508
+     C                     KFLD           KYPYTP  2                       S01508
+     C                     KFLD           KYPYST  2                       S01508
+     C                     KFLD           KYGPCD  4                       S01508
+     C*                                                                   S01117
+     C* READ ICD 1 RECORD
+     C                     EXSR RDIC1
+     C**READ*PAYMENT*CHARGES*RECORD***************************************S01117
+     C*********************EXSR RDCHG                                     S01117
+     C**IF*LAST*CHANGE*DATE*NOT*EQUAL*RUN*DATE*IGNORE*                    S01117
+     C**ONLY*IF*RUN*IN*END*OF*DAY*                                        S01117
+     C***********RTYPE*****IFEQ 'A'                                       S01117
+     C***********LCD*******ANDNERUND                       B001           S01117
+     C*********************SETON                     LR                   S01117
+     C*********************RETRN                                          S01117
+     C*********************END                             E001           S01117
+     C**PRINT*HEADINGS****************************************************S01117
+     C*********************OPEN FT0500P1                                  S01117
+     C*********************WRITEFT500PF1               60                 S01117
+     C* READ ICD 2 RECORD
+     C                     EXSR RDIC2
+     C*                                                                   S01117
+     C* SETON SYSTEM LEVEL AND ENT='ALL' INDICATORS                       S01117
+     C           @PLEV     IFEQ 'S'                                       S01117
+     C                     SETON                     11                   S01117
+     C                     END                                            S01117
+     C           @PENT     IFEQ 'ALL'                                     S01117
+     C                     SETON                     12                   S01117
+     C                     END                                            S01117
+     C*
+     C** Set on branch level indicator
+     C*
+     C           @PLEV     IFEQ 'B'                                       S01117
+     C                     MOVE '1'       *IN54                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C* READ CURRENCIES RECORD
+     C                     EXSR CCIES
+     C**SETON*INDICATOR*30,31,32*OR*33*DEPENDING*ON*CDP*                  S01117
+     C*********************MOVEA'0000'    *IN,30                          S01117
+     C***********CDP*******ADD  30        Z       30                      S01117
+     C*********************MOVEA'1'       *IN,Z                           S01117
+     C**ADD*AMOUNTS*TO*DATA*AREA*FOR*DECIMAL*PLACES*                      S01117
+     C*********************EXSR ADDS                                      S01117
+     C**PRINT*DETAIL*LINES**************                                  S01117
+     C*********************WRITEFT500PF2               60                 S01117
+     C**PRINT*TRAILER*******************                                  S01117
+     C*********************WRITEFT500PF3               60                 S01117
+     C*                                                                   S01117
+     C* READ PAYMENT CHARGES FILE, INVALID WRITE DATABASE ERROR           S01117
+     C*                                                                   S01117
+     C************LOVAL    SETLLPYCHGDB                            S01117 S01506
+     C***********          READ PYCHGDB                  50        S01117 S01506
+     C           *IN15     IFEQ '1'                                       S01506
+     C           *LOVAL    SETLLPYCHGL2                                   S01506
+     C                     READ PYCHGL2                  50               S01506
+     C                     ELSE                                           S01506
+     C           *LOVAL    SETLLPYCHGL1                                   S01506
+     C                     READ PYCHGL1                  50               S01506
+     C                     END                                            S01506
+     C********** *IN50     IFEQ '1'                                                 S01117 AR1061250
+     C***********          MOVEL'PYCHGDB' DBFILE           ********S01117 S01506
+     C**********           MOVEL'PYCHGDD' DBFILE           ***************          S01506 AR1061250
+     C**********           Z-ADD5         DBASE            * DB ERROR 05 *          S01117 AR1061250
+     C**********           MOVEL'*LOVAL'  DBKEY            ***************          S01117 AR1061250
+     C**********           EXSR DBERR                                               S01117 AR1061250
+     C**********           END                                                      S01117 AR1061250
+     C*                                                                   S01117
+     C* IF SINGLE BRANCH MODE EXECUTE SINGBR ELSE MULTBR                  S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C                     EXSR SINGBR                                    S01117
+     C                     ELSE                                           S01117
+     C                     EXSR MULTBR                                    S01117
+     C*                                                                   S01117
+     C** IF SELECTION NOT 'ALL' AND DETAIL OPENED O.K                     S01117
+     C*                                                                   S01117
+     C           *IN12     IFNE '1'                                       S01117
+     C           *IN14     ANDEQ'1'                                       S01117
+     C                     WRITEFT500PF3                                  S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C*  WRITE AUDIT RUN CONTROL                                          S01117
+     C*                                                                   S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C                     WRITEAUHEAD                                    S01117
+     C*                                                                   S01117
+     C*IF NO RECORDS READ O/P AUDIT AS SUCH ELSE WRITE CONTROL DETAIL     S01117
+     C*                                                                   S01117
+     C           AUNORE    IFGT 0                                         S01117
+     C                     WRITEAUCNTL                                    S01117
+     C                     WRITEAUEOR                                     S01117
+     C                     ELSE                                           S01117
+     C                     WRITEAUNODT                                    S01117
+     C                     WRITEAUEOR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     SETON                     LR
+     C                     RETRN                                          S01117
+     C*****************************************************
+     C* LOGICAL END OF PROGRAM
+     C*****************************************************
+     C*****************************************************               S01117
+     C*DBERR SR                                                           S01117
+     C* TO HANDLE GENERAL DATABASE ERRORS                                 S01117
+     C*                                                                   S01117
+     C           DBERR     BEGSR                                          S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C                     SETON                     U7U8LR               S01117
+     C** SET UP AUDIT FIELD IF 'ALL' SELECTED.                            S01117
+     C*                                                                   S01117
+     C           *IN12     IFEQ '1'                                       S01117
+     C                     MOVE 'ALL'     PYBR                            S01117
+     C*                                                                   S01117
+     C* ELSE IF A BRANCH REQUESTED, MOVE @PENT TO AUDIT FIELD.            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C           *IN11     IFEQ '0'                                       S01117
+     C                     MOVE @PENT     PYBR                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     WRITEAUHEAD                 60                 S01117
+     C                     WRITEAUDBER                 60                 S01117
+     C                     WRITEAUEOR                  60                 S01117
+     C                     DUMP                                           S01117
+     C                     RETRN                                          S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C*****************************************************               S01117
+     C*             END OF DBERR SUBROUTINE.                              S01117
+     C*****************************************************               S01117
+     C*****************************************************               S01117
+     C*
+     C*****************************************************
+     C* RDIC1 SR.
+     C* READ INSTALLATION CONTROL 1
+     C* IF FAILS PRINTS HEADINGS AND DATABASE ERROR
+     C*
+     C           RDIC1     BEGSR
+     C                     MOVE *BLANK    KEY
+     C                     MOVEL'01'      KEY
+     C                     MOVE '10'      KEY
+     C           KEY       CHAINTABTB10F             50
+     C  N50      RECI      COMP 'D'                  5050
+     C   50                DO                              B001
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     MOVELKEY       DBKEY            ***************
+     C                     EXSR DBERR                                     S01117
+     C*********************SETON                     U7U8LR               S01117
+     C*********************OPEN FT0500P1                                  S01194
+     C*********************WRITEFT500PF1               60                 S01194
+     C*********************WRITEFT500PF3               60                 S01194
+     C*********************DUMP                                           S01117
+     C*********************RETRN                                          S01117
+     C                     END                             E001
+     C                     ENDSR
+     C*****************************************************
+     C* END OF ICD 1 READ
+     C*****************************************************
+     C*
+     C*****************************************************
+     C* RDCHG SR.
+     C* READ PAYMENT CHARGES FILE RELATIVE REC NO. 1
+     C* INVALID WRITE HEADINGS AND DATABASE ERROR
+     C*
+     C           RDCHG     BEGSR
+     C*                                                                   S01117
+     C************LOVAL    SETLLPYCHGDB                            S01117 S01506
+     C***********          READ PYCHGDB                  50        S01117 S01506
+     C           *IN15     IFEQ '1'                                       S01506
+     C           *LOVAL    SETLLPYCHGL2                                   S01506
+     C                     READ PYCHGL2                  50               S01506
+     C                     ELSE                                           S01506
+     C           *LOVAL    SETLLPYCHGL1                                   S01506
+     C                     READ PYCHGL1                  50               S01506
+     C                     END                                            S01506
+     C********** *IN50     IFEQ '1'                        B001                     S01117 AR1061250
+     C***********          MOVEL'PYCHGDB' DBFILE           ********S01194 S01506
+     C**********           MOVEL'PYCHGDD' DBFILE           ***************          S01506 AR1061250
+     C**********           Z-ADD2         DBASE            * DB ERROR 02 *          S01117 AR1061250
+     C*                                                    ***************S01117
+     C**********           MOVEL'*LOVAL'  DBKEY                                     S01117 AR1061250
+     C**********           EXSR DBERR                                               S01117 AR1061250
+     C**********           END                             E001                     S01117 AR1061250
+     C                     MOVE CHTP      @CHTP   1                       S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C*                                                                   S01117
+     C*********************MOVE '11'      KEY                             S01117
+     C***********1*********CHAINPYCHGDD              50                   S01117
+     C**N50******RECI******COMP 'D'                  5050                 S01117
+     C***50****************DO                              B001           S01117
+     C*********************MOVE 'PYCHG'   DBFILE           ***************S01117
+     C*********************Z-ADD2         DBASE            * DB ERROR 02 *S01117
+     C*********************MOVEL'1'       DBKEY            ***************S01117
+     C*********************SETON                     U7U8LR               S01117
+     C*********************OPEN FT0500P1                                  S01117
+     C*********************WRITEFT500PF1               60                 S01117
+     C*********************WRITEFT500PF3               60                 S01117
+     C*********************DUMP                                           S01117
+     C*********************RETRN                                          S01117
+     C*********************END                             E001           S01117
+     C*********************MOVE CHTP      @CHTP   1                       S01117
+     C*********************ENDSR                                          S01117
+     C************************************************************
+     C* END OF PAYMENT CHARGES READ
+     C************************************************************
+     C*
+     C************************************************************
+     C* RDIC2 SR.
+     C* READ INSTALLATION CONTROL RECORD 2
+     C* FOR BASE CURRENCY
+     C* INVALID PRINT DATABASE ERROR
+     C*
+     C           RDIC2     BEGSR
+     C                     MOVE '11'      KEY                             S01117
+     C           KEY       CHAINTABTB11F             50
+     C  N50      RECI      COMP 'D'                  5050
+     C   50                DO                              B001
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     MOVELKEY       DBKEY            ***************
+     C                     EXSR DBERR                                     S01117
+     C*********************SETON                     U7U8LR               S01117
+     C*********************WRITEFT500PF3               60                 S01194
+     C*********************DUMP                                           S01117
+     C*********************RETRN                                          S01117
+     C                     END                             E001
+     C* SETON MULTIBRANCH INDICATOR                                       S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     10                   S01117
+     C                     END                                            S01117
+     C                     ENDSR
+     C*****************************************************
+     C* END OF ICD 2 READ
+     C*****************************************************
+     C*                                                                   S01117
+     C************************************************************        S01117
+     C* RDIC3 SR.                                                         S01117
+     C* READ INSTALLATION CONTROL FOR BRANCH DETAILS                      S01117
+     C* INVALID PRINT DATABASE ERROR                                      S01117
+     C*                                                                   S01117
+     C           RDIC3     BEGSR                                          S01117
+     C                     MOVE *BLANKS   KEY                             S01117
+     C                     MOVEL'10    '  KEY                             S01117
+     C                     MOVE PYBR      KEY                             S01117
+     C           *IN11     IFEQ '0'                                       S01117
+     C           *IN12     ANDEQ'0'                                       S01117
+     C                     MOVE @PENT     KEY                             S01117
+     C                     MOVE @PENT     PYBR                            S01117
+     C                     END                                            S01117
+     C           KEY       CHAINTABLETRF             50                   S01117
+     C************IN50     IFEQ '1'                                 S01117067526
+     C***********RECI      COMP 'D'                  5050           S01117067526
+     C***********          END                                      S01117067526
+     C*                                                                   S01117
+     C************IN50     IFEQ '1'                        B001     S01117067526
+     C************         MOVEL'TABLETR' DBFILE           *********S01117067526
+     C************         Z-ADD6         DBASE            *ROR 06 *S01117067526
+     C************         MOVELKEY       DBKEY            *********S01117067526
+     C************         EXSR DBERR                               S01117067526
+     C************         END                             E001     S01117067526
+     C*                                                                   S01117
+     C** MOVE BRANCH TEXT TO PRINTER FIELD                                S01117
+     C*                                                                   S01117
+     C                     MOVE *BLANKS   PBRNM                           067526
+     C           *IN50     IFEQ '0'                                       067526
+     C           RECI      ANDEQ'D'                                       067526
+     C                     MOVE BRNM      PBRNM                           S01117
+     C                     ELSE                                           067526
+     C           *IN50     IFEQ '1'                                       067526
+     C                     MOVE TXT,1     PBRNM                           067526
+     C                     ELSE                                           067526
+     C                     MOVE TXT,2     PBRNM                           067526
+     C                     END                                            067526
+     C                     END                                            067526
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*****************************************************               S01117
+     C* END OF RDIC3 SR                                                   S01117
+     C*****************************************************               S01117
+     C*
+     C*****************************************************
+     C* CCIES SR.
+     C* READ CURRENCIES RECORD ON TABLE FILE
+     C* INVALID PRINT DATABASE ERROR
+     C*
+     C           CCIES     BEGSR
+     C                     MOVE *BLANK    KEY
+     C                     MOVEL'20'      KEY
+     C                     MOVELBCCY      SCCY    4
+     C                     MOVE '1'       SCCY
+     C                     MOVE SCCY      KEY
+     C           KEY       CHAINTABTG10F             50
+     C  N50      RECI      COMP 'D'                  5050
+     C   50                DO                              B001
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     MOVELKEY       DBKEY            ***************
+     C                     EXSR DBERR                                     S01117
+     C*********************SETON                     U7U8LR               S01117
+     C*********************WRITEFT500PF3               60                 S01194
+     C*********************DUMP                                           S01117
+     C*********************RETRN                                          S01117
+     C                     END                             E001
+     C* SETON INDICATOR 30,31,32 OR 33 DEPENDING ON CDP                   S01117
+     C                     MOVEA'0000'    *IN,30                          S01117
+     C           CDP       ADD  30        Z       30                      S01117
+     C                     MOVEA'1'       *IN,Z                           S01117
+     C                     ENDSR
+     C************************************************************
+     C* END OF CURRENCIES READ
+     C************************************************************
+     C*
+     C************************************************************
+     C* ADDS SR.
+     C* ADD AMOUNTS TO DATA AREA AMOUNTS
+     C* FOR DECIMAL PLACES SPLIT
+     C*
+     C           ADDS      BEGSR
+     C*                                                                   S01508
+     C                     Z-ADDRNS1      RNS10
+     C                     Z-ADDRNE1      RNE10
+     C                     Z-ADDRNS2      RNS20
+     C                     Z-ADDRNE2      RNE20
+     C                     Z-ADDRNS3      RNS30
+     C                     Z-ADDRNE3      RNE30
+     C                     Z-ADDRNMN      RNMN10
+     C                     Z-ADDRNMX      RNMX10
+     C                     Z-ADDRNMN2     RNMN20
+     C                     Z-ADDRNMX2     RNMX20
+     C                     Z-ADDRNMN3     RNMN30
+     C                     Z-ADDRNMX3     RNMX30
+     C                     Z-ADDRRS1      RRS10
+     C                     Z-ADDRRE1      RRE10
+     C                     Z-ADDRRS2      RRS20
+     C                     Z-ADDRRE2      RRE20
+     C                     Z-ADDRRMN      RRMN10
+     C                     Z-ADDRRMX      RRMX10
+     C                     Z-ADDRRMN2     RRMN20
+     C                     Z-ADDRRMX2     RRMX20
+     C                     Z-ADDNNMN      NNMN0
+     C                     Z-ADDNNMX      NNMX0
+     C                     Z-ADDCQCH      CQCH0
+     C*********************Z-ADDTHRH      THRH0                           S01194
+     C                     Z-ADDSPCH      SPCH0
+     C*                                                                   S01506
+     C                     Z-ADDRNS4      RNS40                           S01506
+     C                     Z-ADDRNE4      RNE40                           S01506
+     C                     Z-ADDRNS5      RNS50                           S01506
+     C                     Z-ADDRNE5      RNE50                           S01506
+     C                     Z-ADDRNS6      RNS60                           S01506
+     C                     Z-ADDRNE6      RNE60                           S01506
+     C                     Z-ADDRNS7      RNS70                           S01506
+     C                     Z-ADDRNE7      RNE70                           S01506
+     C                     Z-ADDRNS8      RNS80                           S01506
+     C                     Z-ADDRNE8      RNE80                           S01506
+     C                     Z-ADDRNS9      RNS90                           S01506
+     C                     Z-ADDRNE9      RNE90                           S01506
+     C                     Z-ADDRNS0      RNS00                           S01506
+     C                     Z-ADDRNE0      RNE00                           S01506
+     C                     Z-ADDRNMN4     RNMN40                          S01506
+     C                     Z-ADDRNMX4     RNMX40                          S01506
+     C                     Z-ADDRNMN5     RNMN50                          S01506
+     C                     Z-ADDRNMX5     RNMX50                          S01506
+     C                     Z-ADDRNMN6     RNMN60                          S01506
+     C                     Z-ADDRNMX6     RNMX60                          S01506
+     C                     Z-ADDRNMN7     RNMN70                          S01506
+     C                     Z-ADDRNMX7     RNMX70                          S01506
+     C                     Z-ADDRNMN8     RNMN80                          S01506
+     C                     Z-ADDRNMX8     RNMX80                          S01506
+     C                     Z-ADDRNMN9     RNMN90                          S01506
+     C                     Z-ADDRNMX9     RNMX90                          S01506
+     C                     Z-ADDRNMN0     RNMN00                          S01506
+     C                     Z-ADDRNMX0     RNMX00                          S01506
+     C*                                                                   S01506
+     C                     Z-ADDRRS3      RRS30                           S01506
+     C                     Z-ADDRRE3      RRE30                           S01506
+     C                     Z-ADDRRS4      RRS40                           S01506
+     C                     Z-ADDRRE4      RRE40                           S01506
+     C                     Z-ADDRRS5      RRS50                           S01506
+     C                     Z-ADDRRE5      RRE50                           S01506
+     C                     Z-ADDRRS6      RRS60                           S01506
+     C                     Z-ADDRRE6      RRE60                           S01506
+     C                     Z-ADDRRS7      RRS70                           S01506
+     C                     Z-ADDRRE7      RRE70                           S01506
+     C                     Z-ADDRRS8      RRS80                           S01506
+     C                     Z-ADDRRE8      RRE80                           S01506
+     C                     Z-ADDRRS9      RRS90                           S01506
+     C                     Z-ADDRRE9      RRE90                           S01506
+     C                     Z-ADDRRS0      RRS00                           S01506
+     C                     Z-ADDRRE0      RRE00                           S01506
+     C                     Z-ADDRRMN3     RRMN30                          S01506
+     C                     Z-ADDRRMX3     RRMX30                          S01506
+     C                     Z-ADDRRMN4     RRMN40                          S01506
+     C                     Z-ADDRRMX4     RRMX40                          S01506
+     C                     Z-ADDRRMN5     RRMN50                          S01506
+     C                     Z-ADDRRMX5     RRMX50                          S01506
+     C                     Z-ADDRRMN6     RRMN60                          S01506
+     C                     Z-ADDRRMX6     RRMX60                          S01506
+     C                     Z-ADDRRMN7     RRMN70                          S01506
+     C                     Z-ADDRRMX7     RRMX70                          S01506
+     C                     Z-ADDRRMN8     RRMN80                          S01506
+     C                     Z-ADDRRMX8     RRMX80                          S01506
+     C                     Z-ADDRRMN9     RRMN90                          S01506
+     C                     Z-ADDRRMX9     RRMX90                          S01506
+     C                     Z-ADDRRMN0     RRMN00                          S01506
+     C                     Z-ADDRRMX0     RRMX00                          S01506
+     C*                                                                   S01494
+     C** If FX/Change Commission is active, print its tariff 3 and 4      S01494
+     C*                                                                   S01494
+     C           *IN53     IFEQ '1'                                       S01494
+     C*                                                                   S01494
+     C                     Z-ADDCNS1      CNS10                           S01494
+     C                     Z-ADDCNE1      CNE10                           S01494
+     C                     Z-ADDCNS2      CNS20                           S01494
+     C                     Z-ADDCNE2      CNE20                           S01494
+     C                     Z-ADDCNS3      CNS30                           S01494
+     C                     Z-ADDCNE3      CNE30                           S01494
+     C                     Z-ADDCNS4      CNS40                           S01494
+     C                     Z-ADDCNE4      CNE40                           S01494
+     C                     Z-ADDCNS5      CNS50                           S01494
+     C                     Z-ADDCNE5      CNE50                           S01494
+     C                     Z-ADDCNS6      CNS60                           S01494
+     C                     Z-ADDCNE6      CNE60                           S01494
+     C                     Z-ADDCNS7      CNS70                           S01494
+     C                     Z-ADDCNE7      CNE70                           S01494
+     C                     Z-ADDCNS8      CNS80                           S01494
+     C                     Z-ADDCNE8      CNE80                           S01494
+     C                     Z-ADDCNS9      CNS90                           S01494
+     C                     Z-ADDCNE9      CNE90                           S01494
+     C                     Z-ADDCNS0      CNS00                           S01494
+     C                     Z-ADDCNE0      CNE00                           S01494
+     C                     Z-ADDCNMN1     CNMN10                          S01494
+     C                     Z-ADDCNMX1     CNMX10                          S01494
+     C                     Z-ADDCNMN2     CNMN20                          S01494
+     C                     Z-ADDCNMX2     CNMX20                          S01494
+     C                     Z-ADDCNMN3     CNMN30                          S01494
+     C                     Z-ADDCNMX3     CNMX30                          S01494
+     C                     Z-ADDCNMN4     CNMN40                          S01494
+     C                     Z-ADDCNMX4     CNMX40                          S01494
+     C                     Z-ADDCNMN5     CNMN50                          S01494
+     C                     Z-ADDCNMX5     CNMX50                          S01494
+     C                     Z-ADDCNMN6     CNMN60                          S01494
+     C                     Z-ADDCNMX6     CNMX60                          S01494
+     C                     Z-ADDCNMN7     CNMN70                          S01494
+     C                     Z-ADDCNMX7     CNMX70                          S01494
+     C                     Z-ADDCNMN8     CNMN80                          S01494
+     C                     Z-ADDCNMX8     CNMX80                          S01494
+     C                     Z-ADDCNMN9     CNMN90                          S01494
+     C                     Z-ADDCNMX9     CNMX90                          S01494
+     C                     Z-ADDCNMN0     CNMN00                          S01494
+     C                     Z-ADDCNMX0     CNMX00                          S01494
+     C*                                                                   S01494
+     C                     Z-ADDCRS1      CRS10                           S01494
+     C                     Z-ADDCRE1      CRE10                           S01494
+     C                     Z-ADDCRS2      CRS20                           S01494
+     C                     Z-ADDCRE2      CRE20                           S01494
+     C                     Z-ADDCRS3      CRS30                           S01494
+     C                     Z-ADDCRE3      CRE30                           S01494
+     C                     Z-ADDCRS4      CRS40                           S01494
+     C                     Z-ADDCRE4      CRE40                           S01494
+     C                     Z-ADDCRS5      CRS50                           S01494
+     C                     Z-ADDCRE5      CRE50                           S01494
+     C                     Z-ADDCRS6      CRS60                           S01494
+     C                     Z-ADDCRE6      CRE60                           S01494
+     C                     Z-ADDCRS7      CRS70                           S01494
+     C                     Z-ADDCRE7      CRE70                           S01494
+     C                     Z-ADDCRS8      CRS80                           S01494
+     C                     Z-ADDCRE8      CRE80                           S01494
+     C                     Z-ADDCRS9      CRS90                           S01494
+     C                     Z-ADDCRE9      CRE90                           S01494
+     C                     Z-ADDCRS0      CRS00                           S01494
+     C                     Z-ADDCRE0      CRE00                           S01494
+     C                     Z-ADDCRMN1     CRMN10                          S01494
+     C                     Z-ADDCRMX1     CRMX10                          S01494
+     C                     Z-ADDCRMN2     CRMN20                          S01494
+     C                     Z-ADDCRMX2     CRMX20                          S01494
+     C                     Z-ADDCRMN3     CRMN30                          S01494
+     C                     Z-ADDCRMX3     CRMX30                          S01494
+     C                     Z-ADDCRMN4     CRMN40                          S01494
+     C                     Z-ADDCRMX4     CRMX40                          S01494
+     C                     Z-ADDCRMN5     CRMN50                          S01494
+     C                     Z-ADDCRMX5     CRMX50                          S01494
+     C                     Z-ADDCRMN6     CRMN60                          S01494
+     C                     Z-ADDCRMX6     CRMX60                          S01494
+     C                     Z-ADDCRMN7     CRMN70                          S01494
+     C                     Z-ADDCRMX7     CRMX70                          S01494
+     C                     Z-ADDCRMN8     CRMN80                          S01494
+     C                     Z-ADDCRMX8     CRMX80                          S01494
+     C                     Z-ADDCRMN9     CRMN90                          S01494
+     C                     Z-ADDCRMX9     CRMX90                          S01494
+     C                     Z-ADDCRMN0     CRMN00                          S01494
+     C                     Z-ADDCRMX0     CRMX00                          S01494
+     C*                                                                   S01494
+     C                     END                                            S01494
+     C*                                                                   S01494
+     C*********************Z-ADDMATHPE    @MATHP                          S01182
+     C*********************                                         S01182S01194
+     C****Convert*days*to*months*for*Matured*Held*Period************S01182S01194
+     C*********************                                         S01182S01194
+     C***********MATHPE****DIV  31        WINT2   20H               S01182S01194
+     C*********************Z-ADDWINT2     @MATHP                    S01182S01194
+     C*********************                                         S01182S01194
+     C*********************Z-ADDPRTDIS    @PRDIS                          S01194
+     C*                                                                   S01508
+     C** Print default tariff, tariff 1 and tariff 2 only when the        S01508
+     C** record read is solely for a branch                               S01508
+     C*                                                                   S01508
+     C           *IN54     IFEQ '1'                                       S01508
+     C                     MOVE DFTRCT    @DFTRF
+     C                     MOVE TNR1      @TNR1
+     C                     MOVE TNR2      @TNR2
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C                     MOVE TNR3      @TNR3
+     C                     MOVE TNR4      @TNR4
+     C                     MOVE TNR5      @TNR5
+     C* MOVE CORRECT TYPE ON CHANGE
+     C           RTYPE     IFEQ 'A'                                       E29899
+     C                     MOVE *BLANKS   TYPE                            S01508
+     C                     MOVE @CHTP     CHTP
+     C           CHTP      IFEQ 'I'                        B001
+     C                     MOVE 'INSERTED'TYPE    8
+     C                     ELSE                            X001
+     C           CHTP      IFEQ 'A'                        B002
+     C*********************MOVE 'AMENDED' TYPE                            E29899
+     C                     MOVE 'AMENDED 'TYPE                            E29899
+     C                     ELSE                                           S01508
+     C           CHTP      IFEQ 'D'                                       S01508
+     C                     MOVE 'DELETED' TYPE                            S01508
+     C                     END                                            S01508
+     C                     END                             E002
+     C                     END                             E001
+     C                     END                                            E29899
+     C                     ENDSR
+     C************************************************************
+     C* END OF ADDS FOR DECIMAL PLACES
+     C************************************************************
+     C*                                                                   S01117
+     C************************************************************        S01117
+     C* SINGBR SR.                                                        S01117
+     C* GENERATE SINGLE BRANCH DETAILS                                    S01117
+     C*                                                                   S01117
+     C           SINGBR    BEGSR                                          S01117
+     C*                                                                   S01117
+     C***READ*PYCHGDB*ONLY*ONCE*ASSUME*ONLY*ONE*RECORD*************S01117 S01508
+     C** Read Payment Charges file for the first time                     S01508
+     C                     EXSR RDCHG                                     S01117
+     C*                                                                   S01508
+     C                     MOVE PYBR      WPYBR   3                       S01508
+     C                     Z-ADD0         PAGE                            S01508
+     C*                                                                   S01508
+     C           *IN51     DOUEQ'1'                                       S01508
+     C*                                                                   S01508
+     C** Report only records for the first branch read                    S01508
+     C*                                                                   S01508
+     C           PYBR      IFNE WPYBR                                     S01508
+     C                     LEAVE                                          S01508
+     C                     END                                            S01508
+     C*                                                                   S01117
+     C**ONLY PRODUCE DETAILS IF EITHER TYPE IS NOT 'AUDIT' OR TYPE IS     S01117
+     C**AUDIT AND THE LAST CHANGE DATE EQUALS THE RUN DATE                S01117
+     C*                                                                   S01117
+     C           RTYPE     IFNE 'A'                                       S01117
+     C           RTYPE     OREQ 'A'                                       S01117
+     C           LCD       ANDEQRUND                                      S01117
+     C*                                                                   S01117
+     C** MOVE VALUES TO PRINTER FILE FIELDS  AND GENERATE SPOOL           S01117
+     C*                                                                   S01117
+     C                     ADD  1         AUNORE                          S01508
+     C                     EXSR VALKEY                                    S01508
+     C                     EXSR ADDS                                      S01117
+     C           AUNORE    IFEQ 1                                         S01508
+     C                     MOVE *BLANKS   ZENT                            S01117
+     C                     EXSR ZSFP1                                     S01117
+     C                     END                                            S01508
+     C                     EXSR RDIC3                                     S01508
+     C***********          Z-ADD0         PAGE                            S01117
+     C*                                                            S01117 S01508
+     C                     WRITEFT500PF1                                  S01117
+     C/COPY WNCPYSRC,FT0500C001
+     C                     WRITEFT500PF2                                  S01117
+     C************IN54     IFEQ '1'                                S01508 176332
+     C                     WRITEFT500PF1                                  S01508
+     C***********          END                                     S01508 176332
+     C                     WRITEFT500PF5                                  S01508
+     C           *IN53     IFEQ '1'                                       S01508
+     C                     WRITEFT500PF1                                  S01508
+     C                     END                                            S01508
+     C                     WRITEFT500PF6                                  S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C** Read the next record from the file                               S01508
+     C*                                                                   S01508
+     C           *IN15     IFEQ '1'                                       S01508
+     C                     READ PYCHGL2                  51               S01508
+     C                     ELSE                                           S01508
+     C                     READ PYCHGL1                  51               S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C***********          WRITEFT500PF3                           S01117 S01508
+     C***********          Z-ADD1         AUNORE                   S01117 S01508
+     C                     END                                            S01117
+     C           AUNORE    IFNE *ZEROS                                    S01508
+     C                     WRITEFT500PF3                                  S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C                     ENDSR                                          S01117
+     C*****************************************************               S01117
+     C* END OF SINGBR SR                                                  S01117
+     C*****************************************************               S01117
+     C*                                                                   S01117
+     C************************************************************        S01117
+     C* MULTBR SR.                                                        S01117
+     C* HANDLES THE CASES   I) LEV= 'S',                                  S01117
+     C*                     II) ENT='ALL'                                 S01117
+     C*                     III) ENT= A BRANCH,                           S01117
+     C*                                                                   S01117
+     C           MULTBR    BEGSR                                          S01117
+     C*                                                                   S01117
+     C* SYSTEM LEVEL REQUESTED                                            S01117
+     C           @PLEV     IFEQ 'S'                                       S01117
+     C                     MOVE *BLANKS   ZENT                            S01117
+     C                     Z-ADD0         AUNORE                          S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C                     EXSR ZSFP1                                     S01117
+     C                     EXSR RDCHG                                     S01117
+     C           *IN51     DOUEQ'1'                                       S01117
+     C*                                                                   S01117
+     C           RTYPE     IFNE 'A'                                       S01117
+     C           RTYPE     OREQ 'A'                                       S01117
+     C           LCD       ANDEQRUND                                      S01117
+     C*                                                                   S01117
+     C                     ADD  1         AUNORE                          S01117
+     C*                                                                   S01117
+     C                     MOVE CHTP      @CHTP   1                       S01117
+     C                     EXSR RDIC3                                     S01117
+     C                     EXSR VALKEY                                    S01508
+     C                     WRITEFT500PF1                                  S01117
+     C                     EXSR ADDS                                      S01117
+     C/COPY WNCPYSRC,FT0500C002
+     C                     WRITEFT500PF2                                  S01117
+     C************IN54     IFEQ '1'                                S01508 176332
+     C                     WRITEFT500PF1                                  S01508
+     C***********          END                                     S01508 176332
+     C                     WRITEFT500PF5                                  S01508
+     C           *IN53     IFEQ '1'                                       S01508
+     C                     WRITEFT500PF1                                  S01508
+     C                     END                                            S01508
+     C                     WRITEFT500PF6                                  S01508
+     C                     END                                            S01117
+     C***********          READ PYCHGDB                  51        S01117 S01508
+     C           *IN15     IFEQ '1'                                       S01508
+     C                     READ PYCHGL2                  51               S01508
+     C                     ELSE                                           S01508
+     C                     READ PYCHGL1                  51               S01508
+     C                     END                                            S01508
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C** STOP WRITE TO PF3 IF NO RECORDS READ                             S01117
+     C*                                                                   S01117
+     C           AUNORE    IFEQ *ZERO                                     S01117
+     C                     SETOF                     14                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C* ENTITY='ALL' REQUESTED                                            S01117
+     C           @PENT     IFEQ 'ALL'                                     S01117
+     C                     Z-ADD0         AUNORE                          S01117
+     C                     MOVE PYBR      ZENT                            176332
+     C                     EXSR ZSFP1                                     176332
+     C                     EXSR RDCHG                                     S01117
+     C***********          MOVE PYBR      WPYBR                    S01508 176332
+     C           *IN51     DOUEQ'1'                                       S01117
+     C*                                                                   S01508
+     C***********          ADD  1         AUNORE                   S01117 S01508
+     C***********          MOVE CHTP      @CHTP   1                S01117 S01508
+     C***********          MOVE PYBR      ZENT                     S01117 S01508
+     C***********          Z-ADD0         PAGE                     S01117 S01508
+     C***********          EXSR ZSFP1                              S01117 S01508
+     C                     EXSR RDIC3                                     S01117
+     C                     EXSR VALKEY                                    S01508
+     C*                                                                   S01508
+     C** At branch level, report only those records with branch as key    S01508
+     C*                                                                   S01508
+     C************IN54     IFEQ '1'                                S01508 176332
+     C                     MOVE CHTP      @CHTP   1                       S01508
+     C           PYBR      IFNE ZENT                                      176332
+     C                     MOVE PYBR      ZENT                            S01508
+     C                     Z-ADD0         PAGE                            S01508
+     C                     EXSR ZSFP1                                     S01508
+     C                     ENDIF                                          176332
+     C                     ADD  1         AUNORE                          S01508
+     C                     WRITEFT500PF1                                  S01117
+     C                     EXSR ADDS                                      S01117
+     C/COPY WNCPYSRC,FT0500C003
+     C                     WRITEFT500PF2                                  S01117
+     C                     WRITEFT500PF1                                  S01508
+     C                     WRITEFT500PF5                                  S01508
+     C           *IN53     IFEQ '1'                                       S01508
+     C                     WRITEFT500PF1                                  S01508
+     C                     END                                            S01508
+     C                     WRITEFT500PF6                                  S01508
+     C                     WRITEFT500PF3                                  S01117
+     C***********          END                                     S01508 176332
+     C***********          READ PYCHGDB                  51        S01117 S01508
+     C           *IN15     IFEQ '1'                                       S01508
+     C                     READ PYCHGL2                  51               S01508
+     C                     ELSE                                           S01508
+     C                     READ PYCHGL1                  51               S01508
+     C                     END                                            S01508
+     C                     END                                            S01117
+     C                     MOVEL'ALL'     PYBR                            S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C* A BRANCH REQUESTED (ENT NE 'ALL')                                 S01117
+     C***********          MOVE @PENT     PYKEY   3                S01117 S01508
+     C***********          MOVEL@PENT     KYBR                     S01508 176332
+     C***********          MOVE *BLANKS   KYCNUM                   S01508 176332
+     C***********          MOVE *BLANKS   KYPYTP                   S01508 176332
+     C***********          MOVE *BLANKS   KYPYST                   S01508 176332
+     C***********          MOVE *BLANKS   KYGPCD                   S01508 176332
+     C                     MOVE @PENT     ZENT                            S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C                     Z-ADD0         AUNORE                          176332
+     C                     EXSR ZSFP1                                     S01117
+     C                     EXSR RDCHG                                     176332
+      *                                                                   176332
+      ** Read all records pertaining to the requested branch              176332
+      *                                                                   176332
+     C           *IN52     DOUEQ'1'                                       176332
+     C           PYBR      IFEQ @PENT                                     176332
+     C                     ADD  1         AUNORE                          176332
+     C                     MOVE CHTP      @CHTP                           176332
+     C                     EXSR RDIC3                                     176332
+     C                     EXSR VALKEY                                    176332
+     C                     WRITEFT500PF1                                  176332
+     C                     EXSR ADDS                                      176332
+     C                     WRITEFT500PF2                                  176332
+     C                     WRITEFT500PF1                                  176332
+     C                     WRITEFT500PF5                                  176332
+     C           *IN53     IFEQ '1'                                       176332
+     C                     WRITEFT500PF1                                  176332
+     C                     ENDIF                                          176332
+     C                     WRITEFT500PF6                                  176332
+     C                     END                                            176332
+     C*                                                                   S01117
+     C**CHAIN*TO*PAYMENT*CHARGES*FILE******************************S01117 176332
+      ** Read next record in Payment Charges File                         176332
+     C*                                                                   S01117
+     C***********PYKEY     CHAINPYCHGDB              52            S01117 S01508
+     C           *IN15     IFEQ '1'                                       S01508
+     C***********PYKEY     CHAINPYCHGL2              52            S01508 176332
+     C                     READ PYCHGL2                  52               176332
+     C                     ELSE                                           S01508
+     C***********PYKEY     CHAINPYCHGL1              52            S01508 176332
+     C                     READ PYCHGL1                  52               176332
+     C                     END                                            S01508
+     C                     ENDDO                                          176332
+     C***********          EXSR RDIC3                              S01117 176332
+     C***********          WRITEFT500PF1                           S01117 176332
+     C***********                                                  S01117 176332
+     C**IF*RECORD*FOUND*IN*PYCHGDB                                 S01117 176332
+     C***********                                                  S01117 176332
+     C************IN52     IFNE '1'                                S01117 176332
+     C***********          Z-ADD1         AUNORE                   S01117 176332
+     C***********          MOVE CHTP      @CHTP   1                S01117 176332
+     C***********          EXSR ADDS                               S01117 176332
+     C/COPY WNCPYSRC,FT0500C004
+     C***********          WRITEFT500PF2                           S01117 176332
+     C***********          WRITEFT500PF1                           S01508 176332
+     C***********          WRITEFT500PF5                           S01508 176332
+     C************IN53     IFEQ '1'                                S01508 176332
+     C***********          WRITEFT500PF1                           S01508 176332
+     C***********          END                                     S01508 176332
+     C***********          WRITEFT500PF6                           S01508 176332
+     C***********          ELSE                                    S01117 176332
+     C***********          WRITEFT500PF4                           S01117 176332
+     C***********          END                                     S01117 176332
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*****************************************************               S01117
+     C* END OF MULTBR SR                                                  S01117
+     C*****************************************************               S01117
+     C*                                                                   S01117
+     C*****************************************************************   S01508
+     C* VALKEY SR                                                         S01508
+     C* Validates the key structure of the record                         S01508
+     C*                                                                   S01508
+     C           VALKEY    BEGSR                                          S01508
+     C*                                                                   S01508
+     C                     MOVE '0'       *IN54                           S01508
+     C                     MOVE *BLANK    WVALK                           S01508
+     C                     MOVE *BLANKS   RTEXT                           S01508
+     C*                                                                   S01508
+     C** Allow the key structure if only the customer market code is      S01508
+     C** blank while the others are non-blank                             S01508
+     C*                                                                   S01508
+     C           PYBR      IFNE *BLANKS                                   S01508
+     C********** PYCNUM    ANDNE*ZEROS                                                 S01508 CSD027
+     C           PYCNUM    ANDNE*BLANKS                                                       CSD027
+     C           PYPYTP    ANDNE*BLANKS                                   S01508
+     C           PYPYST    ANDNE*BLANKS                                   S01508
+     C           PYGPCD    ANDEQ*BLANKS                                   S01508
+     C                     MOVE 'Y'       WVALK   1                       S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C** Allow the key structure if only the branch code and customer     S01508
+     C** number are entered                                               S01508
+     C*                                                                   S01508
+     C           PYBR      IFNE *BLANKS                                   S01508
+     C********** PYCNUM    ANDNE*ZEROS                                                 S01508 CSD027
+     C           PYCNUM    ANDNE*BLANKS                                                       CSD027
+     C           PYPYTP    ANDEQ*BLANKS                                   S01508
+     C           PYPYST    ANDEQ*BLANKS                                   S01508
+     C           PYGPCD    ANDEQ*BLANKS                                   S01508
+     C                     MOVE 'Y'       WVALK   1                       S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C** Allow the key structure if only the customer number and          S01508
+     C** customer market code are not entered                             S01508
+     C*                                                                   S01508
+     C           PYBR      IFNE *BLANKS                                   S01508
+     C********** PYCNUM    ANDEQ*ZEROS                                                 S01508 CSD027
+     C           PYCNUM    ANDEQ*BLANKS                                                       CSD027
+     C           PYPYTP    ANDNE*BLANKS                                   S01508
+     C           PYPYST    ANDNE*BLANKS                                   S01508
+     C           PYGPCD    ANDEQ*BLANKS                                   S01508
+     C                     MOVE 'Y'       WVALK   1                       S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C** Allow the key structure if only the branch code and              S01508
+     C** transaction type are entered                                     S01508
+     C*                                                                   S01508
+     C           PYBR      IFNE *BLANKS                                   S01508
+     C********** PYCNUM    ANDEQ*ZEROS                                                 S01508 CSD027
+     C           PYCNUM    ANDEQ*BLANKS                                                       CSD027
+     C           PYPYTP    ANDNE*BLANKS                                   S01508
+     C           PYPYST    ANDEQ*BLANKS                                   S01508
+     C           PYGPCD    ANDEQ*BLANKS                                   S01508
+     C                     MOVE 'Y'       WVALK   1                       S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C** Allow the key structure if only the branch code and group code   S01508
+     C** 1 are entered                                                    S01508
+     C*                                                                   S01508
+     C           PYBR      IFNE *BLANKS                                   S01508
+     C********** PYCNUM    ANDEQ*ZEROS                                                 S01508 CSD027
+     C           PYCNUM    ANDEQ*BLANKS                                                       CSD027
+     C           PYPYTP    ANDEQ*BLANKS                                   S01508
+     C           PYPYST    ANDEQ*BLANKS                                   S01508
+     C           PYGPCD    ANDNE*BLANKS                                   S01508
+     C*                                                                   S01508
+     C           WKGCD     KLIST                                          S01508
+     C                     KFLD           WSETN   1                       S01508
+     C                     KFLD           SCGRP   4                       S01508
+     C                     MOVE '1'       WSETN                           S01508
+     C           WKGCD     CHAINSDCGRPL1             89                   S01508
+     C           *IN89     IFEQ '0'                                       S01508
+     C                     MOVE 'Y'       WVALK   1                       S01508
+     C                     END                                            S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C** Allow the key structure if only the branch code is entered       S01508
+     C*                                                                   S01508
+     C           PYBR      IFNE *BLANKS                                   S01508
+     C********** PYCNUM    ANDEQ*ZEROS                                                 S01508 CSD027
+     C           PYCNUM    ANDEQ*BLANKS                                                       CSD027
+     C           PYPYTP    ANDEQ*BLANKS                                   S01508
+     C           PYPYST    ANDEQ*BLANKS                                   S01508
+     C           PYGPCD    ANDEQ*BLANKS                                   S01508
+     C                     MOVE 'Y'       WVALK   1                       S01508
+     C                     MOVE '1'       *IN54                           S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C** If key is not valid, print that it is not used in default        S01508
+     C** calculation                                                      S01508
+     C*                                                                   S01508
+     C           WVALK     IFNE 'Y'                                       S01508
+     C                     MOVELTXT,3     RTEXT                           S01508
+     C                     END                                            S01508
+     C*                                                                   S01508
+     C** Write the key of the record
+     C*
+     C********** PYCNUM    IFEQ *ZEROS                                                 S01508 CSD027
+     C           PYCNUM    IFEQ *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   RCNUM                           S01508
+     C                     ELSE                                           S01508
+     C                     MOVELPYCNUM    RCNUM                           S01508
+     C                     END                                            S01508
+     C                     MOVELPYGPCD    RGPCD                           S01508
+     C                     MOVELPYPYTP    RPYTP                           S01508
+     C                     MOVELPYPYST    RPYST                           S01508
+     C*                                                                   S01508
+     C                     ENDSR                                          S01508
+     C*****************************************************               S01508
+     C* END OF VALKEY SR                                                  S01508
+     C*****************************************************               S01508
+     C*                                                                   S01508
+     C*****************************************************************   S01494
+     C* CHKSAR SR                                                         S01494
+     C* Check if an SAR/a feature is available in the system              S01494
+     C*                                                                   S01494
+     C           CHKSAR    BEGSR                                          S01494
+     C*                                                                   S01494
+     C** Access SAR details file to determine if S01494 is switched ON    S01494
+     C*                                                                   S01494
+     C                     MOVE '0'       *IN53                           S01494
+     C                     CALL 'AOSARDR0'                                S01494
+     C                     PARM *BLANKS   P@RTCD  7                       S01494
+     C                     PARM '*VERIFY' P@OPTN  7                       S01494
+     C                     PARM 'S01494'  P@SARD  6                       S01494
+     C           SCSARD    PARM SCSARD    DSFDY                           S01494
+     C*                                                                   S01494
+     C** If core feature is switched ON, set a variable field to          S01494
+     C** condition the rest of the processing                             S01494
+     C*                                                                   S01494
+     C           P@RTCD    IFEQ *BLANKS                                   S01494
+     C                     MOVE '1'       *IN53                           S01494
+     C                     ELSE                                           S01494
+     C*                                                                   S01494
+     C** else, database error (return code other than *NRF)               S01494
+     C*                                                                   S01494
+     C           P@RTCD    IFNE '*NRF   '                                 S01494
+     C                     MOVEL'SCSARDPD'DBFILE                          S01494
+     C                     MOVEL'*CALL'   DBKEY            ************   S01494
+     C                     Z-ADD10        DBASE            * DBERR 10 *   S01494
+     C                     EXSR DBERR                      ************   S01494
+     C                     END                                            S01494
+     C                     END                                            S01494
+     C/COPY WNCPYSRC,FT0500C005
+     C*                                                                   S01494
+     C                     ENDSR                                          S01494
+     C*                                                                   S01494
+     C*****************************************************************   S01494
+     C* END OF CHKSAR SR                                                  S01494
+     C*****************************************************************   S01494
+     C*                                                                   S01494
+     C************************************************************        S01117
+     C* ZSFAU SR.                                                         S01117
+     C* OPEN AU FILE AND CALL ZSFILE                                      S01117
+     C*                                                                   S01117
+     C           ZSFAU     BEGSR                                          S01117
+     C** CALL'ZSFILE' TO LOG AU FILE                                      S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           ZSEQ    5                       S01117
+     C                     PARM *BLANKS   ZENTAU  3                       S01117
+     C                     PARM SFILEU    ZSFLAU 10                       S01117
+     C                     PARM SFNUMU    ZSNOAU  60                      S01117
+     C                     PARM *BLANKS   ZERR    1                       S01117
+     C** ABORT PROGRAM IF ZERR IS NOT BLANK                               S01117
+     C           ZERR      IFNE *BLANK                                    S01117
+     C                     SETON                     U7U8                 S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'FT0500'  DBPGM                           S01117
+     C                     MOVEL'FT500AU' DBKEY            ***************S01117
+     C                     MOVE 'ZSFILE'  DBFILE           * DB ERROR 08 *S01117
+     C                     MOVEL'008'     DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C                     ENDSR                                          S01117
+     C*****************************************************               S01117
+     C* END OF ZSFAU SR                                                   S01117
+     C*****************************************************               S01117
+     C*                                                                   S01117
+     C************************************************************        S01117
+     C* ZSFP1 SR.                                                         S01117
+     C* CLOSE AND OPEN P1 FILE                                            S01117
+     C*                                                                   S01117
+     C           ZSFP1     BEGSR                                          S01117
+     C                     CLOSEFT0500P1                                  S01117
+     C                     OPEN FT0500P1                                  S01117
+     C** CALL'ZSFILE' TO LOG SPOOL FILE DETAILS                           S01117
+     C                     MOVELSFILE1    ZSFLNA                          S01117
+     C                     Z-ADDSFNUM1    ZSSLNO                          S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           ZSEQ    5                       S01117
+     C                     PARM           ZENT    3                       S01117
+     C                     PARM           ZSFLNA 10                       S01117
+     C                     PARM           ZSSLNO  60                      S01117
+     C                     PARM *BLANKS   ZERR    1                       S01117
+     C** ABORT PROGRAM IF ZERR IS NOT BLANK                               S01117
+     C           ZERR      IFNE *BLANK                                    S01117
+     C                     SETON                     U7U8LR               S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'FT0500'  DBPGM                           S01194
+     C                     MOVEL'FT500P1' DBKEY            ***************S01194
+     C                     MOVE 'ZSFILE'  DBFILE           * DB ERROR 09 *S01194
+     C                     MOVEL'009'     DBASE            ***************S01194
+     C                     OUT  LDA                                       S01117
+     C                     DUMP                                           S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C** TURN ON INDICATOR TO SHOW DETAIL FILE OPENED O.K                 S01117
+     C*                                                                   S01117
+     C                     SETON                     14                   S01117
+     C                     ENDSR                                          S01117
+     C*****************************************************               S01117
+     C* END OF ZSFP1 SR                                                   S01117
+     C/COPY WNCPYSRC,FT0500C006
+     C*****************************************************               S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** TXT    **      LONG CONSTANTS                                          067526
+    <  BRANCH NOT FOUND  >                                                067526
+    <  DELETED BRANCH  >                                                  067526
+Not used in Default Calculation

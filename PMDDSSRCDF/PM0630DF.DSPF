@@ -1,0 +1,1019 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas PM Customer portfolio enquiry screen')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Portfolio Management Module                          *
+     A*                                                               *
+     A*  DSPF/PM0630DF - CUSTOMER / PORTFOLIO DETAIL ENQUIRY          *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *  Prev Amend No. 147782             Date 08Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 20Jun96               *
+     A*                 CPM004             DATE 07FEB96               *
+     A*                 S01486             DATE 11AUG94               *
+     A*                 S01496             DATE 11NOV94               *
+     A*                 056584             DATE 20OCT93               *
+     A*                 059472             DATE 02AUG93               *
+     A*                 S01313             DATE 20JUL92               *
+     A*                 B08275             DATE 25NOV91               *
+     A*                 B?????             DATE 25SEP91               *
+     A*                 B9883              DATE 13SEP91               *
+     A*                 B9383              DATE 17JUL91               *
+     A*                 SA9109             DATE 05APR91               *
+     A*                 R05650             DATE 11MAR91               *
+     A*                 R0171              DATE 15FEB91               *
+     A*                 R01166             DATE 04JAN91               *
+     A*                 R01118             DATE 04DEC90               *
+     A*                 R00824             DATE 08NOV90               *
+     A*                 R1006_             DATE 02DEC90               *
+     A*                 R0981_             DATE 27NOV90               *
+     A*                 R10051             DATE 01/10/90              *
+     A*                 R10032             DATE 17/09/90              *
+     A*                 R10038             DATE 12/09/90              *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     A*  147782 - Field Market value is too small for big amount      *
+     A*           So move some fields to left and increase DDTPMV     *
+     A*           Some changes in PM0630 as well.                     *
+     A*  CPM005 - Private Banking Phase II                            *
+     A*           Focus Group Changes Upgraded to DBA                 *
+     A*           PBFG/5 - INSTRUMENT ASSET LIABILITY SPLIT           *
+     A*           PBFG/1 - CHANGE OF CUSTOMER/PORTFOLIO BASE CCY      *
+     A*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     A*           PBFG/7 - NET COMMITMENT BY CCY                      *
+     A*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CCY             *
+     A*  CPM004 - Bank Portfolios                                     *
+     A*  S01486 - Portfolio Management Upgrade to R10.                *
+     A*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     A*  056584 - RELEASE 3 HELP                                      *
+     A*  059472 - RECOMPILE DUE TO HELP AREA CHANGES                  *
+     A*  S01313 - CHANGED FOR PORTFOLIO PERFORMANCE                   *
+     A*  B08275 - ADD EXTRA F KEY TO DISPLAY CLOSED PORTFOLIOS        *
+     A*  B????? -                                                     *
+     A*  B9883  - LOMBARDS FIELD TO SHORT                             *
+     A*  B9383  - SUPPRESS INPUT "FPV DOC" AVAILABLE ONLY FOR         *
+     A*           SWISS BANKS                                         *
+     A*  SA9109 - MARGIN PERCENTAGE BY CUSTOMER                       *
+     A*  R05650 - CUSTOMER DETAILS SHOULD SHOW WHETHER A GENERALISED  *
+     A*           PLEDGE HAS BEEN ISSUED                              *
+     A*  R0171  - Display correct narrative                           *
+     A*  R01166 - Shift subfile to the left to avoid overwrite        *
+     A*           by the '+' sign                                     *
+     A*  R01118 - Lombard details called from Portfolio Management    *
+     A*  R00824 - INVESTMENT POLICY DETAILS AMENDMENT                 *
+     A*  R1006  - DISPLAY CLOSED FORPM IN ALL CASES                   *
+     A*  R0981  - MODIFY DISPLAY OF LOMBARD DETAILS                   *
+     A*           + ADD DISPLAY OF PRECIOUS METAL DETAILS             *
+     A*  R10051 - DISPLAY 'MANAGED STATUS' AND 'INVESTMENT POLICY'    *
+     A*  R10032 - ADD PORTFOLIO MARKET VALUES (TRADE & VALUE DATE)    *
+     A*           TO SUBFILES PM0630S1 & PM0630S2                     *
+     A*  R10038 - OUTPUT DIFFERENT DETAILS TO CUSTOMER ENQUIRY        *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*      RSTDSP(*YES)                                             *
+     A*      SHARE(*YES)                                              *
+     A*           C R E A T I O N     P A R A M E T E R S             *
+     A*
+     A*****************************************************************
+     A                                      VLDCMDKEY(60 'ANY VALID KEY')
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      PRINT(*LIBL/MPRINT)
+     A**** START 059472
+     A**** START 056584
+     A**** END 059472
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END 056584
+     A                                      CA03
+     A                                      CA12
+     A                                      CA04
+     A                                      CA06
+     A* >> B08275 >>
+     A  81                                  CA13
+     A* << B08275 <<
+     A* /* R01118 B */
+     A N68                                  CA15
+     A* /* R01118 E */
+     A                                      CA24
+     A**
+     A** HEADER FORMAT
+     A**
+     A***********                                    Begin /S01486/
+     A**********R*PM0630F1
+     A          R PM0630F1                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A***********                                    End   /S01486/
+     A*                                     OVERLAY
+     A*                                              Begin /S01486/
+     A*N35                              1  2'TRADE'
+     A************************************* DSPATR(HI)
+     A**35                              1  2'VALUE'
+     A************************************* DSPATR(HI)
+     A********************************* 1 08'DATE CUSTOMER / PORTFOLIO DE-
+     A************************************* TAILS ENQUIRY'
+     A************************************* DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORKSTATION ID')
+     A*********** DDRUNA         7A  O  1 63
+     A********************************* 1 72TIME
+     A            USER          10A  O  1  2
+     A                                  1 13'PM0630'
+     A N35                              1 22'TRADE'
+     A                                      DSPATR(HI)
+     A  35                              1 22'VALUE'
+     A                                      DSPATR(HI)
+     A                                  1 28'DATE CUSTOMER / PORTFOLIO DE-
+     A                                      TAILS ENQUIRY'
+     A                                      DSPATR(HI)
+     A            DDRUNA         7A  O  1 72
+      *
+     A            WKSTN         10A  O  2  2
+     A                                  2 71TIME
+     A*                                              End   /S01486/
+      *
+     A*                                              Begin /S01486/
+     A***********                       2  2'Customer No.'
+     A*********** DDCNUM         6A  O  2 17DSPATR(HI)
+     A***********                       2 25'Shortname'
+     A*********** DDCSSN        10A  O  2 35DSPATR(HI)
+     A***********                       2 48'Report Name'
+     A*********** DDCRNM        20A  O  2 60DSPATR(HI)
+     A***********                       3  2'A/c officer'
+     A*********** DDACOC         2A  O  3 14DSPATR(HI)
+     A*********** DDACON        30A  O  3 17DSPATR(HI)
+     A***********                       3 48'Customer Currency'
+     A*********** DDCSBY         3A  O  3 66DSPATR(HI)
+     A***********                       4  2'Nationality'
+     A*********** DDNCTX        20A  O  4 17DSPATR(HI)
+     A***********                       4 48'Language'
+     A*********** DDLANG        20A  O  4 57DSPATR(HI)
+     A***********                       5  2'Domicile'
+     A*********** DDDCTX        30A  O  5 17DSPATR(HI)
+     A***********                       5 48'Town'
+     A*********** DDCRTN        10A  O  5 57DSPATR(HI)
+     A***********                       6  2'Date of birth'
+     A*********** DDBDA1         7A  O  6 17DSPATR(HI)
+     A***********                       6 25'Documentation status'
+     A*********** DDDCMS         1A  O  6 46DSPATR(HI)
+     A***********                       6 67'Pledged'
+     A*********** DDGENP         1A  O  6 75DSPATR(HI)
+     A***********                       7  2'-----------------------------------
+     A***********                           ------------------------------------
+     A***********                           ---------'
+      *
+     A                                  3  2'Customer No.'
+     A            DDCNUM         6A  O  3 17DSPATR(HI)
+     A*                                              Begin /CPM005/
+     A***********                       3 25'Shortname'
+     A*********** DDCSSN        10A  O  3 35DSPATR(HI)
+     A***********                       3 48'Report Name'
+     A*********** DDCRNM        20A  O  3 60DSPATR(HI)
+     A            DDCSSN        10A  O  3 27DSPATR(HI)
+     A            DDCRNM        20A  O  3 38DSPATR(HI)
+     A                                  3 62'Birth Date'
+     A            DDBDA1         7A  O  3 73DSPATR(HI)
+     A***********                       4  2'A/c officer'
+     A*********** DDACOC         2A  O  4 14DSPATR(HI)
+     A*********** DDACON        30A  O  4 17DSPATR(HI)
+     A***********                       4 48'Customer Currency'
+     A*********** DDCSBY         3A  O  4 66DSPATR(HI)
+     A***********                       5  2'Nationality'
+     A*********** DDNCTX        20A  O  5 17DSPATR(HI)
+     A***********                       5 48'Language'
+     A*********** DDLANG        20A  O  5 57DSPATR(HI)
+     A***********                       6  2'Domicile'
+     A*********** DDDCTX        30A  O  6 17DSPATR(HI)
+     A***********                       6 48'Town'
+     A*********** DDCRTN        10A  O  6 57DSPATR(HI)
+     A***********                       7  2'Date of birth'
+     A*********** DDBDA1         7A  O  7 17DSPATR(HI)
+     A***********                       7 25'Documentation status'
+     A*********** DDDCMS         1A  O  7 46DSPATR(HI)
+     A**20*******                       7 48'Branch'
+     A**20******* DDBRCA         3A  O  7 57TEXT('BOOKING BRANCH')
+     A**20*******                           DSPATR(HI)
+     A***********                       7 67'Pledged'
+     A*********** DDGENP         1A  O  7 75DSPATR(HI)
+     A***********                       8  2'-----------------------------------
+     A***********                           ------------------------------------
+     A***********                           ---------'
+     A                                  4  2'Contact Authority:'
+     A            DDUSID        20A  O  4 21
+     A                                      DSPATR(HI)
+     A                                  5  4'A/C Holder'
+     A            DDACHO         1A  O  5 15
+     A                                      DSPATR(HI)
+     A                                  5 18'Power of Att'
+     A            DDPOWA         1A  O  5 31
+     A                                      DSPATR(HI)
+     A                                  5 34'Sign.'
+     A            DDSIGN         1A  O  5 40
+     A                                      DSPATR(HI)
+     A                                  5 43'Comm. Verbal'
+     A            DDVECO         1A  O  5 56
+     A                                      DSPATR(HI)
+     A                                  5 58'Written'
+     A            DDWRCO         1A  O  5 66
+     A                                      DSPATR(HI)
+     A                                  5 69'Documents'
+     A            DDDOCO         1A  O  5 79
+     A                                      DSPATR(HI)
+     A                                  6  2'Details:'
+     A                                  6 11'Secret code'
+     A  21                                  DSPATR(RI)
+     A            DDSECO        10A  O  6 23
+     A  21                                  DSPATR(RI)
+     A                                  6 40'Documentation status'
+     A  22                                  DSPATR(RI)
+     A            DDDCMS         1A  O  6 61
+     A  22                                  DSPATR(RI)
+     A N22                                  DSPATR(HI)
+     A                                  6 68'Pledged'
+     A  23                                  DSPATR(RI)
+     A            DDGENP         1A  O  6 79
+     A  23                                  DSPATR(RI)
+     A N23                                  DSPATR(HI)
+     A                                  7  4'Joint A/C'
+     A            DDJAID         1A  O  7 14
+     A                                      DSPATR(HI)
+     A                                  7 18'Power of Attorney Granted'
+     A            DDPAID         1A  O  7 44
+     A                                      DSPATR(HI)
+     A                                  7 48'Credit Cards'
+     A            DDCCID         1A  O  7 61
+     A                                      DSPATR(HI)
+     A                                  7 68'Language'
+     A            DDLANG         2A  O  7 78DSPATR(HI)
+     A                                  8  4'A/c officer'
+     A            DDACOC         2A  O  8 16DSPATR(HI)
+     A                                  8 23'Nationality'
+     A            DDNCTX         2A  O  8 36DSPATR(HI)
+     A*/COPY WNCPYSRC,PM0630DF17
+     A                                  8 45'Town'
+     A            DDCRTN        10A  O  8 50DSPATR(HI)
+     A                                  8 64'Customer Ccy'
+     A            DDCSBY         3A  O  8 77DSPATR(HI)
+     A*/COPY WNCPYSRC,PM0630DF07
+     A                                  9  2'-----------------------------------
+     A                                      ------------------------------------
+     A                                      ---------'
+     A*                                              End   /CPM005/
+      *
+     A*                                              End   /S01486/
+     A**
+     A** FIRST SUBFILE
+     A** SHOWN IF A FORMAT CONTAINING THE LOMBARD CREDITS
+     A** OR A FORMAT CONTAINING LENDING IS SENT
+     A**
+     A          R PM0630S1                  SFL
+     A*                                              Begin /*S01486*/
+     A*********** DDACTN         1A  I 10  3DSPATR(HI)
+     A**69                                  DSPATR(PR ND)
+     A***********                           VALUES('C' 'D' 'S' 'I' ' ')
+     A***********                           AUTO(RA)
+     A*********** DDPTFR         4A  O 10  6
+     A***********                           DSPATR(HI)
+     A*********** DDPTCY         3A  O 10 12
+     A***********                           DSPATR(HI)
+     A*********** DDPTFN        20A  O 10 17
+     A*********** DDTPMV        15A  O 10 39
+     A***********                           DSPATR(HI)
+     A*********** DDPTAI        15A  O 10 55
+     A***********                           DSPATR(HI)
+     A*********** DDPPDG         9A  O 10 71
+     A***********                           DSPATR(HI)
+     A*                                              Begin /CPM005/
+      ***********
+     A*********** DDACTN         1A  I 11  3DSPATR(HI)
+     A**69*******                           DSPATR(PR ND)
+     A***********                           AUTO(RA)
+     A*********** DDPTFR         4A  O 11  6
+     A***********                           DSPATR(HI)
+     A*                                              End   /CPM005/
+     A*                                              Begin /S01496/
+     A**********  DDPTCY         3A  O 11 12
+     A**********                            DSPATR(HI)
+     A**********  DDPTFN        20A  O 11 17
+     A**********  DDTPMV        15A  O 11 39
+     A**********                            DSPATR(HI)
+     A**********  DDPTAI        15A  O 11 55
+     A**********                            DSPATR(HI)
+     A**********  DDPPDG         9A  O 11 71
+     A**********                            DSPATR(HI)
+     A*                                              Begin /CPM005/
+     A*********** DDPTCY         3A  O 11 11
+     A***********                           DSPATR(HI)
+     A*********** DDPTFN        20A  O 11 15
+     A*********** DDTPMV        15A  O 11 37
+     A***********                           DSPATR(HI)
+     A*********** DDPTAI        15A  O 11 53
+     A***********                           DSPATR(HI)
+     A*********** DDPPDG        11A  O 11 69
+     A***********                           DSPATR(HI)
+     A*                                              End   /CPM005/
+     A*                                              End   /S01496/
+      *
+     A*                                              End   /S01486/
+     A*                                              Begin /CPM005/
+     A            DDACTN         1A  I 12  3DSPATR(HI)
+     A  69                                  DSPATR(PR ND)
+     A                                      AUTO(RA)
+     A            DDPTFR         4A  O 12  6
+     A                                      DSPATR(HI)
+     A*/COPY WNCPYSRC,PM0630DF09
+      *                                     Start of change /147782/
+     A*********** DDPTCY         3A  O 12 12
+     A***********                           DSPATR(HI)
+     A*********** DDPTFN        20A  O 12 17
+     A*********** DDTPMV        15A  O 12 39
+     A            DDPTCY         3A  O 12 11
+     A                                      DSPATR(HI)
+     A            DDPTFN        20A  O 12 15
+     A*/COPY WNCPYSRC,PM0630DF10
+     A            DDTPMV        18A  O 12 36
+      *                                       End of change /147782/
+     A                                      DSPATR(HI)
+     A            DDPTAI        15A  O 12 55
+     A                                      DSPATR(HI)
+     A            DDPPDG         9A  O 12 71
+     A                                      DSPATR(HI)
+     A*                                              End   /CPM005/
+     A            WWPTFR         4A  H
+     A            WWPTCY         3A  H
+     A            DDTRDH        16A  H
+     A            DDVALH        16A  H
+     A            DDTAIH        16A  H
+     A            DDVAIH        16A  H
+     A            WWPMVT        15S 0H
+     A            WWPMVV        15S 0H
+     A            DDPOLH         2A  H
+     A** FORMAT PM0630C1 **
+     A          R PM0630C1                  SFLCTL(PM0630S1)
+     A                                      SFLSIZ(0100)
+     A*                                              Begin /*S01486*/
+     A***********                           SFLPAG(0007)
+     A*                                              Begin /CPM005/
+     A***********                           SFLPAG(0006)
+     A                                      SFLPAG(0005)
+     A*                                              End   /CPM005/
+     A  57                                  SFLMSGID(SD60999 *LIBL/PMUSRMSG)
+     A*                                              End   /S01486/
+     A                                      OVERLAY
+     A                                      BLINK
+     A N61                                  SFLDSP
+     A N61                                  SFLDSPCTL
+     A  61                                  SFLCLR
+     A*                                              Begin /CPM005/
+     A*N63*******                           SFLEND
+     A*                                              End   /CPM005/
+     A            SFLRRN         4S 0H      SFLRCDNBR
+     A*                                              Begin /S01486/
+     A***********                       8  2'C,D'
+     A***********                       8  6'<----------Portfolio---------->'
+     A***********                       8 40'Amounts in customer base ccy'
+     A***********                       8 70'Pldg/Sts/'
+     A***********                       9  2'S,I'
+     A***********                       9  7'Ref'
+     A***********                       9 12'Ccy'
+     A***********                       9 17'Narrative'
+     A***********                       9 40'Market Value'
+     A***********                       9 56'Accrued Int.'
+     A***********                       9 69'Inv/Exc/Prf'
+      *
+     A*                                              Begin /S01496/
+     A**********  DDVAC1         3A  O  9  2
+     A**********                        9  6'<----------Portfolio---------->'
+     A**********                        9 40'Amounts in customer base ccy'
+     A**********                        9 70'Pldg/Sts/'
+     A**********  DDVAC2         3A  O 10  2
+     A**********                       10  7'Ref'
+     A**********                       10 12'Ccy'
+     A**********                       10 17'Narrative'
+     A**********                       10 40'Market Value'
+     A**********                       10 56'Accrued Int.'
+     A**********                       10 69'Inv/Exc/Prf'
+      *
+     A*                                              Begin /CPM005/
+     A*********** DDVAC1         3A  O  9  2
+     A***********                       9  6'<---------Portfolio--------->'
+     A***********                       9 38'Amounts in customer base ccy'
+     A***********                       9 69'Plg/Sts/Inv/'
+     A*********** DDVAC2         3A  O 10  2
+     A***********                      10  6'Ref'
+     A***********                      10 11'Ccy'
+     A***********                      10 15'Narrative'
+     A***********                      10 38'Market Value'
+     A***********                      10 54'Accrued Int.'
+     A*N55*******                      10 69'Exc/Prf'
+     A**55*******                      10 69'Exc/Prf/Blk'
+     A*                                              End   /CPM005/
+     A*                                              End   /S01496/
+      *
+     A*                                              End   /S01486/
+     A*                                              Begin /CPM005/
+     A                                 10  2'CDEFI'
+     A                                 10  8'<----------Portfolio---------->'
+     A                                 10 40'Amounts in customer base ccy'
+     A                                 10 70'Pld/Sts/'
+     A                                 11  2'NPST'
+     A                                 11  7'Ref'
+     A*/COPY WNCPYSRC,PM0630DF11
+      *                                     Start of change /147782/
+     A***********                      11 12'Ccy'
+     A***********                      11 17'Narrative'
+     A                                 11 11'Ccy'
+     A                                 11 15'Narrative'
+     A*/COPY WNCPYSRC,PM0630DF12
+      *                                       End of change /147782/
+     A                                 11 40'Market Value'
+     A                                 11 56'Accrued Int.'
+     A N55                             11 70'Exc/Ccy'
+     A  55                             11 70'Exc/Ccy/Blk'
+     A*                                              End   /CPM005/
+     A**
+     A** 2ND SUBFILE
+     A** SHOWN IF NO LOMBARD CREDITS OR LENDING
+     A**
+     A          R PM0630S2                  SFL
+     A*                                              Begin /S01486/
+     A*********** DDACTN         1A  I 10  3DSPATR(HI)
+     A**69                                  DSPATR(PR ND)
+     A***********                           VALUES('C' 'D' 'S' 'I' ' ')
+     A***********                           AUTO(RA)
+     A*********** DDPTFR         4A  O 10  6
+     A***********                           DSPATR(HI)
+     A*********** DDPTCY         3A  O 10 12
+     A***********                           DSPATR(HI)
+     A*********** DDPTFN        20A  O 10 17
+     A***********                           DSPATR(HI)
+     A*********** DDTPMV        15A  O 10 42
+     A***********                           DSPATR(HI)
+     A*********** DDPTAI        15A  O 10 55
+     A***********                           DSPATR(HI)
+     A*********** DDPPDG         9A  O 10 71
+     A***********                           DSPATR(HI)
+      *
+     A*                                              Begin /CPM005/
+     A*********** DDACTN         1A  I 11  3DSPATR(HI)
+     A**69*******                           DSPATR(PR ND)
+     A***********                           AUTO(RA)
+     A*********** DDPTFR         4A  O 11  6
+     A***********                           DSPATR(HI)
+     A***********                                    End   /CPM005/
+     A*                                              Begin /S01496/
+     A**********  DDPTCY         3A  O 11 12
+     A**********                            DSPATR(HI)
+     A**********  DDPTFN        20A  O 11 17
+     A**********                            DSPATR(HI)
+     A**********  DDTPMV        15A  O 11 42
+     A**********                            DSPATR(HI)
+     A**********  DDPTAI        15A  O 11 55
+     A**********                            DSPATR(HI)
+     A**********  DDPPDG         9A  O 11 71
+     A**********                            DSPATR(HI)
+     A*                                              Begin /CPM005/
+     A*********** DDPTCY         3A  O 11 11
+     A***********                           DSPATR(HI)
+     A*********** DDPTFN        20A  O 11 15
+     A***********                           DSPATR(HI)
+     A*********** DDTPMV        15A  O 11 37
+     A***********                           DSPATR(HI)
+     A*********** DDPTAI        15A  O 11 53
+     A***********                           DSPATR(HI)
+     A*********** DDPPDG        11A  O 11 69
+     A***********                           DSPATR(HI)
+     A*                                              End   /CPM005/
+     A*                                              End   /S01496/
+      *
+     A*                                              End   /S01486/
+     A*                                              Begin /CPM005/
+     A            DDACTN         1A  I 12  3DSPATR(HI)
+     A  69                                  DSPATR(PR ND)
+     A                                      AUTO(RA)
+     A            DDPTFR         4A  O 12  6
+     A                                      DSPATR(HI)
+     A*/COPY WNCPYSRC,PM0630DF13
+     A            DDPTCY         3A  O 12 12
+     A                                      DSPATR(HI)
+     A            DDPTFN        20A  O 12 17
+     A                                      DSPATR(HI)
+     A*/COPY WNCPYSRC,PM0630DF14
+      *                                     Start of change /147782/
+     A*********** DDTPMV        15A  O 12 42
+     A            DDTPMV        18A  O 12 42
+      *                                       End of change /147782/
+     A                                      DSPATR(HI)
+     A            DDPTAI        15A  O 12 55
+     A                                      DSPATR(HI)
+     A            DDPPDG         9A  O 12 71
+     A                                      DSPATR(HI)
+     A*                                              End   /CPM005/
+     A            WWPTFR         4A  H
+     A            WWPTCY         3A  H
+     A            DDTRDH        16A  H
+     A            DDVALH        16A  H
+     A            DDTAIH        16A  H
+     A            DDVAIH        16A  H
+     A*                                              Begin /CPM004/
+     A************QMPMVT        15S 0H
+     A************QMPMVV        15S 0H
+     A            WWPMVT        15S 0H
+     A            WWPMVV        15S 0H
+     A*                                              End   /CPM004/
+     A            DDPOLH         2A  H
+     A**
+     A** FORMAT PM0630C2 **
+     A          R PM0630C2                  SFLCTL(PM0630S2)
+     A                                      SFLSIZ(0100)
+     A*                                              Begin /S01486/
+     A************************************* SFLPAG(0011)
+     A*                                              Begin /CPM005/
+     A***********                           SFLPAG(0010)
+     A                                      SFLPAG(0009)
+     A*                                              End   /CPM005/
+     A  57                                  SFLMSGID(SD60999 *LIBL/PMUSRMSG)
+     A*                                              End   /S01486/
+     A                                      OVERLAY
+     A                                      BLINK
+     A N62                                  SFLDSP
+     A N62                                  SFLDSPCTL
+     A  62                                  SFLCLR
+     A N63                                  SFLEND
+     A            SFLRRN         4S 0H      SFLRCDNBR
+     A*                                              Begin /S01486/
+     A***********                       8  2'C,D'
+     A***********                       8  6'<----------Portfolio---------->'
+     A***********                       8 40'Amounts in customer base ccy'
+     A***********                       8 70'Pldg/Sts/'
+     A***********                       9  2'S,I'
+     A***********                       9  7'Ref'
+     A***********                       9 12'Ccy'
+     A***********                       9 17'Narrative'
+     A***********                       9 40'Accrued Int.'
+     A***********                       9 56'Market Value'
+     A***********                       9 69'Inv/Exc/Prf'
+      *
+     A*                                              Begin /S01496/
+     A**********  DDVAC1         3A  O  9  2
+     A**********                        9  6'<----------Portfolio---------->'
+     A**********                        9 40'Amounts in customer base ccy'
+     A**********                        9 70'Pldg/Sts/'
+     A**********  DDVAC2         3A  O 10  2
+     A**********                       10  7'Ref'
+     A**********                       10 12'Ccy'
+     A**********                       10 17'Narrative'
+     A**********                       10 40'Accrued Int.'
+     A**********                       10 56'Market Value'
+     A**********                       10 69'Inv/Exc/Prf'
+     A*                                              Begin /CPM005/
+     A*********** DDVAC1         3A  O  9  2
+     A***********                       9  6'<---------Portfolio--------->'
+     A***********                       9 38'Amounts in customer base ccy'
+     A***********                       9 69'Plg/Sts/Inv/'
+     A*********** DDVAC2         3A  O 10  2
+     A***********                      10  6'Ref'
+     A***********                      10 11'Ccy'
+     A***********                      10 15'Narrative'
+     A*                                              End   /CPM005/
+     A*                                              Begin /CPM004/
+     A*****                            10 38'Accrued Int.'
+     A*****                            10 54'Market Value'
+     A*                                              Begin /CPM005/
+     A***********                      10 38'Market Value'
+     A***********                      10 54'Accrued Int.'
+     A*                                              End   /CPM005/
+     A*                                              End   /CPM004/
+     A*                                              Begin /CPM005/
+     A*N55*******                      10 69'Exc/Prf'
+     A**55*******                      10 69'Exc/Prf/Blk'
+     A*                                              End   /CPM005/
+     A*                                              End   /S01496/
+      *
+     A*                                              End   /S01486/
+     A*                                              Begin /CPM005/
+     A                                 10  2'CDEFI'
+     A                                 10  8'<----------Portfolio---------->'
+     A                                 10 40'Amounts in customer base ccy'
+     A                                 10 70'Pld/Sts/'
+     A                                 11  2'NPST'
+     A                                 11  7'Ref'
+     A*/COPY WNCPYSRC,PM0630DF15
+     A                                 11 12'Ccy'
+     A                                 11 17'Narrative'
+     A*/COPY WNCPYSRC,PM0630DF16
+     A                                 11 40'Accrued Int.'
+     A                                 11 56'Market Value'
+     A N55                             11 70'Exc/Ccy'
+     A  55                             11 70'Exc/Ccy/Blk'
+     A*                                              End   /CPM005/
+     A**
+     A** FOOTER FORMAT - LOMBARD CREDITS
+     A**
+     A          R PM0630F2
+     A                                      OVERLAY
+     A**** START 059472
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A**** END   056584
+     A**** END 059472
+     A**
+     A**
+     A                                 17  2'--------------------------------+
+     A                                       ---------------------------------+
+     A                                       -------------'
+     A**
+     A                                 18  6'Borrowing Power'
+     A  68                                  DSPATR(ND)
+     A* B9883 BEGIN ***************************************************
+     A************DDBRPR        15A  O 18 23DSPATR(HI)
+     A            DDBRPR        17A  O 18 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A  68                                  DSPATR(ND)
+     A**
+     A                                 18 42'Available Borrowing'
+     A  68                                  DSPATR(ND)
+     A* B9883 BEGIN ***************************************************
+     A************DDAVBR        15A  O 18 63DSPATR(HI)
+     A            DDAVBR        17A  O 18 63DSPATR(HI)
+     A* B9883 END *****************************************************
+     A  68                                  DSPATR(ND)
+     A**
+     A                                 19  6'Lending Power'
+     A  68                                  DSPATR(ND)
+     A* B9883 BEGIN ***************************************************
+     A************DDLEPO        15A  O 19 23DSPATR(HI)
+     A            DDLEPO        17A  O 19 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A  68                                  DSPATR(ND)
+     A**
+     A                                 19 42'Available Lending'
+     A  68                                  DSPATR(ND)
+     A* B9883 BEGIN ***************************************************
+     A************DDAVLE        15A  O 19 63DSPATR(HI)
+     A            DDAVLE        17A  O 19 63DSPATR(HI)
+     A* B9883 END *****************************************************
+     A  68                                  DSPATR(ND)
+     A**
+     A                                 20  6'Exposure'
+     A  68                                  DSPATR(ND)
+     A* B9883 BEGIN ***************************************************
+     A************DDEXPO        15A  O 20 23DSPATR(HI)
+     A            DDEXPO        17A  O 20 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A  68                                  DSPATR(ND)
+     A**
+     A                                 20 42'Collateral'
+     A  68                                  DSPATR(ND)
+     A* B9883 BEGIN ***************************************************
+     A************DDCOLL        15A  O 20 63DSPATR(HI)
+     A            DDCOLL        17A  O 20 63DSPATR(HI)
+     A* B9883 END *****************************************************
+     A  68                                  DSPATR(ND)
+     A                                 21  6'Commitment Line'
+     A  68                                  DSPATR(ND)
+     A* B9883 BEGIN ***************************************************
+     A************DDCMTL        15A  O 21 23DSPATR(HI)
+     A            DDCMTL        17A  O 21 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A  68                                  DSPATR(ND)
+     A*                                              Begin /S01486/
+     A* 68**************************** 20 22'*** NON LOMBARD CREDITS +
+     A************************************** CUSTOMER ***'
+     A  68                             20 20'*** NON PORTFOLIO LENDING +
+     A                                       CUSTOMER ***'
+     A*                                              End   /S01486/
+     A                                      DSPATR(HI)
+     A**
+     A** FOOTER FORMAT - LOMBARD CREDITS OTHER DETAILS
+     A**
+     A          R PM0630F3
+     A                                      OVERLAY
+     A**** START 059472
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** END 059472
+     A**
+     A                                 17  2'--------------------------------+
+     A                                       ---------------------------------+
+     A                                       -------------'
+     A**
+     A                                 18  6'Forex Limit'
+     A* B9883 BEGIN ***************************************************
+     A************DDFOXL        15A  O 18 23DSPATR(HI)
+     A            DDFOXL        17A  O 18 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A**
+     A* /* R0981 B */
+     A                                 18 64'FOREX EXPOSURE'
+     A***********                      19  6'Open Forex'
+     A*********** DDOPFX        15A  O 19 23DSPATR(HI)
+     A                                 19  6'Forex Margin'
+     A* SA9109 START---------------------------------------------------
+     A            DDMPFX         2  0O 19 19EDTWRD('0 %')
+     A                                      DSPATR(HI)
+     A* SA9109 END-----------------------------------------------------
+     A* B9883 BEGIN ***************************************************
+     A************DDMARG        15A  O 19 23DSPATR(HI)
+     A            DDMARG        17A  O 19 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A* /* R0981 E */
+     A*/COPY WNCPYSRC,PM0630DF01
+     A**
+     A                                 20  6'Available Forex'
+     A* B9883 BEGIN ***************************************************
+     A************DDAVFX        15A  O 20 23DSPATR(HI)
+     A            DDAVFX        17A  O 20 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A**
+     A* /* R0981 B */
+     A***********                      20 42'Margin'
+     A*********** DDMARG        15A  O 20 63DSPATR(HI)
+     A***********                      21  6'Unrealised P/L'
+     A*********** DDUNPL        15A  O 21 23DSPATR(HI)
+     A***********                      21 42'Realised P/L'
+     A*********** DDREPL        15A  O 21 63DSPATR(HI)
+     A**
+     A*/COPY WNCPYSRC,PM0630DF02
+     A                                 20 42'Open Forex P/L'
+     A* B9883 BEGIN ***************************************************
+     A************DDUNPL        15A  O 20 63DSPATR(HI)
+     A            DDUNPL        17A  O 20 63DSPATR(HI)
+     A* B9883 END *****************************************************
+     A*/COPY WNCPYSRC,PM0630DF03
+     A                                 21  6'Open Forex'
+     A* B9883 BEGIN ***************************************************
+     A************DDOPFX        15A  O 21 23DSPATR(HI)
+     A            DDOPFX        17A  O 21 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A* R1006
+     A*N58                             21 42'Closed Forex P/L'
+     A*N58        DDREPL        15A  O 21 63DSPATR(HI)
+     A                                 21 42'Closed Forex P/L'
+     A* B9883 BEGIN ***************************************************
+     A************DDREPL        15A  O 21 63DSPATR(HI)
+     A            DDREPL        17A  O 21 63DSPATR(HI)
+     A* B9883 BEGIN ***************************************************
+     A* R1006
+     A* /* R0981 E */
+     A**
+     A** FOOTER FORMAT - GUARANTEES
+     A**
+     A          R PM0630F4
+     A                                      OVERLAY
+     A**
+     A                                 17  2'--------------------------------+
+     A                                       ---------------------------------+
+     A                                       -------------'
+     A                                 18 39'<-- All amounts in customer +
+     A                                       base ccy -->'
+     A**
+     A                                 19  4'Amount of Guarantees Issued'
+     A            DDGUIS        14A  O 19 39DSPATR(HI)
+     A**
+     A                                 19 55'Received'
+     A            DDGURC        14A  O 19 65DSPATR(HI)
+     A**
+     A                                 20  4'Amount of Security Pledges +
+     A                                       Given'
+     A            DDSECG        14A  O 20 39DSPATR(HI)
+     A**
+     A                                 20 55'Received'
+     A            DDSECR        14A  O 20 65DSPATR(HI)
+     A**
+     A                                 21  4'Amount of Collateral Pledges +
+     A                                       Given'
+     A            DDCOPG        14A  O 21 39DSPATR(HI)
+     A**
+     A                                 21 55'Received'
+     A            DDCOPR        14A  O 21 65DSPATR(HI)
+     A* /* R0981 B */
+     A**
+     A** FOOTER FORMAT - PRECIOUS METALS OTHER DETAILS
+     A**
+     A          R PM0630F6
+     A                                      OVERLAY
+     A**** START 059472
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** START 056584
+     A*                                              Begin /S01486/
+     A*                                              End   /S01486/
+     A**** END   056584
+     A**** END 059472
+     A**
+     A                                 17  2'--------------------------------+
+     A                                       ---------------------------------+
+     A                                       -------------'
+     A**
+     A                                 18  6'ForpM Limit'
+     A* B9883 BEGIN ***************************************************
+     A************DDFOXM        15A  O 18 23DSPATR(HI)
+     A            DDFOXM        17A  O 18 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A                                 18 64'METAL EXPOSURE'
+     A                                 19  6'ForpM Margin'
+     A* SA9109 START---------------------------------------------------
+     A            DDMPPM         2  0O 19 19EDTWRD('0 %')
+     A                                      DSPATR(HI)
+     A* SA9109 END-----------------------------------------------------
+     A* B9883 BEGIN ***************************************************
+     A************DDMARM        15A  O 19 23DSPATR(HI)
+     A            DDMARM        17A  O 19 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A*/COPY WNCPYSRC,PM0630DF04
+     A                                 20  6'Available ForpM'
+     A* B9883 BEGIN ***************************************************
+     A************DDAVFM        15A  O 20 23DSPATR(HI)
+     A            DDAVFM        17A  O 20 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A*/COPY WNCPYSRC,PM0630DF05
+     A                                 20 42'Open ForpM P/L'
+     A* B9883 BEGIN ***************************************************
+     A************DDUNPM        15A  O 20 63DSPATR(HI)
+     A            DDUNPM        17A  O 20 63DSPATR(HI)
+     A* B9883 END *****************************************************
+     A*/COPY WNCPYSRC,PM0630DF06
+     A                                 21  6'Open ForpM'
+     A* B9883 BEGIN ***************************************************
+     A************DDOPFM        15A  O 21 23DSPATR(HI)
+     A            DDOPFM        17A  O 21 23DSPATR(HI)
+     A* B9883 END *****************************************************
+     A*N59                             21 42'Closed ForpM P/L'
+     A*N59        DDREPM        15A  O 21 63DSPATR(HI)
+     A                                 21 42'Closed ForpM P/L'
+     A* B9883 BEGIN ***************************************************
+     A************DDREPM        15A  O 21 63DSPATR(HI)
+     A            DDREPM        17A  O 21 63DSPATR(HI)
+     A* B9883 END *****************************************************
+     A* /* R0981 E */
+     A**
+     A** FORMAT PM0630F5
+     A**
+     A          R PM0630F5
+     A                                      OVERLAY
+     A* /* R01118 B */
+     A* 65 ***************             23  3'F3=Exit  F4=Search and +
+     A********************                   Select  F12=Previous'
+     A* 67 ***************             23  3'F3=Exit  F4=Search and +
+     A********************                   Select  F6=Forex Exposure  +
+     A********************                   F12=Previous'
+     A* 66 ***************             23  3'F3=Exit  F4=Search and +
+     A********************                   Select  F6=Lombard +
+     A********************                   Details  F12=Previous'
+     A* R0171 START
+     A* 64**************               23  3'F3=Exit  F4=Search and +
+     A  64                             23  3'F3=Exit  F4=Search and +
+     A                                       Select                      -
+     A                                       F12=Previous Screen'
+     A* 65**************               23  3'F3=Exit  F4=Search and Select  -
+     A  66                             23  3'F3=Exit  F4=Search and Select  -
+     A                                      F6=ForpM Exposure  -
+     A                                      F12=Previous Screen'
+     A* R0171 END
+     A  67                             23  3'F3=Exit  F4=Search and Select  -
+     A                                      F6=Forex Exposure  -
+     A                                      F12=Previous Screen'
+     A* 66**************               23  3'F3=Exit  F4=Search and Select  -
+     A  65                             23  3'F3=Exit  F4=Search and Select  -
+     A                                      F6=Lombard Summary  -
+     A                                      F12=Previous Screen'
+     A* >> B08275 >>
+     A*N80****
+     A**68****                         24  3'F24=Customer Management'
+     A**80N68*                         24  3'F15=Lombard Details  -
+     A****                                  F24=Customer Management'
+     A N80 81N82
+     AO 68 81N82                       24  3'F13=Closed Portfolios F24=-
+     A                                      Customer Management'
+     A  80N68 81
+     AAN82                             24  3'F13=Closed Portfolios  -
+     A                                      F15=Lombard Details  -
+     A                                      F24=Customer Management'
+     A N80N81
+     AO 68N81                          24  3'F24=Customer Management'
+     A  80N68N81                       24  3'F15=Lombard Details  -
+     A                                      F24=Customer Management'
+     A N80 81 82
+     AO 68 81 82                       24  3'F13=Open Portfolios F24=-
+     A                                      Customer Management'
+     A  80N68 81
+     AA 82                             24  3'F13=Open Portfolios  -
+     A                                      F15=Lombard Details  -
+     A                                      F24=Customer Management'
+     A*<< B08275 <<
+     A* /* R01118 E */
+     A*                                              Begin /CPM005/
+     A  01                             22  2'105-Option D is allowed only +
+     A                                       if record exists on Asset/Liab+
+     A                                       ility Split File'
+     A                                      DSPATR(HI)
+     A  02                             22  2'106-Option C is allowed only +
+     A                                       if record exists on Ccy/Inst +
+     A                                       Asset Liability File'
+     A                                      DSPATR(HI)
+     A  07                             22  2'107-Option I is allowed only +
+     A                                       if record exists on Inst/Ccy +
+     A                                       Asset Liability File'
+     A                                      DSPATR(HI)
+     A  08                             22  2'108-Option N is allowed only +
+     A                                       if record exists on Net +
+     A                                       Commitment by Ccy File'
+     A                                      DSPATR(HI)
+     A  09                             22  2'109-Option T is allowed only +
+     A                                       for defined portfolios'
+     A                                      DSPATR(HI)
+     A*                                              End   /CPM005/
+     A*/COPY WNCPYSRC,PM0630DF08

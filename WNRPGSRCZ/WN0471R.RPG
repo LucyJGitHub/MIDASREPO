@@ -1,0 +1,1230 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas WN Mindow layout maintenace')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Windows Module                                       *
+      *                                                               *
+      *  WN0471R- Display Window Layout Details Maintenance           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. Xnnnnn  *CREATE    Date ddmmmyy               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  nnnnnn - (fix details)                                       *
+      *                                                               *
+      *****************************************************************
+     FWN0471R#CF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+      * DSP: Window Layout Creation    Edit record(1 screen)
+      *
+     FSDWLAYL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RTV: Window Layout File        Retrieval index
+      *
+     FSDWLAYL0UF  E           K        DISK                      A
+      * UPD: Window Layout File        Update index
+      *
+     E                    CTX1    1   4 78
+      *
+     E                    ARGV    1   1 78
+      *
+     E                    @CN     1   9 25               Long constants.
+     I* CONVERT THE HEX VALUES ON THE FILE SO THEY CAN BE DISPLAYED
+      /EJECT
+      * Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure.
+      *
+     I@1DBRC    E DSSDWLAYL0
+      * Current/previous master file format fields for change control.
+      *
+     I#1DBRC      DS                            137
+      * Stored master file format fields.
+     I                                        1   1 #1DB1
+      *
+     IUFATR       DS
+     I                                        1   1 UFLD1
+     I                                        2   2 UFLD2
+     I                                        3   3 UFLD3
+     I            DS
+     I                                        1   1 FFW1
+     I                                        2   2 FFW2
+     I                                        3   3 ATR
+     I                                        1   3 FATR
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      /EJECT
+      * Parameter declarations.
+     IP1PARM      DS
+      * I:MAP Window Controller Name(K)
+     I                                        1  10 P1WDCN
+     IP2PARM      DS
+      * I:MAP Line No.
+     I                                        1   3 P2LNNO
+     IP3PARM      DS
+      * I:    Action Code
+     I                                        1   1 P3ANCD
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Field must be blank'
+      * Name of Character Field
+     I                                        1  10 ZA0001
+      * Message data for 'All SCRN ATT Not Allowed'
+      * Attributes Normal Display
+     I                                        1   1 ZA0002
+      * Attributes High Intensity
+     I                                        2   2 ZA0003
+      * Attributes Reverse Image
+     I                                        3   3 ZA0004
+      * Attributes Underscore
+     I                                        4   4 ZA0005
+      * Attributes Blink
+     I                                        5   5 ZA0006
+      * Message data for 'RI HI UL = Blank'
+      * Attributes High Intensity
+     I                                        1   1 ZA0007
+      * Attributes Reverse Image
+     I                                        2   2 ZA0008
+      * Attributes Underscore
+     I                                        3   3 ZA0009
+      * Message data for 'RI UL BL = Blank Flash'
+      * Attributes Reverse Image
+     I                                        1   1 ZA0010
+      * Attributes Underscore
+     I                                        2   2 ZA0011
+      * Attributes Blink
+     I                                        3   3 ZA0012
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C           P1WDCN    PARM           WP0001 10        Window Controll
+     C           P2LNNO    PARM           WP0002  3        Line No.
+     C           P3ANCD    PARM           WP0003  1        Action Code
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters.
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat.
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen.
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program.
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen.
+      *================================================================
+      * Initialise key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible.
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction.
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'R'
+      * Ensure transaction continues (if reset).
+     C                     MOVEL'Y'       W0TRN   1
+      * Initialise detail screen.
+     C                     EXSR MAIZ#1
+      * Conduct screen conversation:
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1WDCN    IFEQ *BLANK                     Window Controll
+     C           #1LNNO    OREQ *BLANK                     Line No.
+      * One or more key field is blank.
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen.
+     C           W0BYP     IFNE 'Y'
+      * Display key screen.
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass.
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen:
+      * Cancel & exit program.
+     C   03                CAS            ZXEXPG
+      * Switch between *ADD/*CHANGE modes.
+     C   09                CAS            BCCHMD
+      * HOME: Reset screen fields.
+     C   05                CAS            BDHMKY
+      * Process key screen input.
+     C                     CAS            BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators.
+     C                     EXSR GADSAK
+      * Update screen time.
+     C                     TIME           ##TME            Screen time.
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      * If help requested, display help text.
+     C   25                EXSR ZHHPKY                     Display help te
+     C                     END
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator.
+     C                     SETOF                         99*
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BCCHMD    BEGSR
+      *================================================================
+      * Switch between ADD and CHANGE modes.
+      *================================================================
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     ELSE
+     C                     MOVEL'ADD'     W0PMD
+     C                     END
+      *================================================================
+     CSR         BCEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen.
+      *================================================================
+      * Validate key fields.
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record.
+     C           KRTV      KLIST
+     C                     KFLD           DNWDCN           Window Controll
+     C                     KFLD           DNLNNO           Line No.
+      * Setup key.
+     C                     MOVEL#1WDCN    DNWDCN           Window Controll
+     C                     MOVEL#1LNNO    DNLNNO           Line No.
+     C           KRTV      CHAIN@DNREGZ              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked.
+     C                     SETON                     993132*
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * Verify record existance against program mode
+     C           W0PMD     IFNE 'ADD'
+      * If record does not exist, error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     993132*
+      * Send message 'Window Layout File     NF'
+     C                     MOVEL'USR0561' ZAMSID           Message id.
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * USER: Initialise detail screen (existing record)
+      * Set-up DTL Screen Footer - Window Layout File  *
+     C           P3ANCD    IFEQ 'E'
+     C                     MOVEACTX1,1    ##CTX1
+     C                     END
+     C           P3ANCD    IFEQ 'D'
+     C                     MOVEACTX1,2    ##CTX1
+     C                     END
+     C           P3ANCD    IFEQ 'A'
+     C                     MOVEACTX1,3    ##CTX1
+     C                     END
+     C           P3ANCD    IFEQ 'I'
+     C                     MOVEACTX1,4    ##CTX1
+     C                     END
+      *
+     C                     MOVEL@CN,01    #DATND           Attributes Norm
+      * convert from attributes - Window Layout File  *
+     C* MOVE THE VALUE FROM THE FIELD TO THE DATA STRUCTURE
+     C                     MOVE DNFDAT    UFATR   3
+     C* CONVERT THE FIELD TYPE
+     C                     TESTB'567'     UFLD1          20
+     C* INDICATOR 20 IS SET ON IF THE FIELD IS NUMERIC
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'NU'      #DIOFT
+     C                     ELSE
+     C                     TESTB'2'       UFLD2          20
+     C* INDICATOR 20 IS SET ON IF THE FIELD IS UPPER CASE
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'AU'      #DIOFT
+     C                     ELSE
+     C                     MOVE 'AL'      #DIOFT
+     C                     END
+     C                     END
+     C* CONVERT THE ATTRIBUTES
+     C                     MOVE 'X'       #DATND
+     C                     TESTB'4'       UFLD3          20
+     C* INDICATOR 20 IS SET ON IF THE FIELD IS BLINK
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'X'       #DATBL
+     C                     END
+     C                     TESTB'5'       UFLD3          20
+     C* INDICATOR 20 IS SET ON IF THE FIELD IS UNDERSCORE
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'X'       #DATUN
+     C                     END
+     C                     TESTB'6'       UFLD3          20
+     C* INDICATOR 20 IS SET ON IF THE FIELD IS HIGH INTENSITY
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'X'       #DATHI
+     C                     END
+     C                     TESTB'7'       UFLD3          20
+     C* INDICATOR 20 IS SET ON IF THE FIELD IS REVERSE IMAGE
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'X'       #DATRI
+     C                     END
+      * Set up data stream fields - Window Layout File  *
+     C* MOVE THE DATA STREAM FROM THE FILE TO THE FUNCTION FIELDS ON THE SCREEN
+     C                     MOVELDNDSFL    #DDSN1
+     C                     MOVE DNDSFL    #DDSN2
+     C                     END
+      *
+     C                     ELSE
+      * If record already exists, error
+     C           *IN90     IFEQ '0'
+     C                     SETON                     993132*
+      * Send message 'Window Layout File     EX'
+     C                     MOVEL'USR0562' ZAMSID           Message id.
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+      * USER: Initialise detail screen (new record)
+      * Set-up DTL Screen Footer - Window Layout File  *
+     C           P3ANCD    IFEQ 'E'
+     C                     MOVEACTX1,1    ##CTX1
+     C                     END
+     C           P3ANCD    IFEQ 'D'
+     C                     MOVEACTX1,2    ##CTX1
+     C                     END
+     C           P3ANCD    IFEQ 'A'
+     C                     MOVEACTX1,3    ##CTX1
+     C                     END
+     C           P3ANCD    IFEQ 'I'
+     C                     MOVEACTX1,4    ##CTX1
+     C                     END
+     C                     MOVEL@CN,01    #DATND           Attributes Norm
+     C                     END
+     C                     END
+      *.................................................
+     C   99                GOTO BEEXIT
+      * No errors: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields.
+      *================================================================
+     C           W0PMD     IFNE 'ADD'
+      * Select existing record.
+     C                     EXSR VACKRL
+     C                     END
+      * USER: Validate key screen
+      *CASE:     PAR.Action Code is Insert
+     C           P3ANCD    IFEQ @CN,02                     *IF
+     C                     MOVEL#1WDCN    WUWDCN           Window Controll
+     C                     MOVEL#1LNNO    WULNNO           Line No.
+      * Retrieve record - Window Layout File  *
+     C                     EXSR SARVGN
+      *CASE:     PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ @CN,04                     *IF
+      * Send message '*Record already exists'
+     C                     MOVEL'Y2U0003' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     99    *
+      *
+     C                     MOVEL@CN,05    W0DCF            *Defer confirm
+     C                     GOTO BFEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+      * Window Controller Name(K) required.
+     C           #1WDCN    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI
+      * Line No. required.
+     C           #1LNNO    IFEQ *BLANK                     IF
+     C                     SETON                     9932  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process details.
+      *================================================================
+      * Conduct detail screen conversation:
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen.
+     C                     EXSR CBEXFM
+      * Process response to detail screen:
+      * Cancel & exit program.
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * Process detail screen input.
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests.
+      *================================================================
+      * Set screen conditioning indicators.
+     C                     EXSR GBDSAD
+      * Update screen time.
+     C                     TIME           ##TME            Screen time.
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      * If help requested, display help text.
+     C   25                EXSR ZHHPKY                     Display help te
+     C                     END
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator.
+     C                     SETOF                         99*
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen.
+      *================================================================
+      * USER: Process key screen request
+     C                     MOVEL@CN,06    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     MOVEL'R'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record.
+      *================================================================
+      * Confirm/update is not defered.
+     C                     MOVEL'N'       W0DCF   1
+      * If delete is not pending....
+      * Validate details.
+     C  N10                CAS            DCVLDL
+     C                     END
+      * Quit if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested:
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: Update record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details.
+      *================================================================
+      * Validate I/O Field Type
+      * Name search required ?
+     C                     MOVEL#DIOFT    W0NSRQ  1        I/O Field Type
+     C           W0NSRQ    IFEQ '?'                        Search required
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1122563   Y2LSNO  70       List number.
+     C           #DIOFT    PARM #DIOFT    W0EXVL 20        I/O Field Type
+     C                     MOVEL'Y'       W0DCF   1        Defer confirm
+     C                     END
+      * Validate Attributes Normal Display
+      * Name search required ?
+     C                     MOVEL#DATND    W0NSRQ  1        Attributes Norm
+     C           W0NSRQ    IFEQ '?'                        Search required
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1122564   Y2LSNO  70       List number.
+     C           #DATND    PARM #DATND    W0EXVL 20        Attributes Norm
+     C                     MOVEL'Y'       W0DCF   1        Defer confirm
+     C                     END
+      * Validate Attributes Reverse Image
+      * Name search required ?
+     C                     MOVEL#DATRI    W0NSRQ  1        Attributes Reve
+     C           W0NSRQ    IFEQ '?'                        Search required
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1122567   Y2LSNO  70       List number.
+     C           #DATRI    PARM #DATRI    W0EXVL 20        Attributes Reve
+     C                     MOVEL'Y'       W0DCF   1        Defer confirm
+     C                     END
+      * Validate Attributes High Intensity
+      * Name search required ?
+     C                     MOVEL#DATHI    W0NSRQ  1        Attributes High
+     C           W0NSRQ    IFEQ '?'                        Search required
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1122565   Y2LSNO  70       List number.
+     C           #DATHI    PARM #DATHI    W0EXVL 20        Attributes High
+     C                     MOVEL'Y'       W0DCF   1        Defer confirm
+     C                     END
+      * Validate Attributes Underscore
+      * Name search required ?
+     C                     MOVEL#DATUN    W0NSRQ  1        Attributes Unde
+     C           W0NSRQ    IFEQ '?'                        Search required
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1122568   Y2LSNO  70       List number.
+     C           #DATUN    PARM #DATUN    W0EXVL 20        Attributes Unde
+     C                     MOVEL'Y'       W0DCF   1        Defer confirm
+     C                     END
+      * Validate Attributes Blink
+      * Name search required ?
+     C                     MOVEL#DATBL    W0NSRQ  1        Attributes Blin
+     C           W0NSRQ    IFEQ '?'                        Search required
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1122566   Y2LSNO  70       List number.
+     C           #DATBL    PARM #DATBL    W0EXVL 20        Attributes Blin
+     C                     MOVEL'Y'       W0DCF   1        Defer confirm
+     C                     END
+      * USER: Validate detail screen fields
+      *CASE:     DTL.I/O Field Type is blank
+     C           #DIOFT    IFEQ *BLANK                     *IF
+      *CASE:     DTL.Name of Character Field is Not blank
+     C           #1NOCF    IFNE *BLANK                     *IF
+      * Setup message data for message.
+     C                     MOVEL#1NOCF    ZA0001           Name of Charact
+      * Send message 'Field must be blank'
+     C                     MOVEL'USR0566' ZAMSID           Message id.
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     9939  *
+      *
+     C                     MOVEL@CN,05    W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+      * All attributes cannot be selected
+      *CASE:     DTL.Attributes Normal Display is Select
+     C           #DATND    IFEQ @CN,01                     *IF
+      *CASE:     DTL.Attributes Reverse Image is Select
+     C           #DATRI    IFEQ @CN,01                     *IF
+      *CASE:     DTL.Attributes High Intensity is Select
+     C           #DATHI    IFEQ @CN,01                     *IF
+      *CASE:     DTL.Attributes Underscore is Select
+     C           #DATUN    IFEQ @CN,01                     *IF
+      *CASE:     DTL.Attributes Blink is Select
+     C           #DATBL    IFEQ @CN,01                     *IF
+      * Setup message data for message.
+     C                     MOVEL#DATND    ZA0002           Attributes Norm
+     C                     MOVEL#DATHI    ZA0003           Attributes High
+     C                     MOVEL#DATRI    ZA0004           Attributes Reve
+     C                     MOVEL#DATUN    ZA0005           Attributes Unde
+     C                     MOVEL#DATBL    ZA0006           Attributes Blin
+      * Send message 'All SCRN ATT Not Allowed'
+     C                     MOVEL'USR0585' ZAMSID           Message id.
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     993234*
+     C                     SETON                     333536*
+      *
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * RI HI UL and RI UL BL validation
+      *CASE:     DTL.Attributes Reverse Image is Select
+     C           #DATRI    IFEQ @CN,01                     *IF
+      *CASE:     DTL.Attributes High Intensity is Select
+     C           #DATHI    IFEQ @CN,01                     *IF
+      *CASE:     DTL.Attributes Underscore is Select
+     C           #DATUN    IFEQ @CN,01                     *IF
+      * Setup message data for message.
+     C                     MOVEL#DATHI    ZA0007           Attributes High
+     C                     MOVEL#DATRI    ZA0008           Attributes Reve
+     C                     MOVEL#DATUN    ZA0009           Attributes Unde
+      * Send message 'RI HI UL = Blank'
+     C                     MOVEL'USR0583' ZAMSID           Message id.
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     993433*
+     C                     SETON                     35    *
+      *
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     DTL.Attributes Underscore is Select
+     C           #DATUN    IFEQ @CN,01                     *IF
+      *CASE:     DTL.Attributes Blink is Select
+     C           #DATBL    IFEQ @CN,01                     *IF
+      * Setup message data for message.
+     C                     MOVEL#DATRI    ZA0010           Attributes Reve
+     C                     MOVEL#DATUN    ZA0011           Attributes Unde
+     C                     MOVEL#DATBL    ZA0012           Attributes Blin
+      * Send message 'RI UL BL = Blank Flash'
+     C                     MOVEL'USR0584' ZAMSID           Message id.
+     C                     MOVEL'WNMSGF'  ZAMSGF
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     993335*
+     C                     SETON                     36    *
+      *
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Field Attributes - Window Layout File  *
+     C*
+     C                     BITOF'01234567'FFW1
+     C                     BITOF'01234567'FFW2
+     C                     BITOF'01234567'ATR
+     C*
+     C           #DIOFT    IFEQ 'AU'
+     C                     BITON'14'      FFW1
+     C                     BITON'2'       FFW2
+     C                     END
+     C*
+     C           #DIOFT    IFEQ 'AL'
+     C                     BITON'14'      FFW1
+     C                     END
+     C*
+     C           #DIOFT    IFEQ 'NU'
+     C                     BITON'14567'   FFW1
+     C                     END
+     C*
+     C*          NORMAL DISPLAY IS ALWAYS REQUIRED
+     C*
+     C*
+     C* NORMAL DISPLAY
+     C           #DATND    IFEQ 'X'
+     C                     BITON'2'       ATR
+     C                     END
+     C*
+     C* REVERSE IMAGE
+     C           #DATRI    IFEQ 'X'
+     C                     BITON'27'      ATR
+     C                     END
+     C*
+     C* HIGH INTENSITY
+     C           #DATHI    IFEQ 'X'
+     C                     BITON'26'      ATR
+     C                     END
+     C*
+     C* UNDERSCORE
+     C           #DATUN    IFEQ 'X'
+     C                     BITON'25'      ATR
+     C                     END
+     C*
+     C* BLINK
+     C           #DATBL    IFEQ 'X'
+     C                     BITON'24'      ATR
+     C                     END
+     C*
+     C                     MOVE FATR      #1FDAT
+     C*
+      * Set up data stream field - Window Layout File  *
+     C* SET UP THE DATA STREAM FROM THE TWO SUB-STREAMS ON THE SCREEN
+     C                     MOVEL#DDSN1    #1DSFL
+     C                     MOVE #DDSN2    #1DSFL
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record.
+      *================================================================
+      * Process delete request.
+     C   10                CAS            EDDLRQ
+      * Process add request.
+     C           W0PMD     CASEQ'ADD'     ECADRQ
+      * Process update request.
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * Restart program for next record.
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         ECADRQ    BEGSR
+      *================================================================
+      * Process add request.
+      *================================================================
+      * USER: Create DBF record
+      * Create Window Layout File - Window Layout File  *
+     C                     EXSR SBCRRC
+     C           W0RTN     IFEQ *BLANK
+      * Send message '*Record added'
+     C                     MOVEL'Y2U0011' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *================================================================
+     CSR         ECEXIT    ENDSR
+      /EJECT
+     CSR         EDDLRQ    BEGSR
+      *================================================================
+      * Process delete request.
+      *================================================================
+      * USER: Delete DBF record
+      * Delete object - Window Layout File  *
+     C                     EXSR SCDLRC
+     C           W0RTN     IFEQ *BLANK
+      * Send message '*Record deleted'
+     C                     MOVEL'Y2U0013' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *================================================================
+     CSR         EDEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request.
+      *================================================================
+      * USER: Change DBF record
+      * Change object - Window Layout File  *
+     C                     EXSR SDCHRC
+     C           W0RTN     IFNE *BLANK
+      * DBF Update error detected.
+      * Reset screen fields if changed record.
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters.
+      *================================================================
+      * Is full key present?
+     C           P1WDCN    IFEQ *BLANK                     Window Controll
+     C           P2LNNO    OREQ *BLANK                     Line No.
+      * Not every key field passed - loop program.
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program.
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators.
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators.
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen.
+     C                     SETON                     88    *
+      * Enable key screen.
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields.
+      *================================================================
+     C                     MOVEL*BLANK    #1FDAT           Field Attribute
+     C                     MOVEL*BLANK    #1TXAT           Text Attribute
+     C                     MOVEL*BLANK    #1DSFL           Data Stream for
+     C                     MOVEL*BLANK    #DIOFT           I/O Field Type
+     C                     MOVEL*BLANK    #DATND           Attributes Norm
+     C                     MOVEL*BLANK    #DATRI           Attributes Reve
+     C                     MOVEL*BLANK    #DATHI           Attributes High
+     C                     MOVEL*BLANK    #DATUN           Attributes Unde
+     C                     MOVEL*BLANK    #DATBL           Attributes Blin
+     C                     MOVEL*BLANK    #DDSN1           Data Stream Num
+     C                     MOVEL*BLANK    #DDSN2           Data Stream Num
+     C                     MOVEL*BLANK    #1NOCF           Name of Charact
+     C                     MOVEL*BLANK    #1NFTC           Name of File to
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @DNREGZ fields to screen.
+      *================================================================
+     C                     MOVELDNFDAT    #1FDAT           Field Attribute
+     C                     MOVELDNTXAT    #1TXAT           Text Attribute
+     C                     MOVELDNDSFL    #1DSFL           Data Stream for
+     C                     MOVELDNWDCN    #1WDCN           Window Controll
+     C                     MOVELDNLNNO    #1LNNO           Line No.
+     C                     MOVELDNNOCF    #1NOCF           Name of Charact
+     C                     MOVELDNNFTC    #1NFTC           Name of File to
+      * Hold existing record image.
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialise key screen.
+      *================================================================
+     C                     MOVELP1WDCN    #1WDCN           Window Controll
+     C                     MOVELP2LNNO    #1LNNO           Line No.
+      * USER: Initialise key screen
+      *CASE:     PAR.Action Code is Insert
+     C           P3ANCD    IFEQ @CN,02                     *IF
+      * Set-up KEY Screen Footer - Standard Functions  *
+     C                     MOVEAARGV,1    ##CTX1
+     C                     MOVE WULNNO    WULNNB           Line number
+     C                     ADD  1         WULNNB           Line number
+     C                     MOVELWULNNB    #1LNNO           Line No.
+     C                     MOVELWUWDCN    #1WDCN           Window Controll
+     C                     END                             *FI
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Retrieve record - Window Layout File  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define Keylist.
+     C           KRSSA     KLIST
+     C                     KFLD           DNWDCN           Window Controll
+     C                     KFLD           DNLNNO           Line No.
+      * Move fields to key list.
+     C                     MOVEL#1WDCN    DNWDCN           Window Controll
+     C                     MOVEL#1LNNO    DNLNNO           Line No.
+     C           KRSSA     CHAIN@DNREGZ              90    *
+     C           *IN90     IFEQ '1'
+      * DBF Record not found.
+     C                     MOVEL'USR0561' W0RTN   7
+      * USER: Processing if DBF record not found
+     C                     MOVEL@CN,03    W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process DBF record
+     C                     MOVEL@CN,04    W0RTN            *Return code
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCRRC    BEGSR
+      *================================================================
+      * Create Window Layout File - Window Layout File  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to @DNREGY
+     C                     MOVEL#1WDCN    DNWDCN           Window Controll
+     C                     MOVEL#1LNNO    DNLNNO           Line No.
+     C                     MOVEL#1FDAT    DNFDAT           Field Attribute
+     C                     MOVEL#1NOCF    DNNOCF           Name of Charact
+     C                     MOVEL#1NFTC    DNNFTC           Name of File to
+     C                     MOVEL#1TXAT    DNTXAT           Text Attribute
+     C                     MOVEL#1DSFL    DNDSFL           Data Stream for
+      *
+     C           KLCRSB    KLIST
+     C                     KFLD           DNWDCN           Window Controll
+     C                     KFLD           DNLNNO           Line No.
+      * Check for duplicate primary key.
+     C           KLCRSB    SETLL@DNREGY                  90*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'USR0562' W0RTN   7
+      * Send message 'Window Layout File     EX'
+     C                     MOVEL'USR0562' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C                     WRITE@DNREGY                91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF Write successful.
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCDLRC    BEGSR
+      *================================================================
+      * Delete object - Window Layout File  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @DNREGY
+     C                     MOVEL#1WDCN    DNWDCN           Window Controll
+     C                     MOVEL#1LNNO    DNLNNO           Line No.
+      *
+     C           KLDLSC    KLIST
+     C                     KFLD           DNWDCN           Window Controll
+     C                     KFLD           DNLNNO           Line No.
+     C           KLDLSC    CHAIN@DNREGY              9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted.
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SCEXIT
+     C                     END
+      *
+      * Check for changed record.
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+      * Use SETLL to release record lock.
+     C           KLDLSC    SETLL@DNREGY              9091  *
+     C                     GOTO SCEXIT
+     C                     END                             FI #1DBRC
+      *................................................................
+     C                     DELET@DNREGY                91  *
+     C           *IN91     IFEQ '1'
+      * Delete error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDCHRC    BEGSR
+      *================================================================
+      * Change object - Window Layout File  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @DNREGY
+     C                     MOVEL#1WDCN    DNWDCN           Window Controll
+     C                     MOVEL#1LNNO    DNLNNO           Line No.
+      *
+     C           KLCHSD    KLIST
+     C                     KFLD           DNWDCN           Window Controll
+     C                     KFLD           DNLNNO           Line No.
+     C           KLCHSD    CHAIN@DNREGY              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found.
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SDEXIT
+     C                     END
+      *
+      * Check for changed record.
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+      * Use SETLL to release record lock.
+     C           KLCHSD    SETLL@DNREGY              9091  *
+     C                     GOTO SDEXIT
+     C                     END                             FI #1DBRC
+      * Move Non-key fields to @DNREGY
+     C                     MOVEL#1FDAT    DNFDAT           Field Attribute
+     C                     MOVEL#1NOCF    DNNOCF           Name of Charact
+     C                     MOVEL#1NFTC    DNNFTC           Name of File to
+     C                     MOVEL#1TXAT    DNTXAT           Text Attribute
+     C                     MOVEL#1DSFL    DNDSFL           Data Stream for
+      *
+     C                     UPDAT@DNREGY                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF Change successful.
+      * Update saved record image.
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record.
+      *================================================================
+      * Name search required ?
+     C                     MOVEL#1WDCN    WK1X01  1        Window Controll
+     C                     MOVEL#1LNNO    WK1X02  1        Line No.
+     C           WK1X01    IFEQ '?'                        Window Controll
+     C           WK1X02    OREQ '?'                        Line No.
+     C                     CALL 'WN0470S'              90  *
+     C                     PARM           W0RTN   7        Return code
+     C           #1WDCN    PARM #1WDCN    WQ0001 10        Window Controll
+     C           #1LNNO    PARM #1LNNO    WQ0002  3        Line No.
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+     C                     MOVEL'Y'       W0DCF   1        Defer confirm
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified use default.
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text.
+      *================================================================
+     C                     MOVEL'Y'       W0HLP   1        Signal help req
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Member name.
+     C                     PARM *BLANK    YYHPFL 10        *DFT text file.
+     C                     PARM *BLANK    YYHPLB 10        Help text lib.
+     C                     PARM           W0RTN   7        Return Code.
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen.
+      *================================================================
+      * USER: Exit program processing
+      *CASE:     PAR.Action Code is Insert
+     C           P3ANCD    IFEQ @CN,02                     *IF
+     C                     MOVE #1LNNO    WULNNB           Line number
+     C                     ADD  1         WULNNB           Line number
+     C                     MOVELWULNNB    #1LNNO           Line No.
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      *CASE:     KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL@CN,07    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Obtain default message file.
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Window Controller Name(K)
+     C                     MOVEL*BLANK    WUWDCN 10
+      * Define work field Line No.
+     C                     MOVEL*BLANK    WULNNO  3
+      * Define work field Line number
+     C                     Z-ADD*ZERO     WULNNB  30
+      * Define work field midas rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Select initial mode.
+     C           @1NROP    IFEQ *ZERO
+     C                     MOVEL'ADD'     W0PMD   3        Add mode
+     C                     ELSE
+     C                     MOVEL'CHG'     W0PMD            Change mode
+     C                     END
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB
+     C                     MOVE SUC       WUSUC
+     C                     MOVE DFF       WUDFF
+     C                     MOVE MBIN      WUMBIN
+      *CASE:     PAR.Action Code is Insert
+     C           P3ANCD    IFEQ @CN,02                     *IF
+     C                     MOVEL@CN,08    W0PMD            *Program mode
+     C                     ELSE
+      *CASE:     *OTHERWISE
+     C                     MOVEL@CN,09    W0PMD            *Program mode
+     C                     END                             *FI
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+**
+F3=Main Menu   F12=Previous
+F3=Main Menu   F12=Previous  F10=Delete
+F3=Main Menu   F12=Previous
+F3=Main Menu   F12=Previous
+**
+F3=Previous
+** @CN Long constants used in program.
+X
+I
+Y2U0005
+Y2U0003
+Y
+USR0790
+Y2U9999
+ADD
+CHG

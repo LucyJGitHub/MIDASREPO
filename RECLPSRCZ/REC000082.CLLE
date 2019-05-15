@@ -1,0 +1,99 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Init Pgm for CRE010 Retail Accnt Bal Chk')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       CLLE/REC000082 - Initialisation Program for CRE010:         */
+/*                        Accounts Extension Detail Initialisation   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CRE010  *CREATE    Date 06Sep04              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE010 - Retail Account Balance Check                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCD)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD)    TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CRE010)  TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD AS400 LOCAL +
+                          DATA AREA EQUIVALENT')
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+             STRCMTCTL  LCKLVL(*ALL) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Check switchable features file */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CRE010')
+ 
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)
+ 
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+ 
+/* First switch on of feature */
+ 
+                IF         COND(&PMODE *EQ '1') THEN(DO)
+                   CALL       PGM(RE000082)
+                ENDDO
+ 
+/* Subsequent switch on of feature */
+ 
+                IF         COND(&PMODE *EQ '2') THEN(DO)
+                   CALL       PGM(RE000082)
+                ENDDO
+ 
+/* Switch off of feature */
+ 
+                IF         COND(&PMODE *EQ '3') THEN(DO)
+                ENDDO
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          REC000082 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+ END:
+             ENDPGM

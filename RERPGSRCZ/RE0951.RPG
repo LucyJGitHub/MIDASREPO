@@ -1,0 +1,1656 @@
+     H        1                                                                             AR807758
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Retail Interest Summary Report')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE0951 - Retail Interest Summary Report                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR807782           Date 28Jul11               *
+      *                 AR807758           Date 28Jul11               *
+      *                 AR787706           Date 13Jun11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23578 *CREATE   Date 24Mar09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR807782 - Increase account field from 15 to 21              *
+      *             (Child:AR807783)                                  *
+      *  AR807758 - Dump on database error is missing (Child:AR807759)*
+      *  AR787706 - COB error in REC0950 00001                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23578 - To generate Retail Interest Summary               *
+      *                                                               *
+      *****************************************************************
+      *
+     FREINSDPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FACNUM   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FRE0951AUO   E             74     PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *
+     FRE0951P1O   E             73     PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+      *
+     FRE0951P2O   E             72     PRINTER      KINFDS SPOOL2     UC
+     F                                              KINFSR *PSSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F  I N D I C A T O R S                   *
+      *                                                               *
+      *  70  Used to read REINSDPD from start to finish               *
+      *  72  Overfolw indicator for printer file RE0951P2             *
+      *  73  Overfolw indicator for printer file RE0951P1             *
+      *  80  Number of decimal position with currency = 0             *
+      *  81  Number of decimal position with currency = 1             *
+      *  82  Number of decimal position with currency = 2             *
+      *  83  Number of decimal position with currency = 3             *
+      *  98  Date format indicator                                    *
+      *                                                               *
+      *  U1  Management statement print                               *
+      *  U7  Database error                                           *
+      *  U8  Database error                                           *
+      *  LR  End of program                                           *
+      *                                                               *
+      *  DB Error number maximum 52 (include)                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #P01   - 1ST Cycle processing                                *
+      *                                                               *
+      *  #P021  - Record type '001' Processing                        *
+      *  #P022  - Record type '002' Processing                        *
+      *  #P023  - Record type '003' Processing                        *
+      *  #P024  - Record type '004' Processing                        *
+      *  #P025  - Record type '005' Processing                        *
+      *  #P026  - Record type '006' Processing                        *
+      *                                                               *
+      *  #P031  - Change of branch processing                         *
+      *  #P032  - Change of currency processing                       *
+      *  #P033  - Overflow processing                                 *
+      *                                                               *
+      *  #P04   - Total time processing                               *
+      *                                                               *
+      *  SRSEDT - Format numeric fields                               *
+      *  SRPNUM - Pad leding spaces with asterisk                     *
+      *  #CURR  - Rretrive currency for alternative accounts          *
+      *  *PSSR  - Error subroutine for certain access object errors   *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+     E                    CPY@    1   1 80
+     E                    FRC     1  14  1   FRQ    17
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     ICPYR@#      DS
+      *
+      ** Data structure for compilation - copyright insertion
+      *
+     I                                        1  80 CPY@
+     I            DS
+      *
+      ** Data structure to output account key
+      *
+     I**********                              1  18 PAC                                     AR807782
+     I                                        1  24 PAC                                     AR807782
+     I                                        1   6 PCNUM
+     I                                        7   9 PCCY
+     I                                       10  19 PACOD
+     I                                       20  21 PACSQ
+     I                                       22  24 PBRA
+     I            DS
+      *
+      ** Data structure to split account key
+      *
+     I**********                              1  15 @ACNT                                   AR807782
+     I                                        1  21 @ACNT                                   AR807782
+     I                                        1   6 @CNUM
+     I                                        7   9 @CCY
+     I**********                             10  20 @ACOD                                   AR807782
+     I**********                             21  22 @ACSQ                                   AR807782
+     I                                       10  19 @ACOD                                   AR807782
+     I                                       20  21 @ACSQ                                   AR807782
+      *
+     I            DS
+     I**********                              1  15 A15                                     AR807782
+     I**********                             11  15 A05                                     AR807782
+     I                                        1  21 A21                                     AR807782
+     I                                       11  21 A11                                     AR807782
+      *
+      ** Data structure for currency decimal
+      *
+     I                                        1  150PDRTU0
+     I                                        1  151PDRTU1
+     I                                        1  152PDRTU2
+     I                                        1  153PDRTU3
+     I            DS
+     I                                        1  150PCRTU0
+     I                                        1  151PCRTU1
+     I                                        1  152PCRTU2
+     I                                        1  153PCRTU3
+     I            DS
+     I                                        1  130PTOTC0
+     I                                        1  131PTOTC1
+     I                                        1  132PTOTC2
+     I                                        1  133PTOTC3
+     I            DS
+     I                                        1  130PCHOD0
+     I                                        1  131PCHOD1
+     I                                        1  132PCHOD2
+     I                                        1  133PCHOD3
+     I            DS
+     I                                        1  130PCTUR0
+     I                                        1  131PCTUR1
+     I                                        1  132PCTUR2
+     I                                        1  133PCTUR3
+     I            DS
+     I                                        1  130PCDRI0
+     I                                        1  131PCDRI1
+     I                                        1  132PCDRI2
+     I                                        1  133PCDRI3
+     I            DS
+     I                                        1  130PCINA0
+     I                                        1  131PCINA1
+     I                                        1  132PCINA2
+     I                                        1  133PCINA3
+     I*
+     I            DS
+     I                                        1  130PCMCB0
+     I                                        1  131PCMCB1
+     I                                        1  132PCMCB2
+     I                                        1  133PCMCB3
+     I            DS
+     I                                        1  130PCFIX0
+     I                                        1  131PCFIX1
+     I                                        1  132PCFIX2
+     I                                        1  133PCFIX3
+     I            DS
+     I                                        1  130PCHFX0
+     I                                        1  131PCHFX1
+     I                                        1  132PCHFX2
+     I                                        1  133PCHFX3
+     I            DS
+     I                                        1  130PSTCH0
+     I                                        1  131PSTCH1
+     I                                        1  132PSTCH2
+     I                                        1  133PSTCH3
+     I            DS
+     I                                        1  130PGADI0
+     I                                        1  131PGADI1
+     I                                        1  132PGADI2
+     I                                        1  133PGADI3
+     I            DS
+     I                                        1  130PGACI0
+     I                                        1  131PGACI1
+     I                                        1  132PGACI2
+     I                                        1  133PGACI3
+     I            DS
+     I                                        1  150PDRIA0
+     I                                        1  151PDRIA1
+     I                                        1  152PDRIA2
+     I                                        1  153PDRIA3
+     I            DS
+     I                                        1  150PODIA0
+     I                                        1  151PODIA1
+     I                                        1  152PODIA2
+     I                                        1  153PODIA3
+     I            DS
+     I                                        1  150PCRIA0
+     I                                        1  151PCRIA1
+     I                                        1  152PCRIA2
+     I                                        1  153PCRIA3
+     I            DS
+     I                                        1  150PTDRI0
+     I                                        1  151PTDRI1
+     I                                        1  152PTDRI2
+     I                                        1  153PTDRI3
+     I            DS
+     I                                        1  150PTCRI0
+     I                                        1  151PTCRI1
+     I                                        1  152PTCRI2
+     I                                        1  153PTCRI3
+     I            DS
+     I                                        1  150PTNTI0
+     I                                        1  151PTNTI1
+     I                                        1  152PTNTI2
+     I                                        1  153PTNTI3
+     I            DS
+     I                                        1  150PTCHA0
+     I                                        1  151PTCHA1
+     I                                        1  152PTCHA2
+     I                                        1  153PTCHA3
+     I            DS
+     I                                        1  150PTCOA0
+     I                                        1  151PTCOA1
+     I                                        1  152PTCOA2
+     I                                        1  153PTCOA3
+     ISPOOL2      DS
+      *
+      ** File information data structure - P2
+      *
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+      *
+     ISPOOL1      DS
+      *
+      ** File information data structure - P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOLU      DS
+      *
+      ** File information data structure - AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IRUNDT       DS
+      *
+      ** Data Area rundat
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ILDA         DS                            256
+      *
+      ** Local Data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Externat DS for bank deatails
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     I              BJURPT                          TITL
+      *
+      ** Retail Details
+      *
+     ISDRETL    E DSSDRETLPD
+      *
+      ** Externat DS for branch codes
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** Currency deatils
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** DS for access programs, long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** First DS for access programs, short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+     C/EJECT
+      *================================================================
+      *
+      ** Define LDA and load copyright
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Parameter send by the CL: component name and sequence number
+      *
+     C********** *ENTRY    PLIST                                                            AR787706
+     C**********           PARM           @CNAM  10                                         AR787706
+     C**********           PARM           @SQNO   5                                         AR787706
+      *
+      *================================================================
+     C/EJECT
+      *================================================================
+      ** P R O G R A M     S T A R T
+      *================================================================
+      *
+      ** First Cycle Processing
+      *
+     C                     EXSR #P01
+      *
+      ** Main processing
+      *
+     C                     READ REINSDD0                 70
+     C           *IN70     DOWEQ*OFF
+      *
+     C                     ADD  1         AUREC  130
+      *
+      ** Perform check and processing for change of branch
+      *
+     C                     EXSR #P031
+      *
+      ** Perform check and processing for change og currency
+      *
+     C                     EXSR #P032
+      *
+     C           FRECT     IFEQ 1
+     C                     EXSR #P021
+     C                     ENDIF
+      *
+     C           FRECT     IFEQ 2
+     C                     EXSR #P022
+     C                     ENDIF
+      *
+     C           FRECT     IFEQ 3
+     C                     EXSR #P023
+     C                     ENDIF
+      *
+     C           FRECT     IFEQ 4
+     C                     EXSR #P024
+     C                     ENDIF
+      *
+     C           FRECT     IFEQ 5
+     C                     EXSR #P025
+     C                     ENDIF
+      *
+     C           FRECT     IFEQ 6
+     C                     EXSR #P026
+     C                     ENDIF
+      *
+     C                     READ REINSDD0                 70
+     C                     ENDDO
+      *
+      ** Total Processing
+      *
+     C                     EXSR #P04
+      *
+      *================================================================
+      ** P R O G R A M     E N D
+      *================================================================
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P01 - Process initialization                                *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P01      BEGSR
+      *
+      ** Prepare DBPGM, DBKEY AND ERRDAT variables
+      *
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'RE0951'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   BLK10  10
+     C                     MOVE *BLANKS   DBASE
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     MOVEL@OPTN     DBOPTN  7
+     C                     Z-ADD01        DBASE
+     C                     EXSR *PSSR
+     C                     GOTO ENDFST
+     C                     ENDIF
+      *
+      ** Access the retail ICD deatils
+      *
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDRETL    PARM SDRETL    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDRETLPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     MOVEL@OPTN     DBOPTN  7
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set date format indicator
+      *
+     C                     MOVE BJMRDT    RUNA
+     C                     MOVE *OFF      *IN98
+      *
+      ** Print audit header
+      *
+     C                     WRITEAUHEAD
+      *
+     C           ENDFST    TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P021 - RECORD TYPE '001' PROCESSING                         *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: P031, P032, ZDATE2                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P021     BEGSR
+      *
+      ** Set management capitalisation flag to blank
+      *
+     C                     MOVE *BLANKS   @@MCF   1
+     C                     MOVE *BLANKS   XACNT  18
+      *
+      ** Set account name, customer name and address
+      *
+     C                     MOVE FANAM     PANAM
+     C                     MOVE FCNA1     PCNA1
+     C                     MOVE FCNA2     PCNA2
+     C                     MOVE FCNA3     PCNA3
+     C                     MOVE FCNA4     PCNA4
+      *
+     C                     MOVE FBRCA     PBRCA
+     C                     MOVE FBRCA     XBRCA   3
+     C                     MOVE FCCY      PCURR
+     C                     MOVE FCCY      XCURR   3
+      *
+      ** If debit capitalisation date is non-zero, format dateS
+      ** for output
+      *
+     C           FDCPD     IFNE *ZEROS
+      *
+     C                     Z-ADDFDCPD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PCAPD
+     C                     MOVELZDATE     XCAPD   60
+      *
+     C                     Z-ADDFDCPV     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PCAPV
+     C                     MOVELZDATE     XCAPV   60
+      *
+      ** Expand frequency code
+      *
+     C                     Z-ADD1         Z       20
+      *
+     C           FDRIF     LOKUPFRC,Z                    75
+     C           *IN75     IFEQ *ON
+     C                     MOVE FRQ,Z     PCAPF
+     C                     MOVE PCAPF     XCAPF  17
+     C                     ENDIF
+      *
+      ** Set management capitalisation flag
+      *
+     C           FDICI     IFEQ 'M'
+     C                     MOVE 'Y'       @@MCF
+     C                     ENDIF
+      *
+      ** Else, format credit capitalisation date for output
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDFCCPD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PCAPD
+     C                     MOVELZDATE     XCAPD
+      *
+     C                     Z-ADDFCCPV     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PCAPV
+     C                     MOVELZDATE     XCAPV
+      *
+      ** Expand frequency code
+      *
+     C                     Z-ADD1         Z
+      *
+     C           FCRIF     LOKUPFRC,Z                    75
+     C           *IN75     IFEQ *ON
+     C                     MOVE FRQ,Z     PCAPF
+     C                     MOVE PCAPF     XCAPF  17
+     C                     ENDIF
+      *
+      ** Set management capitalisation flag
+      *
+     C           FCICI     IFEQ 'M'
+     C                     MOVE 'Y'       @@MCF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Output reatil number or full midas account
+      *
+     C           FACNO     IFNE *ZEROS
+     C                     MOVE FACNO     PACNO
+     C                     MOVE *OFF      *IN27
+     C                     ELSE
+     C                     MOVE FBRCA     PBRA
+     C                     MOVE FCNUM     PCNUM
+     C                     MOVE FCCY      PCCY
+     C                     MOVE FACOD     PACOD
+     C                     MOVE FACSQ     PACSQ
+     C                     MOVE PAC       XAC    18
+     C                     MOVE *ON       *IN27
+     C                     ENDIF
+      *
+      ** Reset page number
+      *
+     C                     Z-ADD1         PAGX1
+     C                     Z-ADD1         PAGX2
+      *
+      ** Write appropriate header
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT1
+     C                     ELSE
+     C                     WRITEP1DT1
+     C                     ENDIF
+      *
+      ** Store header deatils in case of overflow
+      *
+     C                     MOVE PANAM     XANAM  20
+     C                     MOVE PCNA1     XCNA1  35
+     C                     MOVE PCNA2     XCNA2  35
+     C                     MOVE PCNA3     XCNA3  35
+     C                     MOVE PCNA4     XCNA4  35
+     C                     MOVE PACNO     XACNO  10
+      *
+      ** Set rate change flags
+      *
+     C                     MOVE *BLANKS   DRR1    1
+     C                     MOVE *BLANKS   CRR1    1
+     C                     MOVE *BLANKS   ORR1    1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P022 - Record type '002' processing                         *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P022     BEGSR
+      *
+      ** Format total credit and debit turnover amounts
+      *
+     C                     MOVE FDRTU     PDRTU0
+     C                     MOVE FCRTU     PCRTU0
+      *
+      ** Print appropriate turnover amount
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT2
+     C                     ELSE
+     C                     WRITEP1DT2
+     C                     ENDIF
+      *
+      ** If debit alternate, output retail number or
+      ** full midas account
+      *
+     C********** FDACP     IFNE *BLANKS                                                     AR807782
+     C**********           MOVE FDACP     A15                                               AR807782
+     C           FDAC1     IFNE *BLANKS                                                     AR807782
+     C                     MOVE FDAC1     A21                                               AR807782
+      *
+     C********** A05       IFEQ *BLANKS                                                     AR807782
+     C**********           MOVELFDACP     PACNO                                             AR807782
+     C           A11       IFEQ *BLANKS                                                     AR807782
+     C                     MOVELFDAC1     PACNO                                             AR807782
+     C                     MOVE *OFF      *IN27
+      *
+     C                     MOVE PACNO     KACNO
+     C                     EXSR #CURR
+     C                     MOVE CCY       PDCCY
+      *
+     C                     ELSE
+      *
+     C**********           MOVE A15       @ACNT                                             AR807782
+     C                     MOVE A21       @ACNT                                             AR807782
+     C                     MOVE FDRBR     PBRA
+     C                     MOVE @CNUM     PCNUM
+     C                     MOVE @CCY      PCCY
+     C                     MOVE @CCY      PDCCY
+     C                     MOVE @ACOD     PACOD
+     C                     MOVE @ACSQ     PACSQ
+     C                     MOVE *ON       *IN27
+     C                     ENDIF
+      *
+      * Write appropriate detail line
+      *
+     C                     MOVE FDSPT     PDSPT
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT3
+     C                     ELSE
+     C                     WRITEP1DT3
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If credit alternate, output retail number or
+      ** full midas account
+      *
+     C********** FCACP     IFNE *BLANKS                                                     AR807782
+     C**********           MOVE FCACP     A15                                               AR807782
+     C           FCAC1     IFNE *BLANKS                                                     AR807782
+     C                     MOVE FCAC1     A21                                               AR807782
+      *
+     C********** A05       IFEQ *BLANKS                                                     AR807782
+     C**********           MOVELFCACP     PACNO                                             AR807782
+     C           A11       IFEQ *BLANKS                                                     AR807782
+     C                     MOVELFCAC1     PACNO                                             AR807782
+     C                     MOVE *OFF      *IN27
+      *
+     C                     MOVE PACNO     KACNO
+     C                     EXSR #CURR
+     C                     MOVE CCY       PCCCY
+      *
+     C                     ELSE
+      *
+     C**********           MOVE A15       @ACNT                                             AR807782
+     C                     MOVE A21       @ACNT                                             AR807782
+     C                     MOVE FCRBR     PBRA
+     C                     MOVE @CNUM     PCNUM
+     C                     MOVE @CCY      PCCY
+     C                     MOVE @CCY      PCCCY
+     C                     MOVE @ACOD     PACOD
+     C                     MOVE @ACSQ     PACSQ
+     C                     MOVE *ON       *IN27
+     C                     ENDIF
+      *
+      ** Writw appropriate deatil line
+      *
+     C                     MOVE FCSPT     PCSPT
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT4
+     C                     ELSE
+     C                     WRITEP1DT4
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If charges alternate, output reatil number or midas account
+      *
+     C********** FCHCP     IFNE *BLANKS                                                     AR807782
+     C**********           MOVE FCHCP     A15                                               AR807782
+     C           FCHC1     IFNE *BLANKS                                                     AR807782
+     C                     MOVE FCHC1     A21                                               AR807782
+      *
+     C********** A05       IFEQ *BLANKS                                                     AR807782
+     C**********           MOVELFCHCP     PACNO                                             AR807782
+     C           A11       IFEQ *BLANKS                                                     AR807782
+     C                     MOVELFCHC1     PACNO                                             AR807782
+     C                     MOVE *OFF      *IN27
+      *
+     C                     MOVE PACNO     KACNO
+     C                     EXSR #CURR
+     C                     MOVE CCY       PXCCY
+      *
+     C                     ELSE
+      *
+     C**********           MOVE A15       @ACNT                                             AR807782
+     C                     MOVE A21       @ACNT                                             AR807782
+     C                     MOVE FCHBR     PBRA
+     C                     MOVE @CNUM     PCNUM
+     C                     MOVE @CCY      PCCY
+     C                     MOVE @CCY      PXCCY
+     C                     MOVE @ACOD     PACOD
+     C                     MOVE @ACSQ     PACSQ
+     C                     MOVE *ON       *IN27
+     C                     ENDIF
+      *
+      ** Write appropriate detail line
+      *
+     C                     MOVE FCHSP     PCHSP
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT5
+     C                     ELSE
+     C                     WRITEP1DT5
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Format no. of postings, and total transaction charges fileds
+      *
+     C           FNPOC     IFNE *ZEROS
+     C           FTOTC     ORNE *ZEROS
+      *
+     C                     Z-ADDFNPOC     PNPOC
+     C                     Z-ADDFTOTC     PTOTC0
+      *
+     C           FTOTC     IFGE 0
+     C                     MOVE 'D'       STOTC
+     C                     ELSE
+     C                     MOVE 'C'       STOTC
+     C                     ENDIF
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT6
+     C                     ELSE
+     C                     WRITEP1DT6
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format highest o/d commission if non-zero
+      *
+     C           FCHOD     IFNE *ZEROS
+      *
+     C                     MOVE FCHOD     PCHOD0
+      *
+     C           FCHOD     IFGE 0
+     C                     MOVE 'D'       SCHOD
+     C                     ELSE
+     C                     MOVE 'C'       SCHOD
+     C                     ENDIF
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT7
+     C                     ELSE
+     C                     WRITEP1DT7
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format turnover commission if non-zero
+      *
+     C           FCTUR     IFNE *ZEROS
+      *
+     C                     MOVE FCTUR     PCTUR0
+      *
+     C           FCTUR     IFGE 0
+     C                     MOVE 'D'       SCTUR
+     C                     ELSE
+     C                     MOVE 'C'       SCTUR
+     C                     ENDIF
+      *
+      ** Print deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT8
+     C                     ELSE
+     C                     WRITEP1DT8
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format debit interest commission if non-zero
+      *
+     C           FCDRI     IFNE *ZEROS
+      *
+     C                     MOVE FCDRI     PCDRI0
+      *
+     C           FCDRI     IFGE 0
+     C                     MOVE 'D'       SCDRI
+     C                     ELSE
+     C                     MOVE 'C'       SCDRI
+     C                     ENDIF
+      *
+      ** Print deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT9
+     C                     ELSE
+     C                     WRITEP1DT9
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format inactive account commission if non-zero
+      *
+     C           FCINA     IFNE *ZEROS
+      *
+     C                     MOVE FCINA     PCINA0
+      *
+     C           FCINA     IFGE 0
+     C                     MOVE 'D'       SCINA
+     C                     ELSE
+     C                     MOVE 'C'       SCINA
+     C                     ENDIF
+      *
+      ** Print deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT10
+     C                     ELSE
+     C                     WRITEP1DT10
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format minimum credit balance commission if non-zero
+      *
+     C           FCMCB     IFNE *ZEROS
+      *
+     C                     MOVE FCMCB     PCMCB0
+      *
+     C           FCMCB     IFGE 0
+     C                     MOVE 'D'       SCMCB
+     C                     ELSE
+     C                     MOVE 'C'       SCMCB
+     C                     ENDIF
+      *
+      ** Print detail line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT11
+     C                     ELSE
+     C                     WRITEP1DT11
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format fixed commission if non-zero
+      *
+     C           FCFIX     IFNE *ZEROS
+      *
+     C                     MOVE FCFIX     PCFIX0
+      *
+     C           FCFIX     IFGE 0
+     C                     MOVE 'D'       SCFIX
+     C                     ELSE
+     C                     MOVE 'C'       SCFIX
+     C                     ENDIF
+      *
+      ** Print appropriate detail line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT12
+     C                     ELSE
+     C                     WRITEP1DT12
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format fixed charge amount of non-zero
+      *
+     C           FCHFX     IFNE *ZEROS
+      *
+     C                     MOVE FCHFX     PCHFX0
+      *
+     C           FCHFX     IFGE 0
+     C                     MOVE 'D'       SCHFX
+     C                     ELSE
+     C                     MOVE 'C'       SCHFX
+     C                     ENDIF
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT13
+     C                     ELSE
+     C                     WRITEP1DT13
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format daily statements and extra daily statements
+      *
+     C           FCEDS     IFNE *ZEROS
+     C           FSTCH     ORNE *ZEROS
+      *
+     C           FCEDS     ADD  FSTCH     PSTCH0
+     C           FTEDS     ADD  FTSTC     PTSTC
+      *
+     C           PSTCH0    IFGE 0
+     C                     MOVE 'D'       SSTCH
+     C                     ELSE
+     C                     MOVE 'C'       SSTCH
+     C                     ENDIF
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT14
+     C                     ELSE
+     C                     WRITEP1DT14
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format generated adjustment to debit interest amount
+      ** if non-zero
+      *
+     C           FGADI     IFNE *ZEROS
+      *
+     C                     MOVE FGADI     PGADI0
+      *
+     C           FGADI     IFGE 0
+     C                     MOVE 'D'       SGADI
+     C                     ELSE
+     C                     MOVE 'C'       SGADI
+     C                     ENDIF
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT15
+     C                     ELSE
+     C                     WRITEP1DT15
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format generated adjustment to credit interest amount
+      ** if non-zero
+      *
+     C           FGACI     IFNE *ZEROS
+      *
+     C                     MOVE FGACI     PGACI0
+     C           FGACI     IFGE 0
+     C                     MOVE 'D'       SGACI
+     C                     ELSE
+     C                     MOVE 'C'       SGACI
+     C                     ENDIF
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT16
+     C                     ELSE
+     C                     WRITEP1DT16
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P023 - Record type '003' processing                         *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: ZDATE2, P033                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P023     BEGSR
+      *
+      ** Print 'Debit Interest' text
+      *
+     C           DRR1      IFEQ *BLANK
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT17
+     C                     ELSE
+     C                     WRITEP1DT17
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       DRR1
+      *
+      ** Print either the debit interest rate or DR type/subtype
+      *
+     C           FDICT     IFEQ *ZEROS
+     C           FDCST     ANDEQ*ZEROS
+      *
+     C                     MOVE *ON       *IN28
+      *
+     C                     MOVE FDRRT     PDRRT
+      *
+     C                     ELSE
+     C                     MOVE *OFF      *IN28
+     C                     MOVE FDICT     PDICT
+     C                     MOVE FDCST     PDCST
+     C                     ENDIF
+      *
+      ** Format all other debit interest fields
+      *
+     C                     MOVE FDRIN     PDRIN
+      *
+     C                     MOVE FDRIA     PDRIA0
+     C           FDRIA     IFGE 0
+     C                     MOVE 'D'       SDRIA
+     C                     ELSE
+     C                     MOVE 'C'       SDRIA
+     C                     ENDIF
+      *
+     C                     Z-ADDFDRIV     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PDRIV
+      *
+     C                     Z-ADDFDRTD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PDRTD
+      *
+      ** Check for line overflow
+      *
+     C                     EXSR #P033
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT18
+     C                     ELSE
+     C                     WRITEP1DT18
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P024 - Record type '004' processing                         *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: P033                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P024     BEGSR
+      *
+      ** Print 'Overdraft Interest' text
+      *
+     C           ORR1      IFEQ *BLANK
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT19
+     C                     ELSE
+     C                     WRITEP1DT19
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       ORR1
+      *
+      ** Format the overdraft interest rate
+      *
+     C                     MOVE FAODR     PAODR
+      *
+      ** Format all other debit interest fields
+      *
+     C                     MOVE FODIN     PODIN
+      *
+     C                     MOVE FODIA     PODIA0
+     C           FODIA     IFGE 0
+     C                     MOVE 'D'       SODIA
+     C                     ELSE
+     C                     MOVE 'C'       SODIA
+     C                     ENDIF
+      *
+     C                     Z-ADDFAODV     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PAODV
+      *
+     C                     Z-ADDFAOTD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PAOTD
+      *
+      ** Check for line overflow
+      *
+     C                     EXSR #P033
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT20
+     C                     ELSE
+     C                     WRITEP1DT20
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P025 - Record type '005' processing                         *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: P033, ZDATE2                                          *
+      *                                                               *
+     C*****************************************************************
+      *
+     C           #P025     BEGSR
+      *
+      ** Print 'Credit Interest' text
+      *
+     C           CRR1      IFEQ *BLANK
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT21
+     C                     ELSE
+     C                     WRITEP1DT21
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       CRR1
+      *
+      ** Print either the credit interest rate or credit type/subtype
+      *
+     C           FCICT     IFEQ *ZEROS
+     C           FCCST     ANDEQ*ZEROS
+      *
+     C                     MOVE *ON       *IN28
+     C                     MOVE FCRRT     PCRRT
+     C                     ELSE
+     C                     MOVE *OFF      *IN28
+     C                     MOVE FCICT     PCICT
+     C                     MOVE FCCST     PCCST
+     C                     ENDIF
+      *
+      ** Format all other Credit interest fields
+      *
+     C                     MOVE FCRIN     PCRIN
+      *
+     C                     MOVE FCRIA     PCRIA0
+     C           FCRIA     IFGE 0
+     C                     MOVE 'C'       SCRIA
+     C                     ELSE
+     C                     MOVE 'D'       SCRIA
+     C                     ENDIF
+      *
+     C                     Z-ADDFCRIV     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PCRIV
+      *
+     C                     Z-ADDFCRTD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PCRTD
+      *
+      ** Check for line overflow
+      *
+     C                     EXSR #P033
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT22
+     C                     ELSE
+     C                     WRITEP1DT22
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P026 - Record type '006' processing                         *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: P033                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P026     BEGSR
+      *
+      ** Format the total debit interest amount
+      *
+     C                     MOVE FTDRI     PTDRI0
+     C           FTDRI     IFGE 0
+     C                     MOVE 'D'       STDRI
+     C                     ELSE
+     C                     MOVE 'C'       STDRI
+     C                     ENDIF
+      *
+      ** Check for line overflow
+      *
+     C                     EXSR #P033
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT23
+     C                     ELSE
+     C                     WRITEP1DT23
+     C                     ENDIF
+      *
+      ** Format the total credit interest amount
+      *
+     C                     MOVE FTCRI     PTCRI0
+     C           FTCRI     IFGE 0
+     C                     MOVE 'C'       STCRI
+     C                     ELSE
+     C                     MOVE 'D'       STCRI
+     C                     ENDIF
+      *
+      ** Check for line overflow
+      *
+     C                     EXSR #P033
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT24
+     C                     ELSE
+     C                     WRITEP1DT24
+     C                     ENDIF
+      *
+      ** Format the net interest amount
+      *
+     C                     MOVE FTNTI     PTNTI0
+      *
+     C           FTNTI     IFGE 0
+     C                     MOVE 'D'       STNTI
+     C                     ELSE
+     C                     MOVE 'C'       STNTI
+     C                     ENDIF
+      *
+      ** Check for line overflow
+      *
+     C                     EXSR #P033
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT25
+     C                     ELSE
+     C                     WRITEP1DT25
+     C                     ENDIF
+      *
+      ** Format the total charge amount
+      *
+     C                     MOVE FTCHA     PTCHA0
+     C           FTCHA     IFGE 0
+     C                     MOVE 'D'       STCHA
+     C                     ELSE
+     C                     MOVE 'C'       STCHA
+     C                     ENDIF
+      *
+      ** Check for line overflow
+      *
+     C                     EXSR #P033
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT26
+     C                     ELSE
+     C                     WRITEP1DT26
+     C                     ENDIF
+      *
+      ** Format the total commission amount
+      *
+     C                     MOVE FTCOA     PTCOA0
+      *
+     C           FTCOA     IFGE 0
+     C                     MOVE 'D'       STCOA
+     C                     ELSE
+     C                     MOVE 'C'       STCOA
+     C                     ENDIF
+      *
+      ** Check for line overflow
+      *
+     C                     EXSR #P033
+      *
+      ** Print appropriate deatil line
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT27
+     C                     ELSE
+     C                     WRITEP1DT27
+     C                     ENDIF
+      *
+      ** Not in spec
+      *
+     C                     MOVE *ZEROS    FKEYS1
+     C                     MOVE *ZEROS    FKEYS2
+     C                     MOVE *BLANK    DRR1
+     C                     MOVE *BLANK    ORR1
+     C                     MOVE *BLANK    CRR1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P031 - Change of barnch processing                          *
+      *                                                               *
+      *  Called by: P021                                              *
+      *                                                               *
+      *  Calls: PSSR, ZSFILE                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P031     BEGSR
+      *
+      ** Access barnch details
+      *
+     C           FBRCA     IFNE SVBRCA
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FBRCA     @DSNB   3
+     C                     PARM           SDBRCH
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL@DSNB     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     Z-ADD03        DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Perform open / close of printer files for multi-barnching
+      *
+     C           *LOCK     IN   LDA
+     C                     CLOSERE0951P1
+     C                     CLOSERE0951P2
+     C                     MOVE *ON       *IN85
+      *
+     C                     OPEN RE0951P1
+     C                     Z-ADDSFNUM1    ZSNUM1
+     C                     OUT  LDA
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM FBRCA     SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1  60
+     C                     PARM           ZSERR   1
+      *
+      ** ZSFILE error
+      *
+     C           *LOCK     IN   LDA
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     OPEN RE0951P2
+     C                     Z-ADDSFNUM2    ZSNUM2
+     C                     OUT  LDA
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM FBRCA     SENTY   3
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM2  60
+     C                     PARM           ZSERR   1
+      *
+      ** ZSFILE error
+      *
+     C           *LOCK     IN   LDA
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVE FBRCA     SVBRCA  3
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P032 - Change of currency processing                        *
+      *                                                               *
+      *  Called by:  021                                              *
+      *                                                               *
+      *  Calls: PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P032     BEGSR
+      *
+      ** Retrieve new currency deatils
+      *
+     C           FCCY      IFNE SVCCY
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FCCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@CCY      DBKEY
+     C                     MOVEL'AOCURRR0'DBFILE
+     C                     Z-ADD04        DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set decimal places indicator
+      *
+     C                     MOVEA'0000'    *IN,80
+     C                     Z-ADDA6NBDP    X       10
+      *
+     C           X         IFEQ 0
+     C                     MOVE *ON       *IN80
+     C                     ENDIF
+     C           X         IFEQ 1
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+     C           X         IFEQ 2
+     C                     MOVE *ON       *IN82
+     C                     ENDIF
+     C           X         IFEQ 3
+     C                     MOVE *ON       *IN83
+     C                     ENDIF
+      *
+     C                     MOVE FCCY      SVCCY   3
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P033 - Overflow processing                                  *
+      *                                                               *
+      *  Called by: P023, P024, P025, P026                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P033     BEGSR
+      *
+     C           @@MCF     IFEQ 'Y'
+     C           *IN72     ANDEQ*ON
+      *
+     C           @@MCF     OREQ ' '
+     C           *IN73     ANDEQ*ON
+      *
+      ** Print appropriate header with stored deatils
+      *
+     C                     ADD  1         PAGX1
+     C                     ADD  1         PAGX2
+      *
+      ** Store header details in case of overflow
+      *
+     C                     MOVE XANAM     PANAM
+     C                     MOVE XCNA1     PCNA1
+     C                     MOVE XCNA2     PCNA2
+     C                     MOVE XCNA3     PCNA3
+     C                     MOVE XCNA4     PCNA4
+      *
+     C                     MOVE XACNT     PAC
+     C                     MOVE XCAPD     PCAPD
+     C                     MOVE XCAPV     PCAPV
+     C                     MOVE XCAPF     PCAPF
+      *
+     C                     MOVE XCURR     PCURR
+     C                     MOVE XBRCA     PBRCA
+      *
+     C           @@MCF     IFEQ 'Y'
+     C                     WRITEP2DT1
+     C                     ELSE
+     C                     WRITEP1DT1
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN72
+     C                     MOVE *OFF      *IN73
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P04 - TOTAL TIME PROCESSING                                 *
+      *                                                               *
+      *  Called by: Start                                             *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P04      BEGSR
+      *
+     C                     MOVE *BLANKS   PFLDIN
+     C                     MOVE AUREC     PFLDIN
+     C                     MOVE 0         PDECS
+     C                     MOVE 'J'       PECODE
+     C                     EXSR SRSEDT
+     C                     MOVE PFLOUT    AUREC1
+      *
+      ** Write audit report totals and close printer files
+      *
+     C                     WRITEAUDETL
+      *
+     C           AUREC     IFGT 0
+     C                     CLOSERE0951P1
+     C                     CLOSERE0951P2
+     C                     ENDIF
+      *
+     C                     WRITEAUEND
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CURR - Subroutine to access currency for alternative        *
+      *          accounts                                             *
+      *                                                               *
+      *  Called by: SAVE, ALT                                         *
+      *                                                               *
+      *  Calls: PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CURR     BEGSR
+      *
+     C           KACNO     CHAINACNUM                75
+      *
+     C           *IN75     IFEQ *ON
+     C                     Z-ADD5         DBASE
+     C                     MOVEL'ACNUM   'DBFILE
+     C                     MOVELKACNO     DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE *ZEROS    KACNO  100
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSEDT - Format Numeric Fields                               *
+      *                                                               *
+      *  Called by:  #P04, #P022, #P023, #P024, #P025, #P026          *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSEDT    BEGSR
+      *
+      ** Call ZSEDIT Woth following paramaters
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           PFLDIN 150
+     C                     PARM           PDECS   10
+     C                     PARM           PECODE  1
+     C                     PARM           PFLOUT 21
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Subroutine to handle abnormal error conditions       *
+      *                                                               *
+      *  Called by: P01, P031, P032.                                  *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Set on job switches for control program
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+      ** Produce Audit report
+      *
+     C                     WRITEAUERR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(C) COPYRIGHT ACT INTERNATIONAL LIMITED 1993, 1994
+** FRQ -  CAPITALISATION FREQUENCY NARRATIVES
+DDaily
+WWeekly
+FFortnightly
+SSemi-monthly
+MMonthly
+BLast Wrk Day Mnth
+LLast Cal Day Mnth
+AOn Acc/Prf Date
+R6 Dys PreMnth End
+TBi-Monthly
+QQuarterly
+XHalf-Yearly
+YYearly
+ZDemand
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

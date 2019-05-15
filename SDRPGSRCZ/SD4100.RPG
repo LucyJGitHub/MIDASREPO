@@ -1,0 +1,460 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BTS Installation for CSD004')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Standing Data Module                                 *
+     F*                                                               *
+     F*  Business Transactions Statistics Switchable Feature          *
+     F*                                                               *
+     F*  SD4100 - Initialise PFILE for feature CSD004                 *
+     F*                                                               *
+     F*  Function:  This program reads all the records within the     *
+     F*             transactions files and add dummy values into      *
+     F*             the two new fields:                               *
+     F*             -Company name:'XYX'                               *
+     F*             -Branch  Code:'ZYX'                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD004 *C *CREATE  Date 23Mar99               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CSD004 - New program for BTS                                 *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSD4100DFCF  E                    WORKSTN
+     F*                                       ##RR  KSFILE #SFLRCD
+     F*                                              KINFSR *PSSR
+      * DSP: Midas SD Display message
+      * Business Transaction Statistics Master Files
+     FSDBTSMPDUF  E                    DISK         KINFSR *PSSR
+      *
+      * Business Transaction Statistics Monthly Figures
+     FSDBTSFPDUF  E                    DISK         KINFSR *PSSR
+      *
+      * Business Transaction Statistics Master History
+     FSDBTMHPDUF  E                    DISK         KINFSR *PSSR
+      *
+      * Business Transaction Statistics Monthly History
+     FSDBTFHPDUF  E                    DISK         KINFSR *PSSR
+      *
+      * Business Transaction Statistics temporary files
+      * for todays data
+     FSDBTDMPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTDM0
+     FSDBTFFPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTFF0
+     FSDBTFRPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTFR0
+     FSDBTFXPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTFX0
+     FSDBTF1PDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTF10
+     FSDBTF2PDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTF20
+     FSDBTF3PDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTF30
+     FSDBTF4PDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTF40
+     FSDBTF5PDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTF50
+     FSDBTF6PDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTF60
+     FSDBTF7PDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTF70
+     FSDBTGLPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTGL0
+     FSDBTLEPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTLE0
+     FSDBTMMPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTMM0
+     FSDBTNPPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTNP0
+     FSDBTNSPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTNS0
+     FSDBTSEPDUF  E                    DISK         KINFSR *PSSR
+     F            SDBTSMD0                          KRENAMESDBTSE0
+     F*
+      /EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*  80       Read indicator
+     F*
+     F*  90 - 99  Standard subroutines
+     F*
+     F*  U7,U8    Standard MIDAS error
+     F*
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*
+     F*  S U B R O U T I N E   I N D E X
+     F*
+     F*  INIT   - Initial processing
+     F*  UPDBTS - Update BTS Files processing
+     F*  FINAL  - Final processing
+     F*  *PSSR  - Program exception error routine
+     F*
+     F*
+     F*****************************************************************
+      /EJECT
+     E** Array containing Copyright statement
+     E*
+     E                    CPY@    1   1 80
+     I*
+      **  Set up Constants
+     I              'XYX'                 C         CCMPY
+     I              'ZYX'                 C         CBRCH
+     IPSDS       SDS
+     I** Program status DS to retieve the user ID
+     I                                      254 263 @UID                  E17089
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           RCODE   7        Return Code
+     C                     PARM           PMODE   1        Processing Mode
+      *****************************************************************
+     C*
+     C**  Set up Copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Execute initial processing
+     C*
+     C                     EXSR INIT
+      *
+      ** If the Processing Mode is '1' for feature being set on.
+      *
+     C           PMODE     IFEQ '1'
+      *
+     C**  Execute update BTS Files processing
+     C*
+     C                     EXSR UPDBTS
+      *
+     C                     ELSE
+     C*
+     C** Option 'PMODE' not allowed
+     C** Display an error message
+     C*
+     C                     MOVELPMODE     INVAL
+     C*
+     C                     MOVEL@UID      SUSER
+     C*
+     C                     CALL 'ZA3344'
+     C                     PARM           RD1     60
+     C                     PARM           RDATE   7
+     C                     PARM           RD2     80
+     C                     EXFMTRERROR
+     C*
+     C                     ENDIF
+     C*
+     C**  Execute final processing
+     C*
+     C                     EXSR FINAL
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    UPDBTS - Update BTS Files processing                          *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - Main processing                           *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C           UPDBTS    BEGSR
+     C*
+     C** Update SDBTDMPD ( BTS SE/DM Transaction Daily count )
+     C*
+     C                     READ SDBTDMPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTDM0
+     C                     READ SDBTDMPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTFFPD ( BTS FF Transaction Daily count )
+     C*
+     C                     READ SDBTFFPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTFF0
+     C                     READ SDBTFFPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTFRPD ( BTS FRA/IRS Transaction Daily count )
+     C*
+     C                     READ SDBTFRPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTFR0
+     C                     READ SDBTFRPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTFXPD ( BTS FX Transaction Daily count )
+     C*
+     C                     READ SDBTFXPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTFX0
+     C                     READ SDBTFXPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTF1PD ( BTS FT CQPACDD Transaction Daily count )
+     C*
+     C                     READ SDBTF1PD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTF10
+     C                     READ SDBTF1PD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTF2PD ( BTS FT CQPADDD Transaction Daily count )
+     C*
+     C                     READ SDBTF2PD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTF20
+     C                     READ SDBTF2PD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTF3PD ( BTS FT CQCOCDD Transaction Daily count )
+     C*
+     C                     READ SDBTF3PD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTF30
+     C                     READ SDBTF3PD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTF4PD ( BTS FT CQCODDD Transaction Daily count )
+     C*
+     C                     READ SDBTF4PD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTF40
+     C                     READ SDBTF4PD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTF5PD ( BTS FT INPAYDD Transaction Daily count )
+     C*
+     C                     READ SDBTF5PD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTF50
+     C                     READ SDBTF5PD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTF6PD ( BTS FT OTPAYDD Transaction Daily count )
+     C*
+     C                     READ SDBTF6PD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTF60
+     C                     READ SDBTF6PD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTF7PD ( BTS FT NTRANDD Transaction Daily count )
+     C*
+     C                     READ SDBTF7PD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTF70
+     C                     READ SDBTF7PD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTGLPD ( BTS GL Transaction Daily count )
+     C*
+     C                     READ SDBTGLPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTGL0
+     C                     READ SDBTGLPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTLEPD ( BTS LE Transaction Daily count )
+     C*
+     C                     READ SDBTLEPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTLE0
+     C                     READ SDBTLEPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTMMPD ( BTS MM Transaction Daily count )
+     C*
+     C                     READ SDBTMMPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTMM0
+     C                     READ SDBTMMPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTNPPD ( BTS NAP Transaction Daily count )
+     C*
+     C                     READ SDBTNPPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTNP0
+     C                     READ SDBTNPPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTNSPD ( BTS NAS Transaction Daily count )
+     C*
+     C                     READ SDBTNSPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTNS0
+     C                     READ SDBTNSPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTSEPD ( BTS SE Transaction Daily count )
+     C*
+     C                     READ SDBTSEPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTSE0
+     C                     READ SDBTSEPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTFHPD ( BTS Monthly History )
+     C*
+     C                     READ SDBTFHPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E3CMPY
+     C                     MOVE CBRCH     E3BRCA
+     C                     UPDATSDBTFHD0
+     C                     READ SDBTFHPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTMHPD ( BTS Master History )
+     C*
+     C                     READ SDBTMHPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E2CMPY
+     C                     MOVE CBRCH     E2BRCA
+     C                     UPDATSDBTMHD0
+     C                     READ SDBTMHPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTSFPD ( BTS Monthly figures)
+     C*
+     C                     READ SDBTSFPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E1CMPY
+     C                     MOVE CBRCH     E1BRCA
+     C                     UPDATSDBTSFD0
+     C                     READ SDBTSFPD                 80
+     C                     ENDDO
+     C*
+     C** Update SDBTSMPD ( BTS Master File )
+     C*
+     C                     READ SDBTSMPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE CCMPY     E0CMPY
+     C                     MOVE CBRCH     E0BRCA
+     C                     UPDATSDBTSMD0
+     C                     READ SDBTSMPD                 80
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    INIT - Initial processing                                     *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - Main processing                           *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVE 'E'       RCODE
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FINAL - Final processing                                      *
+     C*                                                                  *
+     C*    CALLED BY: MAIN - Main processing                             *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FINAL     BEGSR
+     C*
+     C                     MOVE *BLANKS   RCODE
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* CALLED BY: INIT - Initial processing                          *
+     C*                                                               *
+     C* CALLS:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C**  Check to see that *PSSR has not already called
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C**  If *PSSR already run, then just end the program here.
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

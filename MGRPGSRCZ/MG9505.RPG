@@ -1,0 +1,708 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG MT5xx Deletion Processing')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Generation Module                            *
+      *                                                               *
+      *   MG9505 - MESSAGE DELETION PROCESSING                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21SEP98               *
+      *                  113352            DATE 13FEB97               *
+      *                   S01401           DATE 17JUN93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   CDL008 -  Continuous Linked Settlement (Recompiled MGOREFPD)*
+      *   141572 - Recompile over changes in MGOREFPD                 *
+      *   113352 - Recompile over changes in MGOREFPD                 *
+      *   S01401 - WRITTEN FOR MT5XX MESSAGES GENERATION              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     F*
+     F** MG MESSAGE REFERENCE FILE
+     FMGOREFL0UF  E           K        DISK         KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+     F** BANK ICD DETAILS FILE
+     FSDBANKPDIF  E                    DISK         KINFSR *PSSR
+     F*
+     F** MG OUTGOING MESSAGES FILE
+     FMGOMSGPDUF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+     F********************************************************************
+     F*
+     F* ID C  F  H  L    FUNCTION OF INDICATORS
+     F*
+     F*    05            READ/WRITE/UPDAT/CHAIN to PF/MGOREFL0
+     F*    06            READ/WRITE/UPDAT/CHAIN to PF/MGOMSGPD
+     F*    07            READ FILE PF/SDBANKPD
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     E                    CPY@    1   1 80               copyright
+     E                    @WRK       50  1               concatenation field
+     E*
+     E**  Arrays used in SWFA subroutine
+     E                    NUMB       15  1
+     E                    NUMY       15  1
+     E                    NUMX        4  1
+     E                    NUMO       17  1
+     E*
+     E**  Arrays used in AMTC subroutine
+     E                    SAMT       17  1
+     E                    NUM        15  1
+     E                    DEC         4  1
+     E*
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     I**  Local data area
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I*****************************************************************
+     I/EJECT
+     C*****************************************************************
+     C*                          NOTES                                *
+     C*                                                               *
+     C* Single Messages                                               *
+     C* 1.  A message is 'deleted' when the message status field on   *
+     C*     the reference field (MGST, PF/MGOREFPD), is equal to      *
+     C*     'DLTD'.                                                   *
+     C*                                                               *
+     C* Multiple Messages (MT554, MT580)                              *
+     C* 2.  The message status field of the header record on the      *
+     C*     message reference file (PF/MGOREFPD), contains the        *
+     C*     status for the multiple message. This status is then      *
+     C*     the status for all parts within the multiple message.     *
+     C*                                                               *
+     C*     If the message status field (MGST, PF/MGOREFPD), of the   *
+     C*     header record contains the value 'DLTD' the whole         *
+     C*     message is deleted, (i.e. all parts are deleted).         *
+     C*                                                               *
+     C*     To delete a message part from the multiple message, the   *
+     C*     message is descibed as 'part deleted'. The reference      *
+     C*     record for the message part being deleted has the         *
+     C*     'part deleted' field (PTST, PF/MGOREFPD), set to 'D'.     *
+     C*     The header record message status (MGST, PF/MGOREFPD),     *
+     C*     is then set to 'AMND', to indicate the multiple message   *
+     C*     has been 'amended'.                                       *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                   Index to subroutines                        *
+     C*  main process                                                 *
+     C*  INIT    Initial processing                                   *
+     C*  TYPE    Determine type of message being deleted              *
+     C*  AMDH    AMEND HEADER PART OF MULTIPLE MESSAGE                *
+     C*  UPDH    UPDATE MULTIPLE MESSAGE HEADER                       *
+     C*  AMTC    Convert SWIFT amount to numeric amount               *
+     C*  SWFA    Convert numeric amount to SWIFT amount               *
+     C*  DLTM    DELETE MESSAGE PART OF MULTIPLE MESSAGE              *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* Main Process                                                  *
+     C* Calls    INIT    Initial processing                           *
+     C*          TYPE    Determine type of message being deleted      *
+     C*          AMDH    AMEND HEADER PART OF MULTIPLE MESSAGE        *
+     C*****************************************************************
+     C*
+     C**  Receive the Transaction Reference Number and
+     C**  RETURN CODE
+     C           *ENTRY    PLIST
+     C                     PARM           @TNUM  16
+     C                     PARM           @RTNC   1
+     C*
+     C**  Initial processing
+     C                     EXSR INIT
+     C*
+     C**  Use the parameter @TNUM to access the message we are deleting
+     C           @TNUM     CHAINMGOREFL0             05
+     C*
+     C**  Error message not found
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL@TNUM     DBKEY            *  DBERR 001  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Process message if not already deleted or part deleted
+     C           MGST      IFNE 'DLTD'
+     C           PTST      ANDNE'D'
+     C*
+     C**  Determine what type of message being deleted
+     C**  Flag single message as DeLeTeD
+     C                     EXSR TYPE
+     C*
+     C**  Do deletion process for multiple message
+     C           MMEG      IFEQ 'Y'
+     C*
+     C**  AMEND HEADER PART OF MULTIPLE MESSAGE
+     C                     EXSR AMDH
+     C                     END
+     C*
+     C**  COMIT all file changes
+     C                     COMIT
+     C                     END
+     C*
+     C** IF WWFLAG IS 'N'
+     C           WWFLAG    IFEQ 'N'
+     C*
+     C** SET ON ERROR RETURN FLAG
+     C                     MOVE 'Y'       @RTNC
+     C                     DUMP
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   INIT - inital process                                       *
+     C*   Called by - main process                                    *
+     C*   Calls     -                                                 *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Set up LDA for database error processing
+     C           *NAMVAR   DEFN           LDA
+     C*****      *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MG9505'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C*****                OUT  LDA
+     C*
+     C** ACCESS SDBANKPD FOR BANK DETAILS
+     C           1         SETLLSDBANKPD
+     C                     READ SDBANKPD                 07
+     C*
+     C** IF RECORD NOT FOUND OR LAST CHANGE TYPE = 'D'
+     C           *IN07     IFEQ '1'
+     C           BJTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL*BLANKS   DBKEY            *  DBERR 002  *
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** INITIALISE FLAG FOR MESSAGE SUCCESSFULLY DELETED
+     C                     MOVE 'N'       WWFLAG  1
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   TYPE - determine the type of message being deleted          *
+     C*   Called by   Main process                                    *
+     C*   Calls       -                                               *
+     C*****************************************************************
+     C*
+     C           TYPE      BEGSR
+     C*
+     C**  Initialise multiple message flag
+     C                     MOVE 'N'       MMEG    1
+     C*
+     C**  The message being deleted is part of a multiple and
+     C**  is part-deleted from the multiple message (PF/MGOREFPD)
+     C           TRNF      IFNE *BLANKS
+     C           TRNM      ORNE *BLANKS
+     C*
+     C**  IF MTPY IS NOT '554' OR '580' THEN ERROR
+     C           MTPY      IFNE '554'
+     C           MTPY      ANDNE'580'
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVELTRNO      DBKEY            *  DBERR 003  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE 'Y'       MMEG
+     C                     MOVE 'D'       PTST
+     C*
+     C**  The header TRN is the TRN of the message being deleted
+     C           TRNF      IFEQ *BLANKS
+     C                     MOVEL@TNUM     WWHEAD 16
+     C*
+     C**  The header TRN is the 'TRN of the first part' (TRNF)
+     C                     ELSE
+     C*
+     C                     MOVELTRNF      WWHEAD
+     C                     END
+     C*
+     C**  This is a single message, hence flag as deleted
+     C                     ELSE
+     C*
+     C                     MOVE 'DLTD'    MGST
+     C                     MOVE '4'       MGSG
+     C                     MOVE 'Y'       WWFLAG
+     C                     END
+     C*
+     C**  Update the message being deleted
+     C                     MOVELBJMRDT    LADT
+     C                     TIME           LATM
+     C                     UPDATMGOREFD0
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   AMDH    - AMEND HEADER PART OF MULTIPLE MESSAGE             *
+     C*   Called by   Main process                                    *
+     C*   Calls       LIVE    CHECK NUMBER OF LIVE PARTS              *
+     C*               UPDH    UPDATE MULTIPLE MESSAGE HEADER          *
+     C*               DLTM    DELETE MESSAGE PART OF MULTIPLE MESSAGE *
+     C*****************************************************************
+     C*
+     C           AMDH      BEGSR
+     C*
+     C**  Save amount for the part being deleted and access header
+     C                     MOVELAMTS      @AMTS  17
+     C           WWHEAD    CHAINMGOREFL0             05
+     C*
+     C**  Header reference record not found
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVELWWHEAD    DBKEY            *  DBERR 004  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Count number of live parts (PARTS)
+     C**  Header record checked since part of the multiple message
+     C           PTST      IFEQ 'D'
+     C                     Z-ADD0         PARTS   20
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD1         PARTS
+     C                     END
+     C*
+     C**  CHECK NUMBER OF LIVE PARTS
+     C                     EXSR LIVE
+     C*
+     C**  UPDATE MULTIPLE MESSAGE HEADER
+     C                     EXSR UPDH
+     C*
+     C**  IF NUMBER OF LIVE PARTS MORE THAN ZERO
+     C           PARTS     IFGT 0
+     C*
+     C**  DELETE MESSAGE PART OF MULTIPLE MESSAGE
+     C                     EXSR DLTM
+     C                     END
+     C*
+     C**  SET FLAG MESSAGE SUCCESSFULLY DELETED
+     C                     MOVE 'Y'       WWFLAG
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   LIVE  - CHECK NUMBER OF LIVE PARTS                          *
+     C*   Called by   AMDH                                            *
+     C*   Calls       -                                               *
+     C*****************************************************************
+     C*
+     C           LIVE      BEGSR
+     C*
+     C**  INITIALISE PARTS READ COUNTER
+     C                     Z-ADD1         WWREAD  20
+     C*
+     C**  IF TRNO EQUALS @TNUM
+     C           TRNO      IFEQ @TNUM
+     C*
+     C**  INITIALISE PART POSITION WITHIN MULTIPLE
+     C                     Z-ADD1         WWPTPS  20
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD0         WWPTPS
+     C                     END
+     C*
+     C**  Check until no more parts or 2 live parts have been found
+     C           TRNM      DOWNE*BLANKS
+     C           *IN05     ANDEQ'0'
+     C*
+     C**  Access the next part of the multiple message
+     C           TRNM      CHAINMGOREFL0             05
+     C*
+     C**  Next part not found
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '005'     DBASE            * * * * * * * *
+     C                     MOVELTRNM      DBKEY            *  DBERR 005  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  ADD 1 TO PARTS READ COUNTER
+     C                     ADD  1         WWREAD
+     C*
+     C**  IF TRNO EQUALS @TNUM
+     C           TRNO      IFEQ @TNUM
+     C*
+     C**  SET PART POSITION WITHIN MULTIPLE TO PARTS READ COUNTER
+     C                     Z-ADDWWREAD    WWPTPS
+     C                     END
+     C*
+     C**  IF PTST IS NOT 'D'
+     C           PTST      IFNE 'D'
+     C*
+     C**  ADD 1 TO NUMBER OF LIVE PARTS
+     C                     ADD  1         PARTS
+     C                     END
+     C*
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   UPDH   - UPDATE MULTIPLE MESSAGE HEADER                     *
+     C*   Called by   AMDH                                            *
+     C*   Calls       AMTC    convert SWIFT amount to numeric amount  *
+     C*               SWFA    convert numeric amoutn to SWIFT amount  *
+     C*****************************************************************
+     C*
+     C           UPDH      BEGSR
+     C*
+     C**  The header of a multiple message holds the status of the
+     C**  whole message (the status for all parts of the multiple)
+     C           WWHEAD    CHAINMGOREFL0             05
+     C*
+     C**  Header record not found
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVELWWHEAD    DBKEY            *  DBERR 006  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Message deleted when no live parts (status equals 'DLTD')
+     C           PARTS     IFEQ 0
+     C                     MOVE 'DLTD'    MGST
+     C                     MOVE '4'       MGSG
+     C                     MOVE 'Y'       WWFLAG
+     C*
+     C**  Message contains live parts, hence message amended ('AMND')
+     C                     ELSE
+     C*
+     C                     MOVE 'AMND'    MGST
+     C                     MOVE '1'       MGSG
+     C*
+     C**  IF MTPY IS '554'
+     C           MTPY      IFEQ '554'
+     C*
+     C**  Part of a multiple message so update total amount field
+     C**  Convert message part S.W.I.F.T. amount to numeric
+     C                     MOVE *BLANKS   AMTT   17
+     C                     MOVEL@AMTS     AMTT
+     C                     EXSR AMTC
+     C                     Z-ADDNAMT      SUBAM  150
+     C                     Z-ADDNDEC      SUBDEC  43
+     C*
+     C**  Convert S.W.I.F.T. total amount of the multiple to numeric
+     C                     MOVE *BLANKS   AMTT
+     C                     MOVE AMTX      AMTT
+     C                     EXSR AMTC
+     C                     Z-ADDNAMT      HSHAM  150
+     C                     Z-ADDNDEC      HSHDEC  43
+     C*
+     C**  Subtract message amount from total multiple message amount
+     C           HSHAM     SUB  SUBAM     HSHAM
+     C           HSHDEC    SUB  SUBDEC    HSHDEC
+     C*
+     C           HSHDEC    IFLT 0
+     C           HSHAM     SUB  1         HSHAM
+     C                     ADD  10        HSHDEC
+     C                     END
+     C*
+     C**  Convert total back to S.W.I.F.T. format
+     C                     MOVE HSHAM     NUMCH  15
+     C                     MOVE HSHDEC    DECCH   4
+     C                     EXSR SWFA
+     C                     MOVELSWNUM     AMTX
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Update the reference record on LF/MGOREFL0
+     C                     MOVELBJMRDT    LADT
+     C                     TIME           LATM
+     C                     UPDATMGOREFD0
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*    AMTC   - Converts S.W.I.F.T. amount to numeric equivalent  *
+     C*    Called by  UPDH                                            *
+     C*                                                               *
+     C*    Input  : AMTT 17 long SWIFT amount                         *
+     C*    Outout : NAMT 15 long digit of amount                      *
+     C*             NDEC  4 long 1 digit & 3 decimal of amount        *
+     C*****************************************************************
+     C*
+     C           AMTC      BEGSR
+     C*
+     C                     MOVEAAMTT      SAMT
+     C                     Z-ADD1         R       20
+     C                     Z-ADD2         Q       20
+     C           SAMT,Q    DOWNE','
+     C                     MOVE SAMT,R    NUM,R
+     C                     ADD  1         Q
+     C                     ADD  1         R
+     C                     END
+     C*
+     C                     Z-ADDQ         COM     20
+     C                     ADD  1         Q
+     C                     Z-ADD1         W       20
+     C                     Z-ADD0         NODP    10
+     C                     MOVE SAMT,R    DEC,W
+     C                     ADD  1         W
+     C*
+     C           W         DOWLE4
+     C           Q         ANDLE17
+     C           SAMT,Q    IFNE *BLANK
+     C                     MOVE SAMT,Q    DEC,W
+     C                     ADD  1         NODP
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '0'       DEC,W
+     C                     END
+     C                     ADD  1         W
+     C                     ADD  1         Q
+     C                     END
+     C*
+     C           18        SUB  COM       Z       20
+     C*
+     C                     MOVE *ZEROS    NUMB
+     C*
+     C           COM       IFGT 2
+     C                     MOVEANUM       NUMB,Z
+     C                     MOVEANUMB      NUMA   15
+     C                     MOVE NUMA      NAMT   150
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD0         NAMT
+     C                     END
+     C*
+     C                     MOVEADEC       DECA    4
+     C                     MOVE DECA      NDEC    43
+     C                     ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*    SWFA   - Converts numeric amount into S.W.I.F.T. format   *
+     C*    Called by : UPDH                                          *
+     C*                                                              *
+     C*    Input  : DECCH  4 long 1 unit & 3 decimal part of amount  *
+     C*             NUMCH 15 long numeric part of amount             *
+     C*    Output : SWNUM 17 long SWIFT amount                       *
+     C****************************************************************
+     C*
+     C           SWFA      BEGSR
+     C*
+     C                     MOVE *BLANKS   NUMO
+     C                     MOVEADECCH     NUMX
+     C                     MOVEANUMCH     NUMY
+     C                     Z-ADD1         T       20
+     C                     Z-ADD1         P       20
+     C*
+     C           NUMCH     IFNE *ZEROS
+     C           NUMY,T    DOWEQ'0'
+     C                     ADD  1         T
+     C                     END
+     C*
+     C           T         DOWLE15
+     C                     MOVE NUMY,T    NUMO,P
+     C                     ADD  1         T
+     C                     ADD  1         P
+     C                     END
+     C*
+     C                     END
+     C                     MOVE NUMX,1    NUMO,P
+     C                     ADD  1         P
+     C                     MOVE ','       NUMO,P
+     C                     ADD  1         P
+     C                     Z-ADD2         T
+     C*
+     C                     DO   NODP
+     C                     MOVE NUMX,T    NUMO,P
+     C                     ADD  1         T
+     C                     ADD  1         P
+     C                     END
+     C*
+     C                     MOVEANUMO      SWNUM  17
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   DLTM   - DELETE MESSAGE PART OF MULTIPLE MESSAGE            *
+     C*   Called by   AMDH                                            *
+     C*   Calls       -                                               *
+     C*****************************************************************
+     C*
+     C           DLTM      BEGSR
+     C*
+     C**  Access multiple message on the message data file
+     C           WWHEAD    CHAINMGOMSGPD             06
+     C*
+     C           *IN06     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '007'     DBASE            * * * * * * * *
+     C                     MOVELWWHEAD    DBKEY            *  DBERR 007  *
+     C                     MOVEL'MGOMSGPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  IF MTPY EQUALS '554'
+     C           MTPY      IFEQ '554'
+     C*
+     C**  IF MTAG IS NOT ':19: '
+     C           MTAG      IFNE ':19: '
+     C           *LOCK     IN   LDA
+     C                     MOVE '008'     DBASE            * * * * * * * *
+     C                     MOVELMTAG      DBKEY            *  DBERR 008  *
+     C                     MOVEL'MGOMSGPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE *BLANKS   MFLD
+     C                     MOVELAMTX      MFLD
+     C                     UPDATMGOMSGD0
+     C                     END
+     C*
+     C                     MOVE 'N'       FOUND
+     C                     Z-ADD0         WWFL23  20
+     C*
+     C**  Read through the multiple to find the deleting message
+     C           WWHEAD    DOWEQTRNO
+     C           *IN06     ANDEQ'0'
+     C           FOUND     ANDEQ'N'
+     C*
+     C**  For MT554, part found when Field :20: contains the
+     C**  TRN of the message we are deleting.
+     C           MTPY      IFEQ '554'
+     C           MTAG      ANDEQ':20: '
+     C                     MOVELMFLD      @FLD   16
+     C           @FLD      IFEQ @TNUM
+     C*
+     C**  For this part of the multiple message, flag as part deleted
+     C           MTAG      DOUEQ':20: '
+     C           *IN06     OREQ '1'
+     C           WWHEAD    ORNE TRNO
+     C                     MOVE 'D'       PTDL
+     C                     UPDATMGOMSGD0
+     C*
+     C** READ NEXT RECORD FROM PF/MGOMSGPD
+     C                     READ MGOMSGD0                 06
+     C                     END
+     C*
+     C**  Message-part flagged as part deleted
+     C                     MOVE 'Y'       FOUND   1
+     C                     MOVE 'Y'       WWFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  For MT580, part found when part position within multiple on
+     C**  the reference file is equal to the number of field :23:'s
+     C**  we have read within the message on the data file
+     C           MTPY      IFEQ '580'
+     C           MTAG      ANDEQ':23: '
+     C                     ADD  1         WWFL23
+     C           WWFL23    IFEQ WWPTPS
+     C*
+     C**  For this part of the multiple message, flag as part deleted
+     C           MTAG      DOUEQ':23: '
+     C           *IN06     OREQ '1'
+     C           WWHEAD    ORNE TRNO
+     C                     MOVE 'D'       PTDL
+     C                     UPDATMGOMSGD0
+     C*
+     C** READ NEXT RECORD FROM PF/MGOMSGPD
+     C                     READ MGOMSGD0                 06
+     C                     END
+     C*
+     C**  Message-part flagged as part deleted
+     C                     MOVE 'Y'       FOUND   1
+     C                     MOVE 'Y'       WWFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     READ MGOMSGD0                 06
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   *PSSR - error handling                                      *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     ROLBK
+     C                     DUMP
+     C                     MOVE 'Y'       @RTNC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+      *
+** CPY@   Object Copyright
+(c) Finastra International Limited 2001

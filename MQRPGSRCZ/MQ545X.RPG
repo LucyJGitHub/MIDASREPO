@@ -1,0 +1,290 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RTEVENTS RGZ report I/F definitions')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Midas/Q Modules                                      *
+     F*                                                               *
+     F*         MQ545X -  Reorganise Evnts reports                    *
+     F* Finds all events reports still defined to Midas/Q.  It then   *
+     F* deletes any Interface records still held on files MQ542XPF,   *
+     F* MQ543XPF, and MQ544XPF, for any deleted reports.              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CMQ001             Date 04Nov97               *
+      *                                    Date DDMmmYY               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CMQ001 - MidasQ rationalisation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F* Paramter list :
+     F* ~~~~~~~~~~~~~                                                 User
+     F* Name    Type    Size  Description                            Chang
+     F* ~~~~    ~~~~    ~~~~  ~~~~~~~~~~~                            ~~~~~
+     F* O#SDBK  Struct   n/a  MIDAS/Q system definition block          NO
+     F* O#TCBK  Struct   n/a  MIDAS/Q task / process control block     NO
+     F* O#PIBK  Struct   n/a  MIDAS/Q process information block        NO
+     F* O#IEBK  Struct   n/a  MIDAS/Q information exchange block       NO
+     F* DSP05#  Struct   n/a  MIDAS/Q subset defintion record          NO
+     F* DSP08#  Struct   n/a  MIDAS/Q report defintion record          NO
+     F* O#DDBK  Struct   n/a  MIDAS/Q device defintion block           NO
+     F* O#OTBK  Struct   n/a  MIDAS/Q output tracking block            NO
+     F* @SO@DS  Struct   n/a  MIDAS/Q select / omit values             NO
+     F* @PRTI@  Struct   n/a  MIDAS/Q subtotal warning block           NO
+     F* TPR#RC  Char       1  Return code.                             YES
+     F* TPR#RN  Packed   7,0  Run number assigned to production run    NO
+     F* TPR#PG  Char      10  Name of report module to be called       NO
+     F* TPR#NM  Char      10  Name of report definition (user name)    NO
+     F* TPR#RD  Char      40  Description of report                    NO
+     F* TPR#IA  Char     200  Permanent report interface area          YES
+     F* TPR#UR  Struct   500  Temporary user run interface area        YES
+     F* TPR#IO  Packed  15,0  User count of I/O operations             YES
+     F* TPR#  Ary(5)*chr(75)  User description of production run       YES
+     F*****************************************************************
+     FMQ542XPFUF  E                    DISK
+     FMQ543XPFUF  E                    DISK
+     FMQ544XPFUF  E                    DISK
+     FO#XL08V4IF  E           K        DISK
+     FQAFDMBRLIF  E                    DISK
+     FMQ545XP O   E             08     PRINTER
+     F/EJECT
+      **
+      ** Copyright insertion.
+      **
+     E                    CPY@    1   1 80
+      **
+      ** Array to store ID's found
+      **
+     E                    $$AR      500  8
+     E/EJECT
+      **
+      ** Copyright Array for compilation
+      **
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      **
+      ** Temporary Interface area
+      **
+     IEXT#IA      DS
+     I                                       43  50 $$MQID
+      **
+      ** Remove Member Command
+      **
+     IREMOVE      DS
+     I I            'RMVM MQ541XPF '          1  15 RM1
+     I                                       16  23 RM2
+     I/EJECT
+      *****************************************************************
+      **
+      ** Initialise
+      **
+     C                     Z-ADD0         X       30
+     C                     MOVEL'RTEVENTS'SBS    10
+     C           SBS       CHAINO#XR08V4             90
+      **
+      ** Find the Unique ID for all existing reports
+      **
+     C           *IN90     DOWEQ'0'
+     C                     MOVELP08#IA    EXT#IA
+     C                     ADD  1         X
+      **
+      ** Store the ID's in array $$AR
+      **
+     C                     MOVE $$MQID    $$AR,X
+      **
+     C           SBS       READEO#XR08V4                 90
+      **
+     C                     END
+      **
+      ** For each record in the Events files which has not been
+      ** found as an existing report, then delete it
+      **
+      ** MQ542XPF
+      **
+      **
+      ** Read first record, and write header
+      **
+     C                     READ MQ542XPF                 90
+     C                     MOVE 'MQ542XPF'#FILE
+     C                     WRITEHEAD
+      **
+      ** Loop to process the file
+      **
+     C           *IN90     DOWEQ'0'
+     C           MQID1     LOKUP$$AR                     91
+     C           *IN91     IFEQ '0'
+     C                     MOVELECOD1     #ECOD
+     C                     MOVELMQID1     #MQID
+     C                     WRITEDETL
+      **
+      ** Overflow processing
+      **
+     C           *IN08     IFEQ '1'
+     C                     WRITEHEAD
+     C                     SETOF                     08
+     C                     END
+      **
+      ** Seton 92 to indicate at least 1 record deleted
+      **
+     C                     SETON                     92
+     C                     DELETOPT1
+     C                     END
+      **
+      ** Read Next Record
+      **
+     C                     READ MQ542XPF                 90
+     C                     END
+      **
+      ** If no records deleted, send error message
+      **
+     C           *IN92     IFEQ '0'
+     C                     WRITEERR
+     C                     END
+      **
+      ** MQ543XPF
+      **
+      ** Read first record, and write header
+      **
+     C                     MOVE *BLANKS   #ECOD
+     C                     READ MQ543XPF                 90
+     C                     MOVE 'MQ543XPF'#FILE
+     C                     WRITEHEAD
+      **
+      ** Loop to process the file
+      **
+     C           *IN90     DOWEQ'0'
+     C           MQID2     LOKUP$$AR                     91
+     C           *IN91     IFEQ '0'
+     C                     MOVELECOD2     #ECOD
+     C                     MOVELMQID2     #MQID
+     C                     WRITEDETL
+      **
+      ** Overflow processing
+      **
+     C           *IN08     IFEQ '1'
+     C                     WRITEHEAD
+     C                     SETOF                     08
+     C                     END
+      **
+      ** Seton 93 to indicate at least 1 record deleted
+      **
+     C                     SETON                     93
+     C                     DELETOPT2
+     C                     END
+      **
+      ** Read Next Record
+      **
+     C                     READ MQ543XPF                 90
+     C                     END
+      **
+      ** If no records deleted, send error message
+      **
+     C           *IN93     IFEQ '0'
+     C                     WRITEERR
+     C                     END
+      **
+      ** MQ544XPF
+      **
+      ** Read first record, and write header
+      **
+     C                     READ MQ544XPF                 90
+     C                     MOVE 'MQ544XPF'#FILE
+     C                     WRITEHEAD
+      **
+      ** Loop to process the file
+      **
+     C           *IN90     DOWEQ'0'
+     C           MQID3     LOKUP$$AR                     91
+     C           *IN91     IFEQ '0'
+     C                     MOVELECOD3     #ECOD
+     C                     MOVELMQID3     #MQID
+     C                     WRITEDETL
+      **
+      ** Overflow processing
+      **
+     C           *IN08     IFEQ '1'
+     C                     WRITEHEAD
+     C                     SETOF                     08
+     C                     END
+      **
+      ** Seton 94 to indicate at least 1 record deleted
+      **
+     C                     SETON                     94
+     C                     DELETOPT3
+     C                     END
+      **
+      ** Read Next Record
+      **
+     C                     READ MQ544XPF                 90
+     C                     END
+      **
+      ** If no records deleted, send error message
+      **
+     C           *IN94     IFEQ '0'
+     C                     WRITEERR
+     C                     END
+      **
+      ** Remove all unwanted Members from MQ541XPF
+      **
+      ** Read first record, and write header
+      **
+     C                     READ QAFDMBRL                 90
+     C                     WRITEHEAD2
+      **
+      ** Loop to process the file
+      **
+     C           *IN90     DOWEQ'0'
+     C                     MOVELMLNAME    NAME    8
+     C           NAME      LOKUP$$AR                     91
+     C           *IN91     IFEQ '0'
+     C                     MOVELNAME      #NAME
+     C                     WRITEDETL2
+      **
+      ** Overflow processing
+      **
+     C           *IN08     IFEQ '1'
+     C                     WRITEHEAD2
+     C                     SETOF                     08
+     C                     END
+      **
+      ** Seton 95 to indicate at least 1 member deleted
+      **
+     C                     SETON                     95
+     C                     MOVELNAME      RM2
+     C                     CALL 'QCMDEXC'
+     C                     PARM           REMOVE
+     C                     PARM 23        LEN    155
+     C                     END
+      **
+      ** Read Next Record
+      **
+     C                     READ QAFDMBRL                 90
+     C                     END
+      **
+      ** If no members deleted, send error message
+      **
+     C           *IN95     IFEQ '0'
+     C                     WRITEERR2
+     C                     END
+      **
+      ** End Program
+      **
+     C                     SETON                     LR
+     C                     RETRN
+      **
+**  CPY@
+(c) Finastra International Limited 2001

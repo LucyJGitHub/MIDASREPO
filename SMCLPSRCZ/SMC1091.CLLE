@@ -1,0 +1,204 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Convert branches on files - control pgm')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC1091 - Convert branches on files control program         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CSM003             Date 30May05              */
+/*                      CUP025 *CREATE     Date 14Jan04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CSM003 - Use system value rather than UPSTAT.               */
+/*       CUP025 - Change branches utility                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OPSUSFLD &RERUN)
+ 
+             DCL        VAR(&OPSUSFLD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RERUN)    TYPE(*CHAR) LEN(4)
+ 
+/**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*             */ /*CUP033*/
+/**********  DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)                              */ /*CSM003*/
+/**********  DCL        VAR(&TOSBSID) TYPE(*CHAR) LEN(2)                               */ /*CSM003*/
+             DCL        VAR(&PREVFIL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UPDATED) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GPGVLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+/* File and file member with branch not yet converted */
+             DCLF       FILE(SMBRCFLDL4)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**********  CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)                                */ /*CUP033*/
+/**********  CHGJOB     SWS(XXXXXX00)                                                  */ /*CUP033*/
+ 
+/**Create*data*area**MIDASMSG*in*QTEMP**/ /*                                           */ /*CUP033*/
+/**********  DLTDTAARA  DTAARA(QTEMP/MIDASMSG)                                         */ /*CUP033*/
+/**********  MONMSG     MSGID(CPF0000)                                                 */ /*CUP033*/
+/**********  CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +                  */ /*CUP033*/
+/**********               VALUE(' ')                                                   */ /*CUP033*/
+ 
+/**Get*Deliverable*bridge*items*library**/ /*                                          */ /*CUP033*/
+/**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CUP033*/
+ 
+/**Get*Global*processing*system*prefix**/ /*                                           */ /*CUP033*/
+/**COPY*UPCPYSRC,UPSVALCAL2*                                         */ /*             */ /*CUP033*/
+ 
+/**Check*if*all*relevant*fields*have*been*entered*in*ICD**/ /*                         */ /*CUP033*/
+/**********  IF         COND(&GPSBSID *EQ ' ' *OR &PTFUPG *EQ ' ') THEN(DO)            */ /*CUP033*/
+/**Set*up*messages*for*Midas*Information*Screen***/ /*                                 */ /*CUP033*/
+/**********     RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)                   */ /*CUP033*/
+/**********     CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                   */ /*CUP033*/
+/**********     RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)                   */ /*CUP033*/
+/**********     CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)                   */ /*CUP033*/
+/**********     CALL       PGM(SCC0010) PARM('SMC1091' 'ENTER' ' ')                    */ /*CUP033*/
+/**********     GOTO       CMDLBL(ENDPGM)                                              */ /*CUP033*/
+/**********  ENDDO                                                                     */ /*CUP033*/
+/**********  CHGVAR     VAR(&GPGVLIB) VALUE(&GPSBSID *TCAT 'GVLIB')                    */ /*CUP033*/
+ 
+/**Retrieve*to*library*prefix*from*data*area*UPSTAT**/ /*                              */ /*CSM003*/
+/**********  RTVDTAARA  DTAARA(&PTFUPG/UPSTAT) RTNVAR(&UPSTAT)                         */ /*CSM003*/
+/**********  CHGVAR     VAR(&TOSBSID) VALUE(%SST(&UPSTAT 62 2))                        */ /*CSM003*/
+/**If*&TOSBSID*is*blank*this*means*that*this*is*an*'XX'*to*'XX'**/ /*                  */ /*CSM003*/
+/**type*upgrade;*set*flag*for*later*use.*************************/ /*                  */ /*CSM003*/
+/**********  IF         COND(&TOSBSID *EQ ' ') THEN(DO)                                */ /*CSM003*/
+/**********     CHGVAR     VAR(&TOSBSID) VALUE(%SST(&UPSTAT 60 2))                     */ /*CSM003*/
+/**********  ENDDO                                                                     */ /*CSM003*/
+ 
+/**Set*up*library*list**/ /*                                                           */ /*CUP033*/
+/**********  CALL       PGM(UPC0014) PARM(&TOSBSID)                                    */ /*CSM003*/
+/**********  CALL       PGM(UPC0014) PARM(&SBSID)                           */ /*CSM003*/ /*CUP033*/
+ 
+/* Clear suspect fields file  */
+             CLRPFM     FILE(SMSUSFLDPD)
+ 
+/* If rerun is not needed, */
+             IF         COND(&RERUN *NE '*YES') THEN(DO)
+/*    call program to remove '*DONE' in SMBRCFLDL3.  */
+                 CALL       PGM(SM1093)
+/*       If error, exit program  */
+                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+ 
+/*    call programs to load file member records into file SMFILMBRPD.*/
+                 CALL       PGM(SMC1089)
+/*       If error, exit program  */
+                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ENDPGM))
+             ENDDO
+ 
+LOOP:        RCVF
+/* monitor if end of file */
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+/*    If file has been updated, */
+                IF      COND(&PREVFIL *NE '          ') THEN(DO)
+/*        call SM1092 to update the header rec to signify *DONE */
+                   CALL PGM(SM1092) PARM(&PREVFIL)
+                ENDDO
+/*        go to update GZSDBRCHPPD with new branches for the zone */
+                GOTO CMDLBL(UPDGZBRCH)
+             ENDDO
+/* monitor other errors */
+             MONMSG     MSGID(CPF0000) EXEC(GOTO SUSFLDRPT)
+ 
+/* If new file: */
+             IF         COND(&PREVFIL *NE &BFFILE) THEN(DO)
+/*    If not first file: */
+                IF         COND(&PREVFIL *NE '          ') THEN(DO)
+/*        call SM1092 to update the header rec to signify *DONE */
+                   CALL PGM(SM1092) PARM(&PREVFIL)
+/*        If error, exit program  */
+                   IF   COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(SUSFLDRPT))
+                ENDDO
+/*    Update &PREVFIL to current file name read in. */
+                CHGVAR     VAR(&PREVFIL) VALUE(&BFFILE)
+             ENDDO
+ 
+/* If blank file member, get next file member record */
+             IF         COND(&BFFMBR = '          ') THEN(GOTO CMDLBL(LOOP))
+ 
+/* Copy file member records to input file SMIFILEPD for program SM1091 */
+             CPYF       FROMFILE(&BFFILE) TOFILE(SMIFILEPD) +
+                          FROMMBR(&BFFMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)
+/* Monitor emtpy file member, go to LOOP to get another file member record */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO +
+                          CMDLBL(LOOP))
+ 
+             OVRDBF     FILE(TABBRCCVT) TOFILE(SMBRCCVTPD) OVRSCOPE(*JOB)
+             CHGVAR     VAR(&UPDATED) VALUE(' ')
+ 
+/* Call program with parameters (file name, file member name, output suspect */
+/* fields option) to convert branch codes for the file member records.       */
+             CALL       PGM(SM1091) PARM(&BFFILE &BFFMBR &OPSUSFLD &UPDATED)
+ 
+             DLTOVR     FILE(TABBRCCVT) LVL(*JOB)
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/* If no error, */
+                IF         COND(&UPDATED = 'Y') THEN(DO)
+/*   If file member has been updated, copy updated SMIFILEPD back */
+                   CPYF       FROMFILE(SMIFILEPD) TOFILE(&BFFILE) +
+                                FROMMBR(*FIRST) TOMBR(&BFFMBR) +
+                                MBROPT(*REPLACE) FMTOPT(*NOCHK)
+                ENDDO
+/*   Loop back to process next file member */
+                GOTO LOOP
+             ENDDO
+ 
+UPDGZBRCH:
+/**Call*SM1094*to*copy*SDBRCHPD*records*from*the*new*zone*to*GZSDBRCHPD**/ /*          */ /*CSM003*/
+/**********  OVRDBF     FILE(GZSDBRCHL0) TOFILE(&GPGVLIB/GZSDBRCHL0) +                 */ /*CSM003*/
+/**********             OVRSCOPE(*JOB)                                                 */ /*CSM003*/
+/**********                                                                            */ /*CSM003*/
+/**********  CALL       PGM(SM1094) PARM(&TOSBSID)                                     */ /*CSM003*/
+/**********  DLTOVR     FILE(GZSDBRCHL0) LVL(*JOB)                                     */ /*CSM003*/
+ 
+SUSFLDRPT:
+/* Generate suspect fields report if the output suspect fields are required. */
+             IF         COND(&OPSUSFLD *EQ '*YES') THEN(CALL +
+                          PGM(SM1095))
+             IF         COND(%SWITCH(XXXXXX00)) THEN(GOTO ENDPGM)
+ 
+ABNOR:
+/* Abnormal termination */
+/**********  IF         COND(&RECURSIVE *EQ 'N') THEN(DO)                              */ /*CUP033*/
+/**********     CHGVAR     VAR(&RECURSIVE) VALUE(Y)                                    */ /*CUP033*/
+/**********     RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +                               */ /*CUP033*/
+/**********                  MSGDTA('SMC1091') MSG(&MESSAGE)                           */ /*CUP033*/
+/**********     MONMSG     MSGID(CPF0000)                                              */ /*CUP033*/
+/**********     CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                   */ /*CUP033*/
+/**********     MONMSG     MSGID(CPF0000)                                              */ /*CUP033*/
+/**********     CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +                    */ /*CUP033*/
+/**********                  joblog and dump for details')                             */ /*CUP033*/
+/**********     MONMSG     MSGID(CPF0000)                                              */ /*CUP033*/
+/**********     CALL       PGM(SCC0010) PARM('SMC1091' 'JOBLOG' 'Y')                   */ /*CUP033*/
+/**********     MONMSG     MSGID(CPF0000 MCH0000)                                      */ /*CUP033*/
+ 
+             CHGJOB     SWS(XXXXXX11)
+/**********  ENDDO                                                                     */ /*CUP033*/
+ 
+ENDPGM:
+             ENDPGM

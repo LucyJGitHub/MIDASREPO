@@ -1,0 +1,1016 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Management accounts report prompt')
+      *****************************************************************
+      *
+      *  Midas - Management Accounting Module                         *
+      *
+      *   MC0214 - Management Accounts Report Prompt
+      *
+      *  Function: To allow the user to enter any required selection
+      *  (I/C)     prompts for the Managements Account report.
+      *
+      *  Called from: RCF
+      *
+      *  (c) Finastra International Limited 2001                      *
+      *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197434             Date 09Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 151104             Date 15Jun01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 CTI002            Date 23Sep98                *
+      *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  197434 - Array index error on SF0021. Increase maximum       *
+      *           number of branches from 100 to 900.                 *
+      *  151104 - Allow up to 900 branches.                           *
+      *  176443 - Avoid MCH3601 to be sent.                           *
+      *           Pass correct parameter to AOCUSTR0.                 *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *****************************************************************
+     FMC0214DFCF  E                    WORKSTN      KINFSR INFSR
+      **************************************************************
+      /EJECT
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *  3 - F3 has been pressed (exit)
+      * 10 - F10 has been pressed (delete)
+      * 12 - F12 has been pressed (previous screen)
+      * 14 - System is multibranched
+      * 15 - Profit Centres are used in system
+      * 29 - Delete mode, enable F10 and prevent update
+      * 30 - Enquiry mode, prevent update
+      * 35 - Validation error on branch
+      * 36 - Validation error on currency
+      * 37 - Validation error on account code
+      * 38 - Validation error on client
+      * 39 - Validation error on profit centre
+      * 40 - Validation error on transaction type
+      * 41 - Validation error on transaction sub-type
+      * 44 - Validation error on group code
+      * 45 - Validation error on period year
+      * 46 - Validation error on period number
+      * 47 - Validation error on book code
+      * 48 - Validation error on associated customer number
+      * 49 - Validation error on account sequence number
+      * 50 - Test Numeric work indicator
+      * 52 - Test Zone work indicator
+      * 60 - SFLEND indicator for message subfile
+      * U6 - Program error
+      * U7+U8 - Database error
+      **************************************************************
+      /SPACE 3
+      *  S U B R O U T I N E   I N D E X
+      *
+      *  (Note that sr name indicates calling routine, eg sr/#BC is
+      *   called from sr/#B, #Z routines are called from anywhere)
+      *  (Note that sr's are ordered in the program to minimise
+      *   paging by bunching sr as close to exsr line as possible)
+      *
+      * MAIN   - Main control routine
+      * #B     - Screen processing - main loop
+      * #BA    - Screen validation
+      * #A     - Initial processing
+      * *PSSR  - Program error routine
+      * INFSR  - File error routine
+      **************************************************************
+      /SPACE 3
+      *  P R O G R A M   C A L L E D   I N D E X
+      *
+      * AOACODR0  - Validate account code
+      * AOBOOKR0  - Validate book code
+      * AOBRCHR0  - Validate branch code
+      * AOCUSTR0  - Validate customer (and associated customer) number
+      * AOPRFCR0  - Validate profit centre code
+      * AOCURRR0  - Obtain currency details
+      * AOHBCGR0  - Obtain group code details
+      * AOGELRR0  - Obtain General Ledger details
+      * Y2CLMSC   - Clear program message queue
+      * Y2SNMGC   - Send message to program message queue
+      **************************************************************
+      /EJECT
+      ** CPYP  Copyright array
+     E                    CPYP    1   1 80
+      *
+      ** BR    Branches user is authorised to
+     E***********         BR        100  3                                151104
+     E                    BR        900  3                                151104
+      **************************************************************
+      /EJECT
+     IRUNDAT    E DSRUNDAT
+      * External data area for run-date
+      *
+     IZBRU      E DSZBRU
+      ** Authorised branches for the user
+      *
+     IZBRU1       DS                                                                          197434
+      *                                                                                       197434
+      ** Authorised branches for the user                                                     197434
+      *                                                                                       197434
+     I                                        1 255 BR11                                      197434
+     I                                      256 510 BR12                                      197434
+     I                                      511 765 BR13                                      197434
+     I                                      7661020 BR14                                      197434
+     I                                     10211275 BR15                                      197434
+     I                                     12761530 BR16                                      197434
+     I                                     15311785 BR17                                      197434
+     I                                     17861998 BR18                                      197434
+      *                                                                                       197434
+     IZBRU2       DS                                                                          197434
+      *                                                                                       197434
+      ** Authorised branches for the user                                                     197434
+      *                                                                                       197434
+     I                                        1 255 BR21                                      197434
+     I                                      256 402 BR22                                      197434
+      *                                                                                       197434
+     IPARAM       DS
+      ** Input/Output parameter
+     I                                        1   2 OGRCD
+     I                                        4   6 OBRCD
+     I                                        8  13 OCUST
+     I                                       15  17 OCYCD
+     I**********                             19  22 OACCD                                     CGL029
+     I                                       19  22 OQQCD                                     CGL029
+     I                                       24  25 OACSN
+     I                                       27  30 OPCCD
+     I                                       32  33 OBKCD
+     I                                       35  44 OOTTP
+     I                                       46  55 OTSTY
+     I                                       57  62 OASCU
+     I                                       64  67 OPDYE
+     I                                       69  70 OPDNY
+     I                                       72  81 OUSER
+     I                                       83  92 OACCD                                     CGL029
+      *
+     ILDA       E DSLDA
+      ** Local data area structure used for error handling
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long Data Structure
+      *
+     IGLHBCG    E DSGLHBCGPD
+      **  Historic Balance Control Groups
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Branch details
+      *
+     ISDACOD    E DSSDACODPD
+      **  Account code details
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Customer details
+     I              QQDFAC                          DFACQQ                                    CGL029
+      *
+     ISDPRFC    E DSSDPRFCPD
+      **  Profit centre details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      **  Book code details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  Book code details
+     I              QQACCD                          ACCDQQ                                    CGL029
+      *
+     IPSDS       SDS
+      **  Program Status DS
+      *
+     I                                      201 208 PFILE
+     I                                      244 253 JOB
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+      /EJECT
+      **************************************************************
+      * MAIN routine - Controlling routine
+      *
+      * NOTE: Generally fields beginning with 'P' are program defined.
+      *       Generally fields beginning with 'S' are display file
+      *       defined.
+      *
+      **************************************************************
+      *
+      ** Run initial processing
+     C           PBIS      IFEQ *BLANKS                    B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+      *
+      ** Process selection screen
+     C           *INU7     IFEQ '0'                        B1
+     C                     EXSR #B                         *1
+     C                     END                             E1
+      *
+      ** End program if F3 has been pressed
+     C           *IN03     IFEQ '1'                        B1
+     C                     SETON                     LR    *1
+     C                     END                             E1
+      *
+      ** Return to calling program
+     C                     RETRN
+      *
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#B - Process screen
+      *
+      * Called from:     MAIN routine
+      *
+      **************************************************************
+     C           #B        BEGSR
+      *
+      ** Setof various indicators that may be seton during previous
+      ** call to program
+     C                     SETOF                     353637
+     C                     SETOF                     383944
+     C                     SETOF                     454647
+     C                     SETOF                     484929
+     C                     SETOF                     304041
+      *
+      ** Move input parameters to screen fields
+     C                     MOVE OGRCD     SGRCD
+     C                     MOVE OPDYE     SPDYE
+     C                     MOVE OPDNY     SPDNY
+     C   14                MOVE OBRCD     SBRCD
+     C                     MOVE OCYCD     SCYCD
+     C                     MOVE OACCD     SACCD
+     C                     MOVE OCUST     SCUST
+     C                     MOVE OACSN     SACSN
+     C   15                MOVE OPCCD     SPCCD
+     C                     MOVE OBKCD     SBKCD
+     C                     MOVE OOTTP     SOTTP
+     C                     MOVE OTSTY     STSTY
+     C                     MOVE OASCU     SASCU
+      *
+      ** If action code is 'D' enable F10 and prevent update
+     C           PACT      IFEQ 'D'                        B1
+     C                     MOVE '1'       *IN29            *1
+     C                     END                             E1
+      *
+      ** If action code is 'E' prevent update
+     C           PACT      IFEQ 'E'                        B1
+     C                     MOVE '1'       *IN30            *1
+     C                     END                             E1
+      *
+      ** Main processing loop for the screen
+      ** Loop until F3 (exit to main Midas menu), F12 (return to
+      ** calling program), F10 is pressed, or no validation errors.
+     C           *IN03     DOUEQ'1'                        B1
+     C           *IN10     OREQ '1'                        B1
+     C           *IN12     OREQ '1'                        B1
+     C           PVALID    OREQ 'OK'                       B1
+      *
+      ** Write error subfile and write and read screen details
+     C                     TIME           STIME
+     C                     WRITEMC0214C1                   *1
+     C                     EXFMTMC0214F1                   *1
+      *
+      ** Clear program message queue (of error messages)
+     C                     CALL 'Y2CLMSC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM '*SAME'   PYPGRL           *1
+      *
+      ** Validate user selection for Insert or Amend
+     C           *IN29     IFEQ '0'                        B*2
+     C           *IN30     ANDEQ'0'                        B*2
+     C                     EXSR #BA                        **2
+      *
+      ** End loop for Delete or Enquire
+     C                     ELSE                            X*2
+     C                     MOVE 'OK'      PVALID  2        **2
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      ** F3 has been pressed
+     C           *IN03     IFEQ '1'                        B1
+     C                     MOVE 'E'       PCMD             *1
+     C                     END                             E1
+      *
+      ** F12 has been pressed
+     C           *IN12     IFEQ '1'                        B1
+     C                     MOVE 'F'       PCMD             *1
+     C                     END                             E1
+      *
+      ** F10 has been pressed for delete
+     C           *IN10     IFEQ '1'                        B1
+     C           PACT      ANDEQ'D'                        B1
+     C                     MOVE 'D'       PCMD             *1
+     C                     END                             E1
+      *
+      ** If no validation errors set up output parameters in ds
+     C           PVALID    IFEQ 'OK'                       B1
+     C                     MOVE SGRCD     OGRCD            *1
+     C                     MOVE SPDYE     OPDYE            *1
+     C                     MOVE SPDNY     OPDNY            *1
+     C   14                MOVE SBRCD     OBRCD            *1
+     C                     MOVE SCYCD     OCYCD            *1
+     C                     MOVE SACCD     OACCD            *1
+     C                     MOVE SCUST     OCUST            *1
+     C                     MOVE SACSN     OACSN            *1
+     C   15                MOVE SPCCD     OPCCD            *1
+     C                     MOVE SBKCD     OBKCD            *1
+     C                     MOVE SOTTP     OOTTP            *1
+     C                     MOVE STSTY     OTSTY            *1
+     C                     MOVE SASCU     OASCU            *1
+     C                     MOVE SUSER     OUSER            *1
+     C                     END                             E1
+      *
+     C           #B9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BA - Validate user selection
+      *
+      * Called from:     #B   Screen processing
+      *
+      **************************************************************
+     C           #BA       BEGSR
+      *
+     C                     MOVE 'OK'      PVALID  2
+     C                     SETOF                     353637
+     C                     SETOF                     383940
+     C                     SETOF                     414445
+     C                     SETOF                     464748
+     C                     SETOF                     49
+      *
+      ** Check user selection of group code (mandatory)
+      *
+      ** Must be entered
+     C           SGRCD     IFEQ *BLANKS                    B1
+     C                     SETON                     44    *1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM  10        *1
+     C                     PARM *BLANKS   PYPGRL  5        *1
+     C                     PARM 'GLX0286' PYMSID  7        *1
+     C                     PARM 'GLUSRMSG'PYMSGF 10        *1
+     C                     PARM *BLANKS   PYMSDA132        *1
+     C                     PARM *BLANKS   PYMSTP  7        *1
+      *
+      ** Call for '?' processing
+     C                     ELSE                            X1
+     C                     CALL 'AOHBCGR0'                 *1
+     C                     PARM '*VERIFY' PRTCD   7        *1
+     C                     PARM '*KEY   ' POPTN   7        *1
+     C                     PARM SGRCD     PKEY1   2        *1
+     C           GLHBCG    PARM GLHBCG    DSFDY            *1
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELHCCGCD    SGRCD            **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     SETON                     44    **2
+     C                     MOVE *BLANKS   PVALID           **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM SPGMQ     PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0286' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check user selection of period year (mandatory)
+      *
+      ** Must be entered
+     C           SPDYE     IFEQ *BLANKS                    B1
+     C                     SETON                     45    *1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0313' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM *BLANKS   PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+     C                     ELSE                            X1
+      *
+      ** Must be numeric
+     C                     MOVE '0'       PWRK5   5        *1
+     C                     MOVELSPDYE     PWRK5            *1
+     C                     TESTN          PWRK5      5050  *1
+     C           *IN50     IFEQ '0'                        B*2
+     C                     MOVE *BLANKS   PVALID           **2
+     C                     SETON                     45    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM SPGMQ     PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0313' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check user selection of period number (mandatory)
+      *
+      ** Must be entered
+     C           SPDNY     IFEQ *BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     46    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0314' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM *BLANKS   PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+     C                     ELSE                            X1
+      *
+      ** Must be numeric
+     C                     MOVE '0'       PWRK3            *1
+     C                     MOVELSPDNY     PWRK3            *1
+     C                     TESTN          PWRK3      5050  *1
+     C           *IN50     IFEQ '0'                        B*2
+     C                     MOVE *BLANKS   PVALID           **2
+     C                     SETON                     46    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM SPGMQ     PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0314' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+      *
+      ** Must be between 01 and 52 inclusive
+     C                     ELSE                            X*2
+     C                     MOVE SPDNY     PNUMB   20       **2
+     C           PNUMB     IFLT 01                         B**3
+     C           PNUMB     ORGT 52                         B**3
+     C                     MOVE *BLANKS   PVALID           ***3
+     C                     SETON                     46    ***3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM SPGMQ     PYPGM            ***3
+     C                     PARM *BLANKS   PYPGRL           ***3
+     C                     PARM 'GLX0314' PYMSID           ***3
+     C                     PARM 'GLUSRMSG'PYMSGF           ***3
+     C                     PARM *BLANKS   PYMSDA           ***3
+     C                     PARM *BLANKS   PYMSTP           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check for user selection of branch
+      *
+      ** Entry invalid if Branch not analysed for group
+     C           *IN44     IFEQ '0'                        B1
+     C           HCABBR    ANDEQ' '                        B1
+     C           SBRCD     ANDNE*BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     35    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0352' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM SGRCD     PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+      *
+      ** Call for '?' processing
+     C                     ELSE                            X1
+     C           SBRCD     IFNE *BLANKS                    B*2
+     C**********           CALL 'AOBRCHR0'                 **2                                CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*VERIFY' PRTCD   7        **2
+     C                     PARM '*KEY   ' POPTN   7        **2
+     C                     PARM SBRCD     PKEY2   3        **2
+     C********** SDBRCH    PARM SDBRCH    DSFDY            **2                                CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFEQ *BLANKS                    B**3
+     C                     MOVELA8BRCD    SBRCD            ***3
+      *
+      ** Else send error message
+     C                     ELSE                            X**3
+     C                     MOVE *BLANKS   PVALID           ***3
+     C                     SETON                     35    ***3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM SPGMQ     PYPGM            ***3
+     C                     PARM *BLANKS   PYPGRL           ***3
+     C                     PARM 'GLX0042' PYMSID           ***3
+     C                     PARM 'GLUSRMSG'PYMSGF           ***3
+     C                     PARM *BLANKS   PYMSDA           ***3
+     C                     PARM *BLANKS   PYMSTP           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** Ensure user is authorised to the branch.
+     C           AGMBIN    IFEQ 'Y'                        B*2
+     C           SBRCD     ANDNE*BLANKS                    B*2
+     C           PRTCD     ANDEQ*BLANKS                    B*2
+     C                     MOVE ZINO      PIN     30       **2
+     C           SBRCD     LOKUPBR,PIN                   50**2
+     C           *IN50     IFEQ '0'                        B**3
+     C                     MOVE *BLANKS   PVALID           ***3
+     C                     SETON                     35    ***3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM SPGMQ     PYPGM            ***3
+     C                     PARM *BLANKS   PYPGRL           ***3
+     C                     PARM 'GLX0351' PYMSID           ***3
+     C                     PARM 'GLUSRMSG'PYMSGF           ***3
+     C                     PARM SBRCD     PYMSDA           ***3
+     C                     PARM *BLANKS   PYMSTP           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check for user selection of customer number
+      *
+      ** Entry invalid if Customer not analysed for group
+     C           *IN44     IFEQ '0'                        B1
+     C           HCABCU    ANDEQ' '                        B1
+     C           SCUST     ANDNE*BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     38    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0352' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM SGRCD     PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+      *
+      ** Call for '?' processing
+     C                     ELSE                            X1
+     C           SCUST     IFNE *BLANKS                    B*2
+     C                     CALL 'AOCUSTR0'                 **2
+     C                     PARM '*VERIFY' PRTCD            **2
+     C                     PARM '*KEY'    POPTN            **2
+     C                     PARM SCUST     PKEY4   6        **2
+     C                     PARM *BLANKS   PKEY5   7        **2
+     C***********SDCUST    PARM SDCUST    DSFDY            **2            176443
+     C           SDCUST    PARM SDCUST    DSSDY            **2            176443
+      *
+     C           PRTCD     IFEQ *BLANKS                    B**3
+     C                     MOVELBBCUST    SCUST            ***3
+      *
+      ** Else send error message
+     C                     ELSE                            X**3
+     C                     MOVE *BLANKS   PVALID           ***3
+     C                     SETON                     38    ***3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM SPGMQ     PYPGM            ***3
+     C                     PARM *BLANKS   PYPGRL           ***3
+     C                     PARM 'GLX0037' PYMSID           ***3
+     C                     PARM 'GLUSRMSG'PYMSGF           ***3
+     C                     PARM *BLANKS   PYMSDA           ***3
+     C                     PARM *BLANKS   PYMSTP           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check for user selection of currency code
+      *
+      ** Call for '?' processing
+     C           SCYCD     IFNE *BLANKS                    B1
+     C                     CALL 'AOCURRR0'                 *1
+     C                     PARM '*VERIFY' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM SCYCD     PKEY2            *1
+     C           SDCURR    PARM SDCURR    DSSDY            *1
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELA6CYCD    SCYCD            **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   PVALID           **2
+     C                     SETON                     36    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM SPGMQ     PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0023' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check for user selection of account code
+      *
+      ** Call for '?' processing
+     C           SACCD     IFNE *BLANKS                    B1
+     C                     CALL 'AOACODR0'                 *1
+     C                     PARM '*VERIFY' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C**********           PARM SACCD     PKEY3   4        *1                                 CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY            *1                                 CGL029
+     C                     PARM SACCD     PKEY10 10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELA5ACCD    SACCD            **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     MOVE *BLANKS   PVALID           **2
+     C                     SETON                     37    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM SPGMQ     PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0147' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check for user selection of account sequence number
+      *
+      ** Entry invalid if Sequence not analysed for group
+     C           *IN44     IFEQ '0'                        B1
+     C           HCABAS    ANDEQ' '                        B1
+     C           SACSN     ANDNE*BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     49    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0352' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM SGRCD     PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+      *
+      ** Must be numeric
+     C                     ELSE                            X1
+     C           SACSN     IFNE *BLANKS                    B*2
+     C                     MOVE '0'       PWRK3   3        **2
+     C                     MOVELSACSN     PWRK3            **2
+     C                     TESTN          PWRK3      5050  **2
+     C           *IN50     IFEQ '0'                        B**3
+     C                     MOVE *BLANKS   PVALID           ***3
+     C                     SETON                     49    ***3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM SPGMQ     PYPGM            ***3
+     C                     PARM *BLANKS   PYPGRL           ***3
+     C                     PARM 'GLX0224' PYMSID           ***3
+     C                     PARM 'GLUSRMSG'PYMSGF           ***3
+     C                     PARM *BLANKS   PYMSDA           ***3
+     C                     PARM *BLANKS   PYMSTP           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check for user selection of profit centre
+      *
+      ** Entry invalid if Profit Centre not analysed for group
+     C           *IN44     IFEQ '0'                        B1
+     C           HCABPC    ANDEQ' '                        B1
+     C           SPCCD     ANDNE*BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     39    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0352' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM SGRCD     PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+      *
+      ** Call for '?' processing
+     C                     ELSE                            X1
+     C           SPCCD     IFNE *BLANKS                    B*2
+     C                     CALL 'AOPRFCR0'                 **2
+     C                     PARM '*VERIFY' PRTCD            **2
+     C                     PARM '*KEY'    POPTN            **2
+     C**********           PARM SPCCD     PKEY3            **2                                CGL029
+     C                     PARM SPCCD     PKEY3   4                                           CGL029
+     C           SDPRFC    PARM SDPRFC    DSFDY            **2
+      *
+     C           PRTCD     IFEQ *BLANKS                    B**3
+     C                     MOVELDSPCCD    SPCCD            ***3
+      *
+      ** Else send error message
+     C                     ELSE                            X**3
+     C                     MOVE *BLANKS   PVALID           ***3
+     C                     SETON                     39    ***3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM SPGMQ     PYPGM            ***3
+     C                     PARM *BLANKS   PYPGRL           ***3
+     C                     PARM 'GLX0182' PYMSID           ***3
+     C                     PARM 'GLUSRMSG'PYMSGF           ***3
+     C                     PARM *BLANKS   PYMSDA           ***3
+     C                     PARM *BLANKS   PYMSTP           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check for user selection of book code
+      *
+      ** Entry invalid if Profit Centre not analysed for group
+     C           *IN44     IFEQ '0'                        B1
+     C           HCABBK    ANDEQ' '                        B1
+     C           SBKCD     ANDNE*BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     47    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0352' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM SGRCD     PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+      *
+      ** Call for '?' processing
+     C                     ELSE                            X1
+     C           SBKCD     IFNE *BLANKS                    B*2
+     C                     CALL 'AOBOOKR0'                 **2
+     C                     PARM '*VERIFY' PRTCD            **2
+     C                     PARM '*KEY'    POPTN            **2
+     C                     PARM SBKCD     PKEY3            **2
+     C           SDBOOK    PARM SDBOOK    DSFDY            **2
+      *
+     C           PRTCD     IFEQ *BLANKS                    B**3
+     C                     MOVELBDBKCD    SBKCD            ***3
+      *
+      ** Else send error message
+     C                     ELSE                            X**3
+     C                     SETON                     47    ***3
+     C                     MOVE *BLANKS   PVALID           ***3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM SPGMQ     PYPGM            ***3
+     C                     PARM *BLANKS   PYPGRL           ***3
+     C                     PARM 'GLX0240' PYMSID           ***3
+     C                     PARM 'GLUSRMSG'PYMSGF           ***3
+     C                     PARM *BLANKS   PYMSDA           ***3
+     C                     PARM *BLANKS   PYMSTP           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Check for user selection of transaction type
+      *
+      ** Entry invalid if Transaction Type not analysed for group
+     C           *IN44     IFEQ '0'                        B1
+     C           HCABTT    ANDEQ' '                        B1
+     C           SOTTP     ANDNE*BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     40    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0352' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM SGRCD     PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+     C                     END                             E1
+      *
+      ** Check for user selection of transaction sub-type
+      *
+      ** Entry invalid if Transaction Sub-type not analysed for group
+     C           *IN44     IFEQ '0'                        B1
+     C           HCABTS    ANDEQ' '                        B1
+     C           STSTY     ANDNE*BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     41    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0352' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM SGRCD     PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+     C                     END                             E1
+      *
+      ** Check for user selection of associated customer number
+      *
+      ** Entry invalid if Associated Customer not analysed for group
+     C           *IN44     IFEQ '0'                        B1
+     C           HCASCU    ANDEQ' '                        B1
+     C           SASCU     ANDNE*BLANKS                    B1
+     C                     MOVE *BLANKS   PVALID           *1
+     C                     SETON                     48    *1
+     C                     CALL 'Y2SNMGC'                  *1
+     C                     PARM SPGMQ     PYPGM            *1
+     C                     PARM *BLANKS   PYPGRL           *1
+     C                     PARM 'GLX0352' PYMSID           *1
+     C                     PARM 'GLUSRMSG'PYMSGF           *1
+     C                     PARM SGRCD     PYMSDA           *1
+     C                     PARM *BLANKS   PYMSTP           *1
+      *
+      ** Call for '?' processing
+     C                     ELSE                            X1
+     C           SASCU     IFNE *BLANKS                    B*2
+     C                     CALL 'AOCUSTR0'                 **2
+     C                     PARM '*VERIFY' PRTCD            **2
+     C                     PARM '*KEY'    POPTN            **2
+     C                     PARM SASCU     PKEY4            **2
+     C                     PARM *BLANKS   PKEY5            **2
+     C***********SDCUST    PARM SDCUST    DSFDY            **2            176443
+     C           SDCUST    PARM SDCUST    DSSDY            **2            176443
+      *
+     C           PRTCD     IFEQ *BLANKS                    B**3
+     C                     MOVELBBCUST    SASCU            ***3
+      *
+      ** Else send error message
+     C                     ELSE                            X**3
+     C                     SETON                     48    ***3
+     C                     MOVE *BLANKS   PVALID           ***3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM SPGMQ     PYPGM            ***3
+     C                     PARM *BLANKS   PYPGRL           ***3
+     C                     PARM 'GLX0058' PYMSID           ***3
+     C                     PARM 'GLUSRMSG'PYMSGF           ***3
+     C                     PARM *BLANKS   PYMSDA           ***3
+     C                     PARM *BLANKS   PYMSTP           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           #BA9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#A - Initial processing
+      *
+      * Called from:     MAIN routine
+      *
+      **************************************************************
+     C           #A        BEGSR
+      *
+     C           *ENTRY    PLIST
+      ** Sequence number
+     C                     PARM           PSEQ    5
+      ** Parameter string
+     C**********           PARM           PARAM  81                                           CGL029
+     C                     PARM           PARAM  92                                           CGL029
+      ** Action
+     C                     PARM           PACT    1
+      ** Command
+     C                     PARM           PCMD    1
+      *
+      ** Use copyright array to ensure copyright gets into object
+     C                     MOVEACPYP      PBIS   80
+      *
+      ** Obtain run date and multibranching flag from dtaara/RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Only display branch if system is multibranched
+     C           AGMBIN    IFEQ 'Y'                        B1
+     C                     SETON                     14    *1
+      *
+      ** Read in branches user is authorised to, stored on DS/ZBRU
+     C           *NAMVAR   DEFN           ZBRU             *1
+     C                     IN   ZBRU                       *1
+     C                     MOVEAZBR1      BR,1             *1
+     C                     MOVEAZBR2      BR,51            *1
+      *                                                                                       197434
+      ** Set up the array ZBR by branches in data areas ZBRU1 and ZBRU2                       197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZBRU1                                               197434
+     C                     IN   ZBRU1                                                         197434
+     C                     Z-ADD101       W       30                                          197434
+     C                     MOVEABR11      BR,W                                                197434
+     C                     Z-ADD186       W                                                   197434
+     C                     MOVEABR12      BR,W                                                197434
+     C                     Z-ADD271       W                                                   197434
+     C                     MOVEABR13      BR,W                                                197434
+     C                     Z-ADD356       W                                                   197434
+     C                     MOVEABR14      BR,W                                                197434
+     C                     Z-ADD441       W                                                   197434
+     C                     MOVEABR15      BR,W                                                197434
+     C                     Z-ADD526       W                                                   197434
+     C                     MOVEABR16      BR,W                                                197434
+     C                     Z-ADD611       W                                                   197434
+     C                     MOVEABR17      BR,W                                                197434
+     C                     Z-ADD696       W                                                   197434
+     C                     MOVEABR18      BR,W                                                197434
+     C           *NAMVAR   DEFN           ZBRU2                                               197434
+     C                     IN   ZBRU2                                                         197434
+     C                     Z-ADD767       W                                                   197434
+     C                     MOVEABR21      BR,W                                                197434
+     C                     Z-ADD852       W                                                   197434
+     C                     MOVEABR22      BR,W                                                197434
+     C                     END                             E1
+      *
+      ** Obtain General Ledger details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDGELRPD'DBFILE           *1
+     C                     Z-ADD01        DBASE            *1
+     C                     MOVEL'*FIRST'  DBKEY            *1
+     C                     MOVEL'MC0214'  DBPGM            *1
+     C                     SETON                     U7U8LR*1
+     C                     DUMP                            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+      *
+      ** Setup the Profit Centres Used indicator
+     C           BKPRCU    IFEQ 'Y'                        B1
+     C                     SETON                     15    *1
+     C                     END                             E1
+     C*
+     C                     MOVE *BLANKS   SPGMQ
+     C                     MOVEL'MC0214'  SPGMQ
+      *
+     C           #A9       ENDSR
+      *
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/*PSSR - Program error subroutine
+      *
+      * Called by:   Executes whenever program error occurs
+      *
+      ***************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Set PERR1 to 'Y' to prevent looping if further errors
+     C           PERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR1   1        *1
+     C                     SETON                     U6    *1
+      *                                                    *1
+      ** Set up fields in LDA
+     C                     MOVE '991'     DBASE            *1
+     C                     MOVEL'MC0214'  DBPGM            *1
+      *                                                    *1
+      ** Dump the program                                  *1
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/INFSR - File error subroutine
+      *
+      * Called by:   Executes whenever file exception/error occurs
+      *
+      ***************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      ** Set PERR2 to 'Y' to prevent looping if further errors
+     C           PERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR2   1        *1
+     C                     SETON                     U7U8  *1
+      *                                                    *1
+      ** Set up fields in LDA
+     C                     MOVELPFILE     DBFILE           *1
+     C                     MOVE '992'     DBASE            *1
+     C                     MOVEL'MC0214'  DBPGM            *1
+      *                                                    *1
+      ** Dump the program                                  *1
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+** CPYP         OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

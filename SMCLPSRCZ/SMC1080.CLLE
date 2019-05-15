@@ -1,0 +1,232 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Migrate MITEMDD to SFMENUPD Control Pgm')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC1080 - Migrate MITEMDD to SFMENUPD Control Program       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR936709           Date 19Mar12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP033             Date 15Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CSM003             Date 30May05              */
+/*                      CPK019             Date 06Jul04              */
+/*                      CSF002 *CREATE     Date 08Oct03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR936709 - Replacement file for UPSARIPD.                   */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CSM003 - Use system value rather than UPSTAT.               */
+/*       CPK019 - Post-implementation changes.                       */
+/*       CSF002 - Global Processing SPF changes                      */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CPK019*/
+/**********  PGM        PARM(&UPDATE)                                       */ /*CPK019*/ /*CUP033*/
+             PGM        PARM(&UPDATE &PFXSVAL &GPFXSVAL &OPFXSVAL)                        /*CUP033*/
+ 
+             DCL        VAR(&UPDATE) TYPE(*CHAR) LEN(4)                                   /*CPK019*/
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
+             DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
+ 
+/**COPY*UPCPYSRG,UPSVALDCL*                                          */ /*             */ /*CUP033*/
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CUP033*/
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CUP033*/
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)                                 /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+/**********  DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)                              */ /*CSM003*/
+             DCL        VAR(&FDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TGTALIB) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&TOSBSID) TYPE(*CHAR) LEN(2)                               */ /*CSM003*/
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CUP033*/
+/**COPY*UPCPYSRC,UPSVALCAL2*                                         */ /*             */ /*CUP033*/
+/**COPY*UPCPYSRC,UPSVALCAL3*                                         */ /*  */ /*CSM003*/ /*CUP033*/
+/* Check if all relevant fields have been entered in ICD */
+/**********  IF         COND(&SBSID *EQ ' ' *OR &PTFUPG *EQ ' ' *OR +                  */ /*CSM003*/
+/**********               &GPSBSID *EQ ' ') THEN(DO)                                   */ /*CSM003*/
+/**********  IF         COND(&SBSID *EQ ' ' *OR &PTFUPG *EQ ' ' *OR +                  */ /*CUP033*/
+/**********               &GPSBSID *EQ ' ' *OR &OLDSBSID *EQ ' ') +                    */ /*CUP033*/
+/**********               THEN(DO)                                          */ /*CSM003*/ /*CUP033*/
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)                                   /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)                              /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)                                 /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)                              /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)                                /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+/* Set up messages for Midas Information Screen  */
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC1080' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/**********  CHGVAR     VAR(&FDTALIB) VALUE(&SBSID *TCAT 'DTALIB')                     */ /*CSM003*/
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')                     /*CSM003*/
+ 
+UPSTAT:
+/**Retrieve*to*library*prefix*from*data*area*UPSTAT**/ /*                              */ /*CSM003*/
+/**********  RTVDTAARA  DTAARA(&PTFUPG/UPSTAT) RTNVAR(&UPSTAT)                         */ /*CSM003*/
+/**********  CHGVAR     VAR(&TOSBSID) VALUE(%SST(&UPSTAT 62 2))                        */ /*CSM003*/
+/**If*&TOSBSID*is*blank*this*means*that*this*is*an*'XX'*to*'XX'**/ /*                  */ /*CSM003*/
+/**type*upgrade;*set*flag*for*later*use.*************************/ /*                  */ /*CSM003*/
+/**********  IF         COND(&TOSBSID *EQ ' ') THEN(DO)                                */ /*CSM003*/
+/**********     CHGVAR     VAR(&TOSBSID) VALUE(%SST(&UPSTAT 60 2))                     */ /*CSM003*/
+/**********  ENDDO                                                                     */ /*CSM003*/
+/**********  CHGVAR     VAR(&TDTALIB) VALUE(&TOSBSID *TCAT 'DTALIB')                   */ /*CSM003*/
+             CHGVAR     VAR(&TDTALIB) VALUE(&SBSID *TCAT 'DTALIB')                        /*CSM003*/
+             CHGVAR     VAR(&TGTALIB) VALUE(&GPSBSID *TCAT 'GTALIB')
+ 
+/* Set up library list */
+/**********  CALL       PGM(UPC0014) PARM(&TOSBSID)                                    */ /*CSM003*/
+             CALL       PGM(UPC0014) PARM(&SBSID)                                         /*CSM003*/
+ 
+/* Copy file from existing MITEMDD to temporary keyed physicals. */
+/**********  CPYF       FROMFILE(&FDTALIB/MITEMDD) +                                   */ /*CUP033*/
+/**********               TOFILE(&PTFUPG/SMITEMPD) FROMMBR(*FIRST) +                   */ /*CUP033*/
+/**********               TOMBR(*FIRST) MBROPT(*REPLACE) +                             */ /*CUP033*/
+/**********               INCREL((*IF RECI *EQ 'D') (*AND PCMD *NE +                   */ /*CUP033*/
+/**********               'TITLE               ') (*AND PCMD *NE +                     */ /*CUP033*/
+/**********               'MENU                ')) FMTOPT(*MAP *DROP)                  */ /*CUP033*/
+             CPYF       FROMFILE(&FDTALIB/MITEMDD) TOFILE(SMITEMPD) +
+                          FROMMBR(*FIRST) TOMBR(*FIRST) +
+                          MBROPT(*REPLACE) INCREL((*IF RECI *EQ +
+                          'D') (*AND PCMD *NE 'TITLE               +
+                          ') (*AND PCMD *NE 'MENU                +
+                          ')) FMTOPT(*MAP *DROP)                                          /*CUP033*/
+ 
+/* Call program to remove duplicates from copy of SMITEMPD. */
+             CALL       PGM(SM8023)
+ 
+/* Copy existing SCSARIPD to UPSARIPD for UPSARIL1 (by MGRP, ICDE) */
+/**********  CPYF       FROMFILE(&FDTALIB/SCSARIPD) +                                  */ /*CUP033*/
+/**********               TOFILE(&PTFUPG/UPSARIPD) FROMMBR(*FIRST) +                   */ /*CUP033*/
+/**********               TOMBR(*FIRST) MBROPT(*REPLACE) +                             */ /*CUP033*/
+/**********               INCREL((*IF ADRECI *EQ 'D')) FMTOPT(*MAP +                   */ /*CUP033*/
+/**********               *DROP)                                                       */ /*CUP033*/
+/**********  CPYF       FROMFILE(&FDTALIB/SCSARIPD) TOFILE(UPSARIPD) +
+                          FROMMBR(*FIRST) TOMBR(*FIRST) +
+                          MBROPT(*REPLACE) INCREL((*IF ADRECI *EQ +
+                          'D')) FMTOPT(*MAP *DROP)  */                           /*CUP033 AR936709*/
+             CPYF       FROMFILE(&FDTALIB/SCSARIPD) TOFILE(SMSARIPD) +
+                          FROMMBR(*FIRST) TOMBR(*FIRST) +
+                          MBROPT(*REPLACE) INCREL((*IF ADRECI *EQ +
+                          'D')) FMTOPT(*MAP *DROP)                                      /*AR936709*/
+ 
+/* Clear output file from SM1080 */
+/**********  CLRPFM     FILE(&PTFUPG/SMDPGMPD)                                         */ /*CPK019*/
+             CLRPFM     FILE(SMDPGMPD)                                                    /*CPK019*/
+             CLRPFM     FILE(SMMIGIPD)                                                    /*CPK019*/
+ 
+             OVRDBF     FILE(GPMTXTPD) TOFILE(&TGTALIB/GPMTXTPD) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(SFMENUPD) TOFILE(&TDTALIB/SFMENUPD) +
+                          OVRSCOPE(*JOB)
+/**********  CALL       PGM(SM1080)                                                    */ /*CPK019*/
+             CALL       PGM(SM1080) PARM(&UPDATE)                                         /*CPK019*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ELSE       CMD(DO)
+/**If*no*error,*call*SM1081*to*generate*report*SM1081P1.**/ /*                         */ /*CPK019*/
+/* If no error, call SM1082 to generate migration report SM1082P1 .... */                 /*CPK019*/
+                CALL PGM(SM1082)                                                          /*CPK019*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CPK019*/
+                   GOTO       CMDLBL(ABNOR)                                               /*CPK019*/
+                ENDDO                                                                     /*CPK019*/
+/* ... and call SM1081 to generate duplicate command report SM1081P1. */                  /*CPK019*/
+                CALL PGM(SM1081)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+             DLTOVR     FILE(GPMTXTPD) LVL(*JOB)
+             DLTOVR     FILE(SFMENUPD) LVL(*JOB)
+ 
+             GOTO CMDLBL(ENDPGM)
+ 
+ABNOR:
+/* Abnormal termination */
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE(Y)
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                             MSGDTA('SMC1080') MSG(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                             joblog and dump for details')
+                MONMSG     MSGID(CPF0000)
+                CALL       PGM(SCC0010) PARM('SMC1080' 'JOBLOG' 'Y')
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

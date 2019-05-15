@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax Update Accounts for closure')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Leger                                       */
+/*                                                                   */
+/*       GLC008133 - Stamp Tax - Update Accounts for Closure         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER049  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           Systems Ltd. 2010')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+ 
+/* DB error defintion */
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Retrieve the system prefix xx                                              */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+ 
+/* Check if restart*/
+ 
+             CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+ 
+/* No restart - save object */
+ 
+             IF         COND(&BUSY *EQ 'N') THEN(DO)
+ 
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+             ENDDO
+ 
+/* GL008133 - Reset Accounts being closed today */
+ 
+             CALL       PGM(GL008133)
+ 
+/* DB error  */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&MEM) VALUE('GLC008133 - Job Terminated, +
+                        Database in Error')
+             SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Set OK flag  */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+             CLRPFM     FILE(GLCLOSPD)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+ 
+             CHGVAR     VAR(&MKICPY) VALUE('(c) Finastra International +
+                          Banking Systems Ltd. 2010')
+ 
+             ENDPGM

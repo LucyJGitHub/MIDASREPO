@@ -1,0 +1,1266 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Prices List')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF1040  -  PRICES LIST                                         *
+     F*                                                                  *
+     F*  (c) Finastra International Limited 2001                         *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 243826A            Date 29Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.00 Patch D ---------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 163444             Date 30Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 18Sep96               *
+     F*                  S71062              DATE 19DEC95                *
+     F*                  S01456              DATE 08NOV93                *
+     F*                  S01393              DATE 30OCT92                *
+     F*                  FUJI-FF0011         DATE 10AUG92                *
+     F*                  AUS022              DATE 10AUG92                *
+     F*                  E24171              DATE 21JAN91                *
+     F*                  E20526              DATE 25APR90                *
+     F*                  S01117              DATE 21FEB90                *
+     F*                  E18343              DATE 11NOV89                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CHANGE DESCRIPTIONS                                          *
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  243826A- Recompiled due to changes in FFPRCSZ2, FFPRCSZ3,    *
+      *           FFPRVLZ2 and FFPRVLZ3.                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*   163444  - Y2K Sort Order.                                      *
+     F*   CFF004  -  Increase in size of Price Fields,(Recompiled Only)  *
+     F*   S71062  -  FF/PM Interface (Just recompiled)                   *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*              Types 7 and 8.                                      *
+     F*   E24171  -  Remove code formatting Strike Price since output    *
+     F*              of strike price on the report is conditional on     *
+     F*              *IN48 being off (which it won't be).Set up Tick     *
+     F*              Denominator and Minimum Price Fluctuation for Spot  *
+     F*              Price.                                              *
+     F*   E20526  -  Add new fields PBEC(PRICE BEFORE EOC) & VOSPR(VERY  *
+     F*             OLD SPOT PRICE) so that PRICES LIST is correct in COB*
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   E18343  -  PROGRAM RE-COMPILED DUE TO CHANGE IN ZSRSRC MEMBER  *
+     F*              ZFRPEDZ3                                            *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E           K        DISK                               S01117
+     FINTYP   IF  E           K        DISK
+     FINTYP2  IF  E           K        DISK
+     F            INTYPDF                           KRENAMEINTYP2D
+     FMARKT   IF  E           K        DISK                           UC
+     FMKCTL   IF  E           K        DISK                           UC
+     FPRICSA  UF  E                    DISK                           U3
+     FPRISPA  UF  E                    DISK                           U3
+     F*PRICS1*IF**E           K        DISK                               163444
+     FFFPRICPDIF  E           K        DISK                               163444
+     FPRISP1  IF  E           K        DISK
+     F*
+     F*
+     F*F1040AUO** E                    DISK                           U3  S01117
+     FFF1040AUO   E                    DISK                               S01117
+     F                                              KINFDS SPOOLU         S01117
+     FFF1040P1O   E                    DISK
+     F***********                                   KINFDS PRINT          S01117
+     F                                              KINFDS SPOOL          S01117
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       39        OTC REPORT
+     F*       40        ALL INSTRUMENTS REPORT
+     F*       41        INTERIM REPORT
+     F*       42        DIFFERENCE ON PRICS INSERTS
+     F*       43        DIFFERENCE ON PRICS AMENDS
+     F*       44        DIFFERENCE ON PRICS DELETES
+     F*       45        DIFFERENCE ON PRISP INSERTS
+     F*       46        DIFFERENCE ON PRISP AMENDS
+     F*       47        DIFFERENCE ON PRISP DELETES
+     F*       48        DATE CONDITIONER - SPOT
+     F********50        END OF FILE LF/PRICS1                             163444
+     F*       50        END OF FILE PF/FFPRICPD                           163444
+     F*       51        END OF FILE LF/PRISP1
+     F*       52        ERROR ON MARKT
+     F*       53        ERROR ON MKCTL
+     F*       54        ERROR ON INTYP
+     F*       55        ERROR ON INTYP2
+     F*       56        ERROR ON PRICSA
+     F*       57        ERROR ON PRISPA
+     F********58*       ERROR ON TABTB10                                  S01117
+     F*       58        FF1040P1 REQUIRED - ON REQUEST OR DETAILS EXIST   S01117
+     F*                 SETON ON WHEN OUTPUT REPORT HEADING TO P1         S01117
+     F*       59        U3 ON - WRITE INPUT CONTROL TOTALS IN AU REPORT   S01117
+     F*       60        OFF  - NO DETAIL REPORTED IN P1                   S01117
+     F*                 ON   -  DETAIL REPORTED IN P1                     S01117
+     F*
+     F*     80-89     RESERVED FOR STANDARD FF SUBROUTINES
+     F*     90-99     RESERVED FOR STANDARD  Z SUBROUTINES
+     F*
+     F*            U1 INPUT CYCLE
+     F*            U3 EOC
+     F*            U7 )_ DATABASE ERROR
+     F*            U8 )
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E** SR.ARRAY FOR ZDATE2
+     E*
+     E*
+     E/COPY ZSRSRC,FFPRCSZ2
+     E** SR.ARRAY FOR FFPRCS
+     E*
+     E*
+     E/COPY ZSRSRC,FFFMTZ1
+     E** SR.ARRAY FOR FFFMT
+     E*
+     E*
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E** SR.ARRAY FOR ZFRPED
+     E*
+     E*
+     E** ARRAY FOR UNDERLINING
+     E                    FULA       34  1
+     E*
+     IINTYP2D
+     I              ISTT                            ISTT2
+     I              ISPT                            ISPT2
+     I              TKDM                            TKDM2
+     I              MNPF                            MNPF2
+     I              TKVL                            TKVL2
+     I*
+     I** Rename fields on INTYP2
+     I*
+     IINTYPDF
+     I              ISTT                            IST99
+     I*
+     I** Rename fields on INTYP
+     I*
+     I*PRICSDF**                                                          163444
+     IFFPRICD0                                                            163444
+     I              LCD                             CLCD
+     I              CHTP                            CCHTP
+     I*
+     I** Rename fields on PRICS
+     I*
+     IPRISPDF
+     I              ISTT                            PISTT
+     I              OSPR                            POSPR
+     I              NSPR                            PNSPR
+     I              LCD                             PLCD
+     I              CHTP                            PCHTP
+     I*
+     I** Rename fields on PRISP
+     I*
+     IPRISPAF
+     I              NORE                            PNORE
+     I              NINS                            PNINS
+     I              NAMD                            PNAMD
+     I              NDEL                            PNDEL
+     I*
+     I** Rename fields on PRISPSA
+     I*
+     I*
+     I/COPY ZSRSRC,FFFMTZ2
+     I** SR.SPECS FOR FFFMT
+     I*
+     I*
+     I/COPY ZSRSRC,FFSRDSZ1
+     I** SR.SPECS FOR FFPRCS
+     I*
+     I*
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I** SR.SPECS FOR ZFRPED
+     I*
+     I*
+     I/COPY ZSRSRC,FFPRCSZ3
+     I** SR.SPECS FOR FFPRCS
+     I*
+     I*      SPOOL FILE  DATA STRUCTURE                                   S01117
+     I*RINT*****  DS                                                      S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I*  DS FOR LINE NO. TO HANDLE OVERFLOW
+     I                                    B 367 3680CURLIN
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I*
+     ILDA         DS                            256
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJURPT                          TITL                  S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I**  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*
+     I** Data structures to seperate instrument code
+     I*
+     IISTT        DS                              5
+     I                                        1   2 XMKT
+     I                                        3   5 DISC
+     I*
+     I** Data structures to seperate instrument code
+     I*
+     IPISTT       DS                              5
+     I                                        1   2 PXMKT
+     I                                        3   5 PDISC
+     I*
+     I** Data structure to define key-fields for intyp2
+     I*
+     IINKEY       DS
+     I                                        1   2 MRKT
+     I                                        3   5 FTRF
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     I N I T I A L I S A T I O N
+     C*================================================================
+     C*
+     C** Accept input parameter of market centre
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MTCN    2
+     C                     PARM           SEQ     5         SEQUENCE NUM. S01117
+     C*
+     C**   Reset LDA
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FF1040  'DBPGM
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*ZEROS    DBASE
+     C                     OUT  LDA
+     C*                                                                   S01117
+     C**   Initialized indicator *IN60 - no detail's been printed in P1   S01117
+     C**                                                                  S01117
+     C                     MOVE '0'       *IN60                           S01117
+     C**                                                                  S01117
+     C***********                                                         S01117
+     C***Access*ICD1*for*Titles,Dates*etc.********************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 58               S01117
+     C**N58******RECI      COMP 'D'                  5858                 S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C           DATF      COMP 'M'                      98
+     C*                                                                   S01117
+     C** RCF PROCESSING FOR AU & P1 REPORT                                S01117
+     C                     EXSR RCFSPL                                    S01117
+     C**                                                                  S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C**   Output Database error to P1 for on-request report              S01117
+     C           *INU3     IFEQ '0'                                       S01117
+     C                     EXSR HEADP1                                    S01117
+     C                     WRITEFMTP105                                   S01117
+     C                     END                                            S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*
+     C** Format Report Headings
+     C                     EXSR HEADS
+     C*
+     C***Write*Report*Headings********************************************S01117
+     C***********          WRITEFMTP101                                   S01117
+     C*  Write Report Headings TO P1 IF U3 OFF, I.E. ON REQUEST REPORT    S01117
+     C           *INU3     IFEQ '0'                                       S01117
+     C                     EXSR HEADP1                                    S01117
+     C                     END                                            S01117
+     C*
+     C***If*Record*not*found,Database*Error*01****************************S01117
+     C***********                                                         S01117
+     C************IN58     IFEQ '1'                                       S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          SETON                     U7U8  ***************S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C***********          MOVEL'TABTB10' DBKEY                           S01117
+     C***********          OUT  LDA                                       S01117
+     C***********                                                         S01117
+     C***Write*Database Error details                                     S01117
+     C***********          WRITEFMTP105                                   S01117
+     C***********          SETON                     U7U8LR               S01117
+     C***********          RETRN                                          S01117
+     C***********                                                         S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     M A I N
+     C*================================================================
+     C*
+     C*
+     C***********          READ PRICS1                   50               163444
+     C                     READ FFPRICPD                 50               163444
+     C                     READ PRISP1                   51
+     C*
+     C** If neither file contains records set on indicators to inhibit
+     C** further processing and output 'no details'
+     C** IF  FF1040P1 IS REQUIRED                                         S01117
+     C*
+     C           *IN50     IFEQ '1'
+     C           *IN51     ANDEQ'1'
+     C           *IN58     ANDEQ'1'                                       S01117
+     C                     MOVE 'Y'       PRTND   1                       S01117
+     C                     WRITEFMTP104
+     C                     END
+     C*
+     C**  IF EOF FOR EITHER LF/PRICS1 EOR LF/PRISP1 SET KEY INSTRUMENT
+     C**  FIELD TO *HIVAL
+     C*
+     C           *IN50     IFEQ '1'
+     C                     MOVE *HIVAL    ISTT
+     C                     END
+     C*
+     C           *IN51     IFEQ '1'
+     C                     MOVE *HIVAL    PISTT
+     C                     END
+     C*
+     C** Process while not EOF for both PRICS1 and PRISP1
+     C*
+     C           *IN50     DOWEQ'0'
+     C           *IN51     OREQ '0'
+     C*
+     C** Compare instrument types on PRICS and PRISP
+     C*
+     C           ISTT      IFLE PISTT
+     C*
+     C** Processing record from PRICS1
+     C** If COB report
+     C*
+     C           *INU3     IFEQ '0'
+     C           *INU1     ANDEQ'0'
+     C                     EXSR PRICS
+     C                     ELSE
+     C*
+     C** list prices actioned today ( Run date / Business Date )
+     C*
+     C           CLCD      IFEQ CNTDT
+     C                     EXSR PRICS
+     C                     END
+     C*
+     C                     END
+     C*
+     C***********          READ PRICS1                   50               163444
+     C                     READ FFPRICPD                 50               163444
+     C*
+     C           *IN50     IFEQ '1'
+     C                     MOVE *HIVAL    ISTT
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ISTT      IFGT PISTT
+     C*
+     C** Processing record from PRISP1
+     C** If COB report
+     C*
+     C           *INU3     IFEQ '0'
+     C           *INU1     ANDEQ'0'
+     C                     EXSR PRISP
+     C                     ELSE
+     C*
+     C** list prices actioned today ( Run Date / Business Date )
+     C*
+     C           PLCD      IFEQ CNTDT
+     C                     EXSR PRISP
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     READ PRISP1                   51
+     C*
+     C           *IN51     IFEQ '1'
+     C                     MOVE *HIVAL    PISTT
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     C L O S E
+     C*================================================================
+     C*
+     C** Write AUDIT Report                                               S01117
+     C*                                                                   S01117
+     C                     EXSR AUDIT                                     S01117
+     C*                                                                   S01117
+     C** Write no details to report if no details output                  S01117
+     C** Write report trailer if normal termination
+     C** and FF1040P1 is required.                                        S01117
+     C** This is outqput after AUDIT so as to avoid printing              S01117
+     C** End of Report in P1 before Database error details from AUDIT     S01117
+     C*
+     C           *INU7     IFEQ '0'
+     C           *INU8     ANDEQ'0'
+     C           *IN58     ANDEQ'1'                                       S01117
+     C           *IN60     IFEQ '0'                                       S01117
+     C           PRTND     ANDNE'Y'                                       S01117
+     C                     WRITEFMTP104                                   S01117
+     C                     END                                            S01117
+     C                     WRITEFMTP103
+     C                     END
+     C*
+     C***If*EOC/COB*write*audit*report************************************S01117
+     C*
+     C************INU3     IFEQ '1'                                       S01117
+     C***********          EXSR AUDIT                                     S01117
+     C***********          END                                            S01117
+     C*
+     C                     SETON                     LR
+     C/EJECT
+     C********************************************************************
+     C*
+     C*                   INDEX TO SUB-ROUTINES
+     C*                   ---------------------
+     C*
+     C*     1.S.R. HEADS   - FORMATS REPORT HEADINGS
+     C*     2.S.R. PRICS   - PROCESSES DETAILS ON LF/PRICS1
+     C*     3.S.R. PRISP   - PROCESSES DETAILS ON LF/PRISP1
+     C*     4.S.R. AUDIT   - PROVIDES AUDIT REPORT FOR EOC
+     C*     5.S.R. ZFRPED  - FORMAT NUMERIC FIELD
+     C*     6.S.R. FFPRCS  - FORMAT PRICES
+     C*     7.S.R. ZDATE2  - CHANGES MIDAS DAY No. TO DATE
+     C*     8.S.R. FFFMT   - FORMAT HEADING LINE
+     C*     9.S.R. RCFSPL  - SPOOL P1 & AU REPORT THROUGH RCF             S01117
+     C*    10.S.R. HEADP1  - PRINT HEADER FOR P1, SET ON *IN58            S01117
+     C*    11.S.R. *PSSR   - HANDLES ABNORMAL ERROR CONDITIONS            S01117
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   S.R. HEADS - SUB-ROUTINE TO FORMAT REPORT HEADINGS
+     C*
+     C*  CALLED ONCE FROM PROGRAM INITIALISATION
+     C*  CALLS SR. ZDATE2
+     C*        SR. FFFMT
+     C*
+     C********************************************************************
+     C*
+     C           HEADS     BEGSR
+     C*
+     C** Condition output for COB report
+     C*
+     C           *INU3     IFEQ '0'
+     C           *INU1     ANDEQ'0'
+     C                     SETON                     40
+     C                     MOVE *BLANKS   FDATE
+     C                     ELSE
+     C*
+     C** Condition output for Interim report
+     C*
+     C           *INU1     IFEQ '1'
+     C                     SETON                     41
+     C                     END
+     C*
+     C** If market centre is OTC
+     C*
+     C           MTCN      IFEQ *BLANKS
+     C                     SETON                     39
+     C*
+     C** Set up Run Control date and Report date
+     C*
+     C                     Z-ADDRUND      CNTDT   50
+     C                     MOVE RUNA      FDATE
+     C                     ELSE
+     C*
+     C** If market centre (not OTC) access for market name
+     C*
+     C                     OPEN MARKT
+     C           MTCN      CHAINMARKT                52
+     C*
+     C** If chain unsuccessful - db error 02
+     C*
+     C           *IN52     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD2         DBASE            **           **S01117
+     C                     MOVEL'MARKT'   DBFILE           ***************
+     C                     MOVELMTCN      DBKEY
+     C                     OUT  LDA
+     C*
+     C** Write Database Error details
+     C** IF FF1040P1 IS REQUIRED                                          S01117
+     C           *IN58     IFEQ '1'                                       S01117
+     C                     WRITEFMTP105
+     C                     END                                            S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C** Access Market Control for business date
+     C*
+     C                     OPEN MKCTL
+     C           MTCN      CHAINMKCTL                53
+     C*
+     C** If chain unsuccessful - db error 03
+     C*
+     C           *IN53     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C                     Z-ADD3         DBASE            **           **S01117
+     C                     MOVEL'MKCTL'   DBFILE           ***************
+     C                     MOVELMTCN      DBKEY
+     C                     OUT  LDA
+     C*
+     C** Write Database Error details
+     C** IF FF1040P1 IS REQUIRED                                          S01117
+     C           *IN58     IFEQ '1'                                       S01117
+     C                     WRITEFMTP105
+     C                     END                                            S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C** Set up Run Control date
+     C*
+     C                     Z-ADDBUSD      CNTDT
+     C*
+     C** Format Report date
+     C*
+     C                     MOVELBUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    FFDAT
+     C                     MOVELMKTN      FFNAM
+     C           *IN39     IFNE '1'
+     C                     EXSR FFFMT
+     C*
+     C**  Set up underlining for heading
+     C**  Initialise array index
+     C                     Z-ADD0         X       20
+     C*
+     C**  FFULIN returned from SR. FFFMT contains number of characters
+     C**  for underline
+     C           X         DOUEQFFULIN
+     C                     ADD  1         X
+     C                     MOVEA'-'       FULA,X
+     C                     END
+     C*
+     C**  Move underline array to output field
+     C                     MOVEAFULA      FULINE
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   S.R. PRICS - SUB-ROUTINE TO PROCESS PRICS FILE
+     C*
+     C*  CALLED ONCE FROM PROGRAM MAIN
+     C*  CALLS SR. FFPRCS
+     C*            ZFRPED
+     C*            ZDATE2
+     C*
+     C********************************************************************
+     C           PRICS     BEGSR
+     C*
+     C** Define field for previous ISTT value
+     C*
+     C           *LIKE     DEFN ISTT      ISTTPV
+     C*
+     C** Determine if instrument type has changed
+     C*
+     C           ISTT      IFNE ISTTPV
+     C           ISTT      CHAININTYP                54
+     C*
+     C** If chain unsuccessful - db error 04
+     C*
+     C           *IN54     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
+     C                     Z-ADD4         DBASE            **           **S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA
+     C*
+     C** Write Database Error details
+     C** IF FF1040P1 IS REQUIRED                                          S01117
+     C           *IN58     IFEQ '1'                                       S01117
+     C                     WRITEFMTP105
+     C                     END                                            S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C                     MOVE ISTT      ISTTPV
+     C*
+     C** If instrument is a market instrument
+     C*
+     C           ISTI      IFEQ 'N'
+     C           ISPT      ANDGE4
+     C           ISPT      ANDNE7                                         AUS022
+     C                     MOVE XMKT      MRKT
+     C           INKEY     CHAININTYP2               55
+     C*
+     C** If record not found - db error 05
+     C*
+     C           *IN55     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'05'      DBASE            **DB ERROR 05**S01117
+     C                     Z-ADD5         DBASE            **           **S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELINKEY     DBKEY
+     C                     OUT  LDA
+     C*
+     C** Write Database Error details
+     C** IF FF1040P1 IS REQUIRED                                          S01117
+     C           *IN58     IFEQ '1'                                       S01117
+     C                     WRITEFMTP105
+     C                     END                                            S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** Inspect last-change - format and increment corresponding total
+     C*
+     C           CCHTP     IFEQ 'I'
+     C                     MOVE 'INS'     LCHT    3
+     C                     ADD  1         PCSIT
+     C                     END
+     C*
+     C           CCHTP     IFEQ 'A'
+     C                     MOVE 'AMD'     LCHT
+     C                     ADD  1         PCSAT
+     C                     END
+     C*
+     C           CCHTP     IFEQ 'D'
+     C                     MOVE 'DEL'     LCHT
+     C                     ADD  1         PCSDT
+     C                     END
+     C*
+     C** Check for overflow -
+     C*
+     C           CURLIN    IFGE 59
+     C*
+     C**   - and write new headings if required
+     C*
+     C**   - and FF1040P1 IS REQUIRED                                     S01117
+     C           *IN58     ANDEQ'1'                                       S01117
+     C                     WRITEFMTP101
+     C                     END
+     C*
+     C** Format fields for output
+     C** If OTC output instrument type,else type less market code
+     C*
+     C           ISTI      IFEQ 'Y'
+     C                     MOVE *BLANKS   MKCN
+     C                     MOVE *BLANKS   WISC
+     C                     MOVE ISTT      WISC
+     C                     MOVE *BLANK    WYRN
+     C*
+     C                     ELSE
+     C                     MOVE XMKT      MKCN
+     C                     MOVE *BLANKS   WISC
+     C                     MOVELDISC      WISC
+     C                     MOVE YRNO      WYRN
+     C                     END
+     C*
+     C** Convert month number to alpha format
+     C*
+     C           MTHN      IFNE 0
+     C                     MOVE ZMNM,MTHN WMTH
+     C                     ELSE
+     C                     MOVE *BLANKS   WMTH
+     C                     END
+     C*
+     C                     MOVE ISTN      WISN
+     C                     MOVE PCAL      WPCL
+     C*
+     C** Strike price blank if a future - else format
+     C*
+     C           ISPT      IFLE 3
+     C           ISPT      OREQ 7                                         AUS022
+     C                     MOVE *BLANKS   WSTP
+     C                     ELSE
+     C*
+     C** If OTC use tick and min.price fluc. from INTYP
+     C*
+     C           ISTI      IFEQ 'Y'
+     C                     MOVE TKDM      FFTKDM
+     C                     MOVE MNPF      FFMNPF
+     C                     ELSE
+     C*
+     C                     MOVE TKDM2     FFTKDM
+     C                     MOVE MNPF2     FFMNPF
+     C                     END
+     C*
+     C                     MOVE STRP      FFPRIC
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    WSTP
+     C                     END
+     C*
+     C** Format old price using last EOC price
+     C** (Use PLEC in I/C and PBEC during COB/EOC)                        E20526
+     C*
+     C**********           MOVE PLEC      FFPRIC                          E20526
+     C   U1                MOVE PLEC      FFPRIC                          E20526
+     C  NU1                MOVE PBEC      FFPRIC                          E20526
+     C                     MOVE TKDM      FFTKDM
+     C                     MOVE MNPF      FFMNPF
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    WPLC
+     C*
+     C** Format new price
+     C*
+     C                     MOVE NEWP      FFPRIC
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    WNWP
+     C*
+     C** Format risk factor via ZFRPED S.R.
+     C*
+     C           RSKF      IFGT *ZERO
+     C                     MOVE RSKF      ZFLD15
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    WRKF
+     C                     ELSE
+     C                     MOVE *BLANK    WRKF
+     C                     END
+     C*
+     C** Format change type and date
+     C*
+     C                     MOVE LCHT      WCHT
+     C                     MOVE CLCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WLCD
+     C*                                                                   S01117
+     C** WRITE HEADER TO FF1040P1 IF NOT YET WRITTEN                      S01117
+     C*                                                                   S01117
+     C           *IN58     IFEQ '0'                                       S01117
+     C                     EXSR HEADP1                                    S01117
+     C                     END                                            S01117
+     C*
+     C** Write detail to report
+     C*
+     C                     WRITEFMTP102
+     C*   seton *IN60- detail printed in P1                               S01117
+     C                     MOVE '1'       *IN60                           S01117
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   S.R. PRISP - SUB-ROUTINE TO PROCESS PRISP FILE
+     C*
+     C*  CALLED  FROM PROGRAM MAIN
+     C*  CALLS SR. FFPRCS
+     C*            ZFRPED
+     C*            ZDATE2
+     C*
+     C********************************************************************
+     C           PRISP     BEGSR
+     C*
+     C** Determine if instrument type has changed
+     C*
+     C           PISTT     IFNE ISTTPV
+     C           PISTT     CHAININTYP                54
+     C*
+     C** If chain unsuccessful - db error 06
+     C*
+     C           *IN54     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'06'      DBASE            **DB ERROR 06**S01117
+     C                     Z-ADD6         DBASE            **           **S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELPISTT     DBKEY
+     C                     OUT  LDA
+     C*
+     C** Write Database Error details
+     C** IF FF1040P1 IS REQUIRED                                          S01117
+     C           *IN58     IFEQ '1'                                       S01117
+     C                     WRITEFMTP105
+     C                     END                                            S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C                     MOVE PISTT     ISTTPV
+     C                     END
+     C*
+     C** Chain to INTYP2 for underlying details
+     C*
+     C                     MOVE PXMKT     MRKT
+     C           INKEY     CHAININTYP2               55
+     C*
+     C** If record not found - db error 07
+     C*
+     C           *IN55     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'07'      DBASE            **DB ERROR 07**S01117
+     C                     Z-ADD7         DBASE            **           **S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELINKEY     DBKEY
+     C                     OUT  LDA
+     C*
+     C** Write Database Error details
+     C** IF FF1040P1 IS REQUIRED                                          S01117
+     C           *IN58     IFEQ '1'                                       S01117
+     C                     WRITEFMTP105
+     C                     END                                            S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C** Inspect last-change - format and increment corresponding total
+     C*
+     C           PCHTP     IFEQ 'I'
+     C                     MOVE 'INS'     LCHT
+     C                     ADD  1         PSPIT
+     C                     END
+     C*
+     C           PCHTP     IFEQ 'A'
+     C                     MOVE 'AMD'     LCHT
+     C                     ADD  1         PSPAT
+     C                     END
+     C*
+     C           PCHTP     IFEQ 'D'
+     C                     MOVE 'DEL'     LCHT
+     C                     ADD  1         PSPDT
+     C                     END
+     C*
+     C** Check for overflow -
+     C*
+     C           CURLIN    IFGE 59
+     C*
+     C**   - and write new headings if required
+     C*
+     C**   - and FF1040P1 IS REQUIRED                                     S01117
+     C           *IN58     ANDEQ'1'                                       S01117
+     C                     WRITEFMTP101
+     C                     END
+     C*
+     C** Format fields for output
+     C** If OTC output instrument type,else instrument code
+     C*
+     C           ISTI      IFEQ 'Y'
+     C                     MOVE *BLANKS   MKCN
+     C                     MOVE PISTT     WISC
+     C                     ELSE
+     C*
+     C                     MOVE PXMKT     MKCN
+     C                     MOVE *BLANKS   WISC
+     C                     MOVELPDISC     WISC
+     C                     END
+     C*
+     C                     MOVE ISTN      WISN
+     C*
+     C** Suppress date and put/call indicator
+     C*
+     C                     MOVE *BLANKS   WMTH
+     C                     MOVE *BLANKS   WYRN
+     C                     MOVE *BLANKS   WPCL
+     C                     SETON                     48
+     C*                                                                   E24171
+     C** This code can be removed since for a Future the Strike Price     E24171
+     C** is always zero. the Strike Price won't be displayed anyway       E24171
+     C** since *in48 is on.                                               E24171
+     C*                                                                   E24171
+     C**********                                                          E24171
+     C***If*Strike*price*not*equal*to*zero,*format*Strike*price****       E24171
+     C***using*underlying*details,*otherwise*leave*as*blank*********      E24171
+     C**********                                                          E24171
+     C**********           MOVE *BLANKS   WSTP                            E24171
+     C**********                                                          E24171
+     C********** STRP      IFNE *ZERO                                     E24171
+     C**********           MOVE TKDM2     FFTKDM                          E24171
+     C**********           MOVE MNPF2     FFMNPF                          E24171
+     C**********                                                          E24171
+     C**********           MOVE STRP      FFPRIC                          E24171
+     C**********           EXSR FFPRCS                                    E24171
+     C**********           MOVE FFSPRC    WSTP                            E24171
+     C**********           END                                            E24171
+     C*
+     C** Format old price using old spot price and underlying details
+     C** (Use POSPR in I/C & VOSPR during COB/EOC)                        E20526
+     C** Set up Minimum Price Fluctuation & Tick Denominator.             E24171
+     C*
+     C                     MOVE TKDM2     FFTKDM                          E24171
+     C                     MOVE MNPF2     FFMNPF                          E24171
+     C***********          MOVE POSPR     FFPRIC                          E20526
+     C   U1                MOVE POSPR     FFPRIC                          E20526
+     C  NU1                MOVE VOSPR     FFPRIC                          E20526
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    WPLC
+     C*
+     C** Format new price
+     C*
+     C                     MOVE PNSPR     FFPRIC
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    WNWP
+     C*
+     C** Blank risk factor for output
+     C*
+     C                     MOVE *BLANKS   WRKF
+     C*
+     C** Format change type and date
+     C*
+     C                     MOVE LCHT      WCHT
+     C                     MOVE PLCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WLCD
+     C*                                                                   S01117
+     C** WRITE HEADER TO FF1040P1 IF NOT YET WRITTEN                      S01117
+     C*                                                                   S01117
+     C           *IN58     IFEQ '0'                                       S01117
+     C                     EXSR HEADP1                                    S01117
+     C                     END                                            S01117
+     C*
+     C** Write detail to report
+     C*
+     C                     WRITEFMTP102
+     C*   seton *IN60- detail printed in P1                               S01117
+     C                     MOVE '1'       *IN60                           S01117
+     C                     SETOF                     48
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   S.R. AUDIT - SUB-ROUTINE TO PRODUCE AUDIT REPORT                S01117
+     C****S.R.*AUDIT*-*SUB-ROUTINE*TO*PRODUCE*AUDIT*REPORT*FOR*EOC********S01117
+     C*   IF U3 ON  - CHECK FILE CONTROL FOR SPECIFIC MARKET CENTRE       S01117
+     C*               AND WRITE AU REPORT                                 S01117
+     C*   IF U3 OFF - WRITE AU REPORT WITH CALCULATED TOTALS              S01117
+     C*
+     C*  CALLED ONCE FROM PROGRAM CLOSE
+     C*
+     C********************************************************************
+     C*
+     C           AUDIT     BEGSR
+     C***********          WRITEFMTAU01                                   S01117
+     C*                                                                   S01117
+     C*   RESET *IN59 WHICH CONTROLS OUTPUT OF INPUT TOTALS IN AU REPORT  S01117
+     C                     MOVE '0'       *IN59                           S01117
+     C*                                                                   S01117
+     C*   IF U3 ON  - READ AUDIT RECORD AND CHECK CONTROL TOTAL           S01117
+     C*                                                                   S01117
+     C           *INU3     IFEQ '1'                                       S01117
+     C                     MOVE '1'       *IN59                           S01117
+     C                     READ PRICSA                   56
+     C*
+     C** If record not found - db error 08
+     C*
+     C           *IN56     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'08'      DBASE            **DB ERROR 08**S01117
+     C                     Z-ADD8         DBASE            **           **S01117
+     C                     MOVEL'PRICS'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA
+     C*
+     C***Write*Database*Error*details*************************************S01117
+     C** Write Database Error details to P1 if P1 required                S01117
+     C           *IN58     IFEQ '1'                                       S01117
+     C                     WRITEFMTP105                                   S01117
+     C                     END                                            S01117
+     C** Write Database Error details to AU in *PSSR                      S01117
+     C***********          WRITEFMTAU04                                   S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C** Compare control totals with program totals for PRICS.
+     C** Write detail line and indicate difference if appropriate.
+     C*
+     C** Insertion totals
+     C           PCSIT     IFNE NINS
+     C                     SETON                     42U8
+     C                     END
+     C*
+     C* Amend totals
+     C           PCSAT     IFNE NAMD
+     C                     SETON                     43U8
+     C                     END
+     C*
+     C* Deletion totals
+     C           PCSDT     IFNE NDEL
+     C                     SETON                     44U8
+     C                     END
+     C*
+     C                     READ PRISPA                   57
+     C*
+     C** If record not found - db error 09
+     C*
+     C           *IN57     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'09'      DBASE            **DB ERROR 09**S01117
+     C                     Z-ADD9         DBASE            **           **S01117
+     C                     MOVEL'PRISPS'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA
+     C***Write*Database*Error*details*************************************S01117
+     C** Write Database Error details to P1 if P1 required                S01117
+     C           *IN58     IFEQ '1'                                       S01117
+     C                     WRITEFMTP105                                   S01117
+     C                     END                                            S01117
+     C** Write Database Error details to AU in *PSSR                      S01117
+     C***********          WRITEFMTAU04                                   S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C** Compare control totals with program totals for PRISP.
+     C** Write detail line and indicate difference if appropriate.
+     C*
+     C** Insertion totals
+     C           PSPIT     IFNE PNINS
+     C                     SETON                     45U8
+     C                     END
+     C*
+     C* Amend totals
+     C           PSPAT     IFNE PNAMD
+     C                     SETON                     46U8
+     C                     END
+     C*
+     C* Deletion totals
+     C           PSPDT     IFNE PNDEL
+     C                     SETON                     47U8
+     C                     END
+     C*                                                                   S01117
+     C* END FILE CONTROL CHECKING. *INU3 = 1                              S01117
+     C                     END                                            S01117
+     C*
+     C** Write audit report details and trailer
+     C*
+     C                     WRITEFMTAU01                                   S01117
+     C                     WRITEFMTAU02
+     C           *IN60     IFEQ '0'                                       S01117
+     C                     WRITEFMTAU03
+     C                     END                                            S01117
+     C*
+     C** If EOC PROCESSING AND                                            S01117
+     C** If there are no differences between the file control and
+     C** program totals ( U8 = 0 ) then reset control totals.
+     C*
+     C           *INU3     IFEQ '1'                                       S01117
+     C           *INU8     IFEQ '0'
+     C                     Z-ADD0         NINS
+     C                     Z-ADD0         NAMD
+     C                     Z-ADD0         NDEL
+     C                     Z-ADD0         PNINS
+     C                     Z-ADD0         PNAMD
+     C                     Z-ADD0         PNDEL
+     C*
+     C** Update audit files
+     C*
+     C                     UPDATPRICSAF
+     C                     UPDATPRISPAF
+     C*
+     C                     END
+     C                     END                                            S01117
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/EJECT
+     C/COPY ZSRSRC,FFPRCSZ4
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,FFFMTZ3
+     C*
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** RCFSPL -- SUBROUTINE TO SPOOL P1 & AU REPORT THROUGH RCF         S01117
+     C** CALLED FROM: PROGRAM INITIALIZATION                              S01117
+     C** CALLS: NOTHING                                                   S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFSPL    BEGSR                           ** RCFSPL **   S01117
+     C*                                                                   S01117
+     C**      ENSURE P1 REPORT SPOOL FILE RECORDED BY RCF                 S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C**      ENSURE AU SPOOL FILE RECORDED BY RCF                        S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** HEADP1 -- SUBROUTINE TO WRITE P1 REPORT HEADER                   S01117
+     C**           SET ON *IN58 TO INDICATE P1 REQUIRED & HEADER WRITTEN  S01117
+     C** CALLED FROM: PROGRAM INITIALIZATION,                   U3 OFF    S01117
+     C**              S.R. PRICS BEFORE WRITING DETAIL LINE,    U3 ON     S01117
+     C**              S.R. PRISP BEFORE WRITING DETAIL LINE,    U3 ON     S01117
+     C** CALLS: NOTHING                                                   S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           HEADP1    BEGSR                           ** HEADP1 **   S01117
+     C                     MOVE '1'       *IN58                           S01117
+     C*                                                                   S01117
+     C**      WRITE HEADER TO FF1040P1                                    S01117
+     C*                                                                   S01117
+     C                     WRITEFMTP101                                   S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+     C** CALLS: NOTHING                                                   S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C** Write AUDIT & Database Error details TO AUDIT REPORT             S01117
+     C                     WRITEFMTAU01                                   S01117
+     C                     WRITEFMTAU02                                   S01117
+     C                     WRITEFMTAU04                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

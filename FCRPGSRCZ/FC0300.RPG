@@ -1,0 +1,1190 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC Report descriptions report')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Report Control Facility Module
+     F*                                                                  *
+     F*      FC0300 - REPORT DESCRIPTIONS REPORT                         *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 184589             Date 28May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 186409             Date 29Dec00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CPB001             Date 02Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                     CPL002           DATE 08Mar99                *
+     F*                     CTI001           DATE 22JUL97                *
+     F*                     048078           DATE 09OCT95                *
+     F*                     S01408           DATE 10APR95                *
+     F*                     081700           DATE 15MAR95                *
+     F*                     S01486           DATE 10JUN94                *
+     F*                     S01522           DATE 02JUN94                *
+     F*                     S01502           DATE 08JUL94                *
+     F*                     S01493           DATE 02JUN94                *
+     F*                     S01407           DATE 26JAN93                *
+     F*                     S01393           DATE 06OCT92                *
+     F*                     S10736           DATE 16OCT92                *
+     F*                     S01310           DATE 29JUL91                *
+     F*                     S01271           DATE 25JUN91                *
+     F*                     RT0086           DATE 17MAY91                *
+     F*                   . S01314           DATE 12MAR91                *
+     F*                     LN0842           DATE 09OCT90                *
+     F*                     LN0654           DATE 10SEP90                *
+     F*                     LN0648           DATE 20AUG90                *
+     F*                     LN0587           DATE 20AUG90                *
+     F*                                                                  *
+      ********************************************************************
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  184589 - Array index error is encountered if IC option RPTD  *
+      *           is taken if report pgm has all 5 levels set to 'Y'  *
+      *           in file FCREPTPD.  Need to redefine elements for    *
+      *           arrays AVL and LEVL, partially applied fix 174870.  *
+      *      186409 - Component FCC0304 failed due to printer file       *
+      *               FC0300P1 overflow.  Change condition for checking  *
+      *               overflow from line 57 to line 56 in SUBR/SUFFDT.   *
+     F*      CPB001 - 'Private Banking' Module                           *
+      *      CPL002 - Midas-Plato Interface
+      *      CTI001 - Midas / Trade Innovation Interface Module          *
+      *      048078 - PROGRAM CRASHES WITH DEC ERROR IN AUDIT MODE
+     F*      S01408 - Core hook FC0300CCPG added                         *
+     F*      081700 - Module id 'HF' (HAF) added                         *
+      *      S01486 - ADD ACCOUNT OFFICER AND DEPARTMENT LEVELS FOR      *
+      *               PRIVATE BANKING                                    *
+      *      S01522 - USER DEFINED CORRESPONDANCE                        *
+      *      S01502 - BLI TELEKURS PROCESSING. RECOMPILED DUE TO         *
+      *               CHANGE OF LENGTH IN SESTAT, 133 LONG               *
+      *      S01493 - MIDAS EUREKA INTERFACE MODULE                      *
+      *      S01407 - SWITCHABILITY ENHANCEMENTS                         *
+      *      S01393 - RISK MANAGEMENT MODULE ADDED                       *
+      *      S10736 - MANAGEMENT ACCOUNTS
+      *      S01310 - SWIFT RATIONALISATION
+      *      S01271 - RECOMPILE FOR PAY/RECEIVE IN INPUT CYCLE           *
+      *               PROCESSING                                         *
+      *      RT0086 - RECOMPILE OVER CHANGED VERSION OF FC0300AU.
+      *      S01314 - CHANGES FOR PTF INCORPORATION (APPLY FIX LN1114)   *
+      *      LN0842 - MODULE ACCESS TO BE FROM SDMMODPD                  *LN0842
+      *      LN0654 - REPORT FORMATS CHANGED TO ENSURE CORRECT VALUE OF  *
+      *               MOVED COLLATION INDICATOR DISPLAYED (SEE LN0587)   *
+      *      LN0648 - CHANGE FIELD NAME FROM BVATBI TO BVRTBI            *
+      *               FIELD RENAMED IN FILE SDSTRDPD (LN0410)            *
+      *      LN0587 - MOVE OF COLLATION FLAG - NOW ON FCRSFX INSTEAD     *
+      *               OF FCREPT                                          *
+     F*                                                                  *
+      ********************************************************************
+      * USE OF INDICATORS *
+      *
+      * 05   FLAG - AT LEAST ONE RECORD ON REPORT (AUDIT MODE)
+      * 50   AUDIT MODE
+      * 70   WORK INDICATOR FOR LOKUPS
+      * 80   REPORT DESCRIPTIONS END OF FILE
+      * 88   REPORT COMPONENTS END OF FILE
+      * 89   REPORT SUFFIXES END OF FILE
+      * 98   MMDDYY DATE FORMAT
+      *
+      * U1   AUDIT MODE
+      * U8   FILE CONTROLS OUT OF BALANCE
+      *
+      ********************************************************************
+     F***********FCREPTL1IF  E           K        DISK                    S01407
+     F***********FCRCOML1IF  E           K        DISK                    S01407
+     FFCREPTJ0IF  E           K        DISK                               S01407
+     FFCRCOMJ1IF  E           K        DISK                               S01407
+     FFCRSFXL1IF  E           K        DISK
+     FFCRPDSL0UF  E           K        DISK
+     FFC0300P1O   E                    PRINTER      KINFDS SPOOL
+     FFC0300AUO   E                    PRINTER      KINFDS SPOOLU     U1
+      *
+     E************        UMAR       64  2               MIDAS modules    S10736
+     E**************      UMAR      114  2               MIDAS modulS10736S01522
+     E**************      UMAR      128  2               MIDAS modulS01522CPB001
+     E                    UMAR      129  2               MIDAS modules    CPB001
+     E********************TXT     1  11 11                                LN0654
+     E***********         TXT     1  10 11                          LN0654S01486
+     E                    TXT     1  12 11                                S01486
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+     E                    TEMP       16  1
+     E***********         AVL         4 10                                184589
+     E                    AVL         9 10                                184589
+     E***********         LEVL        4  7                                184589
+     E                    LEVL        9  7                                184589
+     IDSFDY     E DSDSFDY
+      *
+      ** 200 BYTE DATASTRUCTURE FOR ACCESS PROGRAMS
+      *
+     IP@BANK    E DSSDBANKPD
+      *
+      ** Bank ICD Access Program record format data structure
+      *
+     ISDSTRD    E DSSDSTRDPD
+     I**
+     I**     Data structure for SESTAT
+     ISESTAT    E DS
+     I****MMOD        DS                            256                   LN0842
+     I**********                              1   1 WSDGL                 LN0842
+     I**********                              2   2 WDL                   LN0842
+     I**********                              3   3 WRT                   LN0842
+     I**********                              4   4 WCL                   LN0842
+     I**********                              5   5 WST                   LN0842
+     I**********                              6   6 WBC                   LN0842
+     I**********                              7   7 WEM                   LN0842
+     I**********                              8   8 WFM                   LN0842
+     I**********                              9   9 WSR                   LN0842
+     I**********                             10  10 WLE                   LN0842
+     I**********                             11  11 WFD                   LN0842
+     I**********                             12  12 WCM                   LN0842
+     I**********                             13  13 WFX                   LN0842
+     I**********                             14  14 WMM                   LN0842
+     I**********                             15  15 WCN                   LN0842
+     I**********                             16  16 WRE                   LN0842
+     I**********                             18  18 WMS                   LN0842
+     I**********                             19  19 WAB                   LN0842
+     I**********                             21  21 WSE                   LN0842
+     I**********                             22  22 WRC                   LN0842
+     I**********                             23  23 WIA                   LN0842
+     I**********                             26  26 WSW                   LN0842
+     I**********                             50  50 WFF                   LN0842
+     I**********                             51  51 WMT                   LN0842
+     I**********                             54  54 WMF                   LN0842
+     I**********                             56  56 WNM                   LN0842
+     I**********                             57  57 WFT                   LN0842
+     I**********                             85  85 WOD                   LN0842
+     ISDMMOD    E DSSDMMODPD                                              LN0842
+     I*                                                                   LN0842
+     I              BGMTMI                          WMT                   LN0842
+     I              BGSDGL                          WSDGL                 LN0842
+     I              BGDLFX                          WFX                   LN0842
+     I              BGSYLN                          WCL                   LN0842
+     I              BGEXMG                          WEM                   LN0842
+     I              BGCSLN                          WLE                   LN0842
+     I              BGRTBN                          WRE                   LN0842
+     I              BGMSDL                          WMS                   LN0842
+     I              BGSECS                          WSE                   LN0842
+     I              BGAURC                          WRC                   LN0842
+     I              BGDRCM                          WCM                   LN0842
+     I              BGDRSD                          WFD                   LN0842
+     I              BGFDTR                          WFT                   LN0842
+     I              BGTSKY                          WTK                   LN0842
+     I              BGDRAR                          WAB                   LN0842
+     I              BGFUOP                          WFF                   LN0842
+     I              BGNWMI                          WNM                   LN0842
+     I              BGFIIN                          WFI                   LN0842
+     I              BGDLMM                          WMM                   LN0842
+     I              BGTRMG                          WTM                   LN0842
+     I              BGMIDQ                          WMQ                   LN0842
+     I              BGMFIC                          WMF                   LN0842
+     I              BGIOAC                          WIA                   LN0842
+     I              BGCHIP                          WCH                   LN0842
+     I              BGOPDK                          WOD                   LN0842
+     I              BGNZST                          WED                   S01493
+     I*                                                                   LN0842
+     IDSSDY     E DSDSSDY                                                 LN0842
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                LN0842
+     I*                                                                   LN0842
+     ILDA         DS                            256
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR REPORTING
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IPSDS       SDS
+      *
+      **  Program status data structure.
+      *
+     I                                       37  390@NOPMS
+     I                                      244 253 WSID
+     I                                      254 263 @USER
+     I                                      264 2690@JOBNO
+     I*
+     ISPOOL       DS
+     I*
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     I*
+     ISPOOLU      DS
+     I*
+     I** SPOOL INFORMATION DATA STRUCTURE
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*                                                                   S01407
+     IPRCMSQ      DS                             15                       S01407
+     I*                                                                   S01407
+     I** PREVIOUS REPORT COMPONENT/SEQUENCE COMBINATION                   S01407
+     I*                                                                   S01407
+     I                                        1  10 ##COTT                S01407
+     I                                       11  15 ##CSEQ                S01407
+     I*                                                                   S01407
+     ICUCMSQ      DS                             15                       S01407
+     I*                                                                   S01407
+     I** CURRENT REPORT COMPONENT/SEQUENCE COMBINATION                    S01407
+     I*                                                                   S01407
+     I                                        1  10 D3COTT                S01407
+     I                                       11  15 D3CSEQ                S01407
+      /EJECT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** PARAMETER PASSED FROM FCC0304
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PSSEQ   5
+     C                     PARM           PLVL    1
+     C                     PARM           PETTY   3
+      ********************************************************************
+      * CONTROL SECTION
+      ********************************************************************
+     C                     EXSR AINIT
+     C                     EXSR BMAIN
+     C                     EXSR CTERM
+      ********************************************************************
+      * AINIT - INITIALISATION
+      ********************************************************************
+     C*
+     C           AINIT     BEGSR
+     C*
+     C   U1                SETON                     50
+     C*
+     C** ACCESS LF/SDBANKL1 FOR USER REPORT TITLE AND RUN DATE
+     C*
+     C                     CALL 'AOBANKR0'                   <BANK ICD>
+     C                     PARM *BLANK    P@RTC2  7          B:Return code
+     C                     PARM '*FIRST'  P@OPTN  7          I:Option
+     C           P@BANK    PARM P@BANK    DSFDY              O:Rec.format
+     C*
+     C** IF NO RECORD FOUND THEN PERORM DATABASE ERROR PROCESSING
+     C*
+     C           P@RTC2    IFNE *BLANK
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FC0300'  DBPGM
+     C                     MOVEL'SDBANKL0'DBFILE
+     C                     MOVEL'BANK'    DBKEY            *************
+     C                     Z-ADD1         DBASE            * DBERR 001 *
+     C                     SETON                     U7U8  *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+      ** SET UP REPORT HEADINGS FIELDS: TITLE AND RUN DATE
+     C*
+     C                     MOVELBJURPT    TITL
+     C                     MOVELBJMRDT    RUNA
+     C                     Z-ADDBJRDNB    RUND    50                      048078
+     C*
+     C** SET DATE FORMAT INDICATOR
+     C*
+     C           BJDFIN    COMP 'M'                      98
+     C*
+     C** CALL ZSFILE TO REGISTER SPOOL FILE ENTRY OF MAIN PRINTER FILE
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSSEQ
+     C                     PARM           PETTY
+     C                     PARM           SFILE
+     C                     PARM SFNUM     ZSFNO   60
+     C                     PARM           PERR    1
+     C*
+     C** IF ERROR CODE = 'Y' THEN TERMINATE THE PROGRAM
+     C*
+     C           PERR      IFEQ 'Y'
+     C                     EXSR CTERM
+     C                     END
+     C*
+     C********** *NAMVAR   DEFN           MMOD                            LN0842
+     C           *NAMVAR   DEFN           SESTAT
+     C*  Set up an array containing ID's of modules in system
+     C                     Z-ADD1         I       30
+     C**********           IN   MMOD                                      LN0842
+     C                     CALL 'AOMMODR0'                                LN0842
+     C                     PARM '*DBERR  '@RTCD   7                       LN0842
+     C                     PARM '*FIRST  '@OPTN   7                       LN0842
+     C           SDMMOD    PARM SDMMOD    DSSDY                           LN0842
+     C*
+     C           WSDGL     IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'SD'      UMAR,I
+     C                     ADD  1         I
+     C                     MOVEL'GL'      UMAR,I
+     C                     END
+     C*
+     C           WMF       IFEQ 'Y'
+     C********** WOD       OREQ 'Y'                                       LN0842
+     C                     ADD  1         I
+     C                     MOVEL'MA'      UMAR,I
+     C                     END
+     C*
+     C           WOD       IFEQ 'Y'                                       LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'OD'      UMAR,I                          LN0842
+     C                     END                                            LN0842
+     C*                                                                   LN0842
+     C           WFX       IFEQ 'Y'                                       LN0842
+     C           WMM       ANDEQ'Y'                                       LN0842
+     C********** WDL       IFEQ 'Y'                                       LN0842
+     C                     ADD  1         I
+     C                     MOVEL'DL'      UMAR,I
+     C                     END
+     C*
+     C           WCL       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'CL'      UMAR,I
+     C                     END
+     C*
+     C** Check if FRA/IRS is present                                      LN0842
+     C*                                                                   LN0842
+     C           WFI       IFEQ 'Y'                                       LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'IR'      UMAR,I                          LN0842
+     C                     END                                            LN0842
+     C*                                                                   LN0842
+     C** Check if Treasury Management is present                          LN0842
+     C*                                                                   LN0842
+     C           WTM       IFEQ 'Y'                                       LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'TM'      UMAR,I                          LN0842
+     C                     END                                            LN0842
+     C*                                                                   LN0842
+     C** Check if Testkey Interface is present                            LN0842
+     C*                                                                   LN0842
+     C           WTK       IFEQ 'Y'                                       LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'TK'      UMAR,I                          LN0842
+     C                     END                                            LN0842
+      *                                                                   S01310
+      ** If any Message Generation flag on, set MG                        S01310
+     C           BGSWDL    IFEQ 'Y'                                       S01310
+     C           BGSWSM    OREQ 'Y'                                       S01310
+     C           BGSWSL    OREQ 'Y'                                       S01310
+     C           BGSWCL    OREQ 'Y'                                       S01310
+     C           BGSWST    OREQ 'Y'                                       S01310
+     C           BGSWFT    OREQ 'Y'                                       S01310
+     C                     ADD  1         I                               S01310
+     C                     MOVEL'MG'      UMAR,I                          S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      ** Check for Message Management                                     S01310
+     C           WNM       IFEQ 'Y'                                       S01310
+     C                     ADD  1         I                               S01310
+     C                     MOVEL'ME'      UMAR,I                          S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      ** Check for Confirmation Matching                                  S01310
+     C           BGCFMT    IFEQ 'Y'                                       S01310
+     C                     ADD  1         I                               S01310
+     C                     MOVEL'CF'      UMAR,I                          S01310
+     C                     END                                            S01310
+     C*                                                                   LN0842
+     C** Check if MIDAS Q is present                                      LN0842
+     C*                                                                   LN0842
+     C           WMQ       IFEQ 'Y'                                       LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'MQ'      UMAR,I                          LN0842
+     C                     END                                            LN0842
+     C*                                                                   LN0842
+     C** Check if Midas Chips is present                                  LN0842
+     C*                                                                   LN0842
+     C           WCH       IFEQ 'Y'                                       LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'CH'      UMAR,I                          LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'C2'      UMAR,I                          LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'C3'      UMAR,I                          LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'C4'      UMAR,I                          LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'C5'      UMAR,I                          LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'C6'      UMAR,I                          LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'C7'      UMAR,I                          LN0842
+     C                     ADD  1         I                               LN0842
+     C                     MOVEL'C8'      UMAR,I                          LN0842
+     C                     END                                            LN0842
+     C*                                                                   LN0842
+     C********** WBC       IFEQ 'Y'                                       LN0842
+     C**********           ADD  1         I                               LN0842
+     C**********           MOVEL'BC'      UMAR,I                          LN0842
+     C**********           END                                            LN0842
+     C*
+     C********** WSR       IFEQ 'Y'                                       LN0842
+     C**********           ADD  1         I                               LN0842
+     C**********           MOVEL'SR'      UMAR,I                          LN0842
+     C**********           END                                            LN0842
+     C*
+     C           WLE       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'LE'      UMAR,I
+     C                     END
+     C*
+     C           WFD       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'FD'      UMAR,I
+     C                     END
+     C*
+     C           WCM       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'CM'      UMAR,I
+     C                     END
+     C*
+     C           WFX       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'FX'      UMAR,I
+     C                     END
+     C*
+     C           WRE       IFEQ 'Y'
+     C*
+     C           WIA       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'RI'      UMAR,I
+     C                     ELSE
+     C                     ADD  1         I
+     C                     MOVEL'RE'      UMAR,I
+     C                     ADD  1         I
+     C                     MOVEL'RI'      UMAR,I
+     C                     END
+     C**********           ELSE                                           LN0842
+     C********** WRT       IFEQ 'Y'                                       LN0842
+     C**********           ADD  1         I                               LN0842
+     C**********           MOVEL'RT'      UMAR,I                          LN0842
+     C**********           END                                            LN0842
+     C                     END
+     C*
+     C           WEM       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'EM'      UMAR,I
+     C                     END
+     C*
+     C********** WST       IFEQ 'Y'                                       LN0842
+     C**********           ADD  1         I                               LN0842
+     C**********           MOVEL'ST'      UMAR,I                          LN0842
+     C**********           END                                            LN0842
+     C*
+     C********** WCN       IFEQ 'Y'                                       LN0842
+     C**********           ADD  1         I                               LN0842
+     C**********           MOVEL'CN'      UMAR,I                          LN0842
+     C**********           END                                            LN0842
+     C*
+     C           WFF       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'FF'      UMAR,I
+     C                     END
+     C*
+     C           WRC       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'RC'      UMAR,I
+     C                     END
+     C*
+     C           WMS       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'MS'      UMAR,I
+     C*
+     C**********           ELSE                                           LN0842
+     C*
+     C********** WSW       IFEQ 'Y'                                       LN0842
+     C**********           ADD  1         I                               LN0842
+     C**********           MOVEL'SW'      UMAR,I                          LN0842
+     C**********           END                                            LN0842
+     C*
+     C                     END
+     C*
+     C           WFT       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'FT'      UMAR,I
+     C                     END
+     C           WMT       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'MT'      UMAR,I
+     C                     END
+     C*
+     C           WNM       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'NM'      UMAR,I
+     C                     END
+     C*
+     C           WMM       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'MM'      UMAR,I
+     C                     END
+     C*                                                                   S01393
+     C* CHECH FOR RISK MANAGEMENT                                         S01393
+     C*                                                                   S01393
+     C           BGRKMG    IFEQ 'Y'                                       S01393
+     C                     ADD  1         I                               S01393
+     C                     MOVEL'RM'      UMAR,I                          S01393
+     C                     END                                            S01393
+     C*                                                                   S01393
+     C*                                                                   S01493
+     C* CHECK FOR 'ED' MODULE - MIDAS EUREKA INTERFACE                    S01493
+     C*                                                                   S01493
+     C           WED       IFEQ 'Y'                                       S01493
+     C                     ADD  1         I                               S01493
+     C                     MOVEL'ED'      UMAR,I                          S01493
+     C                     END                                            S01493
+     C*                                                                   S01493
+     C* CHECK FOR HISTORY AND AUDIT FACILITY                              081700
+     C*                                                                   081700
+     C           BGNUST    IFEQ 'Y'                                       081700
+     C                     ADD  1         I                               081700
+     C                     MOVEL'HF'      UMAR,I                          081700
+     C                     END                                            081700
+     C*
+     C           WAB       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'AB'      UMAR,I
+     C                     END
+     C* Management Accounts                                               S10736
+     C*                                                                   S10736
+     C           BGNVST    IFEQ 'Y'                                       S10736
+     C                     ADD  1         I                               S10736
+     C                     MOVEL'MC'      UMAR,I                          S10736
+     C                     END                                            S10736
+     C**                                                                  S10736
+     C*  User Defined Correspondance                                      S01522
+     C           BGN1ST    IFEQ 'Y'                                       S01522
+     C                     ADD  1         I                               S01522
+     C                     MOVEL'CG'      UMAR,I                          S01522
+     C                     END                                            S01522
+     C*                                                                   CPL002
+     C** Midas-Plato Interface                                            CPL002
+     C           BGN2ST    IFEQ 'Y'                                       CPL002
+     C                     ADD  1         I                               CPL002
+     C                     MOVEL'PL'      UMAR,I                          CPL002
+     C                     END                                            CPL002
+     C**
+     C           WSE       IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'SE'      UMAR,I
+     C**
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*DBERR'  @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C********** SDSTRD    PARM SDSTRD    DSFDY                           S10736
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S10736
+     C*
+     C           BVEUCD    IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'S2'      UMAR,I
+     C                     END
+     C*
+     C***********BVATBI    IFEQ 'Y'                                       LN0648
+     C***********BVRTBI    IFEQ 'Y'                                 LN0648S01314
+     C*********************ADD  1         I                               S01314
+     C*********************MOVEL'S3'      UMAR,I                          S01314
+     C*********************END                                            S01314
+     C*
+     C           BVBIOP    IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'S4'      UMAR,I
+     C                     END
+     C*
+     C           BVACOP    IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'S5'      UMAR,I
+     C                     END
+     C*
+     C           BVEXOP    IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVE 'S6'      UMAR,I
+     C                     END
+     C*
+     C*  Access DTAARA/SESTAT to determine if Portfolio Processing and
+     C*  Commercial Paper Processing (proccessing Type 9) are licensed
+     C*
+     C                     IN   SESTAT
+     C*
+     C           PFPL      IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'S7'      UMAR,I
+     C                     END
+     C*
+     C           PT9L      IFEQ 'Y'
+     C                     ADD  1         I
+     C                     MOVEL'S8'      UMAR,I
+     C                     END
+     C*
+     C                     END
+     C*                                                                   S01486
+     C** CHECK FOR PORTFOLIO MANAGEMENT                                   S01486
+     C*                                                                   S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C                     ADD  1         I                               S01486
+     C                     MOVEL'PM'      UMAR,I                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** CHECK FOR PORTFOLIO LENDING                                      S01486
+     C*                                                                   S01486
+     C           BGLMCR    IFEQ 'Y'                                       S01486
+     C                     ADD  1         I                               S01486
+     C                     MOVEL'LB'      UMAR,I                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01408
+     C* Check for Midas/Trade Innovation Interface                        CTI001
+     C*                                                                   CTI001
+     C           BGN3ST    IFEQ 'Y'                                       CTI001
+     C                     ADD  1         I                               CTI001
+     C                     MOVEL'TI'      UMAR,I                          CTI001
+     C                     ENDIF                                          CTI001
+     C*                                                                   CTI001
+     C* Check for Private Banking Module                                  CPB001
+     C*                                                                   CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     ADD  1         I                               CPB001
+     C                     MOVEL'PB'      UMAR,I                          CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   CPB001
+     C/COPY WNCPYSRC,FC0300CCPG                                           S01408
+     C*                                                                   S01408
+     C*                                                                   S01407
+     C** INITIALISE WORK FIELDS TO BLANK                                  S01407
+     C*                                                                   S01407
+     C                     MOVE *BLANKS   ##RNAM 10                       S01407
+     C                     MOVE *BLANKS   PRCMSQ                          S01407
+     C*
+     C                     ENDSR
+      ********************************************************************
+      * BMAIN - MAIN PROCESSING
+      ********************************************************************
+     C*
+     C           BMAIN     BEGSR
+      *
+      ***READ*FILE*FCREPTL1*-*REPORT*DESCRIPTIONS*DETAILS*RETRIEVAL*INDEX S01407
+      ** READ FILE FCREPTJ0 - JOIN REPORT NAME TO SAR RELATED REPORT      S01407
+      ** NAME                                                             S01407
+      *
+     C***********          READ FCREPTL1                 80               S01407
+     C                     READ FCREPTJ0                 80               S01407
+      *
+      ** WRITE DETAILS FOR RECORDS AVAILABLE
+      *
+     C           *IN80     IFEQ '0'
+     C                     EXSR DETDES
+     C                     END
+      *
+      ** IF NO RECORD FOUND THEN WRITE BLANK REPORT
+      *
+     C           *IN05     IFEQ '0'
+     C                     EXSR NODETS
+     C                     END
+      *
+     C** IF SWITCH 1 IS ON THEN WRITE AUDIT REPORT
+      *
+     C           *INU1     IFEQ '1'
+     C                     EXSR PROAUD
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      * DETDES - WRITE DETAIL DESCRIPTIONS
+      ********************************************************************
+      *
+     C           DETDES    BEGSR
+     C*
+     C** RESET FLAG
+     C*
+     C                     SETOF                         05
+      *
+      ** FOR EACH DETAIL RECORD FOUND
+      *
+     C           *IN80     DOWEQ'0'
+     C*                                                                   S01407
+     C** ONLY PROCESS THIS RECORD IF IT IS FOR A DIFFERENT REPORT NAME    S01407
+     C** TO THE PREVIOUS RECORD                                           S01407
+     C*                                                                   S01407
+     C           DXRNAM    IFNE ##RNAM                                    S01407
+      *
+      *
+      **  LOOK UP MODULE ID IN ARRAY OF INSTALLED MODULES: PRINT ONLY
+      **  DETAILS FOR MODULES WHICH ARE PRESENT
+      *
+     C           DXCMOD    LOKUPUMAR                     70
+      *
+      ** CHECK LAST CHANGE DATE = RUN DATE IF AUDIT REPORT
+      *
+     C***U1*70***DXLCD*****COMP BJRDNB                   70               048078
+     C   U1 70   DXLCD     COMP RUND                     70               048078
+      *
+     C           *IN70     IFEQ '1'
+      *
+      ** AT LEAST ONE RECORD ON REPORT WITH LAST CHANGE ON RUN DATE
+      *
+     C  N05                MOVE '1'       *IN05
+      *
+      ** WRITE REPORT HEADINGS/REPORT DESCRIPTIONS MAIN DETAILS
+      *
+     C                     EXSR HEADMN
+     C*
+     C***ACCESS*FCRCOML1*FOR*ALL*COMPONENTS*ASSOCIATED*WITH*THE*RECORD    S01407
+     C** ACCESS FCRCOMJ1 FOR ALL COMPONENTS ASSOCIATED WITH THE RECORD    S01407
+     C*
+     C***********DXRNAM    SETLLFCRCOML1                                  S01407
+     C***********DXRNAM    READEFCRCOML1                 88               S01407
+     C           DXRNAM    SETLLFCRCOMJ1                                  S01407
+     C           DXRNAM    READEFCRCOMJ1                 88               S01407
+      *
+      ** IF NO COMPONENTS RECORD FOUND THEN DATABASE ERROR
+      *
+     C           *IN88     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FC0300'  DBPGM
+     C***********          MOVEL'FCRCOML1'DBFILE                          S01407
+     C                     MOVEL'FCRCOMJ1'DBFILE                          S01407
+     C                     MOVELDXRNAM    DBKEY            *************
+     C                     Z-ADD2         DBASE            * DBERR 002 *
+     C                     SETON                     U7U8  *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** WRITE THE DETAILS FOR REPORT COMPONENTS FOR THIS REPORT NAME
+     C*
+     C                     EXSR COMPDT
+     C*
+     C** ACCESS FCRSFXL1 FOR REPORT SUFFIXES
+     C*
+     C           DXRNAM    SETLLFCRSFXL1
+     C           DXRNAM    READEFCRSFXL1                 89
+      *
+      ** IF NO SUFFIXES RECORD FOUND THEN DATABASE ERROR
+      *
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FC0300'  DBPGM
+     C                     MOVEL'FCRSFXL1'DBFILE
+     C                     MOVELDXRNAM    DBKEY            *************
+     C                     Z-ADD3         DBASE            * DBERR 003 *
+     C                     SETON                     U7U8  *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** WRITE THE DETAILS FOR REPORT SUFFIXES FOR THIS REPORT NAME
+     C*
+     C                     EXSR SUFFDT
+     C*
+     C                     END
+     C                     END                                            S01407
+     C*                                                                   S01407
+     C                     MOVE DXRNAM    ##RNAM                          S01407
+     C                     MOVE *BLANKS   PRCMSQ                          S01407
+     C*
+     C** READ NEXT RECORD ON REPORT DESCRIPTIONS FILE
+     C*
+     C***********          READ FCREPTL1                 80               S01407
+     C                     READ FCREPTJ0                 80               S01407
+     C*
+     C                     END
+      *
+      ** WRITE 'END OF REPORT' TEXT
+      *
+     C           *IN05     IFEQ '1'
+     C                     WRITEFC0300F6
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      ********************************************************************
+      * HEADMN - MAIN REPORT HEADINGS/REPORT DESCRIPTION MAIN DETAILS
+      ********************************************************************
+      *
+     C           HEADMN    BEGSR
+      *
+      ** WRITE PAGE HEADINGS
+      *
+     C                     WRITEFC0300H0
+      *
+      ** SET UP REPORT DETAILS FOR MAIN REPORT DESCRIPTIONS RECORD
+      *
+      ** REPORT NAME/MODULE ID
+      *
+     C                     MOVEA*BLANK    TEMP
+     C                     MOVEADXRNAM    TEMP
+     C                     Z-ADD1         Y       20
+     C           ' '       LOKUPTEMP,Y                   70
+     C                     MOVE '/'       TEMP,Y
+     C                     ADD  1         Y
+     C                     MOVEADXCMOD    TEMP,Y
+     C                     MOVEATEMP      REPMOD
+      *
+      ** REPORT DESCRIPTION
+      *
+     C                     MOVELDXRDSC    RDESC
+     C*
+      ** SET UP ARRAYS OF LEVEL/AVAILABLITY
+     C*
+     C                     MOVEA*BLANK    LEVL
+     C                     MOVEA*BLANK    AVL
+     C                     Z-ADD0         L       10
+     C                     Z-ADD0         A       10
+      *
+      ** CONVERT BRANCH LEVEL FIELD TO TEXT
+      *
+     C           DXBLVL    IFEQ 'Y'
+     C                     ADD  1         L
+     C                     MOVELTXT,1     LEVL,L
+     C                     END
+      *
+      ** CONVERT COMPANY LEVEL FIELD TO TEXT
+      *
+     C           DXCLVL    IFEQ 'Y'
+     C                     ADD  1         L
+     C                     MOVELTXT,2     LEVL,L
+     C                     END
+      *
+      ** CONVERT SYSTEM LEVEL FIELD TO TEXT
+      *
+     C           DXGLVL    IFEQ 'Y'
+     C                     ADD  1         L
+     C                     MOVELTXT,3     LEVL,L
+     C                     END
+     C*                                                                   S01486
+     C** CONVERT ACCOUNT OFFICER LEVEL FIELD TO TEXT                      S01486
+     C*                                                                   S01486
+     C           DXALVL    IFEQ 'Y'                                       S01486
+     C                     ADD  1         L                               S01486
+     C                     MOVELTXT,11    LEVL,L                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** CONVERT DEPARTMENT LEVEL FIELD TO TEXT                           S01486
+     C*                                                                   S01486
+     C           DXDLVL    IFEQ 'Y'                                       S01486
+     C                     ADD  1         L                               S01486
+     C                     MOVELTXT,12    LEVL,L                          S01486
+     C                     END                                            S01486
+      *
+      ** CONVERT 'AVAILABLE DURING INPUT CYCLE'
+      *
+     C           DXIPCY    IFEQ 'Y'
+     C                     ADD  1         A
+     C                     MOVELTXT,4     AVL,A
+     C                     END
+      *
+      ** CONVERT 'AVAILABLE AT CLOSE OF BUSINESS'
+      *
+     C           DXCLBP    IFEQ 'Y'
+     C                     ADD  1         A
+     C                     MOVELTXT,5     AVL,A
+     C                     END
+      *
+      ** CONVERT 'AVAILABLE PERIODICALLY'
+      *
+     C           DXPDFL    IFEQ 'Y'
+     C                     ADD  1         A
+     C                     MOVELTXT,6     AVL,A
+     C                     END
+      *
+      ***CONVERT*'AVAILABLE*FOR*COLLATION'                                LN0654
+      *********************                                               LN0654
+     C***********DXCOLT****IFEQ 'Y'                                 LN0587LN0654
+     C***********DYCOLT****IFEQ 'Y'                                 LN0587LN0654
+     C*********************ADD  1         A                               LN0654
+     C*********************MOVELTXT,7     AVL,A                           LN0654
+     C*********************END                                            LN0654
+      *
+      ** NUMBER OF PRINTER FILES
+      *
+      *
+      ** DEFAULT OUTPUT ID
+      *
+     C                     MOVELDXDFTO    OUTPID
+      *
+      ** LAST CHANGE DATE
+      *
+     C                     Z-ADDDXLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    LDATE
+      *
+      ** CHANGE TYPE (INSERT/AMEND)
+      *
+     C           DXCHTP    IFEQ 'I'
+     C                     MOVEL'INSERT'  CHTYP
+     C                     ELSE
+     C                     MOVEL'AMEND '  CHTYP
+     C                     END
+      *
+      ** WRITE FORMAT OF REPORT DETAIL FIRST LINE
+      *
+     C                     MOVE LEVL,1    LEVEL
+     C                     MOVE AVL,1     PROD
+     C                     WRITEFC0300F1
+     C*
+      ** PRINT FURTHER LEVELS/PRODUCTION AVAILABLITY
+     C*
+     C                     Z-ADD1         X       10
+      *
+     C           A         DOWGTX
+     C           L         ORGT X
+     C                     ADD  1         X
+     C                     MOVE AVL,X     PROD
+     C                     MOVE LEVL,X    LEVEL
+     C                     WRITEDETLCONT
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      * COMPDT - WRITE DETAILS FOR REPORT COMPONENTS
+      ********************************************************************
+      *
+     C           COMPDT    BEGSR
+      *
+      ** WRITE COMPONENT LEVEL HEADINGS
+      *
+     C                     WRITEFC0300H1
+      *
+      ** PROCESS ALL REPORT COMPONENTS FOR THIS REPORT NAME
+      *
+     C           *IN88     DOWEQ'0'
+     C*                                                                   S01407
+     C** ONLY PROCESS THIS RECORD IF IT IS FOR THE SAME SAR NUMBER AS     S01407
+     C** ON THE RECORD READ FROM FCREPTJ0                                 S01407
+     C*                                                                   S01407
+     C           AESARN    IFEQ AHSARN                                    S01407
+     C*                                                                   S01407
+     C** ONLY PROCESS THIS RECORD IF IT IS FOR A DIFFERENT COMPONENT      S01407
+     C** NAME/SEQUENCE COMBINATION TO THE PREVIOUS RECORD                 S01407
+     C*                                                                   S01407
+     C           CUCMSQ    IFNE PRCMSQ                                    S01407
+      *
+      ** FORMAT COMPONENT NAME/SEQUENCE
+      *
+     C                     MOVEA*BLANK    TEMP
+     C                     MOVEAD3COTT    TEMP
+     C                     Z-ADD1         Y       20
+     C           ' '       LOKUPTEMP,Y                   70
+     C                     MOVE '/'       TEMP,Y
+     C                     ADD  1         Y
+     C                     MOVEAD3CSEQ    TEMP,Y
+     C                     MOVEATEMP      CPNSEQ
+      *
+      ** FORMAT ADDITIONAL TEXT
+      *
+     C                     MOVELD3ADTX    ADDTXT
+      *
+      ** CONVERT AVAILABILITY TO TEXT MANDATORY/ON REQUEST
+      *
+     C           D3MORQ    IFEQ 'M'
+     C*********************MOVELTXT,8     AVAIL                           LN0654
+     C                     MOVELTXT,7     AVAIL                           LN0654
+     C                     ELSE
+     C*********************MOVELTXT,9     AVAIL                           LN0654
+     C                     MOVELTXT,8     AVAIL                           LN0654
+     C                     END
+      *
+      ** CONVERT BRANCH TYPE TO TEXT ORIGINATING/BOOKING
+      *
+     C           D3BRTP    IFEQ 'O'
+     C*********************MOVELTXT,11    BRTYPE                          LN0654
+     C                     MOVELTXT,10    BRTYPE                          LN0654
+     C                     ELSE
+     C*********************MOVELTXT,10    BRTYPE                          LN0654
+     C                     MOVELTXT,9     BRTYPE                          LN0654
+     C                     END
+      *
+      ** PROMPT PROGRAM NAME
+      *
+     C                     MOVELD3PRPG    PRPTPG
+      *
+      ** CHECK IF OVERFLOW WILL OCCUR: IF SO, WRITE HEADINGS AGAIN
+      *
+     C           LINE      IFGE 56
+     C                     WRITEFC0300H0
+     C                     WRITEFC0300H1
+     C                     END
+      *
+      ** WRITE DETAILS FOR COMPONENT
+      *
+     C                     WRITEFC0300F2
+      *
+      ** IF PARAMETERS EXIST, PRINT PARAMETERS
+      *
+     C           D3CLPM    IFNE *BLANKS
+     C                     MOVELD3CLPM    PARMS
+     C                     WRITEFC0300F3
+     C                     END
+     C                     END                                            S01407
+     C*                                                                   S01407
+     C                     MOVE CUCMSQ    PRCMSQ                          S01407
+     C                     END                                            S01407
+      *
+      ** ACCESS NEXT COMPONENT
+      *
+     C***********DXRNAM    READEFCRCOML1                 88               S01407
+     C           DXRNAM    READEFCRCOMJ1                 88               S01407
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      * SUFFDT - WRITE DETAILS FOR REPORT SUFFIX
+      ********************************************************************
+      *
+     C           SUFFDT    BEGSR
+      *
+      ** PRINT HEADINGS IF NOT ENOUGH ROOM FOR NEXT FORMAT
+      *
+     C********   LINE      IFGE 57                                        186409
+     C           LINE      IFGE 56                                        186409
+     C                     WRITEFC0300H0
+     C                     END
+      *
+      ** PRINT LEVEL HEADERS FOR SUFFIXES
+      *
+     C                     WRITEFC0300H2
+      *
+      ** PROCESS SUFFIX RECORD
+      *
+     C           *IN89     DOWEQ'0'
+      *
+      ** PRINT HEADINGS IF NOT ENOUGH ROOM FOR NEXT FORMAT
+      *
+     C********   LINE      IFGE 57                                        186409
+     C           LINE      IFGE 56                                        186409
+     C                     WRITEFC0300H0
+     C                     WRITEFC0300H2
+     C                     END
+      *
+      ** PRINT DETAILS
+      *
+     C                     WRITEFC0300F4
+      *
+      ** READ NEXT SUFFIX FOR THE REPORT
+      *
+     C           DXRNAM    READEFCRSFXL1                 89
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      * NODETS - WRITE BLANK REPORT
+      ********************************************************************
+      *
+     C           NODETS    BEGSR
+      *
+      ** WRITE HEADINGS/NO DETAILS TO REPORT/END OF REPORT FORMATS
+      *
+     C                     WRITEFC0300H0
+     C                     WRITEFC0300F5
+     C                     WRITEFC0300F6
+      *
+     C                     ENDSR
+      ********************************************************************
+      * PROAUD - WRITE AUDIT REPORT
+      ********************************************************************
+      *
+     C           PROAUD    BEGSR
+      *
+     C                     READ FCRPDSL0                 90
+      *
+      ** IF NO RECORD FOUND THEN DATABASE ERROR
+      *
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FC0300'  DBPGM
+     C                     MOVEL'FCRPDSL0'DBFILE
+     C                     MOVEL'AUDIT'   DBKEY            *************
+     C                     Z-ADD4         DBASE            * DBERR 004 *
+     C                     SETON                     U7U8  *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** CALL ZSFILE TO REGISTER SPOOL FILE ENTRY OF MAIN PRINTER FILE
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSSEQ
+     C                     PARM           PETTY
+     C                     PARM           SFILEU
+     C                     PARM SFNUMU    ZSFNO   60
+     C                     PARM           PERR    1
+     C*
+     C** FORMAT NUMBER OF INSERTIONS FOR REPORT
+     C*
+     C                     Z-ADDADNOIN    INSF
+     C*
+     C** FORMAT NUMBER OF DELETIONS/AMENDMENTS FOR REPORT
+     C*
+     C                     Z-ADDADNOAM    AMDF
+     C                     Z-ADDADNODL    DELF
+     C*
+     C** NUMBER OF RECORDS ON FILE
+     C*
+     C                     Z-ADDADNORC    RECFIL
+     C*
+     C** WRITE AUDIT REPORT
+     C*
+     C                     WRITEAU0300H0
+     C                     WRITEAU0300F1
+     C*
+     C** RESET FILE CONTROLS AND UPDATE
+     C*
+     C                     Z-ADD0         ADNOIN
+     C                     Z-ADD0         ADNOAM
+     C                     Z-ADD0         ADNODL
+     C*
+     C                     UPDAT@ADREBB
+     C*
+     C                     ENDSR
+      *****************************************************************
+      * *PSSR - DATABASE ERROR HANDLING ROUTINE
+      *****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     EXSR CTERM
+     C*
+     C                     ENDSR
+      *****************************************************************
+      * CTERM - PROGRAM TERMINATION
+      *****************************************************************
+     C*
+     C           CTERM     BEGSR
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+**  PRINTER FILE TEXT
+Branch
+Company
+System
+I/p Cycle
+C/Business
+Periodic
+Mandatory
+On Request
+Booking
+Originating
+A/c Ofr
+Dept
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@
+(c) Finastra International Limited 2001

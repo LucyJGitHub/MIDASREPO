@@ -1,0 +1,193 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Cheque Book Charges Posting Generation')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC004210 - Cheque Book Charges Posting Generation          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG14838           Date 15Sep07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CRE019  *CREATE    Date 12Jan04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG14838 - REC004210 Failed when CRT001 or CRT002 is OFF    */
+/*       CRE019 - Cheque Processing and Maintenance                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/* Declare Variables */
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2004')
+             DCL        VAR(&MEM)    TYPE(*CHAR) LEN(52)
+             DCL        VAR(&PRESBS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOLIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CNAM)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)   TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&RTCD)   TYPE(*CHAR) LEN(7)                                 /*BUG14838*/
+             DCL        VAR(&OPTN)   TYPE(*CHAR) LEN(7)                                 /*BUG14838*/
+             DCL        VAR(&SARD)   TYPE(*CHAR) LEN(6)                                 /*BUG14838*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                               /*BUG14838*/
+             DCL        VAR(&CRT001) TYPE(*CHAR) LEN(1)                                 /*BUG14838*/
+             DCL        VAR(&CRT002) TYPE(*CHAR) LEN(1)                                 /*BUG14838*/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' '))
+ 
+/* Reset Switches */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('REC004210 - Cheque Book Charges +
+                          Posting Generation') TOMSGQ(MRUNQ)
+ 
+/* Do Security Copies */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRESBS)
+             CHGVAR     VAR(&TOLIB) VALUE(&PRESBS *TCAT 'DPLIB')
+/* Check Switchable Feature  CRT001      */                                             /*BUG14838*/
+             CHGVAR     VAR(&CRT001) VALUE('N')                                         /*BUG14838*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*BUG14838*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*BUG14838*/
+             CHGVAR     VAR(&SARD) VALUE('CRT001')                                      /*BUG14838*/
+                                                                                        /*BUG14838*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                   /*BUG14838*/
+                                                                                        /*BUG14838*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*BUG14838*/
+                  CHGVAR     VAR(&CRT001) VALUE('Y')                                    /*BUG14838*/
+             ENDDO                                                                      /*BUG14838*/
+ /* Check Switchable Feature  CRT001      */                                            /*BUG14838*/
+             CHGVAR     VAR(&CRT002) VALUE('N')                                         /*BUG14838*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*BUG14838*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*BUG14838*/
+             CHGVAR     VAR(&SARD) VALUE('CRT002')                                      /*BUG14838*/
+                                                                                        /*BUG14838*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                   /*BUG14838*/
+                                                                                        /*BUG14838*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*BUG14838*/
+                  CHGVAR     VAR(&CRT002) VALUE('Y')                                    /*BUG14838*/
+             ENDDO                                                                      /*BUG14838*/
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STATUS)
+ 
+/* If Restart, restore original copies */
+ 
+             IF         COND(&STATUS = 'Y') THEN(DO)
+ 
+                CPYF       FROMFILE(&TOLIB/XGETTPD) TOFILE(GETTPD) +
+                             MBROPT(*REPLACE) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)    +
+                             EXEC(CLRPFM FILE(GETTPD))
+                                                                                        /*BUG14838*/
+                CPYF       FROMFILE(&TOLIB/XGETTPZ) TOFILE(GETTPZ) +
+                             MBROPT(*REPLACE) FMTOPT(*NONE)                             /*BUG14838*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)    +
+                             EXEC(CLRPFM FILE(GETTPZ))                                  /*BUG14838*/
+ 
+             ENDDO
+ 
+             ELSE CMD(DO)
+ 
+/* Delete Copy Files */
+ 
+                DLTF       FILE(XGETTPD)
+                MONMSG     MSGID(CPF0000)
+                                                                                        /*BUG14838*/
+                DLTF       FILE(XGETTPZ)                                                /*BUG14838*/
+                MONMSG     MSGID(CPF0000)                                               /*BUG14838*/
+/*If CRT001 AND CRT002 = 'N' Then clear file and generate it at RPG */                  /*BUG14838*/
+                IF         COND(&CRT001 *EQ 'N' *AND &CRT002 *EQ 'N') THEN(DO)          /*BUG14838*/
+                           CLRPFM     FILE(GETTPH)                                      /*BUG14838*/
+                           CLRPFM     FILE(GETTPD)                                      /*BUG14838*/
+                           CLRPFM     FILE(GETTPZ)                                      /*BUG14838*/
+                ENDDO                                                                   /*BUG14838*/
+ 
+/* Backup File */
+ 
+                CPYF       FROMFILE(GETTPD) TOFILE(&TOLIB/XGETTPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                                                                                        /*BUG14838*/
+                CPYF       FROMFILE(GETTPZ) TOFILE(&TOLIB/XGETTPZ) +
+                             MBROPT(*REPLACE) CRTFILE(*YES) FMTOPT(*NONE)               /*BUG14838*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*BUG14838*/
+ 
+                CHGVAR     VAR(&STATUS) VALUE('Y')
+ 
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STATUS)
+ 
+             ENDDO
+ 
+/* Call RPG/RE004210 - Cheque Book Charges Posting Generation */
+ 
+             CHGJOB     SWS(00000000)
+             CALL       PGM(RE004210)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                RTVDTAARA  DTAARA(LDA (132 52)) RTNVAR(&MEM)
+ 
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+ 
+             CHGVAR     VAR(&MEM) VALUE('REC004210 - JOB TERMINATED, +
+                          DATABASE IN ERROR')
+ 
+                SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+ 
+                GOTO       CMDLBL(ABNOR)
+ 
+             ENDDO
+ 
+/* Change component status */
+ 
+             CHGVAR     VAR(&STATUS) VALUE('N')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STATUS)
+ 
+/* Delete Copy Files */
+ 
+                DLTF       FILE(XGETTPD)
+                MONMSG     MSGID(CPF0000)
+ 
+             RCLRSC
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+             DSPJOBLOG  OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+ 
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('Copyright +
+                          Finastra International Limited')
+ 
+             ENDPGM

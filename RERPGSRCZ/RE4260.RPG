@@ -1,0 +1,1919 @@
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Travellers Cheques Control')
+     H        1
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4260 - Travellers Cheques Register Control                 *
+     F*                                                               *
+     F*  Function:  This program accepts and validates cash, clearing *
+     F*  (I/C)      and house cheque deposits in account currency and *
+     F*             performs file updates to the teller system master *
+     F*             files.  A transaction confirmation slip is        *
+     F*             generated during this transaction, as a receipt   *
+     F*             for the customer.                                 *
+     F*                                                               *
+     F*  Called By: REC4260                                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. BUG17964           Date 28Apr08               *
+      *                 249208             Date 20Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 140770             Date 14Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT002  *CREATE    Date 1DEc95                *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG17964 - Screen looks as if text is overwritten            *
+      *             (Recompile)                                       *
+      *  249208 - Validate no. of cheque books and no. of sequential  *
+      *           fields as mandatory fields.  This will prevent      *
+      *           database errors on other programs.                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     FRE4260DFCF  E                    WORKSTN
+     F                                        @RRN  KSFILE RE4260S0
+      **  Display file
+      *
+     FRETCRCL0IF  E           K        DISK
+      **  Travellers cheques register control
+      *
+     FRETCRCL1UF  E           K        DISK         KINFSR *PSSR A
+      **  Travellers cheques register control - updates
+     F            RETCRCD0                          KRENAMERETCRCD1
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  11 - Error in action code.                                   *
+      *  12 - Error in travellers cheque issuer.                      *
+      *  13 - Error in currency.                                      *
+      *  14 - Error in denomination.                                  *
+      *  15 - Error in starting cheque number.                        *
+      *  16 - Error in selection.                                     *
+      *  17 - Error in ending cheque issuer.                          *
+      *  18 - Error in number of cheques in book.                     *
+      *  19 - Error in number of sequential books.                    *
+      *  20 - Error in date received from issuer.                     *
+      *  21 - Error in cheque book expiry date.                       *
+      *  25 - Non-display/protect selection field.                    *   140770
+      *                                                               *
+      *  69 - General error indicator.                                *
+      *  70 - Subfile clear/display control indicator.                *
+      *  71 - EOF indicator for PF/RETCRCPD.                          *
+      *  72 - Subfile display indicator.                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *PSSR  - Program Error.                                      *
+      *  AMDRQS - Amend Request.                                      *
+      *  CHQBKD - Cheque Book Details.                                *
+      *  DBERR  - Database Error Handling.                            *
+      *  DSPINL - Display Initial Screen.                             *
+      *  DLTCQC - Delete Cheque Book Control.                         *
+      *  DLTRQS - Delete Request.                                     *
+      *  ENQRQS - Enquiry Request.                                    *
+      *  FIRST  - Initial Processing.                                 *
+      *  INSPRS - Insert Process Subfile.                             *
+      *  INSRQS - Insert Request.                                     *
+      *  LDSFL1 - Load Subfile Records.                               *
+      *  PRSCN1 - Process Initial Screen.                             *
+      *  PRSCN2 - Process Second Screen.                              *
+      *  PRSLCT - Process Selection Screen.                           *
+      *  RFRINL - Refresh Initial Screen.                             *
+      *  SBTOFF - Set Bit Off.                                        *
+      *  SNDMSG - Send Program Message Parameters.                    *
+      *  UPDCQC - Update Cheque Book Control.                         *
+      *  VALAMD - Validate Amend Screen.                              *
+      *  VALSC1 - Validate Initial Screen.                            *
+      *  VALSC2 - Validate Second Screen.                             *
+      *  VALSFL - Validate Subfile Screen.                            *
+      *  WRTTCC - Write Travellers Cheques Control Details.           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      **  Copyright array
+      *
+     E                    FNK     1   8 78
+      **  Array for function/command keys
+      *
+     E                    @CP        20  1
+      **  Cheque presented array
+      *
+      /COPY ZSRSRC,ZALIGNZ1
+      **  Array for SR.ZALIGN
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      **  Array for SR.ZDATE2
+      *
+      /EJECT
+      *
+     ILDA         DS                            256
+      **  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+      **  Field containing program ID
+     I                                        1  10 @PGM
+      *
+      **  Field containing workstation ID
+     I                                      244 253 @JOB
+      *
+      **  Field containing user ID
+     I                                      254 263 @USER
+      *
+     IDATA        DS                           1024
+      **  Data to be passed to window manager
+     I                                        1   6 SISSU
+     I                                        7  18 SFSTCN
+     I                                       19  30 SFETCN
+     I                                       31  320@NOTC
+     I                                       33  33 @SUCC
+      *
+     ISPARE       DS                            256
+      **  Spare data to be passed to window manager
+     I                                        1 256 SDATA
+      *
+     I@CPDS       DS                             20
+      **  Data structure to redefine cheque presented array
+     I                                        1  20 @CP
+     I                                        1  20 CQPS
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      **  2nd   DS for access programs, Long  data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency Codes
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Customer Details
+      *
+     IRUNDAT      DS
+      **  Rundat Data Area
+     I                                       13  13 MBIN
+      *
+     IZMUSER      DS                             17
+      **  Menu User Data Area
+     I                                       11  13 USRBCH
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Control Processing                   *
+      *                                                               *
+      * CALLS      DSPINL - Display Initial Screen                    *
+      *            FIRST  - Initial Processing                        *
+      *            PRSCN1 - Process Initial Screen                    *
+      *            RFRINL - Refresh initial screen                    *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      **  Initial Processing
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR FIRST
+      *
+      **  Main Processing.
+      **  Refresh initial screen.
+      *
+     C                     EXSR RFRINL
+      *
+      **  Display initial screen.
+      *
+     C                     EXSR DSPINL
+      *
+      **  Do while Cmd/3 is not pressed.
+      *
+     C           *INKC     DOWEQ'0'
+      *
+      **  If Cmd/5 is pressed, refresh initial screen.
+      *
+     C           *INKE     CASEQ'1'       RFRINL
+      *
+      **  If Enter key is pressed, process initial screen.
+      *
+     C                     CAS            PRSCN1
+      *
+     C                     END
+      *
+      **  Re-display initial screen.
+      *
+     C           *INKC     IFEQ '0'
+     C                     EXSR DSPINL
+     C                     ENDIF
+      *
+     C                     END
+      *
+      **  When Cmd/3 is pressed, perform last processing.
+      *
+     C                     MOVE '1'       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           FIRST   - Initial Processing                        *
+      *                                                               *
+      * CALLS     DBERR   - Database Error Handling                   *
+      *                                                               *
+      * CALLED BY MAIN    - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      **  Get Base Currency - Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      **  Set up date format indicator.
+      *
+     C           BJDFIN    IFEQ 'D'
+     C                     SETOF                     98
+     C                     ELSE
+     C                     SETON                     98
+     C                     END
+      *
+      **  Set up message file, initialise work variables.
+      *
+     C**********           Z-ADD0         @ISSU   60                                          CSD027
+     C                     MOVE *BLANKS   @ISSU   6                                           CSD027
+     C                     MOVEL*BLANK    @BSTS   1
+     C                     MOVE *BLANKS   WUMSID  7
+     C                     MOVEL'GBRTSMSG'WUMSGF 10                       CRT002
+     C                     MOVE 'F '      WUMSGF                          CRT002
+      *
+      **  Search key for LFs/RETCRCL0 and RETCRCL1.
+      *
+     C           KCRC      KLIST
+     C                     KFLD           @ISSU
+     C                     KFLD           @CCY
+     C                     KFLD           @DNOM
+     C                     KFLD           @CHQN  120
+      *
+      **  Reset LDA.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     OUT  LDA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *            VALSC1 - Validate Initial Screen                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DSPINL - Display Initial Screen                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DSPINL    BEGSR                           ** DSPINL **
+      *
+      **  Display program message subfile for any messages.
+      *
+     C                     WRITE#MSGCTL
+      *
+      **  Display header and footer screens.
+      *
+     C                     WRITERE4260F0
+     C                     WRITERE4260F6
+      *
+      **  Display and accept initial screen.
+      *
+     C                     EXFMTRE4260F1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRSCN1 - Process Initial Screen                    *
+      *                                                               *
+      * CALLS      PRSCN2 - Process Second Screen                     *
+      *            VALSC1 - Validate Initial Screen                   *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRSCN1    BEGSR                           ** PRSCN1 **
+      *
+      **  Validate initial screen.
+      *
+     C                     EXSR VALSC1
+      *
+      **  If there are no errors, process detail screen.
+      *
+     C           *IN69     IFEQ '0'
+     C                     EXSR PRSCN2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRSCN2 - Process Second Screen                     *
+      *                                                               *
+      * CALLS      AMDRQS - Amend Request                             *
+      *            DLTRQS - Delete Request                            *
+      *            ENQRQS - Enquiry Request                           *
+      *            INSRQS - Insert Request                            *
+      *            RFRINL - Refresh Initial Screen                    *
+      *                                                               *
+      * CALLED BY  PRSCN1 - Process Initial Screen                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRSCN2    BEGSR                           ** PRSCN2 **
+      *
+      **  Initialise program message queue.
+      *
+     C                     CALL 'SCC0250'
+      *
+      **  Process according to request.
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     SELEC
+      *
+     C           SACTN     WHEQ 'E'
+     C                     EXSR ENQRQS
+      *
+     C           SACTN     WHEQ 'I'
+     C                     EXSR INSRQS
+      *
+     C           SACTN     WHEQ 'A'
+     C                     EXSR AMDRQS
+      *
+     C           SACTN     WHEQ 'D'
+     C                     EXSR DLTRQS
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      **  Refresh details when F10 or F12 pressed.
+      *
+     C           *INKL     IFEQ '1'
+     C           *INKJ     OREQ '1'
+     C                     EXSR RFRINL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ENQRQS - Enquiry Request                           *
+      *                                                               *
+      * CALLS      LDSCR2 - Load Second Screen                        *
+      *            LDSFL1 - Load Subfile Records                      *
+      *            PROSFL - Process Subfile                           *
+      *                                                               *
+      * CALLED BY  PRSCN2 - Process Second Screen                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           ENQRQS    BEGSR                           ** ENQRQS **
+      *
+     C                     EXSR LDSCR2
+     C                     MOVELFNK,5     SFTR
+     C                     EXSR LDSFL1
+     C                     EXSR PROSFL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INSRQS - Insert Request                            *
+      *                                                               *
+      * CALLS      INSPRS - Insert Processing                         *
+      *            PROSFL - Process Subfile                           *
+      *            RFRINL - Refresh Initial Screen                    *
+      *            VALSC2 - Validate Second Screen                    *
+      *                                                               *
+      * CALLED BY  PRSCN2 - Process Second Screen                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           INSRQS    BEGSR                           ** INSRQS **
+      *
+      **  Initialise second screen.
+      *
+     C                     MOVEL*BLANKS   SETCN
+     C                     MOVEL*BLANKS   SNOTC
+     C                     MOVEL*BLANKS   SNOSB
+     C                     MOVEL*BLANKS   SDTIN
+     C                     MOVEL*BLANKS   SDEXP
+     C                     MOVEL*BLANKS   SBSRT
+      *
+     C                     MOVELFNK,2     SFTR
+      *
+      **  Display insert screen.
+      *
+     C                     WRITERE4260F7
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITERE4260F6
+     C                     WRITERE4260F0
+     C                     WRITERE4260F2
+     C                     EXFMTRE4260F4
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  Validate insert screen details.
+      *
+     C                     EXSR VALSC2
+      *
+      **  If no errors, build subfile records according to input.
+      *
+     C           *IN69     IFEQ '0'
+     C                     EXSR INSPRS
+     C                     MOVELFNK,3     SFTR
+     C                     EXSR PROSFL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           *INKL     IFEQ '1'
+     C                     EXSR RFRINL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            AMDRQS - Amend Request                             *
+      *                                                               *
+      * CALLS      LDSCR2 - Load Second Screen                        *
+      *            LDSFL1 - Load Subfile                              *
+      *            PROSFL - Process Subfile                           *
+      *            RFRINL - Refresh Initial Screen                    *
+      *            UPDCQC - Update Cheque Control                     *
+      *            VALAMD - Validate Amend Screen                     *
+      *                                                               *
+      * CALLED BY  PRSCN2 - Process Second Screen                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           AMDRQS    BEGSR                           ** AMDRQS **
+      *
+     C                     EXSR LDSCR2
+     C                     MOVELFNK,2     SFTR
+      *
+      **  Display amend screen.
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     WRITERE4260F7
+     C                     WRITE#MSGCTL
+     C                     WRITERE4260F6
+     C                     WRITERE4260F0
+     C                     WRITERE4260F2
+      *
+      **  Process amend request.
+      *
+     C                     EXFMTRE4260F5
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     EXSR VALAMD
+      *
+      **  If no errors, update cheque book control record and load
+      **  subfile.
+      *
+     C           *IN69     IFEQ '0'
+     C                     EXSR UPDCQC
+     C                     EXSR LDSFL1
+     C                     MOVELFNK,6     SFTR
+     C                     EXSR PROSFL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           *INKL     IFEQ '1'
+     C                     EXSR RFRINL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DLTRQS - Delete Request                            *
+      *                                                               *
+      * CALLS      LDSCR2 - Load Second Screen                        *
+      *            LDSFL1 - Load Subfile                              *
+      *            PROSFL - Process Subfile                          *
+      *                                                               *
+      * CALLED BY  PRSCN2 - Process Second Screen                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DLTRQS    BEGSR                           ** DLTRQS **
+      *
+     C                     EXSR LDSCR2
+     C                     MOVELFNK,2     SFTR
+     C                     EXSR LDSFL1
+     C                     MOVELFNK,4     SFTR
+     C                     EXSR PROSFL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            LDSCR2 - Load Second Screen                        *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  AMDRQS - Amend Request                             *
+      *            DLTRQS - Delete Request                            *
+      *            ENQRQS - Enquiry Request                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           LDSCR2    BEGSR                           ** LDSCR2 **
+      *
+      **  Initialise second screen.
+      *
+     C                     MOVELRNISSU    SISSU
+     C                     MOVELRNINST    SINST
+     C                     MOVELRNCCY     SCCY
+     C                     MOVELRNDNOM    SDNOM
+     C                     MOVELRNSTCN    SSTCN
+     C                     MOVELRNETCN    SETCN
+     C                     MOVELRNNOTC    SNOTC
+      *
+      **  Convert ending cheque number and number of cheques per book
+      **  to numeric.
+      *
+     C           SETCN     IFNE *BLANKS
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD12        ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SETCN     ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    @ETCN  120
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SNOTC     IFNE *BLANKS
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SNOTC     ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    @NOTC   20
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Compute the number of sequential books.
+      *
+     C           @STCN     IFNE 0
+     C           @ETCN     ANDNE0
+     C           @NOTC     ANDNE0
+      *
+     C           @ETCN     SUB  @STCN     @DIFF   40
+     C                     ADD  1         @DIFF
+     C           @DIFF     DIV  @NOTC     @NOSB   40
+     C                     MOVE @NOSB     SNOSB
+     C                     ENDIF
+      *
+      **  Convert the issuance and expiry dates to screen format.
+      *
+     C                     Z-ADDRNDTIN    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ '0'
+     C                     MOVELZDATE     SDTIN
+     C                     ELSE
+     C                     MOVEL*BLANKS   SDTIN
+     C                     ENDIF
+      *
+     C                     Z-ADDRNDEXP    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ '0'
+     C                     MOVELZDATE     SDEXP
+     C                     ELSE
+     C                     MOVEL*BLANKS   SDEXP
+     C                     ENDIF
+      *
+     C                     MOVELRNBSRT    SBSRT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            LDSFL1 - Load Subfile Records                      *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  AMDRQS - Amend Request                             *
+      *            DLTRQS - Delete Request                            *
+      *            ENQRQS - Enquiry Request                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           LDSFL1    BEGSR                           ** LDSFL1 **
+      *
+      **  Clear Subfile.
+      *
+     C                     MOVE '1'       *IN70
+     C                     WRITERE4260C0
+     C                     MOVE '0'       *IN70
+      *
+     C                     Z-ADD0         @RRN    50
+     C                     Z-ADD@STCN     @CHQN
+      *
+     C           KCRC      SETLLRETCRCL0
+     C                     READ RETCRCL0                 71
+      *
+      **  Deactivate subfile display when there are no records read.
+      *
+     C                     MOVE '0'       *IN72
+     C           *IN71     IFEQ '1'
+     C                     MOVE '1'       *IN72
+     C                     ENDIF
+      *
+     C           *IN71     DOWEQ'0'
+      *
+     C           @ISSU     IFEQ RNISSU
+     C           @CCY      ANDEQRNCCY
+     C           @DNOM     ANDEQRNDNOM
+      *
+     C                     MOVEL*BLANK    SSELC
+     C                     MOVELRNBSTS    SFBSTS
+     C                     MOVELRNSTCN    SFSTCN
+     C                     MOVELRNETCN    SFETCN
+      *
+     C                     ADD  1         @RRN
+     C                     WRITERE4260S0
+      *
+     C                     ENDIF
+      *
+     C                     READ RETCRCL0                 71
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PROSLF - Process Subfile                           *
+      *                                                               *
+      * CALLS      VALSFL - Validate Subfile Screen                   *
+      *                                                               *
+      * CALLED BY  AMDRQS - Amend Request                             *
+      *            DLTRQS - Delete Request                            *
+      *            ENQRQS - Enquiry Request                           *
+      *            INSRQS - Insert Request                            *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PROSFL    BEGSR                           ** PROSFL **
+      *
+      **  Display screen.
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITERE4260F6
+     C                     WRITERE4260F0
+     C                     WRITERE4260F2
+     C                     WRITERE4260F3
+      *
+     C                     EXFMTRE4260C0
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+     C           *INKE     IFEQ '1'
+      *
+     C                     EXSR LDSFL1
+     C*                    READCRE4260S0                 71
+     C*          *IN71     IFEQ '0'
+     C*                    MOVEL' '       SSELC
+     C*                    UPDATRE4260S0
+     C*                    ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate selection.                                          .
+      *
+     C                     EXSR VALSFL
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INSPRS - Insert Process Subfile                    *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  INSRQS - Insert Request                            *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           INSPRS    BEGSR                           ** INSPRS **
+      *
+      **  Clear Subfile.
+      *
+     C                     MOVE '1'       *IN70
+     C                     WRITERE4260C0
+     C                     MOVE '0'       *IN70
+      *
+      **  Build cheque book control subfile records based on input.
+      *
+     C                     Z-ADD0         @RRN    50
+     C                     Z-ADD1         @CTR    40
+     C                     Z-ADD@STCN     @STRT  120
+      *
+     C           @CTR      DOWLE@NOSB
+      *
+     C                     MOVEL*BLANK    SSELC
+     C                     MOVEL'U'       SFBSTS
+     C                     MOVEL@STRT     SFSTCN
+     C           @NOTC     ADD  @STRT     @WRK1
+     C           @WRK1     SUB  1         @ETCN
+     C                     MOVEL@ETCN     SFETCN
+      *
+     C                     ADD  1         @CTR
+     C                     ADD  1         @RRN
+     C           @ETCN     ADD  1         @STRT
+     C                     WRITERE4260S0
+      *
+     C                     ENDDO
+      *                                                                   140770
+     C                     Z-ADD*ZERO     @CNF    50                      140770
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRSLCT - Process Selection Screen                  *
+      *                                                               *
+      * CALLS      CHQBKD - Cheque Book Details                       *
+      *            DLTCQC - Delete Cheque Book Control                *
+      *            SNDMSG - Send Program Message Parameters           *
+      *            WRTTCC - Write Travellers Cheques Control Details  *
+      *                                                               *
+      * CALLED BY  VALSFL - Validate Subfile Screen                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRSLCT    BEGSR                           ** PRSLCT **
+      *
+      **  1=Confirm/Insert; A=Amend; C=Cheque Book Details/Enquire;
+      **  D=Delete.
+      *
+     C                     SELEC
+      *
+     C           SSELC     WHEQ 'C'
+     C                     EXSR CHQBKD
+      *
+     C           SSELC     WHEQ 'D'
+      *
+     C           SDEXP     IFEQ *BLANKS
+     C           SDEXP     OREQ *ZEROS
+      *
+     C                     MOVE '1'       *IN16
+     C                     MOVEL'USR0176' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C                     EXSR CHQBKD
+      *
+     C           @SUCC     IFEQ 'Y'
+     C                     EXSR DLTCQC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SSELC     WHEQ '1'
+     C                     EXSR WRTTCC
+      *
+     C           SSELC     WHEQ 'A'
+     C                     EXSR CHQBKD
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALSC1 - Validate Initial Screen                   *
+      *                                                               *
+      * CALLS      SNDMSG - Send Program Message Parameters           *
+      *            ZALIGN - Validate and right align numeric fields   *
+      *                                                               *
+      * CALLED BY  PRSCN1 - Process Initial Screen                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALSC1    BEGSR                           ** VALSC1 **
+      *
+      **  Initialise validation indicators, program message queue.
+      *
+     C                     MOVEA'00000'   *IN,11
+     C                     MOVEL'0'       *IN69
+     C                     Z-ADD1         @RRN                            140770
+     C                     CALL 'SCC0250'
+      *
+      **  Validate action code.
+      *
+     C           SACTN     IFEQ *BLANK
+      *
+     C                     MOVE '1'       *IN11
+     C                     MOVEL'USR0001' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C           SACTN     IFNE *BLANK
+     C           SACTN     ANDNE'A'
+     C           SACTN     ANDNE'D'
+     C           SACTN     ANDNE'E'
+     C           SACTN     ANDNE'I'
+      *
+     C                     MOVE '1'       *IN11
+     C                     MOVEL'USR0001' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      **  Validate users authority to use this action.
+      *
+     C                     Z-ADD*ZERO     @ERR    10
+      *
+      **  Check if system is Multi-Branching
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      **  Get Default Branch
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  If Multi-Branching
+      *
+     C           MBIN      IFEQ 'Y'
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM SACTN     @ZACTN  1
+     C                     PARM USRBCH    @ZBRCA  3
+     C                     PARM           @ERR
+      *
+     C                     ELSE
+      *
+     C                     CALL 'ZVACTU'
+     C                     PARM SACTN     @ZACTN  1
+     C                     PARM           @ERR
+      *
+     C                     ENDIF
+      *
+      **  If user has no authority, send error message.
+      *
+     C           @ERR      IFNE *ZERO
+      *
+     C                     MOVE '1'       *IN11
+     C                     MOVEL'USR1221' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate travellers cheque issuer.
+      *
+     C           SISSU     IFEQ *BLANK
+      *
+     C                     MOVE '1'       *IN12
+     C                     MOVEL'USR0083' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C           SISSU     IFEQ '?'
+      *
+     C                     CALL 'SD0010S'
+     C                     PARM *BLANKS   @RTCD   7
+     C           SISSU     PARM *BLANKS   SISSU
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'1'       *IN12
+     C                     MOVEL'USR0177' WUMSID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE SISSU     @ISSU
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVEL*BLANKS   @KY10
+     C                     MOVELSISSU     @KY10
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KY10  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'1'       *IN12
+     C                     MOVEL'USR0177' WUMSID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVELSISSU     @ISSU
+     C                     ENDIF
+      *
+     C                     MOVELBBCRNM    SINST
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate travellers cheque currency.
+      *
+     C           SCCY      IFEQ *BLANKS
+      *
+     C                     MOVE '1'       *IN13
+     C                     MOVEL'USR0076' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C           SCCY      IFEQ '?'
+      *
+     C                     CALL 'SD0020S'
+     C                     PARM *BLANKS   @RTCD   7
+     C           @CCY      PARM *BLANKS   SCCY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'1'       *IN13
+     C                     MOVEL'USR0261' WUMSID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVEL@CCY      SCCY
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SCCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'1'       *IN13
+     C                     MOVEL'USR0261' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate denomination.
+      *
+     C           SDNOM     IFEQ *BLANKS
+      *
+     C                     MOVE '1'       *IN14
+     C                     MOVEL'USR0191' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD10        ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SDNOM     ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    @DNOM  100
+     C                     MOVE ZFIELD    SDNOM
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN14
+     C                     MOVEL'USR0192' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate starting cheque number.
+      *
+     C           SSTCN     IFEQ *BLANKS
+      *
+     C                     MOVE '1'       *IN15
+     C                     MOVEL'USR0135' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD12        ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SSTCN     ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    @STCN  120
+     C                     MOVE ZFIELD    SSTCN
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN15
+     C                     MOVEL'USR0135' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  No validation errors exist.
+      *
+     C           *IN69     IFEQ '0'
+      *
+     C                     Z-ADD@STCN     @CHQN
+     C           KCRC      SETLLRETCRCL0
+     C                     READ RETCRCL0                 71
+      *
+      **  Record exists but trying to insert.
+      *
+     C           *IN71     IFEQ '0'
+      *
+     C           SACTN     IFEQ 'I'
+     C           @ISSU     ANDEQRNISSU
+     C           @DNOM     ANDEQRNDNOM
+     C           @CCY      ANDEQRNCCY
+     C           @STCN     ANDEQRNSTCN
+     C                     MOVEA'11111'   *IN,11
+     C                     MOVEL'USR0193' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C           SACTN     IFEQ 'A'
+     C           SACTN     OREQ 'D'
+     C           SACTN     OREQ 'E'
+      *
+     C           @ISSU     IFNE RNISSU
+     C           @DNOM     ORNE RNDNOM
+     C           @CCY      ORNE RNCCY
+     C                     MOVEA'11111'   *IN,11
+     C                     MOVEL'USR0194' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  Record does not exist but trying to amend, delete or enquire.
+      *
+     C           SACTN     IFEQ 'A'
+     C           SACTN     OREQ 'D'
+     C           SACTN     OREQ 'E'
+      *
+     C           @ISSU     IFNE RNISSU
+     C           @DNOM     ORNE RNDNOM
+     C           @CCY      ORNE RNCCY
+     C                     MOVEA'11111'   *IN,11
+     C                     MOVEL'USR0194' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALSFL - Validate Subfile Screen                   *
+      *                                                               *
+      * CALLS      SNDMSG - Send Program Message Parameters           *
+      *            PRSLCT - Process Selection Screen                  *
+      *                                                               *
+      * CALLED BY  AMDRQS - Amend Request                             *
+      *            DLTRQS - Delete Request                            *
+      *            ENQRQS - Enquiry Request                           *
+      *            INSRQS - Insert Request                            *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALSFL    BEGSR                           ** VALSFL **
+      *
+      **  Initialise validation indicators, program message queue.
+      *
+     C                     MOVE '0'       *IN16
+     C                     MOVEL'0'       *IN69
+     C                     CALL 'SCC0250'
+      *
+     C                     READCRE4260S0                 71
+      *
+      **  Ensure that selections are valid.
+      *
+     C           *IN71     DOWEQ'0'
+      *
+     C           SELF      IFEQ *BLANK                                    140770
+      *                                                                   140770
+     C                     SELEC
+      *
+     C           SACTN     WHEQ 'I'
+      *
+     C*********  SSELC     IFNE 'C'                                       140770
+     C*********  SSELC     ANDNE'1'                                       140770
+     C           SSELC     IFNE '1'                                       140770
+     C           SSELC     ANDNE*BLANK                                    140770
+     C                     MOVE '1'       *IN16
+     C                     MOVE '0'       *IN25                           140770
+     C                     MOVEL'USR0195' WUMSID
+     C                     EXSR SNDMSG
+     C                     UPDATRE4260S0
+     C                     ENDIF
+      *
+     C           SACTN     WHEQ 'E'
+      *
+     C           SSELC     IFNE 'C'
+     C                     MOVE '1'       *IN16
+     C                     MOVEL'USR0196' WUMSID
+     C                     EXSR SNDMSG
+     C                     UPDATRE4260S0
+     C                     ENDIF
+      *
+     C           SACTN     WHEQ 'A'
+      *
+     C           SSELC     IFNE 'A'
+     C                     MOVE '1'       *IN16
+     C                     MOVEL'USR0197' WUMSID
+     C                     EXSR SNDMSG
+     C                     UPDATRE4260S0
+     C                     ENDIF
+      *
+     C           SACTN     WHEQ 'D'
+      *
+     C           SSELC     IFNE 'C'
+     C           SSELC     ANDNE'D'
+     C                     MOVE '1'       *IN16
+     C                     MOVEL'USR0198' WUMSID
+     C                     EXSR SNDMSG
+     C                     UPDATRE4260S0
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C           *IN69     IFEQ '0'
+     C           SACTN     OREQ 'I'                                       140770
+     C           SSELC     ANDEQ'1'                                       140770
+      *
+     C                     EXSR PRSLCT
+     C           W0RTN     IFEQ 'Y2U9999'
+     C                     MOVEL'1'       *INKC
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           *IN69     IFEQ '0'
+     C           SACTN     OREQ 'I'                                       140770
+     C           SSELC     ANDEQ'1'                                       140770
+      *                                                                   140770
+      * If insert, inhibit selection field.                               140770
+     C           SACTN     IFEQ 'I'                                       140770
+     C           SSELC     ANDEQ'1'                                       140770
+     C                     MOVE '1'       *IN25                           140770
+     C                     MOVE 'Y'       SELF                            140770
+     C                     ADD  1         @CNF                            140770
+     C                     ENDIF                                          140770
+      *                                                                   140770
+     C                     MOVEL' '       SSELC
+     C           SELF      IFEQ *BLANK                                    140770
+     C                     MOVE '0'       *IN25                           140770
+     C                     ENDIF                                          140770
+     C                     UPDATRE4260S0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                   140770
+     C                     ENDIF                                          140770
+      *
+     C                     READCRE4260S0                 71
+      *
+     C                     ENDDO
+      *
+      * If insert and all cheque books have been confirmed, return to     140770
+      * initial screen.                                                   140770
+     C           SACTN     IFEQ 'I'                                       140770
+     C           @CNF      ANDEQ@NOSB                                     140770
+     C                     MOVE '1'       *INKL                           140770
+     C                     ENDIF                                          140770
+      *                                                                   140770
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           SNDMSG  - Send program message parameters           *
+      *                                                               *
+      * CALLS     SCC0240 - Send message to program queue             *
+      *                                                               *
+      * CALLED BY PRSLCT  - Process selection                         *
+      *           VALAMD  - Validate amend screen                     *
+      *           VALSC1  - Validate initial screen                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+      *
+     C                     SETON                     69
+      *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error                             *
+      *                                                               *
+      * CALLS      DBERRCTL - SC DB err ctl for interactive jobs      *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      **  Check to see that *PSSR has not been called yet.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+      **  Call standard database error program.
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     END
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           RFRINL  - Refresh Initial Screen                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY AMDRQS  - Amend Request                             *
+      *           INSRQS  - Insert Request                            *
+      *           MAIN    - Main Control Processing                   *
+      *           PRSCN2  - Process Second Screen                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           RFRINL    BEGSR                           ** RFRINL **
+      *
+      **  Initialise error and screen indicators, fields and messages.
+      *
+     C                     MOVEA'00000'   *IN,11
+     C                     MOVEA'00000'   *IN,16
+     C                     MOVEA'00'      *IN,21
+     C                     MOVEL'0'       *IN69
+     C                     MOVEL'0'       *IN72
+     C                     CALL 'SCC0250'
+      *
+     C                     MOVEL*BLANKS   SACTN
+     C                     MOVEL*BLANKS   SISSU
+     C                     MOVEL*BLANKS   SCCY
+     C                     MOVEL*BLANKS   SDNOM
+     C                     MOVEL*BLANKS   SSTCN
+      *
+     C                     MOVEL@USER     SUSER
+     C                     MOVELBJMRDT    SRUNA
+     C                     MOVEL@JOB      SWSID
+     C                     MOVEL@PGM      SPGMQ
+     C                     MOVELFNK,1     SFTR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           CHQBKD  - Cheque Book Details                       *
+      *                                                               *
+      * CALLS     WN0010  - Window Manager                            *
+      *                                                               *
+      * CALLED BY PRSLCT  - Process selection                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           CHQBKD    BEGSR                           ** CHQBKD **
+      *
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD12        ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SFSTCN    ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    @STCN
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SFETCN    ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    @ETCN
+     C                     ENDIF
+      *
+     C           @ETCN     SUB  @STCN     @WRK1
+     C           @WRK1     ADD  1         @NOTC
+      *
+     C                     MOVEL' '       @SUCC
+      *
+     C                     CALL 'WN0010'
+     C                     PARM 'RE4260'  PGM    10
+     C                     PARM *BLANK    FKEY    2
+     C                     PARM           SSELC
+     C                     PARM DATA      DATA
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM *BLANKS   SPARE
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           WRTTCC  - Write Travellers Cheques Control Details  *
+      *                                                               *
+      * CALLS     SBTOFF  - Set bit off                               *
+      *                                                               *
+      * CALLED BY PRSLCT  - Process selection                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           WRTTCC    BEGSR                           ** WRTTCC **
+      *
+      **  Write cheque book details to control.
+      *
+     C                     MOVELSFSTCN    @CHQN
+     C           KCRC      CHAINRETCRCL1             71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C                     EXSR SBTOFF
+      *
+     C                     MOVEL'U'       RNBSTS
+     C**********           Z-ADD@ISSU     RNISSU                                              CSD027
+     C                     MOVE @ISSU     RNISSU                                              CSD027
+     C                     MOVELSINST     RNINST
+     C                     MOVELSBSRT     RNBSRT
+     C                     MOVELSCCY      RNCCY
+     C                     Z-ADD@DNOM     RNDNOM
+     C                     MOVELSFSTCN    RNSTCN
+     C                     Z-ADD@NOTC     RNNOTC
+     C                     MOVELSFETCN    RNETCN
+     C                     Z-ADD@DTIN     RNDTIN
+     C                     MOVELCQPS      RNCOPS
+     C                     Z-ADD@DEXP     RNDEXP
+     C                     MOVEL'I'       RNCHTP
+     C                     Z-ADDBJRDNB    RNLCD
+      *
+     C                     WRITERETCRCD1
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           VALSC2  - Validate Second Screen.                   *
+      *                                                               *
+      * CALLS     SNDMSG  - Send program message parameters.          *
+      *           ZALIGN  - Validate and right align numeric fields.  *
+      *           ZDATE1  - Validate and convert date to a day number.*
+      *                                                               *
+      * CALLED BY INSRQS  - Insert Request.                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALSC2    BEGSR                           ** VALSC2 **
+      *
+      **  Initialise validation indicators, program message queue.
+      *
+     C                     MOVEA'000000'  *IN,16
+     C                     MOVEL'0'       *IN69
+     C                     Z-ADD0         @WRK1                                               249208
+     C                     CALL 'SCC0250'
+      *
+      **  Validate number of sequential books.
+      *
+     C           SNOSB     IFEQ *BLANKS
+      *
+     C                     MOVE '1'       *IN19
+     C**********           MOVEL'USR0199' WUMSID                                              249208
+     C                     MOVEL'USR0146' WUMSID                                              249208
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD4         ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SNOSB     ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    @NOSB
+     C                     MOVE ZFIELD    SNOSB
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN19
+     C                     MOVEL'USR0171' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate ending cheque number.
+      *
+     C           SETCN     IFNE *BLANKS
+      *
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD12        ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SETCN     ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    SETCN
+     C                     MOVE ZFIELD    @ETCN  120
+      *
+     C           @ETCN     IFLT @STCN
+     C                     MOVE '1'       *IN17
+     C                     MOVEL'USR0142' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN17
+     C                     MOVEL'USR0140' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate number of cheques per book.
+      *
+     C           SNOTC     IFNE *BLANKS
+      *
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SNOTC     ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '0'
+     C           ZFIELD    ANDNE*BLANK
+     C                     MOVE ZFIELD    @NOTC
+     C                     MOVE ZFIELD    SNOTC
+      *
+     C           @NOTC     IFGT 0                                                             249208
+      *                                                                                       249208
+     C           SETCN     IFNE *BLANKS
+     C           SNOTC     ANDNE*BLANKS
+      *
+     C           @NOSB     MULT @NOTC     @TNCQ   60
+     C           @STCN     ADD  @TNCQ     @WRK1  120
+     C           @WRK1     SUB  1         @WRK1
+     C           @WRK1     IFNE @ETCN
+     C                     MOVEA'11'      *IN,17
+     C                     MOVEL'USR0172' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           SETCN     IFEQ *BLANKS
+     C           @NOSB     MULT @NOTC     @TNCQ
+     C           @STCN     ADD  @TNCQ     @WRK1
+     C           @WRK1     SUB  1         @ETCN
+     C                     MOVE @ETCN     SETCN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                                       249208
+     C                     ELSE                                                               249208
+      *                                                                                       249208
+      ** No. of cheques in a book should be greater than 0.                                   249208
+     C                     MOVE '1'       *IN18                                               249208
+     C                     MOVEL'USR0149' WUMSID                                              249208
+     C                     EXSR SNDMSG                                                        249208
+      *                                                                                       249208
+     C                     ENDIF                                                              249208
+      *                                                                                       249208
+     C                     ELSE                                                               249208
+      *                                                                                       249208
+      ** No. of cheques in a book should be numeric                                           249208
+     C                     MOVE '1'       *IN18                                               249208
+     C                     MOVEL'USR0148' WUMSID                                              249208
+     C                     EXSR SNDMSG                                                        249208
+      *
+     C                     ENDIF
+      *                                                                                       249208
+     C                     ELSE                                                               249208
+      *                                                                                       249208
+      ** No. of cheques in a book is mandatory                                                249208
+     C                     MOVE '1'       *IN18                                               249208
+     C                     MOVEL'USR0147' WUMSID                                              249208
+     C                     EXSR SNDMSG                                                        249208
+      *
+     C                     ENDIF
+      *
+     C           SETCN     IFEQ *BLANKS
+     C           SNOTC     ANDEQ*BLANKS
+      *
+     C                     MOVEA'11'      *IN,17
+     C                     MOVEL'USR0173' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ENDIF
+      *
+      **  Validate date received from issuer.
+      *
+     C           SDTIN     IFEQ *BLANKS
+      *
+     C                     MOVE '1'       *IN20
+     C                     MOVEL'USR0174' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C                     MOVELSDTIN     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDZDAYNO    @DTIN   50
+     C                     ELSE
+     C                     Z-ADD0         @DTIN
+     C                     MOVE '1'       *IN20
+     C                     MOVEL'USR0009' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Validate cheque book expiration date.
+      *
+     C           SDEXP     IFNE *BLANKS
+     C           SDEXP     ORNE *ZEROS
+      *
+     C                     MOVELSDEXP     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '0'
+      *
+     C                     Z-ADDZDAYNO    @DEXP   50
+     C           @DEXP     IFLE @DTIN
+     C                     MOVE '1'       *IN21
+     C                     MOVEL'USR0175' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD0         @DEXP
+     C                     MOVE '1'       *IN21
+     C                     MOVEL'USR0009' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           VALAMD  - Validate Amend Screen                     *
+      *                                                               *
+      * CALLS     SNDMSG  - Send Program Message Parameters           *
+      *           ZALIGN  - Validate and right align numeric fields.  *
+      *           ZDATE1  - Validate and convert date to a day number.*
+      *                                                               *
+      * CALLED BY AMDRQS  - Amend Request                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALAMD    BEGSR                           ** VALAMD **
+      *
+      **  Initialise validation indicators, program message queue.
+      *
+     C                     MOVE '0'       *IN21
+     C                     MOVEL'0'       *IN69
+     C                     CALL 'SCC0250'
+      *
+      **  Validate cheque book expiration date.
+      *
+     C           SDEXP     IFEQ *BLANKS
+     C           SDEXP     OREQ *ZEROS
+      *
+     C                     MOVE '1'       *IN21
+     C                     MOVEL'USR0199' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+     C                     MOVELSDEXP     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '0'
+      *
+     C                     Z-ADDZDAYNO    @DEXP   50
+     C           @DEXP     IFLE @DTIN
+     C                     MOVE '1'       *IN21
+     C                     MOVEL'USR0175' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD0         @DEXP
+     C                     MOVE '1'       *IN21
+     C                     MOVEL'USR0176' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           DLTCQC  - Delete Cheque Book Control.               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY PRSLCT  - Process selection                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DLTCQC    BEGSR                           ** DLTCQC **
+      *
+      **  Delete cheque book control, if all cheques have been settled.
+      *
+     C                     Z-ADD@STCN     @CHQN
+     C           KCRC      CHAINRETCRCD1             71
+      *
+     C           *IN71     IFEQ '0'
+     C                     DELETRETCRCD1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           UPDCQC  - Update Cheque Book Control.               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY AMDRQS  - Amend Request                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           UPDCQC    BEGSR                           ** UPDCQC **
+      *
+      **  Update cheque book control details.
+      *
+     C                     Z-ADD@STCN     @CHQN
+     C           KCRC      CHAINRETCRCD1             71
+      *
+     C           *IN71     IFEQ '0'
+     C                     Z-ADD@DEXP     RNDEXP
+     C                     Z-ADDBJRDNB    RNLCD
+     C                     MOVEL'A'       RNCHTP
+     C                     UPDATRETCRCD1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SBTOFF - Set bit off                               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  WRTTCC - Write travellers cheques control details  *
+      *                                                               *
+      *****************************************************************
+     C           SBTOFF    BEGSR                           ** SBTOFF **
+      *
+      **  Set bit of for all the 160 cheque presented array.
+      *
+     C                     Z-ADD1         @I      20
+      *
+     C           @I        DOWLE20
+     C                     BITON'01234567'@CP,@I  1
+     C                     BITOF'01234567'@CP,@I  1
+     C                     ADD  1         @I
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /COPY ZSRSRC,ZALIGNZ2
+      *
+      /COPY ZSRSRC,ZDATE1Z2
+      *
+      /COPY ZSRSRC,ZDATE2Z2
+      *
+** CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**  FNK - Function/Command Keys
+F3 = Exit   F5 = Refresh
+F3 = Exit   F5 = Refresh   F12 = Initial Screen
+1=Confirm  C=Cheque Book Details  F3=Exit  F5=Refresh  F12=Previous Screen
+D=Delete   C=Cheque Book Details  F3=Exit  F5=Refresh  F12=Previous Screen
+C=Cheque Book Details  F3=Exit  F5=Refresh  F12=Previous Screen
+A=Amend  F3=Exit  F5=Refresh  F12=Previous Screen
+F3 = Exit   F12 = Initial Screen
+F3 = Exit   F10 = Confirm Delete   F12 = Initial Screen
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

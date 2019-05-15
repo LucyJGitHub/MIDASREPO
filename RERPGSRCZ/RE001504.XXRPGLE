@@ -1,0 +1,167 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*S*D ***RPGBASEBND****************************************************                     AR958145
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  RE001504 - Midas RE Save Account Balance Check Required Flag *
+      *                                                               *
+      *  Function:  This program will read all records from           *
+      *             GLACNTQD and populate REABCRPD accordingly        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. AR958145*REDUNDANT Date 26Apr12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CAP205  *CREATE    Date 15Feb10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR958145 - ABC First day processing enhancement              *
+      *           - Applied fix for AR975746                          *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    XX         Function of Indicator                           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise                                           *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+      ** Midas GL Account Extension File
+     FGLACNTL3  IF   E           K DISK    INFSR(*PSSR)
+ 
+      ** Account Balance Check Required Flag
+     FREABCRPD  UF A E           K DISK    INFSR(*PSSR)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     D RUNDAT        E DS                  EXTNAME(RUNDAT)
+      *
+      ** Data Area giving Installation Control Details
+      *
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+      *
+     D/COPY ZACPYSRC,PSDS
+      *
+      ** Program Status Data Structure
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+     D  @RUN           S              1A   INZ(*BLANKS)
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *****************************************************************
+      * MAIN PROCEDURE                                                *
+      *****************************************************************
+      *
+     C                   EXSR      SrProcess
+      *
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SrProcess - Process GLACNTQD Records                          *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SrProcess     BEGSR
+      *
+     C                   DOU       %EOF(GLACNTL3)
+     C                   READ      GLACNTD0
+     C                   IF        NOT(%EOF(GLACNTL3))
+     C                   CLEAR                   REABCRD0
+     C                   EVAL      MLCNUM = F1CNUM
+     C                   EVAL      MLCCY  = F1CCY
+     C                   EVAL      MLACOD = F1ACOD
+     C                   EVAL      MLACSQ = F1ACSQ
+     C                   EVAL      MLBRCA = F1BRCA
+     C                   EVAL      MLIABC = F1IABC
+     C                   WRITE     REABCRD0
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+      *
+     C                   CALL      'DBERRCTL'
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

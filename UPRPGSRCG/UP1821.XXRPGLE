@@ -1,0 +1,1006 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+/*E*I****ALWNULL(*USRCTL)**********************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1821 - Report Action File for T_WIPCF                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CUP037  *CREATE    Date 04Dec06               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP037 - Action File for T_WIPCF.                            *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       01 - 18 Null indicators for first comparison fields
+      *       20      End of file indicator
+      *       37      Overflow indicator
+      *       41 - 58 Null indicators for second comparison fields
+      *       69      Read or write errors
+      *       60      Amended records
+      *       61      No amended records to report
+      *       62      Amended records headers
+      *       63      Print field description for Amend
+      *       64      Print 'before' for Amend
+      *       65      Print 'after' for Amend
+      *       70      Deleted records
+      *       71      No deleted records to report
+      *       72      Deleted records headers
+      *       80      Inserted records
+      *       81      No inserted records to report
+      *       82      Inserted records headers
+      *
+     FUPWPCFL0  IF   E           K DISK    INFSR(*PSSR)
+     FUP0799P1  O    E             PRINTER INFSR(*PSSR)
+     F                                     INFDS(SPOOL)
+     F                                     OFLIND(*IN37)
+     F                                     USROPN
+      *
+      /EJECT
+      *
+      * File information data structure for P1 file; used for page end
+      *   handling
+     D SPOOL           DS
+     D  SFILE                 83     92
+     D  SFNUM                123    124B 0
+     D  OFLLN                188    189B 0
+     D  PRTLN                367    368B 0
+      *
+     D                 DS
+     D KEYHDR                  1    132
+     D  HDR1                  10     12    INZ('API')
+     D  HDR2                  41     46    INZ('System')
+     D  HDR3                  72     75    INZ('Zone')
+      *
+     D                 DS
+     D KEYDTA                  1    132
+     D  DTA1                  10     39
+     D  DTA2                  41     70
+     D  DTA3                  72     81
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    HDRTXT
+      *
+     C                   OPEN      UP0799P1
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *LOVAL        SETLL     UPWPCFD0
+      *
+     C                   READ      UPWPCFL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If there are no records at all write 'no records'.
+     C     *IN20         IFEQ      *ON
+     C                   WRITE     NORECS                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   WRITE     TRAILP                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   ENDIF
+      *
+     C     WCACTC        IFNE      'A'
+     C                   SETON                                        61
+     C                   WRITE     DTL1
+     C                   SETOFF                                       61
+     C                   ELSE
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+     C                   ENDIF
+      *
+     C     WCACTC        DOWEQ     'A'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       6237
+     C                   ENDIF
+      *
+     C                   EXSR      AMEND
+      *
+     C                   READ      UPWPCFL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+      *
+     C     WCACTC        IFNE      'D'
+     C                   SETON                                        71
+     C                   WRITE     DTL2
+     C                   SETOFF                                       71
+     C                   ELSE
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       72
+     C                   ENDIF
+      *
+     C     WCACTC        DOWEQ     'D'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       7237
+     C                   ENDIF
+      *
+     C                   EXSR      DELETE
+      *
+     C                   READ      UPWPCFL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+      *
+     C     WCACTC        IFNE      'I'
+     C                   SETON                                        81
+     C                   WRITE     DTL3
+     C                   SETOFF                                       81
+     C                   ELSE
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       82
+     C                   ENDIF
+      *
+     C     WCACTC        DOWEQ     'I'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       8237
+     C                   ENDIF
+      *
+     C                   EXSR      INSERT
+      *
+     C                   READ      UPWPCFL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     TRAILP                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     ENDPGM        TAG
+     C                   CLOSE     UP0799P1
+     C                   SETON                                        LR
+     C                   RETURN
+      *****************************************************************
+      *                                                               *
+      * AMEND subroutine - process amended records                    *
+      *                                                               *
+      *****************************************************************
+     C     AMEND         BEGSR
+      *
+     C                   EVAL      DTA1 = WC_API
+     C                   EVAL      DTA2 = WC_SYSTEM
+     C                   EVAL      DTA3 = WC_ZONE
+      *
+      * Check values for first and second amended records of pair
+     C                   EVAL      CAT1    = *blanks
+     C                   EVAL      BONSTP1 = *blanks
+     C                   EVAL      BOASTP1 = *blanks
+     C                   EVAL      BOAC1   = *blanks
+     C                   EVAL      BOACNE1 = *blanks
+     C                   EVAL      BOACAM1 = *blanks
+     C                   EVAL      BOACAU1 = *blanks
+     C                   EVAL      BOACCL1 = *blanks
+     C                   EVAL      BOACDE1 = *blanks
+     C                   EVAL      BOACRE1 = *blanks
+     C                   EVAL      BOACCH1 = *blanks
+     C                   EVAL      AUTOA1  = *blanks
+     C                   EVAL      AUTLVL1 = *blanks
+     C                   EVAL      BOFLD11 = *blanks
+     C                   EVAL      BOFLD21 = *blanks
+     C                   EVAL      BOFLD31 = *blanks
+     C                   EVAL      BOFLD41 = *blanks
+     C                   EVAL      BOFLD51 = *blanks
+      *
+      * Check values for first and second amended records of pair
+     C                   MOVEL     WC_CAT        CAT1             10
+     C                   EVAL      *IN41 = %NULLIND(WC_CAT)
+     C                   MOVEL     WC_BONSTP     BONSTP1          30
+     C                   EVAL      *IN42 = %NULLIND(WC_BONSTP)
+     C                   MOVEL     WC_BOASTP     BOASTP1          30
+     C                   EVAL      *IN43 = %NULLIND(WC_BOASTP)
+     C                   MOVEL     WC_BOAC       BOAC1            10
+     C                   EVAL      *IN44 = %NULLIND(WC_BOAC)
+     C                   MOVEL     WC_BOACNE     BOACNE1           1
+     C                   EVAL      *IN45 = %NULLIND(WC_BOACNE)
+     C                   MOVEL     WC_BOACAM     BOACAM1           1
+     C                   EVAL      *IN46 = %NULLIND(WC_BOACAM)
+     C                   MOVEL     WC_BOACAU     BOACAU1           1
+     C                   EVAL      *IN47 = %NULLIND(WC_BOACAU)
+     C                   MOVEL     WC_BOACCL     BOACCL1           1
+     C                   EVAL      *IN48 = %NULLIND(WC_BOACCL)
+     C                   MOVEL     WC_BOACDE     BOACDE1           1
+     C                   EVAL      *IN49 = %NULLIND(WC_BOACDE)
+     C                   MOVEL     WC_BOACRE     BOACRE1           1
+     C                   EVAL      *IN50 = %NULLIND(WC_BOACRE)
+     C                   MOVEL     WC_BOACCH     BOACCH1           1
+     C                   EVAL      *IN51 = %NULLIND(WC_BOACCH)
+     C                   MOVEL     WC_AUTOA      AUTOA1            1
+     C                   EVAL      *IN52 = %NULLIND(WC_AUTOA)
+     C                   MOVEL     WC_AUTLVL     AUTLVL1          30
+     C                   EVAL      *IN53 = %NULLIND(WC_AUTLVL)
+     C                   MOVEL     WC_BOFLD1     BOFLD11          20
+     C                   EVAL      *IN54 = %NULLIND(WC_BOFLD1)
+     C                   MOVEL     WC_BOFLD2     BOFLD21          20
+     C                   EVAL      *IN55 = %NULLIND(WC_BOFLD2)
+     C                   MOVEL     WC_BOFLD3     BOFLD31          20
+     C                   EVAL      *IN56 = %NULLIND(WC_BOFLD3)
+     C                   MOVEL     WC_BOFLD4     BOFLD41          20
+     C                   EVAL      *IN57 = %NULLIND(WC_BOFLD4)
+     C                   MOVEL     WC_BOFLD5     BOFLD51          20
+     C                   EVAL      *IN58 = %NULLIND(WC_BOFLD5)
+      *
+      * Read next record so that values can be compared.
+     C                   READ      UPWPCFL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   EVAL      CAT2    = *blanks
+     C                   EVAL      BONSTP2 = *blanks
+     C                   EVAL      BOASTP2 = *blanks
+     C                   EVAL      BOAC2   = *blanks
+     C                   EVAL      BOACNE2 = *blanks
+     C                   EVAL      BOACAM2 = *blanks
+     C                   EVAL      BOACAU2 = *blanks
+     C                   EVAL      BOACCL2 = *blanks
+     C                   EVAL      BOACDE2 = *blanks
+     C                   EVAL      BOACRE2 = *blanks
+     C                   EVAL      BOACCH2 = *blanks
+     C                   EVAL      AUTOA2  = *blanks
+     C                   EVAL      AUTLVL2 = *blanks
+     C                   EVAL      BOFLD12 = *blanks
+     C                   EVAL      BOFLD22 = *blanks
+     C                   EVAL      BOFLD32 = *blanks
+     C                   EVAL      BOFLD42 = *blanks
+     C                   EVAL      BOFLD52 = *blanks
+      *
+     C                   MOVEL     WC_CAT        CAT2             10
+     C                   EVAL      *IN01 = %NULLIND(WC_CAT)
+     C                   MOVEL     WC_BONSTP     BONSTP2          30
+     C                   EVAL      *IN02 = %NULLIND(WC_BONSTP)
+     C                   MOVEL     WC_BOASTP     BOASTP2          30
+     C                   EVAL      *IN03 = %NULLIND(WC_BOASTP)
+     C                   MOVEL     WC_BOAC       BOAC2            10
+     C                   EVAL      *IN04 = %NULLIND(WC_BOAC)
+     C                   MOVEL     WC_BOACNE     BOACNE2           1
+     C                   EVAL      *IN05 = %NULLIND(WC_BOACNE)
+     C                   MOVEL     WC_BOACAM     BOACAM2           1
+     C                   EVAL      *IN06 = %NULLIND(WC_BOACAM)
+     C                   MOVEL     WC_BOACAU     BOACAU2           1
+     C                   EVAL      *IN07 = %NULLIND(WC_BOACAU)
+     C                   MOVEL     WC_BOACCL     BOACCL2           1
+     C                   EVAL      *IN08 = %NULLIND(WC_BOACCL)
+     C                   MOVEL     WC_BOACDE     BOACDE2           1
+     C                   EVAL      *IN09 = %NULLIND(WC_BOACDE)
+     C                   MOVEL     WC_BOACRE     BOACRE2           1
+     C                   EVAL      *IN10 = %NULLIND(WC_BOACRE)
+     C                   MOVEL     WC_BOACCH     BOACCH2           1
+     C                   EVAL      *IN11 = %NULLIND(WC_BOACCH)
+     C                   MOVEL     WC_AUTOA      AUTOA2            1
+     C                   EVAL      *IN12 = %NULLIND(WC_AUTOA)
+     C                   MOVEL     WC_AUTLVL     AUTLVL2          30
+     C                   EVAL      *IN13 = %NULLIND(WC_AUTLVL)
+     C                   MOVEL     WC_BOFLD1     BOFLD12          20
+     C                   EVAL      *IN14 = %NULLIND(WC_BOFLD1)
+     C                   MOVEL     WC_BOFLD2     BOFLD22          20
+     C                   EVAL      *IN15 = %NULLIND(WC_BOFLD2)
+     C                   MOVEL     WC_BOFLD3     BOFLD32          20
+     C                   EVAL      *IN16 = %NULLIND(WC_BOFLD3)
+     C                   MOVEL     WC_BOFLD4     BOFLD42          20
+     C                   EVAL      *IN17 = %NULLIND(WC_BOFLD4)
+     C                   MOVEL     WC_BOFLD5     BOFLD52          20
+     C                   EVAL      *IN18 = %NULLIND(WC_BOFLD5)
+      *
+      * Compare values and write records to report.
+      *
+      * Category
+     C     CAT1          IFNE      CAT2
+     C     *IN41         ORNE      *IN01
+     C                   MOVEL     'WC_CAT'      FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN41   = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     CAT1          #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN01    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     CAT2          #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * New Back Office transaction writing workflow step
+     C     BONSTP1       IFNE      BONSTP2
+     C     *IN42         ORNE      *IN02
+     C                   MOVEL     'WC_BONSTP'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN42    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BONSTP1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN02    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BONSTP2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Amended Back Office transaction writing workflow step
+     C     BOASTP1       IFNE      BOASTP2
+     C     *IN43         ORNE      *IN03
+     C                   MOVEL     'WC_BOASTP'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN43    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOASTP1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN03    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOASTP2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * API action code
+     C     BOAC1         IFNE      BOAC2
+     C     *IN44         ORNE      *IN04
+     C                   MOVEL     'WC_BOAC'     FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN44    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOAC1         #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN04    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOAC2         #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Action code for New
+     C     BOACNE1       IFNE      BOACNE2
+     C     *IN45         ORNE      *IN05
+     C                   MOVEL     'WC_BOACNE'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN45    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACNE1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN05    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACNE2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Action code for Amend
+     C     BOACAM1       IFNE      BOACAM2
+     C     *IN46         ORNE      *IN06
+     C                   MOVEL     'WC_BOACAM'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN46    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACAM1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN06    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACAM2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Action code for Authorise
+     C     BOACAU1       IFNE      BOACAU2
+     C     *IN47         ORNE      *IN07
+     C                   MOVEL     'WC_BOACAU'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN47    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACAU1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN07    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACAU2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Action code for Close
+     C     BOACCL1       IFNE      BOACCL2
+     C     *IN48         ORNE      *IN08
+     C                   MOVEL     'WC_BOACCL'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN48    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACCL1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN08    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACCL2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Action code for Delete
+     C     BOACDE1       IFNE      BOACDE2
+     C     *IN49         ORNE      *IN09
+     C                   MOVEL     'WC_BOACDE'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN49    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACDE1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN09    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACDE2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Action code for Reverse
+     C     BOACRE1       IFNE      BOACRE2
+     C     *IN50         ORNE      *IN10
+     C                   MOVEL     'WC_BOACRE'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN50    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACRE1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN10    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACRE2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Action code for Change
+     C     BOACCH1       IFNE      BOACCH2
+     C     *IN51         ORNE      *IN11
+     C                   MOVEL     'WC_BOACCH'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN51    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACCH1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN11    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOACCH2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Input user own authorisation
+     C     AUTOA1        IFNE      AUTOA2
+     C     *IN52         ORNE      *IN12
+     C                   MOVEL     'WC_AUTOA'    FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN52    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     AUTOA1        #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN12    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     AUTOA2        #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * WIP authorisation level (eyes)
+     C     AUTLVL1       IFNE      AUTLVL2
+     C     *IN53         ORNE      *IN13
+     C                   MOVEL     'WC_AUTLVL'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN53    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     AUTLVL1       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN13    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     AUTLVL2       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Back Office field name 1
+     C     BOFLD11       IFNE      BOFLD12
+     C     *IN54         ORNE      *IN14
+     C                   MOVEL     'WC_BOFLD1'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN54    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD11       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN14    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD12       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Back Office field name 2
+     C     BOFLD21       IFNE      BOFLD22
+     C     *IN55         ORNE      *IN15
+     C                   MOVEL     'WC_BOFLD2'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN55    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD21       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN15    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD22       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Back Office field name 3
+     C     BOFLD31       IFNE      BOFLD32
+     C     *IN56         ORNE      *IN16
+     C                   MOVEL     'WC_BOFLD3'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN56    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD31       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN16    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD32       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Back Office field name 4
+     C     BOFLD41       IFNE      BOFLD42
+     C     *IN57         ORNE      *IN17
+     C                   MOVEL     'WC_BOFLD4'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN57    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD41       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN07    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD42       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      * Back Office field name 5
+     C     BOFLD51       IFNE      BOFLD52
+     C     *IN58         ORNE      *IN18
+     C                   MOVEL     'WC_BOFLD5'   FIELD
+      * Write description of field.
+     C                   EXSR      WrtFldDesc
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN58    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD51       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtBfValue
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   IF        *IN08    = *ON
+     C                   EVAL      #VALUE  =     '*null'
+     C                   ELSE
+     C                   MOVEL     BOFLD52       #VALUE
+     C                   ENDIF
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * DELETE subroutine - process deleted records                   *
+      *                                                               *
+      *****************************************************************
+     C     DELETE        BEGSR
+      *
+     C                   EVAL      DTA1 = WC_API
+     C                   EVAL      DTA2 = WC_SYSTEM
+     C                   EVAL      DTA3 = WC_ZONE
+      *
+     C                   WRITE     DTL2                                 69
+     C     *IN69         IFEQ      *ON
+     C                   SETON                                        U7U8
+     C                   DUMP
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * INSERT subroutine - process inserted records                  *
+      *                                                               *
+      *****************************************************************
+     C     INSERT        BEGSR
+      *
+     C                   EVAL      DTA1 = WC_API
+     C                   EVAL      DTA2 = WC_SYSTEM
+     C                   EVAL      DTA3 = WC_ZONE
+      *
+     C                   WRITE     DTL3                                 69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * OFLOW subroutine - handle overflow for print of field details *
+      *                                                               *
+      *****************************************************************
+     C     OFLOW         BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN              2 0
+     C     3             IFGE      RMLN
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+     C                   EVAL      DTA1 = WC_API
+     C                   EVAL      DTA2 = WC_SYSTEM
+     C                   EVAL      DTA3 = WC_ZONE
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   ENDIF
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtFldDesc - Write description of the field compared          *
+      *                                                               *
+      *****************************************************************
+     C     WrtFldDesc    BEGSR
+      *
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+      * Write description of field.
+     C                   EVAL      #VALUE    =   #FDESC
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     WrtFldDescE   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtBfValue - Write before value of the field                  *
+      *                                                               *
+      *****************************************************************
+     C     WrtBfValue    BEGSR
+      *
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     WrtBfValueE   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtAfValue - Write after value of the field                   *
+      *                                                               *
+      *****************************************************************
+     C     WrtAfValue    BEGSR
+      *
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     WrtAfValueE   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

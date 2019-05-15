@@ -1,0 +1,295 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Additional Customer Details Extract')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0130 - Additional Customer Details Extract                 *
+      *                                                               *
+      *  Function:  This program selects the customers for the        *
+      *             Additional Customer Details Report.               *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 AR740922           Date 02Apr11               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      *                 BUG22213           Date 15Jan09               *
+      *                 CER047  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR740922 - Additional Customer Details Report does not       *
+      *             include all the customers (Child: AR740923)       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
+      *  BUG22213 - Report Output error                               *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicators:                                                  *
+      *                                                               *
+      *  90 - End of file SDCUSTJ2                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas Customer Details
+      *
+     FSDCUSTJ2IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Midas Additional Customer Details Extract
+      *
+     FSDCEXTPDO   E                    DISK         KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *                                                                                     BUG22213
+     E/COPY ZSRSRC,ZDATE9Z1                                                                 BUG22213
+      *                                                                                     BUG22213
+     I/COPY ZSRSRC,ZDATE9Z2                                                                 BUG22213
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     IRPARM       DS                            100
+     I                                        1   6 FRCUS
+     I                                        7  12 TOCUS
+     I                                       13  14 IDTYP
+     I                                       15  15 S24C
+      *                                                                                     BUG22213
+     ISDBANK    E DSSDBANKPD                                                                BUG22213
+      *                                                                                     BUG22213
+      ** First DS for access programs, short data structure.                                BUG22213
+      *                                                                                     BUG22213
+     IDSFDY     E DSDSFDY                                                                   BUG22213
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Initialise program.
+      *
+     C                     EXSR INIT
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RPARM
+      *
+      ** Process customer file  to end.
+      *
+     C           *IN90     DOWEQ*OFF
+     C                     READ @CUSTJ2                  90
+     C           *IN90     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           FRCUS     IFNE '*FIRST'
+     C           E5CUST    ANDLTFRCUS
+     C                     ITER
+     C                     ENDIF
+      *
+     C           TOCUS     IFNE '*LAST '
+     C           E5CUST    ANDGTTOCUS
+     C                     ITER
+     C                     ENDIF
+      *
+     C           IDTYP     IFNE *BLANK
+     C           E5IDTP    ANDNEIDTYP
+     C                     ITER
+     C                     ENDIF
+      *
+     C           S24C      IFNE *BLANK
+     C           E5S24C    ANDNES24C
+     C                     ITER
+     C                     ENDIF
+      *
+     C           BBDTDL    IFNE *ZEROS
+     C                     ITER
+     C                     ENDIF
+      *
+     C                     EXSR OUTPUT
+      *                                                                                     AR740922
+      ** Reset *IN90 to prevent EOF(SDCUSTJ2), this indicator was used                      AR740922
+      ** in SRDATE subroutine                                                               AR740922
+      *                                                                                     AR740922
+     C                     MOVE '0'       *IN90                                             AR740922
+      *
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Initialisation subroutine                            *
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls: AOSARDR0                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Initialisation SubRoutine
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *                                                                                     BUG22213
+      ** Define LDA.                                                                        BUG22213
+      *                                                                                     BUG22213
+     C           *NAMVAR   DEFN           LDA                                               BUG22213
+      *                                                                                     BUG22213
+      ** Get bank details                                                                   BUG22213
+      *                                                                                     BUG22213
+     C                     CALL 'AOBANKR0'                                                  BUG22213
+     C                     PARM '*MSG   ' PRTCD   7                                         BUG22213
+     C                     PARM '*FIRST ' POPTN   7                                         BUG22213
+     C           SDBANK    PARM SDBANK    DSFDY                                             BUG22213
+      *                                                                                     BUG22213
+     C           PRTCD     IFNE *BLANK                                                      BUG22213
+     C           *LOCK     IN   LDA                                                         BUG22213
+     C                     MOVEL'SDBANKPD'DBFILE                                            BUG22213
+     C                     Z-ADD1         DBASE                                             BUG22213
+     C                     OUT  LDA                                                         BUG22213
+     C                     SETON                     U7U8LR                                 BUG22213
+     C                     DUMP                                                             BUG22213
+     C                     RETRN                                                            BUG22213
+     C                     ENDIF                                                            BUG22213
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OUTPUT - Write records to extract file                        *
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTPUT    BEGSR
+      *
+      ** Initialise fields for output
+      *
+     C                     MOVELE5CUST    EXCUST
+     C                     MOVELE5CNA1    EXSNMC
+     C**********           MOVELE5TITL    EXTTLC                                            BUG22213
+     C                     MOVELE5CNA2    EXTTLC                                            BUG22213
+     C**********           MOVELE5CNA2    EXADRS                                            BUG22213
+     C                     MOVELE5CNA3    EXADRS                                            BUG22213
+     C                     MOVELE5BTHT    EXTOWN
+     C                     MOVELE5ZIPC    EXPCDE
+     C                     MOVELE5BTHC    EXCOLC
+     C                     MOVELE5DBTH    EXDBRC
+     C                     MOVELE5BTHT    EXPLBR
+     C                     MOVELE5BTHC    EXCNBR
+     C                     MOVELE5IDTP    EXIDCA
+     C                     MOVELE5DCID    EXIDNR
+     C                     MOVELE5ISCD    EXISAU
+     C                     MOVELE5DIPL    EXISPL
+     C                     MOVELE5ISDT    EXISDT
+     C**********           MOVELE5EXDT    EXEXDT                                            BUG22213
+     C                     EXSR SRDATE
+     C                     MOVELE5S24C    EXS24C
+      *
+      ** Write output record
+      *
+     C                     WRITESDCEXTD0
+      *
+     C                     ENDSR
+      *****************************************************************                     BUG22213
+      /EJECT                                                                                BUG22213
+      *****************************************************************                     BUG22213
+      *                                                               *                     BUG22213
+      *  SRDATE - Calculate the date                                  *                     BUG22213
+      *                                                               *                     BUG22213
+      *  Called by: OUTPUT                                            *                     BUG22213
+      *                                                               *                     BUG22213
+      *  Calls: ZDATE9                                                *                     BUG22213
+      *                                                               *                     BUG22213
+      *****************************************************************                     BUG22213
+      *                                                                                     BUG22213
+     C           SRDATE    BEGSR                                                            BUG22213
+      *                                                                                     BUG22213
+     C                     Z-ADDE5EXDT    @@DAYN  50                                        BUG22213
+      *                                                                                     BUG22213
+      ** Convert from Midas day to date format                                              BUG22213
+      *                                                                                     BUG22213
+     C                     EXSR ZDATE9                                                      BUG22213
+      *                                                                                     BUG22213
+     C                     Z-ADD@@VDT     EXEXDT                                            BUG22213
+      *                                                                                     BUG22213
+     C                     ENDSR                                                            BUG22213
+      *                                                                                     BUG22213
+     C/COPY ZSRSRC,ZDATE9Z3                                                                 BUG22213
+      *                                                                                     BUG22213
+      *****************************************************************                     BUG22213
+      /EJECT                                                                                BUG22213
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2008
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

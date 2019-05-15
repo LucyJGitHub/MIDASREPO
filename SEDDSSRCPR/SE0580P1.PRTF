@@ -1,0 +1,818 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_CONF42                                                    *
+/*EXI *  TEXT('Midas SE Position settlement confirmations')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Securities Trading Module                            *
+     A*                                                               *
+     A*  PRTF/SE0580P1 - SE0580 POSITION SETTLEMENT CONFIRMATIONS     *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD053             Date 01Jun06               *
+      *                 CSD027             Date 30Nov05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 176581             Date 11Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 174836             Date 30Jun01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 CEU017             Date 03Avr98               *
+     A*                 CSE007             DATE 04FEB98               *
+     A*                 076424             DATE 24JUL96               *
+     A*                 093965             DATE 05OCT95               *
+     A*                 S01408             DATE 21JUL95               *
+     A*                 S01496             DATE 11NOV94               *
+     A*                 S01486             DATE 11NOV94               *
+     A*                 S01512             DATE 10AUG94               *
+     A*                 S01509             DATE 10AUG94               *
+     A*                 066908             DATE 13FEB94               *
+     A*                 062718             DATE 02NOV93               *
+     A*                 052254             DATE 07JAN94               *
+     A*                 S01447             DATE 25OCT93               *
+     A*                 AUS004             DATE 17JUN92               *
+     A*                 E37786             DATE 31MAR92               *
+     A*                 E29170             DATE 07OCT91               *
+     A*                 E24652             DATE 26SEP91               *
+     A*                 S01117             DATE 14MAY91               *
+     A*                 E15929             DATE 16JAN90               *
+     A*                 E16772             DATE 26MAY89               *
+     A*                 E14957             DATE 11SEP88               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     A*  176581 - Change the indicator used for the SPACEA keyword in *
+     A*           format SETTL - Settlement Instructions.             *
+     A*  174836 - First detail line missing for Corporate Actions.    *
+     A*  CEU017 - Securities Redenomination Euro Changes              *
+     A*           Same coding than CSE007                             *
+     A*  CSE007 - Corporate Actions                                   *
+     A*  076424 - RECOMPILE ONLY                                      *
+     A*  093965 - S01486 and S01496 did not take into account the     *
+     A*           change in confirmation size done by AUS004          *
+     A*  S01408 - Core hook SE0580P1F1 added                          *
+     A*  S01496 - Incorp. of Private Banking SE Enhancements (S10978) *
+     A*  S01486 - Incorporation of PM Enhancements (S01313)           *
+     A*  S01512 - Add value date to Position Settlements              *
+     A*  S01509 - Value currency to be currency of Issuer payments    *
+     A*  066908 - Overprinting on 'AT' line for share dividends       *
+     A*  062718 - Overprinting on 3rd line of Security Description so *
+     A*           allow more room. Also change in OS/400 seems to     *
+     A*           reject printing on last line of report, so have     *
+     A*           moved up by one line the counterparty name and addr.*
+     A*  052254 - CURRENT FACTOR amended from 9,8 to 10,9             *
+     A*  S01447 - WITHHOLDING TAX (SE).                               *
+     A*           Amended to print Withholding Tax details about a    *
+     A*           Position Settlement if it has them and the          *
+     A*           Withholding Tax switchable feature is on            *
+     A*  AUS004 - Australian Release - 42 Line Confirmations Standard *
+     A*           Completely replaces existing format                 *
+     A*  E37786 - Branch codes should show in the account             *
+     A*  E29170 - RCF CHANGES                                         *
+     A*  E24652 - Incorrect spacing for the 'PER SHARE' narrative     *
+     A*  S01117 - Mutlibranching                                      *
+     F*  E15929 - Show the partly paid % instead of the amount if the *
+     F*           security is % priced.                               *
+     A*  E16772 - Size of Dividend Payment Amount SDDV has increased  *
+     A*           from 9,4 to 13,8. Hence the screen field RSDDV      *
+     A*           must be increased from 12 to 14 alpha.              *
+     A*  E14957 - PRINTS SETTLEMENT CCY/AMT INSTEAD OF                *
+     A*           NOMINAL CCY/AMOUNT DUE                              *
+     A*                                                               *
+     A*****************************************************************
+     A                                      REF(MFRFL)
+     A**
+     A**   ***************
+     A**   BRANCH HEADINGS
+     A**   ***************
+     A**
+     A*                                              Begin /S01496/
+     A**********R HEADS                     SKIPB(9)
+     A          R HEADS                     SKIPB(7)
+     A*                                              End   /S01496/
+     A                                      TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                    34'BRANCH'
+     A**                                                Begin /S01117/
+     A*********** PBCH      R             41
+     A            PBCA      R             41
+     A**                                                 End  /S01117/
+     A            RBRNM         30        45
+     A**
+     A**   *********
+     A**   REFERENCE
+     A**   *********
+     A**
+     A***********                                    Begin /AUS004/
+     A**********R REFRN                     SKIPB(12)
+     A***********                         40'SETTLEMENT CONFIRMATION'
+     A***********                           SPACEA(2)
+     A***********                         10'REFERENCE'
+     A*********** PSSH      R             20
+     A***********                         34'DATE'
+     A*********** RUNA      R             39
+     A***********                         53'DUE'
+     A*********** DDATE          7        57
+     A*                                              Begin /S01496/
+     A**********R REFRN                     SKIPB(11)
+     A          R REFRN                     SKIPB(9)
+     A*                                              End   /S01496/
+     A                                    35'SETTLEMENT CONFIRMATION'
+     A*                                              Begin /S01496/
+     A N40 76                             37'PARTIAL REDEMPTION'
+     A                                      SKIPB(10)
+     A  40 76                             32'PARTIAL REDEMPTION (REVERSAL)'
+     A                                      SKIPB(10)
+     A  40N76                             41'(REVERSAL)'
+     A                                      SKIPB(10)
+     A*                                              End   /S01496/
+     A*                                              Begin /CSE007/
+     A  40 70                             41'(REVERSAL)'
+     A                                      SKIPB(10)
+     A*                                              End   /CSE007/
+     A            PSSH      R             12SKIPB(12)
+     A            RUNA      R             30
+     A                                    57'DUE'
+     A            DDATE          7        61
+     A*                                              Begin /S01512/
+     A  39                                72'VALUE'
+     A  39        VDATE          7        78
+     A*                                              End   /S01512/
+     A***********                                    End   /AUS004/
+     A*/COPY WNCPYSRC,SE0580P105
+     A**
+     A**   ***********************
+     A**   SETTLEMENT INSTRUCTIONS
+     A**   ***********************
+     A**
+     A***********                                    Begin /AUS004/
+     A**********R SETTL                     SKIPB(16)
+     A          R SETTL                     SKIPB(13)
+     A***********                                    End   /AUS004/
+     A  20                                27'WE HAVE RECEIVED A COUPON ON +
+     A                                      BEHALF OF YOUR HOLDING'
+     A***********                                    Begin /093965/
+     A*                                              Begin /S01486/
+     A**10*******                         79'IN PORTFOLIO'
+     A**10******* RRPTF1         4        92
+     A*                                              End   /S01486/
+     A**Start of change 176581
+     A**10******                            SPACEA(1)                                         176581
+     A  20                                  SPACEA(1)
+     A**End of change 176581
+     A  10                                73'IN PORTFOLIO'
+     A  10        RRPTF1         4        86
+     A***********                                    End   /093965/
+     A  21                                27'WE HAVE RECEIVED A DIVIDEND ON +
+     A                                      BEHALF OF YOUR HOLDING'
+     A***********                                    Begin /093965/
+     A*                                              Begin /S01486/
+     A**11*******                         81'IN PORTFOLIO'
+     A**11******* RRPTF2         4        94
+     A*                                              End   /S01486/
+     A**Start of change 176581
+     A**11******                            SPACEA(1)                                         176581
+     A  21                                  SPACEA(1)
+     A**End of change 176581
+     A  11                                73'IN PORTFOLIO'
+     A  11        RRPTF2         4        86
+     A***********                                    End   /093965/
+     A  22                                27'WE HAVE PAID A CALL ON BEHALF OF +
+     A                                      YOUR HOLDING'
+     A***********                                    Begin /093965/
+     A**Start of change 176581
+     A**12******                            SPACEA(1)                                         176581
+     A  22                                  SPACEA(1)
+     A**End of change 176581
+     A***********                                    End   /093965/
+     A*                                              Begin /S01486/
+     A  12                                73'IN PORTFOLIO'
+     A  12        RRPTF3         4        86
+     A*                                              End   /S01486/
+     A  23                                27'WE HAVE RECEIVED A REPAYMENT +
+     A                                      ON YOUR HOLDING'
+     A***********                                    Begin /093965/
+     A**Start of change 176581
+     A**13******                            SPACEA(1)                                         176581
+     A  23                                  SPACEA(1)
+     A**End of change 176581
+     A***********                                    End   /093965/
+     A*                                              Begin /S01486/
+     A  13                                72'IN PORTFOLIO'
+     A  13        RRPTF4         4        85
+     A*                                              End   /S01486/
+     A  24                                27'WE HAVE RECEIVED SETTLEMENT AT +
+     A                                      THE MATURITY OF YOUR HOLDING'
+     A*                                              Begin /S01486/
+     A***********                                    Begin /093965/
+     A**14*******                         87'IN PORTFOLIO'
+     A**14******* RRPTF5         4       100
+     A**Start of change 176581
+     A**14******                            SPACEA(1)                                         176581
+     A  24                                  SPACEA(1)
+     A**End of change 176581
+     A  14                                73'IN PORTFOLIO'
+     A  14        RRPTF5         4        86
+     A***********                                    End   /093965/
+     A*
+     A  32                                27'THE FOLLOWING OPTION HAS +
+     A                                      EXPIRED WITHOUT BEING EXERCISED'
+     A***********                                    Begin /093965/
+     A**15*******                         85'IN PORTFOLIO'
+     A**15******* RRPTF6         4        98
+     A**Start of change 176581
+     A**15******                            SPACEA(1)                                         176581
+     A  32                                  SPACEA(1)
+     A**End of change 176581
+     A  15                                73'IN PORTFOLIO'
+     A  15        RRPTF6         4        86
+     A***********                                    End   /093965/
+     A*                                              End   /S01486/
+     A*                                              Begin /CSE007/
+     A  70                                27'WE HAVE RECEIVED A CORPORATE +
+     A                                      ACTION'
+     A  70        RRDESC        60        63
+     A  70                                  SPACEA(1)
+     A  70                                27'ON BEHALF OF YOUR HOLDING'
+     A  16                                53'IN PORTFOLIO'
+     A  16        RRPTF7         4        86
+     A*                                              End   /CSE007/
+     A**
+     A**   ****************
+     A**   SECURITY DETAILS
+     A**   ****************
+     A**
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R SECRT                     SKIPB(18)
+     A*********** PNCY      R             23
+     A*********** RPNMP         21        27
+     A*********** SDES1         30        50SPACEA(1)
+     A*********** SDES2         30        50SPACEA(1)
+     A*********** SDES3         30        50
+     A          R SECRT                     SKIPB(15)
+     A*                                              Begin /S01509/
+     A**********  PNCY      R             20
+     A            NMCY      R             20
+     A*                                              End   /S01509/
+     A            RPNMP         21        24
+     A            SDES1         30        47SPACEA(1)
+     A*/COPY WNCPYSRC,SE0580P106
+     A            SDES2         30        47SPACEA(1)
+     A            SDES3         30        47
+     A***********                                    End   /AUS004/
+     A*/COPY WNCPYSRC,SE0580P107
+     A**
+     A**   ******************
+     A**   SETTLEMENT DETAILS
+     A**   ******************
+     A**
+     A*    EVENT TYPE EQ 'CP'
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R EVTCP                     SKIPB(22)
+     A***********                         39'AT'
+     A*********** RCPNR         13        42
+     A** E14957
+     A*********** PSCU      R             56
+     A*********** PNCY      R             56
+     A*********** RPSAT         19        61SPACEA(1)
+     A*********** RPAMD         19        61SPACEA(1)
+     A*                                              Begin /062718/
+     A**********R EVTCP                     SKIPB(17)
+     A          R EVTCP                     SKIPB(18)
+     A*                                              End   /062718/
+     A                                    36'AT'
+     A            RCPNR         13        39
+     A            PNCY      R             53
+     A            RPAMD         19        58SPACEA(1)
+     A***********                                    End   /AUS004/
+     A*
+     A*    EVENT TYPE EQ 'DV'
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R EVTDV                     SKIPB(22)
+      *                                              Begin /E24652/
+     A***********                         30'AT'
+     A***********                         29'AT'
+      *                                              End   /E24652/
+     A**  E14957
+     A*********** PSCU      R             33
+      *                                              Begin /E15929/
+     A*********** PNCY      R             34
+      *                                              Begin /E24652/
+     A*N29******* PNCY      R             34
+     A*N29******* PNCY      R             32
+      *                                              End   /E24652/
+     A***********                                                       /E15929/
+      *                                              End   /E15929/
+     A************RSDDV         12        37                     E16772
+      *                                              Begin /E24652/
+     A*********** RSDDV         14        37
+     A*********** RSDDV         14        36
+      *                                              End   /E24652/
+     A***                                                        E16772
+     A***********                         50'PER SHARE'
+     A*********** RPSAT         19        61SPACEA(1)
+     A*********** RPAMD         19        61SPACEA(1)
+     A*                                              Begin /062718/
+     A**********R EVTDV                     SKIPB(17)
+     A          R EVTDV                     SKIPB(18)
+     A*                                              End   /062718/
+     A*                                              Begin /066908/
+     A************                        27'AT'
+     A*N29********PNCY      R             30
+     A************RSDDV         14        34
+     A                                    24'AT'
+     A N29        PNCY      R             27
+     A            RSDDV         14        31
+     A                                    47'PER SHARE'
+     A*                                              End   /066908/
+     A            RPAMD         19        58SPACEA(1)
+     A***********                                    End   /AUS004/
+     A*
+     A*    EVENT TYPE EQ 'PP'
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R EVTPP                     SKIPB(22)
+     A***********                         31'OF'
+     A**  E14957
+     A*********** PSCU      R             34
+     A*********** PNCY      R             34
+     A*********** RSDPP         21        38
+     A*********** RPSAT         19        61SPACEA(1)
+     A*********** RPAMD         19        61SPACEA(1)
+     A*                                              Begin /062718/
+     A**********R EVTPP                     SKIPB(17)
+     A          R EVTPP                     SKIPB(18)
+     A*                                              End   /062718/
+     A                                    28'OF'
+     A            PNCY      R             31
+     A            RSDPP         21        35
+     A            RPAMD         19        58SPACEA(1)
+     A***********                                    End   /AUS004/
+     A*
+     A*    EVENT TYPE EQ 'MP'
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R EVTMP                     SKIPB(22)
+     A***********                         42'AT'
+     A*********** RSDCP         10        45
+     A** E14957
+     A*********** PSCU      R             56
+     A*********** PNCY      R             56
+     A*********** RPSAT         19        61SPACEA(1)
+     A*********** RPAMD         19        61SPACEA(1)
+     A*                                              Begin /062718/
+     A**********R EVTMP                     SKIPB(17)
+     A          R EVTMP                     SKIPB(18)
+     A*                                              End   /062718/
+     A***********                                    Begin /052254/
+     A**********                          39'AT'
+     A**********  RSDCP         10        42
+     A                                    38'AT'
+     A            RSDCP         11        41
+     A***********                                    End   /052254/
+     A            PNCY      R             53
+     A            RPAMD         19        58SPACEA(1)
+     A***********                                    End   /AUS004/
+     A*
+     A*    EVENT TYPE EQ 'MT'
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R EVTMT                     SKIPB(22)
+     A***********                         45'AMOUNT DUE'
+     A**  E14957
+     A*********** PSCU      R             56
+     A*********** PNCY      R             56
+     A*********** RPSAT         19        61SPACEA(1)
+     A*********** RPAMD         19        61SPACEA(1)
+     A*                                              Begin /062718/
+     A**********R EVTMT                     SKIPB(17)
+     A          R EVTMT                     SKIPB(18)
+     A*                                              End   /062718/
+     A                                    42'AMOUNT DUE'
+     A            PNCY      R             53
+     A            RPAMD         19        58SPACEA(1)
+     A***********                                    End   /AUS004/
+     A*                                              Begin /S01496/
+     A**  Event Type = 'RC'
+     A*
+     A          R EVTRC                     SKIPB(18)
+     A                                    42'AMOUNT DUE'
+     A            PNCY      R             53
+     A            RPAMD         19        58SPACEA(1)
+     A*                                              End   /S01496/
+     A*                                              Begin /174836/
+     A          R EVTCA                     SKIPB(18)
+     A                                    42'AMOUNT DUE'
+     A            PNCY      R             53
+     A            RPAMD         19        58SPACEA(1)
+     A*                                              End   /174836/
+     A*
+     A**
+     A**   ******************
+     A**   CHARGES/COMMISSION
+     A**   ******************
+     A**
+     A*
+     A          R CHARG
+     A***********                                    Begin /AUS004/
+     A***********                         52'CHARGES'
+     A*********** RPCHA         19        61SPACEA(1)
+     A***********                         49'COMMISSION'
+     A*********** RPCAM         19        61SPACEA(1)
+     A***********                         61'------------------'
+     A*/COPY WNCPYSRC,SE0580P101
+     A                                    49'CHARGES'
+     A            RPCHA         19        58SPACEA(1)
+     A*/COPY WNCPYSRC,SE0580P104
+     A                                    46'COMMISSION'
+     A            RPCAM         19        58SPACEA(1)
+     A*/COPY WNCPYSRC,SE0580P102
+     A*                                              Begin /S01447/
+     A***********                         58'------------------'
+     A**Start of change CGL031
+     A*N30******                                                                              CGL031
+     A**End of change CGL031
+     A*                                              Begin /174836/
+     A*N20N21***                          58'------------------'
+     A**Start of change CGL031
+     A***ON20N21N70                          58'------------------'                           CGL031
+     A**End of chnage CGL031
+     A*                                              End   /174836/
+     A**Start of change CGL031
+     A*N30******                                                                              CGL031
+     A**End of change CGL031
+     A*                                              Begin /174836/
+     A*N20N21***                            SPACEA(1)
+     A**Start of change CGL031
+     A***ON20N21N70                            SPACEA(1)                                      CGL031
+     A**End of change CGL031
+     A*                                              End   /174836/
+     A*/COPY WNCPYSRC,SE0580P103
+     A  20 30
+     A*                                              Begin /174836/
+     AO 70 30
+     A*                                              End   /174836/
+     AO 21 30                             34'TAX DEDUCTED AT SOURCE'
+     A  20 30
+     A*                                              Begin /174836/
+     AO 70 30
+     A*                                              End   /174836/
+     AO 21 30     RTASO         19        58SPACEA(1)
+     A  20 30
+     A*                                              Begin /174836/
+     AO 70 30
+     A*                                              End   /174836/
+     AO 21 30                             36'TAX DEDUCTED BY USER'
+     A  20 30
+     A*                                              Begin /174836/
+     AO 70 30
+     A*                                              End   /174836/
+     AO 21 30     RTAUS         19        58SPACEA(1)
+     A**Start of change CGL031
+     A  20 19
+     AO 21 19
+     AO 23 19
+     AO 24 19                             38'EU WITHHOLDING TAX'
+     A*
+     A  20 19
+     AO 21 19
+     AO 23 19
+     AO 24 19     RTXSR         19        58SPACEA(1)
+     A**20*30***                                                                              CGL031
+     A**End of change CGL031
+     A*                                              Begin /174836/
+     A**Start of change CGL031
+     A***O*70*30                                                                              CGL031
+     A**End of change CGL031
+     A*                                              End   /174836/
+     A**Start of change CGL031
+     A***O*21*30                             58'------------------'                           CGL031
+     A                                    58'------------------'
+     A                                       SPACEA(1)
+     A**20*30***                                                                              CGL031
+     A**End of change CGL031
+     A*                                              Begin /174836/
+     A**Start of change CGL031
+     A***O*70*30                                                                              CGL031
+     A**End of change CGL031
+     A*                                              End   /174836/
+     A**Start of change CGL031
+     A***O*21*30                               SPACEA(1)                                      CGL031
+     A**End of change CGL031
+     A*                                              End   /S01447/
+     A*                                              Begin /S01447/
+     A***********                                    End   /AUS004/
+     A***********                           SPACEA(1)
+     A***********                                    Begin /AUS004/
+     A*                                              End   /S01447/
+     A*********** PNCY      R             56
+     A*********** RPDUE         19        61SPACEA(1)
+     A***********                         61'------------------'
+     A            PNCY      R             53
+     A            RPDUE         19        58SPACEA(1)
+     A                                    58'------------------'
+     A***********                                    End   /AUS004/
+     A                                      SPACEA(1)
+     A***********                                    Begin /AUS004/
+     A**31*******                         23'CONVERTED AT'
+     A**31******* RPSXR         15        36
+     A**31*******                         53'TO'
+     A**31******* PSCU      R             56
+     A**31******* RPSAT         19        61SPACEA(1)
+     A**31*******                         61'------------------'
+     A  31                                20'CONVERTED AT'
+     A  31        RPSXR         15        33
+     A  31                                50'TO'
+     A  31        PSCU      R             53
+     A  31        RPSAT         19        58SPACEA(1)
+     A  31                                58'------------------'
+     A***********                                    End   /AUS004/
+     A**
+     A**   ******************
+     A**   SETTLEMENT DETAILS
+     A**   ******************
+     A**
+     A*    SETTLEMENT METHOD IS ZERO OR BLANK
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R SETL1                     SKIPB(30)
+     A          R SETL1                     SKIPB(32)
+     A***********                                    End   /AUS004/
+     A  35                                35'WE AWAIT YOUR INSTRUCTIONS'
+     A N35                                35'OUR INSTRUCTIONS TO BE ADVISED'
+     A*
+     A*    SETTLEMENT METHOD IS 4, 5, 14 OR 15
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R SETL2                     SKIPB(30)
+     A          R SETL2                     SKIPB(32)
+     A***********                                    End   /AUS004/
+     A  35                                35'WE HAVE CREDITED YOUR ACCOUNT'
+     A N35                                35'WE HAVE DEBITED YOUR ACCOUNT'
+     A*
+     A*    SETTLEMENT METHOD IS 14
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R SETL3                     SKIPB(32)
+     A          R SETL3                     SKIPB(33)
+     A***********                                    End   /AUS004/
+     A**Start of change CGL029
+     A**********  PSEA      R             38                                                  CGL029
+     A            PSEA          18A       38
+     A**End of change CGL029
+     A*
+     A*    SETTLEMENT METHOD IS 4, 5 OR 15
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R SETL4                     SKIPB(32)
+     A          R SETL4                     SKIPB(33)
+     A***********                                    End   /AUS004/
+     A***********                                    Begin /E37786/
+     A  37        PSEB      R             34
+     A  37                                37'-'
+     A***********                                    End   /E37786/
+                                          44'-   -    -'
+      * Begin /CSD027/
+     A**43******  PCPY      R             38                                                  CSD027
+     A  43        PCPY           6A       38TEXT('Counterparty')
+      * End /CSD027/
+     A  44
+     A***********                                    Begin /E37786/
+     AO 46
+     A***********                                    End   /E37786/
+     AO 48        RPSA1          6        38
+     A            PSCU      R             45
+     A**Start of change CGL029
+     A**43******  CADC      R             49                                                  CGL029
+     A  43        CADC          10  0     49
+     A**End of change CGL029
+     A***********                                    Begin /E37786/
+     A**44******* RPSA2          4        49
+     A  44
+     A**Start of change CGL029
+     A*O*46*****   RPSA2          4        49                                                 CGL029
+     AO 46        RPSA2         10        49
+     A**End of change CGL029
+     A***********                                    End   /E37786/
+     A**Start of change CGL029
+     A**48******  C1AC      R             49                                                  CGL029
+     A  48        C1AC          10  0     49
+     A**End of change CGL029
+     A  43        RNSAC          2        54
+     A***********                                    Begin /E37786/
+     A**44******* RPSA3          2        54
+     A  44
+     AO 46        RPSA3          2        54
+     A***********                                    End   /E37786/
+     A  48        C1SQ      R             54
+     A*
+     A*    SETTLEMENT METHOD IS 1, 2, 7, 8 OR 12
+     A*
+     A***********                                    Begin /AUS004/
+     A**********R SETL5                     SKIPB(30)
+     A***********                          6'PAYMENT BY'
+     A**45*******                         62'PAYMENT TO' SPACEA(1)
+     A*N45*******                         62' ' SPACEA(1)
+     A          R SETL5                     SKIPB(32)
+     A                                     2'PAYMENT BY'
+     A  45                                42'PAYMENT TO' SPACEA(1)
+     A N45                                42' ' SPACEA(1)
+     A***********                                    End   /AUS004/
+     A*    PAYMENT BY
+     A*    ----------
+     A***********                                    Begin /AUS004/
+     A**42*36****                          6'WE AWAIT YOUR REMITTANCE'
+     A**42*35****                          6'WE WILL SEND REMITTANCE'
+     A**47*36****                          6'WE WILL COLLECT YOUR REMITTANCE'
+     A**47*35****                          6'YOU WILL COLLECT OUR REMITTANCE'
+     A**45*35*25*                          6'AS PER OUR ADVISE'
+     A**45*35N25* RNSBN         35         6
+     A**45*36*26*                          6'AS PER YOUR INSTRUCTIONS'
+     A**45*36N26* RCPBN         35         6
+     A  42 36                              2'WE AWAIT YOUR REMITTANCE'
+     A  42 35                              2'WE WILL SEND REMITTANCE'
+     A  47 36                              2'WE WILL COLLECT YOUR REMITTANCE'
+     A  47 35                              2'YOU WILL COLLECT OUR REMITTANCE'
+     A  45 35 25                           2'AS PER OUR ADVISE'
+     A  45 35N25  RNSBN         35         2
+     A  45 36 26                           2'AS PER YOUR INSTRUCTIONS'
+     A  45 36N26  RCPBN         35         2
+     A***********                                    End   /AUS004/
+     A*
+     A*    PAYMENT TO
+     A*    ----------
+     A***********                                    Begin /AUS004/
+     A**45*36*25*                         62'INSTRUCTIONS TO BE ADVISED'
+     A**45*36N25* RNSTN         35        62
+     A**45*35*26*                         62'WE AWAIT YOUR INSTRUCTIONS'
+     A**45*35N26* RCPTN         35        62
+     A***********
+     A**45*35N25* RNSBT         20         6SPACEB(1)
+     A**45*36N26* RCPBT         20         6SPACEB(1)
+     A**45*36N25* RNSTT         20        62SPACEB(1)
+     A**45*35N26* RCPTT         20        62SPACEB(1)
+     A  45 36 25                          42'INSTRUCTIONS TO BE ADVISED'
+     A  45 36N25  RNSTN         35        42
+     A  45 35 26                          42'WE AWAIT YOUR INSTRUCTIONS'
+     A  45 35N26  RCPTN         35        42
+     A*
+     A  45 35N25  RNSBT         20         2SPACEB(1)
+     A  45 36N26  RCPBT         20         2SPACEB(1)
+     A  45 36N25  RNSTT         20        42SPACEB(1)
+     A  45 35N26  RCPTT         20        42SPACEB(1)
+     A***********                                    End   /AUS004/
+     A*
+     A*    FOR A/C OF
+     A*    ----------
+     A***********                                    Begin /AUS004/
+     A*N27*******                         62'FOR ACCOUNT OF'
+     A***********                           SKIPB(33)
+     A*N27******* RFACN         35        62SPACEB(1)
+     A*N27******* RFACT         20        62SPACEB(1)
+     A N27                                42'FOR ACCOUNT OF'
+     A                                      SKIPB(32)
+     A N27        RFACN         35        42SPACEB(1)
+     A N27        RFACT         20        42SPACEB(1)
+     A***********                                    End   /AUS004/
+     A*
+     A*    SPECIAL INSTRUCTIONS
+     A*    --------------------
+     A***********                                    Begin /AUS004/
+     A**27N28****                         62'SPECIAL INSTRUCTIONS'
+     A***********                           SKIPB(33)
+     A*N27N28****                         62'SPECIAL INSTRUCTIONS'
+     A  27N28                             42'SPECIAL INSTRUCTIONS'
+     A                                      SKIPB(35)
+     A N27N28                             42'SPECIAL INSTRUCTIONS'
+     A***********                                    End   /AUS004/
+     A                                      SKIPB(36)
+     A***********                                    Begin /AUS004/
+     A*N28******* PSPI      R             62SPACEB(1)
+     A N28        PSPI      R             42SPACEB(1)
+     A***********                                    End   /AUS004/
+     A**
+     A**   *****************
+     A*    SETTLEMENT BRANCH
+     A**   *****************
+     A**
+     A***********                                    Begin /AUS004/
+     A**********R SETLB                     SKIPB(34)
+     A          R SETLB                     SKIPB(38)
+     A***********                                    End   /AUS004/
+     A                                    30'AT OUR'
+     A            RSTBR         30        37
+     A**
+     A**   ********************
+     A**   COUNTERPARTY DETAILS
+     A**   ********************
+     A**
+     A***********                                    Begin /AUS004/
+     A**********R CNTPY                     SKIPB(43)
+     A***********                                    Begin /062718/
+     A**********R CNTPY                     SKIPB(39)
+     A          R CNTPY                     SKIPB(38)
+     A***********                                    END   /062718/
+     A***********                                    End   /AUS004/
+     A**Start of change CSD053
+     A**********  RCNA1         35        10SPACEA(1)                                         CSD053
+     A            RCNA1         35O       10SPACEA(1)
+     A**********  RCNA2         35        10SPACEA(1)                                         CSD053
+     A            RCNA2         35O       10SPACEA(1)
+     A**********  RCNA3         35        10SPACEA(1)                                         CSD053
+     A            RCNA3         35O       10SPACEA(1)
+     A**********  RCNA4         35        10                                                  CSD053
+     A            RCNA4         35O       10
+     A**End of change CSD053
+     A*
+     A***********                                    BEGIN /E29170/
+     A***********
+     A*****AUDIT*DETAILS*FOR*DATABASE*FILE*ERRORS**********************
+     A***********
+     A***********
+     A******************
+     A*****PAGE*HEADINGS***********************************************
+     A******************
+     A***********
+     A**********R HEADAU                    SKIPB(3)
+     A***********                          6'REFERENCE SE0580P1'
+     A*********** TITL      R             29
+     A***********                         88'PAGE'
+     A*********** PAGE1        004S 0     93EDTCDE(Z) SPACEA(2)
+      ***********
+     A***********                         21'SECURITIES TRADING'
+     A***********                         40'POSITION SETTLEMENT CONFIRMA+
+     A***********                           TIONS - AUDIT'
+     A***********                         85'DATE'
+     A*********** RUNA      R             90SPACEA(1)
+     A***********                         21'-------------------'
+     A***********                         40'----------------------------+
+     A***********                           -------------'
+     A**********R ERROR
+     A***********                         25'**** DATABASE ERROR ****'
+     A***********                           SPACEB(2)
+     A***********                         11'************************'
+     A***********                           SPACEB(2)
+     A***********                         35'************************'
+     A***********                         59'******'
+     A***********                         11'*'
+     A***********                           SPACEB(1)
+     A***********                         64'*'
+     A***********                         11'*    FILE NAME    '''
+     A***********                           SPACEB(1)
+     A**                                                Begin /S01117/
+     A*********** DBFILE         5        30
+     A***********                         35''''
+     A*********** DBFILE         8        30
+     A***********                         38''''
+     A**                                                 End  /S01117/
+     A***********                         64'*'
+     A***********                         11'*    KEY          '''
+     A***********                           SPACEB(1)
+     A*********** DBKEY         29        30
+     A***********                         59 '''    *'
+     A***********                         11'*    PROGRAM NAME '''
+     A***********                           SPACEB(1)
+     A**                                                Begin /S01117/
+     A*********** DBPGM          8        30
+     A***********                         38''''
+     A*********** DBPGM         10        30
+     A***********                         40''''
+     A**                                                 End  /S01117/
+     A***********                         64'*'
+     A***********                         11'*    AT           '''
+     A***********                           SPACEB(1)
+     A**                                                Begin /S01117/
+     A*********** DBASE          2        30
+     A***********                         32''''
+     A*********** DBASE          3  0     30
+     A***********                         33''''
+     A**                                                 End  /S01117/
+     A***********                         64'*'
+     A***********                         11'*'
+     A***********                           SPACEB(1)
+     A***********                         64'*'
+     A***********                         11'************************'
+     A***********                           SPACEB(1)
+     A***********                         35'************************'
+     A***********                         59'******'
+     A***********                                    END   /S01117/
+     A*                                              Begin /S01408/
+     A*/COPY WNCPYSRC,SE0580P1F1
+     A*                                              End   /S01408/

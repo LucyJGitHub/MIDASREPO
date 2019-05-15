@@ -1,0 +1,1238 @@
+     H        1
+      *****************************************************************
+/*OVRF*: OVRDBF MCPOSTL1 MCPCACPD                                     *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Generated entry split')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounts Module                           *
+      *                                                               *
+      *  MC0340 - GENERATE ACCOUNTING ENTRIES                         *
+      *                                                               *
+      *  Function:  This program splits the Management Account        *
+      *   (COB)     generated entries into generated entry posting    *
+      *             files.  A separate generated entry posting file   *
+      *             will be used for each Account Posting run.        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 244853             Date 08Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 199613             Date 04Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 188498             Date 11Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 174556             Date 13DEC00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 130068             Date 26Mar98               *
+      *                 CTI002             Date 23Sep98               *
+      *                 143770             Date 28Sep98               *
+      *                 CMC001 *CREATE     Date 18Mar96               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  244853 - FCIE transfer incorrect following non-working day.  *
+      *           Applied fix 205165.                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information (Recompile)                             *
+      *  199613 - End of Year Profit Centre (if entered) should only  *
+      *           be applied to P&L Account entries.                  *
+      *  188498 - FCOB in GL0400 if a trailer is not always output    *
+      *  174556 - GEXBPD should use Profit Centre from PCA ICD.       *
+      *           Users of Hook MC0340C003 should check positioning.  *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  130068 - Record Id of GEPCPD records being overwritten.      *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  143770 - COB halted due to out of balance in GL0340 if PCA   *
+      *           is installed.                                       *
+      *  CMC001 - Management Accounts Enhancement for PCA.            *
+      *                                                               *
+      *****************************************************************
+     FMCPOSTL1IP  E           K        DISK
+     FGEPCPD  O   E                    DISK
+     F            APOSTPDF                          KRENAMEGEPC
+     FGESRPD  O   E                    DISK
+     F            APOSTPDF                          KRENAMEGESR
+     FGEXFPD  O   E                    DISK
+     F            APOSTPDF                          KRENAMEGEXF
+     FGEXBPD  O   E                    DISK
+     F            APOSTPDF                          KRENAMEGEXB
+     FGEPCZZ  O   E                    DISK
+     F            APOSTZZF                          KRENAMEGEPCT
+     FGESRZZ  O   E                    DISK
+     F            APOSTZZF                          KRENAMEGESRT
+     FGEXFZZ  O   E                    DISK
+     F            APOSTZZF                          KRENAMEGEXFT
+     FGEXBZZ  O   E                    DISK
+     F            APOSTZZF                          KRENAMEGEXBT
+     FMCPST1PDO   E                    DISK
+     F            MCPCACD0                          KRENAMEPOST1
+     FMCPST2PDO   E                    DISK
+     F            MCPCACD0                          KRENAMEPOST2
+     FMCPST3PDO   E                    DISK
+     F            MCPCACD0                          KRENAMEPOST3
+     FMC0340AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+     FMC0340P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FMC0340P2O   E                    PRINTER      KINFDS SPOOL2     UC
+     F                                              KINFSR *PSSR
+     FMC0340P3O   E                    PRINTER      KINFDS SPOOL3     UC
+     F                                              KINFSR *PSSR
+     FMC0340P4O   E                    PRINTER      KINFDS SPOOL4     UC
+     F                                              KINFSR *PSSR
+     F*****************************************************************
+     F*   FUNCTION OF INDICATORS
+     F*
+     F*       01      INITIAL PROCESSING COMPLETED
+     F*       10      SPOOL FILE NOT RECORDED BY RCF
+     F*       11      MC0340P1 OPEN
+     F*       12      MC0340P2 OPEN
+     F*       13      MC0340P3 OPEN
+     F*       14      MC0340P4 OPEN
+     F*       21      OUTPUT RECORD TO MCGEPCPD & GEPCPD
+     F*       22      OUTPUT RECORD TO MCGESRPD & GESRPD
+     F*       23      OUTPUT RECORD TO MCPST2PD & GEXFPD
+     F*       24      OUTPUT RECORD TO MCPST3PD & GEXBPD
+     F*       30      POST TO NEXT WORKING DAY BEING PROCESSED
+     F*       70      MULTIBRANCHED ENVIRONMENT
+     F*       77      POSTING AMOUNT IS A CREDIT
+     F*       78      VOID POSTING ENTRY
+     F*       80      ZSFILE NOT FOUND
+     F*          U7U8 DATABASE ERROR
+     F*
+     F*****************************************************************
+      *
+      ** Arrays to hold Currency details
+      *
+     E                    CYC       300  3
+     E                    CYD       300  1 0
+     E                    CYN       300 14
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+     IMCPCACD0
+     I                                              BRCA  L5
+     I                                              CCY   L4
+     I                                              EVDT  L3
+     I                                              PRFC  L2
+     I                                              ACOD  L1
+     I              ATYP                            ATYPE
+     I              ACSC                            ACSCE
+     I              PDTM                            PDTME
+      * Data Structure for Printer file MC0340P1
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      * Data Structure for Printer file MC0340P2
+     ISPOOL2      DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 188 1890OFLLN2
+     I                                    B 367 3680PRTLN2
+      * Data Structure for Printer file MC0340P3
+     ISPOOL3      DS
+     I                                       83  92 SFILE3
+     I                                    B 123 1240SFNUM3
+     I                                    B 188 1890OFLLN3
+     I                                    B 367 3680PRTLN3
+      * Data Structure for Printer file MC0340P4
+     ISPOOL4      DS
+     I                                       83  92 SFILE4
+     I                                    B 123 1240SFNUM4
+     I                                    B 188 1890OFLLN4
+     I                                    B 367 3680PRTLN4
+      * Data Structure for Printer file MC0340AU
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 188 1890OFLLNU
+     I                                    B 367 3680PRTLNU
+      *
+      *  Data Structure for Copyright Statement
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+      *
+      *  Data Structure used to store File Controls
+     ICNTRL       DS                          5
+     I                                        1  150ZZTOTI
+     I                                       16  180ZZTOTD
+     I                                       19  230ZZRECS
+     I                                       24  420ZZPRFC
+      *  Local Data Area
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IRUNDT     E DSRUNDAT
+      *    Run date Data Area
+      **
+     ISDBANK    E DSSDBANKPD
+      **   Bank Details
+      *                                                                                       244853
+     I              BJDNWD                          DNWD                                      244853
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **   Branch details
+      *
+     ISDACOD    E DSSDACODPD
+     I              A5ACTY                          ATYP
+     I              A5ACSC                          ACSC
+      **   Account code details
+      *
+     ISDACCT    E DSACCNTAB
+     I              RECI                            ARECI                 130068
+     I              ATYP                            ATYPA
+      **   Account details
+      *
+     ISDCURR    E DSSDCURRPD
+      **   Currency Details
+      *                                                                   174556
+     ISDPCAC    E DSSDPCACPD                                              174556
+      **   PCA ICD Details                                                174556
+     I              QQFNAA                          FNAAQQ                                    CGL029
+     I              QQFNIC                          FNICQQ                                    CGL029
+      *
+     ISDGELR    E DSSDGELRPD                                                                  199613
+      **   General Ledger Details                                                             199613
+     I              QQACCD                          QQACD1                                    CGL029
+      *                                                                                       199613
+     IDSFDY     E DSDSFDY
+      * First DS for Access Programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      * Second DS for Access Programs, Long Data Structure
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *IN01     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+      *
+      **  Select Output file for Posting and Open Spool file
+      *
+     C                     MOVEA'0000'    *IN,21
+      *
+     C                     SELEC
+      *
+      **  GEPCPD Record
+      *
+     C           POST      WHNE '2'
+     C                     MOVE '1'       *IN21
+     C                     MOVE '   GE-PC'SPOS
+      *
+     C           *IN11     IFEQ '0'
+     C                     OPEN MC0340P1
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN11
+     C                     Z-ADDSFNUM1    SFNUMX
+     C                     MOVE SFILE1    SFILEX
+     C                     END
+      *
+      **  GESRPD Record
+      *
+     C           GETP      WHEQ 'R'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '   GE-SR'SPOS
+      *
+     C           *IN12     IFEQ '0'
+     C                     OPEN MC0340P2
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN12
+     C                     Z-ADDSFNUM2    SFNUMX
+     C                     MOVE SFILE2    SFILEX
+     C                     END
+      *
+      **  GEXFPD Record
+      *
+     C           GETP      WHEQ 'X'
+     C                     MOVE '1'       *IN23
+     C                     MOVE '   GE-XF'SPOS
+      *
+     C           *IN13     IFEQ '0'
+     C                     OPEN MC0340P3
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN13
+     C                     Z-ADDSFNUM3    SFNUMX
+     C                     MOVE SFILE3    SFILEX
+     C                     END
+      *
+      **  GEXBPD Record
+      *
+     C           GETP      WHEQ 'Y'
+     C                     MOVE '1'       *IN24
+     C                     MOVE '   GE-XB'SPOS
+      *
+     C           *IN14     IFEQ '0'
+     C                     OPEN MC0340P4
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN14
+     C                     Z-ADDSFNUM4    SFNUMX
+     C                     MOVE SFILE4    SFILEX
+     C                     END
+      *
+     C                     OTHER
+      *
+      **  GEPCPD Record - Post = 2 and GETP <> R, X or Y
+      *
+     C                     MOVE '1'       *IN23
+     C                     MOVE '   GE-PC'SPOS
+      *
+     C           *IN13     IFEQ '0'
+     C                     OPEN MC0340P3
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN13
+     C                     Z-ADDSFNUM3    SFNUMX
+     C                     MOVE SFILE3    SFILEX
+     C                     END
+      *
+     C                     ENDSL
+      *
+      **  BRCHD - Process Change of Branch
+      *
+     C           *INL5     IFEQ '1'
+     C                     EXSR BRCHD
+     C                     END
+      *
+      **  CURRD - Process change in Currency
+      *
+     C           *INL4     IFEQ '1'
+     C                     EXSR CURRD
+     C                     END
+      *
+      **  Ensure New Spool file is recorded by RCF
+      *
+     C           *IN10     IFEQ '1'
+     C                     MOVE '0'       *IN10
+     C                     MOVE BRCA      SENTY
+     C                     EXSR RCFSP
+     C                     END
+      *
+      **  ACODD - Process change in Account Code
+      *
+     C           *INL1     IFEQ '1'
+     C                     EXSR ACODD
+     C                     END
+      *
+      **  FRMAT - Process to format the Generated Posting Entries
+      *
+     C                     EXSR FRMAT
+      *
+      **  Count Records Read and Calculate the Input Hash Total
+      *
+     C           1         OCUR CNTRL
+     C                     EXSR HASHR
+      *
+      **  Write Input Movement to appropriate Output Posting File
+      *
+     C                     SELEC
+      *
+      **  Write GEPCPD Generated Entry
+      *
+     C           *IN21     WHEQ '1'
+     C           2         OCUR CNTRL
+     C                     EXSR HASHR
+     C                     WRITEGEPC
+     C                     WRITEPOST1
+     C                     EXSR OVFW
+     C                     WRITEDETAILP1
+      *
+      **  Write GESRPD Generated Entry
+      *
+     C           *IN22     WHEQ '1'
+     C           3         OCUR CNTRL
+     C                     EXSR HASHR
+     C                     WRITEGESR
+     C                     WRITEPOST2
+     C                     EXSR OVFW
+     C                     WRITEDETAILP2
+      *
+      **  Write GEXFPD Generated Entry
+      *
+     C           *IN23     WHEQ '1'
+     C           4         OCUR CNTRL
+     C                     EXSR HASHR
+     C/COPY WNCPYSRC,MC0340C001
+     C                     WRITEGEXF
+     C                     WRITEPOST2
+     C                     EXSR OVFW
+     C                     WRITEDETAILP3
+     C/COPY WNCPYSRC,MC0340C002
+      *
+      **  Write GEXBPD Generated Entry
+      *
+     C           *IN24     WHEQ '1'
+     C           5         OCUR CNTRL
+     C                     EXSR HASHR
+      *
+     C/COPY WNCPYSRC,MC0340C005
+      *                                                                   174556
+     C********** FTEYPC    IFNE *BLANKS                                                174556 199613
+     C**********           MOVE FTEYPC    PRFC                                         174556 199613
+     C**********           ELSE                                                        174556 199613
+     C********** FTUAPC    IFNE *BLANKS                                                174556 199613
+     C**********           MOVE FTUAPC    PRFC                                         174556 199613
+     C**********           ENDIF                                                       174556 199613
+     C**********           ENDIF                                                       174556 199613
+      *                                                                   174556
+     C**********           MOVE BKPLAC    WPLAC   40                                   199613 CGL029
+     C                     MOVE BKPLAC    WPLAC  100                                          CGL029
+     C           ACOD      IFNE WPLAC                                                         199613
+     C           ACOD      OREQ WPLAC                                                         199613
+     C           FTEYPC    ANDEQ*BLANKS                                                       199613
+     C                     ELSE                                                               199613
+     C                     MOVE FTEYPC    PRFC                                                199613
+     C                     ENDIF                                                              199613
+     C           PRFC      IFEQ *BLANKS                                                       199613
+     C                     MOVE FTUAPC    PRFC                                                199613
+     C                     ENDIF                                                              199613
+     C/COPY WNCPYSRC,MC0340C003
+     C                     WRITEGEXB
+     C                     WRITEPOST3
+     C                     EXSR OVFW
+     C                     WRITEDETAILP4
+     C/COPY WNCPYSRC,MC0340C004
+      *
+     C                     ENDSL
+      *
+     C           END       TAG                             ** END TAG **
+      *****************************************************************
+      *    TOTAL TIME CALCULATIONS.
+      *****************************************************************
+     CLRN01                EXSR INIT
+     CL2                   EXSR PRFCT
+     CL5                   EXSR BRCHT
+      *
+     CLR                   EXSR AUDIT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  ACODD --- Subroutine to Access Account Code Details
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: AOACODR0, DBERR
+      *
+      *****************************************************************
+      *
+     C           ACODD     BEGSR
+      *
+      **   Access SDACODPD for Account Section / Type
+      *
+     C                     MOVE ACOD      @ACOD
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C**********           PARM           @ACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM           @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            **************
+     C                     MOVEL'SDACODPD'DBFILE           * DBERROR 04 *
+     C                     MOVEL@ACOD     DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Set Output fields depending upon A/c Type
+      *
+     C           ATYP      IFEQ 'R'
+     C                     MOVE '1'       RIND
+     C                     Z-ADD92070     TRAT
+     C                     ELSE
+     C                     Z-ADD*ZERO     RIND
+     C                     MOVE *ZERO     ACNO
+     C                     MOVE *ZERO     TRAT
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  BRCHD --- Subroutine to process Change of Branch Code (DETAIL)
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: AOBRCHR0, DBERR
+      *
+      *****************************************************************
+      *
+     C           BRCHD     BEGSR
+      *
+      **  Access Branch information, for Multi-Branch System
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @BRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            **************
+     C                     MOVE 'SDBRCHPD'DBFILE           * DBERROR 02 *
+     C                     MOVEL@BRCH     DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      **  For Single branch system, Use default Branch
+      *
+     C                     ELSE
+     C                     MOVE BJSBRC    A8BRCD
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  BRCHT --- Subroutine to process Change of Branch (TOTAL TIME)
+      *
+      *  CALLED FROM: Total Time Processing
+      *
+      *  CALLS: NONE
+      *
+      *****************************************************************
+      *
+     C           BRCHT     BEGSR
+      *
+      **  Print 'End of Branch' and close all open spool files
+      **  for the Branch
+      *
+     C           *IN11     IFEQ '1'
+     C                     WRITETRAIL2P1               80
+     C                     CLOSEMC0340P1
+     C                     ENDIF
+      *
+     C           *IN12     IFEQ '1'
+     C                     WRITETRAIL2P2               80
+     C                     CLOSEMC0340P2
+     C                     ENDIF
+      *
+     C           *IN13     IFEQ '1'
+     C                     WRITETRAIL2P3               80
+     C                     CLOSEMC0340P3
+     C                     ENDIF
+      *
+     C           *IN14     IFEQ '1'
+     C                     WRITETRAIL2P4               80
+     C                     CLOSEMC0340P4
+     C                     ENDIF
+      *
+     C                     MOVEA'0000'    *IN,11
+      *
+     C           ENDBR     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  CURRD --- Subroutine to Access Currency Details
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: AOCURRR0, DBERR
+      *
+      *****************************************************************
+      *
+      **   ACCESS SDCURRPD - for Currency Decimal Places
+      *
+     C           CURRD     BEGSR
+      *
+     C                     Z-ADDX         V       30
+     C           CCY       LOKUPCYC,V                    50
+      *
+     C           *IN50     IFEQ '1'
+     C                     MOVE CYD,V     ZDECS
+     C                     MOVE CYN,V     CYNM
+     C                     ELSE
+      *
+      ** If a new Currency Code Access and Store Dec Pls in Array
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM CCY       @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            **************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERROR 03 *
+     C                     MOVEL@CCY      DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ELSE
+     C                     SUB  1         X
+      *
+     C                     MOVE CCY       CYC,X
+     C                     MOVE A6CYNM    CYN,X
+     C                     MOVE A6CYNM    CYNM
+     C                     MOVE A6NBDP    CYD,X
+     C                     MOVE A6NBDP    ZDECS
+     C                     END
+     C                     END
+      *
+      **  Force headings to be reported for New Branch/Currency
+      *
+     C                     Z-ADD99        PRTLN1
+     C                     Z-ADD99        PRTLN2
+     C                     Z-ADD99        PRTLN3
+     C                     Z-ADD99        PRTLN4
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  FRMAT --- Subroutine to format Generated Posting Entries
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: ZDATE2, ZSEDIT, AOACCTR0, DBERR
+      *
+      *****************************************************************
+      *
+     C           FRMAT     BEGSR
+      *
+      **  Convert Movement Amount to Posting Amount
+      *
+     C           PAMT      IFLT 0
+     C                     MOVE '1'       DRCR
+     C                     Z-SUBPAMT      PSTA
+     C                     ELSE
+     C                     MOVE '0'       DRCR
+     C                     Z-ADDPAMT      PSTA
+     C                     END
+      *
+      **  Format Branch code for output
+      *
+     C           AGMBIN    IFNE 'Y'
+     C                     MOVE BJSBRC    BRCA
+     C                     ELSE
+     C                     MOVE A8BRCD    BRCA
+     C                     ENDIF
+      *
+      **  Set Void Entry and DR/CR Indicator
+      *
+     C                     MOVE DRCR      *IN77
+     C                     MOVE VOIN      *IN78
+      *
+      **  Format Event date
+      *
+     C           POST      IFEQ '3'                                                           244853
+     C                     Z-ADDDNWD      VALD                                                244853
+     C                     ELSE                                                               244853
+     C                     Z-ADDEVDT      VALD
+     C                     END                                                                244853
+     C**********           Z-ADDEVDT      ZDAYNO                                              244853
+     C                     Z-ADDVALD      ZDAYNO                                              244853
+     C                     EXSR ZDATE2
+      *
+      **  Format Associated Customer
+      *
+     C********** ASOC      IFEQ *ZERO                                                         CSD027
+     C           ASOC      IFEQ *BLANKS                                                       CSD027
+     C                     MOVE *BLANK    ASOCA
+     C                     ELSE
+     C                     MOVE ASOC      ASOCA
+     C                     END
+      *
+      **  Format Posting Amount for printing
+      *
+     C                     Z-ADDPSTA      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DAMT
+      *
+      **  Access Account Details for Retail & Nostro Accounts
+      *
+     C           ATYP      IFEQ 'R'
+     C           ATYP      OREQ 'N'
+      *
+     C                     MOVE CNUM      @CUST
+     C                     MOVE ACOD      @ACOD
+     C                     MOVE ACSQ      @ACSQ
+     C                     MOVE BRCA      @BRCH
+     C                     MOVE CCY       @CCY
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANK    @ACID  10
+     C                     PARM           @CUST   6
+     C                     PARM           @CCY    3
+     C**********           PARM           @ACOD   4                                           CGL029
+     C                     PARM           @ACOD                                               CGL029
+     C                     PARM           @ACSQ   2
+     C                     PARM           @BRCH   3
+     C           SDACCT    PARM SDACCT    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ACCNTAB 'DBFILE
+     C           @BRCH     CAT  '-':1     DBKEY
+     C           DBKEY     CAT  @CUST:1   DBKEY
+     C           DBKEY     CAT  '-':1     DBKEY
+     C           DBKEY     CAT  @CCY:1    DBKEY
+     C           DBKEY     CAT  '-':1     DBKEY
+     C           DBKEY     CAT  @ACOD:1   DBKEY
+     C           DBKEY     CAT  '-':1     DBKEY            **************
+     C           DBKEY     CAT  @ACSQ:1   DBKEY     P      * DBERROR 05 *
+     C                     Z-ADD5         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      **  ELSE if Not Retail or Nostro Account
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD*ZERO     RRNM
+     C                     Z-ADD*ZERO     ACNO
+     C                     END
+      *                                                                   143770
+     C                     MOVE 'P'       RECI                            143770
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  PRFCT --- Subroutine to report the Profit Centre Total
+      *
+      *  CALLED FROM: Total Time Processing
+      *
+      *  CALLS: ZSEDIT, OVFW
+      *
+      *****************************************************************
+      *
+     C           PRFCT     BEGSR
+      *
+      **  Check for Balancing Profit Centres
+      *
+     C           2         DO   5         W       30
+     C           W         OCUR CNTRL
+      *
+     C           ZZPRFC    IFNE 0
+      *
+     C           ZZPRFC    IFLT 0
+     C                     Z-SUBZZPRFC    ZZPRFC
+     C                     MOVE '1'       *IN77
+     C                     ELSE
+     C                     MOVE '0'       *IN77
+     C                     END
+      *
+     C                     Z-ADDZZPRFC    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TAMT
+      *
+      **  Write Profit Centre 'OUT OF BALANCE' Report Line
+      *
+     C                     SELEC
+      *
+     C           W         WHEQ 2
+     C                     EXSR OVFW
+     C                     WRITETRAIL1P1               80
+      *
+     C           W         WHEQ 3
+     C                     EXSR OVFW
+     C                     WRITETRAIL1P2               80
+      *
+     C           W         WHEQ 4
+     C                     EXSR OVFW
+     C                     WRITETRAIL1P3               80
+      *
+     C           W         WHEQ 5
+     C                     EXSR OVFW
+     C                     WRITETRAIL1P4               80
+      *
+     C                     ENDSL
+      *
+      **  Reset Profit Centre Total
+      *
+     C                     Z-ADD*ZERO     ZZPRFC
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  AUDIT --- Subroutine to Print the Audit Report
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: None
+      *
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+     C                     MOVE 'T'       RECI
+      *
+      **  Report Control Totals for each file
+      *
+     C           1         DO   5         W       30
+     C           W         OCUR CNTRL
+      *
+     C                     SELEC
+      *
+     C           W         WHEQ 1
+     C                     Z-ADDZZRECS    NUMREC
+     C                     Z-ADDZZTOTI    HASHI
+     C                     Z-ADDZZTOTD    HASHD
+      *
+      **  Report Totals and Output Trailer for GEPCPD
+      *
+     C           W         WHEQ 2
+     C                     Z-ADDZZRECS    P1NUM
+     C                     Z-ADDZZTOTI    P1HRWN
+     C                     Z-ADDZZTOTD    P1HRDC
+      *
+     C           ZZRECS    IFGT 0
+     C           ZZRECS    ADD  2         NORE1
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C                     WRITEGEPCT
+     C                     ENDIF
+      *
+      **  Report Totals and Output Trailer for GESRPD
+      *
+     C           W         WHEQ 3
+     C                     Z-ADDZZRECS    P2NUM
+     C                     Z-ADDZZTOTI    P2HRWN
+     C                     Z-ADDZZTOTD    P2HRDC
+      *
+     C           ZZRECS    IFGT 0
+     C           ZZRECS    ADD  2         NORE1
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C                     WRITEGESRT
+     C                     ENDIF
+      *
+      **  Report Totals and Output Trailer for GEXFPD
+      *
+     C           W         WHEQ 4
+     C                     Z-ADDZZRECS    P3NUM
+     C                     Z-ADDZZTOTI    P3HRWN
+     C                     Z-ADDZZTOTD    P3HRDC
+      *
+     C********** ZZRECS    IFGT 0                                                             188498
+     C           ZZRECS    ADD  2         NORE1
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C                     WRITEGEXFT
+     C**********           ENDIF                                                              188498
+      *
+      **  Report Totals and Output Trailer for GEXBPD
+      *
+     C           W         WHEQ 5
+     C                     Z-ADDZZRECS    P4NUM
+     C                     Z-ADDZZTOTI    P4HRWN
+     C                     Z-ADDZZTOTD    P4HRDC
+      *
+     C           ZZRECS    IFGT 0
+     C           ZZRECS    ADD  2         NORE1
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C                     WRITEGEXBT
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      **  Print File Control Totals
+      *
+     C                     WRITECONTROL
+      *
+     C           NUMREC    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  HASHR --- Subroutine to Accumulate Hash Totals
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: None
+      *
+      *****************************************************************
+      *
+     C           HASHR     BEGSR
+      *
+      **   Count records read
+      *
+     C                     ADD  1         ZZRECS
+      *
+      **   Accumulate PROFIT CENTRE Total ignoring Balancing items
+      *
+     C           ATYPE     IFNE 'F'
+     C           GETP      ORNE 'K'
+     C                     ADD  PAMT      ZZPRFC
+     C                     ENDIF
+      *
+      **   Convert Posting Amount for Hash Totals
+      *
+     C           PSTA      DIV  1000      ZZAMT  153
+      *
+      **   Accumulate Hash Total.
+      *
+      **   Split amount into integer and Decimal
+      *
+     C                     Z-ADDZZAMT     ZZAMTI 150
+     C                     MOVE ZZAMT     ZZAMTD  30
+      *
+      **   Add Decimal part and check for carry
+      *
+     C                     ADD  ZZAMTD    ZZTOTD  30
+     C           ZZTOTD    IFLT ZZAMTD
+     C                     ADD  1         ZZAMTI
+     C                     END
+      *
+      **   Add integer part
+      *
+     C                     ADD  ZZAMTI    ZZTOTI 150
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT  --- Subroutine to Perform Initial Processing           *
+      *                                                               *
+      *  CALLED FROM: Main Processing, Total Time Processing          *
+      *                                                               *
+      ***CALLS:*AOBANKR0,*RCFSP,*DBERR                                *   174556
+      ***CALLS:*AOBANKR0,*RCFSP,*DBERR,*AOPCACR0                      *                174556 199613
+      *  CALLS: AOBANKR0, RCFSP, DBERR, AOPCACR0, AOGELRR0            *                       199613
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           POST    1        Run Type
+      *
+      ** Define RUNDT and LDA Dtaaras
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Set up Fields for DB Error
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'MC0340  'DBPGM
+     C                     OUT  LDA
+      *
+      ** Set up Contants and Blank/Zeroise output formats
+      *
+     C           1         DO   5         W
+     C           W         OCUR CNTRL
+     C                     CLEARCNTRL
+     C                     ENDDO
+      *
+     C                     Z-ADD300       X       30
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE '0'       *IN98
+      *                    MOVE *BLANKS   SEQ
+     C                     Z-ADDSFNUMU    SFNUMX  60
+     C                     MOVE SFILEU    SFILEX 10
+      *
+     C           POST      IFEQ '3'
+     C                     MOVE '1'       *IN30
+     C                     END
+      *
+     C                     MOVE 'P'       RECI
+     C                     BITOF'01234567'PRIN
+     C                     Z-ADDAGRDNB    PSTD
+     C                     Z-ADD235959    PTIM
+     C           PSTD      MULT 1000000   PDTM
+     C                     ADD  PTIM      PDTM
+     C                     Z-ADD*ZERO     RRNM
+     C                     Z-ADD*ZERO     ACNO
+     C                     Z-ADD*ZERO     CHQN
+     C                     Z-ADD*ZERO     ACUM
+     C                     Z-ADD*ZERO     REJC
+     C                     Z-ADD*ZERO     CHGA
+     C                     Z-ADD*ZERO     SDCB
+     C                     Z-ADD*ZERO     SDLB
+     C                     Z-ADD*ZERO     NITMS
+      *
+      ** Read Bank details via Access program
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If record not found, exit via DBERR subroutine
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     Z-ADD1         DBASE            * DBERR 001 *
+     C                     MOVEL@OPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *                                                                                       244853
+      **  Income and Expense Transfer Postings for Non-working day should                     244853
+      **  have correct value date of next working day - 1.                                    244853
+      *                                                                                       244853
+     C                     SUB  1         DNWD                                                244853
+      *                                                                   174556
+      **  Get 'EOY P&L Profit Centre' and Unallocated Profit Centre       174556
+      **  error if not found                                              174556
+      *                                                                   174556
+     C                     CALL 'AOPCACR0'                                174556
+     C                     PARM *BLANKS   @RTCD                           174556
+     C                     PARM '*FIRST ' @OPTN                           174556
+     C           SDPCAC    PARM SDPCAC    DSFDY                           174556
+     C           @RTCD     IFNE *BLANKS                                   174556
+     C                     MOVEL'SDPCACPD'DBFILE           ************   174556
+     C                     Z-ADD7         DBASE            * DBERR 07 *   174556
+     C                     MOVEL'*FIRST'  DBKEY            ************   174556
+     C                     EXSR DBERR                                     174556
+     C                     ENDIF                                          174556
+      *                                                                   174556
+      **  Use access program to read general ledger detail file                               199613
+      *                                                                                       199613
+     C**********           CALL 'AOGELRR0'                                             199613 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                                           199613
+     C                     PARM '*FIRST ' @OPTN   7                                           199613
+     C********** SDGELR    PARM SDGELR    DSFDY                                        199613 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                                       199613
+     C                     MOVEL'SDGELRPD'DBFILE           ************                       199613
+     C                     Z-ADD8         DBASE            * DBERR 08 *                       199613
+     C                     MOVEL'*FIRST'  DBKEY            ************                       199613
+     C                     EXSR DBERR                                                         199613
+     C                     ENDIF                                                              199613
+      *
+      **  If single Branch, suppress Reporting of Branch
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN70
+     C                     ELSE
+     C                     MOVE '0'       *IN70
+     C                     END
+      *
+      **  Write Audit file Headings
+      *
+     C                     WRITEHEADAU
+      *
+     C                     MOVE '1'       *IN01
+      *
+      **  Ensure spool file recorded by RCF
+      *
+     C                     EXSR RCFSP
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  RCFSP --- Subroutine to record Audit Spool file in RCF
+      *
+      *  CALLED FROM: Main Processing, INIT, DBERR
+      *
+      *  CALLS: ZSFILE, DBERR
+      *
+      ********************************************************************
+      *
+     C           RCFSP     BEGSR                            ** RCFSP **
+      *
+      ** Ensure spool file recorded by RCF
+      *
+     C                     CALL 'ZSFILE'               8080
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILEX
+     C                     PARM           SFNUMX
+     C                     PARM           ZSERR   1
+      *
+      ** Set on database error indicators DUMP and exit program
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            **************
+     C                     MOVEL'ZSFILE  'DBFILE           * DBERROR 06 *
+     C                     MOVELSFILEX    DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  OVFW  --- Subroutine to Handle Printer Overflow
+      *
+      *  CALLED FROM: Main Processing, PRFCT
+      *
+      *  CALLS: None
+      *
+      ********************************************************************
+      *
+     C           OVFW      BEGSR
+      *
+      ** Print Page Headings, if Page Overflowed
+      *
+     C   21      OFLLN1    SUB  PRTLN1    RMLN    20
+     C   22      OFLLN2    SUB  PRTLN2    RMLN    20
+     C   23      OFLLN3    SUB  PRTLN3    RMLN    20
+     C   24      OFLLN4    SUB  PRTLN4    RMLN    20
+      *
+      **  Adjust space after if level 1 total at end of page
+      *
+     C           RMLN      IFLT 3
+     C   21                WRITEHEADP1
+     C   22                WRITEHEADP2
+     C   23                WRITEHEADP3
+     C   24                WRITEHEADP4
+     C                     END
+      *
+     C                     ENDSR                           ** OVFW  **
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  DBERR --- Subroutine to handle Data base errors
+      *
+      *  CALLED FROM: After Data base error
+      *
+      *  CALLS: RCFSP, *PSSR
+      *
+      ********************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+      ** Read database error details from LDA
+      *
+     C                     IN   LDA
+      *
+      ** Write Audit file Headings if not already done
+      ** Ensure spool file recorded by RCF
+      *
+     C           *IN01     IFEQ '0'
+     C                     WRITEHEADAU
+     C                     Z-ADDSFNUMU    SFNUMX
+     C                     MOVE SFILEU    SFILEX
+     C                     EXSR RCFSP
+     C                     END
+      *
+      ** Write database error details
+      *
+     C                     WRITEDBERROR
+      *
+      ** Set on database error indicators DUMP and exit program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR                           ** DBERR **
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+      *
+      *  CALLED FROM: Abnormal Termination Processing, DBERR
+      *
+      *  CALLS: None
+      *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR                           ** *PSSR **
+      *
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

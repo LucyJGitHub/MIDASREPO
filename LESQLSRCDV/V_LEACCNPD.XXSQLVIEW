@@ -1,0 +1,56 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_LEACCNPD - Midas Settlement Account Pre-Checking Order              */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2012                     */
+/*                                                                             */
+/*       Last Amend No. CLE164  *REDUNDANT Date 18Aug14                        */
+/*       Prev Amend No. AR574130           Date 01Aug12                        */
+/*                      AR400648           Date 01Aug12                        */
+/*                      CLE134  *CREATE    Date 01Aug12                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)                 */
+/*       AR574130 - CLE134 Pre-check is not working for Retail                 */
+/*                  (Child: AR574131)                                          */
+/*       AR400648 - CLE134:Information for non retail (GL type) accounts in S  */
+/*                  (Child: AR400649)                                          */
+/*       CLE134 - Past Due Call Loan Processing                                */
+/*                                                                             */
+/*******************************************************************************/
+/*CREATE*VIEW********************************************************************             CLE164
+/***********/********************************************************************             CLE164
+  AS                                                                            :
+  SELECT DISTINCT                                                               :
+  RPRECI as DDRECI,                                                             :
+  RPBRCA as DDBRCA,                                                             :
+  RPCNUM as DDCNUM,                                                             :
+  RPACCY as DDCCY,                                                              :
+  DIGITS(RPACOD) as DDACOD,                                                     :
+  DIGITS(RPACSQ) as DDACSQ,                                                     :
+  BBCRNM as DDCRNM,                                                             :
+  ANAM as DDANAM,                                                               :
+**ACNO*as*DDACNO****************************************************************:           AR574130
+  DIGITS(ACNO) as DDACNO,                                                       :           AR574130
+  (SELECT COUNT(*)                                                              :
+   FROM LESAPOX0 EX                                                             :
+    WHERE EX.DDBRCA = DDBRCA                                                    :
+    AND EX.DDCNUM = DDCNUM                                                      :
+    AND EX.DDCCY = DDCCY                                                        :
+    AND EX.DDACOD = DDACOD                                                      :
+    AND EX.DDACSQ = DDACSQ) AS PCLIP                                            :
+  FROM LEACCNPD                                                                 :
+       INNER JOIN ACCNTAB                                                       :
+           ON RPBRCA = BRCA                                                     :
+           AND RPCNUM = CNUM                                                    :
+           AND RPACCY = CCY                                                     :
+           AND RPACOD = ACOD                                                    :
+           AND RPACSQ = ACSQ                                                    :
+       INNER JOIN SDCUSTPD                                                      :
+           ON CNUM = BBCUST                                                     :
+*WHERE*RECI*=*'D'*and*ATYP*= *R';***********************************************:           AR400648
+ WHERE RECI = 'D';                                                              :           AR400648
+/*******************************************************************************/

@@ -1,0 +1,765 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280CSFR                           *
+      *                                                               *
+      *  Last Amend No. AR755195           Date 13Dec13               *
+      *  Prev Amend No. AR1075873          Date 08Jan13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 239835             Date 14Jun06               *
+      *                 BUG11189           Date 08May06               *
+      *                 BUG11013           Date 28Mar06               *
+      *                 CDL033  *CREATE    Date 10Feb05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR755195 - Update base rate. (Child: AR755196)               *
+      *           - Applied for MD024110                              *
+      *  AR1075873 - CDL033 Interest payment frequency reset to blanks*
+      *              after COB                                        *
+      *  239835 - DBERR DAMSX.  Applied BUG11013.                     *
+      *  BUG11189 - Deal amendment 'SC' should be applied to FRCD     *
+      *             deals.  Changes made in /COPY DL0280CSFR.         *
+      *             Also moved into a /COPY SR/DLBACK to free up      *
+      *             space in this program.                            *
+      *  BUG11013 - DBERR DAMSX.                                      *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRC1 - Processing #1 for CF deals                          *
+      *         - Retrieve extension details of deal                  *
+      *         - Set up FRCD arrays                                  *
+      *         - Initialise processing flags                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SRFRC1        BEGSR
+      *
+      ** Set up FRCD arrays.
+      ** Short term rate has higher priority over
+      ** rate fix date.
+      *
+     C     IACD          IFLE      XKINFD
+     C                   Z-ADD     IACD          CFA1(1)
+     C                   MOVE      'S'           CFA2(1)
+     C                   Z-ADD     XKINFD        CFA1(2)
+     C                   MOVE      'F'           CFA2(2)
+     C                   ELSE
+     C                   Z-ADD     XKINFD        CFA1(1)
+     C                   MOVE      'F'           CFA2(1)
+     C                   Z-ADD     IACD          CFA1(2)
+     C                   MOVE      'S'           CFA2(2)
+     C                   ENDIF
+      *
+      ** Reset FRCD array index to 1.
+      *
+     C                   Z-ADD     1             WCFX              3 0
+      *
+      ** Initialise processing flags for the following
+      ** events:  short term rate, rate fix date and
+      ** rate change date.
+      *
+     C                   MOVE      *BLANK        WFLAGS            1
+     C                   MOVE      *BLANK        WFLAGF            1
+     C                   MOVE      *BLANK        WFLAGR            1
+      *
+      ** Save original effective rate.
+      *
+     C                   Z-ADD     INTR          WCFRAT           11 7
+      *
+     C     EFRC1         ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRC2 - Processing #2 for CF deals                          *
+      *         - Determine which of the following has to be          *
+      *           performed: short term rate processing, rate fix     *
+      *           date processing or rate change date processing      *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SRFRC2        BEGSR
+      *
+      ** Compare rate change date from the first unprocessed date
+      ** in the array.
+      *
+     C                   Z-ADD     WCFX          I                 3 0
+     C     I             IFGT      2
+     C                   Z-ADD     XKRCDT        WDATE             5 0
+     C                   MOVE      'R'           WEVENT            1
+     C                   ELSE
+     C     XKRCDT        IFLT      CFA1(I)
+     C                   Z-ADD     XKRCDT        WDATE             5 0
+     C                   MOVE      'R'           WEVENT            1
+     C                   ELSE
+     C                   Z-ADD     CFA1(I)       WDATE
+     C                   MOVE      CFA2(I)       WEVENT
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Process unprocessed short term rate, rate fix date
+      ** and rate change date that occur on or before the
+      ** event date.
+      *
+     C     WDATE         DOWLE     WCFDAT
+      *
+     C                   SELECT
+      *
+      ** Process short term rate.
+      *
+     C     WEVENT        WHENEQ    'S'
+     C                   EXSR      SRFRC3
+     C                   ADD       1             I
+      *
+      ** Process rate fix date.
+      *
+     C     WEVENT        WHENEQ    'F'
+     C                   EXSR      SRFRC4
+     C                   ADD       1             I
+      *
+      ** Process rate change date.
+      *
+     C                   OTHER
+     C                   EXSR      SRFRC5
+      *
+     C                   ENDSL
+      *
+     C     WFLAGS        IFEQ      'Y'
+     C     WFLAGF        ANDEQ     'Y'
+     C     WFLAGR        ANDEQ     'Y'
+     C                   LEAVE
+     C                   ENDIF
+      *
+      ** Compare rate change date from the first unprocessed date
+      ** in the array.
+      *
+     C     I             IFGT      2
+     C                   Z-ADD     XKRCDT        WDATE             5 0
+     C                   MOVE      'R'           WEVENT            1
+     C                   ELSE
+     C     XKRCDT        IFLT      CFA1(I)
+     C     WFLAGR        ANDNE     'Y'
+     C                   Z-ADD     XKRCDT        WDATE
+     C                   MOVE      'R'           WEVENT
+     C                   ELSE
+     C                   Z-ADD     CFA1(I)       WDATE
+     C                   MOVE      CFA2(I)       WEVENT
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C                   Z-ADD     I             WCFX
+      *
+     C     EFRC2         ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRC3 - Processing #3 for CF deals                          *
+      *         - Short term rate processing                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SRFRC3        BEGSR
+      *
+      ** Flag short term rate as processed.
+      *
+     C                   MOVE      'Y'           WFLAGS
+      *
+      ** Bypass short term rate processing if short term
+      ** rate has been processed before.
+      *
+     C     XKSTRF        IFEQ      *BLANK
+     C                   GOTO      EFRC3
+     C                   ENDIF
+      *
+      ** Set on interest override indicator.
+      *
+     C                   BITON     '2'           DNSI
+      *
+      ** Update date of last rate change.
+      *
+     C                   Z-ADD     IACD          DLRC
+      *
+      ** Reset short term rate flag to blank.
+      *
+     C                   MOVE      *BLANK        XKSTRF
+      *
+      ** Allow file to be updated.
+      *
+     C                   MOVE      *ON           *IN15
+      *
+     C     EFRC3         ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRC4 - Processing #4 for CF deals                          *
+      *         - Rate fix date processing                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SRFRC4        BEGSR
+      *
+      ** Flag rate fix date as processed.
+      *
+     C                   MOVE      'Y'           WFLAGF
+      *
+      ** Bypass processing in this subroutine if this a shadow
+      ** posting run.
+      *
+     C     *INU1         IFEQ      *OFF
+     C                   GOTO      EFRC4
+     C                   ENDIF
+      *
+      ** Bypass rate fix date processing if rate fix date
+      ** has been processed before, or rate fix date is
+      ** zero or rate fix date has not been reached yet.
+      *
+     C     XKINFF        IFEQ      'Y'
+     C     XKINFD        OREQ      *ZERO
+     C     XKINFD        ORGT      EVCD
+     C                   GOTO      EFRC4
+     C                   ENDIF
+      *
+      ** DB error if no deal amendment read for the deal
+      ** or if deal amendment read is not a fixed base rate
+      ** change.
+      *
+     C     DLNO          CHAIN     DAMSX                              41                    BUG11013
+      *                                                                                     BUG11189
+     C     *IN41         IFEQ      *OFF                                                     BUG11189
+     C     AMTP          ANDNE     'FI'                                                     BUG11189
+      *                                                                                     BUG11189
+     C     DLNO          DOWEQ     DLNODM                                                   BUG11189
+     C                   READ      DAMSX                                                    BUG11189
+     C     AMTP          IFEQ      'FI'                                                     BUG11189
+     C     DLNO          ANDEQ     DLNODM                                                   BUG11189
+     C                   LEAVE                                                              BUG11189
+     C                   ENDIF                                                              BUG11189
+     C                   ENDDO                                                              BUG11189
+     C                   ENDIF                                                              BUG11189
+     C     *IN41         IFEQ      *ON                                                      BUG11013
+     C******IN41**       IFEQ      *OFF
+     C     AMTP          ORNE      'FI'
+     C                   MOVE      '027'         DBASE
+     C                   MOVEL     DLNO          WDBKEY           10
+     C                   MOVE      'FI'          WDBKEY
+     C                   MOVEL     WDBKEY        DBKEY
+     C                   MOVEL     'DAMSX'       DBFILE
+     C                   MOVE      *ON           *INU7
+     C                   MOVE      *ON           *INU8
+     C                   MOVE      *ON           *INLR
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ENDIF
+      *
+      ** Update fixed base rate.
+      *
+     C                   Z-ADD     RTSPDM        XKBSRF
+      *                                                                                     AR755195
+      ** Update base rate                                                                   AR755195
+      *                                                                                     AR755195
+     C                   Z-ADD     RTSPDM        BRTE                                       AR755195
+      *
+      ** Flag the rate fix date as processed.
+      *
+     C                   MOVE      'Y'           XKINFF
+      *
+     C     EFRC4         ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRC5 - Processing #5 for CF deals                          *
+      *         - Rate change processing:                             *
+      *           (1) update accrued interest to control date         *
+      *           (2) update accrued COF to control date              *
+      *           (3) set effective rate to fixed base rate           *
+      *           (4) determine next rate change date                 *
+      *           (5) determine next rate fix date                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SRFRC5        BEGSR
+      *
+      ** If rate change date is zero or it has not been reached yet,
+      ** flag rate change date as processed and bypass processing
+      ** in this subroutine.
+      *
+     C     XKRCDT        IFEQ      *ZERO
+     C     XKRCDT        ORGT      EVCD
+     C                   MOVE      'Y'           WFLAGR
+     C                   GOTO      EFRC5
+     C                   ENDIF
+      *
+      ** Update accrued interest to control date.
+      *
+     C                   Z-ADD     IACD          ZIBEG
+     C                   Z-ADD     XKRCDT        ZIEND
+     C                   Z-ADD     INTR          ZIRATE
+     C                   Z-ADD     ICBS          ZICALC
+     C                   Z-ADD     PAMT          ZIAMT
+      *
+     C                   EXSR      GLINTC
+      *
+      ** Round down or not.
+      ** This replaces a line removed from the internally
+      ** described GLINTC.
+      *
+     C     JRDFC         IFEQ      'Y'
+     C                   Z-ADD     ZINTR         WKINT
+     C                   ELSE
+     C                   Z-ADD(H)  ZINTR         WKINT
+     C                   ENDIF
+      *
+     C     AITC          ADD       WKINT         AITC
+      *
+      ** Reset interest accrual control date to rate change
+      ** date.
+      *
+     C                   Z-ADD     XKRCDT        IACD
+      *
+      ** Reset accrued interest since last interest payment
+      ** date / last rate change date to zero.
+      *
+     C                   Z-ADD     *ZERO         XKAILC
+      *
+      ** If analytical accounting is on and funding profit
+      ** centre is present, update accrued COF to control
+      ** date.
+      *
+     C     BGN0ST        IFEQ      'Y'
+     C     FPRC          ANDNE     *BLANKS
+      *
+      ** Determine effective funding rate.
+      *
+     C                   SELECT
+     C     FSGN          WHENEQ    '+'
+     C     INTR          ADD       FSRP          WEFFR
+     C     FSGN          WHENEQ    '-'
+     C     INTR          SUB       FSRP          WEFFR
+     C     FSGN          WHENEQ    ' '
+     C                   Z-ADD     FSRP          WEFFR
+     C                   ENDSL
+      *
+     C                   Z-ADD     FCTD          ZIBEG
+     C                   Z-ADD     XKRCDT        ZIEND
+     C                   Z-ADD     WEFFR         ZIRATE
+     C                   Z-ADD     ICBS          ZICALC
+     C                   Z-ADD     PAMT          ZIAMT
+      *
+     C                   EXSR      GLINTC
+      *
+      ** Round down or not.
+      ** This replaces a line removed from the internally
+      ** described GLINTC.
+      *
+     C     JRDFC         IFEQ      'Y'
+     C                   Z-ADD     ZINTR         WKINT
+     C                   ELSE
+     C                   Z-ADD(H)  ZINTR         WKINT
+     C                   ENDIF
+      *
+     C     ACDA          ADD       WKINT         ACDA
+      *
+      ** Reset funding accrual control date to rate change
+      ** date.
+      *
+     C                   Z-ADD     XKRCDT        FCTD
+      *
+      ** Reset accrued COF since last interest payment
+      ** date / last rate change date to zero.
+      *
+     C                   Z-ADD     *ZERO         XKACDA
+      *
+     C                   ENDIF
+      *
+      ** Update date of last rate change.
+      *
+     C                   Z-ADD     XKRCDT        DLRC
+      *
+      ** Save old effective rate.
+      *
+     C                   Z-ADD     INTR          WCFRAT
+      *
+      ** Update effective rate only if base rate has been
+      ** fixed.
+      *
+     C     XKINFF        IFEQ      'Y'
+      *
+     C     XKBSRF        ADD       RTSP          INTR
+     C     INTR          IFLT      *ZERO
+     C                   Z-ADD     *ZERO         INTR
+     C                   ENDIF
+      *
+     C                   Z-ADD     XKBSRF        BRTE
+      *
+      ** Set on interest override indicator.
+      *
+     C                   BITON     '2'           DNSI
+      *
+     C                   ENDIF
+      *                                                                                     AR755195
+      ** Update total interest.                                                             AR755195
+      *                                                                                     AR755195
+     C                   Z-ADD     IACD          ZIBEG                                      AR755195
+     C                   Z-ADD     MDAT          ZIEND                                      AR755195
+     C                   Z-ADD     INTR          ZIRATE                                     AR755195
+     C                   Z-ADD     ICBS          ZICALC                                     AR755195
+     C                   Z-ADD     PAMT          ZIAMT                                      AR755195
+     C     MDAT          IFEQ      0                                                        AR755195
+     C     NOTD          IFEQ      0                                                        AR755195
+     C     ZIBEG         ADD       1             ZIEND                                      AR755195
+     C                   ELSE                                                               AR755195
+     C     NOTD          IFNE      -999                                                     AR755195
+     C     ZIBEG         ADD       NOTD          ZIEND                                      AR755195
+     C                   ELSE                                                               AR755195
+     C                   Z-ADD     MDAT          ZIEND                                      AR755195
+     C                   ENDIF                                                              AR755195
+     C                   ENDIF                                                              AR755195
+     C                   ENDIF                                                              AR755195
+     C                   EXSR      GLINTC                                                   AR755195
+     C     JRDFC         IFEQ      'Y'                                                      AR755195
+     C                   Z-ADD     ZINTR         WKINT                                      AR755195
+     C                   ELSE                                                               AR755195
+     C                   Z-ADD(H)  ZINTR         WKINT                                      AR755195
+     C                   ENDIF                                                              AR755195
+     C     AITC          ADD       WKINT         TOTI                                       AR755195
+      *                                                                                     AR755195
+      ** Write to HISTSAA                                                                   AR755195
+      *                                                                                     AR755195
+     C     *INU1         IFEQ      *ON                                                      AR755195
+     C                   MOVE      'SC'          H_RTYP                                     AR755195
+     C                   MOVE      CNUM          H_CNUM                                     AR755195
+     C                   Z-ADD     EVCD          H_EDAT                                     AR755195
+     C                   Z-ADD     DLNO          H_DLNO                                     AR755195
+     C                   Z-ADD     PAMT          H_PCPL                                     AR755195
+     C                   Z-ADD     INTR          H_NRAT                                     AR755195
+     C                   Z-ADD     WCFRAT        H_ORAT                                     AR755195
+     C                   MOVE      *BLANKS       H_TERM                                     AR755195
+     C                   MOVE      DTYP          H_DTYP                                     AR755195
+     C                   MOVE      DLST          H_DLST                                     AR755195
+     C                   MOVE      BRCA          H_BRCA                                     AR755195
+     C                   Z-ADD     15            H_SQNO                                     AR755195
+     C                   Z-ADD     MDAT          H_MDAT                                     AR755195
+     C                   MOVE      *BLANKS       H_SECI                                     AR755195
+     C                   MOVE      CCY           H_CCY                                      AR755195
+     C                   MOVE      INTC          H_INTC                                     AR755195
+     C                   Z-ADD     0             H_EAMT                                     AR755195
+     C                   MOVE      'N'           H_CHQI                                     AR755195
+     C                   MOVE      ICBS          H_ICBS                                     AR755195
+     C                   MOVE      REPI          H_REPI                                     AR755195
+     C                   MOVE      CLAS          H_CLAS                                     AR755195
+     C                   WRITE     HISTSAAF                                                 AR755195
+     C                   ENDIF                                                              AR755195
+      *
+      ** Determine next rate change date.
+      *
+     C                   SELECT
+      *
+     C     XKRCFR        WHENEQ    'Z'
+      *
+     C                   MOVE      'R'           KRCIP
+     C                   Z-ADD     XKRCDT        KPRDT
+      *
+      ** If frequency of rate change is irregular, first,
+      ** access corresponding record of the current rate change
+      ** in the schedule file and flag the record as processed.
+      *
+     C     *INU1         IFEQ      *ON
+     C     KFRCD1        CHAIN     DLFRSCL0                           16
+     C     *IN16         IFEQ      *OFF
+     C                   MOVE      'Y'           HHDTPR
+     C                   UPDATE    DLFRSCD1
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Access the schedule file for the next rate change date.
+      *
+     C     KFRCD1        SETGT     DLFRSCL5
+     C     DLNO          READE     DLFRSCL5                               16
+     C     *IN16         IFEQ      *OFF
+     C*****HHRCIP        ANDNE     'R'                                                     AR1075873
+     C     HHRCIP        ANDEQ     'R'                                                     AR1075873
+     C                   Z-ADD     HHPRDT        XKRCDT
+     C                   ELSE
+     C                   Z-ADD     *ZERO         XKRCDT
+     C                   ENDIF
+      *
+     C     XKRCFR        WHENNE    *BLANK
+      *
+      ** No EMU consideration.
+      *
+     C                   MOVE      PCCY          ZCCY
+      *
+     C                   MOVE      XKRCFR        ZFREQ
+     C                   MOVE      BJSLCD        ZLOC
+     C                   Z-ADD     XKRCDM        ZMDAY
+     C                   Z-ADD     XKRCDT        ZDAYNO
+     C                   EXSR      ZFREQC
+     C                   Z-ADD     ZDAYNO        XKRCDT
+      *
+     C                   OTHER
+     C                   Z-ADD     *ZERO         XKRCDT
+      *
+     C                   ENDSL
+      *
+     C     XKRCDT        IFGE      MDAT
+     C                   Z-ADD     *ZERO         XKRCDT
+     C                   ENDIF
+      *
+     C     XKRCDT        IFEQ      *ZERO
+     C                   MOVE      *BLANK        XKRCFR
+     C                   Z-ADD     *ZERO         XKRCDM
+     C                   ENDIF
+      *
+      ** Determine the next rate fix date.
+      *
+     C                   SELECT
+      *
+     C     XKRCDT        WHENNE    *ZERO
+     C     XKFXDM        ANDNE     *ZERO
+      *
+      ** No EMU consideration.
+      *
+     C                   MOVE      PCCY          ZCCY
+     C                   Z-ADD     XKFXDM        ZRFDY
+     C                   Z-ADD     XKRCDT        ZINDT
+     C                   EXSR      DLBACK
+     C                   Z-ADD     ZRFDT         XKINFD
+      *
+     C     XKRCDT        WHENNE    *ZERO
+     C     XKFXDM        ANDEQ     *ZERO
+     C                   Z-ADD     XKRCDT        XKINFD
+      *
+     C                   OTHER
+     C                   Z-ADD     *ZERO         XKINFD
+      *
+     C                   ENDSL
+      *
+     C     XKINFD        IFLE      EVCD
+     C                   Z-ADD     *ZERO         XKINFD
+     C                   ENDIF
+      *
+      ** Reset the rate fix date flag.
+      *
+     C                   MOVE      *BLANK        XKINFF
+      *
+      ** Allow file to be updated.
+      *
+     C                   MOVE      *ON           *IN15
+      *
+      ** If new rate change date is zero or it has not been
+      ** reached yet, flag rate change date as processed.
+      *
+     C     XKRCDT        IFEQ      *ZERO
+     C     XKRCDT        ORGT      EVCD
+     C                   MOVE      'Y'           WFLAGR
+     C                   ENDIF
+      *
+     C     EFRC5         ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRC6 - Processing #6 for CF deals                          *
+      *         - Value date processing:                              *
+      *           (1) set effective rate to fixed base rate           *
+      *           (2) determine next rate fix date                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SRFRC6        BEGSR
+      *
+      ** Update effective rate only if base rate has been
+      ** fixed.
+      *
+     C     XKINFF        IFEQ      'Y'
+      *
+     C     XKBSRF        ADD       RTSP          INTR
+     C     INTR          IFLT      *ZERO
+     C                   Z-ADD     *ZERO         INTR
+     C                   ENDIF
+      *
+     C                   Z-ADD     XKBSRF        BRTE
+      *
+      ** Set on interest override indicator.
+      *
+     C                   BITON     '2'           DNSI
+      *
+     C                   ENDIF
+      *
+      ** Determine the next rate fix date.
+      *
+     C                   SELECT
+      *
+     C     XKRCDT        WHENNE    *ZERO
+     C     XKFXDM        ANDNE     *ZERO
+      *
+      ** No EMU consideration.
+      *
+     C                   MOVE      PCCY          ZCCY
+     C                   Z-ADD     XKFXDM        ZRFDY
+     C                   Z-ADD     XKRCDT        ZINDT
+     C                   EXSR      DLBACK
+     C                   Z-ADD     ZRFDT         XKINFD
+      *
+     C     XKRCDT        WHENNE    *ZERO
+     C     XKFXDM        ANDEQ     *ZERO
+     C                   Z-ADD     XKRCDT        XKINFD
+      *
+     C                   OTHER
+     C                   Z-ADD     *ZERO         XKINFD
+      *
+     C                   ENDSL
+      *
+     C     XKINFD        IFLE      EVCD
+     C                   Z-ADD     *ZERO         XKINFD
+     C                   ENDIF
+      *
+      ** Reset the rate fix date flag.
+      *
+     C                   MOVE      *BLANK        XKINFF
+      *
+      ** Allow file to be updated.
+      *
+     C                   MOVE      *ON           *IN15
+      *
+     C     EFRC6         ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRC7 - Processing #7 for CF deals                          *
+      *         - Irregular interest payment schedule processing      *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SRFRC7        BEGSR
+      *
+     C                   MOVE      'P'           KRCIP
+     C                   Z-ADD     NIDT          KPRDT
+      *
+      ** If frequency of interest payment is irregular, first,
+      ** access corresponding record of the current interest
+      ** payment in the schedule file and flag the record as
+      ** processed.
+      *
+     C     *INU1         IFEQ      *ON
+     C     KFRCD1        CHAIN     DLFRSCL0                           16
+     C     *IN16         IFEQ      *OFF
+     C                   MOVE      'Y'           HHDTPR
+     C                   UPDATE    DLFRSCD1
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Access the schedule file for the next interest payment
+      ** date.
+      *
+     C     KFRCD1        SETGT     DLFRSCL5
+     C     DLNO          READE     DLFRSCL5                               16
+     C     *IN16         IFEQ      *OFF
+     C*****HHRCIP        ANDNE     'P'                                                     AR1075873
+     C     HHRCIP        ANDEQ     'P'                                                     AR1075873
+     C                   Z-ADD     HHPRDT        NIDT
+     C                   ELSE
+     C                   Z-ADD     *ZERO         NIDT
+     C                   ENDIF
+      *
+     C                   Z-ADD     NIDT          IBDT
+      *
+     C     EFRC7         ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRC8 - Processing #8 for CF deals                          *
+      *         - Process short term rate, rate fix date and/or rate  *
+      *           change date if necessary                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SRFRC8        BEGSR
+      *
+      ** Bypass processing in this subroutine if this a shadow
+      ** posting run or an error previously occurred in the
+      ** program.
+      *
+     C     *INU1         IFEQ      *OFF
+     C     *INU7         OREQ      *ON
+     C     *INU8         OREQ      *ON
+     C     *INLR         OREQ      *ON
+     C                   GOTO      EFRC8
+     C                   ENDIF
+      *
+      ** If this is not a reversal, process the following
+      ** if they were not yet processed before in this
+      ** run: short term rate, rate fix date and/or
+      ** rate change date.
+      *
+     C     *IN47         IFEQ      *OFF
+      *
+     C     WFLAGS        IFEQ      *BLANK
+     C     WFLAGF        OREQ      *BLANK
+     C     WFLAGR        OREQ      *BLANK
+     C                   Z-ADD     99999         WCFDAT
+     C                   EXSR      SRFRC2
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      ** If this is not a reversal, save file field values
+      ** to be used later in updating DEALSDC record.
+      *
+     C     *IN47         IFEQ      *OFF
+     C                   Z-ADD     XKRCDT        WURCDT            5 0
+     C                   MOVE      XKRCFR        WURCFR            1
+     C                   Z-ADD     XKRCDM        WURCDM            2 0
+     C                   Z-ADD     XKAILC        WUAILC           13 0
+     C                   Z-ADD     XKACDA        WUACDA           13 0
+     C                   Z-ADD     XKINFD        WUINFD            5 0
+     C                   Z-ADD     XKBSRF        WUBSRF           11 7
+     C                   MOVE      XKSTRF        WUSTRF            1
+     C                   MOVE      XKSTVF        WUSTVF            1
+     C                   MOVE      XKBSVF        WUBSVF            1
+     C                   MOVE      XKINFF        WUINFF            1
+     C                   MOVE      XKFRCI        WUFRCI            1
+     C                   ENDIF
+      *
+      ** Update file.
+      *
+     C                   Z-ADD     WURCDT        XKRCDT
+     C                   MOVE      WURCFR        XKRCFR
+     C                   Z-ADD     WURCDM        XKRCDM
+     C                   Z-ADD     WUAILC        XKAILC
+     C                   Z-ADD     WUACDA        XKACDA
+     C                   Z-ADD     WUINFD        XKINFD
+     C                   Z-ADD     WUBSRF        XKBSRF
+     C                   MOVE      WUSTRF        XKSTRF
+     C                   MOVE      WUSTVF        XKSTVF
+     C                   MOVE      WUBSVF        XKBSVF
+     C                   MOVE      WUINFF        XKINFF
+     C                   MOVE      WUFRCI        XKFRCI
+      *
+     C     EFRC8         ENDSR
+      *
+      *****************************************************************
+      *
+      *****************************************************************
+      * End of /COPY DL0280CSFR                                       *
+      *****************************************************************

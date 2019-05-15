@@ -1,0 +1,206 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  RTCOEUC1 - Currency Conversion Relating to Euro Ccy          *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. 151260             Date 18Jan99               *
+      *  Prev Amend No. 147915             Date 20Nov98               *
+      *                 141862             Date 03Sep98               *
+      *                 CEU024 *Create     Date 28Jul98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  151260 - If 1 ccy is base or if 1 ccy is Euro and the other  *
+      *           is 'in', the multiply/divide indicator should       *
+      *           always be taken into account.                       *
+      *  147915 - When transaction involves in ccys and Euro, rate    *
+      *           computed should always be via Euro rates, whether or*
+      *           not the base ccy is in and whether or not CRT104 is *
+      *           switched on.  In this copy source, when the rate is *
+      *           not defaulted, the processing should be inverted    *
+      *           (multiply or divide).  Also, remove fix 141862 as   *
+      *           the problem that it attempted to solve (transactions*
+      *           involving base ccy) still occurs when CRT104 is on. *
+      *  141862 - Computed Amounts are incorrect in some transactions *
+      *  CEU024 - EMU RTS Enhancement                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Fields   :Input                                              *
+      *            @TCCY  - Transaction currency                      *
+      *            @TCAM  - Transaction currency amount               *
+      *            @TCDP  - Transaction currency decimal positions    *
+      *            @TCMD  - Transaction currency multiple/divide ind. *
+      *            @EXRT  - Conversion rate                           *
+      *            @EQCY  - Equivalent currency code                  *
+      *            @EQDP  - Equiv.currency decimal positions          *
+      *            @EQMD  - Equiv.currency multiple/divide ind.       *
+      *            @EUCY  - Euro currency code                        *
+      *            @BSCY  - Base currency code                        *
+      *            @CURR  - Currency used in comparisons              *
+      ************ @C104  - CRT104 is installed                       *   151260
+      ************ @BDCD  - Defaulted from BdC                        *   151260
+      *            @INEU  - Both ccys 'in' or Euro                    *   151260
+      *                                                               *
+      *            Output                                             *
+      *            @WKAM  - Amount (work field)                       *
+      *            @WKDP  - Decimal places (work field)               *
+      *            @EQAM  - Equiv.currency amount                     *
+      *                                                               *
+      *****************************************************************
+     C           RTCOEU    BEGSR
+      *
+      ** Define input parameters
+      *
+     C**********           MOVEL@BDCD     @BDCD   1                       151260
+     C**********           MOVEL@C104     @C104   1                       151260
+     C                     MOVEL@INEU     @INEU   1                       151260
+     C                     MOVEL@TCCY     @TCCY   3
+     C                     MOVEL@EQCY     @EQCY   3
+     C                     MOVEL@BSCY     @BSCY   3
+     C                     Z-ADD0         @EQAM  150
+     C                     Z-ADD@TCAM     @TCAM  150
+     C                     Z-ADD@EQDP     @EQDP   10
+     C                     Z-ADD@TCDP     @TCDP   10
+     C                     MOVEL@EQMD     @EQMD   1
+     C                     MOVEL@TCMD     @TCMD   1
+     C                     Z-ADD@EXRT     @EXRT  138
+      *
+      ***For*BdC,*always*use*base*currency                                151260
+      ** For 'in'/Euro or 'in'/'in' calculation is via Euro.              151260
+      ** Otherwise calculation is via base.                               151260
+      *
+     C********** @C104     IFEQ 'Y'                                       151260
+     C           @INEU     IFNE 'Y'                                       151260
+     C                     MOVE @BSCY     @CURR
+     C                     ELSE
+     C                     MOVE @EUCY     @CURR   3
+     C                     ENDIF
+      *
+      ** If both currencies are equal?
+      *
+     C           @EQCY     IFEQ @TCCY
+     C                     Z-ADD@TCAM     @WKAM  153
+     C                     Z-ADD@TCAM     @EQAM  150
+     C                     ELSE
+      *
+      ** If trans.currency is same as basis currency
+      ***If*defaulted*from*BdC,*simply*divide                             151260
+      *
+     C                     SELEC
+     C           @TCCY     WHEQ @CURR
+      *
+     C********** @C104     IFEQ 'Y'                                       151260
+     C********** @BDCD     ANDEQ'Y'                                       151260
+     C********** @BSCY     ANDEQ@CURR                                     151260
+     C           @EQMD     IFEQ 'M'                                       151260
+     C           @TCAM     DIV  @EXRT     @WKAM     H
+     C                     ELSE
+     C***********@EQMD     IFEQ 'M'                                       147915
+     C********** @TCCY     IFEQ BKEURO                             147915 151260
+     C********** @EQMD     ANDNE'M'                                147915 151260
+     C********** @C104     ANDNE'Y'                                147915 151260
+     C           @TCAM     MULT @EXRT     @WKAM     H                     147915
+     C**********           ELSE                                    147915 151260
+     C********** @TCAM     DIV  @EXRT     @WKAM     H                     151260
+     C***********          ELSE                                           147915
+     C***********@TCAM     MULT @EXRT     @WKAM     H                     147915
+     C**********           ENDIF                                          151260
+     C                     ENDIF
+      *
+      ** If equiv.currency is same as basis currency
+      ***If*defaulted*from*BdC,*simply*multiply                           151260
+      *
+     C           @EQCY     WHEQ @CURR
+      *
+     C********** @C104     IFEQ 'Y'                                       151260
+     C********** @BDCD     ANDEQ'Y'                                       151260
+     C********** @BSCY     ANDEQ@CURR                                     151260
+     C********** @TCAM     MULT @EXRT     @WKAM     H                     151260
+     C           @TCMD     IFEQ 'D'                                       151260
+     C           @TCAM     DIV  @EXRT     @WKAM     H                     151260
+     C                     ELSE
+     C***********@TCMD     IFEQ 'D'                                       147915
+     C***********@TCAM     DIV  @EXRT     @WKAM     H                     147915
+     C***********          ELSE                                           147915
+     C           @TCAM     MULT @EXRT     @WKAM     H
+     C***********          ENDIF                                          147915
+     C                     ENDIF
+      *
+     C           PMODE     WHEQ 'P'
+     C           @TCMD     IFEQ 'M'
+     C           @TCAM     DIV  @EXRT     @WKAM     H
+     C                     ELSE
+     C           @TCAM     MULT @EXRT     @WKAM     H
+     C                     ENDIF
+      *
+     C                     OTHER
+     C***********          SELEC                                   141862 147915
+     C***********@TCCY     WHEQ @BSCY                              141862 147915
+     C***********@EQMD     IFEQ 'M'                                141862 147915
+     C***********@TCAM     DIV  @EXRT     @WKAM     H              141862 147915
+     C***********          ELSE                                    141862 147915
+     C***********@TCAM     MULT @EXRT     @WKAM     H              141862 147915
+     C***********          ENDIF                                   141862 147915
+      ***********                                                  141862 147915
+     C***********@EQCY     WHEQ @BSCY                              141862 147915
+     C***********@TCMD     IFEQ ' '                                141862 147915
+     C***********@TCAM     DIV  @EXRT     @WKAM     H              141862 147915
+     C***********          ELSE                                    141862 147915
+     C***********@TCAM     MULT @EXRT     @WKAM     H              141862 147915
+     C***********          ENDIF                                   141862 147915
+      ***********                                                  141862 147915
+     C***********          OTHER                                   141862 147915
+     C********** @TCCY     IFEQ BKEURO                             147915 151260
+     C********** @EQMD     ANDEQ'M'                                147915 151260
+     C********** @C104     ANDEQ'Y'                                147915 151260
+     C********** @TCAM     DIV  @EXRT     @WKAM     H              147915 151260
+     C**********           ELSE                                    147915 151260
+     C           @TCAM     MULT @EXRT     @WKAM     H
+     C***********          ENDSL                                   141862 147915
+     C**********           ENDIF                                   147915 151260
+      *
+     C                     ENDSL
+      *
+      ** Align the result for the differences in decimal places
+      *
+      ** Obtain the difference in currency decimal places
+      *
+     C           @EQDP     SUB  @TCDP     @WKDP   10
+      *
+     C                     SELEC
+     C           @WKDP     WHEQ 0
+     C                     Z-ADD@WKAM     @EQAM  150H
+      *
+     C           @WKDP     WHEQ -1
+     C           @WKAM     DIV  10        @EQAM  150H
+      *
+     C           @WKDP     WHEQ -2
+     C           @WKAM     DIV  100       @EQAM  150H
+      *
+     C           @WKDP     WHEQ -3
+     C           @WKAM     DIV  1000      @EQAM     H
+      *
+     C           @WKDP     WHEQ 1
+     C           @WKAM     MULT 10        @EQAM     H
+      *
+     C           @WKDP     WHEQ 2
+     C           @WKAM     MULT 100       @EQAM     H
+      *
+     C           @WKDP     WHEQ 3
+     C           @WKAM     MULT 1000      @EQAM     H
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * End of /COPY RTCOEUC1                                         *
+      *****************************************************************

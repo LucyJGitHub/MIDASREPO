@@ -1,0 +1,78 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#PRCS -  Global SE Prices Detail                                    */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CGL035             Date 01Mar05                        */
+/*                      BUG5839            Date 10Feb05                        */
+/*                      BUG5404            Date 17Jan05                        */
+/*                      BUG2600            Date 03Jun04                        */
+/*                      CGP001  *CREATE    Date 14Jan04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CGL035 - EUSD Upgrade to Midasplus (Recompile)                        */
+/*       BUG5839- Performance Enhancements                                     */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG2600- Introduced global customer                                   */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+   RECI, PSSN, PPRT, PMKT, PBRA, PBOK, PPRC, PNTV, CHTP, PSRC, PBWN, PPWN,      :
+   PTFR, NPXR, NPMD, PRTMST, PRFRNT, PRAFRT, PRREPA, PRDTFR, PRTLEX, PRBDPR,    :
+   PROFPR, PRCLPR, PRCRSK, PRLQPR,                                              :
+   SEZONE AS CUSTZONE,                                                          :
+   DIGITS(TNLU) as PADTNLU,                                                     :
+   CASE WHEN PVDT=0 THEN NULL ELSE DATE(PVDT+719892) END AS FPVDT,              :
+   CASE WHEN LCD=0 THEN NULL ELSE DATE(LCD+719892) END AS FLCD,                 :
+***CASE*WHEN*PCNM=0*THEN*NULL*ELSE*DIGITS(PCNM)*END*AS*PADPCNM,*****************:             CSD027
+   CASE WHEN PCNM=''THEN NULL ELSE        PCNM  END AS PADPCNM,                 :             CSD027
+/**CASE*WHEN*PRDFTS=0*THEN*NULL*ELSE*PRDFTS*END*AS*SPRDFTS**********************:            BUG2600
+   CASE WHEN PRDFTS=0 THEN NULL ELSE PRDFTS END AS SPRDFTS,                     :            BUG2600
+***V_GPGLCUSL.* ****************************************************************:    BUG2600 BUG5839
+   GPGLCUSL.CGGLOB,GPGLCUSL.CGCSSN,GPGLCUSL.CGRNM,GPGLCUSL.CGRTN,               :            BUG5839
+   GPGLCUSL.CGICD,GPGLCUSL.CGACO,GPGLCUSL.CGCNCZ,GPGLCUSL.CGCOLC,               :            BUG5839
+   GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE                              :            BUG5839
+/*FROM GZPRICED;****************************************************************:            BUG2600
+  FROM GZPRICED                                                                 :            BUG2600
+**LEFT*JOIN*GPGLCUSL*V_GPGLCUSL*ON*SEZONE*=*CGZONE*AND*CGCNUM*=*PCNM;***********:    BUG2600 BUG5839
+  LEFT JOIN GPGLCUSL ON SEZONE = CGZONE AND CGCNUM = PCNM;                      :            BUG5839
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADPCNM    AS PCNM       USING GZPRICED                        :
+ * DESCRIBEFIELD PADTNLU    AS TNLU       USING GZPRICED                        :
+ * DESCRIBEFIELD FPVDT      AS PVDT       USING GZPRICED                        :
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZPRICED                        :
+ * DESCRIBEFIELD SPRDFTS    AS PRDFTS     USING GZPRICED                        :
+ * DESCRIBEFIELD CUSTZONE   AS SEZONE     USING GZPRICED                        :
+ * DESCRIBEEND                                                                  :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Securities Prices Details - GZPRICED     ';                     :
+                                                                                :

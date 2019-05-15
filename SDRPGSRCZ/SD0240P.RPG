@@ -1,0 +1,283 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Customer cheque & card details report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0240P - Report Customer Cheque & Card Details              *
+      *                                                               *
+      *  Function:  This program lists the customer cheques and       *
+      *             cards file to a hard copy.                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 05Aug96               *
+      *                 082061  *CREATE    Date 24JAN95               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPM005 - Private Banking Phase II                            *
+      *           Focus Group Changes Upgraded to DBA                 *
+      *  082061 - Creation of a new report.                           *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                  FUNCTION OF INDICATORS                       *
+      *                 ************************                      *
+      *                                                               *
+      *       10        END OF FILE SDCHEQL0                          *
+      *       98        OFF FOR DDMMMYY IN ZDATE2                     *
+      *                                                               *
+      *****************************************************************
+     FSDCHEQL0IF  E                    DISK
+     FSD0240P1O   E                    PRINTER
+     F                                              KINFDS SPOOL
+      *
+     E                    CPY@    1   1 80
+     E                    OUT        25  7
+      /COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+      *
+      ** FILE INFORMATION DATA STRUCTURE - SD0240P1
+     ISPOOL       DS
+     I                                    B 123 1240SFNUM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDMMOD    E DSSDMMODPD                                              CPM005
+      *                                                                   CPM005
+      ** Access Midas Modules                                             CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+      **   DATA STRUCTURE FOR DATE CONVERSIONS
+     IODATE       DS
+     I                                        1   7 IDAT1
+     I                                        8  14 EDAT1
+     I                                       15  21 IDAT2
+     I                                       22  28 EDAT2
+     I                                       29  35 IDAT3
+     I                                       36  42 EDAT3
+     I                                       43  49 IDAT4
+     I                                       50  56 EDAT4
+     I                                       57  63 IDAT5
+     I                                       64  70 EDAT5
+     I                                       71  77 IDATE1
+     I                                       78  84 IDATE2
+     I                                       85  91 IDATE3
+     I                                       92  98 IDATE4
+     I                                       99 105 IDATE5
+     I                                      106 112 ISSD1
+     I                                      113 119 EXPD1
+     I                                      120 126 ISSD2
+     I                                      127 133 EXPD2
+     I                                      134 140 ISSD3
+     I                                      141 147 EXPD3
+     I                                      148 154 ISSD4
+     I                                      155 161 EXPD4
+     I                                      162 168 ISSD5
+     I                                      169 175 EXPD5
+      *
+      /EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           RTNCD   7
+     C                     PARM           MODE    1
+     C                     PARM           SEQ     5
+     C                     PARM           LEVEL   1
+     C                     PARM           ENTITY  3
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     SETOF                     98
+     C                     MOVEL'SD0240P1'SFILE   8
+      *
+      ** Call AOBANKR0 to access MIDAS run date.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Access Midas Modules
+      *
+     C                     CALL 'AOMMODR0'             86               on
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           WRTCD     ANDNE'*NRF    '
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     WRITESD0240F1
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           *IN01     DOUEQ'1'
+     C                     READ SDCHEQL0                 01
+     C           *IN01     IFEQ '0'
+      *
+     C                     Z-ADD1         X       20
+      *
+     C                     Z-ADDSCDIS1    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDRE1    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDIS2    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDRE2    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDIS3    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDRE3    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDIS4    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDRE4    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDIS5    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCDRE5    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCQI1    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCQI2    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCQI3    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCQI4    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCQI5    ZDAYNO
+     C                     EXSR DATE
+      *                                                                   CPM005
+      ** If Portfolio Manangement Module is installed, do not print       CPM005
+      ** Credit Card Line                                                 CPM005
+      *                                                                   CPM005
+     C           BGPFMG    IFEQ 'Y'                                       CPM005
+     C                     Z-ADDSCCAI1    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAE1    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAI2    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAE2    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAI3    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAE3    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAI4    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAE4    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAI5    ZDAYNO
+     C                     EXSR DATE
+     C                     Z-ADDSCCAE5    ZDAYNO
+     C                     EXSR DATE
+     C                     MOVE *OFF      *IN20                           CPM005
+      *                                                                   CPM005
+     C                     ELSE                                           CPM005
+     C                     MOVE *ON       *IN20                           CPM005
+     C                     ENDIF                                          CPM005
+      *
+     C                     MOVEAOUT       ODATE
+      *
+     C           PCOUNT    IFGE 2
+     C                     WRITESD0240F1
+     C                     Z-ADD0         PCOUNT
+     C                     END
+      *
+     C                     WRITESD0240F2
+     C                     ADD  1         PCOUNT  20
+      *
+     C                     END
+     C                     END
+      *
+     C                     WRITESD0240F3
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                                                               *
+      *                  SUB - ROUTINES                               *
+      *                  ~~~~~~~~~~~~~~                               *
+      * DATE   - CONVERTS DAY NO. TO DATE IF 0 REPLACE WITH BLANKS    *
+      * ZDATE2 - CONVERTS DAY NO. TO DATE                             *
+      * *PSSR  - ERROR HANDLING ROUTINE                               *
+      *                                                               *
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+      *                                                               *
+      *  DATE   - Convert day no. to date subroutine.                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *  Calls    : ZDATE2                                            *
+      *                                                               *
+      *****************************************************************
+     C           DATE      BEGSR
+      *
+     C           ZDAYNO    IFEQ 0
+     C                     MOVEL*BLANKS   ZADATE
+     C                     ELSE
+     C                     EXSR ZDATE2
+     C                     END
+     C                     MOVE ZADATE    OUT,X
+     C                     ADD  1         X
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,309 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Basic Condition Evaluator')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                  *
+     F*                                                               *
+     F*  CG3010 - Basic Condition Evaluator                           *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 111545             Date 26Feb97               *
+      *                 S01522             Date 01Jan95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  111545 - Recompile with IGNDECERR(*YES)                      *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E*  Array containing Copyright statement
+     E*
+     E                    CPY@    1   1 80
+     E/COPY CGCPYSRC,SROPRE
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+      /EJECT
+     I/COPY CGCPYSRC,SRERRI
+     I/COPY CGCPYSRC,SRPGN
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     I*
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+      *
+      *  User Defined Correspondence Data Area
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+      /EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           ##LELM  6
+     C                     PARM           ##RELM  6
+     C                     PARM           ##OPER 10
+     C                     PARM           ##L256256
+     C                     PARM           ##R256256
+     C                     PARM           #CONDV  1
+      *
+      *  Reset return code
+      *
+     C                     MOVE *BLANKS   P0RTN
+      *
+     C                     MOVE 'T'       #CONDV
+     C*
+     C* If one element type is blank (the element is a literal),
+     C*  the other element must be of type "*CODE ":
+     C*
+     C                     SELEC
+     C           ##LELM    WHEQ *BLANKS
+      *
+     C           ##RELM    IFNE '*CODE '
+     C           ##RELM    ANDNE'*CHAR '
+     C           ##RELM    ANDNE'*DEC  '
+     C                     MOVE '*ERROR*' P0RTN
+     C                     ENDIF
+      *
+     C           ##RELM    WHEQ *BLANKS
+      *
+     C           ##LELM    IFNE '*CODE '
+     C           ##LELM    ANDNE'*CHAR '
+     C           ##LELM    ANDNE'*DEC  '
+     C                     MOVE '*ERROR*' P0RTN
+     C                     ENDIF
+     C*
+     C* The element types must be identical:
+     C*
+     C           ##LELM    WHNE ##RELM
+     C                     MOVE '*ERROR*' P0RTN
+     C                     MOVE 'F'       #CONDV
+     C                     ENDSL
+     C*
+     C* Compare data:
+     C*
+     C           ##LELM    IFEQ '*DEC  '
+     C           ##RELM    OREQ '*DEC  '
+      *
+     C           *LIKE     DEFN NUMVAL    ##LNUM
+     C           *LIKE     DEFN NUMVAL    ##RNUM
+      *
+     C                     CLEARNUMDS
+     C           ##L256    IFNE *BLANKS
+     C                     MOVEL##L256    NUMDS
+     C                     END
+     C                     Z-ADDNUMVAL    ##LNUM
+      *
+     C                     CLEARNUMDS
+     C           ##R256    IFNE *BLANKS
+     C                     MOVEL##R256    NUMDS
+     C                     END
+     C                     Z-ADDNUMVAL    ##RNUM
+      *
+     C           ##LNUM    COMP ##RNUM               010203
+      *
+     C                     ELSE
+      *
+     C           ##L256    COMP ##R256               010203
+      *
+     C                     END
+      *
+     C* Seek the operator:
+     C*
+     C                     Z-ADD1         L1      30
+     C           ##OPER    LOKUPOPR@,L1              99  30
+      *
+     C           *IN30     IFEQ *OFF
+     C                     MOVE '*ERROR*' P0RTN
+     C                     ELSE
+      *
+     C                     SELEC
+     C*
+     C* Left greater than right --
+     C*
+     C           *IN01     WHEQ *ON
+     C           L1        IFEQ 1
+     C           L1        OREQ 4
+     C           L1        OREQ 5
+     C                     MOVE 'F'       #CONDV
+     C                     END
+     C*
+     C* Left less than right --
+     C*
+     C           *IN02     WHEQ *ON
+     C           L1        IFEQ 1
+     C           L1        OREQ 2
+     C           L1        OREQ 3
+     C                     MOVE 'F'       #CONDV
+     C                     END
+     C*
+     C* Left equal to right --
+     C*
+     C           *IN03     WHEQ *ON
+     C           L1        IFEQ 2
+     C           L1        OREQ 4
+     C           L1        OREQ 6
+     C                     MOVE 'F'       #CONDV
+     C                     END
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+     C           *INZSR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'*INZSR'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *  Dummy reference
+     C                     MOVE OPM@,1    DUMMY   1
+     C                     MOVE OPI@,1    DUMMY
+     C                     MOVE OPI#,1    DUMMY
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  OPM@
+0102
+0104
+0106
+0201
+0204
+0205
+0304
+0401
+0402
+0403
+0502
+0601
+**  OPI@
+0205
+0304
+0403
+0502
+**  OPR@
+EQUAL
+GREATER
+GREATEREQ
+LESS
+LESSEQUAL
+NOTEQUAL

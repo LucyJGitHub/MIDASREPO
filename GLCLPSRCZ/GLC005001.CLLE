@@ -1,0 +1,681 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Calculation manager job')                    */
+/********CRTPF FILE(QTEMP/GLMLCLJARS) RCDLEN(100)                    */            /*BG1726 BG3668*/
+/*O*R****CRTPF FILE(QTEMP/GLCLJARS) RCDLEN(100)                      */                   /*BG3668*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC005001 - Calculation Manager                             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1015290          Date 20Oct12              */
+/*                      AR918665           Date 20Oct12              */
+/*                      CSC043             Date 18Jun10              */
+/*                      BUG27747A          Date 25Jun10              */
+/*                      BUG27747           Date 22Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BG3994             Date 12Aug04              */
+/*                      BUG3823            Date 27Jul04              */
+/*                      BG3656             Date 16Jul04              */
+/*                      BG3668             Date 10Jun04              */
+/*                      BG1726             Date 10Jun04              */
+/*                      CLE024             Date 17May04              */
+/*                      CGL014  *CREATE    Date 17May04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1015290 - Classpath cannot be set using a wildcard.       */
+/*                Retrieved Jar list from SDJARFPD.                  */
+/*                (Child: AR1015291)                                 */
+/*       AR918665 - Unable to start the calculator jobs              */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       BUG27747A - Error in CALCMGR_zz and LTVMNTR_zz (Reopen)     */
+/*       BUG27747 - Error in CALCMGR_zz and LTVMNTR_zz               */
+/*       BG3994 - Correct error in LTV monitor classpath             */
+/*       BUG3823 - QPRINT spooled output fills up too easily         */
+/*       BG3656 - Remove management limits to distinguish global     */
+/*       BG3668 - Shorten classpath for limitations of QShell        */
+/*       BG1726 - Addition of Management Limits processing.          */
+/*       CLE024 - Addition of CALCMGR processing for CLE024.         */
+/*       CGL014 - New program to submit the calculation manager.     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PREFIX &EXTN01)
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+/**********  DCL        VAR(&EXTN01) TYPE(*CHAR) LEN(4) */                                /*BG1726*/
+             DCL        VAR(&EXTN01) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JAVAPATH) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNBR) TYPE(*CHAR) LEN(6)
+/**********  DCL        VAR(&GLCALCMGR) TYPE(*CHAR) LEN(200) */                           /*BG1726*/
+             DCL        VAR(&GLCLCALMAN) TYPE(*CHAR) LEN(200)                             /*BG1726*/
+             DCL        VAR(&GLMLCALMAN) TYPE(*CHAR) LEN(200)                             /*BG1726*/
+             DCL        VAR(&GLEMAILER) TYPE(*CHAR) LEN(200)                              /*BG1726*/
+             DCL        VAR(&GLEODMON) TYPE(*CHAR) LEN(200)                               /*BG1726*/
+             DCL        VAR(&GLLTVMNTR) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&EXECUTE) TYPE(*CHAR) LEN(5000)
+             DCL        VAR(&ABNOR) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&CLASSPATH) TYPE(*CHAR) LEN(5000)                             /*BG1726*/
+             DCL        VAR(&COMMAND) TYPE(*CHAR) LEN(100)                                /*BG1726*/
+             DCL        VAR(&LSCOMMAND) TYPE(*CHAR) LEN(100)                              /*BG1726*/
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(100)                                  /*BG1726*/
+             DCL        VAR(&LNKNAME) TYPE(*CHAR) LEN(10)                                 /*BG3668*/
+             DCL        VAR(&JAVA_HOME) TYPE(*CHAR) LEN(1024)                           /*BUG27747*/
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(18)                                    /*CSC043*/
+             DCL        VAR(&LIBEXT) TYPE(*CHAR) LEN(200)                              /*AR1015290*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+/**********  DCLF       FILE(GLMLCLJARS)                                           /*BG1726 BG3656*/
+/**********  DCLF       FILE(GLCLJARS) */                                    /*BG3656*/ /*AR918665*/
+             DCLF       FILE(SDJARFL0)                                                 /*AR1015290*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+                                                                                         /*BUG3823*/
+            OVRPRTF FILE(QPRINT) MAXRCDS(999999) OVRSCOPE(*JOB)                          /*BUG3823*/
+                                                                                         /*BUG3823*/
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPdatabase' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of database. */                                                              /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 18))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+ 
+/* If a CALCMGR call check if the CALCMGR_xx job is running */                            /*CLE024*/
+                                                                                          /*CLE024*/
+/**********  IF         COND(&EXTN01 *EQ 'calc') THEN(DO)              */      /*CLE024*/ /*BG1726*/
+             IF         COND(&EXTN01 *EQ 'calccl') THEN(DO)                               /*CLE024*/
+/**********     ALCOBJ     OBJ((GLCALCMLCK *DTAARA *EXCL)) WAIT(0)     */      /*CLE024*/ /*BG1726*/
+                ALCOBJ     OBJ((GLCLCALLCK *DTAARA *EXCL)) WAIT(0)                        /*BG1726*/
+                MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))                       /*CLE024*/
+             ENDDO                                                                        /*CLE024*/
+                                                                                          /*CLE024*/
+/* If a LTVMNTR call check if the LTVMNTR_xx job is running */
+ 
+             IF         COND(&EXTN01 *EQ 'ltv ') THEN(DO)
+                ALCOBJ     OBJ((GLLTVMNLCK *DTAARA *EXCL)) WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))
+             ENDDO
+                                                                                          /*BG1726*/
+/**If*a*CALMANML call check if the CALMANML job is running */                      /*BG1726 BG3656*/
+/**********                                                             */         /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'calcml') THEN(DO)             */         /*BG1726 BG3656*/
+/**********     ALCOBJ     OBJ((GLMLCALLCK *DTAARA *EXCL)) WAIT(0)      */         /*BG1726 BG3656*/
+/**********     MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))     */         /*BG1726 BG3656*/
+/**********  ENDDO                                                      */         /*BG1726 BG3656*/
+/**********                                                             */         /*BG1726 BG3656*/
+/**If*a*EODMON call check if the MLEODMON job is running */                        /*BG1726 BG3656*/
+/**********                                                             */         /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'eodmon') THEN(DO)             */         /*BG1726 BG3656*/
+/**********     ALCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL)) WAIT(0)      */         /*BG1726 BG3656*/
+/**********     MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))     */         /*BG1726 BG3656*/
+/**********  ENDDO                                                      */         /*BG1726 BG3656*/
+/**********                                                             */         /*BG1726 BG3656*/
+/**If*a*EMAIL call check if the MLEMAILER job is running */                        /*BG1726 BG3656*/
+/**********                                                             */         /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'email ') THEN(DO)             */         /*BG1726 BG3656*/
+/**********     ALCOBJ     OBJ((GLEMAILLCK *DTAARA *EXCL)) WAIT(0)      */         /*BG1726 BG3656*/
+/**********     MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))     */         /*BG1726 BG3656*/
+/**********  ENDDO                                                      */         /*BG1726 BG3656*/
+/**********                                                             */         /*BG1726 BG3656*/
+/* Log job details */
+ 
+             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNBR)
+ 
+/* Log the CALCMGR_xx job details */                                                      /*CLE024*/
+                                                                                          /*CLE024*/
+/**********  IF         COND(&EXTN01 *EQ 'calc') THEN(DO)             **********/   /*CLE024BG1726*/
+             IF         COND(&EXTN01 *EQ 'calccl') THEN(DO)                               /*BG1726*/
+/**********     CHGVAR     VAR(&GLCALCMGR) VALUE(&JOBNAME *CAT &JOBUSER +
+                             *CAT &JOBNBR)                            **********/   /*CLE024BG1726*/
+                CHGVAR     VAR(&GLCLCALMAN) VALUE(&JOBNAME *CAT &JOBUSER +
+                             *CAT &JOBNBR)                                                /*BG1726*/
+/**********     CHGDTAARA  DTAARA(GLCALCMGR (1 26)) VALUE(&GLCALCMGR) **********/   /*CLE024BG1726*/
+                CHGDTAARA  DTAARA(GLCLCALMAN (1 26)) VALUE(&GLCLCALMAN)                   /*BG1726*/
+             ENDDO                                                                        /*CLE024*/
+                                                                                          /*CLE024*/
+/* Log the LTVMNTR_xx job details */
+ 
+             IF         COND(&EXTN01 *EQ 'ltv ') THEN(DO)
+                CHGVAR     VAR(&GLLTVMNTR) VALUE(&JOBNAME *CAT &JOBUSER +
+                             *CAT &JOBNBR)
+                CHGDTAARA  DTAARA(GLLTVMNTR (1 26)) VALUE(&GLLTVMNTR)
+             ENDDO
+/**********                                                                  */    /*BG1726 BG3656*/
+/**Log*the*CALMANML*job details */                                                 /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'calcml') THEN(DO)                  */    /*BG1726 BG3656*/
+/**********     CHGVAR     VAR(&GLMLCALMAN) VALUE(&JOBNAME *CAT &JOBUSER +   */    /*BG1726 BG3656*/
+/**********                  *CAT &JOBNBR)                                   */    /*BG1726 BG3656*/
+/**********     CHGDTAARA  DTAARA(GLMLCALMAN (1 26)) VALUE(&GLMLCALMAN)      */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**Log*the*EODMON job details */                                                   /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'eodmon') THEN(DO)                  */    /*BG1726 BG3656*/
+/**********     CHGVAR     VAR(&GLEODMON) VALUE(&JOBNAME *CAT &JOBUSER +     */    /*BG1726 BG3656*/
+/**********                  *CAT &JOBNBR)                                   */    /*BG1726 BG3656*/
+/**********     CHGDTAARA  DTAARA(GLEODMON (1 26)) VALUE(&GLEODMON)          */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**Log*the*CALCMGR_xx job details */                                               /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'email ') THEN(DO)                  */    /*BG1726 BG3656*/
+/**********     CHGVAR     VAR(&GLEMAILER) VALUE(&JOBNAME *CAT &JOBUSER +    */    /*BG1726 BG3656*/
+/**********                  *CAT &JOBNBR)                                   */    /*BG1726 BG3656*/
+/**********     CHGDTAARA  DTAARA(GLEMAILER (1 26)) VALUE(&GLEMAILER)        */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+ 
+/* Convert prefix to lower case */
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'A') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('a'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'B') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('b'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'C') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('c'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'D') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('d'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'E') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('e'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'F') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('f'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'G') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('g'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'H') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('h'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'I') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('i'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'J') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('j'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'K') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('k'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'L') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('l'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'M') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('m'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'N') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('n'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'O') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('o'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'P') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('p'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'Q') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('q'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'R') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('r'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'S') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('s'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'T') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('t'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'U') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('u'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'V') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('v'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'W') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('w'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'X') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('x'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'Y') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('y'))
+ 
+             IF         COND(%SST(&PREFIX 1 1) *EQ 'Z') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 1 1)) VALUE('z'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'A') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('a'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'B') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('b'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'C') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('c'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'D') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('d'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'E') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('e'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'F') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('f'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'G') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('g'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'H') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('h'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'I') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('i'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'J') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('j'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'K') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('k'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'L') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('l'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'M') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('m'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'N') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('n'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'O') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('o'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'P') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('p'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'Q') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('q'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'R') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('r'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'S') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('s'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'T') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('t'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'U') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('u'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'V') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('v'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'W') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('w'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'X') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('x'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'Y') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('y'))
+ 
+             IF         COND(%SST(&PREFIX 2 1) *EQ 'Z') THEN(CHGVAR +
+                          VAR(%SST(&PREFIX 2 1)) VALUE('z'))
+ 
+/* Get 'JavaPath' system value from file SDSVALPD  */
+ 
+/**********  CALL       PGM(AOSVALR0) PARM(&RTNCDE +                 */                /*BUG27747A*/
+/**********               'JavaPathStem' &JAVAPATH &SVALK2 +         */                /*BUG27747A*/
+/**********               &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +     */                /*BUG27747A*/
+/**********               &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +    */                /*BUG27747A*/
+/**********               &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +     */                /*BUG27747A*/
+/**********               &SVALK0 &SVAL10)                           */                /*BUG27747A*/
+ 
+/* Get 'JavaPathStem' and 'JavaHome' system values from file SDSVALPD */               /*BUG27747A*/
+                                                                                       /*BUG27747A*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'JavaPathStem' +
+                          &JAVAPATH 'JavaHome' &JAVA_HOME &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                       /*BUG27747A*/
+                                                                                       /*BUG27747A*/
+/* If the 'JavaPathStem' system value is missing then end abnormally */
+ 
+             IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+                                                                                        /*BUG27747*/
+/* Get 'JavaHome' system value from file SDSVALPD  */                                   /*BUG27747*/
+                                                                                        /*BUG27747*/
+/**********  CALL       PGM(AOSVALR0) PARM(&RTNCDE +                 */                /*BUG27747A*/
+/**********               'JavaHome' &JAVA_HOME &SVALK2 +            */                /*BUG27747A*/
+/**********               &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +     */                /*BUG27747A*/
+/**********               &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +    */                /*BUG27747A*/
+/**********               &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +     */                /*BUG27747A*/
+/**********               &SVALK0 &SVAL10)                           */       /*BUG27747 BUG27747A*/
+                                                                                        /*BUG27747*/
+/* If the 'JavaHome' system value is missing then end abnormally */                     /*BUG27747*/
+                                                                                        /*BUG27747*/
+             IF         COND(%SST(&JAVA_HOME 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))                                                /*BUG27747*/
+                                                                                        /*BUG27747*/
+/** Setup environment variable JAVA_HOME */                                             /*BUG27747*/
+                                                                                        /*BUG27747*/
+             RMVENVVAR  ENVVAR(JAVA_HOME)                                               /*BUG27747*/
+             MONMSG     MSGID(CPFA981)                                                  /*BUG27747*/
+                                                                                          /*BG1726*/
+/**********  ALCOBJ     OBJ((GLMLCLJLCK *DTAARA *EXCL)) WAIT(30)      */           /*BG1726 BG3656*/
+             ALCOBJ     OBJ((GLCLJLCK *DTAARA *EXCL)) WAIT(30)                            /*BG3656*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))                          /*BG1726*/
+             CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *CAT 'DPLIB')                           /*BG1726*/
+                                                                                          /*BG1726*/
+/*********   CHGVAR     VAR(&LNKNAME) VALUE(&PREFIX *cat +
+                          'EXT')                                                /*BG3668 AR1015290*/
+             CHGVAR     VAR(&LNKNAME) VALUE('A')                                       /*AR1015290*/
+/*********   RMVLNK     OBJLNK(&LNKNAME)                                        /*BG3668 AR1015290*/
+/*********   MONMSG     MSGID(CPFA0A0)                                             /*BG3668 BG3994*/
+/**********  MONMSG     MSGID(CPFA0A0 CPFA0A9)                                  /*BG3994 AR1015290*/
+/**********  ADDLNK     OBJ(&JAVAPATH) NEWLNK(&LNKNAME)                         /*BG3668 AR1015290*/
+/**********  MONMSG     MSGID(CPFA0A0)                                          /*BG3668 AR1015290*/
+                                                                                          /*BG3656*/
+             RMVLNK     OBJLNK(A)                                                      /*AR1015290*/
+             MONMSG     MSGID(CPFA0A9)                                                 /*AR1015290*/
+                                                                                       /*AR1015290*/
+             RMVLNK     OBJLNK(B)                                                      /*AR1015290*/
+             MONMSG     MSGID(CPFA0A9)                                                 /*AR1015290*/
+                                                                                       /*AR1015290*/
+             ADDLNK     OBJ(&JAVAPATH) NEWLNK(A)                                       /*AR1015290*/
+             MONMSG     MSGID(CPFA0A0)                                                 /*AR1015290*/
+                                                                                       /*AR1015290*/
+             CHGVAR     VAR(&LIBEXT) VALUE(&JAVAPATH *TCAT +
+                          '/lib/ext')                                                  /*AR1015290*/
+             ADDLNK     OBJ(&LIBEXT) NEWLNK(B)                                         /*AR1015290*/
+             MONMSG     MSGID(CPFA0A0)                                                 /*AR1015290*/
+                                                                                       /*AR1015290*/
+             ADDENVVAR  ENVVAR(JAVA_HOME) VALUE(&JAVA_HOME)                             /*BUG27747*/
+             MONMSG     MSGID(CPFA0A0)                                                  /*BUG27747*/
+                                                                                        /*BUG27747*/
+/**********  CLRPFM     FILE(&DPLIB/GLCLJARS)                      */           /*BG3656 AR1015290*/
+/**********  MONMSG     MSGID(CPF0000)                             */                  /*AR1015290*/
+/**********  CRTPF      FILE(&DPLIB/GLMLCLJARS) RCDLEN(100)         */             /*BG1726 BG3656*/
+/**********  GRTOBJAUT  OBJ(&DPLIB/GLMLCLJARS) OBJTYPE(*FILE) +
+                          USER(*PUBLIC) AUT(*ALL)                                  /*BG1726 BG3656*/
+                                                                                          /*BG1726*/
+/**********  CHGVAR     VAR(&LSCOMMAND) VALUE('LS ' *CAT &JAVAPATH +
+                          *TCAT '/lib/ext/ > /QSYS.LIB/' *TCAT +
+                          &DPLIB *TCAT +
+                          '.LIB/GLMLCLJARS.FILE/GLMLCLJARS.MBR')        */         /*BG1726 BG3656*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+/**********  IF         COND(&IASP_YN *EQ 'Y') THEN(DO)            */           /*CSC043 AR1015290*/
+/**********  CHGVAR     VAR(&LSCOMMAND) VALUE('LS ' *CAT &JAVAPATH +
+                          *TCAT '/lib/ext/ > /' *CAT &IASP *TCAT +
+                          '/QSYS.LIB/' *TCAT &DPLIB *TCAT +
+                          '.LIB/GLCLJARS.FILE/GLCLJARS.MBR') */                 /*CSC043 AR1015290*/
+/**********  ENDDO                                                 */           /*CSC043 AR1015290*/
+/**********  ELSE       CMD(DO)                                    */           /*CSC043 AR1015290*/
+/**********  CHGVAR     VAR(&LSCOMMAND) VALUE('LS ' *CAT &JAVAPATH +
+                          *TCAT '/lib/ext/ > /QSYS.LIB/' *TCAT +
+                          &DPLIB *TCAT +
+                          '.LIB/GLCLJARS.FILE/GLCLJARS.MBR') */                 /*BG3656 AR1015290*/
+/**********  ENDDO                                                 */           /*CSC043 AR1015290*/
+                                                                                          /*BG1726*/
+/**********  QSH        CMD(&LSCOMMAND)                            */           /*BG1726 AR1015290*/
+                                                                                          /*BG1726*/
+/**********  CHGVAR     VAR(&CLASSPATH) VALUE(&JAVAPATH *TCAT ':') */           /*BG1726 AR1015290*/
+/**********READNEXT: */                                                      /*BG1726*/ /*AR918665*/
+/**********  RCVF */                                                         /*BG1726*/ /*AR918665*/
+/**********  MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDFILE))            /*BG1726*/ /*AR918665*/
+/**********  CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT +
+                          &JAVAPATH *TCAT '/lib/ext/' *TCAT +
+                          &GLMLCLJARS *TCAT ':')                  **********/             /*BG3668*/
+/**********  CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT +
+                          &LNKNAME *TCAT '/lib/ext/' *TCAT +
+                          &GLCLJARS *TCAT ':') */                            /*BG3668*/ /*AR918665*/
+/**********  CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT +
+                          &LNKNAME *TCAT '/lib/ext/*:') */                    /*AR918665 AR1015290*/
+/**********  GOTO       CMDLBL(READNEXT) */                                  /*BG1726*/ /*AR918665*/
+/**********ENDFILE: */                                                       /*BG1726*/ /*AR918665*/
+/**********  DLCOBJ     OBJ((GLMLCLJLCK *DTAARA *EXCL))                      */    /*BG1726 BG3656*/
+             DLCOBJ     OBJ((GLCLJLCK *DTAARA *EXCL))                                     /*BG3656*/
+ 
+/* Build the QSH command string */
+ 
+  /**********    CHGVAR     VAR(&EXECUTE) +                                       */      /*BG1726*/
+  /**********             VALUE('java -cp ' *CAT &JAVAPATH *TCAT ':' *TCAT +      */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/calculationmanager.jar:' *CAT +       */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/calculators.jar:' *CAT +              */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/frwkapi.jar:' *CAT +                  */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/frwkapidef.jar:' *CAT +               */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/frwkdataaccess.jar:' *CAT +           */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/frwkdataview.jar:' *CAT +             */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/frwkdtd.jar:' *CAT +                  */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/frwkjavaext.jar:' *CAT +              */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/xml-apis.jar:' *CAT +             */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/xmlParserAPIs.jar:' *CAT +        */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/xsdlib.jar:' *CAT +               */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/midaslocalconfig:' *CAT +             */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/activation.jar:' *CAT +           */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/commons-beanutils.jar:' *CAT +    */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/commons-collections.jar:' *CAT +  */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/commons-dbcp.jar:' *CAT +         */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/commons-digester.jar:' *CAT +     */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/commons-logging.jar:' *CAT +      */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/commons-pool.jar:' *CAT +         */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/concurrent.jar:' *CAT +           */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/getopt.jar:' *CAT +               */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/jaas.jar:' *CAT +                 */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/jaxb-api.jar:' *CAT +             */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/jaxb-impl.jar:' *CAT +            */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/jaxb-libs.jar:' *CAT +            */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/jaxb-xjc.jar:' *CAT +             */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/jax-qname.jar:' *CAT +            */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/jt400.jar:' *CAT +                */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/jta-spec1_0_1.jar:' *CAT +        */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/junit.jar:' *CAT +                */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/log4j-1.2.8.jar:' *CAT +          */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/mail.jar:' *CAT +                 */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/namespace.jar:' *CAT +            */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/providerutil.jar:' *CAT +         */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/relaxngDatatype.jar:' *CAT +      */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/velocity-dep-1.3.1.jar:' *CAT +   */      /*BG1726*/
+  /**********             &JAVAPATH *TCAT '/lib/xercesImpl.jar:' *BCAT +          */      /*BG1726*/
+  /**********             'com.misys.midas.midasplus.calculationmanager.+         */      /*BG1726*/
+  /**********             CalcManager -s' *BCAT &PREFIX *CAT &EXTN01)             */      /*BG1726*/
+ 
+             CHGVAR     VAR(&CLASSPATH) VALUE('A')                                     /*AR1015290*/
+                                                                                       /*AR1015290*/
+ SETUP_PATH: RCVF       RCDFMT(SDJARFD0)                                               /*AR1015290*/
+                                                                                       /*AR1015290*/
+ /** END OF FILE */                                                                    /*AR1015290*/
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END_PATH))                     /*AR1015290*/
+                                                                                       /*AR1015290*/
+ /** CONCATENATE JAVA PATH */                                                          /*AR1015290*/
+             CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT ':' +
+                          *TCAT &JFNAME)                                               /*AR1015290*/
+                                                                                       /*AR1015290*/
+ /** READ NEXT RECORD */                                                               /*AR1015290*/
+             GOTO       CMDLBL(SETUP_PATH)                                             /*AR1015290*/
+ END_PATH:                                                                             /*AR1015290*/
+                                                                                       /*AR1015290*/
+             IF         COND(&EXTN01 *EQ 'calccl') THEN(DO)                               /*BG1726*/
+ /**********    CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT +
+                             &JAVAPATH *TCAT '/calmancl')            **********/   /*BG1726 BG3668*/
+             CHGVAR     VAR(&CLASSPATH) VALUE(&LNKNAME *TCAT +
+                          '/calmancl/' *TCAT &PREFIX *TCAT ':' +
+                          *TCAT &CLASSPATH)                                               /*BG3668*/
+                CHGVAR     VAR(&COMMAND) +
+                             VALUE(' com.misys.midas.midasplus.calculatio+
+                             nmanager.CalcManager -s' *BCAT &PREFIX +
+                             *CAT 'calc')                                                 /*BG1726*/
+             ENDDO                                                                        /*BG1726*/
+                                                                                          /*BG1726*/
+             IF         COND(&EXTN01 *EQ 'ltv   ') THEN(DO)                               /*BG1726*/
+ /**********    CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT +
+                             &JAVAPATH *TCAT '/calmancl')            **********/   /*BG1726 BG3668*/
+/**********  CHGVAR     VAR(&CLASSPATH) VALUE(&LNKNAME *TCAT +
+                          '/ltvcl' *TCAT &PREFIX *TCAT ':' *TCAT +
+                          &CLASSPATH)                           **********/        /*BG3668 BG3994*/
+             CHGVAR     VAR(&CLASSPATH) VALUE(&LNKNAME *TCAT +
+                          '/ltvcl/' *TCAT &PREFIX *TCAT ':' *TCAT +
+                          &CLASSPATH)                                                     /*BG3994*/
+                CHGVAR     VAR(&COMMAND) +
+                             VALUE(' com.misys.midas.midasplus.calculatio+
+                             nmanager.CalcManager -s' *BCAT &PREFIX +
+                             *CAT 'ltv ')                                                 /*BG1726*/
+             ENDDO                                                                        /*BG1726*/
+                                                                                          /*BG1726*/
+/**If*a*CALMANML call check if the CALMANML job is running */                      /*BG1726 BG3656*/
+/**********                                                                   */   /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'calcml') THEN(DO)                  */    /*BG1726 BG3656*/
+/**********     CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT +          */    /*BG1726 BG3656*/
+/**********                  &JAVAPATH *TCAT '/calmanml')            **********/   /*BG1726 BG3668*/
+/**********     CHGVAR     VAR(&COMMAND) +                                   */    /*BG1726 BG3656*/
+/**********                  VALUE(' com.misys.midas.midasplus.calculatio+   */    /*BG1726 BG3656*/
+/**********                  nmanager.CalcManager -s ' *CAT +                */    /*BG1726 BG3656*/
+/**********                  'MLIMITSLOCAL')                                 */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**If*a*EODMON call check if the MLEODMON job is running */                        /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'eodmon') THEN(DO)                  */    /*BG1726 BG3656*/
+/**********     CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT +          */    /*BG1726 BG3656*/
+/**********                  &JAVAPATH *TCAT '/eodmonitor')          **********/   /*BG1726 BG3656*/
+/**********     CHGVAR     VAR(&COMMAND) +                                   */    /*BG1726 BG3656*/
+/**********                  VALUE(' com.misys.midas.midasplus.mlimitsend+   */    /*BG1726 BG3656*/
+/**********                  ofday.EODMonitor')                              */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**If*a*EMAIL call check if the MLEMAILER job is running */                        /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  IF         COND(&EXTN01 *EQ 'email ') THEN(DO)                  */    /*BG1726 BG3656*/
+/**********     CHGVAR     VAR(&CLASSPATH) VALUE(&CLASSPATH *TCAT +          */    /*BG1726 BG3656*/
+/**********                  &JAVAPATH *TCAT '/ml_emailer')          **********/   /*BG1726 BG3656*/
+/**********  CHGVAR     VAR(&COMMAND) VALUE(' +                              */    /*BG1726 BG3656*/
+/**********               com.misys.midas.midasplus.mlimits.mlimitsem+       */    /*BG1726 BG3656*/
+/**********               ailer.MLimitsEMailer -s MLIMITSLOCAL')             */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  CHGVAR     VAR(&EXECUTE) VALUE('java -cp ' *CAT +
+                          &CLASSPATH *TCAT &COMMAND)           */     /*BG1726 BG3656*/ /*BUG27747*/
+                                                                                        /*BUG27747*/
+/**********  CHGVAR     VAR(&EXECUTE) +
+                          VALUE('/QIBM/ProdData/Java400/jdk6/bin/JAVA +
+                          -cp ' *CAT &CLASSPATH *TCAT &COMMAND)      */       /*BUG27747 BUG27747A*/
+                                                                                       /*BUG27747A*/
+             CHGVAR     VAR(&EXECUTE) VALUE('java -cp ' *CAT +
+                          &CLASSPATH *TCAT &COMMAND)                                   /*BUG27747A*/
+ 
+/* Execute the QSH command string */
+ 
+             QSH        CMD(&EXECUTE)
+ 
+/* For a normal end set the abnormal termination indicator off */
+ 
+             CHGVAR     VAR(&ABNOR) VALUE('N')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC005000 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ ENDPGM:
+ 
+/* Only clear the job information for an abnormal end */
+ 
+/*********   IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +  */          /*CLE024*/ /*BG1726*/
+/*********                'calc')) THEN(DO)                        */          /*CLE024*/ /*BG1726*/
+             IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +
+                          'calccl')) THEN(DO)                                             /*BG1726*/
+/*********      CHGDTAARA  DTAARA(GLCALCMGR (1 26)) VALUE(' ')     */          /*CLE024*/ /*BG1726*/
+                CHGDTAARA  DTAARA(GLCLCALMAN (1 26)) VALUE(' ')                           /*BG1726*/
+                MONMSG     MSGID(CPF0000)                                                 /*CLE024*/
+             ENDDO                                                                        /*CLE024*/
+                                                                                          /*CLE024*/
+             IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +
+                          'ltv ')) THEN(DO)
+                CHGDTAARA  DTAARA(GLLTVMNTR (1 26)) VALUE(' ')
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+/**********  IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +            */    /*BG1726 BG3656*/
+/**********               'calcml')) THEN(DO)                                */    /*BG1726 BG3656*/
+/**********     CHGDTAARA  DTAARA(GLCLCALMAN (1 26)) VALUE(' ')              */    /*BG1726 BG3656*/
+/**********     MONMSG     MSGID(CPF0000)                                    */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +            */    /*BG1726 BG3656*/
+/**********               'eodmon')) THEN(DO)                                */    /*BG1726 BG3656*/
+/**********     CHGDTAARA  DTAARA(GLEODMON (1 26)) VALUE(' ')                */    /*BG1726 BG3656*/
+/**********     MONMSG     MSGID(CPF0000)                                    */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  IF         COND((&ABNOR *NE 'Y') *AND (&EXTN01 *EQ +            */    /*BG1726 BG3656*/
+/**********               'email ')) THEN(DO)                                */    /*BG1726 BG3656*/
+/**********     CHGDTAARA  DTAARA(GLEMAILER (1 26)) VALUE(' ')               */    /*BG1726 BG3656*/
+/**********     MONMSG     MSGID(CPF0000)                                    */    /*BG1726 BG3656*/
+/**********  ENDDO                                                           */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+             ENDPGM

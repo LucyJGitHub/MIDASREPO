@@ -1,0 +1,637 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Customer risk weight enquiry subfile')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1401D - Midas SD Display Customer Risk Weight              *
+      *                                                               *
+      *  Function:  This program allows the user to enquire from a    *
+      *             list of Customer Risk Weights                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. CSD003             Date 01Jul99               *
+      *                 S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 LN1121             Date 06FEB91               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+     F*  LN1121 - CHANGE THE SELECTOR FIELD TO ALPHA                  *
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,SD1401DFPG
+     FSD1401D#CF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      * DSP: Disp Customer Risk Weight Display file
+      *
+     FSDCRWCL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RTV: Customer Risk Weight Code Retrieval index
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright     array
+     E/COPY WNCPYSRC,SD1401DEPG
+     E                    @CN     1   3 25               Long constants.
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY WNCPYSRC,SD1401DIPG
+      /EJECT
+      * Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure.
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Risk weighting % not num'
+      * Base risk weight % funfld
+     I                                        1   5 ZA0001
+      * Message data for 'Risk weighting % not num'
+      * Base risk weight % funfld
+     I                                        1   5 ZA0002
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page.
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested:
+     C           W0RSF     DOWEQ'N'
+      * Display screen.
+     C                     EXSR CAEXFM
+      *   Process response:
+      * Cancel & exit program.
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload.
+     C   05                CAS            FBRQRL
+      *   Display next SFL page.
+     C   27                CAS            BBLDSF
+      *   Process screen input.
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise & Load subfile page.
+      *================================================================
+      * Clear subfile.
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile.
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialise subfile control
+      * 00/Copy Member SD1401DISC - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DISC
+     C*
+      * Position DBF file:
+     C           KPOS      KLIST
+     C                     KFLD           D5RWCD           Risk Weighting
+      * Setup key.
+     C                     MOVEL#2RWCD    D5RWCD           Risk Weighting
+     C           KPOS      SETLL@D5REI5
+     C                     READ @D5REI5                8782*82=EOF
+      * Save previous selector values.
+     C           *LIKE     DEFN #2BRWP    WZBRWP
+     C                     MOVEL#2BRWP    WZBRWP           Base Risk Weigh
+     C           *LIKE     DEFN #2LCD     WZLCD
+     C                     MOVEL#2LCD     WZLCD            Last Change Dat
+     C           *LIKE     DEFN #2TYLC    WZTYLC
+     C                     MOVEL#2TYLC    WZTYLC           Type of Last Ch
+     C           *LIKE     DEFN #2RWCD    WZRWCD
+     C                     MOVEL#2RWCD    WZRWCD           Risk Weighting
+     C           *LIKE     DEFN #2RWDS    WZRWDS
+     C                     MOVEL#2RWDS    WZRWDS           Risk Weighting
+      * Translate search mask for text field.
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2RWDS    WQRWDS           Risk Weighting
+     C                     CALL 'QDCXLATE'
+     C                     PARM 30        WQA5N   50       Len
+     C                     PARM #2RWDS    WQRWDS           Risk Weighting
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+      * Load subfile page.
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page.
+      *================================================================
+      * Re-establish fields in read-ahead record.
+     C   27                DO
+     C  N82                READP@D5REI5                  90*
+     C  N82                READ @D5REI5                  90*
+     C                     END
+      *
+      * Start at previous highest record in SFL.
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read.
+     C                     Z-ADD0         ##RRRD  50
+      *................................................................
+      * Load next SFL page until SFL page full, or :
+      * scan limit reached.
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFPG
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record.
+     C           #2BRWP    IFNE *ZERO                      Base Risk Weigh
+     C           D5BRWP    CABNE#2BRWP    BB020            Base Risk Weigh
+     C                     END
+     C           #2LCD     IFNE *ZERO                      Last Change Dat
+     C           D5LCD     CABNE#2LCD     BB020            Last Change Dat
+     C                     END
+     C           #2TYLC    IFNE *BLANK                     Type of Last Ch
+     C           D5TYLC    CABNE#2TYLC    BB020            Type of Last Ch
+     C                     END
+     C           #2RWDS    IFNE *BLANK                     Risk Weighting
+      * Scan for search string.
+     C                     CALL 'QCLSCAN'
+     C                     PARM           D5RWDS           Risk Weighting
+     C                     PARM 30        WQA3N   30       Length
+     C                     PARM 1         WQB3N   30       Start
+     C                     PARM           WQRWDS           Mask
+     C                     PARM 30        WQC3N   30       Length
+     C                     PARM '1'       WQD1    1        Translate
+     C                     PARM '1'       WQE1    1        Trim
+     C                     PARM '?'       WQF1    1        Wild
+     C                     PARM           WQG3N   30       Result
+     C           WQG3N     CABLT1         BB020
+     C                     END
+      * Load SFL fields.
+     C                     EXSR MBFL#1
+     C                     EXSR MC#1FN
+     C                     MOVEL'Y'       W0RSL   1
+      * USER: Initialise subfile record from DBF record
+      * 00/Copy Member SD1401DISR - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DISR
+     C*
+      * DBF Record not selected.
+     C           W0RSL     CABNE'Y'       BB020
+      * Output to subfile.
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      * Increment scan check count.
+     C                     ADD  1         ##RRRD
+     C                     READ @D5REI5                  82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+      * If no DBF records found, display error message.
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point.
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message.
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen.
+      *================================================================
+     C           W0HLP     DOUEQ'N'
+      * Update screen time.
+     C                     TIME           ##TME            Screen time.
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      * If help requested, display help text.
+     C   25                EXSR ZHHPKY                     Display help te
+     C                     END
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8388*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input.
+      *================================================================
+      * Maintain subfile position where possible.
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      *
+      * Confirm/update is not defered.
+     C                     MOVEL'N'       W0DCF   1
+      * CALC: Subfile control function fields
+      * 00/Copy Member SD1401DSCF - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DSCF
+     C*
+      * Change of position specified.
+     C           WZRWCD    CASNE#2RWCD    FBRQRL
+     C           WZRWDS    CASNE#2RWDS    FBRQRL
+     C                     END
+      * USER: Process subfile control (Pre-confirm)
+      * Start of Fix LN1121
+      * Base Rate converted to alpha field on the screen.
+      *CASE:     CTL.Base risk weight % funfld NE WRK.Base risk weight % funfld
+     C           #CRWPF    IFNE WURWPF                     *IF
+      *CASE:     CTL.Base risk weight % funfld is Blank
+     C           #CRWPF    IFEQ *BLANK                     *IF
+     C                     MOVEL@CN,01    W0RSF            *Reload subfile
+     C                     MOVEL#CRWPF    WURWPF           Base risk weigh
+     C                     Z-ADD*ZERO     #2BRWP           Base Risk Weigh
+     C                     ELSE
+      *CASE:     *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+      * MOVE Risk Weight % - ZASF - Customer Risk Weight Code  *
+     C                     MOVE #CRWPF    WUZASF
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0001  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0002 16        ZALIGN Screen F
+     C                     PARM 3         WQ0003  10       ZALIGN No Of De
+     C                     PARM 1         WQ0004  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0005 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected ?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      *CASE:     PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ @CN,02                     *IF
+     C                     MOVEL@CN,01    WUERCD           Err Code
+     C                     ELSE
+      *CASE:     *OTHERWISE
+     C                     MOVEL@CN,03    WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0006 16        ZALIGN Screen F
+     C                     PARM 3         WQ0007  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      *CASE:     WRK.Err Code is Error Found
+     C           WUERCD    IFEQ @CN,01                     *IF
+      * Setup message data for message.
+     C                     MOVEL#CRWPF    ZA0001           Base risk weigh
+      * Send message 'Risk weighting % not num'
+     C                     MOVEL'USR1461' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     9933  *
+      *
+     C                     ELSE
+      *CASE:     *OTHERWISE
+     C                     MOVE WUZAFF    #2BRWP           Base Risk Weigh
+      *CASE:     CTL.Base Risk Weighting Perc is GE 0 and LE 1
+     C           #2BRWP    IFGE *ZERO                      *IF
+     C           #2BRWP    ANDLE1
+     C                     MOVEL@CN,01    W0RSF            *Reload subfile
+     C                     MOVEL#CRWPF    WURWPF           Base risk weigh
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Setup message data for message.
+     C                     MOVEL#CRWPF    ZA0002           Base risk weigh
+      * Send message 'Risk weighting % not num'
+     C                     MOVEL'USR1461' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * End of Fix LN1121
+      * 00/Copy Member SD1401DPSC - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DPSC
+     C*
+      * Reload subfile requested:
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records.
+     C                     EXSR DBPRSF
+     C                     END
+      * USER: Final processing (Pre-confirm)
+      * 00/Copy Member SD1401DFPR - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DFPR
+     C*
+      * If error, Quit processing:
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested:
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: Process command keys
+      * 00/Copy Member SD1401DPCK - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DPCK
+     C*
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile records.
+      *================================================================
+     C                     READC#SFLRCD                  88*
+     C           *IN88     DOWEQ'0'
+      * Process SFL record.
+     C                     EXSR DCPRSR
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  88*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record.
+      *================================================================
+      * Setof error indicators and SFLNXTCHG.
+     C                     SETOF                     98    *
+     C                     EXSR MC#1FN
+      * USER: Process subfile record (Pre-confirm)
+      * 00/Copy Member SD1401DPSR - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DPSR
+     C*
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid.
+     C  N99                Z-ADD##RR      ##SFRC     99    Invalid SFLRCD
+     C                     SETON                     84    SFLNXTCHG
+     C                     ELSE
+      * SFLRCD valid.
+     C                     SETOF                     84    SFLNXTCHG
+     C                     END                             FI *IN98
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload.
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @D5REI5    fields to subfile.
+      *================================================================
+     C                     Z-ADDD5LCD     #1LCD            Last Change Dat
+     C                     MOVELD5TYLC    #1TYLC           Type of Last Ch
+     C                     MOVELD5RWCD    #1RWCD           Risk Weighting
+     C                     MOVELD5RWDS    #1RWDS           Risk Weighting
+     C                     Z-ADDD5BRWP    #1BRWP           Base Risk Weigh
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MC#1FN    BEGSR
+      *================================================================
+      * CALC: Subfile record function fields
+      *================================================================
+      * CALC: Subfile record function fields
+      * 00/Copy Member SD1401DRFF - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DRFF
+     C*
+      *================================================================
+     CSR         MCEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control.
+      *================================================================
+     C                     Z-ADD*ZERO     #2BRWP           Base Risk Weigh
+     C                     Z-ADD*ZERO     #2LCD            Last Change Dat
+     C                     MOVEL*BLANK    #2TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #2RWCD           Risk Weighting
+     C                     MOVEL*BLANK    #2RWDS           Risk Weighting
+     C                     MOVEL*BLANK    #CRWPF           Base risk weigh
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified use default.
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text.
+      *================================================================
+     C                     MOVEL'Y'       W0HLP   1        Signal help req
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Member name.
+     C                     PARM *BLANK    YYHPFL 10        *DFT text file.
+     C                     PARM *BLANK    YYHPLB 10        Help text lib.
+     C                     PARM           W0RTN   7        Return Code.
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program.
+      *================================================================
+      * USER: Exit program processing
+      * 00/Copy Member SD1401DEPP - Customer Risk Weight Code  *
+     C*
+     C/COPY WNCPYSRC,SD1401DEPP
+     C*
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Define work field Base risk weight % funfld
+     C                     MOVEL*BLANK    WURWPF  5
+      * Define work field ZALIGN Screen Fun Field
+     C                     MOVEL*BLANK    WUZASF 16
+      * Define work field ZALIGN File Field
+     C                     MOVEL*BLANK    WUZAFF 16
+      * Define work field Err Code
+     C                     MOVEL*BLANK    WUERCD  1
+      * Obtain default message file.
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+     C                     Z-ADD14        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+     C                     Z-ADD*ZERO     ##RRMX           MAX RECNO
+     C                     Z-ADD500       W0SLM   50       SCAN LIMIT
+      *................................................................
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Copyright Statement - Standard Functions  *
+      * Last Amend Box SD1401D - Customer Risk Weight Code  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT           RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     Z-ADD99999     W0SLM            *Scan limit
+      * 00/Copy Member SD1401DIPG - Customer Risk Weight Code  *
+      *00/Copy Member SD1401D   Initialise Program
+     C/COPY WNCPYSRC,SD1401DCPG
+      * Initialise subfile control.
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     O/COPY WNCPYSRC,SD1401DOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001
+** @CN Long constants used in program.
+Y
+*ERROR*
+N

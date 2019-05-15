@@ -1,0 +1,1284 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC F/M Accounts Reconciliation Report')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  MC0551 - Financial/Management Accounts Reconciliation        *
+      *                                                               *
+      *  Function:  This program will check if the management account *
+      *             balances sum up to the financial account balances.*
+      *                                                               *
+      *  Called By: MCC0550 - Financial/Management Accounts Reconc'n  *
+      *                       Control Program                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 164810             Date 05Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 127956             Date 09Dec97               *
+      *                 124847 *CREATE     Date 05Sep97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  164810 - Change to prevent database error 5 if the account   *
+      *           is not found in ACCNTAB. Instead put a message in   *
+      *           the customer name "** ACCOUNT NOT FOUND **".        *
+      *  127956 - Imbalance report is unreadable.                     *
+      *  124847 - Financial/Management Accounts Reconciliation        *
+      *           New report program.                                 *
+      *                                                               *
+      *****************************************************************
+     F*
+     FMCACHBPDIF  E           K        DISK         KINFSR *PSSR
+     F**  Financial/Management Accounts Extract
+     F*
+     FMC0550AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+     F**  Financial/Management Accounts Rec'n Report - Audit
+     F*
+     FMC0550P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     F**  Financial/Management Accounts Rec'n Report - Detail
+     F*
+     FMC0550P2O   E                    PRINTER      KINFDS SPOOL2     UC
+     F*                                              KINFSR *PSSR
+     F**  Financial/Management Accounts Rec'n Report - Imbalance
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Multibranching ON                                     *
+     F*   11  - System level requested                                *
+     F*                                                               *
+     F*   20  - EOF in Financial/Management Accounts Extract File     *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7+U8 - Database Error                                        *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SRINIT - Program Initialisation                              *
+     F*  SRDETL - Process Account Details                             *
+     F*  SRCBRC - Process Change in Branch                            *
+     F*  SRCCUR - Process Change in Currency                          *
+     F*  SRCACD - Process Change in Account Code                      *
+     F*  SRCACN - Process Change in Account                           *
+     F*  SRBRCD - Get Branch Details                                  *
+     F*  SRCYCD - Get Currency Details                                *
+     F*  SRACCD - Get Account Code Details                            *
+     F*  SRACNT - Get Account Details                                 *
+     F*  SRWDTL - Print detail line                                   *
+     F*  SRNBAL - Print Imbalance                                     *
+     F*  SRAUDT - Print Audit Report                                  *
+     F*  *PSSR  - Program Error Processing Subroutine                 *
+     F*  SRRCF1 - RCF Processing for P1 Report                        *
+     F*  SRRCF2 - RCF Processing for P2 Report                        *
+     F*  SRRCFA - RCF Processing for Audit Report                     *
+     F*                                                               *
+     F*  ZFRPED - Edit an Amount                                      *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**  Array containing Copyright statement
+     E*
+      *                                                                   127956
+     E                    @STK      100 10   @REC    3 0                  127956
+      *                                                                   127956
+      *  Subroutine stack                                                 127956
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E*
+     I/EJECT
+     I*
+     I            DS
+     I**********                              1  18 WACCNT                                    CGL029
+     I                                        1  24 WACCNT                                    CGL029
+     I                                        1   3 MCBRCD
+     I                                        4   9 MCCNUM
+     I                                       10  12 MCCYCD
+     I**********                             13  16 MCACCD                                    CGL029
+     I**********                             17  18 MCACSQ                                    CGL029
+     I                                       13  22 MCACCD                                    CGL029
+     I                                       23  24 MCACSQ                                    CGL029
+     I*
+     ILDA       E DSLDA                         256
+     I*
+     I**  Local data area for database error details
+     I**  *LOCK IN LDA immediately before and OUT LDA immediately
+     I**  after each database error handling.
+     I**
+     I**                                    134 141 DBFILE
+     I**       Defines:                     142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     I*
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I*
+     IRUNDAT    E DSRUNDAT
+     I**  Data Area giving Installation Control Details
+     I*
+     ISPOOL1      DS
+     I**  File Information Data Structure for MC0550P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     I*
+     ISPOOL2      DS
+     I**  File Information Data Structure for MC0550P2.
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 188 1890OFLLN2
+     I                                    B 367 3680PRTLN2
+     I*
+     ISPOOLU      DS
+     I**  File Information Data Structure for MC0550AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  External data structure for Bank Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I**  External data structure for Branch Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  External data structure for Currency Details
+     I*
+     ISDACOD    E DSSDACODPD
+     I**  External data structure for Account Code Details
+     I*
+     ISDACCN    E DSACCNTAB
+     I**  External data structure for Account Details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  First data structure for Access Programs, short DS
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Second data structure for Access Programs, long DS
+     I*
+     I              '*ACCOUNT NOT FOUND*' C         NOTFND                164810
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     Z-ADD1         Q       50                      127956
+     C                     MOVEL'MAIN  '  @STK,Q                          127956
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C**  Receive Parameter List.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQN   5
+     C                     PARM           PLEVL   1
+     C                     PARM           PENTY   3
+     C*
+     C**  Perform Initialisation.
+     C*
+     C                     EXSR SRINIT
+     C*
+     C**  Process Account Details.
+     C*
+     C                     EXSR SRDETL
+     C*
+     C**  Print Audit Report.
+     C*
+     C                     EXSR SRAUDT
+     C*
+     C**  End Program and Return.
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRINIT - Program Initialisation                              *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine                 *
+     C*  Calls    :  AOBANKR0 - Bank details access object            *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR                           ** SRINIT **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRINIT'  @STK,Q                          127956
+      *................................................................   127956
+     C**  Initialise LDA field.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Call Access Program for Bank Details - Title, Run Date and
+     C**  Run Day Number.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0551  'DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Check System Date Format, DDMMYY (*IN98 off)
+     C**                            MMDDYY (*IN98 on).
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+     C*
+     C**  Access RUNDAT for multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN10
+     C                     ENDIF
+     C*
+     C**  System level requested.
+     C*
+     C           PLEVL     IFEQ 'S'
+     C                     MOVE *ON       *IN11
+     C                     ENDIF
+     C*
+     C**  Initialise Report Work fields.
+     C*
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         RQDLN2  30
+     C                     Z-ADD0         DIFLN2  30
+     C                     Z-ADD0         TFBAL  150
+     C                     Z-ADD0         TMBAL  150
+     C                     MOVE 'N'       WOPEN1  1
+     C                     MOVE 'N'       WOPEN2  1
+     C                     MOVE *BLANK    WBRCD   3
+     C                     MOVE *BLANK    WCYCD   3
+     C**********           MOVE *BLANK    WACCD   4                                           CGL029
+     C                     MOVE *BLANK    WACCD  10                                           CGL029
+     C                     MOVE *BLANK    WCNUM   6
+     C                     MOVE *BLANK    WACSQ   2
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRINI9    ENDSR                           ** SRINI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRDETL - Process Account Details                             *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine.                *
+     C*  Calls    :  SRCBRC - Process Change in Branch                *
+     C*              SRCCUR - Process Change in Currency              *
+     C*              SRCACD - Process Change in Account Code          *
+     C*              SRCACN - Process Change in Account               *
+     C*              SRWDTL - Print detail line.                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRDETL    BEGSR                           ** SRDETL **
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRDETL'  @STK,Q                          127956
+     C*
+     C**  Read all records from PF/MCACHBPD.
+     C*
+     C           *LOVAL    SETLLMCACHBPD
+     C                     READ MCACHBPD                 20
+     C*
+     C           *IN20     DOWEQ*OFF
+     C*
+     C**  Change of Branch.
+     C*
+     C           MCBRCD    IFNE WBRCD
+     C                     EXSR SRCBRC
+     C                     ENDIF
+     C*
+     C**  Change of Currency.
+     C*
+     C           MCCYCD    IFNE WCYCD
+     C                     EXSR SRCCUR
+     C                     ENDIF
+     C*
+     C**  Change of Account Code.
+     C*
+     C           MCACCD    IFNE WACCD
+     C                     EXSR SRCACD
+     C                     ENDIF
+     C*
+     C**  Change of Account.
+     C*
+     C           MCBRCD    IFNE WBRCD
+     C           MCCYCD    ORNE WCYCD
+     C           MCACCD    ORNE WACCD
+     C           MCCNUM    ORNE WCNUM
+     C           MCACSQ    ORNE WACSQ
+     C                     EXSR SRCACN
+     C                     ENDIF
+     C*
+     C**  Accumulate totals for Financial and Management Accounts.
+     C*
+     C           MCPRFC    IFEQ *BLANK
+     C                     ADD  MCLDBL    TFBAL  150
+     C                     ELSE
+     C                     ADD  MCLDBL    TMBAL  150
+     C                     ENDIF
+     C*
+     C**  Write detail line.
+     C*
+     C                     EXSR SRWDTL
+     C*
+     C                     READ MCACHBPD                 20
+     C*
+     C                     ENDDO
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRDET9    ENDSR                           ** SRDET9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCBRC - Process Change in Branch                            *
+     C*                                                               *
+     C*  Called By:  SRDETL - Process Account Details                 *
+     C*  Calls    :  SRBRCD - Get Branch Details                      *
+     C*              SRCYCD - Get Currency Details                    *
+     C*              SRACCD - Get Account Code Details                *
+     C*              SRACNT - Get Account Details                     *
+     C*              SRNBAL - Print Imbalance                         *
+     C*              SRRCF1 - RCF Processing for P1 Report            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCBRC    BEGSR                           ** SRCBRC **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRCBRC'  @STK,Q                          127956
+     C**  Financial account balance is not same as management account.
+     C*
+     C           TFBAL     IFNE TMBAL
+     C                     EXSR SRNBAL
+     C                     ENDIF
+     C*
+     C**  If P1 report is open...
+     C*
+     C           WOPEN1    IFEQ 'Y'
+     C*
+     C**  If multi-branching and requested by branch, print '*** END OF,
+     C**  REPORT FOR BRANCH ***' and close it.
+     C*
+     C           *IN10     IFEQ '1'
+     C           *IN11     ANDEQ'0'
+     C*
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0550D0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0550D4
+     C                     CLOSEMC0550P1
+     C                     MOVE 'N'       WOPEN1
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  If P2 report is open...
+     C*
+     C           WOPEN2    IFEQ 'Y'
+     C*
+     C**  If multi-branching and requested by branch, print '*** END OF,
+     C**  REPORT FOR BRANCH ***' and close it.
+     C*
+     C           *IN10     IFEQ '1'
+     C           *IN11     ANDEQ'0'
+     C*
+     C                     Z-ADD3         RQDLN2
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEMC0550E0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0550E2
+     C                     CLOSEMC0550P2
+     C                     MOVE 'N'       WOPEN2
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Get branch details.
+     C*
+     C                     EXSR SRBRCD
+     C*
+     C**  Get currency details.
+     C*
+     C                     EXSR SRCYCD
+     C*                                                                   127956
+     C**  Open printer file MC0550P2 if not yet open (PLEVL = 'B')        127956
+     C*                                                                   127956
+     C           WOPEN2    IFNE 'Y'                                       127956
+     C*                                                                   127956
+     C                     OPEN MC0550P2                                  127956
+     C                     MOVE 'Y'       WOPEN2                          127956
+     C*                                                                   127956
+     C**  Ensure Report Spool File recorded by RCF                        127956
+     C*                                                                   127956
+     C           *IN10     IFEQ '1'                                       127956
+     C           *IN11     ANDEQ'0'                                       127956
+     C                     MOVE MCBRCD    SENTY                           127956
+     C                     ELSE                                           127956
+     C                     MOVE *BLANKS   SENTY                           127956
+     C                     ENDIF                                          127956
+     C*                                                                   127956
+     C                     EXSR SRRCF2                                    127956
+     C*                                                                   127956
+     C                     ENDIF                                          127956
+     C*                                                                   127956
+     C**  Change of branch                                                127956
+     C*                                                                   127956
+     C           MCBRCD    IFNE WBRCD                                     127956
+     C                     MOVE MCBRCD    RBRCA                           127956
+     C                     MOVE MCCYCD    RCCY                            127956
+     C                     WRITEMC0550E0                                  127956
+     C                     ENDIF                                          127956
+     C*
+     C**  Get Account Code Details.
+     C*
+     C                     EXSR SRACCD
+     C*
+     C**  Get Account Details.
+     C*
+     C                     EXSR SRACNT
+     C*
+     C**  Open printer file MC0550P1 if not yet open.
+     C*
+     C           WOPEN1    IFNE 'Y'
+     C*
+     C                     OPEN MC0550P1
+     C                     MOVE 'Y'       WOPEN1
+     C*
+     C**  Ensure Report Spool File recorded by RCF
+     C*
+     C           *IN10     IFEQ '1'
+     C           *IN11     ANDEQ'0'
+     C                     MOVE MCBRCD    SENTY
+     C                     ELSE
+     C                     MOVE *BLANKS   SENTY
+     C                     ENDIF
+     C*
+     C                     EXSR SRRCF1
+     C*
+     C                     ENDIF
+     C*
+     C                     WRITEMC0550D0
+     C                     WRITEMC0550D1
+     C*
+     C                     MOVE MCBRCD    WBRCD
+     C                     MOVE MCCYCD    WCYCD
+     C                     MOVE MCACCD    WACCD
+     C                     MOVE MCCNUM    WCNUM
+     C                     MOVE MCACSQ    WACSQ
+     C*
+     C                     Z-ADD0         TFBAL
+     C                     Z-ADD0         TMBAL
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRCBR9    ENDSR                           ** SRCBR9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCCUR - Process Change in Currency                          *
+     C*                                                               *
+     C*  Called By:  SRDETL - Process Account Details                 *
+     C*  Calls    :  SRCYCD - Get Currency Details                    *
+     C*              SRACCD - Get Account Code Details                *
+     C*              SRACNT - Get Account Details                     *
+     C*              SRNBAL - Print Imbalance                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCCUR    BEGSR                           ** SRCCUR **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRCCUR'  @STK,Q                          127956
+     C**  Financial account balance is not same as management account.
+     C*
+     C           TFBAL     IFNE TMBAL
+     C                     EXSR SRNBAL
+     C                     ENDIF
+     C*
+     C**  Get currency details.
+     C*
+     C                     EXSR SRCYCD
+     C*                                                                   127956
+     C**  Print header for change of currency                             127956
+     C*                                                                   127956
+     C           MCBRCD    IFEQ WBRCD                                     127956
+     C           MCCYCD    ANDNEWCYCD                                     127956
+     C                     MOVE MCBRCD    RBRCA                           127956
+     C                     MOVE MCCYCD    RCCY                            127956
+     C                     WRITEMC0550E0                                  127956
+     C                     ENDIF                                          127956
+     C*
+     C**  Get Account Code Details.
+     C*
+     C                     EXSR SRACCD
+     C*
+     C**  Get Account Details.
+     C*
+     C                     EXSR SRACNT
+     C*
+     C                     WRITEMC0550D0
+     C                     WRITEMC0550D1
+     C*
+     C                     MOVE MCCYCD    WCYCD
+     C                     MOVE MCACCD    WACCD
+     C                     MOVE MCCNUM    WCNUM
+     C                     MOVE MCACSQ    WACSQ
+     C*
+     C                     Z-ADD0         TFBAL
+     C                     Z-ADD0         TMBAL
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRCCU9    ENDSR                           ** SRCCU9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCACD - Process Change in Account Code                      *
+     C*                                                               *
+     C*  Called By:  SRDETL - Process Account Details                 *
+     C*  Calls    :  SRACCD - Get Account Code Details                *
+     C*              SRACNT - Get Account Details                     *
+     C*              SRNBAL - Print Imbalance                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCACD    BEGSR                           ** SRCACD **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRCACD'  @STK,Q                          127956
+     C**  Financial account balance is not same as management account.
+     C*
+     C           TFBAL     IFNE TMBAL
+     C                     EXSR SRNBAL
+     C                     ENDIF
+     C*
+     C**  Get Account Code Details.
+     C*
+     C                     EXSR SRACCD
+     C*
+     C**  Get Account Details.
+     C*
+     C                     EXSR SRACNT
+     C*
+     C*                                                                   127956
+     C**  Open printer file MC0550P1 if not yet open.                     127956
+     C*                                                                   127956
+     C           WOPEN1    IFNE 'Y'                                       127956
+     C*                                                                   127956
+     C                     OPEN MC0550P1                                  127956
+     C                     MOVE 'Y'       WOPEN1                          127956
+     C*                                                                   127956
+     C**  Ensure Report Spool File recorded by RCF                        127956
+     C*                                                                   127956
+     C           *IN10     IFEQ '1'                                       127956
+     C           *IN11     ANDEQ'0'                                       127956
+     C                     MOVE MCBRCD    SENTY                           127956
+     C                     ELSE                                           127956
+     C                     MOVE *BLANKS   SENTY                           127956
+     C                     ENDIF                                          127956
+     C*                                                                   127956
+     C                     EXSR SRRCF1                                    127956
+     C*                                                                   127956
+     C                     ENDIF                                          127956
+     C*                                                                   127956
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0550D0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0550D1
+     C*
+     C                     MOVE MCACCD    WACCD
+     C                     MOVE MCCNUM    WCNUM
+     C                     MOVE MCACSQ    WACSQ
+     C*
+     C                     Z-ADD0         TFBAL
+     C                     Z-ADD0         TMBAL
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRCAC9    ENDSR                           ** SRCAC9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCACN - Process Change in Account                           *
+     C*                                                               *
+     C*  Called By:  SRDETL - Process Account Details                 *
+     C*  Calls    :  SRACNT - Get Account Details                     *
+     C*              SRNBAL - Print Imbalance                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCACN    BEGSR                           ** SRCACN **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRCACN'  @STK,Q                          127956
+     C**  Financial account balance is not same as management account.
+     C*
+     C           TFBAL     IFNE TMBAL
+     C                     EXSR SRNBAL
+     C                     ENDIF
+     C*
+     C**  Get Account Details.
+     C*
+     C                     EXSR SRACNT
+     C*
+     C                     MOVE MCCNUM    WCNUM
+     C                     MOVE MCACSQ    WACSQ
+     C*
+     C                     Z-ADD0         TFBAL
+     C                     Z-ADD0         TMBAL
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRCAN9    ENDSR                           ** SRCAN9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRBRCD - Get Branch Details                                  *
+     C*                                                               *
+     C*  Called By:  SRCBRC - Process Change in Branch                *
+     C*  Calls    :  AOBRCHR0 - Branch details access object          *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRBRCD    BEGSR                           ** SRBRCD **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRBRCD'  @STK,Q                          127956
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM MCBRCD    WWBRCD  3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0551  'DBPGM
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELMCBRCD    DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVELA8BRCD    RBRCA
+     C                     MOVELA8BRNM    RBRNM
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRBRC9    ENDSR                           ** SRBRC9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCYCD - Get Currency Details                                *
+     C*                                                               *
+     C*  Called By:  SRCBRC - Process Change in Branch                *
+     C*              SRCCUR - Process Change in Currency              *
+     C*  Calls    :  AOCURRR0 - Currency details access object        *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCYCD    BEGSR                           ** SRCYCD **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRCYCD'  @STK,Q                          127956
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM MCCYCD    WWCYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0551  'DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELMCCYCD    DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVE A6CYCD    RCCY
+     C                     Z-ADDA6NBDP    WDECP   10
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRCYC9    ENDSR                           ** SRCYC9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRACCD - Get Account Code Details                            *
+     C*                                                               *
+     C*  Called By:  SRCBRC - Process Change in Branch                *
+     C*              SRCCUR - Process Change in Currency              *
+     C*              SRCACD - Process Change in Account Code          *
+     C*  Calls    :  AOACODR0 - Account Code details access object    *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRACCD    BEGSR                           ** SRACCD **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRACCD'  @STK,Q                          127956
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C**********           PARM MCACCD    WWACOD  4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM MCACCD    WWACOD 10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C*
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0551  'DBPGM
+     C                     MOVEL'SDACODPD'DBFILE           ************
+     C                     MOVELMCACCD    DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVELA5ACCD    RACOD
+     C                     MOVELA5ACCN    RACCN
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRACC9    ENDSR                           ** SRACC9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRACNT - Get Account Details                                 *
+     C*                                                               *
+     C*  Called By:  SRCBRC - Process Change in Branch                *
+     C*              SRCCUR - Process Change in Currency              *
+     C*              SRCACD - Process Change in Account Code          *
+     C*              SRCACN - Process Change in Account               *
+     C*  Calls    :  AOACCTR0 - Account details access object         *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRACNT    BEGSR                           ** SRACNT **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRACNT'  @STK,Q                          127956
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM *BLANKS   WWRETL 10
+     C                     PARM MCCNUM    WWCNUM  6
+     C                     PARM MCCYCD    WWCYCD
+     C                     PARM MCACCD    WWACOD
+     C                     PARM MCACSQ    WWACSQ  2
+     C                     PARM MCBRCD    WWBRCD
+     C           SDACCN    PARM SDACCN    DSSDY
+     C*
+     C********** WRTCD     IFNE *BLANK                                    164810
+     C********** *LOCK     IN   LDA                                       164810
+     C**********           MOVEL'MC0551  'DBPGM                           164810
+     C**********           MOVEL'ACCNTAB 'DBFILE           ************   164810
+     C**********           MOVELWACCNT    DBKEY            * DBERR 05 *   164810
+     C**********           Z-ADD5         DBASE            ************   164810
+     C**********           OUT  LDA                                       164810
+     C**********           EXSR *PSSR                                     164810
+     C**********           ENDIF                                          164810
+     C*
+     C** If the account is not found, place a message to that effect      164810
+     C** in the customer name in the report rather than produce a         164810
+     C** datebase error.                                                  164810
+     C*                                                                   164810
+     C           WRTCD     IFNE *BLANK                                    164810
+     C                     MOVEL*BLANK    WRTCD                           164810
+     C                     MOVEL*BLANKS   ANAM                            164810
+     C                     MOVELNOTFND    ANAM                            164810
+     C                     ENDIF                                          164810
+     C*                                                                   164810
+     C                     MOVELANAM      RANAM
+     C                     MOVELMCCYCD    RCCY                            127956
+     C                     MOVELMCBRCD    RBRCA                           127956
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRACN9    ENDSR                           ** SRACN9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRWDTL - Print Detail Line                                   *
+     C*                                                               *
+     C*  Called By:  SRDETL - Process Account Details                 *
+     C*  Calls    :  ZFRPED - Edit an Amount                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRWDTL    BEGSR                           ** SRWDTL **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRWDTL'  @STK,Q                          127956
+     C                     MOVE MCCNUM    RCNUM
+     C                     MOVE MCACSQ    RACSQ
+     C                     MOVE MCPRFC    RPRFC
+     C*
+     C**  Format Balance
+     C*
+     C                     MOVELMCLDBL    ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RBALN
+     C*
+     C**  Check that sufficient lines remain for the Format.  If not,
+     C**  write out the Main Headings on a new page.
+     C*
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0550D0
+     C                     WRITEMC0550D1
+     C                     ENDIF
+     C*
+     C**  Write Report Detail
+     C*
+     C                     WRITEMC0550D2
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRWDT9    ENDSR                           ** SRWDT9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRNBAL - Print Imbalance                                     *
+     C*                                                               *
+     C*  Called By:  SRCBRC - Process Change in Branch                *
+     C*              SRCCUR - Process Change in Currency              *
+     C*              SRCACD - Process Change in Account Code          *
+     C*              SRCACN - Process Change in Account               *
+     C*  Calls    :  ZFRPED - Edit an Amount                          *
+     C*              SRRCF2 - RCF Processing for P2 Report            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRNBAL    BEGSR                           ** SRNBAL **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRNBAL'  @STK,Q                          127956
+     C**  Open printer file MC0550P2 if not yet open.
+     C*
+     C           WOPEN2    IFNE 'Y'
+     C*
+     C                     OPEN MC0550P2
+     C                     MOVE 'Y'       WOPEN2
+     C*
+     C**  Ensure Report Spool File recorded by RCF
+     C*
+     C           *IN10     IFEQ '1'
+     C           *IN11     ANDEQ'0'
+     C                     MOVE MCBRCD    SENTY
+     C                     ELSE
+     C                     MOVE *BLANKS   SENTY
+     C                     ENDIF
+     C*
+     C                     EXSR SRRCF2
+     C*
+     C                     ENDIF
+     C*
+     C***********MCBRCD    IFNE WBRCD                                     127956
+     C***********MCCYCD    ORNE WCYCD                                     127956
+     C***********          WRITEMC0550E0                                  127956
+     C***********          ENDIF                                          127956
+     C*
+     C**  Format Financial Account Balance
+     C*
+     C                     MOVELTFBAL     ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RFBAL
+     C*
+     C**  Format Management Account Balance
+     C*
+     C                     MOVELTMBAL     ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RMBAL
+     C*
+     C**  Ensure that sufficient lines remain for this detail, if not,
+     C**  write this detail on a new page (ie. output new page heading)
+     C*
+     C                     Z-ADD1         RQDLN2
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEMC0550E0
+     C                     ENDIF
+     C*
+     C**  Write report detail line
+     C*
+     C                     WRITEMC0550E1
+     C*
+     C*                                                                   127956
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRNBA9    ENDSR                           ** SRNBA9 ****
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRAUDT - Print Audit Report                                  *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine.                *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*  Calls    :  SRRCFA - RCF Processing for Audit Report         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRAUDT    BEGSR                           ** SRAUDT **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRAUDT'  @STK,Q                          127956
+     C**  P1 REPORT...
+     C*
+     C           WOPEN1    IFEQ 'Y'
+     C*
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+     C*
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0550D0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0550D4
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEMC0550D0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0550D3
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  P2 REPORT...
+     C*
+     C           WOPEN2    IFEQ 'Y'
+     C*
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+     C*
+     C                     Z-ADD3         RQDLN2
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEMC0550E0
+     C                     ENDIF
+     C*
+     C                     WRITEMC0550E2
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  AU REPORT...
+     C*
+     C**  If error occured or no record has been processed,
+     C**  create/output audit report.
+     C*
+     C           *INU7     IFEQ *ON
+     C           WOPEN1    ORNE 'Y'
+     C*
+     C                     OPEN MC0550AU
+     C                     EXSR SRRCFA
+     C                     WRITEMC0550A0
+     C*
+     C           *INU7     IFEQ *ON
+     C                     WRITEMC0550A2
+     C                     ELSE
+     C                     WRITEMC0550A1
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRAUD9    ENDSR                           ** SRAUD9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Program Error Processing Subroutine                 *
+     C*                                                               *
+     C*  Called By:  SRINIT - Program Initialisation                  *
+     C*              SRBRCD - Get Branch Details                      *
+     C*              SRCYCD - Get Currency Details                    *
+     C*              SRACCD - Get Account Code Details                *
+     C*              SRACNT - Get Account Details                     *
+     C*  Calls    :  SRAUDT - Print Audit Report                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRRCF1'  @STK,Q                          127956
+     C*
+     C**  Check to see that *PSSR has not already been called.
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+     C*
+     C**  If *PSSR already run, then just end the program here.
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           WPSS9     ENDSR                           ** *PSSR9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRRCF1 - RCF Processing for P1 Report                        *
+     C*                                                               *
+     C*  Called By:  SRCBRC - Process Change in Branch                *
+     C*  Calls    :  ZSFILE - Setup Spool File                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRRCF1    BEGSR                           ** SRRCF1 **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRRCF1'  @STK,Q                          127956
+     C**  Ensure Report Spool File recorded by RCF.
+     C*
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C**  If Error occurs during ZSFILE processing, then return to the
+     C**  Calling Program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRRC19    ENDSR                           ** SRRC19 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRRCF2 - RCF Processing for P2 Report                        *
+     C*                                                               *
+     C*  Called By:  SRNBAL - Print Imbalance                         *
+     C*  Calls    :  ZSFILE - Setup Spool File                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRRCF2    BEGSR                           ** SRRCF2 **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRRCF2'  @STK,Q                          127956
+     C**  Ensure Report Spool File recorded by RCF.
+     C*
+     C                     Z-ADDSFNUM2    ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C**  If Error occurs during ZSFILE processing, then return to the
+     C**  Calling Program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRRC29    ENDSR                           ** SRRC29 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRRCFA - RCF Processing for Audit Report                     *
+     C*                                                               *
+     C*  Called By:  SRAUDT - Print Audit Report                      *
+     C*  Calls    :  ZSFILE - Setup Spool File                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRRCFA    BEGSR                           ** SRRCFA **
+     C*
+      **  Set up subroutine stack name                                    127956
+     C                     ADD  1         Q       50                      127956
+     C                     MOVEL'SRRCFA'  @STK,Q                          127956
+     C**  Ensure Audit Spool File recorded by RCF.
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C**  If Error occurs during ZSFILE processing, then return to the
+     C**  Calling Program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+      **  Unwind subroutine stack name                                    127956
+     C                     MOVEA*BLANKS   @STK,Q                          127956
+     C                     SUB  1         Q                               127956
+     C           SRRCF9    ENDSR                           ** SRRCF9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+**  CPY@
+(c) Finastra International Limited 2001

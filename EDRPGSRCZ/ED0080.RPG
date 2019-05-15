@@ -1,0 +1,295 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Drip feed determine deletions')
+      *****************************************************************
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0080 - Drip Feed Determine Deletions                       *
+      *                                                               *
+      *  Function: This program will access all new, (ie since last   *
+      *            call of this program), records on PF/EDLASTPD.     *
+      *            ED0080 will then delete records for this batch on  *
+      *                                                               *
+      *  Called By: EDC0040 - Drip Feed Controller                    *
+      *             EDC0050 - Drip Feed Batch Creator                 *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 101971             Date 17Jul95               *
+      *                 S01493 *C *CREATE  Date 16May94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  AMENDMENT HISTORY                                            *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  101971 - Phase II Modifications                              *
+      *  S01493 - Midas Export Data Interface Module.                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDLASTL1UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      * Last batch received by the remote machine
+      *
+     F**EDSAVEL1UF**E***********K********DISK*********KINFSR *PSSR        101971
+     F**********************************************KCOMIT                101971
+      * Batches created for export via DTA
+      *
+     FEDDFAUL1UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      * Drip Feed Audit file
+      *
+     FED0080AUO   E                    PRINTER                        UC
+      * Audit report for program errors
+      *
+     F/EJECT
+      *****************************************************************
+      *                     INDICATOR USAGE                           *
+      *                     ---------------                           *
+      *                                                               *
+      *   01      Record not found on LF/EDLASTL1                     *
+      *   04      Record not found on LF/EDDFAUL1                     *
+      ****05******Delete*on*LF/EDSAVEL1*failed                        *   101971
+      *   06      Delete on LF/EDLASTL1 failed                        *
+      *   U7      Job Switch 7                                        *
+      *   U8      Job Switch 8                                        *
+      *   LR      Exit program                                        *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Copyright Statement
+      *
+     I/EJECT
+      *
+     ICPYR@#      DS
+      ** Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IPSDS       SDS
+      ** Program Status
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I                                      276 281 WDATE
+     I                                      282 287 WTIME
+      *
+     ILDA         DS                            256
+      *
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short data structure for access programs (200 long)
+      *
+     C/EJECT
+     *****************************************************************
+      *
+      *** INITIAL PROCESSING
+      *** ==================
+      *
+      *** Copyright Statement and initialisations
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     MOVEL*BLANKS   DBPGM
+      *
+      ** PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'ED0080'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ****************************************************************
+      *
+      *** MAIN PROCESSING
+      *** ===============
+      *
+      *
+      *** Access the records from LF/EDLASTL1. For each record found:
+      ***
+      *** (i)   Update the audit file (LF/EDDFAUL1) status
+      *** (ii)  Delete the record read from LF/EDLASTL1.
+      ****(iii)*If*this*batch*was*successful*then*delete*the*batch*by     101971
+      **********calling*EDC0070.************************************      101971
+      ****(iv)**If*this*batch*was*successful*then*delete*the*record       101971
+      **********on*LF/EDSAVEL1*************************************       101971
+      *
+     C                     READ EDLASTD0                 01
+     C           *IN01     DOWEQ'0'                        b1
+      *
+      ***       Update the audit file status
+      *
+     C           EGBTCH    SETLLEDDFAUL1
+     C           EGBTCH    READEEDDFAUL1                 04
+      *
+     C********** *IN04     IFEQ '1'                        b2
+     C********** *LOCK     IN   LDA                                       101971
+     C***********          Z-ADD5         DBASE            ***************101971
+     C***********          MOVEL'EDDFAUL1'DBFILE           * DB ERROR 05 *101971
+     C***********          MOVELEGBTCH    DBKEY            ***************101971
+     C***********          OUT  LDA                                       101971
+     C***********          EXSR *PSSR                                     101971
+     C***********          ENDIF                           e2             101971
+      *
+      *** UPDATE AUDIT RECORD IF THIS BATCH WAS A DRIP FEED BATCH         101971
+      *                                                                   101971
+     C           *IN04     IFEQ '0'                        b2             101971
+     C                     MOVELEGPSTS    EEBAST
+     C           EGPSTS    IFEQ 'C'                        b2
+     C                     TIME           EEDELT
+     C                     MOVELBJMRDT    EEDELD
+     C                     ENDIF                           e2
+     C                     EXCPTEDDFAU
+     C                     ENDIF                           e2             101971
+      *
+      ***       Delete EDLASTL1 record read
+      *
+     C                     DELETEDLASTD0               06
+      *
+     C           *IN06     IFEQ '1'                        b2
+     C           *LOCK     IN   LDA                                       101971
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVEL'EDLASTL1'DBFILE           * DB ERROR 07 *
+     C                     MOVELEGBTCH    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             e2
+      *
+      **********If*the*batch*was*successful                               101971
+      *********************                                               101971
+     C***********EGPSTS****IFEQ 'C'                        b2             101971
+      *********************                                               101971
+      ****EDC0070**********                                               101971
+      *********************                                               101971
+     C*********************CALL 'EDC0070'                                 101971
+     C*********************PARM           EGBTCH                          101971
+     C*********************PARM           PRTN    1                       101971
+      *********************                                               101971
+     C***********PRTN******IFEQ 'Y'                        b3             101971
+      *********************                                               101971
+      ***Database*error*if*CALL*failed                                    101971
+      *********************                                               101971
+     C********** *LOCK*****IN   LDA                                       101971
+     C*********************Z-ADD2         DBASE            ***************101971
+     C*********************MOVEL'EDC0070 'DBFILE           * DB ERROR 02 *101971
+     C*********************MOVELEGBTCH    DBKEY            ***************101971
+     C*********************OUT  LDA                                       101971
+     C*********************EXSR *PSSR                                     101971
+     C*********************END                                            101971
+      *********************                                e3             101971
+      **********Delete*EDSAVEL1*record*for*this*batch                     101971
+      *********************                                               101971
+     C***********EGBTCH****SETLLEDSAVEL1                                  101971
+     C***********EGBTCH****READEEDSAVEL1                 05               101971
+      *********************                                               101971
+     C********** *IN05*****IFEQ '0'                        b3             101971
+     C*********************DELETEDSAVED0               05                 101971
+     C*********************ENDIF                           e3             101971
+      *********************                                               101971
+     C********** *IN05*****IFEQ '1'                        b3             101971
+     C*********************Z-ADD6         DBASE            ***************101971
+     C*********************MOVEL'EDSAVEL1'DBFILE           * DB ERROR 06 *101971
+     C*********************MOVEL*BLANKS   DBKEY            ***************101971
+     C*********************MOVELEGBTCH    DBKEY                           101971
+     C*********************OUT  LDA                                       101971
+     C*********************EXSR *PSSR                                     101971
+     C*********************ENDIF                           e3             101971
+      *********************                                e2             101971
+     C*********************ENDIF                                          101971
+      *                                                    e2
+      ***   Read next record from LF/EDLASTL1
+      *
+     C                     READ EDLASTD0                 01
+     C                     END                             e1
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : *PSSR  - Error Handling Subroutine              *
+      *                                                               *
+      *  CALLED BY  : This routine is called if there are any program *
+      *               or file errors.                                 *
+      *                                                               *
+      *  CALLS      : -                                               *
+      *                                                               *
+      *  FIELDS USED: WPSSR  - Temporary to prevent endless loop      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      *** Ensure only performed once
+      *
+     C           WPSSR     IFEQ ' '
+     C                     MOVEL'Y'       WPSSR   1
+      *
+      *** Set on Error Indicators, U7 and U8 and LR.
+      *
+     C                     SETON                     U7U8LR
+      *
+      ** Write Audit Report ED0080AU
+      *
+     C                     OPEN ED0080AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0080AU
+      *
+      **  Dump program and return.
+      *
+     C                     DUMP
+      *
+     C                     END
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR                           ** #PSSR9 **
+      *****************************************************************
+     C/EJECT
+     OEDDFAUD0E                EDDFAU
+     O                         EEBAST
+     O                         EEDELT
+     O                         EEDELD
+** CPY@ - Copyright Statement
+(c) Finastra International Limited 2001

@@ -1,0 +1,978 @@
+     H Debug
+     H Copyright('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(LEREPLL1)*TOFILE(LEREPLL2)*SHARE(*NO)*************            AR1057854B CLE164
+/*S*D****RPGBASEBND****************************************************                       CLE164
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE000479 - Retrieve Available Balance based on repayment     *
+      *           priority                                            *
+      *                                                               *
+      *  Function:  This program reads the new account keys file      *
+      *             LEPK1DPD, LEPK2DPD, LEPK3DPD                      *
+      *             and temporary repayment file                      *
+      *             LEACCTPD (PDCL repayments) and retrieves          *
+      *             the available balance processing the transactions *
+      *             by settlement a/c and by repayment priority.      *
+      *             The files are updated to store the available      *
+      *             balance (field xxAAMT) and to set xxIPFL = 'Y'    *
+      *             wich means that the available balance of the      *
+      *             transaction has been calculated.                  *
+      *                                                               *
+      *  Called By: LEC000459 (COB) - Available balance calculation   *
+      *                                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CLE164  *REDUNDANT Date 02Dec14               *
+      *  Prev Amend No. MD031227           Date 26Nov14               *
+      *                 MD020966           Date 20Jun13               *
+      *                 AR786878           Date 05Jun13               *
+      *                 MD020563           Date 21May13               *
+      *                 MD020212           Date 06May13               *
+      *                 MD019881           Date 22Apr13               *
+      *                 AR1097176          Date 22Mar13               *
+      *                 CLE157             Date 06Aug12               *
+      *                 CFC006             Date 06Aug12               *
+      *                 AR1080035          Date 23Jan13               *
+      *                 AR1073390          Date 30Dec12               *
+      *                 AR1057854          Date 21Nov12               *
+      *                 AR1056323          Date 14Nov12               *
+      *                 AR1021983          Date 01Aug12               *
+      *                 AR1022006          Date 01Aug12               *
+      *                 AR724089           Date 01Aug12               *
+      *                 AR402058           Date 01Aug12               *
+      *                 AR217562           Date 01Aug12               *
+      *                 263629             Date 01Aug12               *
+      *                 263074             Date 01Aug12               *
+      *                 CLE134  *CREATE    Date 01Aug12               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  MD031227 - Overdraft limit must not have a CR/DR indicator   *
+      *  MD020966 - Payments for Past due loans are posted twice      *
+      *  AR786878 - New processing for manual repayment and           *
+      *             repayment schedule for PDCL's. (Child: AR786879)  *
+      *  MD020563 - CFC006 issues                                     *
+      *  MD020212 - Incorrect CR amount printed in the report         *
+      *  MD019881 - Two PDCLs are generated for PDCL with Capitalised *
+      *             Interest set to Y                                 *
+      *  AR1097176 - Accessing AOCOMR0 multiple times slows down the  *
+      *              system                                           *
+      *  CLE157 - Tactical COB Changes LE0459                         *
+      *  CFC006 - COB Restructure - Remove reports from COB           *
+      *  AR1080035 - A MSGW on component LEC000459 00001 occurred     *
+      *              during COB run                                   *
+      *  AR1073390 - Amount being sent to Java for PDCL creation is   *
+      *              invalid for when there are partial payment       *
+      *  AR1057854 - Geneva Drop 01 Build Issues - RPG Program        *
+      *              Compilation Error                                *
+      *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
+      *              LKEYFED (Recompile)                              *
+      *  AR1021983 - Option C - Technical Enhancements Stated in POC  *
+      *  AR1022006 - COB Performance Optimisation                     *
+      *  AR724089 - Several performance issues in COB component       *
+      *             LEC000459. Call LE000475 directly, instead of     *
+      *             passing thru LEC000475. (Child: AR724090)         *
+      *  AR402058 - Overdraft PDCL repayments are incorrect           *
+      *             (Child: AR402059)                                 *
+      *  AR217562 - Incorrect Repayment Methodology                   *
+      *             (Child: AR217563)                                 *
+      *  263629 - LE000479 issues                                     *
+      *         - Prevent field RECI on LEPK1DPD to be overwritten by *
+      *           CLOANCL RECI.                                       *
+      *  263074 - Original Loans posting errors                       *
+      *         - Wrong Posting generated when there is one a/c key   *
+      *           for interest and principal (Recompile)              *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *                                                               *
+      *****************************************************************
+     FLEREPLL1  UF A E           K DISK    Rename(LKEYFEDF:LKEYF2DF)
+     F                                     COMMIT
+     FLELOANLW  IF   E           K DISK    INCLUDE(CLOANCLF)
+     F                                     Rename(CLOANCLF:CLOANCL6)
+     F                                     PREFIX(L_)                                         263629
+     FACCNTL0   IF   E           K DISK
+     F                                     PREFIX(A_)                                       MD020212
+     FLE000479P1O    E             PRINTER INFDS(SPOOL1)
+     F                                     OFLIND(*IN50)
+      *****************************************************************
+ 
+     D SPOOL1          DS
+     D SFILE1                 83     92
+     D SFNUM1                123    124B 0
+     D OFLLN1                188    189B 0
+     D PRTLN1                367    368B 0
+     D                 DS                                                                   MD031227
+      ** Format amount returned by standard subroutine                                      MD031227
+     D  ZOUT22                 1     22                                                     MD031227
+     D  ZOUT20                 1     20                                                     MD031227
+                                                                                            MD031227
+     D SDCURR        E DS                  EXTNAME(SDCURRPD)
+     D                                     OCCURS(250)                                        CLE157
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+     D SDLOAN        E DS                  EXTNAME(SDLOANPD)
+     D                                     OCCURS(300)                                        CLE157
+     D SDFEE         E DS                  EXTNAME(SDFEEPD)
+     D                                     OCCURS(200)                                        CLE157
+ 
+     D DSFDY         E DS
+     D DSSDY         E DS
+ 
+     D PRETURNCODE     S              7
+     D CLE134          S              1
+     D***WRETCD*         S              7                                                  AR1080035
+     D WRETCD          S              1                                                    AR1080035
+     D WACSQ           S              2  0
+     D WFCODN          S              2  0
+     D WACODA          S             10
+     D WACSQA          S              2
+     D WFULLACCT       S             24                                                    AR1022006
+     D WAAMT           S             15P 0                                                 AR1022006
+     D WBLAF           S             15P 0                                                 AR1022006
+     D WOVLN           S             15P 0                                                 AR1022006
+     D WEAMT           S             15P 0                                                 AR1022006
+ 
+ 
+      ** Balance check
+ 
+      ** Cleared Balance
+     D P@BLBF          S             15P 0
+ 
+      ** Available Funds
+     D P@BLAF          S             15P 0
+     D P@OVLN          S             15P 0                                                 AR1022006
+ 
+     D*ZS2******       S              1    DIM(21)                                         AR1073390
+     D**********       DS                                                                  AR1073390
+     D**WORK15**               1     15  0                                                 AR1073390
+     D**ZS1*****               1     15  0                                                 AR1073390
+     D**********                           DIM(15)                                         AR1073390
+     D DSFULLACCT      DS                                                                  AR1022006
+     D  SEBRCA                                                                             AR1022006
+     D  SECNUM                                                                             AR1022006
+     D  SEACCY                                                                             AR1022006
+     D  SEACOD                                                                             AR1022006
+     D  SEACSQ                                                                             AR1022006
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+     D/copy zacpysrc,psds
+ 
+     D SVAL            S             20    DIM(4) CTDATA PERRCD(1)
+ 
+      ** Additional Field Definitions
+     D W@FCUS          S              6
+     D W@LOAN          S              6
+     D W@FACL          S              5
+     D W@FSEQ          S              2
+     D W@FCOD          S              2
+     D LTYP            S              2
+     D SUTP            S              2
+     D CLAS            S              4
+     D WLTYP           S              2
+     D WCLAS           S              4
+     D @FECD           S              2
+     D WSUTP           S              2
+     D W@PDCL          S              1
+     D W@FILE          S             10
+     D W@VDAT5         S              5  0
+     D W@VDAT6         S              6  0
+                                                                                              CFC006
+     D PRTCD           S              7A                                                      CFC006
+     D SUPFLG          S              1A                                                      CFC006
+     D PNAME           S             10A                                                      CFC006
+     D PCSEQ           S              5A                                                      CFC006
+     D PSCTN           S             50A                                                      CFC006
+     D CFC006          S              1A                                                   AR1097176
+     D POPTN           S              7A                                                   AR1097176
+     D PSARD           S              6A                                                   AR1097176
+                                                                                           AR1073390
+     D DSCYCD          S                   INZ DIM(250) LIKE(SEACCY)                          CLE157
+     D IDXCUR          S              3  0 INZ(1)                                             CLE157
+     D CURLKUP         S              1  0 INZ(0)                                             CLE157
+     D DSFEED          S                   INZ DIM(200) LIKE(@FECD)                           CLE157
+     D IDXFEE          S              3  0 INZ(1)                                             CLE157
+     D FEELKUP         S              1  0 INZ(0)                                             CLE157
+     D ARRSIZE         C                   CONST(300)                                         CLE157
+     D TRUON           C                   CONST(*ON)                                         CLE157
+     D FLSOF           C                   CONST(*OFF)                                        CLE157
+                                                                                              CLE157
+     D CACHE           S              2A   DIM(ARRSIZE) INZ                                   CLE157
+     D LRUA            S             13  0 DIM(ARRSIZE) INZ                                   CLE157
+     D LRUS            S             13  0 DIM(ARRSIZE) INZ                                   CLE157
+                                                                                              CLE157
+     D PFKEY           S              8A   INZ                                                CLE157
+     D FoundInCache    S              1N   INZ                                                CLE157
+     D LRUKEY          S             13  0 INZ                                                CLE157
+     D IDXTRL          S              4  0 INZ                                                CLE157
+     D RECSEQ          S                   INZ LIKE(LRUKEY)                                   CLE157
+     D IDXPRV          S                   INZ LIKE(IDXTRL)                                   CLE157
+     D IDXLOA          S                   INZ LIKE(IDXTRL)                                   CLE157
+     D KEYTMP          S                   INZ LIKE(PFKEY)                                    CLE157
+     D/COPY ZSRSRC,ZFRPEDZ1LE                                                              AR1073390
+ 
+      *****************************************************************
+      *                M A I N  P R O C E S S I N G                   *
+      *****************************************************************
+ 
+      ** Read a/c keys file that contains a/c key subject
+      ** to funds pre-ceck
+ 
+     C     *LOVAL        SETLL     LEREPLL1
+     C                   EVAL      WFULLACCT = DSFULLACCT
+ 
+      ** loop to read a/c keys on LEREPPL1
+ 
+     C     *IN88         DOWEQ     *OFF
+     C                   READ      LEREPLL1                               88
+     C     *IN88         IFEQ      *OFF
+     C     SEBRCA        ANDNE     *BLANKS
+     C     SEACCY        ANDNE     *BLANKS
+     C     SECNUM        ANDNE     *BLANKS
+     C     SEACOD        ANDGT     0
+     C     SEACSQ        ANDGT     0
+ 
+     C                   EXSR      MOVEVAL
+ 
+     C                   IF        WFULLACCT <> DSFULLACCT
+ 
+     C                   EXSR      CHKBAL
+     C                   EXSR      PRINTHDR
+     C                   EVAL      WFULLACCT = DSFULLACCT
+ 
+     C                   ENDIF
+ 
+     C                   EXSR      UPDFILES
+ 
+     C                   ENDIF
+ 
+     C                   ENDDO
+     C                   IF        PRTLN1 >= 60                                            AR1073390
+     C                   EXSR      PRINTHDR                                                AR1073390
+     C                   ENDIF                                                             AR1073390
+     C                   WRITE     LE000479T1                                              AR1073390
+ 
+      ** end of program
+ 
+     C                   EVAL      *INLR       = *ON
+     C                   RETURN
+ 
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *    CHKBAL - Check Account Balance                             *
+      *****************************************************************
+     C     CHKBAL        BEGSR
+ 
+     C                   EXSR      GETCCY
+      ** clear fields
+ 
+     C                   CLEAR                   P@BLAF
+     C                   CLEAR                   P@OVLN
+ 
+     C                   EVAL      W@PDCL = 'N'                                             AR217562
+                                                                                            AR217562
+      ** Check if Loan is a PDCL                                                            AR217562
+                                                                                            AR217562
+     C                   IF        %SUBST(LTYP:1:1) = 'X' OR                                AR217562
+     C                             %SUBST(LTYP:1:1) = 'Y' OR                                AR217562
+     C                             %SUBST(LTYP:1:1) = 'Z'                                   AR217562
+     C                   EVAL      W@PDCL = 'Y'                                             AR217562
+     C                   ENDIF                                                              AR217562
+ 
+     C                   CALL      'LE000475'                                               AR724089
+     C                   PARM                    SECNUM                                     AR724089
+     C                   PARM                    SEACCY                                     AR724089
+     C                   PARM                    SEACOD                                     AR724089
+     C                   PARM                    SEACSQ                                     AR724089
+     C                   PARM                    SEBRCA                                     AR724089
+     C                   PARM                    SEVDAT                                     AR724089
+                                                                                            AR724089
+     C                   PARM                    SELNRF                                     AR724089
+     C                   PARM                    SEPCKO                                     AR724089
+     C                   PARM                    AYOVRD                                     AR724089
+                                                                                            AR724089
+     C                   PARM      *BLANKS       wRetcd                                     AR724089
+     C                   PARM                    P@BLBF                                     AR724089
+     C                   PARM                    P@BLAF                                     AR724089
+     C                   PARM                    P@OVLN                                    AR1022006
+     C                   PARM                    SEPCKM                                     AR724089
+     C                   PARM                    W@PDCL                                     AR724089
+     C                   PARM                    W@FILE                                     AR724089
+     C                   PARM                    W@FCUS                                     AR724089
+     C                   PARM                    W@LOAN                                     AR724089
+     C                   PARM                    W@FACL                                     AR724089
+     C                   PARM                    W@FSEQ                                     AR724089
+     C                   PARM                    W@FCOD                                     AR724089
+ 
+     C     WRETCD        IFNE      *BLANKS
+     C     WRETCD        IFEQ      'Y'
+     C     WRETCD        OREQ      'N'
+     C                   CLEAR                   WRETCD
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** if Return code is not blanks, output error
+ 
+     C     WRETCD        IFNE      *BLANKS
+     C     *LOCK         IN        LDA
+     C                   MOVE      SEACOD        WACODA
+     C                   MOVE      SEACSQ        WACSQA
+     C                   EVAL      DBKEY       =  SEBRCA + SECNUM+ SEACCY
+     C                                            + WACODA+ WACSQA
+     C                   EVAL      DBFILE      = 'LE000475 '
+     C                   EVAL      DBASE       = 004
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+                                                                                           AR1022006
+     C                   EVAL      WBLAF = P@BLAF * -1                                     AR1022006
+     C                   EVAL      WOVLN = P@OVLN * -1                                     AR1022006
+     C                   EXSR      CVT2ALP01
+ 
+     C                   ENDSR
+ 
+      *****************************************************************                    AR1022006
+     C/EJECT                                                                               AR1022006
+      *****************************************************************                    AR1022006
+      *    CALBAL - Calculate Account Balance                         *                    AR1022006
+      *****************************************************************                    AR1022006
+     C     CALBAL        BEGSR                                                             AR1022006
+                                                                                           AR1022006
+     C                   EVAL      WAAMT = 0                                               AR1022006
+     C                   IF        WBLAF > 0                                               AR1022006
+     C                             OR WOVLN > 0                                            AR1022006
+                                                                                           AR1022006
+     C                   SELECT                                                            AR1022006
+                                                                                           AR1022006
+     C     WBLAF         WHENGE    WEAMT                                                   AR1022006
+     C                   EVAL      WAAMT = WBLAF                                           AR1022006
+     C                   EVAL      WBLAF -= WEAMT                                          AR1022006
+                                                                                           AR1022006
+     C     WBLAF         WHENLT    WEAMT                                                   AR1022006
+     C                   IF        AYOVRD = 'Y'                                            AR1022006
+                                                                                           AR1022006
+     C                   IF        (WBLAF+WOVLN) >= WEAMT                                  AR1022006
+     C                   EVAL      WAAMT = WBLAF + WOVLN                                   AR1022006
+     C                   EVAL      WOVLN = WOVLN - WEAMT + WBLAF                           AR1022006
+     C                   ELSE                                                              AR1022006
+     C                   EVAL      WAAMT = WBLAF + WOVLN                                   AR1022006
+     C                   EVAL      WOVLN = 0                                               AR1022006
+     C                   ENDIF                                                             AR1022006
+                                                                                           AR1022006
+     C                   ELSE                                                              AR1022006
+     C                   EVAL      WAAMT = WBLAF                                           AR1022006
+     C                   ENDIF                                                             AR1022006
+     C                   EVAL      WBLAF = 0                                               AR1022006
+                                                                                           AR1022006
+     C                   ENDSL                                                             AR1022006
+                                                                                           AR1022006
+     C                   IF        WAAMT <> 0                                              AR1022006
+     C                   EVAL      WAAMT = WAAMT * -1                                      AR1022006
+     C                   ENDIF                                                             AR1022006
+                                                                                           AR1022006
+     C                   ENDIF                                                             AR1022006
+                                                                                           AR1022006
+     C                   ENDSR                                                             AR1022006
+                                                                                           AR1022006
+      *****************************************************************
+      *    UPDFILES  - Update Files                                   *
+      *****************************************************************
+     C     UPDFILES      BEGSR
+ 
+     C                   EXSR      CALBAL
+ 
+     C                   EXSR      PRINTDTL
+ 
+     C                   EXSR      UpdREPL
+ 
+      ** Loans repayments
+ 
+     C                   IF        SEFILE = 'L1'
+     C                   EVAL      AAMT = WAAMT
+     C                   EVAL      IPFL = 'Y'
+     C                   UPDATE    LKEY1DPF
+     C                   ENDIF
+ 
+      ** PDCL repayments
+ 
+     C                   IF        SEFILE = 'LT'
+     C                   EVAL      SEAAMT = WAAMT
+     C                   EVAL      SEIPFL = 'Y'
+     C                   UPDATE    LEACCTD0
+     C                   ENDIF
+      *                                                                                     AR786878
+     C                   IF        SEFILE = 'LP'                                            AR786878
+     C                   EVAL      SEAAMT   = WAAMT                                         AR786878
+     C                   EVAL      SEIPFL = 'Y'                                             AR786878
+     C                   UPDATE    LEREMRD0                                                 AR786878
+     C                   ENDIF                                                              AR786878
+ 
+      ** Grace Days
+ 
+     C                   IF        SEFILE = 'L2'
+     C                   EVAL      SEAAMT = WAAMT
+     C                   EVAL      SEIPFL = 'Y'
+     C                   UPDATE    LELEGDD0
+     C                   END
+     C                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *    MOVEVAL - Move values to program variables                 *
+      *****************************************************************
+     C     MOVEVAL       BEGSR
+ 
+     C                   CLEAR                   W@ACKEY
+     C                   CLEAR                   W@PCKM
+     C                   CLEAR                   W@PCKO
+     C                   CLEAR                   W@PCKT
+     C                   CLEAR                   W@VDAT
+     C                   CLEAR                   W@VDAT5
+     C                   CLEAR                   W@VDAT6
+     C                   EVAL      W@LNRF = *BLANKS
+ 
+     C                   MOVE      *BLANKS       W@FCUS
+     C                   MOVE      *BLANKS       W@LOAN
+     C                   MOVE      *BLANKS       W@FACL
+     C                   MOVE      *BLANKS       W@FSEQ
+     C                   MOVE      *BLANKS       W@FCOD
+     C                   EVAL      W@REVI = 'N'
+     C                   CLEAR                   W@IPFL
+     C                   CLEAR                   W@OVRD
+ 
+     C                   IF        SEFILE = 'F2'
+     C                   EVAL      W@FILE = 'LEPK2DPD  '
+     C                   MOVE      LKCNU2        W@FCUS
+     C                   MOVE      LKLOAN        W@LOAN
+     C                   MOVE      LKFACL        W@FACL
+     C                   MOVE      LKFSE2        W@FSEQ
+     C                   MOVE      LKFCOD        W@FCOD
+     C                   ENDIF
+ 
+     C                   IF        SEFILE = 'F3'
+     C                   EVAL      W@FILE = 'LEPK3DPD  '
+     C                   MOVE      LKCNU2        W@FCUS
+     C                   MOVE      LKLOAN        W@LOAN
+     C                   MOVE      LKFACL        W@FACL
+     C                   MOVE      LKFSE2        W@FSEQ
+     C                   MOVE      LKFCOD        W@FCOD
+     C                   ENDIF
+ 
+ 
+     C                   IF        SEFILE = 'F4'
+     C                   EVAL      W@FILE = 'LEACCFPD  '
+     C                   MOVE      SEFCUS        W@FCUS
+     C                   MOVE      SELNRF        W@LOAN
+     C                   MOVE      *BLANKS       W@FACL
+     C                   MOVE      SEFSEQ        W@FSEQ
+     C                   MOVE      SEFCOD        W@FCOD
+     C                   MOVE      SEFCOD        LKFCOD
+     C                   ENDIF
+ 
+     C                   IF        SEFILE = 'L2'
+     C                   EVAL      W@FILE = 'LELEGDPD  '
+     C                   ENDIF
+ 
+     C                   IF        SEFILE = 'LT'
+     C                   EVAL      W@FILE = 'LEACCTPD  '
+     C                   ENDIF
+ 
+     C                   IF        SEFILE = 'L1'
+     C                   EVAL      SELNRF = LNNO
+     C                   EVAL      W@FILE = 'LEPK1DPD  '
+     C                   ENDIF
+      *                                                                                     AR786878
+     C                   IF        SEFILE = 'LP'                                            AR786878
+     C                   EVAL      W@FILE = 'LEREMRPD  '                                    AR786878
+     C                   ENDIF                                                              AR786878
+ 
+     C                   IF        SEFILE = 'L1' OR SEFILE = 'LT' OR
+     C**********                   SEFILE = 'L2'                                            AR786878
+     C                             SEFILE = 'L2' OR SEFILE = 'LP'                           AR786878
+     C     SELNRF        CHAIN     CLOANCL6
+     C                   IF        NOT %FOUND
+     C     *LOCK         IN        LDA
+     C**********         MOVE      LNNO          DBKEY                                      AR786878
+     C                   MOVE      SELNRF        DBKEY                                      AR786878
+     C                   MOVEL     'LELOANLW'    DBFILE
+     C                   Z-ADD     001           DBASE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C     *LIKE         DEFINE    L_LTYP        LTYP                                         263629
+     C     *LIKE         DEFINE    L_SUTP        SUTP                                         263629
+     C     *LIKE         DEFINE    L_CLAS        CLAS                                         263629
+                                                                                              263629
+     C                   EVAL      LTYP   = L_LTYP                                            263629
+     C                   EVAL      SUTP   = L_SUTP                                            263629
+     C                   EVAL      CLAS   = L_CLAS                                            263629
+ 
+     C                   EVAL      SELTYP = LTYP
+     C                   EVAL      SESUTP = SUTP
+ 
+      ** get overdraft indicator
+ 
+     C     LTYP          IFNE      WLTYP
+     C     SUTP          ORNE      WSUTP
+     C     CLAS          ORNE      WCLAS
+                                                                                              CLE157
+     C                   EVAL      RECSEQ += 1                                                CLE157
+     C                   EVAL      PFKEY = LTYP + SUTP + CLAS                                 CLE157
+     C                   EXSR      CHKCACHE                                                   CLE157
+     C                   IF        FoundInCache                                               CLE157
+     C                   EVAL      %OCCUR(SDLOAN) = IDXLOA                                    CLE157
+     C                   ELSE                                                                 CLE157
+     C                   IF        IDXTRL <> ARRSIZE                                          CLE157
+     C                   EVAL      IDXLOA = IDXTRL + 1                                        CLE157
+     C                   ELSE                                                                 CLE157
+     C                   EVAL      LRUS = LRUA                                                CLE157
+     C                   SORTA     LRUS                                                       CLE157
+     C                   EVAL      LRUKEY = LRUS(1)                                           CLE157
+     C                   EVAL      IDXLOA = %LOOKUP(LRUKEY : LRUA :                           CLE157
+     C                                              1 : IDXTRL)                               CLE157
+     C                   ENDIF                                                                CLE157
+     C                   EVAL      %OCCUR(SDLOAN) = IDXLOA                                    CLE157
+     C                   CALL      'AOLOANR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM                    LTYP
+     C                   PARM                    SUTP
+     C                   PARM                    CLAS
+     C     SDLOAN        PARM      SDLOAN        DSFDY
+ 
+     C                   IF        @RTCD      <> *BLANKS
+     C                   EVAL      DBFILE      = 'SDLOANPD'
+     C                   EVAL      DBKEY       = LTYP  + SUTP  + CLAS
+     C                   EVAL      DBASE       = 002
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   EVAL      W@OVRD = AYOVRD
+                                                                                              CLE157
+     C                   EXSR      ADDKEY                                                     CLE157
+     C                   ENDIF                                                                CLE157
+                                                                                              CLE157
+     C                   ENDIF
+ 
+     C                   CLEAR                   WFCODN
+     C                   MOVE      LTYP          WLTYP
+     C                   MOVE      SUTP          WSUTP
+     C                   MOVE      CLAS          WCLAS
+ 
+     C                   ENDIF
+ 
+      ** Access fee code to get overdraft indicator
+ 
+     C                   IF        SEFILE = 'F2' OR SEFILE = 'F3'
+     C                             OR SEFILE = 'F4'
+ 
+      ** Access Fee code table
+ 
+     C                   MOVE      LKFCOD        @FECD
+     C     LKFCOD        IFNE      WFCODN
+                                                                                              CLE157
+      ** Access Cache to check if Fee code is existing                                        CLE157
+                                                                                              CLE157
+     C                   EVAL      FEELKUP = %LOOKUP(@FECD:DSFEED)                            CLE157
+                                                                                              CLE157
+     C                   IF        FEELKUP > 0                                                CLE157
+     C                   EVAL      %OCCUR(SDFEE) = FEELKUP                                    CLE157
+                                                                                              CLE157
+     C                   ELSE                                                                 CLE157
+     C                   EVAL      %OCCUR(SDFEE) = IDXFEE                                     CLE157
+                                                                                              CLE157
+     C                   CALL      'AOFEER0'
+     C                   PARM      '*BLANKS'     @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM                    @FECD
+     C     SDFEE         PARM      SDFEE         DSFDY
+ 
+     C                   IF        @RTCD      <> *BLANKS
+     C                   EVAL      DBFILE      = 'SDFEEPD'
+     C                   CLEAR                   DBKEY
+     C                   MOVEL     @FECD         DBKEY
+     C                   EVAL      DBASE       = 003
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   EVAL      W@OVRD = AUOVRA
+     C                   EVAL      DSFEED(IDXFEE) = AUFECD                                    CLE157
+     C                   EVAL      IDXFEE = IDXFEE + 1                                        CLE157
+                                                                                              CLE157
+     C                   ENDIF                                                                CLE157
+                                                                                              CLE157
+     C                   ENDIF
+     C                   MOVE      LKFCOD        WFCODN
+     C                   CLEAR                   WLTYP
+     C                   MOVE      SUTP          WSUTP
+     C                   MOVE      CLAS          WCLAS
+ 
+      ** Overdraft allowed
+ 
+     C                   MOVE      AUOVRA        AYOVRD
+     C                   EVAL      W@FCUS = LKCNU2
+ 
+     C                   ENDIF
+ 
+ 
+     C                   SELECT
+     C                   WHEN      SEFILE = 'F2'
+     C                             OR SEFILE = 'F3'
+     C                   EVAL      WEAMT = LKEAMT
+     C                   EVAL      W@LNRF = LKLNNO
+     C                   EVAL      W@ACKEY = LKAKEY
+     C                   EVAL      W@PCKM  = SEPCKM
+     C                   EVAL      W@PCKO  = SEPCKO
+     C                   EVAL      W@PCKT  = SEPCKT
+     C                   EVAL      W@VDAT5 = SEVDAT
+     C                   IF        REVI = 1
+     C                   EVAL      W@REVI = 'Y'
+     C                   ENDIF
+     C                   EVAL      W@IPFL = 'Y'
+ 
+     C                   WHEN      SEFILE = 'F4'
+     C                             OR SEFILE = 'L2'
+     C                             OR SEFILE = 'LT'
+     C                             OR SEFILE = 'LP'                                         MD020966
+     C                   EVAL      WEAMT = SETAMT
+     C                   EVAL      W@LNRF = SELNRF
+     C                   IF        SEFILE = 'L2'
+     C                             OR SEFILE = 'LT'
+     C                             OR SEFILE = 'LP'                                         MD020966
+     C                   EVAL      W@ACKEY = 'PRINCIPAL'
+ 
+      ** If Interest is not zero, then output interest
+     C     SEPRAM        IFEQ      0
+     C     SEINTA        ANDNE     0
+     C                   EVAL      ZFLD15 = SEINTA
+     C                   EVAL      W@ACKEY = 'INTEREST'
+     C                   ENDIF
+     C                   ENDIF
+     C                   EVAL      W@PCKM  = SEPCKM
+     C                   EVAL      W@PCKO  = SEPCKO
+     C                   EVAL      W@PCKT  = SEPCKT
+     C                   EVAL      W@VDAT5 = SEVDAT
+     C                   EVAL      W@IPFL  = 'Y'
+ 
+     C                   WHEN      SEFILE = 'L1'
+     C                   EVAL      WEAMT = EAMT
+     C                   EVAL      W@LNRF = LNNO
+     C                   EVAL      W@ACKEY = AKEY
+     C                   EVAL      W@PCKM  = SEPCKM
+     C                   EVAL      W@PCKO  = SEPCKO
+     C                   EVAL      W@PCKT  = SEPCKT
+     C                   EVAL      W@VDAT5 = SEVDAT
+     C                   IF        REVI   = 1
+     C                   EVAL      W@REVI = 'Y'
+     C                   ENDIF
+     C                   EVAL      W@IPFL  = 'Y'
+ 
+     C                   ENDSL
+ 
+     C                   ENDSR
+      *****************************************************************
+      *    CVT2ALP01 - Convert to Alphanumeric 01                     *
+      *****************************************************************
+     C     CVT2ALP01     BEGSR
+ 
+      ** Convert opening balance
+     C                   Z-ADD     P@BLAF        ZFLD15
+     C**********         EXSR      ZSEDIT                                                  AR1073390
+     C**********         MOVE      ZOUT21        W@OPEN                                    AR1073390
+     C                   EXSR      ZFRPED                                                  AR1073390
+     C                   MOVE      ZOUT22        W@OPEN                                    AR1073390
+      ** Convert held item
+     C                   Z-ADD     0             ZFLD15
+     C**********         EXSR      ZSEDIT                                                  AR1073390
+     C**********         MOVE      ZOUT21        W@HELD                                    AR1073390
+     C                   EXSR      ZFRPED                                                  AR1073390
+     C                   MOVE      ZOUT22        W@HELD                                    AR1073390
+      ** Convert overdraft
+     C                   Z-ADD     WOVLN         ZFLD15
+     C**********         EXSR      ZSEDIT                                                  AR1073390
+     C**********         MOVE      ZOUT21        W@OVLN                                    AR1073390
+     C                   EXSR      ZFRPED                                                  AR1073390
+     C**********         MOVE      ZOUT22        W@OVLN                           AR1073390 MD031227
+     C                   MOVE      ZOUT20        W@OVLN                                     MD031227
+ 
+     C                   ENDSR
+      *****************************************************************
+      *    CVT2ALPHA - Convert to Alphanumeric                        *
+      *****************************************************************
+     C     CVT2ALP02     BEGSR
+ 
+      ** Convert date to Alphanumeric
+     C                   CALL      'ZDATE2'
+     C                   PARM                    W@VDAT5
+     C                   PARM                    BJDFIN
+     C                   PARM      *ZEROS        W@VDAT6
+     C                   PARM      *BLANKS       W@VDAT
+      ** Convert WEAMT
+     C                   Z-ADD     WEAMT         ZFLD15
+     C**********         EXSR      ZSEDIT                                                  AR1073390
+     C**********         MOVE      ZOUT21        W@EAMT                                    AR1073390
+     C                   EXSR      ZFRPED                                                  AR1073390
+     C                   MOVE      ZOUT22        W@EAMT                                    AR1073390
+      ** Convert WAAMT
+     C                   Z-ADD     WAAMT         ZFLD15
+     C**********         EXSR      ZSEDIT                                                  AR1073390
+     C**********         MOVE      ZOUT21        W@AMT                                     AR1073390
+     C                   EXSR      ZFRPED                                                  AR1073390
+     C                   MOVE      ZOUT22        W@AMT                                     AR1073390
+ 
+     C                   ENDSR
+      *****************************************************************                    AR1021983
+     C/EJECT                                                                               AR1021983
+      *****************************************************************                    AR1021983
+      *    UpdREPL - Update LEREPLL2                                  *                    AR1021983
+      *****************************************************************                    AR1021983
+     C     UpdREPL       BEGSR                                                             AR1021983
+      *                                                                                    AR1021983
+      ** Update files                                                                      AR1021983
+      *                                                                                    AR1021983
+     C                   IF        SEFILE = 'F2' OR SEFILE = 'F3' OR                       AR1021983
+     C                             SEFILE = 'F4'                                           AR1021983
+     C                   EVAL      LKAAMT = WAAMT                                          AR1021983
+     C                   EVAL      LKIPFL = 'Y'                                            AR1021983
+                                                                                           AR1021983
+     C                   IF        SEFILE = 'F2'                                           AR1021983
+     C                   UPDATE    LKEYF2DF                                                AR1021983
+     C                   ENDIF                                                             AR1021983
+                                                                                           AR1021983
+     C                   IF        SEFILE = 'F3'                                           AR1021983
+     C                   UPDATE    LKEYFEDF                                                AR1021983
+     C                   ENDIF                                                             AR1021983
+                                                                                           AR1021983
+     C                   IF        SEFILE = 'F4'                                           AR1021983
+     C                   EVAL      SEAAMT = WAAMT                                          AR1021983
+     C                   EVAL      SEIPFL = 'Y'                                            AR1021983
+     C                   UPDATE    LEACCFD0                                                AR1021983
+     C                   ENDIF                                                             AR1021983
+                                                                                           AR1021983
+     C                   ENDIF                                                             AR1021983
+                                                                                           AR1021983
+     C                   ENDSR                                                             AR1021983
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRINTHDR - Print Header 2                                    *
+      *                                                               *
+      *****************************************************************
+     C     PRINTHDR      BEGSR
+ 
+     C     KACCNTL0      CHAIN(E)  ACCNTL0
+     C                   IF        %FOUND(ACCNTL0)
+     C**********         MOVE      ACNO          SEACNO                                     MD020212
+     C                   MOVE      A_ACNO        SEACNO                                     MD020212
+     C                   ENDIF
+     C                   IF        SUPFLG <> 'Y'                                              CFC006
+     C                   WRITE     LE000479H1
+     C                   WRITE     LE000479H2
+     C                   WRITE     LE000479H3
+     C                   ENDIF                                                                CFC006
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRINTDTL  - Print Detail                                     *
+      *                                                               *
+      *****************************************************************
+     C     PRINTDTL      BEGSR
+ 
+     C                   EXSR      CVT2ALP02
+     C                   IF        SUPFLG <> 'Y'                                              CFC006
+     C                   IF        PRTLN1 >= 60                                            AR1073390
+     C                   EXSR      PRINTHDR                                                AR1073390
+     C                   ENDIF                                                             AR1073390
+     C                   WRITE     LE000479D1
+     C                   ENDIF                                                                CFC006
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  GETCCY - Get Currency                                        *
+      *                                                               *
+      *****************************************************************
+     C     GETCCY        BEGSR
+ 
+     C                   EVAL      CURLKUP = %LOOKUP(SEACCY:DSCYCD)                           CLE157
+                                                                                              CLE157
+     C                   IF        CURLKUP > 0                                                CLE157
+     C                   EVAL      %OCCUR(SDCURR) = CURLKUP                                   CLE157
+                                                                                              CLE157
+     C                   ELSE                                                                 CLE157
+     C                   EVAL      %OCCUR(SDCURR) = IDXCUR                                    CLE157
+                                                                                              CLE157
+     C                   CALL      'AOCURRR0'
+     C                   PARM      '*DBERR'      @RTCD
+     C                   PARM      '*KEY'        @OPTN
+     C                   PARM                    SEACCY
+     C     SDCURR        PARM                    DSSDY
+ 
+     C                   EVAL      ZDECS = A6NBDP
+     C**********         EVAL      ZECODE = 'J'                                            AR1073390
+     C**********         EVAL      ZECODE = 'C'                                   AR1073390 MD019881
+     C**********         EVAL      ZECODE = 'J'                                    MD019881 MD020212
+     C                   EVAL      ZECODE = 'A'                                             MD020212
+                                                                                              CLE157
+     C                   EVAL      DSCyCd(IDXCUR) = A6CYCD                                    CLE157
+     C                   EVAL      IDXCUR = IDXCUR + 1                                        CLE157
+     C                   ENDIF                                                                CLE157
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************                       CLE157
+      *                                                               *                       CLE157
+      *  CHKCACHE - Check key if existing in cache array              *                       CLE157
+      *                                                               *                       CLE157
+      *****************************************************************                       CLE157
+     C     CHKCACHE      BEGSR                                                                CLE157
+                                                                                              CLE157
+      ** Reinitialize work fields                                                             CLE157
+                                                                                              CLE157
+     C                   EVAL      FoundInCache = FALSE                                       CLE157
+                                                                                              CLE157
+     C                   IF        IDXTRL <> 0                                                CLE157
+     C                   EVAL      IDXLOA = %LOOKUP( PFKEY : CACHE :                          CLE157
+     C                                               1 : IDXTRL )                             CLE157
+                                                                                              CLE157
+      ** If returned value of current index from LOOKUP                                       CLE157
+      ** is found in cache (not equal to 0)                                                   CLE157
+                                                                                              CLE157
+     C                   IF        IDXLOA <> 0                                                CLE157
+     C                   EVAL      FoundInCache = True                                        CLE157
+     C                   ENDIF                                                                CLE157
+                                                                                              CLE157
+      ** Save the last accessed detail to previous index                                      CLE157
+      ** Set the indicator to show the data was found                                         CLE157
+                                                                                              CLE157
+     C                   IF        FoundInCache                                               CLE157
+     C                   EVAL      LRUA(IDXLOA) = RECSEQ                                      CLE157
+     C                   ENDIF                                                                CLE157
+                                                                                              CLE157
+     C                   ENDIF                                                                CLE157
+                                                                                              CLE157
+     C                   ENDSR                                                                CLE157
+      *****************************************************************                       CLE157
+      *                                                               *                       CLE157
+      *  ADDKEY - Add key details to cache array                      *                       CLE157
+      *                                                               *                       CLE157
+      *****************************************************************                       CLE157
+     C     ADDKEY        BEGSR                                                                CLE157
+                                                                                              CLE157
+      ** If there is still room in the array then add the details                             CLE157
+                                                                                              CLE157
+     C                   IF        IDXTRL < ARRSIZE                                           CLE157
+     C                   EVAL      IDXTRL += 1                                                CLE157
+     C                   ENDIF                                                                CLE157
+                                                                                              CLE157
+      ** Store only the Key value in Cache                                                    CLE157
+      ** Store the record counter in LRU cache pointed by current index                       CLE157
+                                                                                              CLE157
+     C                   EVAL      CACHE(IDXLOA) = PFKEY                                      CLE157
+     C                   EVAL      LRUA(IDXLOA) = RECSEQ                                      CLE157
+                                                                                              CLE157
+     C                   ENDSR                                                                CLE157
+      *****************************************************************
+      *  *INZSR - Program Initialisation routine                      *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+     C     KACCNTL0      KLIST
+     C                   KFLD                    SECNUM
+     C                   KFLD                    SEACCY
+     C                   KFLD                    SEACOD
+     C                   KFLD                    SEACSQ
+     C                   KFLD                    SEBRCA
+ 
+     C                   CALL      'AOBANKR0'
+     C                   PARM      '*DBERR'      @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+ 
+      *****************************************************************           AR1097176 MD020563
+      ***Check*if*CFC006*-*COB*Restructure*-*Remove*reports*from*COB***           AR1097176 MD020563
+      ***is*installed**************************************************           AR1097176 MD020563
+      *****************************************************************           AR1097176 MD020563
+     C**********         EVAL      CFC006 = 'N'                                   AR1097176 MD020563
+     C**********         CALL      'AOSARDR0'                                     AR1097176 MD020563
+     C**********         PARM      *BLANKS       PRTCD                            AR1097176 MD020563
+     C**********         PARM      '*VERIFY'     POPTN                            AR1097176 MD020563
+     C**********         PARM      'CFC006'      PSARD                            AR1097176 MD020563
+      *****************************************************************           AR1097176 MD020563
+     C**********         IF        PRTCD = *BLANKS                                AR1097176 MD020563
+     C**********         EVAL      CFC006 = 'Y'                                   AR1097176 MD020563
+     C**********         ELSE                                                     AR1097176 MD020563
+     C**********         IF        PRTCD <> '*NRF'                                AR1097176 MD020563
+      *****************************************************************           AR1097176 MD020563
+      ***Database*Error************************************************           AR1097176 MD020563
+      *****************************************************************           AR1097176 MD020563
+     C**********         EVAL      DBFILE = 'SCSARDPD'                            AR1097176 MD020563
+     C**********         EVAL      DBASE  =  900                                  AR1097176 MD020563
+     C**********         EVAL      DBKEY = POPTN                                  AR1097176 MD020563
+     C**********         EXSR      *PSSR                                          AR1097176 MD020563
+     C**********         ENDIF                                                    AR1097176 MD020563
+     C**********         ENDIF                                                    AR1097176 MD020563
+      *****************************************************************           AR1097176 MD020563
+     C                   EVAL      SUPFLG = 'N'                                               CFC006
+     C**********         IF        CFC006 = 'Y'                                   AR1097176 MD020563
+     C                   CALL      'AOCOMR0'                                                  CFC006
+     C                   PARM      'LEC000459'   PNAME                                        CFC006
+     C                   PARM      '*ALL'        PCSEQ                                        CFC006
+     C                   PARM      'LE00047901'  PSCTN                                        CFC006
+     C                   PARM      *BLANKS       PRTCD                                        CFC006
+                                                                                              CFC006
+     C                   IF        PRTCD = 'Y'                                                CFC006
+     C                   EVAL      SUPFLG = 'Y'                                               CFC006
+     C                   ENDIF                                                                CFC006
+     C**********         ENDIF                                                    AR1097176 MD020563
+                                                                                              CFC006
+     C                   EVAL      PRTLN1 = 60
+                                                                                              CLE157
+      ** Set LRU element key to zero                                                          CLE157
+                                                                                              CLE157
+     C                   EVAL      LRUKEY = 0                                                 CLE157
+                                                                                              CLE157
+      ** Set trailer index to zero as arrival sequence is at front                            CLE157
+                                                                                              CLE157
+     C                   EVAL      IDXTRL = 0                                                 CLE157
+                                                                                              CLE157
+      ** Initialize temporary key variable, previous index and                                CLE157
+      ** current index                                                                        CLE157
+                                                                                              CLE157
+     C                   EVAL      KEYTMP = *BLANKS                                           CLE157
+     C                   EVAL      IDXPRV = IDXTRL                                            CLE157
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  *PSSR - Subroutine to handle abnormal error conditions       *
+      *****************************************************************
+     C     *PSSR         BEGSR
+ 
+     C                   IF        RUNBEFORE <> 'Y'
+     C                   EVAL      RUNBEFORE   = 'Y'
+     C                   DUMP
+     C                   ENDIF
+ 
+     C                   EVAL      PRETURNCODE = '*ERROR*'
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+     C***/COPY*ZSRSRC,ZSEDITZ3LE                                                           AR1073390
+     C/COPY ZSRSRC,ZFRPEDZ2LE                                                              AR1073390
+     C/EJECT
+ 
+**  CPY@
+(c) MIsys International Banking Systems Ltd. 2012

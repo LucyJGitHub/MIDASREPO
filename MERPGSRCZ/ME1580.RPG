@@ -1,0 +1,762 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Message contents translation control')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1580 - Message Translation Control                         *
+      *                                                               *
+      *  Function:  This program controls the translation of a single *
+      *             incoming message                                  *
+      *                                                               *
+      *  Called By: FT0300 - Automatic Generation of FT transactions  *
+      *             FT0040 - FT Outgoing Payments Maintenance         *
+      *             FT0050 - FT Incoming Payments Maintenance         *
+      *             FT101HRTV - FT MT101 retrieve header details      *                       CFT006
+      *             FT101CRTV - FT MT101 retrieve credit details      *                       CFT006
+      *             FT102HRTV - FT MT102 retrieve header details      *                       CFT006
+      *             FT102CRTV - FT MT102 retrieve credit details      *                       CFT006
+      *                                                               *
+      *  Calls    : ME1190 - Check action code is valid               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG24998           Date 17Jul09               *
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG15156           Date 30Oct07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 237914             Date 18Apr06               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT006             Date 02Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 162671             Date 24Jun99               *
+      *                 CFT002  *CREATE    Date 05May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature                            *
+      *  BUG24998 - Bank operation code is missing (Recompile)        *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  BUG15156 - Beneficiary account not translated correctly into *
+      *             Midas account.  The keyfields being passed to     *
+      *             ME1590 is not properly aligned bec of incorrect   *
+      *             definition of data structure. Same fix as 237914. *
+      *  237914 - Reflect 10 characters long account code in EXMDEQ.  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CFT014 - Straight-through processing Phase 2 MT103           *
+      *           Messages Generation for FT.                         *
+      *  CFT006 - MT101/2 message addtion for outgoing/incoming RFT   *
+      *  162671 - Default translation field                           *
+      *  CFT002 - Staight Through Processing Phase 1                  *
+      *           Based on ME1580 original references:                *
+      *           S01489/DBF110/DBF026/DBF021/HUB001                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯                                              *
+      *                                                               *
+      *  50    No record found - MEINCRL1                             *
+      *  51    No record found - METAGTL1                             *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   SRINIT   - Initialisation subroutine                        *
+      *   SRTRNS   - Translation subroutine                           *
+      *   SRXREF   - Access Translation X-ref file subroutine         *
+      *   PROCSS   - Translation processing subroutine                *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FMEINMPL1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      * RTV : Incoming Msg Control Retrieval index
+      *
+     FMETAGTL1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      * RTV : Msg Tag Translation  Retrieval index
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+      *  Array containing Copyright statement
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+      ***  FIRST COMPILE TIME ARRAY ***
+      * Arrays
+      *
+      *  Copysource for error processing
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *   Parameter data structures
+     I/COPY MECPYSRC,SME1100P
+      *
+      *  Message general details to pass to ME1590
+     IPEXTR       DS
+     I                                        1   6 EXMTAG
+     I**********                              7  24 EXMDEQ                                  BUG15156
+     I                                        7  30 EXMDEQ                                  BUG15156
+     I**********                             25 256 EXDATA                                  BUG15156
+     I                                       31 256 EXDATA                                  BUG15156
+     I/COPY WNCPYSRC,ME1580I001
+      *
+      *  Message general details to pass to ME1590
+     IP2GEND      DS
+     I                                        1   6 P2NWRK
+     I                                        7  11 P2MTAG
+     I                                       12  14 P2CYCD
+     I                                       15  34 P2SNDR
+     I                                       35  37 P2MTPY
+      *
+      *  Error Processing copysource member
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+      *                                                                                       CER030
+      ** Short Data Structure                                                                 CER030
+      *                                                                                       CER030
+     IDSFDY     E DSDSFDY                                                                     CER030
+      *                                                                                       CER030
+      ** Data Structure for SAR details                                                       CER030
+      *                                                                                       CER030
+     ISCSARD    E DSSCSARDPD                                                                  CER030
+      *                                                                                       CER030
+      /EJECT
+      *================================================================
+      *  Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           W0ACT   8        Action
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Extension for PDATA                CSW209
+     C/COPY WNCPYSRC,ME1580C003
+     C                     PARM           W0RTN   7        Return Code
+     C/COPY WNCPYSRC,ME1580C010
+      *================================================================
+      *  Initialise
+     C                     EXSR SRINIT
+      *  Translate
+     C                     EXSR SRTRNS
+      *  End program
+     C                     RETRN
+      *
+      /EJECT
+      *================================================================
+      *  Access Translation X-ref file subroutine
+      *================================================================
+      *
+     C           SRXREF    BEGSR
+      *
+      *  Chain to METAGTL1 to check if decoding required
+     C           KTAGT     CHAINMETAGTL1             51
+      *
+     C                     ENDSR
+      *
+      *================================================================
+      *
+      /EJECT
+      *================================================================
+      *  Translation processing subroutine
+      *================================================================
+      *
+     C           PROCSS    BEGSR
+      *
+      *  Initialize return code and MIDAS equivalent
+     C                     MOVE *BLANKS   P2RTN   7
+     C                     MOVE *BLANKS   EXMDEQ
+      *
+      *  Call Translation process
+     C                     CALL 'ME1590'
+     C                     PARM           P2GEND
+     C                     PARM           P2DATA175
+     C                     PARM           P2RTN
+     C                     PARM           TGDFLT                                              162671
+      *
+      *  If return code blank equals successful translation - move
+      *  translation into return data structure
+     C           P2RTN     IFEQ *BLANKS
+     C                     MOVELP2DATA    EXMDEQ
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *================================================================
+      *
+      /EJECT
+      *================================================================
+      *  Translation subroutine
+      *================================================================
+      *
+     C           SRTRNS    BEGSR
+      *
+      *  - For each message check whether translation is required by chaining
+      *  to METAGTRV1. If yes extract first 140 characters of data to   file
+      *  pass to the Translation process ME1590.                       t the
+     C/COPY WNCPYSRC,ME1580C004
+      *                                                                                       CSW209
+      ** Tag 103: FIN Copy                                                                    CSW209
+      *                                                                                       CSW209
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVEL*BLANKS   PEXTR                                               CSW209
+     C                     MOVELP103      PEXTR                                               CSW209
+     C                     MOVELEXMTAG    P2MTAG                                              CSW209
+     C                     EXSR SRXREF                                                        CSW209
+     C           *IN51     IFEQ '0'                                                           CSW209
+     C                     MOVELEXDATA    P2DATA                                              CSW209
+     C                     EXSR PROCSS                                                        CSW209
+     C                     MOVELPEXTR     P103                                                CSW209
+     C                     ENDIF                                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                    CFT006
+      *  Tag :20:  Sender reference (Header)               CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH20      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH20             CFT006
+     C                     END                             CFT006
+      *
+      *  Tag :20: Transaction Reference
+     C                     MOVELP20       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P20
+     C                     END
+      *
+      *  Tag :21: Related Reference
+     C                     MOVELP21       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P21
+     C                     END
+      *                                                    CFT006
+      *  Tag :50: Ordering  customer (Header)              CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH50      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH50             CFT006
+     C                     END                             CFT006
+      *
+      *  Tag :50: Ordering Customer
+     C                     MOVELP50       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P50
+     C                     END
+      *                                                    CFT006
+      *  Tag :52: Ordering  Institution (Header)           CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH52      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH52             CFT006
+     C                     END                             CFT006
+      *
+      *  Tag :52: Ordering Institution    (A,D)
+     C                     MOVELP52       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P52
+     C                     END
+      *                                                    CFT006
+      *  Tag :53: Senders Correspondent (Header)           CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH53      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH53             CFT006
+     C                     END                             CFT006
+      *
+      *  Tag :53: Senders Correspondent   (A,B,D)
+     C                     MOVELP53       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P53
+     C                     END
+      *                                                    CFT006
+      *  Tag :54: Receivers Correspondent (Header)         CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH54      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH54             CFT006
+     C                     END                             CFT006
+      *
+      *  Tag :54: Receivers Correspondent (A,B,D)
+     C                     MOVELP54       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P54
+     C                     END
+      *                                                                   CFT014
+      *  Tag :55a:  Third Reimbursement Institution                       CFT014
+     C                     MOVEL*BLANK    PEXTR                           CFT014
+     C                     MOVELP55       PEXTR                           CFT014
+     C                     MOVELEXMTAG    P2MTAG                          CFT014
+     C                     EXSR SRXREF                                    CFT014
+     C           *IN51     IFEQ '0'                                       CFT014
+     C                     MOVELEXDATA    P2DATA                          CFT014
+     C                     EXSR PROCSS                                    CFT014
+     C                     MOVELPEXTR     P55                             CFT014
+     C                     END                                            CFT014
+      *
+      *  Tag :56: Intermediary            (A,D)
+     C                     MOVELP56       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C/COPY WNCPYSRC,ME1580C005
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P56
+     C                     END
+     C/COPY WNCPYSRC,ME1580C006
+      *
+      *  Tag :57: Account with Institut'n (A,B,D)
+     C                     MOVELP57       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C/COPY WNCPYSRC,ME1580C007
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P57
+     C                     END
+     C/COPY WNCPYSRC,ME1580C008
+      *
+      *  Tag :58: Beneficiary Institution (A,D)
+     C                     MOVELP58       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P58
+     C                     END
+      *
+      *  Tag :59: Beneficiary Customer
+     C                     MOVELP59       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P59
+     C                     END
+      *
+      *  Tag :70: Details Of Payment
+     C                     MOVELP70       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P70
+     C                     END
+      *                                                    CFT006
+      *  Tag :71:  Payment charges  (Header)               CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH71      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH71             CFT006
+     C                     END                             CFT006
+      *
+      *  Tag :71: Details Of Charges      (A)
+     C                     MOVELP71       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P71
+     C                     END
+      *                                                    CFT006
+      *  Tag :72:  Bank to Bank information (Header)       CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH72      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH72             CFT006
+     C                     END                             CFT006
+      *
+      *  Tag :72: Bank To Bank Information
+     C                     MOVELP72       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     P72
+     C                     END
+     C/COPY WNCPYSRC,ME1580C001
+      *
+      *  PSN  Sender Address Information
+     C                     MOVELPSN       PEXTR
+     C                     MOVELEXMTAG    P2MTAG
+     C                     EXSR SRXREF
+     C           *IN51     IFEQ '0'
+     C                     MOVELEXDATA    P2DATA
+     C                     EXSR PROCSS
+     C                     MOVELPEXTR     PSN
+      *
+      * If BOJ MBR then overwrite text.
+      *
+     C           P2RTN     IFEQ 'BOJ MBR'
+     C                     MOVELPSN       DSTRAN
+     C                     MOVELP2DATA    TMLIN
+     C                     MOVELDSTRAN    PSN
+     C                     END
+     C                     END
+      *                                                    CFT006
+      *  Tag :21R: Customer reference                      CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH21R     PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH21R            CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :50L: Instructing party (Header)              CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH50L     PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH50L            CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :50L: Instructing party                       CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELP50L      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     P50L             CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :51:  Sending institution                     CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH51A     PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH51A            CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :30:  Execution date                          CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH30      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH30             CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :25:   Authorisation                          CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH25      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH25             CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :21F:  FX reference                           CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELP21F      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     P21F             CFT006
+     C                     END                             CFT006
+      *                                                                   CFT014
+      ** Tag :23B:  Bank Operation Code                                   CFT014
+     C                     MOVEL*BLANK    PEXTR                           CFT014
+     C                     MOVELP23B      PEXTR                           CFT014
+     C                     MOVELEXMTAG    P2MTAG                          CFT014
+     C                     EXSR SRXREF                                    CFT014
+     C           *IN51     IFEQ '0'                                       CFT014
+     C                     MOVELEXDATA    P2DATA                          CFT014
+     C                     EXSR PROCSS                                    CFT014
+     C                     MOVELPEXTR     P23B                            CFT014
+     C                     END                                            CFT014
+      *                                                    CFT006
+      *  Tag :23E:  Instruction code                       CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELP23E      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     P23E             CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :77B:  Regulatory report                      CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELP77B      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     P77B             CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :25A:  Charges account                        CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELP25A      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     P25A             CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :23:  Bank operation code                     CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH23      PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH23             CFT006
+     C                     END                             CFT006
+      *                                                    CFT006
+      *  Tag :26T:  Transaction code                       CFT006
+     C                     MOVEL*BLANK    PEXTR            CFT006
+     C                     MOVELPH26T     PEXTR            CFT006
+     C                     MOVELEXMTAG    P2MTAG           CFT006
+     C                     EXSR SRXREF                     CFT006
+     C           *IN51     IFEQ '0'                        CFT006
+     C                     MOVELEXDATA    P2DATA           CFT006
+     C                     EXSR PROCSS                     CFT006
+     C                     MOVELPEXTR     PH26T            CFT006
+     C                     END                             CFT006
+      *
+      * If BOJ MBR then overwrite text.
+      *
+      *
+      ** Extended Narrative                                                                   CER030
+      *                                                                                       CER030
+     C           CER031    IFEQ 'Y'                                                           CER030
+     C                     MOVEL*BLANKS   PEXTR                                               CER030
+     C                     MOVELPEXN      PEXTR                                               CER030
+     C                     MOVELEXMTAG    P2MTAG                                              CER030
+     C                     EXSR SRXREF                                                        CER030
+      *                                                                                       CER030
+     C           *IN51     IFEQ *OFF                                                          CER030
+     C                     MOVELEXDATA    P2DATA                                              CER030
+     C                     EXSR PROCSS                                                        CER030
+     C                     MOVELPEXTR     PEXN                                                CER030
+      *                                                                                       CER030
+     C                     ENDIF                                                              CER030
+      *                                                                                       CER030
+     C                     ENDIF                                                              CER030
+      *                                                                                       CER030
+     C                     ENDSR
+      *
+      *================================================================
+      *
+      /EJECT
+      *================================================================
+      *  Initialisation subroutine
+      *================================================================
+      *
+     C           SRINIT    BEGSR
+      *
+      *  Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     MOVE *BLANK    W0RTN
+      *
+      *  Define work fields
+     C           *LIKE     DEFN W0RTN     P@RTN
+      *
+      *  Define key lists:
+      *
+      *  METAGTL1
+     C           KTAGT     KLIST
+     C                     KFLD           PMTPY
+     C                     KFLD           P2MTAG
+      *
+      *  Open files
+     C           *IN60     IFEQ '0'
+     C                     OPEN MEINMPL1
+     C                     OPEN METAGTL1
+     C                     MOVEL'1'       *IN60
+     C                     END
+      *                                                                    CFT006
+      *  In MT101 and MT102 this program can be called to                  CFT006
+      *  translated tags that belong to the header uniquely.               CFT006
+      *  Therefore the part is 0 because we don't write any part           CFT006
+      *  for the sequence A (or header) of the message                     CFT006
+     C           PHPART    IFNE 0                                          CFT006
+      *
+      *  Chain to MEINCRL1 to get message currency
+     C           MPKEY     KLIST
+     C                     KFLD           PHMSGR
+     C                     KFLD           PHPART
+     C           MPKEY     CHAINMEINMPL1             50
+      *
+      *  If record not found - database error
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'MEINMPL1'W0FILE           ***************
+     C                     MOVELPHMSGR    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C  N50                MOVE MPCYCD    P2CYCD
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+      *
+      *  Set up other general details to pass to Translation routine
+     C                     MOVE PNWRK     P2NWRK
+     C                     MOVE PSNDR     P2SNDR
+     C                     MOVE PMTPY     P2MTPY
+     C/COPY WNCPYSRC,ME1580C002
+      *                                                                                       CSW209
+      * See if SWIFT 2009 Active                                                              CSW209
+      *                                                                                       CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM           P@RTCD  7                                           CSW209
+     C           P@RTCD    IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVE 'Y'       CSW209  1                                           CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE 'N'       CSW209                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CER030
+      ** Check the switchable feature CER031                                                  CER030
+      *                                                                                       CER030
+     C                     CALL 'AOSARDR0'                                                    CER030
+     C                     PARM *BLANKS   PRTCD   7                                           CER030
+     C                     PARM '*VERIFY' POPTN   7                                           CER030
+     C                     PARM 'CER031'  PSARD   6                                           CER030
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER030
+      *                                                                                       CER030
+     C           PRTCD     IFEQ *BLANKS                                                       CER030
+     C                     MOVEL'Y'       CER031  1                                           CER030
+     C                     ELSE                                                               CER030
+     C                     MOVEL'N'       CER031                                              CER030
+     C                     ENDIF                                                              CER030
+      *
+     C                     ENDSR
+      *
+      *================================================================
+     C/COPY WNCPYSRC,ME1580C009
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+      *
+**  CPY@
+(c) Finastra International Limited 2001

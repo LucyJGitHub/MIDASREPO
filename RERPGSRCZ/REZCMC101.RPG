@@ -1,0 +1,684 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Cash Mgt Compare against MT101 Field')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RECMC101 - RE Cash Management Compare Against MT101          *
+      *             Field                                             *
+      *                                                               *
+      *  Function:  This user check program will validate certain     *
+      *             fields in a MT103 correspond to the fields        *
+      *             in a topping request MT101. This program          *
+      *             will recieve the details of the MT103 in          *
+      *             parameter PDATA.  REICSDPD will then be           *
+      *             sifted with all unmatched MT101. A 'T' will be    *
+      *             passed back if the following MT103 fields are     *
+      *             matched with the MT101.                           *
+      *                   MT103                 MT101                 *
+      *                   :32A:                 :30:+offset           *
+      *                   :33B:                 :32B:                 *
+      *                   :50K:                 :50H:                 *
+      *                   :59:                  :59:                  *
+      *                   :70:                  :70:                  *
+      *           Also, the account in field 50K must be a master     *
+      *           account                                             *
+      *                                                               *
+      *  Called By: ME1501  -  Auto-Gen Criteria Analysis             *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 AR676213           Date 19Nov10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG24998           Date 17Jul09               *
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CSW207             Date 17Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 16May06               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 211499             Date 24Jan03               *
+      *                 CRE008  *CREATE    Date 15Apr02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
+      *             (Child: AR676229)                                 *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  BUG24998 - Bank operation code is missing (Recompile)        *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSW207 - SWIFT 2007 Standard Changes                         *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  211499 - The comparison of MT103 fld 50K and MT101 fld 50H   *
+      *           should be limited to NAME only.  50K is received as *
+      *           Name and Address whilst 50H is Account No. and Name.*
+      *           Pick out Name only in the comparison.               *
+      *           The comparison of MT103 fld 59  and MT101 fld 59    *
+      *           should be limited to Account No. and Name only      *
+      *           MT103 fld 59 contains Ac No., Name and sometimes,   *
+      *           Address too.  MT101 fld 59 contains Ac No and Name. *
+      *           Pick out Ac. No and Name only in the comparison     *
+      *           Also, add check that the account in 50k must  be    *
+      *           not be a master account                             *
+      *  CRE008 - Cash Management                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FREICSDL3IF  E           K        DISK
+     FREZSHLJ1IF  E           K        DISK                                211499
+     FMGOMSGL1IF  E           K        DISK
+     FMGOMSGLAIF  E           K        DISK
+     F            MGOMSGD0                          KRENAMEMGMSGLA
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+     E/COPY MECPYSRC,SRERRE
+     E                    AFLD        4 35
+     I/COPY MECPYSRC,SME1100P
+     IACCT      E DSACCNTAB
+     I              LCD                             CLCD
+     IDSFDY     E DSDSFDY
+     ISCSARD    E DSSCSARDPD
+      *
+     I            DS
+     I                                        1 175 WFLD
+     I                                        1  35 WFLD1
+     I                                       36 175 WFLD2
+      *                                                                    211499
+     I            DS                                                       211499
+     I                                        1 175 W50                    211499
+     I                                       36 175 W50X                   211499
+      *                                                                    211499
+     I            DS                                                       211499
+     I                                        1 175 @50K                   211499
+     I                                       36 175 @50X                   211499
+      *                                                                    211499
+     I            DS                                                       211499
+     I                                        1 175 @59                    211499
+     I                                       71 175 @59X                   211499
+     I            DS                                                       211499
+     I                                        1 175 W59                    211499
+     I                                       71 175 W59X                   211499
+     I            DS
+     I**********                              1  18 @TOPAC                                    CGL029
+     I                                        1  24 @TOPAC                                    CGL029
+     I                                        1   3 KBRCA
+     I**********                              4   90KCNUM                                    CSD027A
+     I                                        4   9 KCNUM                                    CSD027A
+     I                                       10  12 KCCY
+     I**********                             13  160KACCD                                     CGL029
+     I**********                             17  180KACSQ                                     CGL029
+     I                                       13  220KACCD                                     CGL029
+     I                                       23  240KACSQ                                     CGL029
+      *
+     I            DS
+     I                                        1  34 @591
+      *
+     I                                        1  100@RETL
+     I                                       11  34 @BL24
+      *
+     I**********                              1  18 @GL                                       CGL029
+     I                                        1  24 @GL                                       CGL029
+     I                                        1   3 @BRCA
+     I                                        4   90@CNUM
+     I                                       10  12 @CCY
+     I**********                             13  160@ACOD                                     CGL029
+     I**********                             17  180@ACSQ                                     CGL029
+     I**********                             19  34 @BL16                                     CGL029
+     I                                       13  220@ACOD                                     CGL029
+     I                                       23  240@ACSQ                                     CGL029
+     I                                       25  34 @BL16                                     CGL029
+      *
+     I***********                            26  59 @IBAN
+     I                                        1  34 @IBAN                  211499
+      *
+      *****************************************************************
+      *
+      ** Define entry parameters
+     C           *ENTRY    PLIST
+      ** Return Code Parameter
+     C                     PARM           RTNCDE  7
+      ** Incoming Message Header
+     C                     PARM           PHEAD
+      ** Incoming Message Data
+     C                     PARM           PDATA
+     C                     PARM           PDAT2                                               CSW209
+      ** Subset of FT message data relating for a specific message tag
+     C                     PARM           SBSMSG251
+      ** Pattern which can be applied to the function
+     C                     PARM           PATTRN 32
+      ** Operator (GE, LE, GT, LT)
+     C                     PARM           POPER   2
+      ** Message tag
+     C                     PARM           PMTAG   5
+      ** Logging require
+     C                     PARM           PREPT   1
+      ** Program for messages
+     C                     PARM           PCPGM  10
+      ** Return Field
+     C                     PARM           RETFLD256
+      *
+     C           KMGO      KLIST
+     C                     KFLD           KTRNO  16
+     C                     KFLD           KMTAG   5
+     C           KTOPAC    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACCD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      *  Check if IBAN feature is installed
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'CFT004'  P@SARD  6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      ** Allow IBAN processing
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVE 'Y'       CFT004  1
+     C                     ELSE
+     C                     MOVE 'N'       CFT004
+     C                     END
+      *
+     C                     CALL 'SWIF2007'                                                    CSW207
+     C                     PARM *BLANKS   @RTCD   7                                           CSW207
+      *                                                                                       CSW207
+     C           @RTCD     IFEQ *BLANKS                                                       CSW207
+     C                     MOVEL'N'       CSW207  1                                           CSW207
+     C                     ELSE                                                               CSW207
+     C                     MOVEL'Y'       CSW207                                              CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+      * Begin Processing
+      *
+     C                     MOVE *BLANK    Q       50
+     C                     MOVE PCPGM     ##PGM  10
+     C                     MOVEL'F'       RTNCDE    P
+     C                     MOVE TMLIN1    @591
+     C                     MOVE *BLANK    RETFLD
+      *                                                                    211499
+      * First, check if top account is a master account                    211499
+      *      Get MT103 Fld 59                                              211499
+     C                     MOVELP59       DSTRAN                           211499
+     C                     MOVELTMLIN     @59   175                        211499
+     C                     MOVE TMLIN1    @591                             211499
+      *                                                                    211499
+     C                     SELEC                                           211499
+     C           @BL24     WHEQ *BLANK                                     211499
+     C                     MOVEL@RETL     P@RETL                           211499
+     C                     CALL 'AOACCTR0'             90                  211499
+     C                     PARM           P@RTCD  7                        211499
+     C                     PARM '*KEY   ' P@OPTN  7                        211499
+     C                     PARM           P@RETL 10                        211499
+     C                     PARM *BLANK    P@CNUM  6                        211499
+     C                     PARM *BLANK    P@CUCD  3                        211499
+     C**********           PARM *BLANK    P@ACCD  4                                    211499 CGL029
+     C                     PARM *BLANK    P@ACCD 10                                           CGL029
+     C                     PARM *BLANK    P@ACSQ  2                        211499
+     C                     PARM *BLANK    P@BRCA  3                        211499
+     C           ACCT      PARM           ACCT                             211499
+     C*                                                                    211499
+     C           P@RTCD    IFEQ *BLANK                                     211499
+     C           RECI      ANDEQ'D'                                        211499
+     C                     MOVELBRCA      KBRCA                            211499
+     C                     MOVELCNUM      KCNUM                            211499
+     C                     MOVELCCY       KCCY                             211499
+     C                     MOVELACOD      KACCD                            211499
+     C                     MOVELACSQ      KACSQ                            211499
+     C                     ENDIF                                           211499
+     C*                                                                    211499
+     C           @BL16     WHEQ *BLANK                                     211499
+     C                     MOVELBRCA      KBRCA                            211499
+     C                     MOVELCNUM      KCNUM                            211499
+     C                     MOVELCCY       KCCY                             211499
+     C                     MOVELACOD      KACCD                            211499
+     C                     MOVELACSQ      KACSQ                            211499
+     C*                                                                    211499
+     C* Get GL account if IBAN given                                       211499
+     C           CFT004    WHEQ 'Y'                                        211499
+     C                     CALL 'AOIBANR4'             90                  211499
+     C                     PARM           P@RTCD                           211499
+     C                     PARM '*VERIFY' P@OPTN                           211499
+     C                     PARM           @IBAN                            211499
+     C           ACCT      PARM ACCT      DSFDY                            211499
+     C*                                                                    211499
+     C           P@RTCD    IFEQ *BLANK                                     211499
+     C           RECI      ANDEQ'D'                                        211499
+     C                     MOVELBRCA      KBRCA                            211499
+     C                     MOVELCNUM      KCNUM                            211499
+     C                     MOVELCCY       KCCY                             211499
+     C                     MOVELACOD      KACCD                            211499
+     C                     MOVELACSQ      KACSQ                            211499
+     C                     ENDIF                                           211499
+     C                     ENDSL                                           211499
+     C*                                                                    211499
+     C* Top Account must NOT be a Master Account.                          211499
+     C*                                                                    211499
+     C           KTOPAC    CHAINREZSHLJ1             70                    211499
+     C           *IN70     IFEQ '1'                                        211499
+     C           *IN70     OREQ '0'                                        211499
+     C           ZDMAST    ANDEQ'Y'                                        211499
+     C           MEMSDT    CAT  TRTAG:0   MEMSDT    P                      211499
+     C                     MOVELPCPGM     MEPGMQ                           211499
+     C                     MOVEL'RE75962' MEMSID                           211499
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file        211499
+     C                     EXSR MESNMS                                     211499
+     C                     GOTO RETN                                       211499
+     C                     ENDIF                                           211499
+      *
+      *
+      *  For each unmatched MT101 in REICSDPD
+     C           *LOVAL    SETLLREICSDL3
+     C                     READ REICSDL3                 70
+     C           *IN70     DOWEQ'0'
+     C           RTNCDE    ANDNE'T      '
+      *
+     C                     MOVELIDOMSR    KTRNO
+      *
+     C           PREPT     IFEQ 'Y'
+     C                     MOVELIDOMSR    MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75410' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+      *
+      * =============================================================
+      *
+      **  Incoming MT103 Field 32A Date = Outward MT101 Field 30
+      *
+      *      First, get MT103 Fld 32A Date
+     C                     MOVELPDCA      DSTRAN
+     C                     MOVELTVVDAT    @DATE   6
+     C                     MOVELTVCCY     @CCY    3
+      *
+      *      Then Get MT101 Date (Field 30)
+     C***********          MOVEL':30:'    KMTAG                            211499
+     C                     MOVEL':30: '   KMTAG                            211499
+     C           KMGO      CHAINMGOMSGL1             71
+     C           *IN71     IFEQ '1'
+     C                     GOTO NEXT
+     C                     ELSE
+     C                     MOVELMFLD      WDAT6   6
+     C                     MOVELMFLD      WDATE   6
+     C                     ENDIF
+     C*
+     C*  Compare MT103 date vs MT101
+     C           @DATE     IFEQ WDATE
+     C                     MOVEL'T'       RTNCDE    P
+     C                     ELSE
+     C                     MOVEL'F'       RTNCDE    P
+      *
+      *  Log, if test failed.
+     C           PREPT     IFEQ 'Y'
+     C                     MOVE *BLANKS   MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75403' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+     C                     GOTO NEXT
+     C                     ENDIF
+      *
+      * ==============================================================
+      *
+      **  Incoming MT103 Field 33B = Outward MT101 Field 32B
+      *
+      *      Get MT103 Fld 33B:
+     C                     MOVELP33B      DSTRAN
+     C                     MOVE TTCA      @33B   18
+      *      Get MT101 Fld 32B:
+     C                     MOVEL':32B:'   KMTAG
+     C           KMGO      CHAINMGOMSGL1             71
+     C           *IN71     IFEQ '1'
+     C                     GOTO NEXT
+     C                     ELSE
+     C                     MOVELMFLD      W32B   18
+     C                     ENDIF
+     C*
+     C*  Compare MT103  vs MT101
+     C           @33B      IFEQ W32B
+     C                     MOVEL'T'       RTNCDE    P
+     C                     ELSE
+     C*
+      *  Log, if test failed.
+     C           PREPT     IFEQ 'Y'
+     C                     MOVE *BLANKS   MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75404' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+     C                     MOVEL'F'       RTNCDE    P
+     C                     GOTO NEXT
+     C                     ENDIF
+      * ==============================================================
+      *
+      **  Incoming MT103 Field 50K = Outward MT101 Field 50H
+      **  Compare Name part only                                           211499
+      *
+      *      Get MT103 Fld 50K:
+     C                     MOVELP50       DSTRAN
+     C                     MOVELTMLIN     @50K  175
+      *      Get MT101 Fld :50H:
+     C                     MOVEL':50H:'   KMTAG
+     C           KTRNO     SETLLMGOMSGLA
+     C           KTRNO     READEMGOMSGLA                 71
+     C           *IN71     IFEQ '1'
+     C                     GOTO NEXT
+     C                     ELSE
+     C*
+     C           *IN71     DOWEQ*OFF
+     C           MTAG      ANDNEKMTAG
+     C                     READ MGOMSGLA                 71
+     C                     ENDDO
+     C*
+     C           *IN71     IFEQ *ON                                                      CSW207
+     C           CSW207    ANDEQ'Y'                                                      CSW207
+     C                     MOVEL':50F:'   KMTAG                                          CSW207
+     C           KTRNO     SETLLMGOMSGLA                                                 CSW207
+     C           KTRNO     READEMGOMSGLA                 71                              CSW207
+     C*                                                                                  CSW207
+     C           *IN71     DOWEQ*OFF                                                     CSW207
+     C           MTAG      ANDNEKMTAG                                                    CSW207
+     C                     READ MGOMSGLA                 71                              CSW207
+     C                     ENDDO                                                         CSW207
+     C                     ENDIF                                                         CSW207
+     C*                                                                                  CSW207
+     C           *IN71     IFEQ *OFF
+     C*
+     C                     MOVELMFLD      WFLD1
+     C                     MOVEA*BLANKS   AFLD
+     C                     Z-ADD1         Z       10
+     C                     READ MGOMSGLA                 71
+     C           Z         DOWLE4
+     C           *IN71     IFEQ '0'
+     C           MTAG      ANDEQ*BLANK
+     C                     MOVELMFLD      AFLD,Z
+     C                     ADD  1         Z
+     C                     READ MGOMSGLA                 71
+     C                     ELSE
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     MOVEAAFLD      WFLD2
+     C                     MOVELWFLD      W50   175
+      *
+      * Exclude account lines (if present) from compare
+      * and address lines too                                              211499
+      *
+     C                     MOVELW50       CHAR1   1
+     C           CHAR1     IFEQ '/'
+     C                     MOVELW50       WFLD
+     C                     MOVEL*BLANK    W50
+     C                     MOVELWFLD2     W50
+     C                     ENDIF
+     C                     MOVEL*BLANK    W50X                             211499
+      *
+     C                     MOVEL@50K      CHAR1   1
+     C           CHAR1     IFEQ '/'
+     C                     MOVEL@50K      WFLD
+     C                     MOVEL*BLANK    @50K
+     C                     MOVELWFLD2     @50K
+     C                     ENDIF
+     C                     MOVEL*BLANK    @50X                             211499
+     C*
+     C*  Compare MT103  vs MT101
+     C           @50K      IFEQ W50
+     C                     MOVEL'T'       RTNCDE    P
+     C                     ELSE
+     C                     MOVEL'F'       RTNCDE    P
+      *
+      *  Log, if test failed.
+     C           PREPT     IFEQ 'Y'
+     C                     MOVE *BLANKS   MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75412' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+     C                     GOTO NEXT
+     C                     ENDIF
+      *
+      * ==============================================================
+      *
+      **  Incoming MT103 Field 59  = Outward MT101 Field 59
+      *
+      *  These lines of code have been duplicated above                    211499
+      *******Get MT103 Fld 59                                              211499
+     C***********          MOVELP59       DSTRAN                           211499
+     C***********          MOVELTMLIN     @59   175                        211499
+     C***********          MOVE TMLIN1    @591                             211499
+      *      Drop address part                                             211499
+     C                     MOVEL*BLANK    @59X                             211499
+      *                                                                    211499
+      *      Get MT101 Fld :59:
+     C                     MOVEL':59: '   KMTAG
+     C           KTRNO     SETLLMGOMSGLA
+     C           KTRNO     READEMGOMSGLA                 71
+     C           *IN71     IFEQ '1'
+     C                     GOTO NEXT
+     C                     ELSE
+     C*
+     C           *IN71     DOWEQ*OFF
+     C           MTAG      ANDNEKMTAG
+     C                     READ MGOMSGLA                 71
+     C                     ENDDO
+     C*
+     C           *IN71     IFEQ *OFF
+     C                     MOVELMFLD      WFLD1
+     C                     MOVEA*BLANKS   AFLD
+     C                     Z-ADD1         Z       10
+     C                     READ MGOMSGLA                 71
+     C           Z         DOWLE4
+     C           *IN71     IFEQ '0'
+     C           MTAG      ANDEQ*BLANK
+     C                     MOVELMFLD      AFLD,Z
+     C                     ADD  1         Z
+     C                     READ MGOMSGLA                 71
+     C                     ELSE
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     MOVEAAFLD      WFLD2
+     C                     MOVE WFLD      W59   175
+      *      Drop address part                                             211499
+     C                     MOVEL*BLANK    W59X                             211499
+      *                                                                    211499
+     C*
+     C*  Compare MT103  vs MT101
+     C           @59       IFEQ W59
+     C                     MOVEL'T'       RTNCDE    P
+     C                     ELSE
+     C                     MOVEL'F'       RTNCDE    P
+      *
+      *  Log, if test failed.
+     C           PREPT     IFEQ 'Y'
+     C                     MOVE *BLANKS   MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75405' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+     C                     GOTO NEXT
+     C                     ENDIF
+      *
+      * ==============================================================
+      *
+      **  Incoming MT103 Field 70  = Outward MT101 Field 70
+      *
+      *      Get MT103 Fld 70
+     C                     MOVELP70       DSTRAN
+     C                     MOVELTMLIN     @70   140
+      *      Get MT101 Fld :70:
+     C                     MOVEL':70: '   KMTAG
+     C           KTRNO     SETLLMGOMSGLA
+     C           KTRNO     READEMGOMSGLA                 71
+     C           *IN71     IFEQ '1'
+     C                     GOTO NEXT
+     C                     ELSE
+     C*
+     C           *IN71     DOWEQ*OFF
+     C           MTAG      ANDNEKMTAG
+     C                     READ MGOMSGLA                 71
+     C                     ENDDO
+     C*
+     C           *IN71     IFEQ *OFF
+     C                     MOVELMFLD      WFLD1
+     C                     MOVEA*BLANKS   AFLD
+     C                     Z-ADD1         Z       10
+     C                     READ MGOMSGLA                 71
+     C           Z         DOWLE3
+     C           *IN71     IFEQ '0'
+     C           MTAG      ANDEQ*BLANK
+     C                     MOVELMFLD      AFLD,Z
+     C                     ADD  1         Z
+     C                     READ MGOMSGLA                 71
+     C                     ELSE
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     MOVEAAFLD      WFLD2
+     C                     MOVELWFLD      W70   140
+     C*
+     C*  Compare MT103  vs MT101
+     C           @70       IFEQ W70
+     C                     MOVEL'T'       RTNCDE    P
+     C                     ELSE
+     C                     MOVEL'F'       RTNCDE    P
+      *
+      *  Log, if test failed.
+     C           PREPT     IFEQ 'Y'
+     C                     MOVE *BLANKS   MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75406' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+     C                     GOTO NEXT
+     C                     ENDIF
+      *
+      * ==============================================================
+      *
+     C           NEXT      TAG
+     C*
+      ** Log check failed on this MT101.
+      *
+     C           PREPT     IFEQ 'Y'
+     C           RTNCDE    ANDNE'T      '
+     C                     MOVELIDOMSR    MEMSDT
+     C                     MOVELPCPGM     MEPGMQ
+     C                     MOVEL'RE75411' MEMSID
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file
+     C                     EXSR MESNMS
+     C                     ENDIF
+      *
+     C                     READ REICSDL3                 70
+      *
+     C                     ENDDO
+      *
+      * Pass back matching MT101 to calling program
+      *
+     C           RTNCDE    IFEQ 'T      '
+     C           RETFLD    CAT  '*TRNO':0 RETFLD
+     C                     CAT  TRNO:0    RETFLD
+     C                     CAT  '/':0     RETFLD
+      *                                                                    211499
+      *  The following lines of code have been transferred above.          211499
+      *                                                                    211499
+      **Pass*back*top account in GL format                                 211499
+      ***********                                                          211499
+     C***********          SELEC                                           211499
+     C***********@BL24     WHEQ *BLANK                                     211499
+     C***********          MOVEL@RETL     P@RETL                           211499
+     C***********          CALL 'AOACCTR0'             90                  211499
+     C***********          PARM           P@RTCD  7                        211499
+     C***********          PARM '*KEY   ' P@OPTN  7                        211499
+     C***********          PARM           P@RETL 10                        211499
+     C***********          PARM *BLANK    P@CNUM  6                        211499
+     C***********          PARM *BLANK    P@CUCD  3                        211499
+     C***********          PARM *BLANK    P@ACCD  4                        211499
+     C***********          PARM *BLANK    P@ACSQ  2                        211499
+     C***********          PARM *BLANK    P@BRCA  3                        211499
+     C***********ACCT      PARM           ACCT                             211499
+     C***********                                                          211499
+     C***********P@RTCD    IFEQ *BLANK                                     211499
+     C***********RECI      ANDEQ'D'                                        211499
+     C***********          MOVELBRCA      KBRCA                            211499
+     C***********          MOVELCNUM      KCNUM                            211499
+     C***********          MOVELCCY       KCCY                             211499
+     C***********          MOVELACOD      KACCD                            211499
+     C***********          MOVELACSQ      KACSQ                            211499
+     C***********          ENDIF                                           211499
+     C***********                                                          211499
+     C***********@BL16     WHEQ *BLANK                                     211499
+     C***********          MOVELBRCA      KBRCA                            211499
+     C***********          MOVELCNUM      KCNUM                            211499
+     C***********          MOVELCCY       KCCY                             211499
+     C***********          MOVELACOD      KACCD                            211499
+     C***********          MOVELACSQ      KACSQ                            211499
+     C***********                                                          211499
+     C**Get*GL*account if IBAN given                                       211499
+     C***********CFT004    WHEQ 'Y'                                        211499
+     C***********          CALL 'AOIBANR4'             90                  211499
+     C***********          PARM           P@RTCD                           211499
+     C***********          PARM '*VERIFY' P@OPTN                           211499
+     C***********          PARM           @IBAN                            211499
+     C***********ACCT      PARM ACCT      DSFDY                            211499
+     C***********                                                          211499
+     C***********P@RTCD    IFEQ *BLANK                                     211499
+     C***********RECI      ANDEQ'D'                                        211499
+     C***********          MOVELBRCA      KBRCA                            211499
+     C***********          MOVELCNUM      KCNUM                            211499
+     C***********          MOVELCCY       KCCY                             211499
+     C***********          MOVELACOD      KACCD                            211499
+     C***********          MOVELACSQ      KACSQ                            211499
+     C***********          ENDIF                                           211499
+     C***********          ENDSL                                           211499
+     C*
+     C           RETFLD    CAT  '*TOPA':0 RETFLD
+     C                     CAT  @TOPAC:0  RETFLD
+     C                     CAT  '/':0     RETFLD
+     C                     ENDIF
+      *
+     C           RETN      TAG                                             211499
+     C                     RETRN
+     C/COPY MECPYSRC,SMESNMSC
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2002

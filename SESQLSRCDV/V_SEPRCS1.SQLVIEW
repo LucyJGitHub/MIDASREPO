@@ -1,0 +1,59 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Securities Trading Module                                     */
+/*                                                                             */
+/*       V_SEPRCS1 - SE Prices Detail                                          */
+/*                                                                             */
+/*       (c) Finastra International Limited 2013                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. AR787635 *CREATE   Date 10Jun13                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       AR787635 - Redelivery of AR214066 and AR214066B. Also amended CGZONE  */
+/*                  where clause to prevent an SQL error when multiple records */
+/*                  is retrieved. (Child: AR787636)                            */
+/*       AR214066B - Change condition of CGGLOB.                               */
+/*       AR214066 - UDF Files are not properly populated during migration.     */
+/*                  Created SQL for use in T_GZPRCSEX population.              */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  PSSN ,                                                                        :
+  PPRT ,                                                                        :
+  PMKT ,                                                                        :
+  PBRA ,                                                                        :
+  PBOK ,                                                                        :
+  PTFR ,                                                                        :
+  CGGLOB)                                                                       :
+  AS                                                                            :
+  (SELECT                                                                       :
+  PSSN, PPRT, PMKT, PBRA, PBOK, PTFR,                                           :
+  CASE WHEN CGGLOB IS NULL THEN ''                                              :
+  ELSE CGGLOB END AS CGGLOB                                                     :
+  FROM PRICED                                                                   :
+  LEFT JOIN GPGLCUSL                                                            :
+  ON                                                                            :
+  PCNM = CGCUST                                                                 :
+  WHERE                                                                         :
+  CGZONE IN (SELECT DISTINCT A8ZONE FROM SDBRCHPD)                              :
+  ) ;                                                                           :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  PSSN    IS 'Security Shortname'         ,                                     :
+  PPRT    IS 'Price Type'                 ,                                     :
+  PMKT    IS 'Market'                     ,                                     :
+  PBRA    IS 'Branch'                     ,                                     :
+  PBOK    IS 'Book'                       ,                                     :
+  PTFR    IS 'Portfolio Reference'        ,                                     :
+  CGGLOB  IS 'Global Customer ID');                                             :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas SE Prices Detail                            ';                     :
+                                                                                :

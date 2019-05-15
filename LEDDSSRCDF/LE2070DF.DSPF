@@ -1,0 +1,664 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas LE Rollover input display')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  DSPF/LE2070DF - Rollover input Details Display               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR847588           Date 09Mar15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CLE036             Date 22Sep03               *
+      *                 222729             Date 04Nov03               *
+      *                 220754             Date 12Sep03               *
+      *                 CLE034             Date 05May03               *
+      *                 CLE030             Date 25Sep02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CAP062             Date 11Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 150806             Date 22Dec98               *
+      *                 158488 (BT0498)    Date 31Dec97               *
+      *                 132168             Date 18Apr98               *
+      *                 126274             Date 21Nov97               *
+      *                 123857             Date 21Oct97               *
+      *                 123335             Date 23Sep97               *
+      *                 121019             Date 22Jul97               *
+      *                 CLE004 *Create     Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR847588 - Enable system to accept negative spread rate.     *
+      *           - Applied for MD033488.                             *
+      *  CLE036 - LE Enh for Nordea Phase 1 Pty 2- Specific Base Rate *
+      *  222729 - Do not show 'Requires Release' if CLE030 is off     *
+      *  220754 - Next loan ccy repayment amount non-displayed.       *
+      *  CLE034 - Lending Enhancements for Phase 1 Priority 1A.       *
+      *  CLE030 - Release Authorisation processing                    *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  CAP062 - Lending API enhancements - Rollover Input           *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *  150806 - Fac ccy and base ccy exchange rate too short to     *
+      *           receive ITL rates.                                  *
+      *  158488 - Correct headings
+      *  132168 - Add help text for multi-ccy rollover fields         *
+      *  126274 - Subfile should show Shortname                       *
+      *  123857 - Condition F11 for authorisation on ICD value        *
+      *  123335 - Include new base currency exchange rate/indicator   *
+      *  121019 - Change screen text.                                 *
+      *  CLE004 - Customer Lending  Enhancements - Syndications       *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      REF(MFRFL)
+     A                                      CA03
+     A                                      INDARA
+     A                                      CHGINPDFT
+     A                                      PRINT(MPRINT)
+      *
+      **  Screen 1 - Header format
+      *
+     A          R LE2070F0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A  83                                  OVERLAY
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 14'LE2070'
+      *                                              Begin /CAP062/
+     A************                      1 34'ROLLOVER INPUT'                        CAP062
+     A************                          DSPATR(HI)                              CAP062
+     A N84                              1 34'ROLLOVER INPUT'                        CAP062
+     A N84                                  DSPATR(HI)                              CAP062
+     A  84                              1 34'ROLLOVER REPAIR'                       CAP062
+     A  84                                  DSPATR(HI)                              CAP062
+      *                                              End   /CAP062/
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 72TIME
+     A                                      EDTWRD('  :  :  ')
+      *
+      **  Screen 1 - Initial screen
+      *
+     A          R LE2070F1
+     A*/COPY WNCPYSRC,LE2070DF01
+     A                                      OVERLAY
+      *
+     A                                  9 21'Action'
+     A            SACTN          1   B  9 31
+     A  30                                  DSPATR(RI PC)
+     A N30                                  DSPATR(HI UL)
+      *
+     A                                  9 41'Loan no '
+     A            SALON          6   B  9 50
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(HI UL)
+     A*                                      Begin /121019/
+     A******************************** 11  8'or'
+     A******************************** 13 21'Review from         Loan +
+     A********************************      no'
+     A*********** SRLON          6   B 13 50
+     A                                 11 35'OR'
+     A                                 13 07'Review from   Loan no'
+     A            SRLON          6   B 13 31
+     A*                                      End   /121019/
+     A  32                                  DSPATR(RI PC)
+     A N32                                  DSPATR(HI UL)
+     A*                                      Begin /121019/
+     A********70********************** 15 25'Requiring Authorisation'
+     A********70* SRAUT          1   B 15 50
+     A        70                       13 41'Unauthorised Only?'
+     A        70  SRAUT          1   B 13 61
+     A*                                      End   /121019/
+     A  33    70                            DSPATR(RI PC)
+     A N33    70                            DSPATR(HI UL)
+      *
+     A                                 22  2'F3=Exit'
+     A*/COPY WNCPYSRC,LE2070DF02
+      *
+      **  Screen 2 - Footer
+      *
+     A          R LE2070F2
+     A                                      OVERLAY
+     A                                 22  2'F3=Exit'
+     A                                 22 12'F5=Refresh'
+      *                                              Begin /CAP062/
+     A**********                       22 25'F12=Previous screen'                   CAP062
+     A N84                             22 25'F12=Previous screen'                   CAP062
+      *                                              End   /CAP062/
+     A N81                             23 71'Page keys'
+      *
+      **  Screen 3 - Footer
+      *
+     A          R LE2070F3
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                 23 10'F12=Previous screen'
+      *                                              Begin /123857/
+     A**26*******                      23 30'F11=Authorise'
+     A  26N59                          23 30'F11=Authorise'
+      *                                              End   /123857/
+     A  27                             23 44'F14=Settlement'
+      *
+      **  Screen 2 - Subfile of loan records
+      *
+     A          R LE2070S0
+     A                                      SFL
+     A  24                                  SFLNXTCHG
+     A*                                              Begin /126274/
+     A*********** SLSEL          1   B 10  4
+     A**34*******                           DSPATR(RI PC)
+     A*N34*******                           DSPATR(HI UL)
+     A*********** SSLON          6   O 10  8DSPATR(HI)
+     A*********** SSCUS          6   O 10 16DSPATR(HI)
+     A*********** SSRDT          7   O 10 26DSPATR(HI)
+     A*********** SSNRD          7   O 10 38DSPATR(HI)
+     A            SLSEL          1   B 10  2
+     A  34                                  DSPATR(RI PC)
+     A N34                                  DSPATR(HI UL)
+     A            SSLON          6   O 10  6DSPATR(HI)
+     A            SSCUS          6   O 10 13DSPATR(HI)
+     A            SCSNM         10   O 10 20DSPATR(HI)
+     A            SSRDT          7   O 10 31DSPATR(HI)
+     A            SSNRD          7   O 10 40DSPATR(HI)
+     A*                                              End   /126274/
+     A            SSRFQ          1   O 10 53DSPATR(HI)
+     A            SSRDY          2   O 10 55DSPATR(HI)
+     A            SSRST         16   O 10 64DSPATR(HI)
+      *                                              Begin /CAP062/
+     A            XREPN          5S 0H                                              CAP062
+      *                                              End   /CAP062/
+      *
+      **  Screen 2 - Subfile control
+      *
+     A          R LE2070C0
+     A                                      CA05
+      *                                              Begin /CAP062/
+     A************                          CF12                                    CAP062
+     A N84                                  CF12                                    CAP062
+      *                                              End   /CAP062/
+     A                                      SFLCTL(LE2070S0)
+     A N82N83                               SFLDSP
+     A N82                                  SFLDSPCTL
+     A  82                                  SFLCLR
+     A                                      SFLPAG(10)
+     A                                      SFLSIZ(11)
+     A N82 89
+     AON82 83                               SFLEND(*MORE)
+     A                                      OVERLAY
+     A N89N83                               ROLLUP(88)
+     A            SRNBR          4S 0H      SFLRCDNBR
+     A                                  4 46'Review from loan no'
+     A            SRLON          6   B  4 66
+     A  35                                  DSPATR(RI PC)
+     A N35                                  DSPATR(HI UL)
+     A        70                        5 42'Requiring Authorisation'
+     A        70  SRAUT          1   B  5 66
+     A  36    70                            DSPATR(RI PC)
+     A N36    70                            DSPATR(HI UL)
+     A                                  5  2'Actions,'
+      *                                              Begin /CAP062/
+     A************                      6  3'E=Enquire'                             CAP062
+     A N84                              6  3'E=Enquire'                             CAP062
+     A************                      6 16'A=Amend'                               CAP062
+     A N84                              6 16'A=Amend'                               CAP062
+     A  84                              6  3'U=Amend'                               CAP062
+     A  84                              6 16'Q=Delete'                              CAP062
+     A********70**                      6 27'X=Authorise'                           CAP062
+     A N84    70                        6 27'X=Authorise'                           CAP062
+      *                                              End   /CAP062/
+     A**   Start of 222729
+     A*** N84    70                        6 42'Q=Release'                          CLE030 222729
+     A N84 22 70                        6 42'Q=Release'                                    222729
+     A**   End of 222729
+     A***  Start of 158488
+     A***                               8  3'Sel'
+     A***                               8  9'Loan'
+     A                                  8  1'Sel'
+     A                                  8  7'Loan'
+     A***  End of 158488
+     A                                  8 15'Customer'
+     A***  Start of 158488
+     A***                               8 25'Rollover'
+     A***                               9 27'date'
+     A***                               8 35'Next Rollover'
+     A***                               9 39'date'
+     A                                  8 32'Roll'
+     A                                  9 32'Date'
+     A                                  8 41'Next'
+     A                                  9 41'Roll'
+     A***  End of 158488
+     A                                  8 50'Freq/Dayno'
+     A                                  8 68'Status'
+      *
+      **  Screen 3 - Detail
+      *
+     A          R LE2070D1
+     A                                      OVERLAY
+      *                                              Begin /123857/
+     A**26*******                           CA11
+     A  26N59                               CA11
+      *                                              End   /123857/
+     A                                      CF12
+     A  27                                  CA14
+      *
+     A                                  4  2'Loan no'
+     A            SLOAN          6   O  4 24DSPATR(HI)
+     A                                  4 38'Action'
+     A            SACTN          1   O  4 46DSPATR(HI)
+     A                                  4 54'Status'
+     A            SRSTS         16   O  4 62DSPATR(HI)
+     A                                  5  2'Customer'
+     A            SCUST         10   B  5 24
+     A    N37                               DSPATR(HI)
+     A N28N37                               DSPATR(UL)
+     A  28                                  DSPATR(PR)
+     A     37                               DSPATR(RI PC)
+     A            SCNUM          6   H
+     A**Start of change CLE036
+     A**********                        7  2'Rollover date'                                   CLE036
+     A**********  SRLDT          6   O  7 24                                                  CLE036
+     A                                  6  2'Rollover date'
+     A            SRLDT          6   O  6 24
+     A**End of change CLE036
+     A  28                                  DSPATR(HI)
+     A  28 38                               DSPATR(RI PC)
+     A**Start of change CLE036
+     A**********  SRLDTB         6   B  7 31                                                  CLE036
+     A            SRLDTB         6   B  6 31
+     A**End of change CLE036
+     A N28N38                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     38                               DSPATR(RI PC)
+     A**Start of change CLE011
+     A**Start of change CLE036
+     A**********                        7 40'Fix Days'                                        CLE036
+     A                                  6 40'Fix Days'
+     A**End of change CLE036
+     A N71                                  DSPATR(ND)
+     A**Start of change CLE036
+     A**********  SRFDY          2   O  7 49DSPATR(HI)                                        CLE036
+     A            SRFDY          2   O  6 49DSPATR(HI)
+     A**End of change CLE036
+     A N71                                  DSPATR(ND)
+      *
+     A                                  8 40'Rate fixed at'
+     A N71
+     AON72                                  DSPATR(ND)
+     A            SRFRT         12   O  8 54DSPATR(HI)
+     A N71
+     AON72                                  DSPATR(ND)
+     A**End of change CLE011
+     A**Start of change CLE036
+     A**********                        7 54'Freq/day no'                                     CLE036
+     A**********  SRLFQ          1   O  7 67                                                  CLE036
+     A                                  6 54'Freq/day no'
+     A            SRLFQ          1   O  6 67
+     A**End of change CLE036
+     A  28                                  DSPATR(HI)
+     A**Start of change CLE036
+     A**********                        7 69'/'                                               CLE036
+     A**********  SRLDY          2   O  7 71                                                  CLE036
+     A                                  6 69'/'
+     A            SRLDY          2   O  6 71
+     A**End of change CLE036
+     A  28                                  DSPATR(HI)
+     A**Start of change CLE036
+     A**********  SRLFQB         1   B  7 75                                                  CLE036
+     A            SRLFQB         1   B  6 75
+     A**End of change CLE036
+     A N28N39                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     39                               DSPATR(RI PC)
+     A**Start of change CLE036
+     A**********                        7 77'/'                                               CLE036
+     A                                  6 77'/'
+     A**End of change CLE036
+     A  28                                  DSPATR(ND)
+     A**Start of change CLE036
+     A**********  SRLDYB         2   B  7 79                                                  CLE036
+     A            SRLDYB         2   B  6 79
+     A**End of change CLE036
+     A N28N40                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     40                               DSPATR(RI PC)
+     A**Start of change CLE036
+     A  02                              7  2'New base rate'
+     A            SNBRT         12   O  7 24
+     A  28                                  DSPATR(HI)
+     A N02                                  DSPATR(ND)
+     A            SNBRTB        12   B  7 37
+     A N28N76 02                            DSPATR(HI UL)
+     A N02
+     AO 28                                  DSPATR(ND PR)
+     A  76                                  DSPATR(RI PC)
+     A**********                        8  2'New base rate'                                   CLE036
+     A N02                              8  2'New base rate'
+     A  02                              8  2'New base rate code'
+     A**End of change CLE036
+     A            SNBRA          2   O  8 24
+     A  28                                  DSPATR(HI)
+     A  28 41                               DSPATR(RI PC)
+     A            SNBRAB         2   B  8 27
+     A N28N41                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     41                               DSPATR(RI PC)
+     A                                  9  2'New spread/rate'
+     A            SNRTS         12   O  9 24
+     A  28                                  DSPATR(HI)
+      **Start of change AR847588
+     A            SRSGN          1   O  9 37
+     A  28                                  DSPATR(HI)
+     A**********  SNRTSB        12   B  9 37                                                AR847588
+     A            SNRTSB        12   B  9 39
+      **End of change AR847588
+     A N28N42                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     42                               DSPATR(RI PC)
+      **Start of change AR847588
+     A            SRSGNB         1   B  9 52
+     A N28N23                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     23                               DSPATR(RI PC)
+      **End of change AR847588
+     A                                  9 54'New spread ind'
+     A            SNSIN          1   O  9 69
+     A  28                                  DSPATR(HI)
+     A            SNSINB         1   B  9 71
+     A N28N43                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     43                               DSPATR(RI PC)
+     A                                 10  2'New int calc basis'
+     A            SNCAS          1   O 10 24
+     A  28                                  DSPATR(HI)
+     A            SNCASB         1   B 10 26
+     A N28N44                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     44                               DSPATR(RI PC)
+     A                                 10 34'New change ind'
+     A            SNCHI          1   O 10 50
+     A  28                                  DSPATR(HI)
+     A            SNCHIB         1   B 10 52
+     A N28N45                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     45                               DSPATR(RI PC)
+     A                                 11  2'Next Rollover date'
+     A            SNROD          6   O 11 24
+     A  28                                  DSPATR(HI)
+     A  28 46                               DSPATR(RI PC)
+     A            SNRODB         6   B 11 31
+     A N28N46                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     46                               DSPATR(RI PC)
+      * Start of change CAS001
+     A  73                             11 39'New Fwd Yield Curve'
+     A            SFYLD          5   O 11 60
+     A  73 28                               DSPATR(HI)
+     A N73                                  DSPATR(ND)
+     A            SFYLDB         5   B 11 66
+     A  73N74N28                            DSPATR(HI UL)
+     A  73 74                               DSPATR(RI PC)
+     A N73                                  DSPATR(ND)
+     A  28
+     AON73                                  DSPATR(PR)
+      * End of change CAS001
+     A                                 12  2'New principal'
+     A            SNPRAM        14   O 12 24
+     A  28                                  DSPATR(HI)
+     A            SNPRAB        14   B 12 39
+     A N28N47                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     47                               DSPATR(RI PC)
+      * Start of change CLE034
+     A  01                             18 54'Settlement Allocation'
+     A            SRSTA          1   B 18 76
+     A N01
+     AO 28                                  DSPATR(PR)
+     A N28 01                               DSPATR(UL)
+     A  75                                  DSPATR(RI PC)
+     A N75                                  DSPATR(HI)
+     A N01                                  DSPATR(ND)
+      * End of change CLE034
+     A                                 13  2'New discount amount'
+     A            SNDAM         14   O 13 24
+     A  28                                  DSPATR(HI)
+     A            SNDAMB        14   B 13 39
+     A N28N48                               DSPATR(HI UL)
+     A  28                                  DSPATR(ND PR)
+     A     48                               DSPATR(RI PC)
+     A        60                       14  2'New interest date'
+     A        60  SNIPD          6   O 14 24
+     A  28    60                            DSPATR(HI)
+     A        60  SNIPDB         6   B 14 31
+     A N28N49 60                            DSPATR(HI UL)
+     A  28    60                            DSPATR(ND PR)
+     A     49 60                            DSPATR(RI PC)
+     A        60                       14 39'New Maturity date'
+     A        60  SNMDT          6   O 14 57
+     A  28    60                            DSPATR(HI)
+     A        60  SNMDTB         6   B 14 64
+     A N28N50 60                            DSPATR(HI UL)
+     A  28    60                            DSPATR(ND PR)
+     A     50 60                            DSPATR(RI PC)
+     A        61                       15  2'New currency'
+     A        61  SNCCY          3   O 15 24
+     A  28    61                            DSPATR(HI)
+     A        61  SNCCYB         3   B 15 29
+     A N28N51 61                            DSPATR(HI UL)
+     A  28    61                            DSPATR(ND PR)
+     A     51 61                            DSPATR(RI PC)
+     A        61                       15 34'New ccy amount'
+     A        61  SNCPA         14   O 15 49
+     A  28    61                            DSPATR(HI)
+     A        61  SNCPAB        14   B 15 64
+     A N28N52 61                            DSPATR(HI UL)
+     A  28    61                            DSPATR(ND PR)
+     A     52 61                            DSPATR(RI PC)
+      *                                              Begin /123335/
+     A********61*                      16  2'Exchange rate'
+     A**Start of change CLE023
+     A********61                       16  2'Fac ccy new exch rate'                           CLE023
+     A  61
+     AO 67                             16  2'Fac ccy new exch rate'
+     A**End of change CLE023
+      *                                              End   /123335/
+      *                                              Begin /150806/
+     A********61* SNFCE         12   O 16 24
+     A**Start of change CLE023
+     A********61  SNFCE         14   O 16 24                                                  CLE023
+      **********                                     End   /150806/                           CLE023
+     A**28****61                            DSPATR(HI)                                        CLE023
+     A  61
+     AO 67        SNFCE         14   O 16 24
+     A  28 61
+     AO 28 67                               DSPATR(HI)
+     A**End of change CLE023
+      *                                              Begin /150806/
+     A********61* SNFCEB        12   B 16 39
+     A**Start of change CLE023
+     A********61  SNFCEB        14   B 16 39                                                  CLE023
+      **********                                     End   /150806/                           CLE023
+     A*N28N53*61                            DSPATR(HI UL)                                     CLE023
+     A**28****61                            DSPATR(ND PR)                                     CLE023
+     A*****53*61                            DSPATR(RI PC)                                     CLE023
+     A  61
+     AO 67        SNFCEB        14   B 16 39
+     A N28N53 61
+     AON28N53 67                            DSPATR(HI UL)
+     A  28 61
+     AO 28 67                               DSPATR(ND PR)
+     A  53 61
+     AO 53 67                               DSPATR(RI PC)
+     A**End of change CLE023
+      *                                              Begin /123335/
+     A********61*                      16 53'Exchange rate ind'
+      *                                              Begin /150806/
+     A********61*                      16 53'Fac exch rate ind'
+     A**Start of change CLE023
+     A********61                       16 55'Fac exch rate ind'                               CLE023
+     A  61
+     AO 67                             16 55'Fac exch rate ind'
+     A**End of change CLE023
+      *                                              End   /150806/
+      *                                              End   /123335/
+      *                                              Begin /150806/
+     A********61* SNFMD          1   O 16 72
+     A**Start of change CLE023
+     A********61  SNFMD          1   O 16 74                                                  CLE023
+      **********                                     End   /150806/                           CLE023
+     A**28****61                            DSPATR(HI)                                        CLE023
+     A  61
+     AO 67        SNFMD          1   O 16 74
+     A  28 61
+     AO 28 67                               DSPATR(HI)
+     A**End of change CLE023
+      *                                              Begin /150806/
+     A********61* SNFMDB         1   B 16 74
+     A**Start of change CLE023
+     A********61  SNFMDB         1   B 16 76                                                  CLE023
+      **********                                     End   /150806/                           CLE023
+     A*N28N54*61                            DSPATR(HI UL)                                     CLE023
+     A**28****61                            DSPATR(ND PR)                                     CLE023
+     A*****54*61                            DSPATR(RI PC)                                     CLE023
+     A  61
+     AO 67        SNFMDB         1   B 16 76
+     A N28N54 61
+     AON28N54 67                            DSPATR(HI UL)
+     A  28 61
+     AO 28 67                               DSPATR(ND PR)
+     A  54 61
+     AO 54 67                               DSPATR(RI PC)
+     A**End of change CLE023
+      *                                              Begin /123335/
+     A********61*                      17  2'Next loan currency +
+     A***********                           Repayment amount'
+     A********61* SNLRA         14   O 17 39
+     A**28****61*                           DSPATR(HI)
+     A********61* SNLRAB        14   B 17 54
+     A        61                       17  2'Bas ccy new exch rate'
+      *                                              Begin /150806/
+     A********61* SNBCE         12   O 17 24
+     A        61  SNBCE         14   O 17 24
+      *                                              End   /150806/
+     A  28    61                            DSPATR(HI)
+      *                                              Begin /150806/
+     A********61* SNBCEB        12   B 17 39
+     A        61  SNBCEB        14   B 17 39
+      *                                              End   /150806/
+     A N28N64 61                            DSPATR(HI UL)
+     A  28    61                            DSPATR(ND PR)
+     A     64 61                            DSPATR(RI PC)
+      *                                              Begin /150806/
+     A********61*                      17 53'Base exch rate ind'
+     A********61  SNBMD          1   O 17 72
+     A        61                       17 55'Base exch rate ind'
+     A        61  SNBMD          1   O 17 74
+      *                                              End   /150806/
+     A  28    61                            DSPATR(HI)
+      *                                              Begin /150806/
+     A********61* SNBMDB         1   B 17 74
+     A        61  SNBMDB         1   B 17 76
+      *                                              End   /150806/
+     A N28N65 61                            DSPATR(HI UL)
+     A  28    61                            DSPATR(ND PR)
+     A     65 61                            DSPATR(RI PC)
+     A        61                       18  2'Next loan currency +
+     A                                      Repayment amount'
+     A        61  SNLRA         14   O 18 39
+     A  28    61                            DSPATR(HI)
+      *                                              Begin /220754/
+     A********61* SNLRAB        14   B 18 54                                                  220754
+     A        61  SNLRAB        14   B 18 38
+      *                                              End   /220754/
+      *                                              End   /123335/
+     A N28N55 61                            DSPATR(HI UL)
+     A  28    61                            DSPATR(ND PR)
+     A     55 61                            DSPATR(RI PC)
+      *                                              Begin /123335/
+     A***********                      18  2'Special instructions'
+     A*********** SSPI1         30   B 19  2
+     A                                 19  2'Special instructions'
+     A            SSPI1         30   B 20  2
+      *                                              End   /123335/
+     A    N56                               DSPATR(HI)
+     A N28N56                               DSPATR(UL)
+     A  28                                  DSPATR(PR)
+     A     56                               DSPATR(RI PC)
+      *                                              Begin /123335/
+     A*********** SSPI2         30   B 20  2
+     A            SSPI2         30   B 21  2
+      *                                              End   /123335/
+     A    N57                               DSPATR(HI)
+     A N28N57                               DSPATR(UL)
+     A  28                                  DSPATR(PR)
+     A     57                               DSPATR(RI PC)
+      *                                              Begin /123335/
+     A*********** SSPI3         30   B 21  2
+     A            SSPI3         30   B 22  2
+      *                                              End   /123335/
+     A    N58                               DSPATR(HI)
+     A N28N58                               DSPATR(UL)
+     A  28                                  DSPATR(PR)
+     A     58                               DSPATR(RI PC)
+      *
+      *                                              Begin /123335/
+     A********29*                      18 39'New Funding Details'
+     A********29*                      19 39'Spread/rate'
+     A********29* SNFRSB        12   B 19 53
+     A        29                       19 39'New Funding Details'
+     A        29                       20 39'Spread/rate'
+     A        29  SNFRSB        12   B 20 53
+      *                                              End   /123335/
+     A    N62 29                            DSPATR(HI)
+     A N28N62 29                            DSPATR(UL)
+     A  28    29                            DSPATR(PR)
+     A     62 29                            DSPATR(RI PC)
+      *                                              Begin /123335/
+     A********29*                      20 39'Spread sign'
+     A********29* SNFSNB         1   B 20 53
+     A        29                       21 39'Spread sign'
+     A        29  SNFSNB         1   B 21 53
+      *                                              End   /123335/
+     A    N63 29                            DSPATR(HI)
+     A N28N63 29                            DSPATR(UL)
+     A  28    29                            DSPATR(PR)
+     A     63 29                            DSPATR(RI PC)
+      *                                              Begin /123335/
+     A********29*                      21 39'Profit centre'
+     A********29* SNFPCB         4   O 21 53
+     A        29                       22 39'Profit centre'
+     A        29  SNFPCB         4   O 22 53
+      *                                              End   /123335/
+     A        29                            DSPATR(HI)
+      *
+      **  Screen 1 & 2 - Message subfile record
+      *
+     A          R LE2070S1                  TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *
+      **  Screen 1 & 2 - Message subfile control
+      *
+     A          R LE2070C1                  TEXT('Program messages')
+     A                                      SFLCTL(LE2070S1)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+      *
